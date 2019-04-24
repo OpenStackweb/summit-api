@@ -613,7 +613,7 @@ final class PresentationService
         LaravelRequest $request,
         $presentation_id,
         array $slide_data,
-        array $allowed_extensions = ['ppt', 'pptx', 'xps',  'key', 'pdf'],
+        array $allowed_extensions =  ['ppt', 'pptx', 'xps',  'key', 'pdf', 'jpg', 'jpeg', 'png', 'svg', 'bmp', 'tga', 'tiff', 'gif'],
         $max_file_size = 10485760
     )
     {
@@ -678,7 +678,7 @@ final class PresentationService
         $presentation_id,
         $slide_id,
         array $slide_data,
-        array $allowed_extensions = ['ppt', 'pptx', 'xps',  'key', 'pdf'],
+        array $allowed_extensions = ['ppt', 'pptx', 'xps',  'key', 'pdf', 'jpg', 'jpeg', 'png', 'svg', 'bmp', 'tga', 'tiff', 'gif'],
         $max_file_size = 10485760
     ){
         $slide = $this->tx_service->transaction(function () use

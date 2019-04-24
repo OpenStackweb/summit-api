@@ -1,4 +1,6 @@
 <?php namespace ModelSerializers;
+use models\summit\PresentationSlide;
+
 /**
  * Copyright 2016 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +17,6 @@
  * Class PresentationSlideSerializer
  * @package ModelSerializers
  */
-use Illuminate\Support\Facades\Config;
-
 final class PresentationSlideSerializer extends PresentationMaterialSerializer
 {
     protected static $array_mappings = array
@@ -35,8 +35,11 @@ final class PresentationSlideSerializer extends PresentationMaterialSerializer
     {
         $values = parent::serialize($expand, $fields, $relations, $params);
         $slide  = $this->object;
+        if(!$slide instanceof PresentationSlide) return [];
+        $values['has_file'] = false;
         if(empty($values['link'])){
             $values['link']  =  $slide->hasSlide() ?  $slide->getSlide()->getUrl(): null;
+            $values['has_file'] = true;
         }
         return $values;
     }

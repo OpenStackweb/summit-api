@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\EmailCreationRequest;
@@ -130,4 +131,40 @@ interface ISpeakerService
      * @throws ValidationException
      */
     public function sendSpeakerSummitAssistanceAnnouncementMail(Summit $summit, $assistance_id);
+
+    /**
+     * @param int $requested_by_id
+     * @param int $speaker_id
+     * @return SpeakerEditPermissionRequest
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function requestSpeakerEditPermission(int $requested_by_id, int $speaker_id):SpeakerEditPermissionRequest;
+
+    /**
+     * @param int $requested_by_id
+     * @param int $speaker_id
+     * @return SpeakerEditPermissionRequest
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function getSpeakerEditPermission(int $requested_by_id, int $speaker_id):SpeakerEditPermissionRequest;
+
+    /**
+     * @param string $token
+     * @param int $speaker_id
+     * @return SpeakerEditPermissionRequest
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function approveSpeakerEditPermission(string $token, int $speaker_id):SpeakerEditPermissionRequest;
+
+    /**
+     * @param string $token
+     * @param int $speaker_id
+     * @return SpeakerEditPermissionRequest
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function rejectSpeakerEditPermission(string $token, int $speaker_id):SpeakerEditPermissionRequest;
 }

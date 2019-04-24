@@ -15,7 +15,9 @@
 use App\Models\ResourceServer\ApiEndpoint;
 use App\Models\ResourceServer\IApiEndpoint;
 use App\Models\ResourceServer\IApiEndpointRepository;
+use App\Repositories\ConfigDoctrineRepository;
 use App\Repositories\DoctrineRepository;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\QueryBuilder;
 use Illuminate\Support\Facades\Log;
 
@@ -24,10 +26,20 @@ use Illuminate\Support\Facades\Log;
  * @package repositories\resource_server
  */
 final class DoctrineApiEndpointRepository
-    extends DoctrineRepository
+    extends ConfigDoctrineRepository
     implements IApiEndpointRepository
 {
 
+    /**
+     * Initializes a new <tt>EntityRepository</tt>.
+     *
+     * @param EntityManager         $em    The EntityManager to use.
+     * @param ClassMetadata $class The class descriptor.
+     */
+    public function __construct($em, ClassMetadata $class)
+    {
+        parent::__construct($em, $class);
+    }
     /**
      * @param string $url
      * @param string $http_method
@@ -59,7 +71,7 @@ final class DoctrineApiEndpointRepository
      */
     protected function getBaseEntity()
     {
-        // TODO: Implement getBaseEntity() method.
+        return ApiEndpoint::class;
     }
 
     /**
@@ -67,7 +79,7 @@ final class DoctrineApiEndpointRepository
      */
     protected function getFilterMappings()
     {
-        return ApiEndpoint::class;
+        return [];
     }
 
     /**

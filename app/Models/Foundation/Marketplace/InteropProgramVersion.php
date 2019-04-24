@@ -30,7 +30,7 @@ class InteropProgramVersion extends SilverstripeBaseModel
 
     /**
      * @ORM\ManyToMany(targetEntity="InteropCapability", cascade={"persist"})
-     * @ORM\JoinTable(name="nteropProgramVersion_Capabilities",
+     * @ORM\JoinTable(name="InteropProgramVersion_Capabilities",
      *      joinColumns={@ORM\JoinColumn(name="InteropProgramVersionID", referencedColumnName="ID")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="InteropCapabilityID", referencedColumnName="ID")}
      *      )

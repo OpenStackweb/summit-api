@@ -33,7 +33,7 @@ final class DefaultEventTypesSeeder extends Seeder
     public function run()
     {
 
-        $em                = Registry::getManager('ss');
+        $em                = Registry::getManager(\models\utils\SilverstripeBaseModel::EntityManager);
         $repo              = $em->getRepository(DefaultSummitEventType::class);
 
         // presentation default types

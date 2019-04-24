@@ -11,37 +11,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\QueryBuilder;
-use LaravelDoctrine\ORM\Facades\Registry;use models\utils\IBaseRepository;
+use LaravelDoctrine\ORM\Facades\Registry;
+use models\utils\IBaseRepository;
 use models\utils\IEntity;
+use models\utils\SilverstripeBaseModel;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
 use utils\PagingResponse;
 use Doctrine\ORM\Tools\Pagination\Paginator;
-
 /**
  * Class DoctrineRepository
  * @package App\Repositories
  */
 abstract class DoctrineRepository extends EntityRepository implements IBaseRepository
 {
-    protected static $em_name = 'default';
-    /**
-     * Initializes a new <tt>EntityRepository</tt>.
-     *
-     * @param EntityManager         $em    The EntityManager to use.
-     * @param ClassMetadata $class The class descriptor.
-     */
-    public function __construct($em, ClassMetadata $class)
-    {
-        $em = Registry::getManager(static::$em_name);
-        parent::__construct($em, $class);
-    }
 
     public function getById($id)
     {

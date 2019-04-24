@@ -1,5 +1,4 @@
 <?php namespace App\Models\ResourceServer;
-
 /**
  * Copyright 2016 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use models\utils\IEntity;
 use Doctrine\ORM\Mapping AS ORM;
-
 /***
  * @ORM\MappedSuperclass
  * Class ResourceServerEntity
@@ -23,6 +20,7 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class ResourceServerEntity implements IEntity
 {
+    const EntityManager = 'config';
 
     const DefaultTimeZone = 'America/Chicago';
 

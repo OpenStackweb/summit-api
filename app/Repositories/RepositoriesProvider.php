@@ -25,6 +25,7 @@ use App\Models\Foundation\Summit\Repositories\IPresentationSpeakerSummitAssistan
 use App\Models\Foundation\Summit\Repositories\IRSVPTemplateRepository;
 use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerActiveInvolvementRepository;
+use App\Models\Foundation\Summit\Repositories\ISpeakerEditPermissionRequestRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerOrganizationalRoleRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitEventTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitLocationBannerRepository;
@@ -33,6 +34,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
 use App\Models\Foundation\Summit\Repositories\ITrackQuestionTemplateRepository;
 use App\Models\Foundation\Summit\Repositories\ITrackTagGroupAllowedTagsRepository;
 use App\Models\Foundation\Summit\SelectionPlan;
+use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
 use App\Models\Foundation\Summit\TrackTagGroupAllowedTag;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
@@ -389,6 +391,13 @@ final class RepositoriesProvider extends ServiceProvider
             ISpeakerActiveInvolvementRepository::class,
             function(){
                 return EntityManager::getRepository(SpeakerActiveInvolvement::class);
+            }
+        );
+
+        App::singleton(
+            ISpeakerEditPermissionRequestRepository::class,
+            function(){
+                return EntityManager::getRepository(SpeakerEditPermissionRequest::class);
             }
         );
 

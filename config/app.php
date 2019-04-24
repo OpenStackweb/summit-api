@@ -158,6 +158,7 @@ return [
         libs\utils\CustomDoctrineServiceProvider::class,
         LaravelDoctrine\Extensions\BeberleiExtensionsServiceProvider::class,
         Sichikawa\LaravelSendgridDriver\SendgridTransportServiceProvider::class,
+        LaravelDoctrine\Migrations\MigrationsServiceProvider::class,
     ],
 
     /*

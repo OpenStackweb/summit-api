@@ -23,7 +23,10 @@ use DateTime;
  *     "SpeakerCreationEmailCreationRequest" = "SpeakerCreationEmailCreationRequest",
  *     "MemberPromoCodeEmailCreationRequest"= "MemberPromoCodeEmailCreationRequest",
  *     "CalendarSyncErrorEmailRequest" = "CalendarSyncErrorEmailRequest",
- *     "SpeakerSelectionAnnouncementEmailCreationRequest" = "SpeakerSelectionAnnouncementEmailCreationRequest"})
+ *     "SpeakerSelectionAnnouncementEmailCreationRequest" = "SpeakerSelectionAnnouncementEmailCreationRequest",
+ *     "PresentationCreatorNotificationEmailRequest" = "PresentationCreatorNotificationEmailRequest",
+ *    "PresentationSpeakerNotificationEmailRequest" = "PresentationSpeakerNotificationEmailRequest"
+ * })
  * Class EmailCreationRequest
  * @package models\main
  */

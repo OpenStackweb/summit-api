@@ -149,6 +149,8 @@ final class SerializerRegistry
                 self::SerializerType_Private =>  AdminPresentationSpeakerSerializer::class
             ];
 
+        $this->registry['SpeakerEditPermissionRequest'] = SpeakerEditPermissionRequestSerializer::class;
+
         // RSVP
         $this->registry['RSVP']                       = RSVPSerializer::class;
         $this->registry['RSVPTemplate']               = RSVPTemplateSerializer::class;
@@ -197,6 +199,7 @@ final class SerializerRegistry
         $this->registry['SummitLocationImage']           = SummitLocationImageSerializer::class;
         $this->registry['SummitLocationBanner']          = SummitLocationBannerSerializer::class;
         $this->registry['ScheduledSummitLocationBanner'] = ScheduledSummitLocationBannerSerializer::class;
+
         // track tag groups
         $this->registry['TrackTagGroup'] = TrackTagGroupSerializer::class;
         $this->registry['TrackTagGroupAllowedTag'] = TrackTagGroupAllowedTagSerializer::class;

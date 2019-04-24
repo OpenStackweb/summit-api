@@ -622,4 +622,64 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
         $presentations = json_decode($content);
         $this->assertTrue(!is_null($presentations));
     }
+
+    public function testRequestSpeakerEditPermission()
+    {
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $params = [
+            'speaker_id' => 9
+        ];
+
+        $response = $this->action
+        (
+            "PUT",
+            "OAuth2SummitSpeakersApiController@requestSpeakerEditPermission",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
+        $content = $response->getContent();
+        $request = json_decode($content);
+        $this->assertTrue($request->id > 0);
+        return $request;
+    }
+
+    public function testGetRequestSpeakerEditPermission()
+    {
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $params = [
+            'speaker_id' => 9
+        ];
+
+        $response = $this->action
+        (
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakerEditPermission",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $content = $response->getContent();
+        $request = json_decode($content);
+        $this->assertTrue($request->id > 0);
+        return $request;
+    }
 }

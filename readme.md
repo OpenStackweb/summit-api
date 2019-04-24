@@ -3,7 +3,7 @@
 ## Prerequisites
 
     * LAMP/LEMP environment
-    * PHP >= 5.4.0
+    * PHP >= 7.1
     * Redis
     * composer (https://getcomposer.org/)
 
@@ -32,4 +32,28 @@ Laravel may require some permissions to be configured: folders within storage an
 
 ## create SS schema
 
-php artisan doctrine:schema:create --sql --em=ss > ss.sql
+php artisan doctrine:schema:create --sql --em=model > ss.sql
+
+## Doctrine Migrations
+
+# For Config Storage
+
+## create new migration
+php artisan doctrine:migrations:generate --connection=config --create=<table-name>
+
+## check status
+php artisan doctrine:migrations:status --connection=config
+
+## run
+php artisan doctrine:migrations:migrate --connection=config
+
+# For Model Storage
+
+## create new migrations
+php artisan doctrine:migrations:generate --connection=model --create=<table-name>
+
+## check status
+php artisan doctrine:migrations:status --connection=model
+
+## run
+php artisan doctrine:migrations:migrate --connection=model 

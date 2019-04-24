@@ -1,5 +1,4 @@
 <?php namespace App\Repositories;
-
 /**
  * Copyright 2016 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,16 +11,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\QueryBuilder;
 use Illuminate\Support\Facades\App;
+use models\utils\SilverstripeBaseModel;
+use LaravelDoctrine\ORM\Facades\Registry;
 /**
  * Class SilverStripeDoctrineRepository
  * @package App\Repositories
  */
 abstract class SilverStripeDoctrineRepository extends DoctrineRepository
 {
-    protected static $em_name = 'ss';
+
+
+    /**
+     * Initializes a new <tt>EntityRepository</tt>.
+     *
+     * @param EntityManager         $em    The EntityManager to use.
+     * @param ClassMetadata $class The class descriptor.
+     */
+    public function __construct($em, ClassMetadata $class)
+    {
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        parent::__construct($em, $class);
+    }
 
     /**
      * @return array

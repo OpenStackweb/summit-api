@@ -26,7 +26,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'openstackid_resources'),
+    'default' => env('DB_CONNECTION', 'config'),
 
     /*
     |--------------------------------------------------------------------------
@@ -46,8 +46,8 @@ return [
 
     'connections' => [
 
-        //primary DB
-        'openstackid_resources' => array(
+        // config DB
+        'config' => [
             'driver'    => 'mysql',
             'host'      => env('DB_HOST'),
             'database'  => env('DB_DATABASE'),
@@ -57,9 +57,9 @@ return [
             'charset'   => 'utf8',
             'collation' => 'utf8_unicode_ci',
             'prefix'    => '',
-        ),
-        //secondary DB (SS OS)
-        'ss' => array(
+        ],
+        // Model DB
+        'model' => [
             'driver'    => 'mysql',
             'host'      => env('SS_DB_HOST'),
             'database'  => env('SS_DATABASE'),
@@ -69,7 +69,7 @@ return [
             'charset'   => 'utf8',
             'collation' => 'utf8_unicode_ci',
             'prefix'    => '',
-        ),
+        ],
 
     ],
 

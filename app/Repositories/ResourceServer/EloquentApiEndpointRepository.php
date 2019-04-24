@@ -1,5 +1,4 @@
 <?php namespace repositories\resource_server;
-
 /**
  * Copyright 2015 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Models\ResourceServer\IApiEndpoint;
 use App\Models\ResourceServer\IApiEndpointRepository;
 use models\utils\EloquentBaseRepository;
-
+use models\utils\IEntity;
+use utils\Filter;
+use utils\Order;
+use utils\PagingInfo;
+use utils\PagingResponse;
 /**
  * Class EloquentApiEndpointRepository
  * @package repositories\resource_server
@@ -53,4 +55,49 @@ class EloquentApiEndpointRepository extends EloquentBaseRepository implements IA
         ))->firstOrFail();
     }
 
+    /**
+     * @param int $id
+     * @return IEntity
+     */
+    public function getById($id)
+    {
+        // TODO: Implement getById() method.
+    }
+
+    /**
+     * @param IEntity $entity
+     * @return void
+     */
+    public function add($entity)
+    {
+        // TODO: Implement add() method.
+    }
+
+    /**
+     * @param IEntity $entity
+     * @return void
+     */
+    public function delete($entity)
+    {
+        // TODO: Implement delete() method.
+    }
+
+    /**
+     * @return IEntity[]
+     */
+    public function getAll()
+    {
+        // TODO: Implement getAll() method.
+    }
+
+    /**
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
+    {
+        // TODO: Implement getAllByPage() method.
+    }
 }

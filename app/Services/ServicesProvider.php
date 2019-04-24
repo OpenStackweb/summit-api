@@ -13,6 +13,7 @@
  **/
 use App\Permissions\IPermissionsManager;
 use App\Permissions\PermissionsManager;
+use App\Repositories\DoctrineRepository;
 use App\Services\Apis\CalendarSync\ICalendarSyncRemoteFacadeFactory;
 use App\Services\Apis\GoogleGeoCodingAPI;
 use App\Services\Apis\IGeoCodingAPI;
@@ -48,6 +49,7 @@ use App\Services\SummitEventTypeService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
+use models\utils\SilverstripeBaseModel;
 use ModelSerializers\BaseSerializerTypeSelector;
 use ModelSerializers\ISerializerTypeSelector;
 use services\apis\CalendarSync\CalendarSyncRemoteFacadeFactory;
@@ -83,7 +85,7 @@ final class ServicesProvider extends ServiceProvider
         App::singleton(IPermissionsManager::class, PermissionsManager::class);
 
         App::singleton(\libs\utils\ITransactionService::class, function(){
-            return new \services\utils\DoctrineTransactionService('ss');
+            return new \services\utils\DoctrineTransactionService(SilverstripeBaseModel::EntityManager);
         });
 
         App::singleton(\libs\utils\IEncryptionService::class, function(){

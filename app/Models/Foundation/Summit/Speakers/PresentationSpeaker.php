@@ -11,9 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use Doctrine\ORM\Mapping AS ORM;
 use App\Models\Foundation\Main\Language;
 use App\Models\Foundation\Summit\SelectionPlan;
-use Doctrine\ORM\Mapping AS ORM;
 use App\Events\PresentationSpeakerCreated;
 use App\Events\PresentationSpeakerDeleted;
 use App\Events\PresentationSpeakerUpdated;
@@ -146,6 +146,12 @@ class PresentationSpeaker extends SilverstripeBaseModel
      * @var Presentation[]
      */
     private $moderated_presentations;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest", mappedBy="speaker", cascade={"persist"})
+     * @var Presentation[]
+     */
+    private $granted_edit_permissions;
 
     /**
      * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
@@ -330,6 +336,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
         $this->organizational_roles       = new ArrayCollection;
         $this->active_involvements        = new ArrayCollection;
         $this->announcement_summit_emails = new ArrayCollection;
+        $this->granted_edit_permissions   = new ArrayCollection;
     }
 
     /**
@@ -1619,5 +1626,18 @@ SQL;
             $photoUrl = File::getCloudLinkForImages("generic-speaker-icon.png");
         }
         return $photoUrl;
+    }
+
+    /**
+     * @param Member $member
+     * @return bool
+     */
+    public function canBeEditedBy(Member $member):bool{
+        if($member->isAdmin()) return true;
+        $criteria = Criteria::create();
+        $criteria
+            ->where(Criteria::expr()->eq('requested_by', $member))
+            ->andWhere(Criteria::expr()->eq('approved', true));
+        return $this->granted_edit_permissions->matching($criteria)->count() > 0 ;
     }
 }

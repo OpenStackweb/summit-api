@@ -835,9 +835,20 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             if (!Request::isJson()) return $this->error400();
             $data = Input::json();
 
+            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
+            if (is_null($current_member_id))
+                return $this->error403();
+
+            $member = $this->member_repository->getById($current_member_id);
+            if (is_null($member))
+                return $this->error403();
 
             $speaker = $this->speaker_repository->getById($speaker_id);
             if (is_null($speaker)) return $this->error404();
+
+            if(!$speaker->canBeEditedBy($member)){
+                return $this->error403();
+            }
 
             $rules = [
                 'title' => 'sometimes|string|max:100',
@@ -1145,6 +1156,106 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $speaker_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function requestSpeakerEditPermission($speaker_id){
+        try {
+            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
+            if (is_null($current_member_id))
+                return $this->error403();
+
+            $request = $this->service->requestSpeakerEditPermission($current_member_id, $speaker_id);
+
+            return $this->created(
+                SerializerRegistry::getInstance()->getSerializer($request)
+            );
+
+        } catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        } catch (EntityNotFoundException $ex2) {
+            Log::warning($ex2);
+            return $this->error404(array('message' => $ex2->getMessage()));
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $speaker_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getSpeakerEditPermission($speaker_id){
+        try {
+            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
+            if (is_null($current_member_id))
+                return $this->error403();
+
+            $request = $this->service->getSpeakerEditPermission($current_member_id, $speaker_id);
+
+            return $this->ok(
+                SerializerRegistry::getInstance()->getSerializer($request)->serialize()
+            );
+
+        } catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        } catch (EntityNotFoundException $ex2) {
+            Log::warning($ex2);
+            return $this->error404(array('message' => $ex2->getMessage()));
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+
+    /**
+     * @param $speaker_id
+     * @param $hash
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function approveSpeakerEditPermission($speaker_id, $hash){
+        try {
+            $request = $this->service->approveSpeakerEditPermission($hash, $speaker_id);
+            return response()->view('speakers.edit_permissions.approved', [], 200);
+        } catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return response()->view('speakers.edit_permissions.approved_validation_error', [], 412);
+        } catch (EntityNotFoundException $ex2) {
+            Log::warning($ex2);
+            return response()->view('speakers.edit_permissions.approved_error', [], 404);
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return response()->view('speakers.edit_permissions.approved_error', [], 500);
+        }
+    }
+
+    /**
+     * @param $speaker_id
+     * @param $hash
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function declineSpeakerEditPermission($speaker_id, $hash){
+        try {
+
+            $request = $this->service->rejectSpeakerEditPermission($hash, $speaker_id);
+            return response()->view('speakers.edit_permissions.rejected', [], 200);
+        } catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return response()->view('speakers.edit_permissions.rejected_validation_error', [], 412);
+        } catch (EntityNotFoundException $ex2) {
+            Log::warning($ex2);
+            return response()->view('speakers.edit_permissions.rejected_error', [], 404);
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return response()->view('speakers.edit_permissions.rejected_error', [], 500);
         }
     }
 

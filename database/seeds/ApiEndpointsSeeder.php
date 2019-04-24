@@ -356,6 +356,24 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ),
            [
+                'name' => 'request-edit-speaker-permission',
+                'route' => '/api/v1/speakers/{speaker_id}/edit-permission',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'get-edit-speaker-permission',
+                'route' => '/api/v1/speakers/{speaker_id}/edit-permission',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+           [
                 'name' => 'get-my-speaker-presentations-by-role-by-selection-plan',
                 'route' => '/api/v1/speakers/me/presentations/{role}/selection-plans/{selection_plan_id}',
                 'http_method' => 'GET',

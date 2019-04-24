@@ -13,15 +13,22 @@
  **/
 use App\Models\ResourceServer\EndPointRateLimitByIP;
 use App\Models\ResourceServer\IEndpointRateLimitByIPRepository;
+use App\Repositories\ConfigDoctrineRepository;
 use App\Repositories\DoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use Illuminate\Support\Facades\Log;
+use models\utils\IEntity;
+use utils\Filter;
+use utils\Order;
+use utils\PagingInfo;
+use utils\PagingResponse;
+
 /**
  * Class DoctrineEndPointRateLimitByIPRepository
  * @package repositories\resource_server
  */
 final class DoctrineEndPointRateLimitByIPRepository
-    extends DoctrineRepository
+    extends ConfigDoctrineRepository
     implements IEndpointRateLimitByIPRepository
 {
     /**
@@ -83,5 +90,51 @@ final class DoctrineEndPointRateLimitByIPRepository
     protected function applyExtraFilters(QueryBuilder $query)
     {
        return $query;
+    }
+
+    /**
+     * @param int $id
+     * @return IEntity
+     */
+    public function getById($id)
+    {
+        // TODO: Implement getById() method.
+    }
+
+    /**
+     * @param IEntity $entity
+     * @return void
+     */
+    public function add($entity)
+    {
+        // TODO: Implement add() method.
+    }
+
+    /**
+     * @param IEntity $entity
+     * @return void
+     */
+    public function delete($entity)
+    {
+        // TODO: Implement delete() method.
+    }
+
+    /**
+     * @return IEntity[]
+     */
+    public function getAll()
+    {
+        // TODO: Implement getAll() method.
+    }
+
+    /**
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
+    {
+        // TODO: Implement getAllByPage() method.
     }
 }

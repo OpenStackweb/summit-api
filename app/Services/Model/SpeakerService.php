@@ -1,5 +1,4 @@
 <?php namespace services\model;
-
 /**
  * Copyright 2017 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +11,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Mail\SpeakerEditPermissionApprovedEmail;
+use App\Mail\SpeakerEditPermissionRejectedEmail;
+use App\Mail\SpeakerEditPermissionRequestedEmail;
 use App\Models\Foundation\Main\CountryCodes;
 use App\Models\Foundation\Main\Repositories\ILanguageRepository;
 use App\Models\Foundation\Summit\Factories\PresentationSpeakerSummitAssistanceConfirmationRequestFactory;
+use App\Models\Foundation\Summit\Factories\SpeakerEditPermissionRequestFactory;
 use App\Models\Foundation\Summit\Repositories\IPresentationSpeakerSummitAssistanceConfirmationRequestRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerActiveInvolvementRepository;
+use App\Models\Foundation\Summit\Repositories\ISpeakerEditPermissionRequestRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerOrganizationalRoleRepository;
+use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IFolderService;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Mail;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -45,7 +52,6 @@ use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\SpeakerTravelPreference;
 use models\summit\Summit;
 use App\Http\Utils\IFileUploader;
-
 /**
  * Class SpeakerService
  * @package services\model
@@ -110,6 +116,11 @@ final class SpeakerService
     private $file_uploader;
 
     /**
+     * @var ISpeakerEditPermissionRequestRepository
+     */
+    private $speaker_edit_permisssion_repository;
+
+    /**
      * SpeakerService constructor.
      * @param ISpeakerRepository $speaker_repository
      * @param IMemberRepository $member_repository
@@ -122,6 +133,7 @@ final class SpeakerService
      * @param ISpeakerOrganizationalRoleRepository $speaker_organizational_role_repository
      * @param ISpeakerActiveInvolvementRepository $speaker_involvement_repository
      * @param IFileUploader $file_uploader
+     * @param ISpeakerEditPermissionRequestRepository $speaker_edit_permisssion_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -137,6 +149,7 @@ final class SpeakerService
         ISpeakerOrganizationalRoleRepository $speaker_organizational_role_repository,
         ISpeakerActiveInvolvementRepository $speaker_involvement_repository,
         IFileUploader $file_uploader,
+        ISpeakerEditPermissionRequestRepository $speaker_edit_permisssion_repository,
         ITransactionService $tx_service
     )
     {
@@ -152,6 +165,7 @@ final class SpeakerService
         $this->speaker_organizational_role_repository = $speaker_organizational_role_repository;
         $this->speaker_involvement_repository = $speaker_involvement_repository;
         $this->file_uploader = $file_uploader;
+        $this->speaker_edit_permisssion_repository = $speaker_edit_permisssion_repository;
     }
 
     /**
@@ -1016,6 +1030,109 @@ final class SpeakerService
             $promo_code->setEmailSent(true);
             return $email_request;
 
+        });
+    }
+
+    /**
+     * @param int $requested_by_id
+     * @param int $speaker_id
+     * @return SpeakerEditPermissionRequest
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function requestSpeakerEditPermission(int $requested_by_id, int $speaker_id): SpeakerEditPermissionRequest
+    {
+        return $this->tx_service->transaction(function () use ($requested_by_id, $speaker_id) {
+
+            $requestor = $this->member_repository->getById($requested_by_id);
+            if(is_null($requestor))
+                throw new EntityNotFoundException();
+
+            $speaker   = $this->speaker_repository->getById($speaker_id);
+            if(is_null($speaker))
+                throw new EntityNotFoundException();
+
+            $request = $this->speaker_edit_permisssion_repository->getBySpeakerAndRequestor($speaker, $requestor);
+            if(!is_null($request) && $request->isActionTaken())
+                throw new ValidationException("there is another permission edit request already redeem!");
+
+            // build request with factory
+            $request = SpeakerEditPermissionRequestFactory::build($speaker, $requestor);
+            $token  = $request->generateConfirmationToken();
+            Mail::to($request->getSpeaker()->getEmail())->send(new SpeakerEditPermissionRequestedEmail($request, $token));
+            $this->speaker_edit_permisssion_repository->add($request);
+
+            return $request;
+        });
+    }
+
+    /**
+     * @param int $requested_by_id
+     * @param int $speaker_id
+     * @return SpeakerEditPermissionRequest
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function getSpeakerEditPermission(int $requested_by_id, int $speaker_id): SpeakerEditPermissionRequest
+    {
+        return $this->tx_service->transaction(function () use ($requested_by_id, $speaker_id) {
+
+            $requestor = $this->member_repository->getById($requested_by_id);
+            if(is_null($requestor))
+                throw new EntityNotFoundException();
+
+            $speaker   = $this->speaker_repository->getById($speaker_id);
+            if(is_null($speaker))
+                throw new EntityNotFoundException();
+
+            $request = $this->speaker_edit_permisssion_repository->getBySpeakerAndRequestor($speaker, $requestor);
+
+            if(is_null($request))
+                throw new EntityNotFoundException();
+
+            return $request;
+        });
+    }
+
+    /**
+     * @param string $token
+     * @param int $speaker_id
+     * @return SpeakerEditPermissionRequest
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function approveSpeakerEditPermission(string $token, int $speaker_id): SpeakerEditPermissionRequest
+    {
+        return $this->tx_service->transaction(function () use ($token, $speaker_id) {
+            $request = $this->speaker_edit_permisssion_repository->getByToken($token);
+            if(is_null($request))
+                throw new EntityNotFoundException();
+            if($request->isApproved())
+                throw new ValidationException();
+            $request->approve();
+            Mail::to($request->getRequestedBy()->getEmail())->send(new SpeakerEditPermissionApprovedEmail($request));
+            return $request;
+        });
+    }
+
+    /**
+     * @param string $token
+     * @param int $speaker_id
+     * @return SpeakerEditPermissionRequest
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function rejectSpeakerEditPermission(string $token, int $speaker_id): SpeakerEditPermissionRequest
+    {
+        return $this->tx_service->transaction(function () use ($token, $speaker_id) {
+            $request = $this->speaker_edit_permisssion_repository->getByToken($token);
+            if(is_null($request))
+                throw new EntityNotFoundException();
+            if($request->isActionTaken())
+                throw new ValidationException();
+            $request->reject();
+            Mail::to($request->getRequestedBy()->getEmail())->send(new SpeakerEditPermissionRejectedEmail($request));
+            return $request;
         });
     }
 }

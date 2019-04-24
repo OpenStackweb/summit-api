@@ -25,6 +25,7 @@
         "guzzlehttp/guzzle": "^6.3",
         "idct/sftp-client": "dev-master",
         "laravel-doctrine/extensions": "1.0.*",
+        "laravel-doctrine/migrations": "^1.2",
         "laravel-doctrine/orm": "1.4.*",
         "laravel/framework": "5.6.*",
         "laravel/tinker": "^1.0",

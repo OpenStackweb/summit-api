@@ -23,9 +23,12 @@ use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackAnswer
 use Illuminate\Support\Facades\Event;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\IEmailCreationRequestRepository;
 use models\main\IFolderRepository;
 use models\main\ITagRepository;
 use models\main\Member;
+use models\main\PresentationCreatorNotificationEmailRequest;
+use models\main\PresentationSpeakerNotificationEmailRequest;
 use models\summit\ISpeakerRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\Presentation;
@@ -78,6 +81,11 @@ final class PresentationService
     private $folder_repository;
 
     /**
+     * @var IEmailCreationRequestRepository
+     */
+    private $email_creation_request_repository;
+
+    /**
      * PresentationService constructor.
      * @param ISummitEventRepository $presentation_repository
      * @param ISpeakerRepository $speaker_repository
@@ -85,6 +93,7 @@ final class PresentationService
      * @param IFolderService $folder_service
      * @param IFileUploader $file_uploader
      * @param IFolderRepository $folder_repository
+     * @param IEmailCreationRequestRepository $email_creation_request_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -95,6 +104,7 @@ final class PresentationService
         IFolderService $folder_service,
         IFileUploader $file_uploader,
         IFolderRepository $folder_repository,
+        IEmailCreationRequestRepository $email_creation_request_repository,
         ITransactionService $tx_service
     )
     {
@@ -105,6 +115,7 @@ final class PresentationService
         $this->folder_service = $folder_service;
         $this->file_uploader = $file_uploader;
         $this->folder_repository = $folder_repository;
+        $this->email_creation_request_repository = $email_creation_request_repository;
     }
 
     /**
@@ -605,6 +616,23 @@ final class PresentationService
 
             $presentation->setProgress(Presentation::PHASE_COMPLETE);
             $presentation->setStatus(Presentation::STATUS_RECEIVED);
+
+            // create email requests
+
+            foreach($presentation->getSpeakers() as $speaker){
+                if($speaker->getMemberId() == $presentation->getCreatorId()) continue;
+
+                $email = new PresentationSpeakerNotificationEmailRequest();
+
+                $email->setSpeaker($speaker);
+                $email->setPresentation($presentation);
+                $this->email_creation_request_repository->add($email);
+            }
+
+            $email = new PresentationCreatorNotificationEmailRequest();
+            $email->setPresentation($presentation);
+            $this->email_creation_request_repository->add($email);
+
             return $presentation;
         });
     }

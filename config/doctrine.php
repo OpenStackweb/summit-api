@@ -21,10 +21,10 @@ return [
     |
     */
     'managers'                  => [
-        'default' => [
+        'config' => [
             'dev'        => env('APP_DEBUG', true),
             'meta'       => env('DOCTRINE_METADATA', 'annotations'),
-            'connection' => env('DB_CONNECTION', 'openstackid_resources'),
+            'connection' => env('DB_CONNECTION', 'config'),
             'namespaces' => [
                 'App'
             ],
@@ -77,10 +77,10 @@ return [
                 'enum' => 'string'
             ]
         ],
-        'ss' => [
+        'model' => [
             'dev'        => env('APP_DEBUG'),
             'meta'       => env('DOCTRINE_METADATA', 'annotations'),
-            'connection' => 'ss',
+            'connection' => 'model',
             'namespaces' => [
                 'App'
             ],

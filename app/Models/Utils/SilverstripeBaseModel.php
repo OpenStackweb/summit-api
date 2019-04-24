@@ -152,5 +152,5 @@ class SilverstripeBaseModel extends BaseEntity
         return Registry::getManager(self::EntityManager);
     }
 
-    const EntityManager = 'ss';
+    const EntityManager = 'model';
 }

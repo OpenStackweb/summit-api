@@ -598,7 +598,7 @@ Route::group([
     Route::group(['prefix' => 'speakers'], function () {
 
         Route::get('', 'OAuth2SummitSpeakersApiController@getAll');
-        Route::post('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitSpeakersApiController@addSpeaker']);
+        Route::post('', 'OAuth2SummitSpeakersApiController@addSpeaker');
         Route::put('merge/{speaker_from_id}/{speaker_to_id}', 'OAuth2SummitSpeakersApiController@merge');
 
         Route::group(['prefix' => 'active-involvements'], function(){
@@ -647,7 +647,9 @@ Route::group([
         });
 
         Route::group(['prefix' => '{speaker_id}'], function () {
-            Route::put('',[ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitSpeakersApiController@updateSpeaker'])->where('speaker_id', 'me|[0-9]+');
+            Route::put('/edit-permission', 'OAuth2SummitSpeakersApiController@requestSpeakerEditPermission')->where('speaker_id', '[0-9]+');
+            Route::get('/edit-permission', 'OAuth2SummitSpeakersApiController@getSpeakerEditPermission')->where('speaker_id', '[0-9]+');
+            Route::put('','OAuth2SummitSpeakersApiController@updateSpeaker')->where('speaker_id', 'me|[0-9]+');
             Route::delete('',[ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitSpeakersApiController@deleteSpeaker'])->where('speaker_id', 'me|[0-9]+');
             Route::get('', 'OAuth2SummitSpeakersApiController@getSpeaker');
             Route::post('/photo', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitSpeakersApiController@addSpeakerPhoto']);

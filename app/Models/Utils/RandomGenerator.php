@@ -29,8 +29,8 @@ final class RandomGenerator {
 
         // TODO Fails with "Could not gather sufficient random data" on IIS, temporarily disabled on windows
         if(!$isWin) {
-            if(function_exists('mcrypt_create_iv')) {
-                $e = mcrypt_create_iv(64, MCRYPT_DEV_URANDOM);
+            if(function_exists('random_bytes')) {
+                $e = random_bytes(64);
                 if($e !== false) return $e;
             }
         }

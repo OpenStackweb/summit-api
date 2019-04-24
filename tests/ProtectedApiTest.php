@@ -139,7 +139,6 @@ abstract class ProtectedApiTest extends \Tests\BrowserKitTestCase
     {
         $app = parent::createApplication();
         App::singleton('App\Models\ResourceServer\IAccessTokenService', 'AccessTokenServiceStub');
-
         return $app;
     }
 

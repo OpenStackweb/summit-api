@@ -30,6 +30,18 @@ Route::group([
         Route::get('', 'OAuth2MembersApiController@getAll');
     });
 
+    // speakers
+    Route::group(['prefix'=>'speakers'], function() {
+        Route::group(['prefix'=>'{speaker_id}'], function(){
+            Route::group(['prefix'=>'edit-permission'], function(){
+                Route::group(['prefix'=>'{token}'], function(){
+                    Route::get('approve', 'OAuth2SummitSpeakersApiController@approveSpeakerEditPermission');
+                    Route::get('decline', 'OAuth2SummitSpeakersApiController@declineSpeakerEditPermission');
+                });
+            });
+        });
+    });
+
     // summits
     Route::group(['prefix'=>'summits'], function() {
         Route::get('', [ 'middleware' => 'cache:'.Config::get('cache_api_response.get_summit_response_lifetime', 600), 'uses' => 'OAuth2SummitApiController@getSummits']);

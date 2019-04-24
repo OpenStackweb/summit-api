@@ -38,8 +38,8 @@ final class PresentationSlideSerializer extends PresentationMaterialSerializer
         if(!$slide instanceof PresentationSlide) return [];
         $values['has_file'] = false;
         if(empty($values['link'])){
-            $values['link']  =  $slide->hasSlide() ?  $slide->getSlide()->getUrl(): null;
-            $values['has_file'] = true;
+            $values['link']     = $slide->hasSlide() ?  $slide->getSlide()->getUrl(): null;
+            $values['has_file'] = !empty($values['link']);
         }
         return $values;
     }

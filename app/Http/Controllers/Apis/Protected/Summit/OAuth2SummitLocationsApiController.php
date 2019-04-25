@@ -1932,28 +1932,10 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
-
-            $content_type = $request->headers->has('Content-Type')  ? strtolower( $request->headers->get('Content-Type')) : null;
-
-            if (false !== $pos = strpos($content_type, ';')) {
-                $content_type = substr($content_type, 0, $pos);
-            }
-
-            if(!strstr($content_type, 'multipart/form-data'))
-                return $this->error400();
-
-            $parser   = new ParseMultiPartFormDataInputStream(file_get_contents('php://input'));
-            $input    = $parser->getInput();
-            $metadata = $input['parameters'];
-            $files    = $input['files'];
-            $file     = null;
-
-            if(isset($files['file']))
-                $file = $files['file'];
-
-            $rules      = SummitLocationImageValidationRulesFactory::build(true);
+            $data  = $request->all();
+            $rules = SummitLocationImageValidationRulesFactory::build(true);
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($metadata, $rules);
+            $validation = Validator::make($data, $rules);
 
             if ($validation->fails()) {
                 $messages = $validation->messages()->toArray();
@@ -1971,9 +1953,9 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 $map_id,
                 HTMLCleaner::cleanData
                 (
-                    $metadata, ['description']
+                    $data, ['description']
                 ),
-                $file
+                $request->hasFile('file') ? $request->file('file'):null
             );
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($map)->serialize());
@@ -2148,28 +2130,10 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         try {
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
-
-            $content_type = $request->headers->has('Content-Type')  ? strtolower( $request->headers->get('Content-Type')) : null;
-
-            if (false !== $pos = strpos($content_type, ';')) {
-                $content_type = substr($content_type, 0, $pos);
-            }
-
-            if(!strstr($content_type, 'multipart/form-data'))
-                return $this->error400();
-
-            $parser   = new ParseMultiPartFormDataInputStream(file_get_contents('php://input'));
-            $input    = $parser->getInput();
-            $metadata = $input['parameters'];
-            $files    = $input['files'];
-            $file     = null;
-
-            if(isset($files['file']))
-                $file = $files['file'];
-
-            $rules      = SummitLocationImageValidationRulesFactory::build(true);
+            $data  = $request->all();
+            $rules = SummitLocationImageValidationRulesFactory::build(true);
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($metadata, $rules);
+            $validation = Validator::make($data, $rules);
 
             if ($validation->fails()) {
                 $messages = $validation->messages()->toArray();
@@ -2187,9 +2151,9 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 $image_id,
                 HTMLCleaner::cleanData
                 (
-                    $metadata, ['description']
+                    $data, ['description']
                 ),
-                $file
+                $request->hasFile('file') ? $request->file('file'):null
             );
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($image)->serialize());

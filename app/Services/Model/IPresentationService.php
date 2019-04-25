@@ -1,5 +1,4 @@
 <?php namespace services\model;
-
 /**
  * Copyright 2016 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +20,6 @@ use models\summit\PresentationSlide;
 use models\summit\PresentationVideo;
 use models\summit\Summit;
 use Illuminate\Http\Request as LaravelRequest;
-use Illuminate\Http\UploadedFile;
 /**
  * Interface IPresentationService
  * @package services\model
@@ -107,7 +105,7 @@ interface IPresentationService
         LaravelRequest $request,
         $presentation_id,
         array $slide_data,
-        array $allowed_extensions = ['ppt', 'pptx', 'xps',  'key', 'pdf', 'jpg', 'jpeg', 'png', 'svg', 'bmp', 'tga', 'tiff', 'gif'],
+        array $allowed_extensions = [],
         $max_file_size = 10485760
     );
 
@@ -116,7 +114,6 @@ interface IPresentationService
      * @param int $presentation_id
      * @param int $slide_id
      * @param array $slide_data
-     * @param UploadedFile $file
      * @param array $allowed_extensions
      * @param int $max_file_size
      * @return mixed|PresentationSlide
@@ -128,8 +125,7 @@ interface IPresentationService
         $presentation_id,
         $slide_id,
         array $slide_data,
-        UploadedFile $file = null,
-        array $allowed_extensions = ['ppt', 'pptx', 'xps',  'key', 'pdf', 'jpg', 'jpeg', 'png', 'svg', 'bmp', 'tga', 'tiff', 'gif'],
+        array $allowed_extensions = [],
         $max_file_size = 10485760
     );
 

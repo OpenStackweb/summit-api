@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Http\Utils\FileTypes;
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -640,7 +642,13 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 'description',
             ];
 
-            $slide = $this->presentation_service->addSlideTo($request, $presentation_id, HTMLCleaner::cleanData($data, $fields));
+            $slide = $this->presentation_service->addSlideTo
+            (
+                $request,
+                $presentation_id,
+                HTMLCleaner::cleanData($data, $fields),
+                array_merge(FileTypes::ImagesExntesions, FileTypes::SlidesExtensions)
+            );
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($slide)->serialize());
         }
@@ -675,25 +683,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             if (is_null($summit)) return $this->error404();
 
 
-            $content_type = $request->headers->has('Content-Type')  ? strtolower( $request->headers->get('Content-Type')) : null;
-
-            if (false !== $pos = strpos($content_type, ';')) {
-                $content_type = substr($content_type, 0, $pos);
-            }
-            $file  = null;
             $data  = $request->all();
-            Log::debug("updatePresentationSlide: data ".var_dump($data));
-            if(strstr($content_type, 'multipart/form-data')) {
-                Log::debug("updatePresentationSlide: has multipart/form-data");
-                $parser = new ParseMultiPartFormDataInputStream(file_get_contents('php://input'));
-                $input  = $parser->getInput();
-                Log::debug("updatePresentationSlide: input ".var_dump($input));
-                $data   = $input['parameters'];
-                $files  = $input['files'];
-                $file   = null;
-                if (isset($files['file']))
-                    $file = $files['file'];
-            }
 
             $rules = [
                 'link'            => 'nullable|url',
@@ -720,7 +710,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $slide = $this->presentation_service->updateSlide
             (
-                $request, $presentation_id, $slide_id, HTMLCleaner::cleanData($data, $fields), $file
+                $request,
+                $presentation_id,
+                $slide_id,
+                HTMLCleaner::cleanData($data, $fields),
+                array_merge(FileTypes::ImagesExntesions, FileTypes::SlidesExtensions)
             );
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($slide)->serialize());

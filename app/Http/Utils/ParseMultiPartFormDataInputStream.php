@@ -235,7 +235,7 @@ final class ParseMultiPartFormDataInputStream
     {
         $string = trim($string);
         $data = [];
-        if ( preg_match('/name=\"(.*)\"\n*(.*)$/s', $string, $match) ) {
+        if ( preg_match('name=\"([^\"]*)\"[\n|\r]+([^\n\r].*)$', $string, $match) ) {
             if (preg_match('/^(.*)\[\]$/i', $match[1], $tmp)) {
                 $data[$tmp[1]][] = ($match[2] !== NULL ? $match[2] : '');
             } else {

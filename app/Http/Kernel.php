@@ -21,6 +21,7 @@ class Kernel extends HttpKernel
         \Illuminate\View\Middleware\ShareErrorsFromSession::class,
         \App\Http\Middleware\CORSMiddleware::class,
         \App\Http\Middleware\SecurityHTTPHeadersWriterMiddleware::class,
+        \App\Http\Middleware\ParseMultipartFormDataInputForNonPostRequests::class,
     ];
 
     /**

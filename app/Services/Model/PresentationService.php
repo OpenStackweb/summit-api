@@ -623,7 +623,7 @@ final class PresentationService
         LaravelRequest $request,
         $presentation_id,
         array $slide_data,
-        array $allowed_extensions =  ['ppt', 'pptx', 'xps',  'key', 'pdf', 'jpg', 'jpeg', 'png', 'svg', 'bmp', 'tga', 'tiff', 'gif'],
+        array $allowed_extensions =  [],
         $max_file_size = 10485760
     )
     {
@@ -653,7 +653,7 @@ final class PresentationService
             $slide = PresentationSlideFactory::build($slide_data);
 
             // check if there is any file sent
-            if($request->hasFile('file')){
+            if($hasFile){
                 $file = $request->file('file');
                 if (!in_array($file->extension(), $allowed_extensions)) {
                     throw new ValidationException(
@@ -684,7 +684,6 @@ final class PresentationService
      * @param int $presentation_id
      * @param int $slide_id
      * @param array $slide_data
-     * @param UploadedFile $file
      * @param array $allowed_extensions
      * @param int $max_file_size
      * @return mixed|PresentationSlide
@@ -696,8 +695,7 @@ final class PresentationService
         $presentation_id,
         $slide_id,
         array $slide_data,
-        UploadedFile $file = null,
-        array $allowed_extensions = ['ppt', 'pptx', 'xps',  'key', 'pdf', 'jpg', 'jpeg', 'png', 'svg', 'bmp', 'tga', 'tiff', 'gif'],
+        array $allowed_extensions = [],
         $max_file_size = 10485760
     ){
 
@@ -708,8 +706,7 @@ final class PresentationService
             $slide_data,
             $max_file_size,
             $allowed_extensions,
-            $slide_id,
-            $file
+            $slide_id
         ) {
 
             $presentation = $this->presentation_repository->getById($presentation_id);
@@ -730,7 +727,7 @@ final class PresentationService
 
 
             $hasLink = isset($slide_data['link']) && !empty($slide_data['link']);
-            $hasFile = !is_null($file);
+            $hasFile = $request->hasFile('file');
 
             if($hasFile && $hasLink){
                 throw new ValidationException("you must provide a file or a link, not both.");
@@ -751,6 +748,7 @@ final class PresentationService
 
             // check if there is any file sent
             if($hasFile){
+                $file = $request->file('file');
                 if (!in_array($file->extension(), $allowed_extensions)) {
                     throw new ValidationException(
                         sprintf("file does not has a valid extension '(%s)'.", implode("','", $allowed_extensions)));

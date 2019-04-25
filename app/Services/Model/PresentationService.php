@@ -720,7 +720,11 @@ final class PresentationService
             $hasFile = $request->hasFile('file');
 
             if($hasFile && $hasLink){
-                throw new ValidationException("you must set a file or a link, not both!");
+                throw new ValidationException("you must provide a file or a link, not both.");
+            }
+
+            if(!$hasLink && !$hasFile && !$slide->hasSlide()){
+                throw new ValidationException("you must provide a file or a link.");
             }
 
             PresentationSlideFactory::populate($slide, $slide_data);

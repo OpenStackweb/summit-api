@@ -35,4 +35,50 @@ DATA;
 
 
     }
+
+    public function testParseAttributes(){
+        $input = <<<DATA
+------WebKitFormBoundarySPB0RLYHwOEptxHU
+Content-Disposition: form-data; name="file"; filename="clint-eastwood_gettyimages-119202692jpg.jpg"
+Content-Type: image/jpeg
+
+
+------WebKitFormBoundarySPB0RLYHwOEptxHU
+Content-Disposition: form-data; name="class_name"
+
+PresentationSlide
+------WebKitFormBoundarySPB0RLYHwOEptxHU
+Content-Disposition: form-data; name="name"
+
+tets1 update update
+------WebKitFormBoundarySPB0RLYHwOEptxHU
+Content-Disposition: form-data; name="description"
+
+<p>test1</p>
+------WebKitFormBoundarySPB0RLYHwOEptxHU
+Content-Disposition: form-data; name="featured"
+
+false
+------WebKitFormBoundarySPB0RLYHwOEptxHU
+Content-Disposition: form-data; name="display_on_site"
+
+false
+------WebKitFormBoundarySPB0RLYHwOEptxHU
+Content-Disposition: form-data; name="link"
+
+https://www.google.com
+------WebKitFormBoundarySPB0RLYHwOEptxHU--
+  
+
+DATA;
+        $_SERVER['CONTENT_TYPE'] = 'multipart/form-data; boundary=----WebKitFormBoundarySPB0RLYHwOEptxHU';
+        $parser = new \utils\ParseMultiPartFormDataInputStream($input);
+
+        $res = $parser->getInput();
+
+
+        $this->assertTrue(isset($res['parameters']));
+        $this->assertTrue(count($res['parameters']) > 0);
+
+    }
 }

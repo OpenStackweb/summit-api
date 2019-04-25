@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -29,7 +28,6 @@ use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use services\model\IPresentationService;
 use utils\ParseMultiPartFormDataInputStream;
-
 /**
  * Class OAuth2PresentationApiController
  * @package App\Http\Controllers
@@ -682,18 +680,20 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             if (false !== $pos = strpos($content_type, ';')) {
                 $content_type = substr($content_type, 0, $pos);
             }
-
-            if(!strstr($content_type, 'multipart/form-data'))
-                return $this->error400();
-
-            $parser   = new ParseMultiPartFormDataInputStream(file_get_contents('php://input'));
-            $input    = $parser->getInput();
-            $data = $input['parameters'];
-            $files    = $input['files'];
-            $file     = null;
-
-            if(isset($files['file']))
-                $file = $files['file'];
+            $file  = null;
+            $data  = $request->all();
+            Log::debug("updatePresentationSlide: data ".var_dump($data));
+            if(strstr($content_type, 'multipart/form-data')) {
+                Log::debug("updatePresentationSlide: has multipart/form-data");
+                $parser = new ParseMultiPartFormDataInputStream(file_get_contents('php://input'));
+                $input  = $parser->getInput();
+                Log::debug("updatePresentationSlide: input ".var_dump($input));
+                $data   = $input['parameters'];
+                $files  = $input['files'];
+                $file   = null;
+                if (isset($files['file']))
+                    $file = $files['file'];
+            }
 
             $rules = [
                 'link'            => 'nullable|url',

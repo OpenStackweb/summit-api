@@ -233,20 +233,18 @@ final class ParseMultiPartFormDataInputStream
      */
     private function parameter($string)
     {
-        $data = [];
         $string = trim($string);
-        if(empty($string)) return $data;
-
-        if ( preg_match('/name=\"([^\"]*)\"[\n|\r]+([^\n\r].*)?\r$/s', $string, $match) ) {
+        $data = [];
+        if ( preg_match('/name=\"(.*)\"\n*(.*)$/s', $string, $match) ) {
             if (preg_match('/^(.*)\[\]$/i', $match[1], $tmp)) {
-                $data[$tmp[1]][] = (count($match) >=2 && $match[2] !== NULL ? $match[2] : '');
+                $data[$tmp[1]][] = ($match[2] !== NULL ? $match[2] : '');
             } else {
-                $data[$match[1]] = (count($match) >=2 && $match[2] !== NULL ? $match[2] : '');
+                $data[$match[1]] = ($match[2] !== NULL ? $match[2] : '');
             }
         }
-
         return $data;
     }
+
 
     /**
      * @function merge

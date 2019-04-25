@@ -619,6 +619,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             if (is_null($summit)) return $this->error404();
 
             $data  = $request->all();
+
             $rules = [
                 'file'            => 'required_without:link',
                 'link'            => 'required_without:file|url',

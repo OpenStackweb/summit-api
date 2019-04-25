@@ -235,16 +235,35 @@ final class ParseMultiPartFormDataInputStream
     {
         $string = trim($string);
         $data = [];
-        if ( preg_match('name=\"([^\"]*)\"[\n|\r]+([^\n\r].*)$', $string, $match) ) {
+        if ( preg_match('/name=\"([^\"]*)\"[\n|\r]+([^\n\r].*)$/s', $string, $match) ) {
+            $val = ($match[2] !== NULL ? $match[2] : '');
+            if(!empty($val) && is_bool($val))
+                $val = boolval($val);
+            if(!empty($val) && is_string($val) && self::checkBool($val))
+                $val = self::boolVal($val);
+            if(!empty($val) && is_int($val))
+                $val = intval($val);
+            if(!empty($val) && is_double($val))
+                $val = doubleval($val);
             if (preg_match('/^(.*)\[\]$/i', $match[1], $tmp)) {
-                $data[$tmp[1]][] = ($match[2] !== NULL ? $match[2] : '');
+                $data[$tmp[1]][] = $val;
             } else {
-                $data[$match[1]] = ($match[2] !== NULL ? $match[2] : '');
+                $data[$match[1]] = $val;
             }
         }
         return $data;
     }
 
+    static function checkBool($string){
+        $string = strtolower($string);
+        return (in_array($string, array("true", "false", "1", "0", "yes", "no"), true));
+    }
+
+    static function boolVal($string){
+        $string = strtolower($string);
+        if(in_array($string, ["true", "1", "yes"])) return true;
+        return false;
+    }
 
     /**
      * @function merge

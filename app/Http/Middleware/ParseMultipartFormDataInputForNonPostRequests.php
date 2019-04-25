@@ -13,6 +13,7 @@
  **/
 use Closure;
 use utils\ParseMultiPartFormDataInputStream;
+use Illuminate\Support\Facades\Log;
 /**
  * Class ParseMultipartFormDataInputForNonPostRequests
  * @package App\Http\Middleware
@@ -36,22 +37,18 @@ final class ParseMultipartFormDataInputForNonPostRequests
         if (preg_match('/multipart\/form-data/', $request->headers->get('Content-Type')) or
             preg_match('/multipart\/form-data/', $request->headers->get('content-type'))
         ) {
-            $parser     = new ParseMultiPartFormDataInputStream(file_get_contents('php://input'));
-            $params     = $parser->getInput();
-            $files      = [];
-            $parameters = [];
-            foreach ($params as $key => $param) {
-                if ($param instanceof \Symfony\Component\HttpFoundation\File\UploadedFile) {
-                    $files[$key] = $param;
-                } else {
-                    $parameters[$key] = $param;
-                }
-            }
+            $parser  = new ParseMultiPartFormDataInputStream(file_get_contents('php://input'));
+            $params = $parser->getInput();
+            $data   = $params['parameters'];
+            $files  = $params['files'];
             if (count($files) > 0) {
+                Log::debug("ParseMultipartFormDataInputForNonPostRequests: files ".json_encode($files));
                 $request->files->add($files);
             }
-            if (count($parameters) > 0) {
-                $request->request->add($parameters);
+
+            if (count($data) > 0) {
+                Log::debug("ParseMultipartFormDataInputForNonPostRequests: parameters ".json_encode($data));
+                $request->request->add($data);
             }
         }
         return $next($request);

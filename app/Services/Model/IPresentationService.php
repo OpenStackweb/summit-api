@@ -21,6 +21,7 @@ use models\summit\PresentationSlide;
 use models\summit\PresentationVideo;
 use models\summit\Summit;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Http\UploadedFile;
 /**
  * Interface IPresentationService
  * @package services\model
@@ -115,6 +116,7 @@ interface IPresentationService
      * @param int $presentation_id
      * @param int $slide_id
      * @param array $slide_data
+     * @param UploadedFile $file
      * @param array $allowed_extensions
      * @param int $max_file_size
      * @return mixed|PresentationSlide
@@ -126,6 +128,7 @@ interface IPresentationService
         $presentation_id,
         $slide_id,
         array $slide_data,
+        UploadedFile $file = null,
         array $allowed_extensions = ['ppt', 'pptx', 'xps',  'key', 'pdf', 'jpg', 'jpeg', 'png', 'svg', 'bmp', 'tga', 'tiff', 'gif'],
         $max_file_size = 10485760
     );

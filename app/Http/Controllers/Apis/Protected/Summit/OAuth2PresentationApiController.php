@@ -28,6 +28,7 @@ use Exception;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use services\model\IPresentationService;
+use utils\ParseMultiPartFormDataInputStream;
 
 /**
  * Class OAuth2PresentationApiController
@@ -675,7 +676,24 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $data  = $request->all();
+
+            $content_type = $request->headers->has('Content-Type')  ? strtolower( $request->headers->get('Content-Type')) : null;
+
+            if (false !== $pos = strpos($content_type, ';')) {
+                $content_type = substr($content_type, 0, $pos);
+            }
+
+            if(!strstr($content_type, 'multipart/form-data'))
+                return $this->error400();
+
+            $parser   = new ParseMultiPartFormDataInputStream(file_get_contents('php://input'));
+            $input    = $parser->getInput();
+            $data = $input['parameters'];
+            $files    = $input['files'];
+            $file     = null;
+
+            if(isset($files['file']))
+                $file = $files['file'];
 
             $rules = [
                 'link'            => 'nullable|url',
@@ -700,7 +718,10 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 'description',
             ];
 
-            $slide = $this->presentation_service->updateSlide($request, $presentation_id, $slide_id, HTMLCleaner::cleanData($data, $fields));
+            $slide = $this->presentation_service->updateSlide
+            (
+                $request, $presentation_id, $slide_id, HTMLCleaner::cleanData($data, $fields), $file
+            );
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($slide)->serialize());
         }

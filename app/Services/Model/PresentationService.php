@@ -38,6 +38,7 @@ use libs\utils\ITransactionService;
 use models\summit\Summit;
 use Illuminate\Http\Request as LaravelRequest;
 use App\Services\Model\IFolderService;
+use Illuminate\Http\UploadedFile;
 /**
  * Class PresentationService
  * @package services\model
@@ -642,7 +643,7 @@ final class PresentationService
             if (!$presentation instanceof Presentation)
                 throw new EntityNotFoundException('presentation not found!');
 
-            $hasLink = isset($slide_data['link']);
+            $hasLink = isset($slide_data['link']) && !empty($slide_data['link']);
             $hasFile = $request->hasFile('file');
 
             if($hasFile && $hasLink){
@@ -683,11 +684,11 @@ final class PresentationService
      * @param int $presentation_id
      * @param int $slide_id
      * @param array $slide_data
+     * @param UploadedFile $file
      * @param array $allowed_extensions
      * @param int $max_file_size
      * @return mixed|PresentationSlide
-     * @throws EntityNotFoundException
-     * @throws ValidationException
+     * @throws \Exception
      */
     public function updateSlide
     (
@@ -695,9 +696,11 @@ final class PresentationService
         $presentation_id,
         $slide_id,
         array $slide_data,
+        UploadedFile $file = null,
         array $allowed_extensions = ['ppt', 'pptx', 'xps',  'key', 'pdf', 'jpg', 'jpeg', 'png', 'svg', 'bmp', 'tga', 'tiff', 'gif'],
         $max_file_size = 10485760
     ){
+
         $slide = $this->tx_service->transaction(function () use
         (
             $request,
@@ -705,7 +708,8 @@ final class PresentationService
             $slide_data,
             $max_file_size,
             $allowed_extensions,
-            $slide_id
+            $slide_id,
+            $file
         ) {
 
             $presentation = $this->presentation_repository->getById($presentation_id);
@@ -724,8 +728,9 @@ final class PresentationService
             if (!$slide instanceof PresentationSlide)
                 throw new EntityNotFoundException('slide not found!');
 
-            $hasLink = isset($slide_data['link']);
-            $hasFile = $request->hasFile('file');
+
+            $hasLink = isset($slide_data['link']) && !empty($slide_data['link']);
+            $hasFile = !is_null($file);
 
             if($hasFile && $hasLink){
                 throw new ValidationException("you must provide a file or a link, not both.");
@@ -746,7 +751,6 @@ final class PresentationService
 
             // check if there is any file sent
             if($hasFile){
-                $file = $request->file('file');
                 if (!in_array($file->extension(), $allowed_extensions)) {
                     throw new ValidationException(
                         sprintf("file does not has a valid extension '(%s)'.", implode("','", $allowed_extensions)));

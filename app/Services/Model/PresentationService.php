@@ -641,6 +641,14 @@ final class PresentationService
 
             if (!$presentation instanceof Presentation)
                 throw new EntityNotFoundException('presentation not found!');
+
+            $hasLink = isset($slide_data['link']);
+            $hasFile = $request->hasFile('file');
+
+            if($hasFile && $hasLink){
+                throw new ValidationException("you must provide a file or a link, not both.");
+            }
+
             $slide = PresentationSlideFactory::build($slide_data);
 
             // check if there is any file sent

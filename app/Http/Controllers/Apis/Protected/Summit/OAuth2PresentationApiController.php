@@ -678,7 +678,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $data  = $request->all();
 
             $rules = [
-                'link'            => 'sometimes|required|url',
+                'link'            => 'nullable|url',
                 'name'            => 'sometimes|required|text:512',
                 'description'     => 'sometimes|required|string',
                 'display_on_site' => 'sometimes|required|boolean',
@@ -691,7 +691,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             if ($validation->fails()) {
                 $ex = new ValidationException;
-                $ex->setMessages($validation->messaupdateSlideges()->toArray());
+                $ex->setMessages($validation->messages()->toArray());
                 throw $ex;
             }
 

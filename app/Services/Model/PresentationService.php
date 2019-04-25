@@ -23,6 +23,7 @@ use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackAnswer
 use Illuminate\Support\Facades\Event;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\IFolderRepository;
 use models\main\ITagRepository;
 use models\main\Member;
 use models\summit\ISpeakerRepository;
@@ -71,12 +72,18 @@ final class PresentationService
     private $file_uploader;
 
     /**
+     * @var IFolderRepository
+     */
+    private $folder_repository;
+
+    /**
      * PresentationService constructor.
      * @param ISummitEventRepository $presentation_repository
      * @param ISpeakerRepository $speaker_repository
      * @param ITagRepository $tag_repository
      * @param IFolderService $folder_service
      * @param IFileUploader $file_uploader
+     * @param IFolderRepository $folder_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -86,6 +93,7 @@ final class PresentationService
         ITagRepository $tag_repository,
         IFolderService $folder_service,
         IFileUploader $file_uploader,
+        IFolderRepository $folder_repository,
         ITransactionService $tx_service
     )
     {
@@ -95,6 +103,7 @@ final class PresentationService
         $this->tag_repository = $tag_repository;
         $this->folder_service = $folder_service;
         $this->file_uploader = $file_uploader;
+        $this->folder_repository = $folder_repository;
     }
 
     /**
@@ -707,10 +716,24 @@ final class PresentationService
             if (!$slide instanceof PresentationSlide)
                 throw new EntityNotFoundException('slide not found!');
 
+            $hasLink = isset($slide_data['link']);
+            $hasFile = $request->hasFile('file');
+
+            if($hasFile && $hasLink){
+                throw new ValidationException("you must set a file or a link, not both!");
+            }
+
             PresentationSlideFactory::populate($slide, $slide_data);
 
+            if($hasLink && $slide->hasSlide()){
+                // drop file
+                $file = $slide->getSlide();
+                $this->folder_repository->delete($file);
+                $slide->clearSlide();
+            }
+
             // check if there is any file sent
-            if($request->hasFile('file')){
+            if($hasFile){
                 $file = $request->file('file');
                 if (!in_array($file->extension(), $allowed_extensions)) {
                     throw new ValidationException(
@@ -723,6 +746,7 @@ final class PresentationService
 
                 $slideFile = $this->file_uploader->build($file, sprintf('summits/%s/presentations/%s/slides/', $presentation->getSummitId(), $presentation_id), false);
                 $slide->setSlide($slideFile);
+                $slide->clearLink();
             }
 
             if (isset($data['order']) && intval($slide_data['order']) != $slide->getOrder()) {

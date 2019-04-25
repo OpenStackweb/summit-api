@@ -50,6 +50,10 @@ class PresentationSlide extends PresentationMaterial
         return $this->slide;
     }
 
+    public function clearSlide(){
+        $this->slide = null;
+    }
+
     /**
      * @param File $slide
      */
@@ -72,6 +76,11 @@ class PresentationSlide extends PresentationMaterial
     public function setLink($link)
     {
         $this->link = $link;
+    }
+
+    public function clearLink():void
+    {
+        $this->link = "";
     }
 
     /**

@@ -13,14 +13,16 @@ class CreateApisTable extends Migration
 	 */
 	public function up()
 	{
-		Schema::create('apis', function(Blueprint $table)
-		{
-			$table->bigIncrements('id');
-			$table->string('name',255)->unique();
-			$table->text('description')->nullable();
-			$table->boolean('active')->default(true);
-			$table->timestamps();
-		});
+        if (!Schema::hasTable('apis')) {
+            Schema::create('apis', function(Blueprint $table)
+            {
+                $table->bigIncrements('id');
+                $table->string('name',255)->unique();
+                $table->text('description')->nullable();
+                $table->boolean('active')->default(true);
+                $table->timestamps();
+            });
+        }
 	}
 
 	/**

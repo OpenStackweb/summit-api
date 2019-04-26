@@ -21,9 +21,15 @@ class UpdateTableApiEndpoint extends Migration
         if (!Schema::hasColumn('api_endpoints', 'rate_limit')) {
             Schema::table('api_endpoints', function (Blueprint $table) {
                 $table->bigInteger("rate_limit")->unsigned()->default(0);
+            });
+        }
+
+        if (!Schema::hasColumn('api_endpoints', 'rate_limit_decay')) {
+            Schema::table('api_endpoints', function (Blueprint $table) {
                 $table->bigInteger("rate_limit_decay")->unsigned()->default(0);
             });
         }
+
     }
 
     /**

@@ -300,7 +300,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
      */
     public function getTwitterName()
     {
-        return $this->twitter_name;
+        return urlencode($this->twitter_name);
     }
 
     /**
@@ -1608,10 +1608,10 @@ SQL;
         if($this->hasPhoto() && $photo = $this->getPhoto()){
             $photoUrl =  $photo->getUrl();
         }
-        if(empty($photo_url)  && $this->hasMember() && $this->member->hasPhoto() && $photo = $this->member->getPhoto()){
+        if(empty($photoUrl)  && $this->hasMember() && $this->member->hasPhoto() && $photo = $this->member->getPhoto()){
             $photoUrl =  $photo->getUrl();
         }
-        if(empty($photo_url) && !empty($this->getTwitterName()) ){
+        if(empty($photoUrl) && !empty($this->getTwitterName()) ){
             $twitterName = $this->getTwitterName();
             $photoUrl = sprintf("https://avatars.io/twitter/%s", trim(trim($twitterName, '@')));
         }

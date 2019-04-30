@@ -408,7 +408,7 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
     public function testGetSpeaker(){
 
         $params = [
-            'speaker_id' => 2884
+            'speaker_id' => 12927
         ];
 
         $headers = [

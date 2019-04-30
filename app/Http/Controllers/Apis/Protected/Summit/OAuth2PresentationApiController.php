@@ -158,7 +158,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $rules =
             [
-                'you_tube_id'     => 'required|alpha_dash',
+                'youtube_id'      => 'required|alpha_dash',
                 'name'            => 'sometimes|required|text:512',
                 'description'     => 'sometimes|required|string',
                 'featured'        => 'sometimes|required|boolean',
@@ -219,7 +219,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $data = Input::json();
 
             $rules = [
-                'you_tube_id'     => 'required|alpha_dash',
+                'youtube_id'     => 'required|alpha_dash',
                 'name'            => 'sometimes|required|text:512',
                 'description'     => 'sometimes|required|string',
                 'display_on_site' => 'sometimes|required|boolean',

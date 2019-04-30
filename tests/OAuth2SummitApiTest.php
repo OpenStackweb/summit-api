@@ -942,7 +942,7 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
 
         $video_data = array
         (
-            'you_tube_id' => 'cpHa7kSOur0',
+            'youtube_id' => 'cpHa7kSOur0',
             'name' => 'test video',
             'description' => 'test video',
             'display_on_site' => true,
@@ -984,7 +984,7 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
 
         $video_data = array
         (
-            'you_tube_id' => 'cpHa7kSOur0',
+            'youtube_id' => 'cpHa7kSOur0',
             'name' => 'test video update',
         );
 

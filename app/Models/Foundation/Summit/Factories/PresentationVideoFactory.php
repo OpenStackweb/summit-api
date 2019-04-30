@@ -34,8 +34,8 @@ final class PresentationVideoFactory
     public static function populate(PresentationVideo $video, array $data){
 
         PresentationMaterialFactory::populate($video, $data);
-        if(isset($data['you_tube_id']))
-            $video->setYoutubeId(trim($data['you_tube_id']));
+        if(isset($data['youtube_id']))
+            $video->setYoutubeId(trim($data['youtube_id']));
         if($video->getId() == 0)
             $video->setDateUploaded(new \DateTime());
         return $video;

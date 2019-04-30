@@ -19,7 +19,7 @@ final class PresentationVideoSerializer extends PresentationMaterialSerializer
 {
     protected static $array_mappings =
     [
-        'YouTubeID'    => 'you_tube_id:json_text',
+        'YouTubeID'    => 'youtube_id:json_text',
         'DateUploaded' => 'data_uploaded:datetime_epoch',
         'Highlighted'  => 'highlighted:json_boolean',
         'Views'        => 'views:json_int',

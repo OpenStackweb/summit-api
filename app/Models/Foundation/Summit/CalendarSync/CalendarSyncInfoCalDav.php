@@ -104,6 +104,13 @@ class CalendarSyncInfoCalDav extends CalendarSyncInfo
      */
     public function getServer(){
         $result = parse_url($this->user_principal_url);
+
+        if(!$result) throw new \InvalidArgumentException(sprintf("user_principal_url %s is invalid", $this->user_principal_url));
+        if(!isset($result['scheme']))
+            throw new \InvalidArgumentException(sprintf("user_principal_url %s is invalid", $this->user_principal_url));
+        if(!isset($result['host']))
+            throw new \InvalidArgumentException(sprintf("user_principal_url %s is invalid", $this->user_principal_url));
+
         return $result['scheme']."://".$result['host'];
     }
 

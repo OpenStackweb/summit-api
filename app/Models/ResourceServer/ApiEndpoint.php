@@ -255,25 +255,27 @@ class ApiEndpoint extends ResourceServerEntity implements IApiEndpoint
     /**
 	* @return string
 	*/
-	public function getScope()
+	public function getFriendlyScopes():string
 	{
-        return CacheFacade::remember
-        (
-            'endpoint_scopes_'.$this->id,
-            Config::get("cache_regions.region_api_scopes_lifetime", 1140),
-            function() {
-                $scope = '';
-                foreach ($this->scopes as $s) {
-                    if (!$s->isActive()) {
-                        continue;
-                    }
-                    $scope = $scope . $s->getName() . ' ';
-                }
-                $scope = trim($scope);
-                return $scope;
-            }
-        );
+	    $scopes = $this->getScopesNames();
+	    return implode(' ', $scopes);
 	}
+
+    /**
+     * @return string[]
+     */
+	public function getScopesNames(): array {
+        $scopes = [];
+
+        foreach ($this->scopes as $s) {
+            if (!$s->isActive()) {
+                continue;
+            }
+            $scopes[] = $s->getName();
+        }
+
+        return $scopes;
+    }
 
     /**
      * @param IApiScope $scope

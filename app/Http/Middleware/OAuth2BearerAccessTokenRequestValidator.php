@@ -160,11 +160,9 @@ class OAuth2BearerAccessTokenRequestValidator
             }
             //check scopes
             Log::debug('checking token scopes ...');
-            $endpoint_scopes = $endpoint->getScope();
-            Log::debug(sprintf("endpoint scopes %s", $endpoint_scopes));
+            $endpoint_scopes = $endpoint->getScopesNames();
+            Log::debug(sprintf("endpoint scopes %s", implode(' ',$endpoint_scopes)));
             Log::debug(sprintf("token scopes %s", $token_info->getScope()));
-
-            $endpoint_scopes = explode(' ', $endpoint_scopes);
             $token_scopes    = explode(' ', $token_info->getScope());
 
             //check token available scopes vs. endpoint scopes

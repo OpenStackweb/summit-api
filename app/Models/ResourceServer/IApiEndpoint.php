@@ -57,7 +57,12 @@ interface IApiEndpoint extends IEntity
     /**
      * @return string
      */
-    public function getScope();
+    public function getFriendlyScopes();
+
+    /**
+     * @return string[]
+     */
+    public function getScopesNames(): array;
 
     /**
      * @return bool

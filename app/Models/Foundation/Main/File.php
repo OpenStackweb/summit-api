@@ -275,11 +275,13 @@ class File extends SilverstripeBaseModel
      */
     public function getCloudLink()
     {
+        $relativeLink = ltrim($this->getRelativeLinkFor(), '/');
+
         return
-            sprintf("%s/%s%s",
+            sprintf("%s/%s/%s",
                 Config::get("cloudstorage.base_url") ,
                 Config::get("cloudstorage.assets_container"),
-                $this->getRelativeLinkFor());
+                $relativeLink);
     }
 
     /**
@@ -287,12 +289,14 @@ class File extends SilverstripeBaseModel
      * @return string
      */
     public static function getCloudLinkForImages(string $imageRelativePath):string {
+        $imageRelativePath = ltrim($$imageRelativePath, '/');
+
+
         return
-            sprintf("%s/%s%s",
+            sprintf("%s/%s/%s",
                 Config::get("cloudstorage.base_url") ,
                 Config::get("cloudstorage.images_container"),
-                $imageRelativePath
-            );
+                $imageRelativePath);
     }
 
     /**

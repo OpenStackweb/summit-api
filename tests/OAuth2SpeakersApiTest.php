@@ -288,7 +288,7 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
     {
         $params = [
 
-            'id'       => 23,
+            'id'       => 26,
             'page'     => 1,
             'per_page' => 10,
             'order'    => '+id'

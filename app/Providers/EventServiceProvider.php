@@ -40,6 +40,7 @@ use App\Factories\EntityEvents\TrackActionEntityEventFactory;
 use App\Factories\EntityEvents\TrackGroupActionActionEntityEventFactory;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\App;
 /**
  * Class EventServiceProvider
  * @package App\Providers
@@ -68,6 +69,12 @@ final class EventServiceProvider extends ServiceProvider
         Event::listen(\App\Events\MyScheduleAdd::class, function($event)
         {
             EntityEventPersister::persist(MyScheduleAddEntityEventFactory::build($event));
+        });
+
+        Event::listen(\Illuminate\Mail\Events\MessageSending::class, function($event){
+            if(App::environment() === 'dev' || App::environment() === 'testing' ){
+                $event->message->setTo(env('DEV_EMAIL_TO'));
+            }
         });
 
         Event::listen(\App\Events\MyFavoritesAdd::class, function($event)

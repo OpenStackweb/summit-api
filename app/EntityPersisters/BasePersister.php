@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use LaravelDoctrine\ORM\Facades\Registry;
+use models\utils\SilverstripeBaseModel;
 /**
  * Class BasePersister
  * @package App\EntityPersisters
@@ -23,7 +24,7 @@ abstract class BasePersister
      * @param array $bindings
      */
     protected static function insert($sql, array $bindings, array $types){
-        $em = Registry::getManager('ss');
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
         $em->getConnection()->executeUpdate($sql, $bindings, $types);
     }
 }

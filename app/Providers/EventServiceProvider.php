@@ -72,9 +72,11 @@ final class EventServiceProvider extends ServiceProvider
         });
 
         Event::listen(\Illuminate\Mail\Events\MessageSending::class, function($event){
-            if(App::environment() === 'dev' || App::environment() === 'testing' ){
-                $event->message->setTo(env('DEV_EMAIL_TO'));
+            $devEmail = env('DEV_EMAIL_TO');
+            if((App::environment() === 'dev' || App::environment() === 'testing') && !empty($devEmail)){
+                $event->message->setTo(explode(",", $devEmail));
             }
+            return true;
         });
 
         Event::listen(\App\Events\MyFavoritesAdd::class, function($event)

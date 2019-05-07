@@ -66,7 +66,7 @@ final class DoctrineTest extends TestCase
     }
 
     public function testGetMember(){
-        $em = Registry::getManager('ss');
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
         $repo   =  $em->getRepository(\models\main\Member::class);
         $me = $repo->find(11624);
         $this->assertTrue(!is_null($me));
@@ -84,7 +84,7 @@ final class DoctrineTest extends TestCase
     }
 
     public function testGetFile(){
-        $em = Registry::getManager('ss');
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
         $repo   =  $em->getRepository(\models\main\File::class);
         $file = $repo->find(1);
         $this->assertTrue(!is_null($file));
@@ -98,7 +98,7 @@ final class DoctrineTest extends TestCase
         $newExternalLocation->setType(SummitExternalLocation::Lounge);
         $newExternalLocation->setSummit($summit);
         $summit->getLocations()->add($newExternalLocation);
-        $em = Registry::getManager('ss');
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
         $em->flush();
     }
 

@@ -112,9 +112,9 @@ class SpeakerEditPermissionRequest extends SilverstripeBaseModel
     }
 
     /**
-     * @return DateTime
+     * @return ?DateTime
      */
-    public function getApprovedDate():DateTime
+    public function getApprovedDate():?DateTime
     {
         return $this->approved_date;
     }

@@ -144,7 +144,7 @@ abstract class AbstractSerializer implements IModelSerializer
             foreach ($mappings as $attribute => $mapping) {
                 $mapping = preg_split('/:/', $mapping);
                 if(count($fields) > 0 && !in_array($mapping[0], $fields)) continue;
-
+                $value = null;
                 foreach($method_prefix as $prefix){
                     if(method_exists($this->object, $prefix.$attribute)){
                         $value   = call_user_func([$this->object, $prefix.$attribute ]);

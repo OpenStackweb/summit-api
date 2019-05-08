@@ -289,8 +289,7 @@ class File extends SilverstripeBaseModel
      * @return string
      */
     public static function getCloudLinkForImages(string $imageRelativePath):string {
-        $imageRelativePath = ltrim($$imageRelativePath, '/');
-
+        $imageRelativePath = ltrim($imageRelativePath, '/');
 
         return
             sprintf("%s/%s/%s",

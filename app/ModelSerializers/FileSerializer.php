@@ -19,8 +19,8 @@ use ModelSerializers\SilverStripeSerializer;
 class FileSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
-        'Title'     => 'title:json_string',
-        'Name'      => 'name:json_string',
-        'getUrl'    => 'url:json_string',
+        'Title'   => 'title:json_string',
+        'Name'    => 'name:json_string',
+        'Url'     => 'url:json_string',
     ];
 }

@@ -398,14 +398,14 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $rules =
                 [
-                    'title'                     => 'sometimes|string|max:100',
-                    'description'               => 'sometimes|string',
-                    'social_description'        => 'sometimes|string|max:100',
-                    'level'                     => 'sometimes|in:Beginner,Intermediate,Advanced,N/A',
-                    'attendees_expected_learnt' => 'sometimes|string|max:1000',
-                    'type_id'                   => 'sometimes|integer',
-                    'track_id'                  => 'sometimes|integer',
-                    'attending_media'           => 'sometimes|boolean',
+                    'title'                     => 'required|string|max:100',
+                    'description'               => 'required|string',
+                    'social_description'        => 'required|string|max:100',
+                    'level'                     => 'required|in:Beginner,Intermediate,Advanced,N/A',
+                    'attendees_expected_learnt' => 'required|string|max:1000',
+                    'type_id'                   => 'required|integer',
+                    'track_id'                  => 'required|integer',
+                    'attending_media'           => 'required|boolean',
                     'links'                     => 'sometimes|url_array',
                     'extra_questions'           => 'sometimes|entity_value_array',
                     'tags'                      => 'sometimes|string_array',

@@ -423,6 +423,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
                 if($presentation->getSummit()->getId() != $selectionPlan->getSummitId()) return false;
                 if($presentation->getModeratorId() == $this->getId()) return false;
                 if($presentation->getCreatorId() == $this->getMemberId()) return false;
+                return true;
             });
             return $res->toArray();
         }
@@ -450,6 +451,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
                 if($presentation->getSummit()->getId() != $summit->getId()) return false;
                 if($presentation->getModeratorId() == $this->getId()) return false;
                 if($presentation->getCreatorId() == $this->getMemberId()) return false;
+                return true;
             });
             return $res->toArray();
         }

@@ -35,6 +35,7 @@ use models\main\EmailCreationRequest;
 use models\main\File;
 use models\main\IEmailCreationRequestRepository;
 use models\main\IMemberRepository;
+use models\main\Member;
 use models\main\MemberPromoCodeEmailCreationRequest;
 use models\main\SpeakerCreationEmailCreationRequest;
 use models\main\SpeakerSelectionAnnouncementEmailCreationRequest;
@@ -170,13 +171,14 @@ final class SpeakerService
 
     /**
      * @param array $data
-     * @throws ValidationException
+     * @param null|Member $creator
      * @return PresentationSpeaker
+     * @throws ValidationException
      */
-    public function addSpeaker(array $data)
+    public function addSpeaker(array $data, ?Member $creator = null)
     {
 
-        return $this->tx_service->transaction(function () use ($data) {
+        return $this->tx_service->transaction(function () use ($data, $creator) {
 
             $speaker = new PresentationSpeaker();
             $speaker->setCreatedFromApi(true);
@@ -236,6 +238,12 @@ final class SpeakerService
             $email_request->setSpeaker($speaker);
             $this->email_creation_request_repository->add($email_request);
 
+            if(!is_null($creator)){
+                // create edit permission for creator
+                $request = SpeakerEditPermissionRequestFactory::build($speaker, $creator);
+                $request->approve();
+                $this->speaker_edit_permisssion_repository->add($request);
+            }
             return $speaker;
         });
     }
@@ -1086,6 +1094,13 @@ final class SpeakerService
                 throw new EntityNotFoundException();
 
             $request = $this->speaker_edit_permisssion_repository->getBySpeakerAndRequestor($speaker, $requestor);
+
+            if(is_null($request) && $speaker->canBeEditedBy($requestor)){
+                $request = SpeakerEditPermissionRequestFactory::build($speaker, $requestor);
+                $request->approve();
+                $this->speaker_edit_permisssion_repository->add($request);
+                return $request;
+            }
 
             if(is_null($request))
                 throw new EntityNotFoundException();

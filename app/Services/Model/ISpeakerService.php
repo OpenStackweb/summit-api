@@ -16,6 +16,7 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\EmailCreationRequest;
 use models\main\File;
+use models\main\Member;
 use models\summit\PresentationSpeaker;
 use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
 use models\summit\SpeakerSummitRegistrationPromoCode;
@@ -37,10 +38,11 @@ interface ISpeakerService
 
     /**
      * @param array $data
+     * @param null|Member $creator
      * @return PresentationSpeaker
      * @throws ValidationException
      */
-    public function addSpeaker(array $data);
+    public function addSpeaker(array $data, ?Member $creator = null);
 
     /**
      * @param Summit $summit

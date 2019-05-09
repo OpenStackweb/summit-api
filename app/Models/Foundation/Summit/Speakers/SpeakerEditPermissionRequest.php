@@ -153,7 +153,6 @@ class SpeakerEditPermissionRequest extends SilverstripeBaseModel
         return md5($token);
     }
 
-
     public function approve():void{
         $this->approved = true;
         $this->approved_date = new \DateTime('now', new \DateTimeZone('UTC'));

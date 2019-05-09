@@ -766,6 +766,14 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             if (!Request::isJson()) return $this->error400();
             $data = Input::json();
 
+            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
+            if (is_null($current_member_id))
+                return $this->error403();
+
+            $creator = $this->member_repository->getById($current_member_id);
+            if (is_null($creator))
+                return $this->error403();
+
             $rules = [
                 'title' => 'required|string|max:100',
                 'first_name' => 'required|string|max:100',
@@ -810,7 +818,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'notes'
             ];
 
-            $speaker = $this->service->addSpeaker(HTMLCleaner::cleanData($data->all(), $fields));
+            $speaker = $this->service->addSpeaker(HTMLCleaner::cleanData($data->all(), $fields), $creator);
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($speaker, SerializerRegistry::SerializerType_Private)->serialize());
         } catch (ValidationException $ex1) {
@@ -1214,7 +1222,6 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             return $this->error500($ex);
         }
     }
-
 
     /**
      * @param $speaker_id

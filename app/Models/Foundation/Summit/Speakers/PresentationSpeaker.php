@@ -1634,6 +1634,7 @@ SQL;
      */
     public function canBeEditedBy(Member $member):bool{
         if($member->isAdmin()) return true;
+        if($this->getMemberId() == $member->getId()) return true;
         $criteria = Criteria::create();
         $criteria
             ->where(Criteria::expr()->eq('requested_by', $member))

@@ -702,14 +702,30 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
 
         try {
 
+            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
+            if (is_null($current_member_id))
+                return $this->error403();
+
+            $member = $this->member_repository->getById($current_member_id);
+            if (is_null($member))
+                return $this->error403();
+
+            $speaker = $this->speaker_repository->getById($speaker_id);
+            if (is_null($speaker)) return $this->error404();
+
+            if(!$speaker->canBeEditedBy($member)){
+                return $this->error403();
+            }
+
             $file = $request->file('file');
             if (is_null($file)) {
                 return $this->error412(array('file param not set!'));
             }
 
-            $res = $this->service->addSpeakerPhoto($speaker_id, $file);
+            $photo = $this->service->addSpeakerPhoto($speaker_id, $file);
 
-            return !is_null($res) ? $this->created($res->getId()) : $this->error400();
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($photo)->serialize());
+
         } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();

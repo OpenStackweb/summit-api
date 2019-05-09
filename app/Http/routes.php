@@ -652,7 +652,7 @@ Route::group([
             Route::put('','OAuth2SummitSpeakersApiController@updateSpeaker')->where('speaker_id', 'me|[0-9]+');
             Route::delete('',[ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitSpeakersApiController@deleteSpeaker'])->where('speaker_id', 'me|[0-9]+');
             Route::get('', 'OAuth2SummitSpeakersApiController@getSpeaker');
-            Route::post('/photo', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitSpeakersApiController@addSpeakerPhoto']);
+            Route::post('/photo', 'OAuth2SummitSpeakersApiController@addSpeakerPhoto');
         });
     });
 

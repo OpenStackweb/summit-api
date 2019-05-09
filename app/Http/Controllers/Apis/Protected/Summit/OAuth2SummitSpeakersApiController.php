@@ -875,9 +875,9 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             }
 
             $rules = [
-                'title' => 'sometimes|string|max:100',
-                'first_name' => 'sometimes|string|max:100',
-                'last_name' => 'sometimes|string|max:100',
+                'title' => 'required|string|max:100',
+                'first_name' => 'required|string|max:100',
+                'last_name' => 'required|string|max:100',
                 'bio' => 'sometimes|string',
                 'notes' => 'sometimes|string',
                 'irc' => 'sometimes|string|max:50',

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\ModelSerializers\CCLA\TeamSerializer;
+use App\ModelSerializers\FileSerializer;
 use App\ModelSerializers\LanguageSerializer;
 use App\ModelSerializers\Marketplace\CloudServiceOfferedSerializer;
 use App\ModelSerializers\Marketplace\ConfigurationManagementTypeSerializer;
@@ -257,6 +258,8 @@ final class SerializerRegistry
         // ccla
 
         $this->registry['Team']                               = TeamSerializer::class;
+
+        $this->registry['File']                               = FileSerializer::class;
     }
 
     /**

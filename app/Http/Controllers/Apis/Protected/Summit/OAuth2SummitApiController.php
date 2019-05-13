@@ -209,7 +209,6 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 );
             }
 
-
             $summit = $this->summit_service->addSummit($payload);
             $serializer_type = $this->serializer_type_selector->getSerializerType();
             return $this->created(SerializerRegistry::getInstance()->getSerializer($summit, $serializer_type)->serialize());

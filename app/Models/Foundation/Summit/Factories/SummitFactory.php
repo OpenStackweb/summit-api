@@ -137,6 +137,10 @@ final class SummitFactory
             $summit->setLink(trim($data['link']));
         }
 
+        if(isset($data['slug']) ){
+            $summit->setRawSlug(trim($data['slug']));
+        }
+
         if(isset($data['secondary_registration_link']) ){
             $summit->setSecondaryRegistrationLink(trim($data['secondary_registration_link']));
         }

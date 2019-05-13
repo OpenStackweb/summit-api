@@ -2406,4 +2406,18 @@ SQL;
         $track_tag_group = $this->track_tag_groups->matching($criteria)->first();
         return $track_tag_group === false ? null : $track_tag_group;
     }
+
+    /**
+     * @return string
+     */
+    public function getRawSlug():string{
+        return $this->slug;
+    }
+
+    /**
+     * @param string $slug
+     */
+    public function setRawSlug(string $slug):void{
+        $this->slug = $slug;
+    }
 }

@@ -51,6 +51,7 @@ class SummitSerializer extends SilverStripeSerializer
         'TimeZoneId'                                     => 'time_zone_id:json_string',
         'SecondaryRegistrationLink'                      => 'secondary_registration_link:json_string',
         'SecondaryRegistrationLabel'                     => 'secondary_registration_label:json_string',
+        'RawSlug'                                        => 'slug:json_string',
     ];
 
     protected static $allowed_relations = [

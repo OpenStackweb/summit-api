@@ -339,7 +339,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $data = Input::json();
 
             $rules = [
-                'title'                          => 'required|string|max:100',
+                'title'                          => 'required|string',
                 'description'                    => 'required|string',
                 'type_id'                        => 'required|integer',
                 'location_id'                    => 'sometimes|integer',
@@ -351,12 +351,12 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 'rsvp_max_user_number'           => 'required_with:rsvp_template_id|integer|min:0',
                 'rsvp_max_user_wait_list_number' => 'required_with:rsvp_template_id|integer|min:0',
                 'head_count'                     => 'sometimes|integer',
-                'social_description'             => 'sometimes|string|max:100',
+                'social_description'             => 'sometimes|string',
                 'allow_feedback'                 => 'sometimes|boolean',
                 'tags'                           => 'sometimes|string_array',
                 'sponsors'                       => 'sometimes|int_array',
                 // presentation rules
-                'attendees_expected_learnt'      =>  'sometimes|string|max:1000',
+                'attendees_expected_learnt'      =>  'sometimes|string',
                 'attending_media'                =>  'sometimes|boolean',
                 'to_record'                      =>  'sometimes|boolean',
                 'speakers'                       =>  'sometimes|int_array',
@@ -424,14 +424,14 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
             $rules = [
                 // summit event rules
-                'title'                          => 'sometimes|string|max:100',
+                'title'                          => 'sometimes|string',
                 'description'                    => 'sometimes|string',
                 'rsvp_link'                      => 'sometimes|url',
                 'rsvp_template_id'               => 'sometimes|integer',
                 'rsvp_max_user_number'           => 'required_with:rsvp_template_id|integer|min:0',
                 'rsvp_max_user_wait_list_number' => 'required_with:rsvp_template_id|integer|min:0',
                 'head_count'                     => 'sometimes|integer',
-                'social_description'             => 'sometimes|string|max:100',
+                'social_description'             => 'sometimes|string',
                 'location_id'                    => 'sometimes|integer',
                 'start_date'                     => 'sometimes|date_format:U',
                 'end_date'                       => 'sometimes|required_with:start_date|date_format:U|after:start_date',
@@ -441,7 +441,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 'tags'                           => 'sometimes|string_array',
                 'sponsors'                       => 'sometimes|int_array',
                 // presentation rules
-                'attendees_expected_learnt'      => 'sometimes|string|max:1000',
+                'attendees_expected_learnt'      => 'sometimes|string',
                 'attending_media'                => 'sometimes|boolean',
                 'to_record'                      => 'sometimes|boolean',
                 'speakers'                       => 'sometimes|int_array',

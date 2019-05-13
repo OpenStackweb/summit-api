@@ -396,6 +396,11 @@ final class PresentationService
                     ['type_id' => $event_type->getIdentifier()]));
             }
 
+            if($presentation->getId() > 0 && $presentation->getTypeId() != $event_type->getId()){
+                // presentation is not new and we are trying to change the presentation type
+                throw new ValidationException("you cant change the presentation type");
+            }
+
             $track = $summit->getPresentationCategory(intval($data['track_id']));
             if (is_null($track)) {
                 throw new EntityNotFoundException(
@@ -577,6 +582,13 @@ final class PresentationService
 
             if (!$presentation instanceof Presentation)
                 throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
+
+            if($presentation->isSubmitted()){
+                throw new ValidationException
+                (
+                    sprintf("presentation %s is not allowed to mark as completed", $presentation_id)
+                );
+            }
 
             if (!$presentation->canEdit($current_speaker))
                 throw new ValidationException(sprintf("member %s can not edit presentation %s",

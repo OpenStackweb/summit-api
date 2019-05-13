@@ -817,4 +817,11 @@ class Presentation extends SummitEvent
 
     use OrderableChilds;
 
+    /**
+     * @return bool
+     */
+    public function isSubmitted():bool {
+        return $this->progress == Presentation::PHASE_COMPLETE && $this->status == Presentation::STATUS_RECEIVED;
+    }
+
 }

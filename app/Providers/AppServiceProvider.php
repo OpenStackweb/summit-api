@@ -16,6 +16,8 @@ use models\main\PushNotificationMessagePriority;
 class AppServiceProvider extends ServiceProvider
 {
 
+    const DefaultSchema = 'https://';
+
     static $event_dto_fields = [
         'id',
         'title',
@@ -200,12 +202,17 @@ class AppServiceProvider extends ServiceProvider
         Validator::extend('url_array', function($attribute, $value, $parameters, $validator)
         {
             $validator->addReplacer('url_array', function($message, $attribute, $rule, $parameters) use ($validator) {
-                return sprintf("%s should be an array of urls", $attribute);
+                return sprintf("%s should a list of valid urls.", $attribute);
             });
             if(!is_array($value)) return false;
             foreach($value as $element)
             {
-                if(!filter_var($element, FILTER_VALIDATE_URL)) return false;
+                if(!filter_var($element, FILTER_VALIDATE_URL)){
+                    // try to add the default schema in front of the url to valiate
+                    $element = self::DefaultSchema.$element;
+                    if(!filter_var($element, FILTER_VALIDATE_URL))
+                        return false;
+                }
             }
             return true;
         });

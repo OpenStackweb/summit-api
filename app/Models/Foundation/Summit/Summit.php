@@ -2408,9 +2408,9 @@ SQL;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getRawSlug():string{
+    public function getRawSlug():?string{
         return $this->slug;
     }
 

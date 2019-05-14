@@ -13,7 +13,6 @@
  **/
 use App\Models\Foundation\Main\IGroup;
 use Doctrine\ORM\Tools\Pagination\Paginator;
-use models\main\Group;
 use models\summit\ISummitEventRepository;
 use models\summit\SummitEvent;
 use App\Repositories\SilverStripeDoctrineRepository;
@@ -28,7 +27,6 @@ use utils\PagingResponse;
 use Doctrine\ORM\Query\Expr\Join;
 use utils\DoctrineLeftJoinFilterMapping;
 use models\summit\SummitGroupEvent;
-use models\summit\Presentation;
 /**
  * Class DoctrineSummitEventRepository
  * @package App\Repositories\Summit
@@ -175,6 +173,8 @@ final class DoctrineSummitEventRepository
             'start_date'  => 'e.start_date',
             'end_date'    => 'e.end_date',
             'created'     => 'e.created',
+            'track'       => 'cc.title',
+            'location'    => 'l.name',
         ];
     }
 
@@ -195,7 +195,10 @@ final class DoctrineSummitEventRepository
 
         $query  = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
-            ->from($class, "e")->leftJoin("e.location", 'l', Join::LEFT_JOIN);
+            ->from($class, "e")
+            ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
+            ->leftJoin("e.category", 'cc', Join::LEFT_JOIN)
+        ;
 
         if(!is_null($filter)){
             $filter->apply2Query($query, $this->getFilterMappings());
@@ -210,8 +213,6 @@ final class DoctrineSummitEventRepository
         }
 
         if($class == \models\summit\Presentation::class) {
-            $query = $query->innerJoin("e.category", "cc", Join::WITH);
-            $query = $query->leftJoin("e.location", "loc", Join::WITH);
             $query = $query->leftJoin("e.speakers", "sp", Join::WITH);
             $query = $query->leftJoin('e.selected_presentations', "ssp", Join::LEFT_JOIN);
             $query = $query->leftJoin('ssp.list', "sspl", Join::LEFT_JOIN);
@@ -291,6 +292,7 @@ final class DoctrineSummitEventRepository
             ->select("e")
             ->from($class, "e")
             ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
+            ->leftJoin("e.category", 'cc', Join::LEFT_JOIN)
             ->where("l.id is null");
 
         if(!is_null($filter)){
@@ -306,7 +308,6 @@ final class DoctrineSummitEventRepository
         }
 
         if($class == \models\summit\Presentation::class) {
-            $query = $query->innerJoin("e.category", "cc", Join::WITH);
             $query = $query->leftJoin("e.speakers", "sp", Join::WITH);
             $query = $query->leftJoin('e.selected_presentations', "ssp", Join::LEFT_JOIN);
             $query = $query->leftJoin('ssp.list', "sspl", Join::LEFT_JOIN);
@@ -314,7 +315,6 @@ final class DoctrineSummitEventRepository
             $query = $query->leftJoin('sp.member', "spmm", Join::LEFT_JOIN);
             $query = $query->leftJoin('sp.registration_request', "sprr", Join::LEFT_JOIN);
         }
-
 
         $can_view_private_events = self::isCurrentMemberOnGroup(IGroup::SummitAdministrators);
 

@@ -36,6 +36,7 @@ abstract class RetrieveSummitEventsStrategy
             $page     = intval(Input::get('page'));
             $per_page = intval(Input::get('per_page'));
         }
+
         return [$page, $per_page];
     }
 
@@ -94,6 +95,7 @@ abstract class RetrieveSummitEventsStrategy
                 'end_date',
                 'id',
                 'created',
+                'track',
             ]);
         }
         return $order;

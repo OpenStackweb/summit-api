@@ -243,6 +243,7 @@ Route::group([
                 Route::post('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitEventsApiController@addEvent']);
                 Route::group(array('prefix' => '{event_id}'), function () {
 
+                    Route::post('/clone',  [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitEventsApiController@cloneEvent']);
                     Route::get('', 'OAuth2SummitEventsApiController@getEvent');
                     Route::get('/published', [ 'middleware' => 'cache:'.Config::get('cache_api_response.get_published_event_response_lifetime', 300), 'uses' => 'OAuth2SummitEventsApiController@getScheduledEvent']);
                     Route::put('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators|summit-room-administrators', 'uses' => 'OAuth2SummitEventsApiController@updateEvent' ]);

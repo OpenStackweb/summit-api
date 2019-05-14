@@ -37,6 +37,7 @@ final class SummitEventFactory
             $event = new SummitEventWithFile();
 
         $event->setSummit($summit);
+        $event->setType($type);
 
         return $event;
     }

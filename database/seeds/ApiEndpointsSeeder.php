@@ -584,6 +584,12 @@ class ApiEndpointsSeeder extends Seeder
                 'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
             ],
             [
+                'name' => 'clone-event',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/clone',
+                'http_method' => 'POST',
+                'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
+            ],
+            [
                 'name' => 'update-events',
                 'route' => '/api/v1/summits/{id}/events',
                 'http_method' => 'PUT',

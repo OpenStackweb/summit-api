@@ -1836,4 +1836,63 @@ final class SummitService extends AbstractService implements ISummitService
         });
     }
 
+    /**
+     * @param Summit $summit
+     * @param int $event_id
+     * @return SummitEvent
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function cloneEvent(Summit $summit, int $event_id): SummitEvent
+    {
+        return $this->tx_service->transaction(function () use ($summit, $event_id) {
+
+            $event = $this->event_repository->getById($event_id);
+            if(is_null($event))
+                throw new EntityNotFoundException(sprintf("event %s not found!", $event_id));
+
+            if($event instanceof Presentation)
+                throw new ValidationException(sprintf("event %s is not allowed to be cloned!", $event_id));
+
+            $eventClone = SummitEventFactory::build($event->getType(), $summit);
+
+            $eventClone->setTitle($event->getTitle());
+            $eventClone->setAbstract($event->getAbstract());
+            $eventClone->setLocation($event->getLocation());
+            $eventClone->setAllowFeedBack($event->getAllowFeedback());
+            $eventClone->setSocialSummary($event->getSocialSummary());
+            $eventClone->setStartDate($event->getLocalStartDate());
+            $eventClone->setEndDate($event->getLocalEndDate());
+            $eventClone->setCategory($event->getCategory());
+
+            if($event->hasRSVPTemplate())
+            {
+                $eventClone->setRSVPTemplate($event->getRSVPTemplate());
+            }
+
+            if($event->isExternalRSVP())
+            {
+                $eventClone->setRSVPLink($event->getRSVPLink());
+            }
+
+            foreach($event->getSponsors() as $sponsor){
+                $eventClone->addSponsor($sponsor);
+            }
+
+            foreach($event->getTags() as $tag){
+                $eventClone->addTag($tag);
+            }
+
+            // check if SummitEventWithFile
+
+            if($event instanceof SummitEventWithFile && $event->hasAttachment()){
+                $eventClone->setAttachment($event->getAttachment());
+            }
+
+            $this->event_repository->add($eventClone);
+
+            return $eventClone;
+
+        });
+    }
 }

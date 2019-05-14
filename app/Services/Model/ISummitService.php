@@ -263,4 +263,14 @@ interface ISummitService
      */
     public function removeModeratorFromPresentation($current_member_id, $speaker_id, $presentation_id);
 
+
+    /**
+     * @param Summit $summit
+     * @param int $event_id
+     * @return SummitEvent
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function cloneEvent(Summit $summit, int $event_id):SummitEvent;
+
 }

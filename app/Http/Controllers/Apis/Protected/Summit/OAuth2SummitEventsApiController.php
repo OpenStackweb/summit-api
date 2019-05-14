@@ -1163,4 +1163,37 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         }
     }
 
+    /**
+     * @param $summit_id
+     * @param $event_id
+     * @return mixed
+     */
+    public function cloneEvent($summit_id, $event_id)
+    {
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $event = $this->service->cloneEvent($summit, $event_id);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($event)->serialize());
+
+        }
+        catch (ValidationException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message'=> $ex2->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+
 }

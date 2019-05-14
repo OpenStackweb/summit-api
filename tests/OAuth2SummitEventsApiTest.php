@@ -1335,4 +1335,35 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     }
 
+    public function testCloneEvent($summit_id = 25, $event_id= 22943)
+    {
+        $params = [
+
+            'id' => $summit_id,
+            'event_id' => $event_id,
+        ];
+
+        $headers = [
+
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action
+        (
+            "POST",
+            "OAuth2SummitEventsApiController@cloneEvent",
+            $params,
+            [], [], [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $event = json_decode($content);
+        $this->assertTrue($event->id > 0);
+        return $event;
+    }
+
+
 }

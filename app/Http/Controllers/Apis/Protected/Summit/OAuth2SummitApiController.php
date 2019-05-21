@@ -187,6 +187,30 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         }
     }
 
+
+    /**
+     * @return mixed
+     */
+    public function getAllCurrentSummit()
+    {
+        $expand = Request::input('expand', '');
+
+        try {
+            $summit = $this->repository->getCurrent();
+            if (is_null($summit)) return $this->error404();
+            $serializer_type = $this->serializer_type_selector->getSerializerType();
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($summit, $serializer_type)->serialize($expand));
+        }
+        catch(HTTP403ForbiddenException $ex1){
+            Log::warning($ex1);
+            return $this->error403();
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
     /**
      * @return mixed
      */

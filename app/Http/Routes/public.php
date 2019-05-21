@@ -45,6 +45,14 @@ Route::group([
     // summits
     Route::group(['prefix'=>'summits'], function() {
         Route::get('', [ 'middleware' => 'cache:'.Config::get('cache_api_response.get_summit_response_lifetime', 600), 'uses' => 'OAuth2SummitApiController@getSummits']);
+
+        Route::group(['prefix' => 'all'], function () {
+            Route::get('current',  'OAuth2SummitApiController@getAllCurrentSummit');
+            Route::group(['prefix' => 'selection-plans'], function () {
+                Route::get('current/{status}', 'OAuth2SummitSelectionPlansApiController@getCurrentSelectionPlanByStatus')->where('status', 'submission|selection|voting');
+            });
+        });
+
         Route::group(['prefix' => '{id}'], function () {
             Route::get('', [ 'middleware' => 'cache:'.Config::get('cache_api_response.get_summit_response_lifetime', 1200), 'uses' => 'OAuth2SummitApiController@getSummit'])->where('id', 'current|[0-9]+');
             // locations

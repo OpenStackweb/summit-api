@@ -53,4 +53,10 @@ interface ISummitRepository extends IBaseRepository
      * @return Summit[]
      */
     public function getCurrentAndFutureSummits();
+
+    /**
+     * @param string $slug
+     * @return Summit
+     */
+    public function getBySlug(string $slug):Summit;
 }

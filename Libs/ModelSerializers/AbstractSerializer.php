@@ -133,7 +133,7 @@ abstract class AbstractSerializer implements IModelSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $values          = [];
         $method_prefix   = ['get', 'is'];

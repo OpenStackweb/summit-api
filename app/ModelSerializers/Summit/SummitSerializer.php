@@ -52,6 +52,10 @@ class SummitSerializer extends SilverStripeSerializer
         'SecondaryRegistrationLink'                      => 'secondary_registration_link:json_string',
         'SecondaryRegistrationLabel'                     => 'secondary_registration_label:json_string',
         'RawSlug'                                        => 'slug:json_string',
+        'MeetingRoomBookingStartTime'                    => 'meeting_room_booking_start_time:datetime_epoch',
+        'MeetingRoomBookingEndTime'                      => 'meeting_room_booking_end_time:datetime_epoch',
+        'MeetingRoomBookingSlotLength'                   => 'meeting_room_booking_slot_length:json_int',
+        'MeetingRoomBookingMaxAllowed'                   => 'meeting_room_booking_max_allowed:json_int',
     ];
 
     protected static $allowed_relations = [
@@ -59,6 +63,7 @@ class SummitSerializer extends SilverStripeSerializer
         'locations',
         'wifi_connections',
         'selection_plans',
+        'meeting_booking_room_allowed_attributes',
     ];
 
     /**
@@ -110,7 +115,16 @@ class SummitSerializer extends SilverStripeSerializer
             $values['ticket_types'] = $ticket_types;
         }
 
-        //locations
+        // meeting_booking_room_allowed_attributes
+        if(in_array('meeting_booking_room_allowed_attributes', $relations)) {
+            $meeting_booking_room_allowed_attributes = [];
+            foreach ($summit->getMeetingBookingRoomAllowedAttributes() as $attr) {
+                $meeting_booking_room_allowed_attributes[] = SerializerRegistry::getInstance()->getSerializer($attr)->serialize($expand);
+            }
+            $values['meeting_booking_room_allowed_attributes'] = $meeting_booking_room_allowed_attributes;
+        }
+
+        // locations
         if(in_array('locations', $relations)) {
             $locations = [];
             foreach ($summit->getLocations() as $location) {

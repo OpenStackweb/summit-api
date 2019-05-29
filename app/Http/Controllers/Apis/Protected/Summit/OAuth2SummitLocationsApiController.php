@@ -16,8 +16,10 @@ use App\Models\Foundation\Summit\Locations\Banners\SummitLocationBannerConstants
 use App\Models\Foundation\Summit\Locations\SummitLocationConstants;
 use App\Models\Foundation\Summit\Repositories\ISummitLocationBannerRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitLocationRepository;
+use App\Services\Apis\IPaymentGatewayAPI;
 use App\Services\Model\ILocationService;
 use Exception;
+use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
@@ -25,6 +27,7 @@ use Illuminate\Support\Facades\Validator;
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\IMemberRepository;
 use models\oauth2\IResourceServerContext;
 use models\summit\IEventFeedbackRepository;
 use models\summit\ISpeakerRepository;
@@ -45,9 +48,6 @@ use utils\FilterParserException;
 use utils\OrderParser;
 use utils\PagingInfo;
 use utils\PagingResponse;
-use Illuminate\Http\Request as LaravelRequest;
-use utils\ParseMultiPartFormDataInputStream;
-
 /**
  * Class OAuth2SummitLocationsApiController
  * @package App\Http\Controllers
@@ -80,6 +80,11 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     private $location_repository;
 
     /**
+     * @var IMemberRepository
+     */
+    private $member_repository;
+
+    /**
      * @var ILocationService
      */
     private $location_service;
@@ -90,6 +95,11 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     private $location_banners_repository;
 
     /**
+     * @var IPaymentGatewayAPI
+     */
+    private $payment_gateway;
+
+    /**
      * OAuth2SummitLocationsApiController constructor.
      * @param ISummitRepository $summit_repository
      * @param ISummitEventRepository $event_repository
@@ -97,8 +107,10 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param IEventFeedbackRepository $event_feedback_repository
      * @param ISummitLocationRepository $location_repository
      * @param ISummitLocationBannerRepository $location_banners_repository
+     * @param IMemberRepository $member_repository
      * @param ISummitService $summit_service
      * @param ILocationService $location_service
+     * @param IPaymentGatewayAPI $payment_gateway
      * @param IResourceServerContext $resource_server_context
      */
     public function __construct
@@ -109,19 +121,23 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         IEventFeedbackRepository $event_feedback_repository,
         ISummitLocationRepository $location_repository,
         ISummitLocationBannerRepository $location_banners_repository,
+        IMemberRepository $member_repository,
         ISummitService $summit_service,
         ILocationService $location_service,
+        IPaymentGatewayAPI $payment_gateway,
         IResourceServerContext $resource_server_context
     ) {
         parent::__construct($resource_server_context);
         $this->repository                  = $summit_repository;
         $this->speaker_repository          = $speaker_repository;
         $this->event_repository            = $event_repository;
+        $this->member_repository           = $member_repository;
         $this->event_feedback_repository   = $event_feedback_repository;
         $this->location_repository         = $location_repository;
         $this->location_banners_repository = $location_banners_repository;
         $this->location_service            = $location_service;
         $this->summit_service              = $summit_service;
+        $this->payment_gateway             = $payment_gateway;
     }
 
     /**
@@ -2210,5 +2226,9 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             return $this->error500($ex);
         }
     }
+
+    // bookable rooms
+
+    use SummitBookableVenueRoomApi;
 
 }

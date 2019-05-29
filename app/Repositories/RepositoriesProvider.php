@@ -30,6 +30,7 @@ use App\Models\Foundation\Summit\Repositories\ISpeakerOrganizationalRoleReposito
 use App\Models\Foundation\Summit\Repositories\ISummitEventTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitLocationBannerRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitLocationRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
 use App\Models\Foundation\Summit\Repositories\ITrackQuestionTemplateRepository;
 use App\Models\Foundation\Summit\Repositories\ITrackTagGroupAllowedTagsRepository;
@@ -58,6 +59,7 @@ use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\SummitAbstractLocation;
 use models\summit\SummitEventType;
 use models\summit\SummitRegistrationPromoCode;
+use models\summit\SummitRoomReservation;
 use models\summit\SummitTicketType;
 /**
  * Class RepositoriesProvider
@@ -398,6 +400,13 @@ final class RepositoriesProvider extends ServiceProvider
             ISpeakerEditPermissionRequestRepository::class,
             function(){
                 return EntityManager::getRepository(SpeakerEditPermissionRequest::class);
+            }
+        );
+
+        App::singleton(
+            ISummitRoomReservationRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitRoomReservation::class);
             }
         );
 

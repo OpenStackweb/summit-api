@@ -28,11 +28,14 @@ use App\Http\Utils\IFileUploader;
 use App\Models\Foundation\Summit\Factories\SummitLocationBannerFactory;
 use App\Models\Foundation\Summit\Factories\SummitLocationFactory;
 use App\Models\Foundation\Summit\Factories\SummitLocationImageFactory;
+use App\Models\Foundation\Summit\Factories\SummitRoomReservationFactory;
 use App\Models\Foundation\Summit\Factories\SummitVenueFloorFactory;
 use App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner;
 use App\Models\Foundation\Summit\Repositories\ISummitLocationRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
 use App\Services\Apis\GeoCodingApiException;
 use App\Services\Apis\IGeoCodingAPI;
+use App\Services\Apis\IPaymentGatewayAPI;
 use App\Services\Model\Strategies\GeoLocation\GeoLocationStrategyFactory;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
@@ -40,10 +43,14 @@ use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\IMemberRepository;
+use models\main\Member;
 use models\summit\Summit;
 use models\summit\SummitAbstractLocation;
+use models\summit\SummitBookableVenueRoom;
 use models\summit\SummitGeoLocatedLocation;
 use models\summit\SummitLocationImage;
+use models\summit\SummitRoomReservation;
 use models\summit\SummitVenue;
 use models\summit\SummitVenueFloor;
 use models\summit\SummitVenueRoom;
@@ -71,27 +78,52 @@ final class SummitLocationService
     private $folder_service;
 
     /**
+     * @var IPaymentGatewayAPI
+     */
+    private $payment_gateway;
+
+    /**
+     * @var IMemberRepository
+     */
+    private $member_repository;
+
+    /**
+     * @var ISummitRoomReservationRepository
+     */
+    private $reservation_repository;
+
+    /**
      * SummitLocationService constructor.
      * @param ISummitLocationRepository $location_repository
+     * @param IMemberRepository $member_repository
+     * @param ISummitRoomReservationRepository $reservation_repository
      * @param IGeoCodingAPI $geo_coding_api
      * @param IFolderService $folder_service
      * @param IFileUploader $file_uploader
+     * @param IPaymentGatewayAPI $payment_gateway
      * @param ITransactionService $tx_service
      */
     public function __construct
     (
         ISummitLocationRepository $location_repository,
+        IMemberRepository $member_repository,
+        ISummitRoomReservationRepository $reservation_repository,
         IGeoCodingAPI $geo_coding_api,
         IFolderService $folder_service,
         IFileUploader $file_uploader,
+        IPaymentGatewayAPI $payment_gateway,
         ITransactionService $tx_service
     )
     {
         parent::__construct($tx_service);
-        $this->location_repository = $location_repository;
-        $this->geo_coding_api      = $geo_coding_api;
-        $this->file_uploader       = $file_uploader;
-        $this->folder_service      = $folder_service;
+
+        $this->location_repository    = $location_repository;
+        $this->member_repository      = $member_repository;
+        $this->reservation_repository = $reservation_repository;
+        $this->geo_coding_api         = $geo_coding_api;
+        $this->file_uploader          = $file_uploader;
+        $this->folder_service         = $folder_service;
+        $this->payment_gateway        = $payment_gateway;
     }
 
     /**
@@ -1644,6 +1676,109 @@ final class SummitLocationService
 
             $location->removeImage($image);
 
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $room_id
+     * @param array $payload
+     * @return SummitRoomReservation
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addBookableRoomReservation(Summit $summit, int $room_id, array $payload): SummitRoomReservation
+    {
+        return $this->tx_service->transaction(function () use ($summit, $room_id, $payload) {
+
+            $room = $summit->getLocation($room_id);
+
+            if (is_null($room)) {
+                throw new EntityNotFoundException();
+            }
+
+            if(!$room instanceof SummitBookableVenueRoom){
+                throw new EntityNotFoundException();
+            }
+
+            $owner_id = $payload["owner_id"];
+
+            $owner = $this->member_repository->getById($owner_id);
+
+            if (is_null($owner)) {
+                throw new EntityNotFoundException();
+            }
+
+            $payload['owner'] = $owner;
+
+            $reservation = SummitRoomReservationFactory::build($summit, $payload);
+
+            $room->addReservation($reservation);
+
+            $result = $this->payment_gateway->generatePayment
+            (
+                $reservation
+            );
+
+            $reservation->setPaymentGatewayCartId($result['cart_id']);
+            $reservation->setPaymentGatewayClientToken($result['client_token']);
+
+            return $reservation;
+        });
+    }
+
+    /**
+     * @param array $payload
+     * @throws \Exception
+     */
+    public function processBookableRoomPayment(array $payload): void
+    {
+        $this->tx_service->transaction(function () use ($payload) {
+            $reservation = $this->reservation_repository->getByPaymentGatewayCartId($payload['cart_id']);
+
+            if(is_null($reservation)){
+                throw new EntityNotFoundException();
+            }
+
+            if($this->payment_gateway->isSuccessFullPayment($payload)) {
+                $reservation->setPayed();
+                return;
+            }
+
+            $reservation->setPaymentError($this->payment_gateway->getPaymentError($payload));
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param Member $owner
+     * @param int $reservation_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function cancelReservation(Summit $summit, Member $owner, int $reservation_id): void
+    {
+        $this->tx_service->transaction(function () use ($summit, $owner, $reservation_id) {
+
+            $reservation = $owner->getReservationById($reservation_id);
+
+            if(is_null($reservation)){
+                throw new EntityNotFoundException();
+            }
+
+            if($reservation->getRoom()->getSummitId() != $summit->getId()){
+                throw new EntityNotFoundException();
+            }
+
+            if($reservation->getStatus() == SummitRoomReservation::ReservedStatus)
+                throw new ValidationException("can not request a refund on a reserved booking!");
+
+            if($reservation->getStatus() == SummitRoomReservation::RequestedRefundStatus ||
+                $reservation->getStatus() == SummitRoomReservation::RefundedStatus
+            )
+                throw new ValidationException("can not request a refund on an already refunded booking!");
+
+            $reservation->requestRefund();
         });
     }
 }

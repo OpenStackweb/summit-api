@@ -1350,4 +1350,181 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
         $content = $response->getContent();
         $this->assertResponseStatus(204);
     }
+
+    // bookable rooms tests
+
+    public function testSummitGetBookableRoomsORFilter($summit_id = 27)
+    {
+        $params = [
+            'id'       => $summit_id,
+            'page'     => 1,
+            'per_page' => 10,
+            'order'    => '-id',
+            'expand'   => 'venue,attribute_type',
+            'filter'   => [
+                "attribute==Ocean,attribute==Microwave",
+                "availability_day==1572912000",
+            ],
+        ];
+
+        $headers =
+            [
+                "HTTP_Authorization" => " Bearer " . $this->access_token,
+                "CONTENT_TYPE"       => "application/json"
+            ];
+
+        $response = $this->action
+        (
+            "GET",
+            "OAuth2SummitLocationsApiController@getBookableVenueRooms",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $rooms = json_decode($content);
+        $this->assertTrue(!is_null($rooms));
+    }
+
+    public function testSummitGetBookableRoomAvailability($summit_id = 27, $room_id = 483, $day = 1572912000)
+    {
+        $params = [
+            'id'       => $summit_id,
+            'room_id'  => $room_id,
+            'day'      => $day,
+        ];
+
+        $headers =
+            [
+                "HTTP_Authorization" => " Bearer " . $this->access_token,
+                "CONTENT_TYPE"       => "application/json"
+            ];
+
+        $response = $this->action
+        (
+            "GET",
+            "OAuth2SummitLocationsApiController@getBookableVenueRoomAvailability",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $slots = json_decode($content);
+        $this->assertTrue(!is_null($slots));
+    }
+
+    /**
+     * @param int $summit_id
+     * @param int $room_id
+     * @param int $start_date
+     * @return mixed
+     */
+    public function testBookableRoomReservation($summit_id =27, $room_id = 483, $start_date = 1572883200, $end_date = 1572886800){
+        $params = [
+            'id'       => $summit_id,
+            'room_id'  => $room_id,
+        ];
+
+        $data = [
+            'currency'   => 'USD',
+            'amount'     => 325,
+            'start_datetime' => $start_date,
+            'end_datetime'   => $end_date,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitLocationsApiController@createBookableVenueRoomReservation",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $reservation = json_decode($content);
+        $this->assertTrue(!is_null($reservation));
+        return $reservation;
+    }
+
+    public function testGetMyReservations($summit_id = 27)
+    {
+        $params = [
+            'id' => $summit_id,
+            'expand' => 'room'
+        ];
+
+        $headers =
+            [
+                "HTTP_Authorization" => " Bearer " . $this->access_token,
+                "CONTENT_TYPE"       => "application/json"
+            ];
+
+        $response = $this->action
+        (
+            "GET",
+            "OAuth2SummitLocationsApiController@getMyBookableVenueRoomReservations",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $reservations = json_decode($content);
+        $this->assertTrue(!is_null($reservations));
+    }
+
+    public function testCancelMyReservations($summit_id = 27, $reservation_id = 4)
+    {
+        $params = [
+            'id' => $summit_id,
+            'reservation_id' => $reservation_id
+        ];
+
+        $headers =
+            [
+                "HTTP_Authorization" => " Bearer " . $this->access_token,
+                "CONTENT_TYPE"       => "application/json"
+            ];
+
+        $response = $this->action
+        (
+            "DELETE",
+            "OAuth2SummitLocationsApiController@cancelMyBookableVenueRoomReservation",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $reservations = json_decode($content);
+        $this->assertTrue(!is_null($reservations));
+    }
+
 }

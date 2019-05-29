@@ -166,9 +166,38 @@ class Summit extends SilverstripeBaseModel
     private $calendar_sync_desc;
 
     /**
+     * @ORM\Column(name="MeetingRoomBookingStartTime", type="time", nullable=true)
+     * @var DateTime
+     */
+    private $meeting_room_booking_start_time;
+
+    /**
+     * @ORM\Column(name="MeetingRoomBookingEndTime", type="time", nullable=true)
+     * @var DateTime
+     */
+    private $meeting_room_booking_end_time;
+
+    /**
+     * @ORM\Column(name="MeetingRoomBookingSlotLength", type="integer", nullable=true)
+     * @var int
+     */
+    private $meeting_room_booking_slot_length;
+
+    /**
+     * @ORM\Column(name="MeetingRoomBookingMaxAllowed", type="integer", nullable=true)
+     * @var int
+     */
+    private $meeting_room_booking_max_allowed;
+
+    /**
      * @ORM\OneToMany(targetEntity="SummitAbstractLocation", mappedBy="summit", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      */
     private $locations;
+
+    /**
+     * @ORM\OneToMany(targetEntity="models\summit\SummitBookableVenueRoomAttributeType", mappedBy="summit", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     */
+    private $meeting_booking_room_allowed_attributes;
 
     /**
      * @ORM\OneToMany(targetEntity="SummitEvent", mappedBy="summit", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
@@ -549,6 +578,7 @@ class Summit extends SilverstripeBaseModel
         $this->track_tag_groups = new ArrayCollection;
         $this->notifications = new ArrayCollection;
         $this->selection_plans = new ArrayCollection;
+        $this->meeting_booking_room_allowed_attributes = new ArrayCollection();
     }
 
     /**
@@ -640,6 +670,17 @@ class Summit extends SilverstripeBaseModel
             return $e instanceof SummitHotel;
         });
     }
+
+    /**
+     * @return SummitBookableVenueRoom[]
+     */
+    public function getBookableRooms()
+    {
+        return $this->locations->filter(function ($e) {
+            return $e instanceof SummitBookableVenueRoom;
+        });
+    }
+
 
     /**
      * @return SummitAirport[]
@@ -2420,4 +2461,85 @@ SQL;
     public function setRawSlug(string $slug):void{
         $this->slug = $slug;
     }
+
+    /**
+     * @return DateTime
+     */
+    public function getMeetingRoomBookingStartTime():?DateTime
+    {
+        return $this->meeting_room_booking_start_time;
+    }
+
+    /**
+     * @param DateTime $meeting_room_booking_start_time
+     */
+    public function setMeetingRoomBookingStartTime(DateTime $meeting_room_booking_start_time): void
+    {
+        $this->meeting_room_booking_start_time = $meeting_room_booking_start_time;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getMeetingRoomBookingEndTime():?DateTime
+    {
+        return $this->meeting_room_booking_end_time;
+    }
+
+    /**
+     * @param DateTime $meeting_room_booking_end_time
+     */
+    public function setMeetingRoomBookingEndTime(DateTime $meeting_room_booking_end_time): void
+    {
+        $this->meeting_room_booking_end_time = $meeting_room_booking_end_time;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMeetingRoomBookingSlotLength(): int
+    {
+        return $this->meeting_room_booking_slot_length;
+    }
+
+    /**
+     * @param int $meeting_room_booking_slot_length
+     */
+    public function setMeetingRoomBookingSlotLength(int $meeting_room_booking_slot_length): void
+    {
+        $this->meeting_room_booking_slot_length = $meeting_room_booking_slot_length;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMeetingRoomBookingMaxAllowed(): int
+    {
+        return $this->meeting_room_booking_max_allowed;
+    }
+
+    /**
+     * @param int $meeting_room_booking_max_allowed
+     */
+    public function setMeetingRoomBookingMaxAllowed(int $meeting_room_booking_max_allowed): void
+    {
+        $this->meeting_room_booking_max_allowed = $meeting_room_booking_max_allowed;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getMeetingBookingRoomAllowedAttributes()
+    {
+        return $this->meeting_booking_room_allowed_attributes;
+    }
+
+    public function getMaxReservationsPerDay():int {
+        $interval = $this->meeting_room_booking_end_time->diff( $this->meeting_room_booking_start_time);
+        $minutes  = $interval->days * 24 * 60;
+        $minutes  += $interval->h * 60;
+        $minutes  += $interval->i;
+        return intval ($minutes / $this->meeting_room_booking_slot_length);
+    }
+
 }

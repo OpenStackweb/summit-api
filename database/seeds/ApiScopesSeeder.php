@@ -186,6 +186,16 @@ final class ApiScopesSeeder extends Seeder
                 'short_description' => 'Write Summit Presentation Materials Data',
                 'description' => 'Grants write access for Summit Materials Links Data',
             ],
+            [
+                'name' => sprintf(SummitScopes::ReadMyBookableRoomsReservationData, $current_realm),
+                'short_description' => 'Read my bookable rooms reservations',
+                'description' => 'Read my bookable rooms reservations',
+            ],
+            [
+                'name' => sprintf(SummitScopes::WriteMyBookableRoomsReservationData, $current_realm),
+                'short_description' => 'Write my bookable rooms reservations',
+                'description' => 'Write my bookable rooms reservations',
+            ],
         ];
 
         foreach ($scopes as $scope_info) {

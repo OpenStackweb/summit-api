@@ -94,6 +94,15 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'get-summits-all-by-id-slug',
+                'route' => '/api/v1/summits/all/{id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadBookableRoomsData, $current_realm),
+                ],
+            ],
+            [
                 'name' => 'get-summit-cached',
                 'route' => '/api/v1/summits/{id}',
                 'http_method' => 'GET',
@@ -1048,6 +1057,85 @@ class ApiEndpointsSeeder extends Seeder
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm),
                     sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                ],
+            ],
+            // bookable rooms
+            [
+                'name' => 'get-bookable-venue-rooms',
+                'route' => '/api/v1/summits/{id}/locations/bookable-rooms',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadBookableRoomsData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+             [
+                'name' => 'get-bookable-venue-room',
+                'route' => '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadBookableRoomsData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'get-bookable-venue-room-availability',
+                'route' => '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/availability/{day}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadBookableRoomsData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'get-my-bookable-venue-room-reservations',
+                'route' => '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/me',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadMyBookableRoomsReservationData, $current_realm),
+                ],
+            ],
+            [
+                'name' => 'cancel-my-bookable-venue-room-reservation',
+                'route' => '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/{reservation_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteMyBookableRoomsReservationData, $current_realm),
+                ],
+            ],
+            [
+                'name' => 'create-bookable-venue-room-reservation',
+                'route' => '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteMyBookableRoomsReservationData, $current_realm),
+                ],
+            ],
+            [
+                'name' => 'add-bookable-venue-room',
+                'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
+                ],
+            ],
+            [
+                'name' => 'update-bookable-venue-room',
+                'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
+                ],
+            ],
+            [
+                'name' => 'delete-bookable-venue-room',
+                'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
                 ],
             ],
             // floor rooms

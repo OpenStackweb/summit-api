@@ -40,7 +40,16 @@ use Doctrine\ORM\Mapping AS ORM;
  * @ORM\Table(name="SummitAbstractLocation")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({"SummitAbstractLocation" = "SummitAbstractLocation", "SummitGeoLocatedLocation" = "SummitGeoLocatedLocation", "SummitExternalLocation" = "SummitExternalLocation", "SummitVenue" = "SummitVenue", "SummitHotel" = "SummitHotel", "SummitAirport" = "SummitAirport", "SummitVenueRoom" = "SummitVenueRoom"})
+ * @ORM\DiscriminatorMap({
+ *     "SummitAbstractLocation" = "SummitAbstractLocation",
+ *     "SummitGeoLocatedLocation" = "SummitGeoLocatedLocation",
+ *     "SummitExternalLocation" = "SummitExternalLocation",
+ *     "SummitVenue" = "SummitVenue",
+ *     "SummitHotel" = "SummitHotel",
+ *     "SummitAirport" = "SummitAirport",
+ *     "SummitVenueRoom" = "SummitVenueRoom",
+ *     "SummitBookableVenueRoom" = "SummitBookableVenueRoom"
+ * })
  * Class SummitAbstractLocation
  * @package models\summit
  */

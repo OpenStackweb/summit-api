@@ -96,6 +96,6 @@ final class DoctrineApiEndpointRepository
      */
     protected function applyExtraFilters(QueryBuilder $query)
     {
-        return [];
+        return $query;
     }
 }

@@ -12,7 +12,9 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner;
+use models\main\Member;
 use models\summit\SummitLocationImage;
+use models\summit\SummitRoomReservation;
 use models\summit\SummitVenueRoom;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -213,4 +215,30 @@ interface ILocationService
      */
     public function deleteLocationImage(Summit $summit, $location_id, $image_id);
 
+    /**
+     * @param Summit $summit
+     * @param int $room_id
+     * @param array $payload
+     * @return SummitRoomReservation
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addBookableRoomReservation(Summit $summit, int $room_id, array $payload):SummitRoomReservation;
+
+    /**
+     * @param array $data
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function processBookableRoomPayment(array $payload):void;
+
+
+    /**
+     * @param Summit $sumit
+     * @param Member $owner
+     * @param int $reservation_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function cancelReservation(Summit $sumit, Member $owner, int $reservation_id):void;
 }

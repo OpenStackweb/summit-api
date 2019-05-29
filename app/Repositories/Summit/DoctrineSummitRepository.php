@@ -106,6 +106,21 @@ final class DoctrineSummitRepository
     }
 
     /**
+     * @param string $slug
+     * @return Summit
+     */
+    public function getBySlug(string $slug):Summit
+    {
+        return $this->getEntityManager()->createQueryBuilder()
+            ->select("s")
+            ->from(\models\summit\Summit::class, "s")
+            ->where('s.slug = :slug')
+            ->setParameter('slug', $slug)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
      * @return Summit
      */
     public function getActive()

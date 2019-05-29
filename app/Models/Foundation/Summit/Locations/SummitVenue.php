@@ -16,7 +16,6 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use models\exceptions\ValidationException;
-
 /**
  * @ORM\Entity
  * @ORM\Table(name="SummitVenue")

@@ -597,7 +597,26 @@ class AppServiceProvider extends ServiceProvider
             $value = trim($value);
             return isset($countries[$value]);
         });
+
+        Validator::extend('currency_iso', function($attribute, $value, $parameters, $validator)
+        {
+            $currencies =
+                [
+                    'USD' => 'USD',
+                    'EUR' => 'EUR',
+                    'GBP' => 'GBP'
+                ];
+
+            $validator->addReplacer('currency_iso', function($message, $attribute, $rule, $parameters) use ($validator) {
+                return sprintf("%s should be a valid currency iso 4217 code", $attribute);
+            });
+            if(!is_string($value)) return false;
+            $value = trim($value);
+            return isset($currencies[$value]);
+        });
     }
+
+
 
     /**
      * Register any application services.

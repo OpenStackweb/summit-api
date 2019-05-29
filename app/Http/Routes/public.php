@@ -51,6 +51,15 @@ Route::group([
             Route::group(['prefix' => 'selection-plans'], function () {
                 Route::get('current/{status}', 'OAuth2SummitSelectionPlansApiController@getCurrentSelectionPlanByStatus')->where('status', 'submission|selection|voting');
             });
+
+            Route::group(['prefix' => 'bookable-rooms'], function () {
+                Route::group(['prefix' => 'all'], function () {
+                    Route::group(['prefix' => 'reservations'], function () {
+                        // api/public/v1/summits/all/bookable-rooms/all/reservations/confirm ( open endpoint for payment gateway callbacks)
+                        Route::post("confirm", "OAuth2SummitLocationsApiController@confirmBookableVenueRoomReservation");
+                    });
+                });
+            });
         });
 
         Route::group(['prefix' => '{id}'], function () {

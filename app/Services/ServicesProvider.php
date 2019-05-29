@@ -13,10 +13,11 @@
  **/
 use App\Permissions\IPermissionsManager;
 use App\Permissions\PermissionsManager;
-use App\Repositories\DoctrineRepository;
 use App\Services\Apis\CalendarSync\ICalendarSyncRemoteFacadeFactory;
 use App\Services\Apis\GoogleGeoCodingAPI;
 use App\Services\Apis\IGeoCodingAPI;
+use App\Services\Apis\IPaymentGatewayAPI;
+use App\Services\Apis\PaymentGateways\StripeApi;
 use App\Services\Model\AttendeeService;
 use App\Services\Model\FolderService;
 use App\Services\Model\IAttendeeService;
@@ -123,6 +124,13 @@ final class ServicesProvider extends ServiceProvider
         App::singleton(IPushNotificationApi::class,   function(){
             $api = new FireBaseGCMApi(Config::get("server.firebase_gcm_server_key", null));
             return $api;
+        });
+
+        App::singleton(IPaymentGatewayAPI::class, function(){
+            return new StripeApi(
+                Config::get("stripe.private_key", null),
+                Config::get("stripe.endpoint_secret", null)
+            );
         });
 
         App::singleton

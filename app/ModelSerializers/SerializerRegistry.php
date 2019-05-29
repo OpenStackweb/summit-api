@@ -14,6 +14,11 @@
 use App\ModelSerializers\CCLA\TeamSerializer;
 use App\ModelSerializers\FileSerializer;
 use App\ModelSerializers\LanguageSerializer;
+use App\ModelSerializers\Locations\SummitBookableVenueRoomAttributeTypeSerializer;
+use App\ModelSerializers\Locations\SummitBookableVenueRoomAttributeValueSerializer;
+use App\ModelSerializers\Locations\SummitBookableVenueRoomAvailableSlotSerializer;
+use App\ModelSerializers\Locations\SummitBookableVenueRoomSerializer;
+use App\ModelSerializers\Locations\SummitRoomReservationSerializer;
 use App\ModelSerializers\Marketplace\CloudServiceOfferedSerializer;
 use App\ModelSerializers\Marketplace\ConfigurationManagementTypeSerializer;
 use App\ModelSerializers\Marketplace\ConsultantClientSerializer;
@@ -191,15 +196,20 @@ final class SerializerRegistry
         $this->registry['SponsorSummitRegistrationPromoCode'] = SponsorSummitRegistrationPromoCodeSerializer::class;
         $this->registry['PresentationSpeakerSummitAssistanceConfirmationRequest'] = PresentationSpeakerSummitAssistanceConfirmationRequestSerializer::class;
         // locations
-        $this->registry['SummitVenue']                   = SummitVenueSerializer::class;
-        $this->registry['SummitVenueRoom']               = SummitVenueRoomSerializer::class;
-        $this->registry['SummitVenueFloor']              = SummitVenueFloorSerializer::class;
-        $this->registry['SummitExternalLocation']        = SummitExternalLocationSerializer::class;
-        $this->registry['SummitHotel']                   = SummitHotelSerializer::class;
-        $this->registry['SummitAirport']                 = SummitAirportSerializer::class;
-        $this->registry['SummitLocationImage']           = SummitLocationImageSerializer::class;
-        $this->registry['SummitLocationBanner']          = SummitLocationBannerSerializer::class;
-        $this->registry['ScheduledSummitLocationBanner'] = ScheduledSummitLocationBannerSerializer::class;
+        $this->registry['SummitVenue']                           = SummitVenueSerializer::class;
+        $this->registry['SummitVenueRoom']                       = SummitVenueRoomSerializer::class;
+        $this->registry['SummitVenueFloor']                      = SummitVenueFloorSerializer::class;
+        $this->registry['SummitExternalLocation']                = SummitExternalLocationSerializer::class;
+        $this->registry['SummitHotel']                           = SummitHotelSerializer::class;
+        $this->registry['SummitAirport']                         = SummitAirportSerializer::class;
+        $this->registry['SummitLocationImage']                   = SummitLocationImageSerializer::class;
+        $this->registry['SummitLocationBanner']                  = SummitLocationBannerSerializer::class;
+        $this->registry['ScheduledSummitLocationBanner']         = ScheduledSummitLocationBannerSerializer::class;
+        $this->registry['SummitBookableVenueRoom']               = SummitBookableVenueRoomSerializer::class;
+        $this->registry['SummitBookableVenueRoomAttributeType']  = SummitBookableVenueRoomAttributeTypeSerializer::class;
+        $this->registry['SummitBookableVenueRoomAttributeValue'] = SummitBookableVenueRoomAttributeValueSerializer::class;
+        $this->registry['SummitBookableVenueRoomAvailableSlot']  = SummitBookableVenueRoomAvailableSlotSerializer::class;
+        $this->registry['SummitRoomReservation']                 = SummitRoomReservationSerializer::class;
 
         // track tag groups
         $this->registry['TrackTagGroup'] = TrackTagGroupSerializer::class;

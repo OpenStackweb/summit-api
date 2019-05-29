@@ -18,47 +18,44 @@
  */
 final class SummitScopes
 {
-    const ReadSummitData     = '%s/summits/read';
-    const ReadAllSummitData  = '%s/summits/read/all';
-    const ReadNotifications  = '%s/summits/read-notifications';
-    const WriteNotifications  = '%s/summits/write-notifications';
+    const ReadSummitData                      = '%s/summits/read';
+    const ReadAllSummitData                   = '%s/summits/read/all';
 
-    const WriteSummitData    = '%s/summits/write';
-    const WriteSpeakersData  = '%s/speakers/write';
-    const ReadSpeakersData  = '%s/speakers/read';
-    const WriteTrackTagGroupsData  = '%s/track-tag-groups/write';
-    const WriteTrackQuestionTemplateData  = '%s/track-question-templates/write';
-    const WriteMySpeakersData  = '%s/speakers/write/me';
-    const ReadMySpeakersData  = '%s/speakers/read/me';
+    // bookable rooms
+    const ReadBookableRoomsData               = '%s/bookable-rooms/read';
+    const WriteMyBookableRoomsReservationData = '%s/bookable-rooms/my-reservations/write';
+    const ReadMyBookableRoomsReservationData  = '%s/bookable-rooms/my-reservations/read';
+    const BookableRoomsReservation            = '%s/bookable-rooms/reserve';
+    const WriteBookableRoomsData              = '%s/bookable-rooms/write';
 
-    const PublishEventData                = '%s/summits/publish-event';
-    const WriteEventData                  = '%s/summits/write-event';
-    const WriteVideoData                  = '%s/summits/write-videos';
-    const WritePresentationVideosData     = '%s/summits/write-presentation-videos';
-    const WritePresentationLinksData      = '%s/summits/write-presentation-links';
-    const WritePresentationSlidesData     = '%s/summits/write-presentation-slides';
-    const WritePresentationMaterialsData  = '%s/summits/write-presentation-materials';
+    const ReadNotifications                   = '%s/summits/read-notifications';
+    const WriteNotifications                  = '%s/summits/write-notifications';
 
+    const WriteSummitData                     = '%s/summits/write';
+    const WriteSpeakersData                   = '%s/speakers/write';
+    const ReadSpeakersData                    = '%s/speakers/read';
+    const WriteTrackTagGroupsData             = '%s/track-tag-groups/write';
+    const WriteTrackQuestionTemplateData      = '%s/track-question-templates/write';
+    const WriteMySpeakersData                 = '%s/speakers/write/me';
+    const ReadMySpeakersData                  = '%s/speakers/read/me';
 
-    const WriteAttendeesData = '%s/attendees/write';
+    const PublishEventData                    = '%s/summits/publish-event';
+    const WriteEventData                      = '%s/summits/write-event';
+    const WriteVideoData                      = '%s/summits/write-videos';
+    const WritePresentationVideosData         = '%s/summits/write-presentation-videos';
+    const WritePresentationLinksData          = '%s/summits/write-presentation-links';
+    const WritePresentationSlidesData         = '%s/summits/write-presentation-slides';
+    const WritePresentationMaterialsData      = '%s/summits/write-presentation-materials';
 
-    const WritePromoCodeData = '%s/promo-codes/write';
-
-    const WriteEventTypeData = '%s/event-types/write';
-
-    const WriteTracksData    = '%s/tracks/write';
-
-    const WriteTrackGroupsData    = '%s/track-groups/write';
-
-    const WriteLocationsData    = '%s/locations/write';
-
-    const WriteRSVPTemplateData    = '%s/rsvp-templates/write';
-
-    const WriteLocationBannersData = '%s/locations/banners/write';
-
-    const WriteSummitSpeakerAssistanceData = '%s/summit-speaker-assistance/write';
-
-    const WriteTicketTypeData = '%s/ticket-types/write';
-
-    const WritePresentationData     = '%s/summits/write-presentation';
+    const WriteAttendeesData                  = '%s/attendees/write';
+    const WritePromoCodeData                  = '%s/promo-codes/write';
+    const WriteEventTypeData                  = '%s/event-types/write';
+    const WriteTracksData                     = '%s/tracks/write';
+    const WriteTrackGroupsData                = '%s/track-groups/write';
+    const WriteLocationsData                  = '%s/locations/write';
+    const WriteRSVPTemplateData               = '%s/rsvp-templates/write';
+    const WriteLocationBannersData            = '%s/locations/banners/write';
+    const WriteSummitSpeakerAssistanceData    = '%s/summit-speaker-assistance/write';
+    const WriteTicketTypeData                 = '%s/ticket-types/write';
+    const WritePresentationData               = '%s/summits/write-presentation';
 }

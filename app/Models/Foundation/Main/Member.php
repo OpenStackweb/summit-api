@@ -24,6 +24,7 @@ use models\summit\RSVP;
 use models\summit\Summit;
 use models\summit\SummitEvent;
 use models\summit\SummitEventFeedback;
+use models\summit\SummitRoomReservation;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
@@ -208,6 +209,12 @@ class Member extends SilverstripeBaseModel
     private $favorites;
 
     /**
+     * @ORM\OneToMany(targetEntity="models\summit\SummitRoomReservation", mappedBy="owner", cascade={"persist"}, orphanRemoval=true)
+     * @var ArrayCollection
+     */
+    private $reservations;
+
+    /**
      * Member constructor.
      */
     public function __construct()
@@ -223,6 +230,7 @@ class Member extends SilverstripeBaseModel
         $this->rsvp               = new ArrayCollection();
         $this->calendars_sync     = new ArrayCollection();
         $this->schedule_sync_info = new ArrayCollection();
+        $this->reservations       = new ArrayCollection();
     }
 
     /**
@@ -1122,5 +1130,34 @@ SQL;
             $photoUrl = File::getCloudLinkForImages("generic-profile-photo.png");
         }
         return $photoUrl;
+    }
+
+    /**
+     * @param SummitRoomReservation $reservation
+     * @return $this
+     */
+    public function addReservation(SummitRoomReservation $reservation){
+        if($this->reservations->contains($reservation)) return $this;
+        $this->reservations->add($reservation);
+        $reservation->setOwner($this);
+        return $this;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getReservations(){
+        return  $this->reservations;
+    }
+
+    /**
+     * @param int $reservation_id
+     * @return SummitRoomReservation
+     */
+    public function getReservationById(int $reservation_id): ?SummitRoomReservation {
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq("id", $reservation_id));
+
+        return $this->reservations->matching($criteria)->first();
     }
 }

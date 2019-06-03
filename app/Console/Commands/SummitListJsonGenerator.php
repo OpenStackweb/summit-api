@@ -92,13 +92,8 @@ final class SummitListJsonGenerator extends Command {
         try {
 
             $this->info("processing summits");
-            $start  = time();
-
-            $summits = [];
-            $expand  = '';
-            foreach($this->repository->getAvailables() as $summit){
-                $summits[] = SerializerRegistry::getInstance()->getSerializer($summit)->serialize($expand);
-            }
+            $start   = time();
+            $summits = $this->repository->getAvailables();
 
             $response = new PagingResponse
             (

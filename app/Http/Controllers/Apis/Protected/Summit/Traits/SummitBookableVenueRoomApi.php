@@ -159,13 +159,14 @@ trait SummitBookableVenueRoomApi
             $list = [];
             foreach($slots_definitions as $slot_label => $is_free){
                 $dates = explode('|', $slot_label);
-                $list[] = new SummitBookableVenueRoomAvailableSlot
-                (
-                    $room,
-                    $summit->convertDateFromTimeZone2UTC(new \DateTime($dates[0], $summit->getTimeZone())),
-                    $summit->convertDateFromTimeZone2UTC(new \DateTime($dates[1], $summit->getTimeZone())),
-                    $is_free
-                );
+                $list[] =
+                    SerializerRegistry::getInstance()->getSerializer( new SummitBookableVenueRoomAvailableSlot
+                    (
+                        $room,
+                        $summit->convertDateFromTimeZone2UTC(new \DateTime($dates[0], $summit->getTimeZone())),
+                        $summit->convertDateFromTimeZone2UTC(new \DateTime($dates[1], $summit->getTimeZone())),
+                        $is_free
+                    ))->serialize();
             }
 
             $response = new PagingResponse

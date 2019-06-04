@@ -61,6 +61,7 @@ class SpeakerEditPermissionRequest extends SilverstripeBaseModel
     {
         parent::__construct();
         $this->approved = false;
+        $this->hash     = "";
     }
 
     /**

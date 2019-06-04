@@ -1697,9 +1697,8 @@ final class SummitService extends AbstractService implements ISummitService
             $speaker = $this->speaker_repository->getById(intval($speaker_id));
             if (is_null($speaker))
                 throw new EntityNotFoundException(sprintf('speaker %s not found', $speaker_id));
-
-            if($presentation->getProgress() == Presentation::PHASE_TAGS)
-                $presentation->setProgress(Presentation::PHASE_SPEAKERS);
+            if(!$presentation->isCompleted())
+                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
             $presentation->addSpeaker($speaker);
         });
@@ -1741,8 +1740,7 @@ final class SummitService extends AbstractService implements ISummitService
                 $speaker = $this->speaker_repository->getById(intval($speaker_id));
                 if (is_null($speaker))
                     throw new EntityNotFoundException(sprintf('speaker %s not found', $speaker_id));
-
-                if($presentation->getProgress() == Presentation::PHASE_TAGS)
+                if(!$presentation->isCompleted())
                     $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
                 $presentation->removeSpeaker($speaker);
@@ -1784,8 +1782,7 @@ final class SummitService extends AbstractService implements ISummitService
             $speaker = $this->speaker_repository->getById(intval($speaker_id));
             if (is_null($speaker))
                 throw new EntityNotFoundException(sprintf('speaker %s not found', $speaker_id));
-
-            if($presentation->getProgress() == Presentation::PHASE_TAGS)
+            if(!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
             $presentation->setModerator($speaker);
@@ -1828,8 +1825,7 @@ final class SummitService extends AbstractService implements ISummitService
             $speaker = $this->speaker_repository->getById(intval($speaker_id));
             if (is_null($speaker))
                 throw new EntityNotFoundException(sprintf('speaker %s not found', $speaker_id));
-
-            if($presentation->getProgress() == Presentation::PHASE_TAGS)
+            if(!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
             $presentation->unsetModerator();

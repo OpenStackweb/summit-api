@@ -567,6 +567,13 @@ class Presentation extends SummitEvent
     }
 
     /**
+     * @return bool
+     */
+    public function isCompleted():bool {
+        return $this->progress == Presentation::PHASE_COMPLETE;
+    }
+
+    /**
      * @param int $progress
      */
     public function setProgress($progress)

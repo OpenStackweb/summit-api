@@ -281,8 +281,8 @@ final class PresentationService
             $presentation->setSelectionPlan($current_selection_plan);
 
             $summit->addEvent($presentation);
-
-            $presentation->setProgress(Presentation::PHASE_SUMMARY);
+            if(!$presentation->isCompleted())
+                $presentation->setProgress(Presentation::PHASE_SUMMARY);
 
             $presentation = $this->saveOrUpdatePresentation
             (
@@ -447,7 +447,7 @@ final class PresentationService
                 $presentation->clearTags();
 
                 if (count($data['tags']) > 0) {
-                    if ($presentation->getProgress() == Presentation::PHASE_SUMMARY)
+                    if(!$presentation->isCompleted())
                         $presentation->setProgress(Presentation::PHASE_TAGS);
                 }
 
@@ -596,12 +596,6 @@ final class PresentationService
                     $presentation_id
                 ));
 
-            if ($presentation->getProgress() != Presentation::PHASE_SPEAKERS) {
-                throw new ValidationException
-                (
-                    sprintf("presentation %s is not allowed to mark as completed", $presentation_id)
-                );
-            }
 
             if (!$presentation->fulfilSpeakersConditions()) {
                 throw new ValidationException

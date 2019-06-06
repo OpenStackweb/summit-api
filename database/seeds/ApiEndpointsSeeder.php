@@ -2277,7 +2277,7 @@ class ApiEndpointsSeeder extends Seeder
         $current_realm = Config::get('app.scope_base_realm');
 
         $this->seedApiEndpoints('tags', [
-                // members
+                // tags
                 [
                     'name' => 'get-tags',
                     'route' => '/api/v1/tags',
@@ -2285,7 +2285,16 @@ class ApiEndpointsSeeder extends Seeder
                     'scopes' => [
                         sprintf(SummitScopes::ReadAllSummitData, $current_realm),
                         sprintf(SummitScopes::ReadSummitData, $current_realm),
-                        sprintf('%s/tags/read', $current_realm)
+                        sprintf(SummitScopes::ReadTagsData, $current_realm)
+                    ],
+                ],
+                [
+                    'name' => 'add-tag',
+                    'route' => '/api/v1/tags',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                        sprintf(SummitScopes::WriteTagsData, $current_realm)
                     ],
                 ]
             ]

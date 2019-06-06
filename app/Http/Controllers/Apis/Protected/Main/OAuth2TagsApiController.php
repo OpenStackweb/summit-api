@@ -1,6 +1,4 @@
 <?php namespace App\Http\Controllers;
-
-
 /**
  * Copyright 2017 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +15,7 @@ use models\main\ITagRepository;
 use models\oauth2\IResourceServerContext;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Validator;
+use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterParser;
 use utils\FilterParserException;
@@ -26,6 +25,7 @@ use Illuminate\Support\Facades\Log;
 use utils\PagingInfo;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use App\Services\Model\ITagService;
 /**
  * Class OAuth2TagsApiController
  * @package App\Http\Controllers
@@ -33,29 +33,36 @@ use models\exceptions\ValidationException;
 final class OAuth2TagsApiController extends OAuth2ProtectedController
 {
     /**
-     * OAuth2MembersApiController constructor.
+     * @var ITagService
+     */
+    private $tag_service;
+
+    /**
+     * OAuth2TagsApiController constructor.
+     * @param ITagService $tag_service
      * @param ITagRepository $tag_repository
      * @param IResourceServerContext $resource_server_context
      */
     public function __construct
     (
+        ITagService $tag_service,
         ITagRepository $tag_repository,
         IResourceServerContext $resource_server_context
     )
     {
         parent::__construct($resource_server_context);
         $this->repository = $tag_repository;
+        $this->tag_service = $tag_service;
     }
 
     public function getAll(){
 
         $values = Input::all();
 
-        $rules = array
-        (
+        $rules = [
             'page'     => 'integer|min:1',
             'per_page' => 'required_with:page|integer|min:5|max:100',
-        );
+        ];
 
         try {
 
@@ -78,21 +85,20 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
             $filter = null;
 
             if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'),  array
-                (
+                $filter = FilterParser::parse(Input::get('filter'), [
+
                     'tag' => ['=@', '=='],
-                ));
+                ]);
             }
 
             $order = null;
 
             if (Input::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), array
-                (
+                $order = OrderParser::parse(Input::get('order'), [
                     'tag',
                     'id',
-                ));
+                ]);
             }
 
             if(is_null($filter)) $filter = new Filter();
@@ -127,6 +133,49 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
             return $this->error412($ex3->getMessages());
         }
         catch (\Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    public function addTag(){
+        try {
+            if(!Request::isJson()) return $this->error400();
+            $data = Input::json();
+
+            $rules = [
+                'tag' => 'required|string',
+            ];
+
+            // Creates a Validator instance and validates the data.
+            $validation = Validator::make($data->all(), $rules);
+
+            if ($validation->fails()) {
+                $messages = $validation->messages()->toArray();
+
+                return $this->error412
+                (
+                    $messages
+                );
+            }
+
+            $tag = $this->tag_service->addTag($data->all());
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($tag)->serialize
+            (
+                Input::get('expand','')
+            ));
+        }
+        catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return $this->error412([$ex1->getMessage()]);
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(['message'=> $ex2->getMessage()]);
+        }
+        catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }

@@ -53,6 +53,7 @@ class Tag extends SilverstripeBaseModel
      */
     public function __construct($tag)
     {
+        parent::__construct();
         $this->tag = $tag;
     }
 

@@ -260,9 +260,14 @@ final class ApiScopesSeeder extends Seeder
 
         $scopes = [
             [
-                'name' => sprintf('%s/tags/read', $current_realm),
+                'name' => sprintf(SummitScopes::ReadTagsData, $current_realm),
                 'short_description' => 'Get Tags Data',
                 'description' => 'Grants read only access for Tags Data',
+            ],
+            [
+                'name' => sprintf(SummitScopes::WriteTagsData, $current_realm),
+                'short_description' => 'Write Tags Data',
+                'description' => 'Grants write access to Tags Data',
             ],
         ];
 

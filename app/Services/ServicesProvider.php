@@ -33,6 +33,7 @@ use App\Services\Model\ISummitSelectionPlanService;
 use App\Services\Model\ISummitTicketTypeService;
 use App\Services\Model\ISummitTrackService;
 use App\Services\Model\ISummitTrackTagGroupService;
+use App\Services\Model\ITagService;
 use App\Services\Model\ITrackQuestionTemplateService;
 use App\Services\Model\OrganizationService;
 use App\Services\Model\PresentationCategoryGroupService;
@@ -45,11 +46,13 @@ use App\Services\Model\SummitSelectionPlanService;
 use App\Services\Model\SummitTicketTypeService;
 use App\Services\Model\SummitTrackService;
 use App\Services\Model\SummitTrackTagGroupService;
+use App\Services\Model\TagService;
 use App\Services\Model\TrackQuestionTemplateService;
 use App\Services\SummitEventTypeService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
+use models\main\ITagRepository;
 use models\utils\SilverstripeBaseModel;
 use ModelSerializers\BaseSerializerTypeSelector;
 use ModelSerializers\ISerializerTypeSelector;
@@ -267,6 +270,11 @@ final class ServicesProvider extends ServiceProvider
         App::singleton(
             ITrackQuestionTemplateService::class,
             TrackQuestionTemplateService::class
+        );
+
+        App::singleton(
+            ITagService::class,
+            TagService::class
         );
     }
 }

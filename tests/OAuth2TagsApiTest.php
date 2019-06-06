@@ -41,4 +41,38 @@ class OAuth2TagsApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
     }
 
+
+    public function testAddTag(){
+        $params = [
+
+        ];
+
+        $tag  = str_random(16).'_tag';
+        $data = [
+            'tag' => $tag,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2TagsApiController@addTag",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $tag = json_decode($content);
+        $this->assertTrue(!is_null($tag));
+        return $tag;
+    }
+
 }

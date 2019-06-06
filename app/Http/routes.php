@@ -64,6 +64,7 @@ Route::group([
     // tags
     Route::group(['prefix'=>'tags'], function(){
         Route::get('', 'OAuth2TagsApiController@getAll');
+        Route::post('',  [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators|summit-room-administrators', 'uses' => 'OAuth2TagsApiController@addTag']);
     });
 
     // companies

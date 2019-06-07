@@ -88,11 +88,11 @@ final class OAuth2TrackTagGroupsApiTest extends ProtectedApiTest
      * @param int $summit_id
      * @return mixed
      */
-    public function testUpdateTrackTagGroup($summit_id = 25){
-        $new_track_tag_group = $this->testAddTrackTagGroup($summit_id);
+    public function testUpdateTrackTagGroup($summit_id = 27){
+        //$new_track_tag_group = $this->testAddTrackTagGroup($summit_id);
         $params = [
             'id' => $summit_id,
-            'track_tag_group_id' => $new_track_tag_group->id,
+            'track_tag_group_id' => 26,
             'expand' => 'allowed_tags,tag'
         ];
 

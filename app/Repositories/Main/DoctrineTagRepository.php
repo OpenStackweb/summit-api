@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Doctrine\ORM\NoResultException;
 use models\main\ITagRepository;
 use models\main\Tag;
 use App\Repositories\SilverStripeDoctrineRepository;
@@ -40,8 +42,8 @@ final class DoctrineTagRepository
     protected function getOrderMappings()
     {
         return [
-            'id'   => 'e.id',
-            'tag'  => 'e.tag',
+            'id' => 'e.id',
+            'tag' => 'e.tag',
         ];
     }
 
@@ -57,9 +59,9 @@ final class DoctrineTagRepository
                 ->from(\models\main\Tag::class, "t")
                 ->where('UPPER(TRIM(t.tag)) = UPPER(TRIM(:tag))')
                 ->setParameter('tag', $tag)
-                ->getQuery()->getOneOrNullResult();
+                ->getQuery()->getSingleResult();
         }
-        catch(\Exception $ex){
+        catch(NoResultException $e){
             return null;
         }
     }

@@ -166,7 +166,8 @@ implements ISummitTrackTagGroupService
                 $track_tag_group->clearAllowedTags();
                 foreach ($data['allowed_tags'] as $str_tag) {
                     $tag = $this->tag_repository->getByTag($str_tag);
-                    if($tag == null) $tag = new Tag($str_tag);
+                    if(is_null($tag))
+                        $tag = new Tag(trim($str_tag));
                     $track_tag_group->addTag($tag);
                 }
             }

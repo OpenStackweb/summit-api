@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use  LaravelDoctrine\ORM\Facades\EntityManager;
 /**
  * Class OAuth2SummitLocationsApiTest
  */
@@ -1527,4 +1527,185 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($reservations));
     }
 
+    /**
+     * @param int $summit_id
+     */
+    public function testAddBookableRoom($summit_id = 27){
+        $summit_repository = EntityManager::getRepository(\models\summit\Summit::class);
+        $summit = $summit_repository->getById($summit_id);
+        $this->assertTrue(!is_null($summit));
+        if(!$summit instanceof \models\summit\Summit) return;
+        $venues = $summit->getVenues();
+        $this->assertTrue($venues->count() > 0 );
+        $venue  = $venues->first();
+
+        $params = [
+            'id' => $summit_id,
+            'venue_id' => $venue->getId()
+        ];
+
+        $name       = str_random(16).'_bookable_room';
+
+        $data = [
+            'name'            => $name,
+            'capacity'       =>  10,
+            'description'    => 'test bookable room',
+            'time_slot_cost' => 200,
+            'currency'       => 'USD',
+         ];
+
+        $headers =
+            [
+                "HTTP_Authorization" => " Bearer " . $this->access_token,
+                "CONTENT_TYPE"       => "application/json"
+            ];
+
+        $response = $this->action
+        (
+            "POST",
+            "OAuth2SummitLocationsApiController@addVenueBookableRoom",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $bookable_room = json_decode($content);
+        $this->assertTrue(!is_null($bookable_room));
+        $this->assertTrue($bookable_room->name == $name);
+
+        return $bookable_room;
+    }
+
+    public function testUpdateBookableRooms($summit_id = 27){
+        $bookable_room = $this->testAddBookableRoom($summit_id);
+        $this->assertTrue(!is_null($bookable_room));
+
+        $params = [
+            'id' => $summit_id,
+            'venue_id' => $bookable_room->venue_id,
+            'room_id' => $bookable_room->id,
+        ];
+
+        $name       = str_random(16).'_bookable_room_update';
+
+        $data = [
+            'name'            => $name,
+            'capacity'       =>  14,
+            'time_slot_cost' => 250,
+        ];
+
+        $headers =
+            [
+                "HTTP_Authorization" => " Bearer " . $this->access_token,
+                "CONTENT_TYPE"       => "application/json"
+            ];
+
+        $response = $this->action
+        (
+            "PUT",
+            "OAuth2SummitLocationsApiController@updateVenueBookableRoom",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $bookable_room = json_decode($content);
+        $this->assertTrue(!is_null($bookable_room));
+        $this->assertTrue($bookable_room->name == $name);
+
+        return $bookable_room;
+
+    }
+
+
+    /**
+     * @param int $summit_id
+     */
+    public function testAddBookableRoomAttributeValue($summit_id = 27){
+        $summit_repository = EntityManager::getRepository(\models\summit\Summit::class);
+        $summit = $summit_repository->getById($summit_id);
+        $this->assertTrue(!is_null($summit));
+        if(!$summit instanceof \models\summit\Summit) return;
+
+        $rooms = $summit->getBookableRooms();
+        $room = $rooms->first();
+        $attributes = $summit->getMeetingBookingRoomAllowedAttributes();
+        $attribute = $attributes->last();
+        $values = $attribute->getValues();
+        $value = $values->first();
+
+        $params = [
+            'id' => $summit_id,
+            'venue_id' => $room->getVenueId(),
+            'room_id' => $room->getId(),
+            'attribute_id' => $value->getId()
+        ];
+
+        $headers =
+            [
+                "HTTP_Authorization" => " Bearer " . $this->access_token,
+                "CONTENT_TYPE"       => "application/json"
+            ];
+
+        $response = $this->action
+        (
+            "PUT",
+            "OAuth2SummitLocationsApiController@addVenueBookableRoomAttribute",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $bookable_room = json_decode($content);
+        $this->assertTrue(!is_null($bookable_room));
+
+    }
+
+
+    public function testGetAllReservationsBySummit($summit_id =27){
+        $params = [
+            'id' => $summit_id,
+            'filter' => 'status==Reserved,room_id==1'
+        ];
+
+        $headers =
+            [
+                "HTTP_Authorization" => " Bearer " . $this->access_token,
+                "CONTENT_TYPE"       => "application/json"
+            ];
+
+        $response = $this->action
+        (
+            "GET",
+            "OAuth2SummitLocationsApiController@getAllReservationsBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $reservations = json_decode($content);
+        $this->assertTrue(!is_null($reservations));
+    }
 }

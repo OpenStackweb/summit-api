@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use models\summit\SummitBookableVenueRoomAttributeType;
+use ModelSerializers\SerializerRegistry;
 use ModelSerializers\SilverStripeSerializer;
 /**
  * Class SummitBookableVenueRoomAttributeTypeSerializer
@@ -22,4 +24,36 @@ class SummitBookableVenueRoomAttributeTypeSerializer extends SilverStripeSeriali
         'Type'     => 'type:json_string',
         'SummitId' => 'summit_id:json_int',
     ];
+
+    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    {
+        $attr_type   = $this->object;
+        if(!$attr_type instanceof SummitBookableVenueRoomAttributeType)
+            return [];
+
+        $values = parent::serialize($expand, $fields, $relations, $params);
+        $attr_values = [];
+        foreach ($attr_type->getValues() as $attr_val){
+            $attr_values[] = $attr_val->getId();
+        }
+        $values['values'] = $attr_values;
+        if (!empty($expand)) {
+            $exp_expand = explode(',', $expand);
+            foreach ($exp_expand as $relation) {
+                switch (trim($relation)) {
+                    case 'values': {
+                        unset($values['values']);
+                        $attr_values = [];
+                        foreach ($attr_type->getValues() as $attr_val){
+                            $attr_values[] = SerializerRegistry::getInstance()->getSerializer($attr_val)->serialize();
+                        }
+                        $values['values'] = $attr_values;
+                    }
+                        break;
+
+                }
+            }
+        }
+        return $values;
+    }
 }

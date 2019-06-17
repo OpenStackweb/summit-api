@@ -41,6 +41,9 @@ use App\Factories\EntityEvents\TrackGroupActionActionEntityEventFactory;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\App;
+use LaravelDoctrine\ORM\Facades\EntityManager;
+use models\summit\SummitRoomReservation;
+
 /**
  * Class EventServiceProvider
  * @package App\Providers
@@ -316,6 +319,28 @@ final class EventServiceProvider extends ServiceProvider
         Event::listen(\App\Events\SummitDeleted::class, function($event)
         {
             EntityEventPersister::persist(SummitActionEntityEventFactory::build($event, 'DELETE'));
+        });
+
+        // bookable rooms events
+
+        Event::listen(\App\Events\BookableRoomReservationRefundAccepted::class, function($event)
+        {
+            $repository = EntityManager::getRepository(SummitRoomReservation::class);
+        });
+
+        Event::listen(\App\Events\CreatedBookableRoomReservation::class, function($event)
+        {
+            $repository = EntityManager::getRepository(SummitRoomReservation::class);
+        });
+
+        Event::listen(\App\Events\PaymentBookableRoomReservationConfirmed::class, function($event)
+        {
+            $repository = EntityManager::getRepository(SummitRoomReservation::class);
+        });
+
+        Event::listen(\App\Events\RequestedBookableRoomReservationRefund::class, function($event)
+        {
+            $repository = EntityManager::getRepository(SummitRoomReservation::class);
         });
     }
 }

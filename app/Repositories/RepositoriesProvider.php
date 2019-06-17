@@ -27,6 +27,8 @@ use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerActiveInvolvementRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerEditPermissionRequestRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerOrganizationalRoleRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitBookableVenueRoomAttributeTypeRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitBookableVenueRoomAttributeValueRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitEventTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitLocationBannerRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitLocationRepository;
@@ -57,6 +59,8 @@ use models\summit\SpeakerOrganizationalRole;
 use models\summit\SpeakerRegistrationRequest;
 use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\SummitAbstractLocation;
+use models\summit\SummitBookableVenueRoomAttributeType;
+use models\summit\SummitBookableVenueRoomAttributeValue;
 use models\summit\SummitEventType;
 use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitRoomReservation;
@@ -407,6 +411,20 @@ final class RepositoriesProvider extends ServiceProvider
             ISummitRoomReservationRepository::class,
             function(){
                 return EntityManager::getRepository(SummitRoomReservation::class);
+            }
+        );
+
+        App::singleton(
+            ISummitBookableVenueRoomAttributeTypeRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitBookableVenueRoomAttributeType::class);
+            }
+        );
+
+        App::singleton(
+            ISummitBookableVenueRoomAttributeValueRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitBookableVenueRoomAttributeValue::class);
             }
         );
 

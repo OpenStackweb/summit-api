@@ -1151,6 +1151,17 @@ SQL;
     }
 
     /**
+     * @param Summit $summit
+     * @return int
+     * @throws NoResultException
+     * @throws NonUniqueResultException
+     */
+    public function getReservationsCountBySummit(Summit $summit):int{
+        $query = $this->createQuery("SELECT count(rv.id) from models\summit\SummitRoomReservation rv JOIN rv.room r JOIN r.venue v JOIN v.summit s WHERE s.id = :summit_id");
+        return $query->setParameter('summit_id', $summit->getId())->getSingleResult();
+    }
+
+    /**
      * @param int $reservation_id
      * @return SummitRoomReservation
      */

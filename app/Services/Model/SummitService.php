@@ -55,6 +55,8 @@ use models\summit\PresentationType;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
+use models\summit\SummitBookableVenueRoomAttributeType;
+use models\summit\SummitBookableVenueRoomAttributeValue;
 use models\summit\SummitEvent;
 use models\summit\SummitEventFactory;
 use models\summit\SummitEventFeedback;
@@ -1888,6 +1890,165 @@ final class SummitService extends AbstractService implements ISummitService
             $this->event_repository->add($eventClone);
 
             return $eventClone;
+
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param array $payload
+     * @return SummitBookableVenueRoomAttributeType
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function addBookableRoomAttribute(Summit $summit, array $payload): SummitBookableVenueRoomAttributeType
+    {
+        return $this->tx_service->transaction(function () use ($summit, $payload) {
+
+            $type_name = trim($payload['type']);
+            $former_type = $summit->getBookableAttributeTypeByTypeName($type_name);
+            if(!is_null($former_type))
+                throw new ValidationException(sprintf("bookable room attr type %s already exists on summit %s", $type_name, $summit->getId()));
+
+            $type = new SummitBookableVenueRoomAttributeType();
+            $type->setType($type_name);
+
+            $summit->addMeetingBookingRoomAllowedAttribute($type);
+
+            return $type;
+
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $type_id
+     * @param array $payload
+     * @return SummitBookableVenueRoomAttributeType
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function updateBookableRoomAttribute(Summit $summit, int $type_id, array $payload): SummitBookableVenueRoomAttributeType
+    {
+        return $this->tx_service->transaction(function () use ($summit, $type_id, $payload) {
+            $type = $summit->getBookableAttributeTypeById($type_id);
+            if(is_null($type))
+                throw new EntityNotFoundException();
+
+            $type_name = trim($payload['type']);
+            $former_type = $summit->getBookableAttributeTypeByTypeName($type_name);
+            if(!is_null($former_type) && $type_id != $former_type->getId())
+                throw new ValidationException(sprintf("bookable room attr type %s already exists on summit %s", $type_name, $summit->getId()));
+
+            $type->setType($type_name);
+
+            return $type;
+
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $type_id
+     * @return void
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function deleteBookableRoomAttribute(Summit $summit, int $type_id): void
+    {
+        $this->tx_service->transaction(function () use ($summit, $type_id) {
+            $type = $summit->getBookableAttributeTypeById($type_id);
+            if(is_null($type))
+                throw new EntityNotFoundException();
+
+            $summit->removeMeetingBookingRoomAllowedAttribute($type);
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $type_id
+     * @param array $payload
+     * @return SummitBookableVenueRoomAttributeValue
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function addBookableRoomAttributeValue(Summit $summit, int $type_id, array $payload): SummitBookableVenueRoomAttributeValue
+    {
+        return $this->tx_service->transaction(function () use ($summit, $type_id, $payload) {
+
+            $type = $summit->getBookableAttributeTypeById($type_id);
+            if (is_null($type))
+                throw new EntityNotFoundException();
+
+            $value_name = trim($payload['value']);
+            $former_value = $type->getValueByValue($value_name);
+            if (!is_null($former_value))
+                throw new ValidationException(sprintf("bookable room attr value %s already exists on summit %s", $value_name, $summit->getId()));
+
+            $value = new SummitBookableVenueRoomAttributeValue();
+            $value->setValue($value_name);
+            $type->addValue($value);
+
+            return $value;
+
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $type_id
+     * @param int $value_id
+     * @param array $payload
+     * @return SummitBookableVenueRoomAttributeValue
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function updateBookableRoomAttributeValue(Summit $summit, int $type_id, int $value_id, array $payload): SummitBookableVenueRoomAttributeValue
+    {
+        return $this->tx_service->transaction(function () use ($summit, $type_id, $value_id, $payload) {
+
+            $type = $summit->getBookableAttributeTypeById($type_id);
+            if (is_null($type))
+                throw new EntityNotFoundException();
+
+            $value = $type->getValueById($value_id);
+            if (is_null($value))
+                throw new EntityNotFoundException();
+
+            $value_name = trim($payload['value']);
+            $former_value = $type->getValueByValue($value_name);
+            if (!is_null($former_value) && $value_id != $former_value->getId())
+                throw new ValidationException(sprintf("bookable room attr value %s already exists on summit %s", $value_name, $summit->getId()));
+
+            $value->setValue($value_name);
+
+            return $value;
+
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $type_id
+     * @param int $value_id
+     * @return void
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function deleteBookableRoomAttributeValue(Summit $summit, int $type_id, int $value_id): void
+    {
+         $this->tx_service->transaction(function () use ($summit, $type_id, $value_id) {
+
+            $type = $summit->getBookableAttributeTypeById($type_id);
+            if (is_null($type))
+                throw new EntityNotFoundException();
+
+            $value = $type->getValueById($value_id);
+            if (is_null($value))
+                throw new EntityNotFoundException();
+
+            $type->removeValue($value);
 
         });
     }

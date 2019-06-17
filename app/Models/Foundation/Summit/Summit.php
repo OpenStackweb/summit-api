@@ -2534,6 +2534,47 @@ SQL;
         return $this->meeting_booking_room_allowed_attributes;
     }
 
+    /**
+     * @param SummitBookableVenueRoomAttributeType $type
+     */
+    public function addMeetingBookingRoomAllowedAttribute(SummitBookableVenueRoomAttributeType $type){
+        if($this->meeting_booking_room_allowed_attributes->contains($type)) return;
+        $this->meeting_booking_room_allowed_attributes->add($type);
+        $type->setSummit($this);
+    }
+
+    /**
+     * @param SummitBookableVenueRoomAttributeType $type
+     */
+    public function removeMeetingBookingRoomAllowedAttribute(SummitBookableVenueRoomAttributeType $type){
+        if(!$this->meeting_booking_room_allowed_attributes->contains($type)) return;
+        $this->meeting_booking_room_allowed_attributes->removeElement($type);
+    }
+
+    /**
+     * @param int $id
+     * @return SummitBookableVenueRoomAttributeType|null
+     */
+    public function getBookableAttributeTypeById(int $id):?SummitBookableVenueRoomAttributeType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', intval($id)));
+        $attr = $this->meeting_booking_room_allowed_attributes->matching($criteria)->first();
+        return $attr === false ? null : $attr;
+    }
+
+    /**
+     * @param string $type
+     * @return SummitBookableVenueRoomAttributeType|null
+     */
+    public function getBookableAttributeTypeByTypeName(string $type):?SummitBookableVenueRoomAttributeType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type', trim($type)));
+        $attr = $this->meeting_booking_room_allowed_attributes->matching($criteria)->first();
+        return $attr === false ? null : $attr;
+    }
+
     public function getMaxReservationsPerDay():int {
         $interval = $this->meeting_room_booking_end_time->diff( $this->meeting_room_booking_start_time);
         $minutes  = $interval->days * 24 * 60;
@@ -2542,4 +2583,15 @@ SQL;
         return intval ($minutes / $this->meeting_room_booking_slot_length);
     }
 
+    /**
+     * @param int $id
+     * @return SummitBookableVenueRoomAttributeValue|null
+     */
+    public function getMeetingBookingRoomAllowedAttributeValueById(int $id):?SummitBookableVenueRoomAttributeValue{
+        foreach($this->meeting_booking_room_allowed_attributes as $attribute_type){
+            $value = $attribute_type->getValueById($id);
+            if(!is_null($value)) return $value;
+        }
+        return null;
+    }
 }

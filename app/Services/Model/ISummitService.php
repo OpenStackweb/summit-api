@@ -19,6 +19,8 @@ use models\main\Member;
 use models\summit\ConfirmationExternalOrderRequest;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
+use models\summit\SummitBookableVenueRoomAttributeType;
+use models\summit\SummitBookableVenueRoomAttributeValue;
 use models\summit\SummitEvent;
 use models\summit\SummitEventFeedback;
 use models\summit\SummitScheduleEmptySpot;
@@ -273,4 +275,64 @@ interface ISummitService
      */
     public function cloneEvent(Summit $summit, int $event_id):SummitEvent;
 
+    // bookable room attribute types
+
+    /**
+     * @param Summit $summit
+     * @param array $payload
+     * @return SummitBookableVenueRoomAttributeType
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function addBookableRoomAttribute(Summit $summit, array $payload):SummitBookableVenueRoomAttributeType;
+
+    /**
+     * @param Summit $summit
+     * @param int $type_id
+     * @param array $payload
+     * @return SummitBookableVenueRoomAttributeType
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function updateBookableRoomAttribute(Summit $summit, int $type_id, array $payload):SummitBookableVenueRoomAttributeType;
+
+    /**
+     * @param Summit $summit
+     * @param int $type_id
+     * @return void
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function deleteBookableRoomAttribute(Summit $summit, int $type_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $type_id
+     * @param array $payload
+     * @return SummitBookableVenueRoomAttributeValue
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function addBookableRoomAttributeValue(Summit $summit, int $type_id, array $payload):SummitBookableVenueRoomAttributeValue;
+
+    /**
+     * @param Summit $summit
+     * @param int $type_id
+     * @param int $value_id
+     * @param array $payload
+     * @return SummitBookableVenueRoomAttributeValue
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function updateBookableRoomAttributeValue(Summit $summit, int $type_id, int $value_id, array $payload):SummitBookableVenueRoomAttributeValue;
+
+    /**
+     * @param Summit $summit
+     * @param int $type_id
+     * @param int $value_id
+     * @return void
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function deleteBookableRoomAttributeValue(Summit $summit, int $type_id, int $value_id):void;
 }

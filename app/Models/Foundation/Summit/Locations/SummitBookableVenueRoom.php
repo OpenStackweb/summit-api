@@ -66,6 +66,7 @@ class SummitBookableVenueRoom extends SummitVenueRoom
      * @throws ValidationException
      */
     public function addReservation(SummitRoomReservation $reservation){
+
         $criteria = Criteria::create();
 
         $start_date = $reservation->getStartDatetime();
@@ -87,7 +88,7 @@ class SummitBookableVenueRoom extends SummitVenueRoom
         if($this->reservations->matching($criteria)->count() > 0)
             throw new ValidationException(sprintf("reservation overlaps an existent reservation"));
 
-        $summit = $this->summit;
+        $summit           = $this->summit;
 
         $local_start_date = $summit->convertDateFromUTC2TimeZone($start_date);
         $local_end_date   = $summit->convertDateFromUTC2TimeZone($end_date);
@@ -96,6 +97,7 @@ class SummitBookableVenueRoom extends SummitVenueRoom
 
         if(!$summit->isTimeFrameInsideSummitDuration($local_start_date, $local_end_date))
             throw new ValidationException("requested reservation period does not belong to summit period");
+
         $local_start_time = new \DateTime("now", $this->summit->getTimeZone());
         $local_start_time->setTime(
             intval($start_time->format("H")),
@@ -160,6 +162,17 @@ class SummitBookableVenueRoom extends SummitVenueRoom
     public function getReservations(): ArrayCollection
     {
         return $this->reservations;
+    }
+
+    /**
+     * @param int $id
+     * @return SummitRoomReservation|null
+     */
+    public function getReservationById(int $id):?SummitRoomReservation{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', intval($id)));
+        $reservation = $this->reservations->matching($criteria)->first();
+        return $reservation === false ? null : $reservation;
     }
 
     public function clearReservations(){
@@ -276,5 +289,20 @@ class SummitBookableVenueRoom extends SummitVenueRoom
         return $this->attributes;
     }
 
+    /**
+     * @param SummitBookableVenueRoomAttributeValue $attribute
+     */
+    public function addAttribute(SummitBookableVenueRoomAttributeValue $attribute){
+        if($this->attributes->contains($attribute)) return;
+        $this->attributes->add($attribute);
+    }
+
+    /**
+     * @param SummitBookableVenueRoomAttributeValue $attribute
+     */
+    public function removeAttribute(SummitBookableVenueRoomAttributeValue $attribute){
+        if(!$this->attributes->contains($attribute)) return;
+        $this->attributes->removeElement($attribute);
+    }
 
 }

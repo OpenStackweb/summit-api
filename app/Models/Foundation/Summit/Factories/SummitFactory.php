@@ -149,6 +149,30 @@ final class SummitFactory
             $summit->setSecondaryRegistrationLabel(trim($data['secondary_registration_label']));
         }
 
+        if(isset($data['meeting_room_booking_start_time']) ){
+            // no need to convert to UTC, its only relative time
+            $meeting_room_booking_start_time = intval($data['meeting_room_booking_start_time']);
+            $meeting_room_booking_start_time = new \DateTime("@$meeting_room_booking_start_time");
+            $summit->setMeetingRoomBookingStartTime($meeting_room_booking_start_time);
+        }
+
+        if(isset($data['meeting_room_booking_end_time']) ){
+            // no need to convert to UTC, its only relative time
+            $meeting_room_booking_end_time = intval($data['meeting_room_booking_end_time']);
+            $meeting_room_booking_end_time = new \DateTime("@$meeting_room_booking_end_time");
+            $summit->setMeetingRoomBookingEndTime($meeting_room_booking_end_time);
+        }
+
+        if(isset($data['meeting_room_booking_slot_length']) ){
+            // minutes
+            $summit->setMeetingRoomBookingSlotLength(intval($data['meeting_room_booking_slot_length']));
+        }
+
+        if(isset($data['meeting_room_booking_max_allowed']) ){
+            // maximun books per user
+            $summit->setMeetingRoomBookingMaxAllowed(intval($data['meeting_room_booking_max_allowed']));
+        }
+
         return $summit;
     }
 }

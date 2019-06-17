@@ -11,8 +11,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use models\summit\Summit;
 use models\summit\SummitRoomReservation;
 use models\utils\IBaseRepository;
+use utils\Filter;
+use utils\Order;
+use utils\PagingInfo;
+use utils\PagingResponse;
+
 /**
  * Interface ISummitRoomReservationRepository
  * @package App\Models\Foundation\Summit\Repositories
@@ -21,7 +28,16 @@ interface ISummitRoomReservationRepository extends IBaseRepository
 {
     /**
      * @param string $payment_gateway_cart_id
-     * @return SummitRoomReservation
+     * @return SummitRoomReservation|null
      */
-    public function getByPaymentGatewayCartId(string $payment_gateway_cart_id):SummitRoomReservation;
+    public function getByPaymentGatewayCartId(string $payment_gateway_cart_id): ?SummitRoomReservation;
+
+    /**
+     * @param Summit $summit
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getAllBySummitByPage(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse;
 }

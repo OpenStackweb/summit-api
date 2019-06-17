@@ -24,7 +24,6 @@ use LaravelDoctrine\ORM\Facades\Registry;
 abstract class SilverStripeDoctrineRepository extends DoctrineRepository
 {
 
-
     /**
      * Initializes a new <tt>EntityRepository</tt>.
      *

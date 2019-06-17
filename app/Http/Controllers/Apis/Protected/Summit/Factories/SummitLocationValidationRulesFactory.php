@@ -14,6 +14,7 @@
 use App\Models\Foundation\Summit\Locations\SummitLocationConstants;
 use models\exceptions\ValidationException;
 use models\summit\SummitAirport;
+use models\summit\SummitBookableVenueRoom;
 use models\summit\SummitExternalLocation;
 use models\summit\SummitHotel;
 use models\summit\SummitVenue;
@@ -59,6 +60,10 @@ final class SummitLocationValidationRulesFactory
                 return array_merge($base_rules, SummitVenueRoomValidationRulesFactory::build($data, $update));
             }
             break;
+            case SummitBookableVenueRoom::ClassName: {
+                return array_merge($base_rules, SummitVenueBookableRoomValidationRulesFactory::build($data, $update));
+            }
+                break;
             default:{
                 throw new ValidationException('invalid class_name param');
             }

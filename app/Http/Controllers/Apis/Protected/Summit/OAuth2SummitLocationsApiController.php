@@ -16,6 +16,7 @@ use App\Models\Foundation\Summit\Locations\Banners\SummitLocationBannerConstants
 use App\Models\Foundation\Summit\Locations\SummitLocationConstants;
 use App\Models\Foundation\Summit\Repositories\ISummitLocationBannerRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitLocationRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
 use App\Services\Apis\IPaymentGatewayAPI;
 use App\Services\Model\ILocationService;
 use Exception;
@@ -100,6 +101,11 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     private $payment_gateway;
 
     /**
+     * @var ISummitRoomReservationRepository
+     */
+    private $reservation_repository;
+
+    /**
      * OAuth2SummitLocationsApiController constructor.
      * @param ISummitRepository $summit_repository
      * @param ISummitEventRepository $event_repository
@@ -108,6 +114,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param ISummitLocationRepository $location_repository
      * @param ISummitLocationBannerRepository $location_banners_repository
      * @param IMemberRepository $member_repository
+     * @param ISummitRoomReservationRepository $reservation_repository
      * @param ISummitService $summit_service
      * @param ILocationService $location_service
      * @param IPaymentGatewayAPI $payment_gateway
@@ -122,6 +129,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         ISummitLocationRepository $location_repository,
         ISummitLocationBannerRepository $location_banners_repository,
         IMemberRepository $member_repository,
+        ISummitRoomReservationRepository $reservation_repository,
         ISummitService $summit_service,
         ILocationService $location_service,
         IPaymentGatewayAPI $payment_gateway,
@@ -138,6 +146,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         $this->location_service            = $location_service;
         $this->summit_service              = $summit_service;
         $this->payment_gateway             = $payment_gateway;
+        $this->reservation_repository      = $reservation_repository;
     }
 
     /**
@@ -655,7 +664,6 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             if (!$venue instanceof SummitVenue) {
                 return $this->error404();
             }
-
 
             $room = $venue->getRoom($room_id);
 

@@ -14,12 +14,12 @@
 use models\exceptions\ValidationException;
 use models\summit\SummitAbstractLocation;
 use models\summit\SummitAirport;
+use models\summit\SummitBookableVenueRoom;
 use models\summit\SummitExternalLocation;
 use models\summit\SummitGeoLocatedLocation;
 use models\summit\SummitHotel;
 use models\summit\SummitVenue;
 use models\summit\SummitVenueRoom;
-
 /**
  * Class SummitLocationFactory
  * @package App\Models\Foundation\Summit\Factories
@@ -50,6 +50,11 @@ final class SummitLocationFactory
             case SummitAirport::ClassName :{
                 $location = self::populateSummitAirport(new SummitAirport, $data);
             }
+            break;
+            case SummitBookableVenueRoom::ClassName :{
+                $location = self::populateSummitVenueBookableRoom(new SummitBookableVenueRoom, $data);
+            }
+            break;
             case SummitVenueRoom::ClassName :{
                 $location = self::populateSummitVenueRoom(new SummitVenueRoom, $data);
             }
@@ -207,6 +212,11 @@ final class SummitLocationFactory
         return $airport;
     }
 
+    /**
+     * @param SummitVenueRoom $room
+     * @param array $data
+     * @return SummitVenueRoom
+     */
     public static function populateSummitVenueRoom(SummitVenueRoom $room, array $data){
 
         self::populateSummitAbstractLocation($room, $data);
@@ -219,6 +229,25 @@ final class SummitLocationFactory
 
         return $room;
     }
+
+    /**
+     * @param SummitBookableVenueRoom $room
+     * @param array $data
+     * @return SummitBookableVenueRoom
+     */
+    public static function populateSummitVenueBookableRoom(SummitBookableVenueRoom $room, array $data){
+
+        self::populateSummitVenueRoom($room, $data);
+
+        if(isset($data['time_slot_cost']))
+            $room->setTimeSlotCost(floatval($data['time_slot_cost']));
+
+        if(isset($data['currency']))
+            $room->setCurrency(trim($data['currency']));
+
+        return $room;
+    }
+
 
     /**
      * @param SummitAbstractLocation $location
@@ -237,6 +266,9 @@ final class SummitLocationFactory
         }
         if($location instanceof SummitExternalLocation){
             return self::populateSummitExternalLocation($location, $data);
+        }
+        if($location instanceof SummitBookableVenueRoom){
+            return self::populateSummitVenueBookableRoom($location, $data);
         }
         if($location instanceof SummitVenueRoom){
             return self::populateSummitVenueRoom($location, $data);

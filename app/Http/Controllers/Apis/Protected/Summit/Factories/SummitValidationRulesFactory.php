@@ -41,6 +41,10 @@ final class SummitValidationRulesFactory
                 'secondary_registration_link'     => 'sometimes|url',
                 'secondary_registration_label'    => 'sometimes|string',
                 'slug'                            => 'nullable|string',
+                'meeting_room_booking_start_time'  => 'nullable|date_format:U',
+                'meeting_room_booking_end_time'    => 'nullable|required_with:meeting_room_booking_end_time|date_format:U|after_or_equal:meeting_room_booking_end_time',
+                'meeting_room_booking_slot_length' => 'nullable|integer',
+                'meeting_room_booking_max_allowed' => 'nullable|integer|min:1',
             ];
         }
 
@@ -65,6 +69,10 @@ final class SummitValidationRulesFactory
             'secondary_registration_link'  => 'sometimes|url',
             'secondary_registration_label' => 'sometimes|string',
             'slug'                         => 'nullable|string',
+            'meeting_room_booking_start_time'  => 'nullable|date_format:U',
+            'meeting_room_booking_end_time'    => 'nullable|required_with:meeting_room_booking_end_time|date_format:U|after_or_equal:meeting_room_booking_end_time',
+            'meeting_room_booking_slot_length' => 'nullable|integer',
+            'meeting_room_booking_max_allowed' => 'nullable|integer|min:1',
         ];
     }
 }

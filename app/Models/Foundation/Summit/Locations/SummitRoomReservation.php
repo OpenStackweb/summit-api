@@ -325,5 +325,4 @@ class SummitRoomReservation extends SilverstripeBaseModel
         }
     }
 
-
 }

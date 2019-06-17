@@ -18,7 +18,7 @@ use models\exceptions\ValidationException;
 use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitBookableVenueRoomAttributeTypeRepository")
  * @ORM\Table(name="SummitBookableVenueRoomAttributeType")
  * @ORM\AssociationOverrides({
  *     @ORM\AssociationOverride(
@@ -67,19 +67,45 @@ class SummitBookableVenueRoomAttributeType extends SilverstripeBaseModel
         $this->type = $type;
     }
 
-    /**
-     * @return ArrayCollection
-     */
-    public function getValues(): ArrayCollection
+    public function getValues()
     {
         return $this->values;
     }
 
-    /**
-     * @param ArrayCollection $values
-     */
-    public function setValues(ArrayCollection $values): void
-    {
-        $this->values = $values;
+    public function addValue(SummitBookableVenueRoomAttributeValue $value){
+        if($this->values->contains($value)) return;
+        $this->values->add($value);
+        $value->setType($this);
     }
+
+    public function removeValue(SummitBookableVenueRoomAttributeValue $value){
+        if(!$this->values->contains($value)) return;
+        $this->values->removeElement($value);
+    }
+
+    /**
+     * @param int $id
+     * @return SummitBookableVenueRoomAttributeValue|null
+     */
+    public function getValueById(int $id):?SummitBookableVenueRoomAttributeValue
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', intval($id)));
+        $value = $this->values->matching($criteria)->first();
+        return $value === false ? null : $value;
+    }
+
+
+    /**
+     * @param string $value
+     * @return SummitBookableVenueRoomAttributeValue|null
+     */
+    public function getValueByValue(string $value):?SummitBookableVenueRoomAttributeValue
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('value', trim($value)));
+        $value = $this->values->matching($criteria)->first();
+        return $value === false ? null : $value;
+    }
+
 }

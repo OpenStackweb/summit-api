@@ -17,7 +17,7 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitBookableVenueRoomAttributeValueRepository")
  * @ORM\Table(name="SummitBookableVenueRoomAttributeValue")
  * Class SummitBookableVenueRoomAttributeValue
  * @package models\summit

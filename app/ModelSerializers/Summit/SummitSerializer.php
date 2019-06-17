@@ -52,6 +52,7 @@ class SummitSerializer extends SilverStripeSerializer
         'SecondaryRegistrationLink'                      => 'secondary_registration_link:json_string',
         'SecondaryRegistrationLabel'                     => 'secondary_registration_label:json_string',
         'RawSlug'                                        => 'slug:json_string',
+        // Bookable rooms attributes
         'MeetingRoomBookingStartTime'                    => 'meeting_room_booking_start_time:datetime_epoch',
         'MeetingRoomBookingEndTime'                      => 'meeting_room_booking_end_time:datetime_epoch',
         'MeetingRoomBookingSlotLength'                   => 'meeting_room_booking_slot_length:json_int',

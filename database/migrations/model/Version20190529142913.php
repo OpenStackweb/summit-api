@@ -37,7 +37,11 @@ SQL;
                 $table->primary("ID");
                 $table->string("Currency",3);
                 $table->decimal("TimeSlotCost", 9, 2)->setDefault('0.00');
+                $table->foreign("SummitAbstractLocation","ID", "ID", ["onDelete" => "CASCADE"]);
             });
+
+            $this->addSql($sql);
+
         }
     }
 

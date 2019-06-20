@@ -29,8 +29,8 @@ class Version20190506153909 extends AbstractMigration
         $builder = new Builder($schema);
         if(!$builder->hasTable("PresentationSpeakerNotificationEmailRequest")){
             $this->addSql("CREATE TABLE PresentationSpeakerNotificationEmailRequest (SpeakerID INT DEFAULT NULL, PresentationID INT DEFAULT NULL, ID INT NOT NULL, INDEX IDX_2BFDC212FEC5CBA6 (SpeakerID), INDEX IDX_2BFDC21279B1711B (PresentationID), PRIMARY KEY(ID)) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB; ");
-            $this->addSql("ALTER TABLE PresentationSpeakerNotificationEmailRequest ADD CONSTRAINT FK_2BFDC212FEC5CBA6 FOREIGN KEY (SpeakerID) REFERENCES PresentationSpeaker (ID); ");
-            $this->addSql("ALTER TABLE PresentationSpeakerNotificationEmailRequest ADD CONSTRAINT FK_2BFDC21279B1711B FOREIGN KEY (PresentationID) REFERENCES Presentation (ID);");
+            $this->addSql("ALTER TABLE PresentationSpeakerNotificationEmailRequest ADD CONSTRAINT FK_2BFDC212FEC5CBA6 FOREIGN KEY (SpeakerID) REFERENCES PresentationSpeaker (ID) ON DELETE CASCADE; ");
+            $this->addSql("ALTER TABLE PresentationSpeakerNotificationEmailRequest ADD CONSTRAINT FK_2BFDC21279B1711B FOREIGN KEY (PresentationID) REFERENCES Presentation (ID) ON DELETE CASCADE;");
             $this->addSql("ALTER TABLE PresentationSpeakerNotificationEmailRequest ADD CONSTRAINT FK_2BFDC21211D3633A FOREIGN KEY (ID) REFERENCES EmailCreationRequest (ID) ON DELETE CASCADE;");
         }
     }

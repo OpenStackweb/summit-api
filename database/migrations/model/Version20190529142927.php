@@ -46,10 +46,10 @@ class Version20190529142927 extends AbstractMigration
                 $table->index("PaymentGatewayCartId", "PaymentGatewayCartId");
                 $table->integer("OwnerID", false, false)->setNotnull(false);
                 $table->index("OwnerID", "OwnerID");
-                //$table->foreign("Member", "OwnerID", "ID");
+                $table->foreign("Member", "OwnerID", "ID", ["onDelete" => "CASCADE"]);
                 $table->integer("RoomID", false, false)->setNotnull(false);
                 $table->index("RoomID", "RoomID");
-                //$table->foreign("SummitBookableVenueRoom", "RoomID", "ID");
+                $table->foreign("SummitBookableVenueRoom", "RoomID", "ID", ["onDelete" => "CASCADE"]);
             });
         }
     }

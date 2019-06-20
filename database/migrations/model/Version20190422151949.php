@@ -31,15 +31,16 @@ final class Version20190422151949 extends AbstractMigration
         if(!$builder->hasTable("SpeakerEditPermissionRequest")) {
             $builder->create('SpeakerEditPermissionRequest', function (Table $table) {
                 $table->increments('ID');
-                $table->integer("SpeakerID");
                 $table->integer("RequestedByID");
                 $table->boolean("Approved")->setDefault(false);
                 $table->dateTime("ApprovedDate")->setNotnull(false);
                 $table->dateTime("Created")->setNotnull(true);
                 $table->dateTime("LastEdited")->setNotnull(true);
                 $table->text("Hash");
-                $table->foreign("PresentationSpeaker", "SpeakerID", "ID");
-                $table->foreign("Member", "RequestedByID", "ID");
+                $table->integer("SpeakerID" );
+                $table->index("SpeakerID", "SpeakerID");
+                $table->foreign("PresentationSpeaker", "SpeakerID", "ID", ["onDelete" => "CASCADE"]);
+                $table->foreign("Member", "RequestedByID", "ID", ["onDelete" => "CASCADE"]);
             });
         }
     }

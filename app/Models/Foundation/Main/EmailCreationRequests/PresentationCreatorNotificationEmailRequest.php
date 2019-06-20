@@ -23,7 +23,7 @@ class PresentationCreatorNotificationEmailRequest extends EmailCreationRequest
 {
     /**
      * @ORM\ManyToOne(targetEntity="models\summit\Presentation")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID")
+     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Presentation
      */
     protected $presentation;

@@ -18,7 +18,6 @@ use models\summit\Summit;
 use models\summit\SummitAbstractLocation;
 use models\summit\SummitAirport;
 use models\summit\SummitBookableVenueRoom;
-use models\summit\SummitBookableVenueRoomAttributeValue;
 use models\summit\SummitExternalLocation;
 use models\summit\SummitGeoLocatedLocation;
 use models\summit\SummitHotel;
@@ -39,8 +38,9 @@ final class DoctrineSummitLocationRepository
     implements ISummitLocationRepository
 {
 
-    private static $forbidden_classes = [
+    private static $second_level_locations = [
         SummitVenueRoom::ClassName,
+        SummitBookableVenueRoom::ClassName,
     ];
 
     /**
@@ -79,6 +79,7 @@ final class DoctrineSummitLocationRepository
                     SummitExternalLocation::ClassName  => SummitExternalLocation::class,
                     SummitAirport::ClassName           => SummitAirport::class,
                     SummitBookableVenueRoom::ClassName => SummitBookableVenueRoom::class,
+                    SummitVenueRoom::ClassName         => SummitVenueRoom::class,
                 ]
             )
         ];
@@ -101,6 +102,7 @@ final class DoctrineSummitLocationRepository
      * @param PagingInfo $paging_info
      * @param Filter|null $filter
      * @param Order|null $order
+     * @param bool $first_level
      * @return PagingResponse
      */
     public function getBySummit
@@ -108,7 +110,8 @@ final class DoctrineSummitLocationRepository
         Summit $summit,
         PagingInfo $paging_info,
         Filter $filter = null,
-        Order $order = null
+        Order $order = null,
+        bool $first_level = true
     )
     {
         $query  =   $this->getEntityManager()
@@ -126,12 +129,14 @@ final class DoctrineSummitLocationRepository
             ->leftJoin('al.summit', 's')
             ->where("s.id = :summit_id");
 
-        $idx  = 1;
-        foreach(self::$forbidden_classes as $forbidden_class){
-            $query = $query
-                ->andWhere("not al INSTANCE OF :forbidden_class".$idx);
-            $query->setParameter("forbidden_class".$idx, $forbidden_class);
-            $idx++;
+        if($first_level) {
+            $idx = 1;
+            foreach (self::$second_level_locations as $second_level_location) {
+                $query = $query
+                    ->andWhere("not al INSTANCE OF :second_level_class" . $idx);
+                $query->setParameter("second_level_class" . $idx, $second_level_location);
+                $idx++;
+            }
         }
 
         $query->setParameter("summit_id", $summit->getId());

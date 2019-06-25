@@ -23,6 +23,13 @@ use models\summit\SummitVenueRoom;
  */
 final class SummitLocationConstants
 {
+    public static $valid_first_level_class_names = [
+        SummitVenue::ClassName,
+        SummitAirport::ClassName,
+        SummitHotel::ClassName,
+        SummitExternalLocation::ClassName,
+    ];
+
     public static $valid_class_names = [
         SummitVenue::ClassName,
         SummitAirport::ClassName,

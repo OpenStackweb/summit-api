@@ -103,7 +103,7 @@ trait SummitBookableVenueRoomApi
 
             $filter->addFilterCondition(FilterParser::buildFilter('class_name','==', SummitBookableVenueRoom::ClassName));
 
-            $data = $this->location_repository->getBySummit($summit, new PagingInfo($page, $per_page), $filter, $order);
+            $data = $this->location_repository->getBySummit($summit, new PagingInfo($page, $per_page), $filter, $order, false);
 
             return $this->ok
             (

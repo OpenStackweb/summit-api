@@ -203,7 +203,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             if(is_null($filter)) $filter = new Filter();
 
             $filter->validate([
-                'class_name'  => sprintf('sometimes|in:%s',implode(',', SummitLocationConstants::$valid_class_names)),
+                'class_name'  => sprintf('sometimes|in:%s',implode(',', SummitLocationConstants::$valid_first_level_class_names)),
                 'name'        => 'sometimes|string',
                 'description' => 'sometimes|string',
                 'address_1'   => 'sometimes|string',
@@ -218,7 +218,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 'class_name.in' =>  sprintf
                 (
                     ":attribute has an invalid value ( valid values are %s )",
-                    implode(", ", SummitLocationConstants::$valid_class_names)
+                    implode(", ", SummitLocationConstants::$valid_first_level_class_names)
                 )
             ]);
 

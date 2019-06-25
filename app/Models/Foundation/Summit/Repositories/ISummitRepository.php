@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use models\utils\IBaseRepository;
+use phpDocumentor\Reflection\Types\Array_;
+
 /**
  * Interface ISummitRepository
  * @package models\summit
@@ -59,4 +61,9 @@ interface ISummitRepository extends IBaseRepository
      * @return Summit
      */
     public function getBySlug(string $slug):Summit;
+
+    /**
+     * @return Summit[]
+     */
+    public function getActivesWithExternalFeed():array;
 }

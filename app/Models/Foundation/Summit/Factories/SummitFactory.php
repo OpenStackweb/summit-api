@@ -173,6 +173,20 @@ final class SummitFactory
             $summit->setMeetingRoomBookingMaxAllowed(intval($data['meeting_room_booking_max_allowed']));
         }
 
+        // external feed
+
+        if(isset($data['api_feed_type'])){
+            $summit->setApiFeedType($data['api_feed_type']);
+        }
+
+        if(isset($data['api_feed_url'])){
+            $summit->setApiFeedUrl($data['api_feed_url']);
+        }
+
+        if(isset($data['api_feed_key'])){
+            $summit->setApiFeedKey($data['api_feed_key']);
+        }
+
         return $summit;
     }
 }

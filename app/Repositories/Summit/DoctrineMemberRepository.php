@@ -129,4 +129,27 @@ final class DoctrineMemberRepository
     {
        return Member::class;
     }
+
+    /**
+     * @param string $fullname
+     * @return Member|null
+     */
+    public function getByFullName(string $fullname): ?Member
+    {
+        $memberFullNameParts = explode(" ", $fullname);
+        $memberFirstName     = trim(trim(array_pop($memberFullNameParts)));
+        $memberLastName      = trim(implode(" ", $memberFullNameParts));
+
+        return $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->where("e.first_name = :first_name")
+            ->andWhere("e.last_name = :last_name")
+            ->setParameter("first_name",$memberFirstName)
+            ->setParameter("last_name", $memberLastName)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

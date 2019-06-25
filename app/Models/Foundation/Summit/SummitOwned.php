@@ -50,6 +50,13 @@ trait SummitOwned
         }
     }
 
+    /**
+     * @return bool
+     */
+    public function hasSummit():bool{
+        return $this->getSummitId() > 0;
+    }
+
     public function clearSummit(){
         $this->summit = null;
     }

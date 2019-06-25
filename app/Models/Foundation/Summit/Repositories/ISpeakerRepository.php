@@ -1,5 +1,4 @@
 <?php namespace models\summit;
-
 /**
  * Copyright 2015 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +11,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use models\main\Member;
 use utils\Order;
 use utils\PagingResponse;
 use utils\PagingInfo;
 use utils\Filter;
 use models\utils\IBaseRepository;
-
 /**
  * Interface ISpeakerRepository
  * @package models\repositories
@@ -40,4 +37,10 @@ interface ISpeakerRepository extends IBaseRepository
      * @return PresentationSpeaker
      */
     public function getByMember(Member $member);
+
+    /**
+     * @param string $fullname
+     * @return PresentationSpeaker|null
+     */
+    public function getByFullName(string $fullname):?PresentationSpeaker;
 }

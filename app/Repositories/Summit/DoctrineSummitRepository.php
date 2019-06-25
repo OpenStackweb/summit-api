@@ -152,4 +152,18 @@ final class DoctrineSummitRepository
         if (count($res) == 0) return null;
         return $res[0];
     }
+
+    /**
+     * @return Summit[]
+     */
+    public function getActivesWithExternalFeed(): array
+    {
+        return $this->getEntityManager()->createQueryBuilder()
+            ->select("e")
+            ->from(\models\summit\Summit::class, "e")
+            ->where('e.active = 1')->andWhere("e.api_feed_type is not null")
+            ->orderBy('e.begin_date', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

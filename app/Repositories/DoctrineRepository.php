@@ -37,12 +37,17 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
     }
 
     /**
-     * @param IEntity $entity
-     * @return void
+     * @param $entity
+     * @param bool $sync
+     * @return mixed|void
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
      */
-    public function add($entity)
+    public function add($entity, $sync = false)
     {
         $this->_em->persist($entity);
+        if($sync)
+            $this->_em->flush($entity);
     }
 
     /**

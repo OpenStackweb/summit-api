@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use models\summit\Summit;
 /**
  * Class SummitValidationRulesFactory
  * @package App\Http\Controllers
@@ -36,15 +37,18 @@ final class SummitValidationRulesFactory
                 'calendar_sync_name'        => 'sometimes|string|max:255',
                 'calendar_sync_desc'        => 'sometimes|string',
                 'link'                      => 'sometimes|url',
-                'registration_link'               => 'sometimes|url',
-                'max_submission_allowed_per_user' => 'sometimes|integer|min:1',
-                'secondary_registration_link'     => 'sometimes|url',
-                'secondary_registration_label'    => 'sometimes|string',
-                'slug'                            => 'nullable|string',
+                'registration_link'                => 'sometimes|url',
+                'max_submission_allowed_per_user'  => 'sometimes|integer|min:1',
+                'secondary_registration_link'      => 'sometimes|url',
+                'secondary_registration_label'     => 'sometimes|string',
+                'slug'                             => 'nullable|string',
                 'meeting_room_booking_start_time'  => 'nullable|date_format:U',
                 'meeting_room_booking_end_time'    => 'nullable|required_with:meeting_room_booking_end_time|date_format:U|after_or_equal:meeting_room_booking_end_time',
                 'meeting_room_booking_slot_length' => 'nullable|integer',
                 'meeting_room_booking_max_allowed' => 'nullable|integer|min:1',
+                'api_feed_type'                    => sprintf('nullable|in:%s',implode(',', Summit::$valid_feed_types)),
+                'api_feed_url'                     => 'nullable|string|url',
+                'api_feed_key'                     => 'nullable|string',
             ];
         }
 
@@ -66,13 +70,16 @@ final class SummitValidationRulesFactory
             'link'                      => 'sometimes|url',
             'registration_link'         => 'sometimes|url',
             'max_submission_allowed_per_user'  => 'sometimes|integer|min:1',
-            'secondary_registration_link'  => 'sometimes|url',
-            'secondary_registration_label' => 'sometimes|string',
-            'slug'                         => 'nullable|string',
+            'secondary_registration_link'      => 'sometimes|url',
+            'secondary_registration_label'     => 'sometimes|string',
+            'slug'                             => 'nullable|string',
             'meeting_room_booking_start_time'  => 'nullable|date_format:U',
             'meeting_room_booking_end_time'    => 'nullable|required_with:meeting_room_booking_end_time|date_format:U|after_or_equal:meeting_room_booking_end_time',
             'meeting_room_booking_slot_length' => 'nullable|integer',
             'meeting_room_booking_max_allowed' => 'nullable|integer|min:1',
+            'api_feed_type'                    => sprintf('nullable|in:%s',implode(',', Summit::$valid_feed_types)),
+            'api_feed_url'                     => 'nullable|string|url',
+            'api_feed_key'                     => 'nullable|string',
         ];
     }
 }

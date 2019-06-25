@@ -469,4 +469,27 @@ SQL;
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    /**
+     * @param string $fullname
+     * @return PresentationSpeaker|null
+     */
+    public function getByFullName(string $fullname): ?PresentationSpeaker
+    {
+        $speakerFullNameParts = explode(" ", $fullname);
+        $speakerFirstName     = trim(trim(array_pop($speakerFullNameParts)));
+        $speakerLastName      = trim(implode(" ", $speakerFullNameParts));
+
+        return $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from(PresentationSpeaker::class, "e")
+            ->where("e.first_name = :first_name")
+            ->andWhere("e.last_name = :last_name")
+            ->setParameter("first_name",$speakerFirstName)
+            ->setParameter("last_name", $speakerLastName)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

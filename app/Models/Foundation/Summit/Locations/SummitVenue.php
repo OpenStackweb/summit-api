@@ -65,9 +65,14 @@ class SummitVenue extends SummitGeoLocatedLocation
         $floor->setVenue($this);
     }
 
+    /**
+     * @param SummitVenueRoom $room
+     */
     public function addRoom(SummitVenueRoom $room){
         $this->rooms->add($room);
         $room->setVenue($this);
+        if($this->hasSummit())
+            $room->setSummit($this->getSummit());
     }
 
     use OrderableChilds;

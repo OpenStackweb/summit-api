@@ -57,6 +57,10 @@ class SummitSerializer extends SilverStripeSerializer
         'MeetingRoomBookingEndTime'                      => 'meeting_room_booking_end_time:datetime_epoch',
         'MeetingRoomBookingSlotLength'                   => 'meeting_room_booking_slot_length:json_int',
         'MeetingRoomBookingMaxAllowed'                   => 'meeting_room_booking_max_allowed:json_int',
+        // External Feeds
+        'ApiFeedType'                                    => 'api_feed_type:json_string',
+        'ApiFeedUrl'                                     => 'api_feed_url:json_string',
+        'ApiFeedKey'                                     => 'api_feed_key:json_string',
     ];
 
     protected static $allowed_relations = [

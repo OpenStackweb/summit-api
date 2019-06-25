@@ -325,6 +325,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
         $this->willing_to_travel          = false;
         $this->funded_travel              = false;
         $this->org_has_cloud              = false;
+        $this->created_from_api           = true;
         $this->presentations              = new ArrayCollection;
         $this->moderated_presentations    = new ArrayCollection;
         $this->summit_assistances         = new ArrayCollection;

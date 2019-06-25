@@ -101,14 +101,6 @@ final class DoctrineEndPointRateLimitByIPRepository
         // TODO: Implement getById() method.
     }
 
-    /**
-     * @param IEntity $entity
-     * @return void
-     */
-    public function add($entity)
-    {
-        // TODO: Implement add() method.
-    }
 
     /**
      * @param IEntity $entity

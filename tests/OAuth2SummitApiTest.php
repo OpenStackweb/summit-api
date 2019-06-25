@@ -14,6 +14,7 @@
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use App\Services\Apis\ExternalScheduleFeeds\IExternalScheduleFeedFactory;
 /**
  * Class OAuth2SummitApiTest
  */
@@ -95,7 +96,7 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
     }
 
-    public function testGetSummit($summit_id = 25)
+    public function testGetSummit($summit_id = 27)
     {
 
         $params = [
@@ -182,6 +183,9 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
             'time_zone_id' => 'America/Argentina/Buenos_Aires',
             'submission_begin_date' => null,
             'submission_end_date' => null,
+            'api_feed_type' => IExternalScheduleFeedFactory::SchedType,
+            'api_feed_url'  =>  'https://localhost.com',
+            'api_feed_key'  => 'secret'
         ];
 
         $headers = [

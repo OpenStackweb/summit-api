@@ -12,13 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use models\utils\IBaseRepository;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
 use utils\PagingResponse;
-
 /**
  * Interface IMemberRepository
  * @package models\main
@@ -30,6 +28,12 @@ interface IMemberRepository extends IBaseRepository
      * @return Member
      */
     public function getByEmail($email);
+
+    /**
+     * @param string $fullname
+     * @return Member|null
+     */
+    public function getByFullName(string $fullname):?Member;
 
     /**
      * @param PagingInfo $paging_info

@@ -1,5 +1,4 @@
 <?php namespace services\utils;
-
 /**
  * Copyright 2016 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use Closure;
 use LaravelDoctrine\ORM\Facades\Registry;
-
 /**
  * Class DoctrineTransactionService
  * @package services\utils
@@ -55,6 +54,7 @@ final class DoctrineTransactionService implements ITransactionService
             $con->commit();
         } catch (\Exception $e) {
             $con->rollBack();
+            Log::error($e);
             throw $e;
         }
         return $result;

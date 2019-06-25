@@ -14,6 +14,8 @@
 use App\Permissions\IPermissionsManager;
 use App\Permissions\PermissionsManager;
 use App\Services\Apis\CalendarSync\ICalendarSyncRemoteFacadeFactory;
+use App\Services\Apis\ExternalScheduleFeeds\ExternalScheduleFeedFactory;
+use App\Services\Apis\ExternalScheduleFeeds\IExternalScheduleFeedFactory;
 use App\Services\Apis\GoogleGeoCodingAPI;
 use App\Services\Apis\IGeoCodingAPI;
 use App\Services\Apis\IPaymentGatewayAPI;
@@ -27,6 +29,7 @@ use App\Services\Model\IMemberService;
 use App\Services\Model\IOrganizationService;
 use App\Services\Model\IPresentationCategoryGroupService;
 use App\Services\Model\IRSVPTemplateService;
+use App\Services\Model\IScheduleIngestionService;
 use App\Services\Model\ISummitEventTypeService;
 use App\Services\Model\ISummitPushNotificationService;
 use App\Services\Model\ISummitSelectionPlanService;
@@ -37,6 +40,7 @@ use App\Services\Model\ITagService;
 use App\Services\Model\ITrackQuestionTemplateService;
 use App\Services\Model\OrganizationService;
 use App\Services\Model\PresentationCategoryGroupService;
+use App\Services\Model\ScheduleIngestionService;
 use App\Services\Model\SummitLocationService;
 use App\Services\Model\MemberService;
 use App\Services\Model\RSVPTemplateService;
@@ -49,6 +53,8 @@ use App\Services\Model\SummitTrackTagGroupService;
 use App\Services\Model\TagService;
 use App\Services\Model\TrackQuestionTemplateService;
 use App\Services\SummitEventTypeService;
+use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
@@ -84,6 +90,8 @@ final class ServicesProvider extends ServiceProvider
 
     public function register()
     {
+        App::singleton(ClientInterface::class, Client::class);
+        
         App::singleton(ICacheService::class, RedisCacheService::class);
 
         App::singleton(IPermissionsManager::class, PermissionsManager::class);
@@ -275,6 +283,16 @@ final class ServicesProvider extends ServiceProvider
         App::singleton(
             ITagService::class,
             TagService::class
+        );
+
+        App::singleton(
+            IExternalScheduleFeedFactory::class,
+            ExternalScheduleFeedFactory::class
+        );
+
+        App::singleton(
+            IScheduleIngestionService::class,
+            ScheduleIngestionService::class
         );
     }
 }

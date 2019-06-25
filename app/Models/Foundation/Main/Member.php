@@ -220,6 +220,8 @@ class Member extends SilverstripeBaseModel
     public function __construct()
     {
         parent::__construct();
+        $this->active             = false;
+        $this->email_verified     = false;
         $this->feedback           = new ArrayCollection();
         $this->groups             = new ArrayCollection();
         $this->ccla_teams         = new ArrayCollection();
@@ -254,6 +256,18 @@ class Member extends SilverstripeBaseModel
             ]);
 
         return $this->affiliations->matching($criteria);
+    }
+
+    /**
+     * @param string $orgName
+     * @return Affiliation|null
+     */
+    public function getAffiliationByOrgName(string $orgName): ?Affiliation
+    {
+        $res =  $this->affiliations->filter(function ($e) use($orgName) {
+            return $e->getOrganization()->getName() == trim($orgName) && $e->isCurrent();
+        })->first();
+        return $res ? $res : null;
     }
 
     /**
@@ -1179,4 +1193,29 @@ SQL;
 
         return $this->reservations->matching($criteria)->first();
     }
+
+    /**
+     * @param string $first_name
+     */
+    public function setFirstName(string $first_name): void
+    {
+        $this->first_name = $first_name;
+    }
+
+    /**
+     * @param string $bio
+     */
+    public function setBio(string $bio): void
+    {
+        $this->bio = $bio;
+    }
+
+    /**
+     * @param string $last_name
+     */
+    public function setLastName(string $last_name): void
+    {
+        $this->last_name = $last_name;
+    }
+
 }

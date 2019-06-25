@@ -28,9 +28,10 @@ interface IBaseRepository
 
     /**
      * @param IEntity $entity
+     * @param bool $sync
      * @return void
      */
-    public function add($entity);
+    public function add($entity, $sync = false);
 
     /**
      * @param IEntity $entity

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-php composer.phar dump-autoload --optimize;
+composer dump-autoload --optimize;
 php artisan doctrine:generate:proxies
 php artisan doctrine:clear:metadata:cache
 php artisan doctrine:clear:query:cache

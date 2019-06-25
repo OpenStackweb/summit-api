@@ -1391,7 +1391,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($rooms));
     }
 
-    public function testSummitGetBookableRoomAvailability($summit_id = 27, $room_id = 483, $day = 1572912000)
+    public function testSummitGetBookableRoomAvailability($summit_id = 27, $room_id = 922, $day = 1572843180)
     {
         $params = [
             'id'       => $summit_id,

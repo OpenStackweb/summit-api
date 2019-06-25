@@ -19,6 +19,7 @@ use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Foundation\Summit\TrackTagGroup;
 use App\Models\Foundation\Summit\TrackTagGroupAllowedTag;
 use App\Models\Utils\TimeZoneEntity;
+use App\Services\Apis\ExternalScheduleFeeds\IExternalScheduleFeedFactory;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
@@ -239,6 +240,24 @@ class Summit extends SilverstripeBaseModel
      * @var File
      */
     private $logo;
+
+    /**
+     * @ORM\Column(name="ApiFeedType", type="string")
+     * @var string
+     */
+    private $api_feed_type;
+
+    /**
+     * @ORM\Column(name="ApiFeedUrl", type="string")
+     * @var string
+     */
+    private $api_feed_url;
+
+    /**
+     * @ORM\Column(name="ApiFeedKey", type="string")
+     * @var string
+     */
+    private $api_feed_key;
 
     /**
      * @ORM\OneToMany(targetEntity="models\summit\SummitEventType", mappedBy="summit", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
@@ -558,6 +577,8 @@ class Summit extends SilverstripeBaseModel
         $this->active  = false;
         $this->available_on_api = false;
         $this->max_submission_allowed_per_user = self::DefaultMaxSubmissionAllowedPerUser;
+        $this->meeting_room_booking_slot_length = 60;
+        $this->meeting_room_booking_max_allowed = 2;
 
         $this->locations = new ArrayCollection;
         $this->events = new ArrayCollection;
@@ -650,6 +671,16 @@ class Summit extends SilverstripeBaseModel
     }
 
     /**
+     * @return SummitVenue[]
+     */
+    public function getMainVenues()
+    {
+        return $this->locations->filter(function ($e) {
+            return $e instanceof SummitVenue && $e->getIsMain();
+        });
+    }
+
+    /**
      * @param string $name
      * @return SummitAbstractLocation|null
      */
@@ -708,6 +739,18 @@ class Summit extends SilverstripeBaseModel
     public function getEvents()
     {
         return $this->events;
+    }
+
+    /**
+     * @param string $externalId
+     * @return SummitEvent|null
+     */
+    public function getEventByExternalId(string $externalId):?SummitEvent{
+
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('external_id', trim($externalId)));
+        $event = $this->events->matching($criteria)->first();
+        return $event === false ? null : $event;
     }
 
     /**
@@ -2594,4 +2637,57 @@ SQL;
         }
         return null;
     }
+
+    static $valid_feed_types = [IExternalScheduleFeedFactory::SchedType, IExternalScheduleFeedFactory::VanderpoelType];
+    /**
+     * @return string|null
+     */
+    public function getApiFeedType(): ?string
+    {
+        return $this->api_feed_type;
+    }
+
+    /**
+     * @param string $api_feed_type
+     * @throws ValidationException
+     */
+    public function setApiFeedType(string $api_feed_type): void
+    {
+        if(!in_array($api_feed_type, self::$valid_feed_types))
+            throw new ValidationException(sprintf("feed type %s is not valid!", $api_feed_type));
+        $this->api_feed_type = $api_feed_type;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getApiFeedUrl(): ?string
+    {
+        return $this->api_feed_url;
+    }
+
+    /**
+     * @param string $api_feed_url
+     */
+    public function setApiFeedUrl(string $api_feed_url): void
+    {
+        $this->api_feed_url = $api_feed_url;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getApiFeedKey(): ?string
+    {
+        return $this->api_feed_key;
+    }
+
+    /**
+     * @param string $api_feed_key
+     */
+    public function setApiFeedKey(string $api_feed_key): void
+    {
+        $this->api_feed_key = $api_feed_key;
+    }
+
 }

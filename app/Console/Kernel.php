@@ -33,6 +33,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\SummitListJsonGenerator::class,
         \App\Console\Commands\PromoCodesRedeemProcessor::class,
         \App\Console\Commands\SummitRoomReservationRevocationCommand::class,
+        \App\Console\Commands\ExternalScheduleFeedIngestionCommand::class,
     ];
 
     /**
@@ -83,5 +84,8 @@ class Kernel extends ConsoleKernel
         // bookable rooms
 
         $schedule->command('summit:room-reservation-revocation')->everyFiveMinutes()->withoutOverlapping();
+        // external schedule ingestion task
+
+        $schedule->command("summit:external-schedule-feed-ingestion-process")->everyFifteenMinutes()->withoutOverlapping();
     }
 }

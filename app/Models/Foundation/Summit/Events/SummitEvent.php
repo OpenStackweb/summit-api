@@ -144,6 +144,12 @@ class SummitEvent extends SilverstripeBaseModel
     protected $rsvp_link;
 
     /**
+     * @ORM\Column(name="ExternalId", type="string")
+     * @var string
+     */
+    protected $external_id;
+
+    /**
      * @ORM\ManyToOne(targetEntity="PresentationCategory", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="CategoryID", referencedColumnName="ID", onDelete="SET NULL")
      * @var PresentationCategory
@@ -932,6 +938,22 @@ class SummitEvent extends SilverstripeBaseModel
     public function setOccupancy($occupancy)
     {
         $this->occupancy = $occupancy;
+    }
+
+    /**
+     * @return string
+     */
+    public function getExternalId(): string
+    {
+        return $this->external_id;
+    }
+
+    /**
+     * @param string $external_id
+     */
+    public function setExternalId(string $external_id): void
+    {
+        $this->external_id = $external_id;
     }
 
 

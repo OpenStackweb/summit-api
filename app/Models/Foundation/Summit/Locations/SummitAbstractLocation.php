@@ -107,6 +107,7 @@ class SummitAbstractLocation extends SilverstripeBaseModel implements IOrderable
     public function __construct()
     {
         parent::__construct();
+        $this->order   = 0;
         $this->type    = self::TypeNone;
         $this->banners = new ArrayCollection;
     }

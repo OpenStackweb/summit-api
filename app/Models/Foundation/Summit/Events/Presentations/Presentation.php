@@ -196,7 +196,7 @@ class Presentation extends SummitEvent
     public function __construct()
     {
         parent::__construct();
-
+        $this->progress        = self::PHASE_NEW;
         $this->materials       = new ArrayCollection();
         $this->speakers        = new ArrayCollection();
         $this->answers         = new ArrayCollection();

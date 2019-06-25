@@ -486,14 +486,14 @@ Route::group([
                 Route::get('', 'OAuth2SummitBookableRoomsAttributeTypeApiController@getAllBookableRoomAttributeTypes');
                 Route::post('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitBookableRoomsAttributeTypeApiController@addBookableRoomAttributeType']);
                 Route::group(['prefix' => '{type_id}'], function () {
-                    Route::get('', 'OAuth2SummitLocationsApiController@getBookableRoomAttributeType');
+                    Route::get('', 'OAuth2SummitBookableRoomsAttributeTypeApiController@getBookableRoomAttributeType');
                     Route::put('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitBookableRoomsAttributeTypeApiController@updateBookableRoomAttributeType']);
                     Route::delete('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitBookableRoomsAttributeTypeApiController@deleteBookableRoomAttributeType']);
                     Route::group(['prefix' => 'values'], function () {
                         Route::get('', 'OAuth2SummitBookableRoomsAttributeTypeApiController@getAllBookableRoomAttributeValues');
                         Route::post('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitBookableRoomsAttributeTypeApiController@addBookableRoomAttributeValue']);
                         Route::group(['prefix' => '{value_id}'], function () {
-                            Route::get('', 'OAuth2SummitLocationsApiController@getBookableRoomAttributeValue');
+                            Route::get('', 'OAuth2SummitBookableRoomsAttributeTypeApiController@getBookableRoomAttributeValue');
                             Route::put('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitBookableRoomsAttributeTypeApiController@updateBookableRoomAttributeValue']);
                             Route::delete('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitBookableRoomsAttributeTypeApiController@udeleteBookableRoomAttributeValue']);
                         });

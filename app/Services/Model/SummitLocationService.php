@@ -1701,8 +1701,6 @@ final class SummitLocationService
                 throw new EntityNotFoundException("room not found");
             }
 
-            $room->getTimeSlotCost()
-
             $owner_id = $payload["owner_id"];
 
             $owner = $this->member_repository->getById($owner_id);

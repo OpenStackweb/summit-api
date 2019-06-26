@@ -114,26 +114,44 @@ class SummitBookableVenueRoom extends SummitVenueRoom
 
         $local_start_time->setDate
         (
-            intval($start_date->format("Y")),
-            intval($start_date->format("m")),
-            intval($start_date->format("d"))
+            intval($local_start_date->format("Y")),
+            intval($local_start_date->format("m")),
+            intval($local_start_date->format("d"))
         );
 
         $local_end_time->setDate
         (
-            intval($start_date->format("Y")),
-            intval($start_date->format("m")),
-            intval($start_date->format("d"))
+            intval($local_start_date->format("Y")),
+            intval($local_start_date->format("m")),
+            intval($local_start_date->format("d"))
         );
 
         if(!($local_start_time <= $local_start_date
         && $local_end_date <= $local_end_time))
-            throw new ValidationException("requested booking time slot is not allowed!");
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "requested booking time slot is not allowed! requested [from %s to %s] allowed [from %s to %s]",
+                    $local_start_date->format("Y-m-d H:i:s"),
+                    $local_end_date->format("Y-m-d H:i:s"),
+                    $local_start_time->format("Y-m-d H:i:s"),
+                    $local_end_time->format("Y-m-d H:i:s")
+                )
+            );
 
         $interval = $end_date->diff($start_date);
         $minutes  =  ($interval->d * 24 * 60) + ($interval->h * 60) + $interval->i;
         if($minutes != $summit->getMeetingRoomBookingSlotLength())
-            throw new ValidationException("requested booking time slot is not allowed!");
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "requested booking time slot is not allowed! request slot (%s minutes) - summit allowed slot (%s minutes)",
+                    $minutes,
+                    $summit->getMeetingRoomBookingSlotLength()
+                )
+            );
 
         $this->reservations->add($reservation);
         $reservation->setRoom($this);

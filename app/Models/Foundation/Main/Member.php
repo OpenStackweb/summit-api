@@ -1157,8 +1157,16 @@ SQL;
      * @throws NonUniqueResultException
      */
     public function getReservationsCountBySummit(Summit $summit):int{
-        $query = $this->createQuery("SELECT count(rv.id) from models\summit\SummitRoomReservation rv JOIN rv.room r JOIN r.venue v JOIN v.summit s WHERE s.id = :summit_id");
-        return $query->setParameter('summit_id', $summit->getId())->getSingleResult();
+        $query = $this->createQuery("SELECT count(rv.id) from models\summit\SummitRoomReservation rv
+        JOIN rv.owner o 
+        JOIN rv.room r 
+        JOIN r.venue v 
+        JOIN v.summit s 
+        WHERE s.id = :summit_id AND o.id = :owner_id");
+        return $query
+            ->setParameter('summit_id', $summit->getId())
+            ->setParameter('owner_id', $this->getId())
+            ->getSingleScalarResult();
     }
 
     /**

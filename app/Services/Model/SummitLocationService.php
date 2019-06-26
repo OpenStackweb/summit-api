@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Events\CreatedBookableRoomReservation;
 use App\Events\FloorDeleted;
 use App\Events\FloorInserted;
@@ -22,8 +21,6 @@ use App\Events\LocationImageInserted;
 use App\Events\LocationImageUpdated;
 use App\Events\LocationInserted;
 use App\Events\LocationUpdated;
-use App\Events\PaymentBookableRoomReservationConfirmed;
-use App\Events\RequestedBookableRoomReservationRefund;
 use App\Events\SummitVenueRoomDeleted;
 use App\Events\SummitVenueRoomInserted;
 use App\Events\SummitVenueRoomUpdated;
@@ -57,7 +54,6 @@ use models\summit\SummitRoomReservation;
 use models\summit\SummitVenue;
 use models\summit\SummitVenueFloor;
 use models\summit\SummitVenueRoom;
-
 /**
  * Class SummitLocationService
  * @package App\Services\Model
@@ -1755,7 +1751,6 @@ final class SummitLocationService
 
             if ($this->payment_gateway->isSuccessFullPayment($payload)) {
                 $reservation->setPayed();
-                Event::fire(new PaymentBookableRoomReservationConfirmed($reservation->getId()));
                 return;
             }
 
@@ -1795,8 +1790,6 @@ final class SummitLocationService
 
             $reservation->requestRefund();
 
-            Event::fire(new RequestedBookableRoomReservationRefund($reservation->getId()));
-
             return $reservation;
         });
     }
@@ -1828,9 +1821,7 @@ final class SummitLocationService
 
             $this->payment_gateway->refundPayment($reservation->getPaymentGatewayCartId(), $amount);
 
-            $reservation->setStatus(SummitRoomReservation::RefundedStatus);
-
-            Event::fire(new CreatedBookableRoomReservation($reservation->getId()));
+            $reservation->refund($amount);
 
             return $reservation;
         });

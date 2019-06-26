@@ -209,4 +209,7 @@ return [
         'Encryption' => services\utils\Facades\Encryption::class,
     ],
 
+    'app_name'    => env('APP_NAME', 'Open Infrastructure Summit'),
+    'tenant_name' => env('TENANT_NAME', 'OpenStack'),
+
 ];

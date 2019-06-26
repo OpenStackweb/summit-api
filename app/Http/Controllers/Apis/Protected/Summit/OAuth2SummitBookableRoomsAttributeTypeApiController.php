@@ -204,7 +204,7 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
             }
 
             $attr = $this->summit_service->addBookableRoomAttribute($summit, $payload);
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($attr)->serialize());
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($attr)->serialize(Request::input('expand', '')));
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);
@@ -235,7 +235,7 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
             $attr = $summit->getBookableAttributeTypeById($type_id);
             if (is_null($attr)) return $this->error404();
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($attr)->serialize());
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($attr)->serialize(Request::input('expand', '')));
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);

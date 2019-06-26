@@ -19,7 +19,7 @@ use Doctrine\ORM\Mapping AS ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="SummitVenueRoom")
- * Class SummitVenueRoom
+ * Class SummitVenueRoomgetLocalEndDatetime
  * @package models\summit
  */
 class SummitVenueRoom extends SummitAbstractLocation implements IOrderable
@@ -70,6 +70,16 @@ class SummitVenueRoom extends SummitAbstractLocation implements IOrderable
     public function getVenue()
     {
         return $this->venue;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompleteName():string{
+        $name = $this->venue->getSummit()->getName();
+        $name .= ' '.$this->venue->getName();
+        $name .= ' '.$this->getName();
+        return $name;
     }
 
     /**

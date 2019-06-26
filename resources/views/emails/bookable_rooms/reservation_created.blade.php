@@ -5,10 +5,10 @@
 </head>
 <body>
 <p>
-    Dear {{ $request->getRequestedBy()->getFullName() }},
+    Dear {!! $reservation->getOwner()->getFullName() !!},
 </p>
 <p>
-    User {{ $request->getSpeaker()->getFullName() }} has rejected your request to edit his/her Speaker Profile.
+    Your Reservation for room {!! $reservation->getRoom()->getCompleteName() !!} has been created successfully.
 </p>
 <p>Cheers,<br/>{!! Config::get('app.tenant_name') !!} Support Team</p>
 </body>

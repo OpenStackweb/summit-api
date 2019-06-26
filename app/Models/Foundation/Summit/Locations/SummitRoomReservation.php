@@ -11,9 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+use App\Events\BookableRoomReservationCanceled;
+use App\Events\BookableRoomReservationRefundAccepted;
+use App\Events\PaymentBookableRoomReservationConfirmed;
+use App\Events\RequestedBookableRoomReservationRefund;
+use Illuminate\Support\Facades\Event;
 use models\main\Member;
 use models\utils\SilverstripeBaseModel;
+use Doctrine\ORM\Mapping AS ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitRoomReservationRepository")
  * @ORM\Table(name="SummitRoomReservation")
@@ -60,6 +65,7 @@ class SummitRoomReservation extends SilverstripeBaseModel
 
     /**
      * @var string
+     * @ORM\Column(name="PaymentGatewayClientToken", type="string")
      */
     private $payment_gateway_client_token;
 
@@ -74,6 +80,12 @@ class SummitRoomReservation extends SilverstripeBaseModel
      * @ORM\Column(name="Amount", type="float")
      */
     private $amount;
+
+    /**
+     * @var float
+     * @ORM\Column(name="RefundedAmount", type="float")
+     */
+    private $refunded_amount;
 
     /**
      * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="reservations")
@@ -94,6 +106,7 @@ class SummitRoomReservation extends SilverstripeBaseModel
     const PayedStatus            = "Payed";
     const RequestedRefundStatus  = "RequestedRefund";
     const RefundedStatus         = "Refunded";
+    const Canceled               = "Canceled";
 
     public static $valid_status = [
         self::ReservedStatus,
@@ -101,6 +114,7 @@ class SummitRoomReservation extends SilverstripeBaseModel
         self::RequestedRefundStatus,
         self::RefundedStatus,
         self::ErrorStatus,
+        self::Canceled
     ];
 
     /**
@@ -109,6 +123,15 @@ class SummitRoomReservation extends SilverstripeBaseModel
     public function getStartDatetime(): \DateTime
     {
         return $this->start_datetime;
+    }
+
+    /**
+     * @param float $amount
+     */
+    public function refund(float $amount){
+        $this->status = self::RefundedStatus;
+        $this->refunded_amount = $amount;
+        Event::fire(new BookableRoomReservationRefundAccepted($this->getId()));
     }
 
     /**
@@ -290,10 +313,17 @@ class SummitRoomReservation extends SilverstripeBaseModel
         $this->status = self::PayedStatus;
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
         $this->approved_payment_date = $now;
+        Event::fire(new PaymentBookableRoomReservationConfirmed($this->getId()));
+    }
+
+    public function cancel():void{
+        $this->status = self::Canceled;
+        Event::fire(new BookableRoomReservationCanceled($this->id));
     }
 
     public function requestRefund():void{
         $this->status = self::RequestedRefundStatus;
+        Event::fire(new RequestedBookableRoomReservationRefund($this->getId()));
     }
 
     public function setPaymentError(string $error):void{
@@ -323,6 +353,22 @@ class SummitRoomReservation extends SilverstripeBaseModel
         catch(\Exception $ex){
             return 0;
         }
+    }
+
+    /**
+     * @return float
+     */
+    public function getRefundedAmount(): float
+    {
+        return $this->refunded_amount;
+    }
+
+    /**
+     * @param float $refunded_amount
+     */
+    public function setRefundedAmount(float $refunded_amount): void
+    {
+        $this->refunded_amount = $refunded_amount;
     }
 
 }

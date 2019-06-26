@@ -38,9 +38,16 @@ use App\Factories\EntityEvents\SummitEventUpdatedEntityEventFactory;
 use App\Factories\EntityEvents\SummitTicketTypeActionEntityEventFactory;
 use App\Factories\EntityEvents\TrackActionEntityEventFactory;
 use App\Factories\EntityEvents\TrackGroupActionActionEntityEventFactory;
+use App\Mail\BookableRoomReservationCanceledEmail;
+use App\Mail\BookableRoomReservationCreatedEmail;
+use App\Mail\BookableRoomReservationPaymentConfirmedEmail;
+use App\Mail\BookableRoomReservationRefundAcceptedEmail;
+use App\Mail\BookableRoomReservationRefundRequestedAdminEmail;
+use App\Mail\BookableRoomReservationRefundRequestedOwnerEmail;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Mail;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\SummitRoomReservation;
 
@@ -326,21 +333,48 @@ final class EventServiceProvider extends ServiceProvider
         Event::listen(\App\Events\BookableRoomReservationRefundAccepted::class, function($event)
         {
             $repository = EntityManager::getRepository(SummitRoomReservation::class);
+            $reservation = $repository->find($event->getReservationId());
+            if(is_null($reservation) || ! $reservation instanceof SummitRoomReservation) return;
+
+            Mail::send(new BookableRoomReservationRefundAcceptedEmail($reservation));
+
         });
 
         Event::listen(\App\Events\CreatedBookableRoomReservation::class, function($event)
         {
             $repository = EntityManager::getRepository(SummitRoomReservation::class);
+            $reservation = $repository->find($event->getReservationId());
+            if(is_null($reservation) || ! $reservation instanceof SummitRoomReservation) return;
+
+            Mail::send(new BookableRoomReservationCreatedEmail($reservation));
+
         });
 
         Event::listen(\App\Events\PaymentBookableRoomReservationConfirmed::class, function($event)
         {
             $repository = EntityManager::getRepository(SummitRoomReservation::class);
+            $reservation = $repository->find($event->getReservationId());
+            if(is_null($reservation) || ! $reservation instanceof SummitRoomReservation) return;
+
+            Mail::send(new BookableRoomReservationPaymentConfirmedEmail($reservation));
         });
 
         Event::listen(\App\Events\RequestedBookableRoomReservationRefund::class, function($event)
         {
             $repository = EntityManager::getRepository(SummitRoomReservation::class);
+            $reservation = $repository->find($event->getReservationId());
+            if(is_null($reservation) || ! $reservation instanceof SummitRoomReservation) return;
+
+            Mail::send(new BookableRoomReservationRefundRequestedAdminEmail($reservation));
+            Mail::send(new BookableRoomReservationRefundRequestedOwnerEmail($reservation));
+        });
+
+        Event::listen(\App\Events\BookableRoomReservationCanceled::class, function($event)
+        {
+            $repository = EntityManager::getRepository(SummitRoomReservation::class);
+            $reservation = $repository->find($event->getReservationId());
+            if(is_null($reservation) || ! $reservation instanceof SummitRoomReservation) return;
+            Mail::send(new BookableRoomReservationCanceledEmail($reservation));
         });
     }
 }

@@ -32,6 +32,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\ChatTeamMessagesSender::class,
         \App\Console\Commands\SummitListJsonGenerator::class,
         \App\Console\Commands\PromoCodesRedeemProcessor::class,
+        \App\Console\Commands\SummitRoomReservationRevocationCommand::class,
     ];
 
     /**
@@ -79,5 +80,8 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('summit:promo-codes-redeem-processor', [end($summit_ids)])->daily()->withoutOverlapping();
 
+        // bookable rooms
+
+        $schedule->command('summit:room-reservation-revocation')->everyFiveMinutes()->withoutOverlapping();
     }
 }

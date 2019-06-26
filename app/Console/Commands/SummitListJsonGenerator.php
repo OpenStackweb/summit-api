@@ -13,9 +13,8 @@
  **/
 use Illuminate\Support\Facades\Log;
 use libs\utils\ICacheService;
-use Mockery\Exception;
+use Exception;
 use models\summit\ISummitRepository;
-use ModelSerializers\SerializerRegistry;
 use services\model\ISummitService;
 use utils\PagingResponse;
 use Illuminate\Console\Command;

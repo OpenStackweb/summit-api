@@ -49,6 +49,7 @@ class DoctrineSummitRoomReservationRepository
             'status'         => 'e.status:json_string',
             'start_datetime' => 'e.start_datetime:datetime_epoch',
             'end_datetime'   => 'e.end_datetime:datetime_epoch',
+            'created'        => 'e.created:datetime_epoch',
             'room_id' => new DoctrineJoinFilterMapping
             (
                 'e.room',

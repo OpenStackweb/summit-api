@@ -64,6 +64,7 @@ Route::group([
 
         Route::group(['prefix' => '{id}'], function () {
             Route::get('', [ 'middleware' => 'cache:'.Config::get('cache_api_response.get_summit_response_lifetime', 1200), 'uses' => 'OAuth2SummitApiController@getSummit'])->where('id', 'current|[0-9]+');
+            Route::get('published-events', 'OAuth2SummitEventsApiController@getScheduledEvents');
             // locations
             Route::group(['prefix' => 'locations'], function () {
                 Route::group(['prefix' => '{location_id}'], function () {

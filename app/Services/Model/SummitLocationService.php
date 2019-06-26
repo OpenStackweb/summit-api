@@ -1701,6 +1701,8 @@ final class SummitLocationService
                 throw new EntityNotFoundException("room not found");
             }
 
+            $room->getTimeSlotCost()
+
             $owner_id = $payload["owner_id"];
 
             $owner = $this->member_repository->getById($owner_id);
@@ -1713,6 +1715,18 @@ final class SummitLocationService
                 throw new ValidationException(sprintf("member %s already reached maximun qty of reservations (%s)", $owner->getId(),  $summit->getMeetingRoomBookingMaxAllowed() ));
 
             $payload['owner'] = $owner;
+
+            $currency = trim($payload['currency']);
+
+            if($room->getCurrency() != $currency){
+                throw new ValidationException(sprintf("currency set %s is not allowed for room %s", $currency, $room->getId()));
+            }
+
+            $amount = floatval($payload['amount']);
+
+            if($room->getTimeSlotCost() != $amount){
+                throw new ValidationException(sprintf("amount set %s does not match with time slot cost %s for room %s", $currency, $room->getTimeSlotCost(), $room->getId()));
+            }
 
             $reservation = SummitRoomReservationFactory::build($summit, $payload);
 

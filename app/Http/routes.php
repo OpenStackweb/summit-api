@@ -94,6 +94,11 @@ Route::group([
             Route::group(['prefix' => 'selection-plans'], function () {
                 Route::get('current/{status}', ['uses' => 'OAuth2SummitSelectionPlansApiController@getCurrentSelectionPlanByStatus'])->where('status', 'submission|selection|voting');
             });
+            Route::group(['prefix' => 'locations'], function () {
+                // GET /api/v1/summits/all/locations/bookable-rooms/all/reservations/{id}
+                Route::get('bookable-rooms/all/reservations/{id}', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitLocationsApiController@getReservationById']);
+            });
+
         });
 
         Route::post('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitApiController@addSummit']);
@@ -326,6 +331,8 @@ Route::group([
                         Route::group(['prefix' => 'reservations'], function () {
                             // GET /api/v1/summits/{id}/locations/bookable-rooms/all/reservations
                             Route::get('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitLocationsApiController@getAllReservationsBySummit']);
+                            // GET /api/v1/summits/{id}/locations/bookable-rooms/all/reservations/csv
+                            Route::get('csv', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitLocationsApiController@getAllReservationsBySummitCSV']);
                             // GET /api/v1/summits/{id}/locations/bookable-rooms/all/reservations/me
                             Route::get('me', 'OAuth2SummitLocationsApiController@getMyBookableVenueRoomReservations');
                             Route::group(['prefix' => '{reservation_id}'], function () {
@@ -495,7 +502,7 @@ Route::group([
                         Route::group(['prefix' => '{value_id}'], function () {
                             Route::get('', 'OAuth2SummitBookableRoomsAttributeTypeApiController@getBookableRoomAttributeValue');
                             Route::put('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitBookableRoomsAttributeTypeApiController@updateBookableRoomAttributeValue']);
-                            Route::delete('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitBookableRoomsAttributeTypeApiController@udeleteBookableRoomAttributeValue']);
+                            Route::delete('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitBookableRoomsAttributeTypeApiController@deleteBookableRoomAttributeValue']);
                         });
                     });
                 });

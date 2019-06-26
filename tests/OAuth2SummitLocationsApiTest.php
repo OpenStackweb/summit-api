@@ -1708,4 +1708,92 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
         $reservations = json_decode($content);
         $this->assertTrue(!is_null($reservations));
     }
+
+    public function testGetAllReservationsBySummitAndOwnerName($summit_id =27){
+        $params = [
+            'id' => $summit_id,
+            'filter' => 'status==Canceled,owner_name=@Sebastian'
+        ];
+
+        $headers =
+            [
+                "HTTP_Authorization" => " Bearer " . $this->access_token,
+                "CONTENT_TYPE"       => "application/json"
+            ];
+
+        $response = $this->action
+        (
+            "GET",
+            "OAuth2SummitLocationsApiController@getAllReservationsBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $reservations = json_decode($content);
+        $this->assertTrue(!is_null($reservations));
+    }
+
+    public function testGetAllReservationsBySummitAndOwnerNameCSV($summit_id =27){
+        $params = [
+            'id' => $summit_id,
+            'filter' => 'status==Canceled,owner_name=@Sebastian'
+        ];
+
+        $headers =
+            [
+                "HTTP_Authorization" => " Bearer " . $this->access_token,
+                "CONTENT_TYPE"       => "application/json"
+            ];
+
+        $response = $this->action
+        (
+            "GET",
+            "OAuth2SummitLocationsApiController@getAllReservationsBySummitCSV",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $csv = $response->getContent();
+        $this->assertResponseStatus(200);
+        $this->assertTrue(!empty($csv));
+    }
+
+    public function testGetReservationById($id = 2){
+        $params = [
+            'id' => $id,
+            'filter' => 'status==Canceled,owner_name=@Sebastian'
+        ];
+
+        $headers =
+            [
+                "HTTP_Authorization" => " Bearer " . $this->access_token,
+                "CONTENT_TYPE"       => "application/json"
+            ];
+
+        $response = $this->action
+        (
+            "GET",
+            "OAuth2SummitLocationsApiController@getReservationById",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $reservation = json_decode($content);
+        $this->assertTrue(!is_null($reservation));
+    }
 }

@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Http\Utils\BooleanCellFormatter;
+use App\Http\Utils\EpochCellFormatter;
 use App\Http\Utils\PagingConstants;
 use Exception;
 use Illuminate\Support\Facades\Input;
@@ -37,6 +40,41 @@ use Illuminate\Http\Request as LaravelRequest;
  */
 trait SummitBookableVenueRoomApi
 {
+
+    /**
+     * @param $id
+     * @return mixed
+     */
+    public function getReservationById($id){
+        try {
+
+            $expand    = Request::input('expand', '');
+            $relations = Request::input('relations', '');
+            $relations = !empty($relations) ? explode(',', $relations) : [];
+
+            $reservation = $this->reservation_repository->getById($id);
+
+            if (is_null($reservation)) {
+                return $this->error404();
+            }
+
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($reservation)->serialize($expand,[], $relations));
+        }
+        catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message'=> $ex2->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
     /**
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
@@ -178,6 +216,8 @@ trait SummitBookableVenueRoomApi
                     'room_name'      => ['==', '=@'],
                     'room_id'        => ['=='],
                     'owner_id'       => ['=='],
+                    'owner_name'     => ['==', '=@'],
+                    'owner_email'    => ['==', '=@'],
                     'status'         => ['=='],
                     'start_datetime' => ['>', '<', '<=', '>=', '=='],
                     'end_datetime'   => ['>', '<', '<=', '>=', '=='],
@@ -188,6 +228,8 @@ trait SummitBookableVenueRoomApi
             $filter->validate([
                 'status'         => sprintf('sometimes|in:%s',implode(',', SummitRoomReservation::$valid_status)),
                 'room_name'      => 'sometimes|string',
+                'owner_name'     => 'sometimes|string',
+                'owner_email'    => 'sometimes|string',
                 'summit_id'      => 'sometimes|integer',
                 'room_id'        => 'sometimes|integer',
                 'owner_id'       => 'sometimes|string',
@@ -247,6 +289,108 @@ trait SummitBookableVenueRoomApi
             return $this->error500($ex);
         }
     }
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function getAllReservationsBySummitCSV($summit_id){
+
+        try {
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            // default values
+            $page     = 1;
+            $per_page = PHP_INT_MAX;
+
+            $filter = null;
+
+            if (Input::has('filter')) {
+                $filter = FilterParser::parse(Input::get('filter'), [
+                    'summit_id'      => ['=='],
+                    'room_name'      => ['==', '=@'],
+                    'room_id'        => ['=='],
+                    'owner_id'       => ['=='],
+                    'owner_name'     => ['==', '=@'],
+                    'owner_email'    => ['==', '=@'],
+                    'status'         => ['=='],
+                    'start_datetime' => ['>', '<', '<=', '>=', '=='],
+                    'end_datetime'   => ['>', '<', '<=', '>=', '=='],
+                ]);
+            }
+            if(is_null($filter)) $filter = new Filter();
+
+            $filter->validate([
+                'status'         => sprintf('sometimes|in:%s',implode(',', SummitRoomReservation::$valid_status)),
+                'room_name'      => 'sometimes|string',
+                'owner_name'     => 'sometimes|string',
+                'owner_email'    => 'sometimes|string',
+                'summit_id'      => 'sometimes|integer',
+                'room_id'        => 'sometimes|integer',
+                'owner_id'       => 'sometimes|string',
+                'start_datetime' => 'sometimes|required|date_format:U',
+                'end_datetime'   => 'sometimes|required_with:start_datetime|date_format:U|after:start_datetime',
+
+            ], [
+                'status.in' =>  sprintf
+                (
+                    ":attribute has an invalid value ( valid values are %s )",
+                    implode(", ", SummitRoomReservation::$valid_status)
+                )
+            ]);
+
+            $order = null;
+
+            if (Input::has('order'))
+            {
+                $order = OrderParser::parse(Input::get('order'), [
+                    'id',
+                    'start_datetime',
+                    'end_datetime',
+                ]);
+            }
+
+
+            $data = $this->reservation_repository->getAllBySummitByPage($summit, new PagingInfo($page, $per_page), $filter, $order);
+
+            $filename = "bookable-rooms-reservations-" . date('Ymd');
+            $list     =  $data->toArray();
+            return $this->export
+            (
+                'csv',
+                $filename,
+                $list['data'],
+                [
+                    'created'                    => new EpochCellFormatter,
+                    'last_edited'                => new EpochCellFormatter,
+                    'start_datetime'             => new EpochCellFormatter,
+                    'end_datetime'               => new EpochCellFormatter,
+                ]
+            );
+        }
+        catch (ValidationException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error412(array( $ex1->getMessage()));
+        }
+        catch (EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message' => $ex2->getMessage()));
+        }
+        catch(\HTTP401UnauthorizedException $ex3)
+        {
+            Log::warning($ex3);
+            return $this->error401();
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
     /**
      * @param $summit_id
      * @param $venue_id

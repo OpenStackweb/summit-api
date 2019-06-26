@@ -22,7 +22,6 @@ use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
 use utils\PagingResponse;
-
 /**
  * Class DoctrineSummitRoomReservationRepository
  * @package App\Repositories\Summit
@@ -67,6 +66,18 @@ class DoctrineSummitRoomReservationRepository
                 'e.owner',
                 'o',
                 "o.id :operator :value"
+            ),
+            'owner_name' => new DoctrineJoinFilterMapping
+            (
+                'e.owner',
+                'o',
+                "LOWER(CONCAT(o.first_name, ' ', o.last_name)) :operator ':value'"
+            ),
+            'owner_email' => new DoctrineJoinFilterMapping
+            (
+                'e.owner',
+                'o',
+                "o.email :operator :value"
             ),
         ];
     }

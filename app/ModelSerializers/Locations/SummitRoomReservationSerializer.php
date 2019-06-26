@@ -21,17 +21,16 @@ use ModelSerializers\SilverStripeSerializer;
 final class SummitRoomReservationSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
-        'RoomId'             => 'room_id:json_int',
-        'OwnerId'            => 'owner_id:json_int',
-        'Amount'             => 'amount:json_int',
-        'Currency'           => 'currency:json_string',
-        'Status'             => 'status:json_string',
-        'StartDatetime'      => 'start_datetime:datetime_epoch',
-        'EndDatetime'        => 'end_datetime:datetime_epoch',
-        'LocalStartDatetime' => 'local_start_datetime:datetime_epoch',
-        'LocalEndDatetime'   => 'local_end_datetime:datetime_epoch',
-        'ApprovedPaymentDate' => 'approved_payment_date:datetime_epoch',
-        'LastError'           => 'last_error:json_string',
+        'RoomId'                    => 'room_id:json_int',
+        'OwnerId'                   => 'owner_id:json_int',
+        'Amount'                    => 'amount:json_int',
+        'RefundedAmount'            => 'refunded_amount:json_int',
+        'Currency'                  => 'currency:json_string',
+        'Status'                    => 'status:json_string',
+        'StartDatetime'             => 'start_datetime:datetime_epoch',
+        'EndDatetime'               => 'end_datetime:datetime_epoch',
+        'ApprovedPaymentDate'       => 'approved_payment_date:datetime_epoch',
+        'LastError'                 => 'last_error:json_string',
         'PaymentGatewayClientToken' => 'payment_gateway_client_token:json_string'
     ];
 

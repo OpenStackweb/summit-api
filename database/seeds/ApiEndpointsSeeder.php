@@ -38,38 +38,6 @@ class ApiEndpointsSeeder extends Seeder
         $this->seedTrackQuestionTemplateEndpoints();
     }
 
-    /**
-     * @param string $api_name
-     * @param array $endpoints_info
-     */
-    private function seedApiEndpoints($api_name, array $endpoints_info){
-
-        $api = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => $api_name]);
-        if(is_null($api)) return;
-
-        foreach($endpoints_info as $endpoint_info){
-
-            $endpoint = new ApiEndpoint();
-            $endpoint->setName($endpoint_info['name']);
-            $endpoint->setRoute($endpoint_info['route']);
-            $endpoint->setHttpMethod($endpoint_info['http_method']);
-            $endpoint->setActive(true);
-            $endpoint->setAllowCors(true);
-            $endpoint->setAllowCredentials(true);
-            $endpoint->setApi($api);
-
-            foreach($endpoint_info['scopes'] as $scope_name){
-                $scope = EntityManager::getRepository(\App\Models\ResourceServer\ApiScope::class)->findOneBy(['name' => $scope_name]);
-                if(is_null($scope)) continue;
-                $endpoint->addScope($scope);
-            }
-
-            EntityManager::persist($endpoint);
-        }
-
-        EntityManager::flush();
-    }
-
     private function seedSummitEndpoints()
     {
         $current_realm = Config::get('app.scope_base_realm');
@@ -1181,6 +1149,15 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'get-bookable-venue-room-reservations-by-id',
+                'route' => '/api/v1/summits/all/locations/bookable-rooms/all/reservations/{id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadBookableRoomsData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            [
                 'name' => 'cancel-my-bookable-venue-room-reservation',
                 'route' => '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/{reservation_id}',
                 'http_method' => 'DELETE',
@@ -1200,6 +1177,15 @@ class ApiEndpointsSeeder extends Seeder
             [
                 'name' => 'get-bookable-venue-room-reservations-by-summit',
                 'route' => '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                ],
+            ],
+            [
+                'name' => 'get-bookable-venue-room-reservations-by-summit-csv',
+                'route' => '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/csv',
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm),
@@ -2313,6 +2299,38 @@ class ApiEndpointsSeeder extends Seeder
         ]);
     }
 
+    /**
+     * @param string $api_name
+     * @param array $endpoints_info
+     */
+    private function seedApiEndpoints($api_name, array $endpoints_info){
+
+        $api = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => $api_name]);
+        if(is_null($api)) return;
+
+        foreach($endpoints_info as $endpoint_info){
+
+            $endpoint = new ApiEndpoint();
+            $endpoint->setName($endpoint_info['name']);
+            $endpoint->setRoute($endpoint_info['route']);
+            $endpoint->setHttpMethod($endpoint_info['http_method']);
+            $endpoint->setActive(true);
+            $endpoint->setAllowCors(true);
+            $endpoint->setAllowCredentials(true);
+            $endpoint->setApi($api);
+
+            foreach($endpoint_info['scopes'] as $scope_name){
+                $scope = EntityManager::getRepository(\App\Models\ResourceServer\ApiScope::class)->findOneBy(['name' => $scope_name]);
+                if(is_null($scope)) continue;
+                $endpoint->addScope($scope);
+            }
+
+            EntityManager::persist($endpoint);
+        }
+
+        EntityManager::flush();
+    }
+
     private function seedMemberEndpoints(){
         $current_realm = Config::get('app.scope_base_realm');
 
@@ -2451,6 +2469,25 @@ class ApiEndpointsSeeder extends Seeder
         );
     }
 
+    private function seedGroupsEndpoints(){
+        $current_realm = Config::get('app.scope_base_realm');
+
+        $this->seedApiEndpoints('groups', [
+                // members
+                [
+                    'name' => 'get-groups',
+                    'route' => '/api/v1/groups',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                        sprintf(SummitScopes::ReadSummitData, $current_realm),
+                        sprintf('%s/groups/read', $current_realm)
+                    ],
+                ]
+            ]
+        );
+    }
+
     private function seedOrganizationsEndpoints(){
         $current_realm = Config::get('app.scope_base_realm');
 
@@ -2475,25 +2512,6 @@ class ApiEndpointsSeeder extends Seeder
                     'http_method' => 'POST',
                     'scopes' => [
                         sprintf(OrganizationScopes::WriteOrganizationData, $current_realm)
-                    ],
-                ]
-            ]
-        );
-    }
-
-    private function seedGroupsEndpoints(){
-        $current_realm = Config::get('app.scope_base_realm');
-
-        $this->seedApiEndpoints('groups', [
-                // members
-                [
-                    'name' => 'get-groups',
-                    'route' => '/api/v1/groups',
-                    'http_method' => 'GET',
-                    'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                        sprintf(SummitScopes::ReadSummitData, $current_realm),
-                        sprintf('%s/groups/read', $current_realm)
                     ],
                 ]
             ]

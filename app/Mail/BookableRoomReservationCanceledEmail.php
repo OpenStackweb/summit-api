@@ -27,7 +27,7 @@ final class BookableRoomReservationCanceledEmail extends AbstractBookableRoomRes
     {
         $subject = Config::get("mail.bookable_room_reservation_canceled_email_subject");
         if(empty($subject))
-            $subject = sprintf("[%s] Your Reservation had canceled", Config::get('app.app_name'));
+            $subject = sprintf("[%s] Your Room Reservation had been canceled", Config::get('app.app_name'));
 
         return $this->from(Config::get("mail.from"))
             ->to($this->reservation->getOwner()->getEmail())

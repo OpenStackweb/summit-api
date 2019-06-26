@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use DateTime;
+use Illuminate\Support\Facades\Log;
 /**
  * Class SchedScheduleFeed
  * @package App\Services\Apis\ExternalScheduleFeeds
@@ -25,7 +26,19 @@ final class SchedScheduleFeed  extends AbstractExternalScheduleFeed
      */
     public function getEvents(): array
     {
-        $url = sprintf("%s/api/session/list?api_key=%s&format=json", $this->summit->getApiFeedUrl(), $this->summit->getApiFeedKey());
+
+        $apiFeedUrl = $this->summit->getApiFeedUrl();
+        $apiFeedKey = $this->summit->getApiFeedKey();
+
+        if(empty($apiFeedUrl)) {
+            Log::warning(sprintf("api_feeed_url is empty for summit %s", $this->summit->getId()));
+            return [];
+        }
+        if(empty($apiFeedKey)) {
+            Log::warning(sprintf("api_feeed_key is empty for summit %s", $this->summit->getId()));
+            return [];
+        }
+        $url = sprintf("%s/api/session/list?api_key=%s&format=json", $apiFeedUrl, $apiFeedKey);
         $response = $this->get($url);
         $timezone = $this->summit->getTimeZone();
         $events   = [];
@@ -62,7 +75,19 @@ final class SchedScheduleFeed  extends AbstractExternalScheduleFeed
      */
     public function getSpeakers(): array
     {
-        $url = sprintf("%s/api/user/list?api_key=%s&format=json", $this->summit->getApiFeedUrl(), $this->summit->getApiFeedKey());
+        $apiFeedUrl = $this->summit->getApiFeedUrl();
+        $apiFeedKey = $this->summit->getApiFeedKey();
+
+        if(empty($apiFeedUrl)) {
+            Log::warning(sprintf("api_feeed_url is empty for summit %s", $this->summit->getId()));
+            return [];
+        }
+        if(empty($apiFeedKey)) {
+            Log::warning(sprintf("api_feeed_key is empty for summit %s", $this->summit->getId()));
+            return [];
+        }
+
+        $url = sprintf("%s/api/user/list?api_key=%s&format=json", $apiFeedUrl, $apiFeedKey);
         $response = $this->get($url);
 
         $speakers = [];

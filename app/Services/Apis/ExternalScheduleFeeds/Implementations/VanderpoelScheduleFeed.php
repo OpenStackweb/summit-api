@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use Illuminate\Support\Facades\Log;
 /**
  * Class VanderpoelScheduleFeed
  * @package App\Services\Apis\ExternalScheduleFeeds
@@ -26,7 +26,19 @@ final class VanderpoelScheduleFeed extends AbstractExternalScheduleFeed
 
     public function getEvents(): array
     {
-        $url = sprintf("%s/sessions/%s", $this->summit->getApiFeedUrl(), $this->summit->getApiFeedKey());
+        $apiFeedUrl = $this->summit->getApiFeedUrl();
+        $apiFeedKey = $this->summit->getApiFeedKey();
+
+        if(empty($apiFeedUrl)) {
+            Log::warning(sprintf("api_feeed_url is empty for summit %s", $this->summit->getId()));
+            return [];
+        }
+        if(empty($apiFeedKey)) {
+            Log::warning(sprintf("api_feeed_key is empty for summit %s", $this->summit->getId()));
+            return [];
+        }
+
+        $url = sprintf("%s/sessions/%s", $apiFeedUrl, $apiFeedKey);
         $response = $this->get($url);
 
         $events   = [];

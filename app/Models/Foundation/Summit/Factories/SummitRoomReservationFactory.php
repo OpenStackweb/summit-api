@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Eluceo\iCal\Component\Timezone;
 use models\summit\Summit;
 use models\summit\SummitRoomReservation;
 /**
@@ -37,13 +39,15 @@ final class SummitRoomReservationFactory
         // summit timezone
         if(isset($data['start_datetime'])) {
             $val = intval($data['start_datetime']);
-            $val = new \DateTime("@$val", $summit->getTimeZone());
+            $val = new \DateTime("@$val");
+            $val->setTimezone($summit->getTimeZone());
             $reservation->setStartDatetime($summit->convertDateFromTimeZone2UTC($val));
         }
 
         if(isset($data['end_datetime'])){
             $val = intval($data['end_datetime']);
-            $val = new \DateTime("@$val", $summit->getTimeZone());
+            $val = new \DateTime("@$val");
+            $val->setTimezone($summit->getTimeZone());
             $reservation->setEndDatetime($summit->convertDateFromTimeZone2UTC($val));
         }
 

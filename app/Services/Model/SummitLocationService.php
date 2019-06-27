@@ -1827,11 +1827,19 @@ final class SummitLocationService
             if ($reservation->getStatus() == SummitRoomReservation::ReservedStatus)
                 throw new ValidationException("can not request a refund on a reserved booking!");
 
+            if($amount <= 0){
+                throw new ValidationException("can not refund an amount lower than zero!");
+            }
             if($amount > intval($reservation->getAmount())){
-                throw new ValidationException("can mot refund an amount greater than paid one!");
+                throw new ValidationException("can not refund an amount greater than paid one!");
             }
 
-            $this->payment_gateway->refundPayment($reservation->getPaymentGatewayCartId(), $amount);
+            try{
+                $this->payment_gateway->refundPayment($reservation->getPaymentGatewayCartId(), $amount);
+            }
+            catch (\Exception $ex){
+                throw new ValidationException($ex->getMessage());
+            }
 
             $reservation->refund($amount);
 

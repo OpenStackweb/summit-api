@@ -162,6 +162,8 @@ final class StripeApi implements IPaymentGatewayAPI
 
         if(is_null($intent))
             throw new \InvalidArgumentException();
+        if(count($intent->charges->data) == 0)
+            throw new \InvalidArgumentException("this intent payment has no charges");
         $charge = $intent->charges->data[0];
         if(!$charge instanceof Charge)
             throw new \InvalidArgumentException();

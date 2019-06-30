@@ -1429,15 +1429,16 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
      * @param int $start_date
      * @return mixed
      */
-    public function testBookableRoomReservation($summit_id =27, $room_id = 922, $start_date = 1572919200, $end_date = 1572922800){
+    public function testBookableRoomReservation($summit_id =27, $start_date = 1572919200, $end_date = 1572922800){
+        $bookable_room = $this->testAddBookableRoom($summit_id);
         $params = [
             'id'       => $summit_id,
-            'room_id'  => $room_id,
+            'room_id'  => $bookable_room->id,
         ];
 
         $data = [
             'currency'   => 'USD',
-            'amount'     => 325,
+            'amount'     => 200,
             'start_datetime' => $start_date,
             'end_datetime'   => $end_date,
         ];

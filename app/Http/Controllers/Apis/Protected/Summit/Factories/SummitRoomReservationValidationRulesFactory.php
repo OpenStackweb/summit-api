@@ -28,7 +28,7 @@ final class SummitRoomReservationValidationRulesFactory
 
         return [
             'currency'       => 'required|string|currency_iso',
-            'amount'         => 'required|integer',
+            'amount'         => 'required|integer|greater_than:0',
             'start_datetime' => 'required|date_format:U',
             'end_datetime'   => 'required|date_format:U|after:start_datetime',
         ];

@@ -77,13 +77,13 @@ class SummitRoomReservation extends SilverstripeBaseModel
 
     /**
      * @var float
-     * @ORM\Column(name="Amount", type="float")
+     * @ORM\Column(name="Amount", type="integer")
      */
     private $amount;
 
     /**
      * @var float
-     * @ORM\Column(name="RefundedAmount", type="float")
+     * @ORM\Column(name="RefundedAmount", type="integer")
      */
     private $refunded_amount;
 
@@ -126,9 +126,9 @@ class SummitRoomReservation extends SilverstripeBaseModel
     }
 
     /**
-     * @param float $amount
+     * @param int $amount
      */
-    public function refund(float $amount){
+    public function refund(int $amount){
         $this->status = self::RefundedStatus;
         $this->refunded_amount = $amount;
         Event::fire(new BookableRoomReservationRefundAccepted($this->getId()));
@@ -271,17 +271,17 @@ class SummitRoomReservation extends SilverstripeBaseModel
     }
 
     /**
-     * @return float
+     * @return int
      */
-    public function getAmount(): float
+    public function getAmount(): int
     {
         return $this->amount;
     }
 
     /**
-     * @param float $amount
+     * @param int $amount
      */
-    public function setAmount(float $amount): void
+    public function setAmount(int $amount): void
     {
         $this->amount = $amount;
     }
@@ -289,7 +289,8 @@ class SummitRoomReservation extends SilverstripeBaseModel
     public function __construct()
     {
         parent::__construct();
-        $this->amount = 0.0;
+        $this->amount = 0;
+        $this->refunded_amount = 0;
         $this->status = self::ReservedStatus;
     }
 
@@ -356,19 +357,11 @@ class SummitRoomReservation extends SilverstripeBaseModel
     }
 
     /**
-     * @return float
+     * @return int
      */
-    public function getRefundedAmount(): float
+    public function getRefundedAmount(): int
     {
         return $this->refunded_amount;
-    }
-
-    /**
-     * @param float $refunded_amount
-     */
-    public function setRefundedAmount(float $refunded_amount): void
-    {
-        $this->refunded_amount = $refunded_amount;
     }
 
 }

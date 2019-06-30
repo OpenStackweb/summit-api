@@ -1717,13 +1717,30 @@ final class SummitLocationService
             $currency = trim($payload['currency']);
 
             if($room->getCurrency() != $currency){
-                throw new ValidationException(sprintf("currency set %s is not allowed for room %s", $currency, $room->getId()));
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "currency set %s is not allowed for room %s",
+                        $currency,
+                        $room->getId()
+                    )
+                );
             }
 
-            $amount = floatval($payload['amount']);
+            $amount = intval($payload['amount']);
 
             if($room->getTimeSlotCost() != $amount){
-                throw new ValidationException(sprintf("amount set %s does not match with time slot cost %s for room %s", $currency, $room->getTimeSlotCost(), $room->getId()));
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "amount set %s does not match with time slot cost %s for room %s",
+                        $amount,
+                        $room->getTimeSlotCost(),
+                        $room->getId()
+                    )
+                );
             }
 
             $reservation = SummitRoomReservationFactory::build($summit, $payload);

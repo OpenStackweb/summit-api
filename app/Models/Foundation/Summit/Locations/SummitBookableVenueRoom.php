@@ -27,8 +27,8 @@ class SummitBookableVenueRoom extends SummitVenueRoom
     const ClassName = 'SummitBookableVenueRoom';
 
     /**
-     * @ORM\Column(name="TimeSlotCost", type="decimal")
-     * @var float
+     * @ORM\Column(name="TimeSlotCost", type="integer")
+     * @var int
      */
     private $time_slot_cost;
 
@@ -159,17 +159,17 @@ class SummitBookableVenueRoom extends SummitVenueRoom
     }
 
     /**
-     * @return float
+     * @return int
      */
-    public function getTimeSlotCost(): float
+    public function getTimeSlotCost(): int
     {
-        return floatval($this->time_slot_cost);
+        return $this->time_slot_cost;
     }
 
     /**
-     * @param float $time_slot_cost
+     * @param int $time_slot_cost
      */
-    public function setTimeSlotCost(float $time_slot_cost): void
+    public function setTimeSlotCost(int $time_slot_cost): void
     {
         $this->time_slot_cost = $time_slot_cost;
     }

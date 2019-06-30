@@ -614,9 +614,11 @@ class AppServiceProvider extends ServiceProvider
             $value = trim($value);
             return isset($currencies[$value]);
         });
+
+        Validator::extend('greater_than', function ($attribute, $value, $otherValue) {
+            return intval($value) > intval($otherValue[0]);
+        });
     }
-
-
 
     /**
      * Register any application services.

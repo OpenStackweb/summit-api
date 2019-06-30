@@ -240,7 +240,7 @@ final class SummitLocationFactory
         self::populateSummitVenueRoom($room, $data);
 
         if(isset($data['time_slot_cost']))
-            $room->setTimeSlotCost(floatval($data['time_slot_cost']));
+            $room->setTimeSlotCost(intval($data['time_slot_cost']));
 
         if(isset($data['currency']))
             $room->setCurrency(trim($data['currency']));

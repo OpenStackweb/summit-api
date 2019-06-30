@@ -962,7 +962,7 @@ trait SummitBookableVenueRoomApi
             if(!Request::isJson()) return $this->error400();
             $payload = Input::json()->all();
             $rules = [
-                'amount' => 'required|numeric',
+                'amount' => 'required|integer|greater_than:0',
             ];
 
             // Creates a Validator instance and validates the data.

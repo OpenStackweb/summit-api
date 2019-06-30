@@ -21,7 +21,7 @@ use ModelSerializers\SerializerRegistry;
 class SummitBookableVenueRoomSerializer extends SummitVenueRoomSerializer
 {
     protected static $array_mappings = [
-        'TimeSlotCost' => 'time_slot_cost:json_float',
+        'TimeSlotCost' => 'time_slot_cost:json_int',
         'Currency'     => 'currency:json_string',
     ];
 

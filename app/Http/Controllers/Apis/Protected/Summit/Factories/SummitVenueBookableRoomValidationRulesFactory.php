@@ -29,7 +29,7 @@ final class SummitVenueBookableRoomValidationRulesFactory
 
         return array_merge([
             'capacity'       => 'required|integer:min:0',
-            'time_slot_cost' => 'required|numeric',
+            'time_slot_cost' => 'required|integer|greater_than:0',
             'currency'       => 'required|string|currency_iso',
         ], $rules);
     }

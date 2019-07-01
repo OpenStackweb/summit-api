@@ -75,7 +75,11 @@ class SummitBookableVenueRoom extends SummitVenueRoom
         $criteria
             ->where(Criteria::expr()->eq('start_datetime', $start_date))
             ->andWhere(Criteria::expr()->eq('end_datetime',$end_date))
-            ->andWhere(Criteria::expr()->notIn("status", [SummitRoomReservation::RequestedRefundStatus, SummitRoomReservation::RefundedStatus]));
+            ->andWhere(Criteria::expr()->notIn("status", [
+                SummitRoomReservation::RequestedRefundStatus,
+                SummitRoomReservation::RefundedStatus,
+                SummitRoomReservation::Canceled
+            ]));
 
         if($this->reservations->matching($criteria)->count() > 0)
             throw new ValidationException(sprintf("reservation overlaps an existent reservation"));
@@ -83,7 +87,11 @@ class SummitBookableVenueRoom extends SummitVenueRoom
         $criteria
             ->where(Criteria::expr()->lte('start_datetime', $end_date))
             ->andWhere(Criteria::expr()->gte('end_datetime', $start_date))
-            ->andWhere(Criteria::expr()->notIn("status", [SummitRoomReservation::RequestedRefundStatus, SummitRoomReservation::RefundedStatus]));
+            ->andWhere(Criteria::expr()->notIn("status", [
+                SummitRoomReservation::RequestedRefundStatus,
+                SummitRoomReservation::RefundedStatus,
+                SummitRoomReservation::Canceled
+            ]));
 
         if($this->reservations->matching($criteria)->count() > 0)
             throw new ValidationException(sprintf("reservation overlaps an existent reservation"));

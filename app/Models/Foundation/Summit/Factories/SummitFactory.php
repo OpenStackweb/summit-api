@@ -180,11 +180,11 @@ final class SummitFactory
         }
 
         if(isset($data['api_feed_url'])){
-            $summit->setApiFeedUrl($data['api_feed_url']);
+            $summit->setApiFeedUrl(trim($data['api_feed_url']));
         }
 
         if(isset($data['api_feed_key'])){
-            $summit->setApiFeedKey($data['api_feed_key']);
+            $summit->setApiFeedKey(trim($data['api_feed_key']));
         }
 
         return $summit;

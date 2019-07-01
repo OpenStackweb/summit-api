@@ -172,6 +172,82 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $this->assertResponseStatus(412);
     }
 
+    public function testAddSummitFeedNull(){
+        $params = [
+        ];
+        $name        = str_random(16).'_summit';
+        $data = [
+            'name'         => $name,
+            'start_date'   => 1522853212,
+            'end_date'     => 1542853212,
+            'time_zone_id' => 'America/Argentina/Buenos_Aires',
+            'submission_begin_date' => null,
+            'submission_end_date' => null,
+            'api_feed_type' => null,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitApiController@addSummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $summit = json_decode($content);
+        $this->assertTrue(!is_null($summit));
+        return $summit;
+    }
+
+    public function testAddSummitFeedEmpty(){
+        $params = [
+        ];
+        $name        = str_random(16).'_summit';
+        $data = [
+            'name'         => $name,
+            'start_date'   => 1522853212,
+            'end_date'     => 1542853212,
+            'time_zone_id' => 'America/Argentina/Buenos_Aires',
+            'submission_begin_date' => null,
+            'submission_end_date' => null,
+            'api_feed_type' => '',
+            'api_feed_url'  =>  '',
+            'api_feed_key'  => ''
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitApiController@addSummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $summit = json_decode($content);
+        $this->assertTrue(!is_null($summit));
+        return $summit;
+    }
+
     public function testAddSummit(){
         $params = [
         ];
@@ -209,6 +285,40 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $summit = json_decode($content);
         $this->assertTrue(!is_null($summit));
         return $summit;
+    }
+
+    public function testAddSummitFeedType412(){
+        $params = [
+        ];
+        $name        = str_random(16).'_summit';
+        $data = [
+            'name'         => $name,
+            'start_date'   => 1522853212,
+            'end_date'     => 1542853212,
+            'time_zone_id' => 'America/Argentina/Buenos_Aires',
+            'submission_begin_date' => null,
+            'submission_end_date' => null,
+            'api_feed_type' => IExternalScheduleFeedFactory::SchedType,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitApiController@addSummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(412);
     }
 
     public function testUpdateSummitAlreadyActiveError(){

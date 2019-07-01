@@ -47,8 +47,8 @@ final class SummitValidationRulesFactory
                 'meeting_room_booking_slot_length' => 'nullable|integer',
                 'meeting_room_booking_max_allowed' => 'nullable|integer|min:1',
                 'api_feed_type'                    => sprintf('nullable|in:%s',implode(',', Summit::$valid_feed_types)),
-                'api_feed_url'                     => 'nullable|string|url',
-                'api_feed_key'                     => 'nullable|string',
+                'api_feed_url'                     => 'nullable|string|url|required_with:api_feed_type',
+                'api_feed_key'                     => 'nullable|string|required_with:api_feed_type',
             ];
         }
 
@@ -78,8 +78,8 @@ final class SummitValidationRulesFactory
             'meeting_room_booking_slot_length' => 'nullable|integer',
             'meeting_room_booking_max_allowed' => 'nullable|integer|min:1',
             'api_feed_type'                    => sprintf('nullable|in:%s',implode(',', Summit::$valid_feed_types)),
-            'api_feed_url'                     => 'nullable|string|url',
-            'api_feed_key'                     => 'nullable|string',
+            'api_feed_url'                     => 'nullable|string|url|required_with:api_feed_type',
+            'api_feed_key'                     => 'nullable|string|required_with:api_feed_type',
         ];
     }
 }

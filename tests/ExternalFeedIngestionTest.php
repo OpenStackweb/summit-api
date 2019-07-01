@@ -14,6 +14,7 @@
 use App\Services\Apis\ExternalScheduleFeeds\SchedScheduleFeed;
 use GuzzleHttp\ClientInterface;
 use Illuminate\Support\Facades\App;
+use LaravelDoctrine\ORM\Facades\EntityManager;
 use Mockery;
 use models\summit\Summit;
 use App\Services\Apis\ExternalScheduleFeeds\IExternalScheduleFeedFactory;
@@ -77,5 +78,11 @@ JSON;
 
         $this->assertTrue(count($events) == 218);
         $this->assertTrue(count($speakers) == 1009);
+    }
+
+    public function testGetSummitWithFeeds(){
+        $repository = EntityManager::getRepository(Summit::class);
+        $summitsWithExternalFeeds = $repository->getActivesWithExternalFeed();
+        $this->assertTrue(count($summitsWithExternalFeeds)>0);
     }
 }

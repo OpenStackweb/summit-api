@@ -2653,7 +2653,7 @@ SQL;
      */
     public function setApiFeedType(string $api_feed_type): void
     {
-        if(!in_array($api_feed_type, self::$valid_feed_types))
+        if(!empty($api_feed_type) && !in_array($api_feed_type, self::$valid_feed_types))
             throw new ValidationException(sprintf("feed type %s is not valid!", $api_feed_type));
         $this->api_feed_type = $api_feed_type;
     }

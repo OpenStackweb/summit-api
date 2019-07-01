@@ -252,7 +252,11 @@ class SummitBookableVenueRoom extends SummitVenueRoom
         $criteria
             ->where(Criteria::expr()->gte('start_datetime', $summit->convertDateFromTimeZone2UTC($start_datetime)))
             ->andWhere(Criteria::expr()->lte('end_datetime', $summit->convertDateFromTimeZone2UTC($end_datetime)))
-            ->andWhere(Criteria::expr()->notIn("status", [SummitRoomReservation::RequestedRefundStatus, SummitRoomReservation::RefundedStatus]));
+            ->andWhere(Criteria::expr()->notIn("status", [
+                SummitRoomReservation::RequestedRefundStatus,
+                SummitRoomReservation::RefundedStatus,
+                SummitRoomReservation::Canceled,
+            ]));
 
         $reservations = $this->reservations->matching($criteria);
 

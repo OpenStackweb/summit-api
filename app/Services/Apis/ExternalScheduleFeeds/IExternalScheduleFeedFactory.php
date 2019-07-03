@@ -18,6 +18,7 @@ use models\summit\Summit;
  */
 interface IExternalScheduleFeedFactory
 {
+    const NoneType       = '';
     const VanderpoelType = 'Vanderpoel';
     const SchedType      = 'Sched';
 

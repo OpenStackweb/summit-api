@@ -2638,7 +2638,11 @@ SQL;
         return null;
     }
 
-    static $valid_feed_types = [IExternalScheduleFeedFactory::SchedType, IExternalScheduleFeedFactory::VanderpoelType];
+    static $valid_feed_types = [
+        IExternalScheduleFeedFactory::NoneType,
+        IExternalScheduleFeedFactory::SchedType,
+        IExternalScheduleFeedFactory::VanderpoelType
+    ];
     /**
      * @return string|null
      */

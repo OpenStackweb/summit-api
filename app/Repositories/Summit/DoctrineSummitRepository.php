@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Log;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
 use App\Repositories\SilverStripeDoctrineRepository;
@@ -107,17 +109,23 @@ final class DoctrineSummitRepository
 
     /**
      * @param string $slug
-     * @return Summit
+     * @return Summit|null
      */
-    public function getBySlug(string $slug):Summit
+    public function getBySlug(string $slug):?Summit
     {
-        return $this->getEntityManager()->createQueryBuilder()
-            ->select("s")
-            ->from(\models\summit\Summit::class, "s")
-            ->where('s.slug = :slug')
-            ->setParameter('slug', $slug)
-            ->getQuery()
-            ->getOneOrNullResult();
+        try {
+            return $this->getEntityManager()->createQueryBuilder()
+                ->select("s")
+                ->from($this->getBaseEntity(), "s")
+                ->where('s.slug = :slug')
+                ->setParameter('slug', $slug)
+                ->getQuery()
+                ->getOneOrNullResult();
+        }
+        catch (\Exception $ex){
+            Log::warning($ex);
+            return null;
+        }
     }
 
     /**

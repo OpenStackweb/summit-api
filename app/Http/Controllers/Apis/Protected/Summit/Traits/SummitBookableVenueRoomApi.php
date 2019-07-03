@@ -583,7 +583,7 @@ trait SummitBookableVenueRoomApi
             if(is_null($member))
                 return $this->error403();
 
-            $reservations = $member->getReservations()->toArray();
+            $reservations = $member->getReservationsBySummit($summit);
 
             $response = new PagingResponse
             (

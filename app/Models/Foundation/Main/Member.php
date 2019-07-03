@@ -1184,6 +1184,25 @@ SQL;
     }
 
     /**
+     * @param Summit $summit
+     * @return SummitRoomReservation[]
+     * @throws NoResultException
+     * @throws NonUniqueResultException
+     */
+    public function getReservationsBySummit(Summit $summit):array{
+        $query = $this->createQuery("SELECT rv from models\summit\SummitRoomReservation rv
+        JOIN rv.owner o 
+        JOIN rv.room r 
+        JOIN r.venue v 
+        JOIN v.summit s 
+        WHERE s.id = :summit_id AND o.id = :owner_id");
+        return $query
+            ->setParameter('summit_id', $summit->getId())
+            ->setParameter('owner_id', $this->getId())
+            ->getArrayResult();
+    }
+
+    /**
      * @param int $reservation_id
      * @return SummitRoomReservation
      */

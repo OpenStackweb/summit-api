@@ -1710,7 +1710,7 @@ final class SummitLocationService
             }
 
             if($owner->getReservationsCountBySummit($summit) >= $summit->getMeetingRoomBookingMaxAllowed())
-                throw new ValidationException(sprintf("member %s already reached maximun qty of reservations (%s)", $owner->getId(),  $summit->getMeetingRoomBookingMaxAllowed() ));
+                throw new ValidationException(sprintf("member %s already reached maximun quantity of reservations (%s)", $owner->getId(),  $summit->getMeetingRoomBookingMaxAllowed() ));
 
             $payload['owner'] = $owner;
 

@@ -1176,10 +1176,15 @@ SQL;
         JOIN rv.room r 
         JOIN r.venue v 
         JOIN v.summit s 
-        WHERE s.id = :summit_id AND o.id = :owner_id");
+        WHERE s.id = :summit_id AND o.id = :owner_id and rv.status not in :status");
         return $query
             ->setParameter('summit_id', $summit->getId())
             ->setParameter('owner_id', $this->getId())
+            ->setParameter('status', [
+                SummitRoomReservation::RequestedRefundStatus,
+                SummitRoomReservation::RefundedStatus,
+                SummitRoomReservation::Canceled
+            ])
             ->getSingleScalarResult();
     }
 

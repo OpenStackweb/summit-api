@@ -420,6 +420,13 @@ Route::group([
                                         Route::put('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitLocationsApiController@updateVenueFloorRoom']);
                                     });
                                 });
+                                Route::group(['prefix' => 'bookable-rooms'], function () {
+                                    Route::post('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitLocationsApiController@addVenueFloorBookableRoom']);
+                                    Route::group(['prefix' => '{room_id}'], function () {
+                                        Route::get('', 'OAuth2SummitLocationsApiController@getVenueFloorBookableRoom');
+                                        Route::put('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitLocationsApiController@updateVenueFloorBookableRoom']);
+                                    });
+                                });
                             });
                         });
                     });

@@ -730,6 +730,55 @@ trait SummitBookableVenueRoomApi
         }
     }
 
+    public function getVenueFloorBookableRoom($summit_id, $venue_id, $floor_id, $room_id){
+        try {
+
+            $expand    = Request::input('expand', '');
+            $relations = Request::input('relations', '');
+            $relations = !empty($relations) ? explode(',', $relations) : [];
+
+            $summit    = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $venue = $summit->getLocation($venue_id);
+
+            if (is_null($venue)) {
+                return $this->error404();
+            }
+
+            if (!$venue instanceof SummitVenue) {
+                return $this->error404();
+            }
+
+            $floor = $venue->getFloor($floor_id);
+
+            if (is_null($floor)) {
+                return $this->error404();
+            }
+
+            $room = $floor->getRoom($room_id);
+
+            if (is_null($room) || !$room instanceof SummitBookableVenueRoom) {
+                return $this->error404();
+            }
+
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($room)->serialize($expand,[], $relations));
+        }
+        catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message'=> $ex2->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
     /**
      * @param $summit_id
      * @param $venue_id

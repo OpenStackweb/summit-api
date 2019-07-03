@@ -1283,6 +1283,33 @@ class ApiEndpointsSeeder extends Seeder
                     sprintf(SummitScopes::WriteLocationsData, $current_realm)
                 ],
             ],
+            [
+                'name' => 'get-venue-floor-bookable-room',
+                'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms/{room_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadBookableRoomsData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'add-venue-floor-room',
+                'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
+                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'update-venue-floor-room',
+                'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms/{room_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
+                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                ],
+            ],
             // external locations
             [
                 'name' => 'get-external-locations',

@@ -1189,7 +1189,7 @@ SQL;
      * @throws NoResultException
      * @throws NonUniqueResultException
      */
-    public function getReservationsBySummit(Summit $summit):array{
+    public function getReservationsBySummit(Summit $summit){
         $query = $this->createQuery("SELECT rv from models\summit\SummitRoomReservation rv
         JOIN rv.owner o 
         JOIN rv.room r 
@@ -1199,7 +1199,7 @@ SQL;
         return $query
             ->setParameter('summit_id', $summit->getId())
             ->setParameter('owner_id', $this->getId())
-            ->getArrayResult();
+            ->getResult();
     }
 
     /**

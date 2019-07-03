@@ -1293,7 +1293,7 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'add-venue-floor-room',
+                'name' => 'add-venue-floor-bookable-room',
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms',
                 'http_method' => 'POST',
                 'scopes' => [
@@ -1302,7 +1302,7 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'update-venue-floor-room',
+                'name' => 'update-venue-floor-bookable-room',
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms/{room_id}',
                 'http_method' => 'PUT',
                 'scopes' => [

@@ -1298,7 +1298,8 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'POST',
                 'scopes' => [
                     sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    sprintf(SummitScopes::WriteLocationsData, $current_realm),
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
                 ],
             ],
             [
@@ -1307,7 +1308,8 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'PUT',
                 'scopes' => [
                     sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    sprintf(SummitScopes::WriteLocationsData, $current_realm),
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
                 ],
             ],
             // external locations

@@ -1583,6 +1583,70 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
         return $bookable_room;
     }
 
+    /**
+     * @param int $summit_id
+     * @param int $floor_id
+     * @return mixed|null
+     */
+    public function testAddBookableRoomOnFloor($summit_id = 27){
+
+        $summit_repository = EntityManager::getRepository(\models\summit\Summit::class);
+        $summit = $summit_repository->getById($summit_id);
+        $this->assertTrue(!is_null($summit));
+        if(!$summit instanceof \models\summit\Summit) return null;
+        $venues = $summit->getVenues();
+        $this->assertTrue($venues->count() > 0 );
+        $venue  = $venues->first();
+        if(!$venue instanceof \models\summit\SummitVenue) return null;
+
+        $floors = $venue->getFloors();
+
+        $this->assertTrue($floors->count() > 0);
+
+        $params = [
+            'id' => $summit_id,
+            'venue_id' => $venue->getId(),
+            'floor_id' => $floors->first()->getId()
+        ];
+
+        $name       = str_random(16).'_bookable_room';
+
+        $data = [
+            'name'            => $name,
+            'capacity'       =>  10,
+            'description'    => 'test bookable room',
+            'time_slot_cost' => 200,
+            'currency'       => 'USD',
+        ];
+
+        $headers =
+            [
+                "HTTP_Authorization" => " Bearer " . $this->access_token,
+                "CONTENT_TYPE"       => "application/json"
+            ];
+
+        $response = $this->action
+        (
+            "POST",
+            "OAuth2SummitLocationsApiController@addVenueFloorBookableRoom",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $bookable_room = json_decode($content);
+        $this->assertTrue(!is_null($bookable_room));
+        $this->assertTrue($bookable_room->name == $name);
+
+        return $bookable_room;
+    }
+
     public function testUpdateBookableRooms($summit_id = 27){
         $bookable_room = $this->testAddBookableRoom($summit_id);
         $this->assertTrue(!is_null($bookable_room));
@@ -1629,7 +1693,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
         return $bookable_room;
 
     }
-
 
     /**
      * @param int $summit_id

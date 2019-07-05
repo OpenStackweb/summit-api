@@ -138,7 +138,7 @@ final class StripeApi implements IPaymentGatewayAPI
      * @param array $payload
      * @return string
      */
-    public function getPaymentError(array $payload): string
+    public function getPaymentError(array $payload): ?string
     {
         if(isset($payload['type']) && $payload['type'] == "payment_intent.payment_failed"){
             $error_message = $payload['error']["message"];

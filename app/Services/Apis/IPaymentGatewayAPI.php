@@ -41,7 +41,7 @@ interface IPaymentGatewayAPI
      * @param array $payload
      * @return string
      */
-    public function getPaymentError(array $payload):string;
+    public function getPaymentError(array $payload):?string;
 
     /**
      * @param string $cart_id

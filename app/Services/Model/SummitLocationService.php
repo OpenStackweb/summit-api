@@ -1778,9 +1778,17 @@ final class SummitLocationService
                 throw new EntityNotFoundException();
             }
 
-            if ($this->payment_gateway->isSuccessFullPayment($payload)) {
-                $reservation->setPayed();
-                return;
+            try {
+                if ($this->payment_gateway->isSuccessFullPayment($payload)) {
+                    $reservation->setPayed();
+                    return;
+                }
+            }
+            catch (ValidationException $ex){
+                Log::error($ex);
+                Log::warning("doing refund of cancelled reservation");
+                $reservation->setStatus(SummitRoomReservation::RequestedRefundStatus);
+                $this->refundReservation($reservation->getRoom(), $reservation->getId(), $reservation->getAmount());
             }
 
             $reservation->setPaymentError($this->payment_gateway->getPaymentError($payload));
@@ -1841,12 +1849,22 @@ final class SummitLocationService
                 throw new EntityNotFoundException();
             }
 
-            if ($reservation->getStatus() == SummitRoomReservation::ReservedStatus)
-                throw new ValidationException("can not request a refund on a reserved booking!");
+            $status        = $reservation->getStatus();
+            $validStatuses = [SummitRoomReservation::RequestedRefundStatus, SummitRoomReservation::PayedStatus];
+            if(in_array($status, $validStatuses))
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "can not request a refund on a %s booking!",
+                        $status
+                    )
+                );
 
             if($amount <= 0){
                 throw new ValidationException("can not refund an amount lower than zero!");
             }
+
             if($amount > intval($reservation->getAmount())){
                 throw new ValidationException("can not refund an amount greater than paid one!");
             }

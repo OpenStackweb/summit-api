@@ -13,6 +13,7 @@
  **/
 use App\Services\Apis\IPaymentGatewayAPI;
 use Illuminate\Http\Request as LaravelRequest;
+use models\exceptions\ValidationException;
 use models\summit\SummitRoomReservation;
 use Stripe\Charge;
 use Stripe\Error\SignatureVerification;
@@ -110,6 +111,8 @@ final class StripeApi implements IPaymentGatewayAPI
                     ]
                 ];
             }
+
+            throw new ValidationException(sprintf("event type %s not handled!", $event->type));
         }
         catch(\UnexpectedValueException $e) {
             // Invalid payload

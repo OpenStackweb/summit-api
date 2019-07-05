@@ -17,6 +17,7 @@ use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\IMemberRepository;
+use models\main\Member;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
@@ -26,6 +27,7 @@ use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request as LaravelRequest;
 use Exception;
+use models\summit\Presentation;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use services\model\IPresentationService;
@@ -618,6 +620,19 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
+            $member_id = $this->resource_server_context->getCurrentUserExternalId();
+            $member = $this->member_repository->getById($member_id);
+            if(is_null($member) || !$member instanceof Member) return $this->error404();
+
+            if(!$member->isAdmin()){
+                // check if we could edit presentation
+                $presentation = $summit->getEvent($presentation_id);
+                if(is_null($presentation) || !$presentation instanceof Presentation)
+                    return $this->error404();
+                if(!$member->hasSpeaker() || !$presentation->canEdit($member->getSpeaker()))
+                   return $this->error403();
+            }
+
             $data  = $request->all();
 
             $rules = [
@@ -683,6 +698,19 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
+
+            $member_id = $this->resource_server_context->getCurrentUserExternalId();
+            $member = $this->member_repository->getById($member_id);
+            if(is_null($member) || !$member instanceof Member) return $this->error404();
+
+            if(!$member->isAdmin()){
+                // check if we could edit presentation
+                $presentation = $summit->getEvent($presentation_id);
+                if(is_null($presentation) || !$presentation instanceof Presentation)
+                    return $this->error404();
+                if(!$member->hasSpeaker() || !$presentation->canEdit($member->getSpeaker()))
+                    return $this->error403();
+            }
 
             $data  = $request->all();
 

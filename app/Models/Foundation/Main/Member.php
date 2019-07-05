@@ -20,6 +20,7 @@ use Doctrine\ORM\NoResultException;
 use models\exceptions\ValidationException;
 use models\summit\CalendarSync\CalendarSyncInfo;
 use models\summit\CalendarSync\ScheduleCalendarSyncInfo;
+use models\summit\PresentationSpeaker;
 use models\summit\RSVP;
 use models\summit\Summit;
 use models\summit\SummitEvent;
@@ -213,6 +214,12 @@ class Member extends SilverstripeBaseModel
      * @var ArrayCollection
      */
     private $reservations;
+
+    /**
+     * @var PresentationSpeaker
+     * @ORM\OneToOne(targetEntity="models\summit\PresentationSpeaker", mappedBy="member")
+     */
+    private $speaker;
 
     /**
      * Member constructor.
@@ -1240,6 +1247,34 @@ SQL;
     public function setLastName(string $last_name): void
     {
         $this->last_name = $last_name;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasSpeaker(){
+        return $this->getSpeakerId() > 0;
+    }
+
+    /**
+     * @return PresentationSpeaker|null
+     */
+    public function getSpeaker():?PresentationSpeaker{
+        return $this->speaker;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSpeakerId()
+    {
+        try{
+            if(is_null($this->speaker)) return 0;
+            return $this->speaker->getId();
+        }
+        catch(\Exception $ex){
+            return 0;
+        }
     }
 
 }

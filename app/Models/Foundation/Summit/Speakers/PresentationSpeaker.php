@@ -161,7 +161,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
     private $photo;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
+     * @ORM\OneToOne(targetEntity="models\main\Member",inversedBy="speaker")
      * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID")
      * @var Member
      */

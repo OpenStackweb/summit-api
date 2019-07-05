@@ -293,10 +293,10 @@ Route::group([
                     // slides
                     Route::group(['prefix' => 'slides'], function () {
                         Route::get('', 'OAuth2PresentationApiController@getPresentationSlides');
-                        Route::post('', [ 'middleware' => 'auth.user:administrators', 'uses' => 'OAuth2PresentationApiController@addPresentationSlide' ]);
+                        Route::post('', 'OAuth2PresentationApiController@addPresentationSlide' );
                         Route::group(['prefix' => '{slide_id}'], function () {
                             Route::get('', 'OAuth2PresentationApiController@getPresentationSlide');
-                            Route::put('', [ 'middleware' => 'auth.user:administrators', 'uses' => 'OAuth2PresentationApiController@updatePresentationSlide' ]);
+                            Route::put('', 'OAuth2PresentationApiController@updatePresentationSlide' );
                             Route::delete('', [ 'middleware' => 'auth.user:administrators', 'uses' => 'OAuth2PresentationApiController@deletePresentationSlide' ]);
                         });
                     });

@@ -678,6 +678,10 @@ trait SummitBookableVenueRoomApi
             $this->location_service->processBookableRoomPayment($response);
             return $this->ok();
         }
+        catch(EntityNotFoundException $ex){
+            Log::warning($ex);
+            return $this->error400(["error" => 'payload error']);
+        }
         catch (Exception $ex){
             Log::error($ex);
             return $this->error400(["error" => 'payload error']);

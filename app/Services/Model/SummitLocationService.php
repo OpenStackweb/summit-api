@@ -1772,10 +1772,11 @@ final class SummitLocationService
     public function processBookableRoomPayment(array $payload): void
     {
         $this->tx_service->transaction(function () use ($payload) {
+
             $reservation = $this->reservation_repository->getByPaymentGatewayCartId($payload['cart_id']);
 
             if (is_null($reservation)) {
-                throw new EntityNotFoundException();
+                throw new EntityNotFoundException(sprintf("there is no reservation with cart_id %s", $payload['cart_id']));
             }
 
             try {

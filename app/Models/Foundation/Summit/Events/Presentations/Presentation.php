@@ -144,6 +144,12 @@ class Presentation extends SummitEvent
     private $materials;
 
     /**
+     * @ORM\OneToMany(targetEntity="models\summit\SummitPresentationComment", mappedBy="presentation", cascade={"persist", "remove"}, orphanRemoval=true)
+     * @var SummitPresentationComment[]
+     */
+    private $comments;
+
+    /**
      * @ORM\ManyToMany(targetEntity="models\summit\PresentationSpeaker", inversedBy="presentations")
      * @ORM\JoinTable(name="Presentation_Speakers",
      *  joinColumns={
@@ -193,6 +199,9 @@ class Presentation extends SummitEvent
         return $this->to_record;
     }
 
+    /**
+     * Presentation constructor.
+     */
     public function __construct()
     {
         parent::__construct();
@@ -200,6 +209,7 @@ class Presentation extends SummitEvent
         $this->materials       = new ArrayCollection();
         $this->speakers        = new ArrayCollection();
         $this->answers         = new ArrayCollection();
+        $this->comments        = new ArrayCollection();
         $this->to_record       = false;
         $this->attending_media = false;
     }
@@ -760,6 +770,15 @@ class Presentation extends SummitEvent
         $criteria->where(Criteria::expr()->eq('question', $question));
         $res = $this->answers->matching($criteria)->first();
         return $res === false ? null : $res;
+    }
+
+    /**
+     * @return SummitPresentationComment[]
+     */
+    public function getPublicComments(){
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('is_public', true));
+        return $this->comments->matching($criteria)->toArray();
     }
 
     /**

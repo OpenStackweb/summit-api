@@ -45,6 +45,7 @@ use App\ModelSerializers\PushNotificationMessageSerializer;
 use App\ModelSerializers\Software\OpenStackComponentSerializer;
 use App\ModelSerializers\Software\OpenStackReleaseSerializer;
 use App\ModelSerializers\Summit\AdminSummitSerializer;
+use App\ModelSerializers\Summit\Presentation\SummitPresentationCommentSerializer;
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackAnswerSerializer;
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackDropDownQuestionTemplateSerializer;
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackMultiValueQuestionTemplateSerializer;
@@ -144,6 +145,7 @@ final class SerializerRegistry
         $this->registry['SummitEventMetricsSnapshot'] = SummitEventMetricsSnapshotSerializer::class;
         $this->registry['TrackTagGroup']              = TrackTagGroupSerializer::class;
         $this->registry['Presentation']               = PresentationSerializer::class;
+        $this->registry['SummitPresentationComment']  = SummitPresentationCommentSerializer::class;
         $this->registry['PresentationVideo']          = PresentationVideoSerializer::class;
         $this->registry['PresentationSlide']          = PresentationSlideSerializer::class;
         $this->registry['PresentationLink']           = PresentationLinkSerializer::class;

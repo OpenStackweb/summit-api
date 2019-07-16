@@ -52,6 +52,7 @@ class PresentationSerializer extends SummitEventSerializer
         'speakers',
         'links',
         'extra_questions',
+        'public_comments'
     ];
 
     /**
@@ -77,7 +78,7 @@ class PresentationSerializer extends SummitEventSerializer
 
         if(in_array('slides', $relations))
         {
-            $slides = array();
+            $slides = [];
             foreach ($presentation->getSlides() as $slide) {
                 $slide_values  = SerializerRegistry::getInstance()->getSerializer($slide)->serialize();
                 if(empty($slide_values['link'])) continue;
@@ -86,9 +87,18 @@ class PresentationSerializer extends SummitEventSerializer
             $values['slides'] = $slides;
         }
 
+        if(in_array('public_comments', $relations))
+        {
+            $public_comments = [];
+            foreach ($presentation->getPublicComments() as $comment) {
+                $public_comments[] = SerializerRegistry::getInstance()->getSerializer($comment)->serialize($expand);
+            }
+            $values['public_comments'] = $public_comments;
+        }
+
         if(in_array('links', $relations))
         {
-            $links = array();
+            $links = [];
             foreach ($presentation->getLinks() as $link) {
                 $link_values  = SerializerRegistry::getInstance()->getSerializer($link)->serialize();
                 if(empty($link_values['link'])) continue;

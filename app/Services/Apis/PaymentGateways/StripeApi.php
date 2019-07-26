@@ -49,26 +49,72 @@ final class StripeApi implements IPaymentGatewayAPI
     }
 
     /**
-     * @param SummitRoomReservation $reservation
+     * @param array $payload
      * @return array
      */
-    public function generatePayment(SummitRoomReservation $reservation):array
+    public function generatePayment(array $payload):array
     {
         if(empty($this->api_key))
             throw new \InvalidArgumentException();
 
         Stripe::setApiKey($this->api_key);
 
-        $intent = PaymentIntent::create([
-            'amount'        => $reservation->getAmount(),
-            'currency'      => $reservation->getCurrency(),
-            'receipt_email' => $reservation->getOwner()->getEmail()
-        ]);
+        $amount   = $payload['amount'];
+        $currency = $payload['currency'];
+
+        if(!self::isZeroDecimalCurrency($currency)){
+            /**
+             * All API requests expect amounts to be provided in a currency’s smallest unit. For example,
+             * to charge $10 USD, provide an amount value of 1000 (i.e, 1000 cents).
+             * For zero-decimal currencies, still provide amounts as an integer but without multiplying by 100.
+             * For example, to charge ¥500, simply provide an amount value of 500.
+             */
+            $amount = $amount * 100 ;
+        }
+
+        $request = [
+            'amount'        => intval($amount),
+            'currency'      => $currency,
+        ];
+
+        if(isset($payload['receipt_email']))
+        {
+            $request['receipt_email']= trim($payload['receipt_email']);
+        }
+
+        $intent = PaymentIntent::create($request);
 
         return [
             'client_token'  => $intent->client_secret,
             'cart_id'       => $intent->id,
         ];
+    }
+
+    /**
+     * @param string $currency
+     * @return bool
+     * @see https://stripe.com/docs/currencies#zero-decimal
+     */
+    private static function isZeroDecimalCurrency(string $currency):bool{
+        $zeroDecimalCurrencies = [
+            'JPY',
+            'BIF',
+            'CLP',
+            'DJF',
+            'GNF',
+            'KMF',
+            'KRW',
+            'MGA',
+            'PYG',
+            'RWF',
+            'UGX',
+            'VND',
+            'VUV',
+            'XAF',
+            'XOF',
+            'XPF',
+        ];
+        return in_array($currency, $zeroDecimalCurrencies);
     }
 
     /**
@@ -152,10 +198,11 @@ final class StripeApi implements IPaymentGatewayAPI
 
     /**
      * @param string $cart_id
-     * @param int $amount
+     * @param float $amount
+     * @param string $currency
      * @throws \InvalidArgumentException
      */
-    public function refundPayment(string $cart_id, int $amount = 0): void
+    public function refundPayment(string $cart_id, float $amount, string $currency): void
     {
         if(empty($this->api_key))
             throw new \InvalidArgumentException();
@@ -172,7 +219,17 @@ final class StripeApi implements IPaymentGatewayAPI
             throw new \InvalidArgumentException();
         $params = [];
         if($amount > 0 ){
-            $params['amount'] = $amount;
+            if(!self::isZeroDecimalCurrency($currency)){
+                /**
+                 * All API requests expect amounts to be provided in a currency’s smallest unit. For example,
+                 * to charge $10 USD, provide an amount value of 1000 (i.e, 1000 cents).
+                 * For zero-decimal currencies, still provide amounts as an integer but without multiplying by 100.
+                 * For example, to charge ¥500, simply provide an amount value of 500.
+                 */
+                $amount = $amount * 100;
+            }
+
+            $params['amount'] = intval($amount);
         }
         $charge->refund($params);
     }

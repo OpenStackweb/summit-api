@@ -1749,7 +1749,11 @@ final class SummitLocationService
 
             $result = $this->payment_gateway->generatePayment
             (
-                $reservation
+                [
+                    "amount"        => $reservation->getAmount(),
+                    "currency"      => $reservation->getCurrency(),
+                    "receipt_email" => $reservation->getOwner()->getEmail(),
+                ]
             );
 
             if(!isset($result['cart_id']))
@@ -1871,7 +1875,7 @@ final class SummitLocationService
             }
 
             try{
-                $this->payment_gateway->refundPayment($reservation->getPaymentGatewayCartId(), $amount);
+                $this->payment_gateway->refundPayment($reservation->getPaymentGatewayCartId(), $amount, $reservation->getCurrency());
             }
             catch (\Exception $ex){
                 throw new ValidationException($ex->getMessage());

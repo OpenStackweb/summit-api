@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use models\summit\SummitRoomReservation;
 use Illuminate\Http\Request as LaravelRequest;
 /**
  * Interface IPaymentGatewayAPI
@@ -20,10 +19,10 @@ use Illuminate\Http\Request as LaravelRequest;
 interface IPaymentGatewayAPI
 {
     /**
-     * @param SummitRoomReservation $reservation
+     * @param array $info
      * @return array
      */
-    public function generatePayment(SummitRoomReservation $reservation):array;
+    public function generatePayment(array $payload):array;
 
     /**
      * @param LaravelRequest $request
@@ -45,8 +44,9 @@ interface IPaymentGatewayAPI
 
     /**
      * @param string $cart_id
-     * @param int $amount
+     * @param float $amount
+     * @param string $currency
      * @throws \InvalidArgumentException
      */
-    public function refundPayment(string $cart_id, int $amount = 0): void;
+    public function refundPayment(string $cart_id, float $amount,  string $currency): void;
 }

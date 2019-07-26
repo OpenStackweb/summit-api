@@ -82,6 +82,11 @@ final class StripeApi implements IPaymentGatewayAPI
             $request['receipt_email']= trim($payload['receipt_email']);
         }
 
+        if(isset($payload['metadata']))
+        {
+            $request['metadata']= $payload['metadata'];
+        }
+
         $intent = PaymentIntent::create($request);
 
         return [

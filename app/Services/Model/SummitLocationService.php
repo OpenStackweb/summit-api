@@ -1753,6 +1753,10 @@ final class SummitLocationService
                     "amount"        => $reservation->getAmount(),
                     "currency"      => $reservation->getCurrency(),
                     "receipt_email" => $reservation->getOwner()->getEmail(),
+                    "metadata"      => [
+                        "type"    => "bookable_room_reservation",
+                        "room_id" => $room->getId(),
+                    ]
                 ]
             );
 

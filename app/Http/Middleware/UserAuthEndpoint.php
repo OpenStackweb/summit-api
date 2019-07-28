@@ -56,7 +56,7 @@ final class UserAuthEndpoint
     public function handle($request, Closure $next, $required_groups)
     {
 
-        $current_member = $this->resource_server_context->getCurrentUser();
+        $current_member = $this->context->getCurrentUser();
         if (is_null($current_member)) return $next($request);
 
         $required_groups = explode('|', $required_groups);

@@ -117,10 +117,8 @@ final class ChatTeamService implements IChatTeamService
      */
     function updateTeam(array $data, $team_id){
         return $this->tx_service->transaction(function () use($data, $team_id){
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) throw new EntityNotFoundException();
 
-            $current_member = $this->member_repository->getById($current_member_id);
+            $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) throw new EntityNotFoundException();
 
             $team = $this->repository->getById($team_id);
@@ -146,10 +144,7 @@ final class ChatTeamService implements IChatTeamService
     {
        $this->tx_service->transaction(function() use($team_id){
 
-           $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-           if (is_null($current_member_id)) throw new EntityNotFoundException();
-
-           $current_member = $this->member_repository->getById($current_member_id);
+           $current_member = $this->resource_server_context->getCurrentUser();
            if (is_null($current_member)) throw new EntityNotFoundException();
 
            $team = $this->repository->getById($team_id);
@@ -176,10 +171,10 @@ final class ChatTeamService implements IChatTeamService
             $team = $this->repository->getById($team_id);
             if(is_null($team)) throw new EntityNotFoundException();
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) throw new EntityNotFoundException();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) throw new EntityNotFoundException();
 
-            $inviter = $this->member_repository->getById($current_member_id);
+            $inviter = $this->member_repository->getById($current_member->getId());
             if (is_null($inviter)) throw new EntityNotFoundException();
 
             $invitee  = $this->member_repository->getById($invitee_id);
@@ -284,10 +279,7 @@ final class ChatTeamService implements IChatTeamService
     {
         $this->tx_service->transaction(function() use($member_id, $team_id){
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) throw new EntityNotFoundException();
-
-            $current_member = $this->member_repository->getById($current_member_id);
+            $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) throw new EntityNotFoundException();
 
             $team_member = $this->member_repository->getById($member_id);
@@ -318,10 +310,7 @@ final class ChatTeamService implements IChatTeamService
     {
         return $this->tx_service->transaction(function() use($team_id, $values){
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) throw new EntityNotFoundException();
-
-            $current_member = $this->member_repository->getById($current_member_id);
+            $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) throw new EntityNotFoundException();
 
             $team = $this->repository->getById($team_id);

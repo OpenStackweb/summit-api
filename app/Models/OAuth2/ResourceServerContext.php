@@ -11,12 +11,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use libs\utils\ITransactionService;
+use models\main\IMemberRepository;
+use models\main\Member;
 /**
  * Class ResourceServerContext
  * @package models\oauth2
  */
 final class ResourceServerContext implements IResourceServerContext
 {
+
+    /**
+     * @var IMemberRepository
+     */
+    private $member_repository;
+
+    /**
+     * @var ITransactionService
+     */
+    private $tx_service;
+
+    /**
+     * ResourceServerContext constructor.
+     * @param IMemberRepository $member_repository
+     * @param ITransactionService $tx_service
+     */
+    public function __construct(IMemberRepository $member_repository, ITransactionService $tx_service)
+    {
+        $this->member_repository = $member_repository;
+        $this->tx_service = $tx_service;
+    }
 
     /**
      * @var array
@@ -36,7 +60,7 @@ final class ResourceServerContext implements IResourceServerContext
      */
     public function getCurrentAccessToken()
     {
-        return isset($this->auth_context['access_token']) ? $this->auth_context['access_token'] : null;
+        return $this->getAuthContextVar('access_token');
     }
 
 
@@ -45,7 +69,7 @@ final class ResourceServerContext implements IResourceServerContext
      */
     public function getCurrentAccessTokenLifetime()
     {
-        return isset($this->auth_context['expires_in']) ? $this->auth_context['expires_in'] : null;
+        return $this->getAuthContextVar('expires_in');
     }
 
     /**
@@ -53,7 +77,7 @@ final class ResourceServerContext implements IResourceServerContext
      */
     public function getCurrentClientId()
     {
-        return isset($this->auth_context['client_id']) ? $this->auth_context['client_id'] : null;
+        return $this->getAuthContextVar('client_id');
     }
 
     /**
@@ -61,7 +85,7 @@ final class ResourceServerContext implements IResourceServerContext
      */
     public function getCurrentUserId()
     {
-        return isset($this->auth_context['user_id']) ? intval($this->auth_context['user_id']) : null;
+        return $this->getAuthContextVar('user_id');
     }
 
     /**
@@ -74,11 +98,11 @@ final class ResourceServerContext implements IResourceServerContext
     }
 
     /**
-     * @return int
+     * @return int|null
      */
     public function getCurrentUserExternalId()
     {
-        return isset($this->auth_context['user_external_id']) ? intval($this->auth_context['user_external_id']) : null;
+        return $this->getAuthContextVar('user_external_id');
     }
 
     /**
@@ -86,6 +110,55 @@ final class ResourceServerContext implements IResourceServerContext
      */
     public function getApplicationType()
     {
-        return isset($this->auth_context['application_type']) ? $this->auth_context['application_type'] : null;
+        return $this->getAuthContextVar('application_type');
+    }
+
+    private function getAuthContextVar(string $varName){
+        return isset($this->auth_context[$varName]) ? $this->auth_context[$varName] : null;
+    }
+
+    /**
+     * @return Member|null
+     * @throws \Exception
+     */
+    public function getCurrentUser(): ?Member
+    {
+        return $this->tx_service->transaction(function() {
+            $member = null;
+            // legacy test
+            $id = $this->getCurrentUserExternalId();
+            if(is_null($id)) return null;
+            // get by id ( legacy test)
+            $member = $this->member_repository->getById(intval($id));
+            // is null
+            if(is_null($member)){
+                $id = $this->getCurrentUserId();
+                if(is_null($id)) return null;
+                $member = $this->member_repository->getById(intval($id));
+            }
+
+            if(is_null($member)){
+
+                $user_external_id = $this->getAuthContextVar('user_id');
+                $user_first_name  = $this->getAuthContextVar('user_first_name');
+                $user_last_name   = $this->getAuthContextVar('user_last_name');
+                $user_email       = $this->getAuthContextVar('user_email');
+                // at last resort try to get by email
+                $member           = $this->member_repository->getByEmail($user_email);
+
+                if(is_null($member))  // user exist on IDP but not in our local DB, proceed to create it
+                    $member = new Member();
+
+                $member->setEmail($user_email);
+                $member->setFirstName($user_first_name);
+                $member->setLastName($user_last_name);
+                $member->setUserExternalId($user_external_id);
+
+                if($member->getId() == 0)
+                    $this->member_repository->add($member);
+            }
+
+            return $member;
+        });
     }
 }

@@ -288,12 +288,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 );
             }
 
-            $current_member = null;
-            if(!is_null($this->resource_server_context->getCurrentUserExternalId())){
-                $current_member = $this->member_repository->getById($this->resource_server_context->getCurrentUserExternalId());
-            }
-
-            $template = $this->rsvp_template_service->addTemplate($summit, $current_member, $payload);
+            $template = $this->rsvp_template_service->addTemplate($summit, $this->resource_server_context->getCurrentUser(), $payload);
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($template)->serialize());
         }

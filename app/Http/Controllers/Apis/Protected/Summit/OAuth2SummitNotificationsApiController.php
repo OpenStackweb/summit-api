@@ -306,12 +306,7 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $current_member = null;
-            if(!is_null($this->resource_server_context->getCurrentUserExternalId())){
-                $current_member = $this->member_repository->getById($this->resource_server_context->getCurrentUserExternalId());
-            }
-
-            $notification = $this->push_notification_service->approveNotification($summit, $current_member, $notification_id);
+            $notification = $this->push_notification_service->approveNotification($summit, $this->resource_server_context->getCurrentUser(), $notification_id);
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($notification)->serialize( Request::input('expand', '')));
         } catch (ValidationException $ex1) {
             Log::warning($ex1);
@@ -335,12 +330,7 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $current_member = null;
-            if(!is_null($this->resource_server_context->getCurrentUserExternalId())){
-                $current_member = $this->member_repository->getById($this->resource_server_context->getCurrentUserExternalId());
-            }
-
-            $notification = $this->push_notification_service->unApproveNotification($summit, $current_member, $notification_id);
+            $notification = $this->push_notification_service->unApproveNotification($summit, $this->resource_server_context->getCurrentUser(), $notification_id);
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($notification)->serialize( Request::input('expand', '')));
         } catch (ValidationException $ex1) {
             Log::warning($ex1);
@@ -380,12 +370,7 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
                 );
             }
 
-            $current_member = null;
-            if(!is_null($this->resource_server_context->getCurrentUserExternalId())){
-                $current_member = $this->member_repository->getById($this->resource_server_context->getCurrentUserExternalId());
-            }
-
-            $notification = $this->push_notification_service->addPushNotification($summit, $current_member, $data->all());
+            $notification = $this->push_notification_service->addPushNotification($summit, $this->resource_server_context->getCurrentUser(), $data->all());
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($notification)->serialize());
         }

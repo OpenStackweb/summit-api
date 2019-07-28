@@ -384,12 +384,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 );
             }
 
-            $current_member = null;
-            if(!is_null($this->resource_server_context->getCurrentUserExternalId())){
-                $current_member = $this->member_repository->getById($this->resource_server_context->getCurrentUserExternalId());
-            }
-
-            $promo_code     = $this->promo_code_service->addPromoCode($summit, $data->all(), $current_member);
+            $promo_code = $this->promo_code_service->addPromoCode($summit, $data->all(), $this->resource_server_context->getCurrentUser());
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize());
         }
@@ -435,14 +430,10 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 );
             }
 
-            $current_member = null;
-            if (!is_null($this->resource_server_context->getCurrentUserExternalId())) {
-                $current_member = $this->member_repository->getById($this->resource_server_context->getCurrentUserExternalId());
-            }
-
-            $promo_code = $this->promo_code_service->updatePromoCode($summit, $promo_code_id, $data->all(), $current_member);
+            $promo_code = $this->promo_code_service->updatePromoCode($summit, $promo_code_id, $data->all(), $this->resource_server_context->getCurrentUser());
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize());
+            
         } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412(array($ex1->getMessage()));

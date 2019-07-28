@@ -11,12 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use Closure;
 use Illuminate\Support\Facades\Response;
 use models\main\IMemberRepository;
 use models\oauth2\IResourceServerContext;
-
 /**
  * Class UserAuthEndpoint
  * @package App\Http\Middleware
@@ -34,6 +32,11 @@ final class UserAuthEndpoint
      */
     private $member_repository;
 
+    /**
+     * UserAuthEndpoint constructor.
+     * @param IResourceServerContext $context
+     * @param IMemberRepository $member_repository
+     */
     public function __construct
     (
         IResourceServerContext $context,
@@ -44,21 +47,22 @@ final class UserAuthEndpoint
         $this->member_repository = $member_repository;
     }
 
+    /**
+     * @param $request
+     * @param Closure $next
+     * @param $required_groups
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
     public function handle($request, Closure $next, $required_groups)
     {
-        $member_id = $this->context->getCurrentUserExternalId();
-        if (is_null($member_id)) return $next($request);
 
-        $member = $this->member_repository->getById($member_id);
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if (is_null($current_member)) return $next($request);
 
-        if (is_null($member)){
-            $http_response = Response::json(['error' => 'member not found'], 403);
-            return $http_response;
-        }
         $required_groups = explode('|', $required_groups);
 
         foreach ($required_groups as $required_group) {
-            if($member->isOnGroup($required_group))
+            if($current_member->isOnGroup($required_group))
                 return $next($request);
         }
 

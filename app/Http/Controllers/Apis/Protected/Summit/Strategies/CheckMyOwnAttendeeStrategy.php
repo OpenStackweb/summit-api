@@ -32,8 +32,8 @@ final class CheckMyOwnAttendeeStrategy extends CheckMeAttendeeStrategy implement
         $attendee = parent::check($attendee_id, $summit);
         if(!$attendee) return null;
         $attendee_member_id = intval($attendee->getMember()->getId());
-        $member_id          = $this->resource_server_context->getCurrentUserExternalId();
-        if(is_null($member_id) || ($attendee_member_id !== $member_id))
+        $current_member  = $this->resource_server_context->getCurrentUser();
+        if(is_null($current_member) || ($attendee_member_id !== $current_member->getId()))
             throw new \HTTP401UnauthorizedException;
         return $attendee;
     }

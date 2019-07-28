@@ -66,13 +66,9 @@ abstract class SilverStripeDoctrineRepository extends DoctrineRepository
      */
     protected static function isCurrentMemberOnGroup($group_code){
         $resource_server_ctx = App::make(\models\oauth2\IResourceServerContext::class);
-        $member_repository   = App::make(\models\main\IMemberRepository::class);
-        $member_id           = $resource_server_ctx->getCurrentUserExternalId();
-        if(is_null($member_id)) return false;
-        $member              = $member_repository->getById($member_id);
-        if (!is_null($member)){
+        $member              = $resource_server_ctx->getCurrentUser();
+        if(is_null($member)) return false;
             return $member->isOnGroup($group_code);
-        }
         return false;
     }
 }

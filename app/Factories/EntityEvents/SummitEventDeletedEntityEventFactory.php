@@ -28,10 +28,8 @@ final class SummitEventDeletedEntityEventFactory
     public static function build(SummitEventDeleted $event){
         $args = $event->getArgs();
 
-        $resource_server_context         = App::make(\models\oauth2\IResourceServerContext::class);
-        $member_repository               = App::make(\models\main\IMemberRepository::class);
-        $owner_id                        = $resource_server_context->getCurrentUserExternalId();
-        if(is_null($owner_id)) $owner_id = 0;
+        $resource_server_context = App::make(\models\oauth2\IResourceServerContext::class);
+        $owner                   = $resource_server_context->getCurrentUser();
         $params = $args->getParams();
 
         $entity_event = new SummitEntityEvent();
@@ -39,9 +37,8 @@ final class SummitEventDeletedEntityEventFactory
         $entity_event->setEntityId($params['id']);
         $entity_event->setType('DELETE');
 
-        if($owner_id > 0){
-            $member = $member_repository->getById($owner_id);
-            $entity_event->setOwner($member);
+        if (!is_null($owner)) {
+            $entity_event->setOwner($owner);
         }
 
         $entity_event->setSummit($params['summit']);

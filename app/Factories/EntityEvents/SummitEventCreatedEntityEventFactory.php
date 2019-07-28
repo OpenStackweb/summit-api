@@ -26,19 +26,16 @@ final class SummitEventCreatedEntityEventFactory
      */
     public static function build(SummitEventCreated $event)
     {
-        $resource_server_context         = App::make(\models\oauth2\IResourceServerContext::class);
-        $member_repository               = App::make(\models\main\IMemberRepository::class);
-        $owner_id                        = $resource_server_context->getCurrentUserExternalId();
-        if(is_null($owner_id)) $owner_id = 0;
+        $resource_server_context = App::make(\models\oauth2\IResourceServerContext::class);
+        $owner                   = $resource_server_context->getCurrentUser();
+        $entity_event            = new SummitEntityEvent();
 
-        $entity_event                  = new SummitEntityEvent();
         $entity_event->setEntityClassName($event->getSummitEvent()->getClassName());
         $entity_event->setEntityId($event->getSummitEvent()->getId());
         $entity_event->setType('INSERT');
 
-        if($owner_id > 0){
-            $member = $member_repository->getById($owner_id);
-            $entity_event->setOwner($member);
+        if (!is_null($owner)) {
+            $entity_event->setOwner($owner);
         }
 
         $entity_event->setSummit($event->getSummitEvent()->getSummit());

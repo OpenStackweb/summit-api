@@ -29,21 +29,17 @@ final class AdminSummitLocationActionSyncWorkRequestFactory
      * @return AdminSummitLocationActionSyncWorkRequest
      */
     public static function build(LocationAction $event, $type){
-        $resource_server_context         = App::make(IResourceServerContext::class);
-        $member_repository               = App::make(IMemberRepository::class);
 
-        $owner_id                        = $resource_server_context->getCurrentUserExternalId();
-        if(is_null($owner_id)) $owner_id = 0;
-
-        $request  = new AdminSummitLocationActionSyncWorkRequest;
+        $resource_server_context = App::make(IResourceServerContext::class);
+        $current_member          = $resource_server_context->getCurrentUser();
+        $request                 = new AdminSummitLocationActionSyncWorkRequest;
 
         $request->setLocationId($event->getLocationId());
 
         $request->setType($type);
 
-        if($owner_id > 0){
-            $member = $member_repository->getById($owner_id);
-            $request->setCreatedBy($member);
+        if(!is_null($current_member)){
+            $request->setCreatedBy($current_member);
         }
 
         return $request;

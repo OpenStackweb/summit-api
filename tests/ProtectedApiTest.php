@@ -71,7 +71,20 @@ class AccessTokenServiceStub implements IAccessTokenService
             sprintf(SummitScopes::WriteMyBookableRoomsReservationData, $url),
         );
 
-        return AccessToken::createFromParams('123456789', implode(' ', $scopes), '1', $realm, '1','11624', 3600, 'WEB_APPLICATION', '', '');
+        return AccessToken::createFromParams(
+            [
+                'access_token'        => '123456789',
+                'scope'               => implode(' ', $scopes),
+                'client_id'           => '1',
+                'audience'            => $realm,
+                'user_id'             => '1',
+                'user_external_id'    => '11624',
+                'expires_in'          => 3600,
+                'application_type'    => 'WEB_APPLICATION',
+                'allowed_return_uris' => '',
+                'allowed_origins'     =>  ''
+            ]
+        );
     }
 }
 
@@ -125,7 +138,20 @@ class AccessTokenServiceStub2 implements IAccessTokenService
             sprintf(SummitScopes::WriteMyBookableRoomsReservationData, $url),
         );
 
-        return AccessToken::createFromParams('123456789', implode(' ', $scopes), '1', $realm, null,null, 3600, 'SERVICE', '', '');
+        return AccessToken::createFromParams(
+            [
+                'access_token'        => '123456789',
+                'scope'               => implode(' ', $scopes),
+                'client_id'           => '1',
+                'audience'            => $realm,
+                'user_id'             =>  null,
+                'user_external_id'    => null,
+                'expires_in'          => 3600,
+                'application_type'    => 'SERVICE',
+                'allowed_return_uris' => '',
+                'allowed_origins'     =>  ''
+            ]
+        );
     }
 }
 /**

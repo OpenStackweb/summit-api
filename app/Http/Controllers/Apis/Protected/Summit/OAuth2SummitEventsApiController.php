@@ -416,11 +416,8 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             if(!Request::isJson()) return $this->error400();
             $data = Input::json();
 
-            $current_member = null;
-            $member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (!is_null($member_id)){
-                $current_member = $this->member_repository->getById($member_id);
-            }
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $rules = [
                 // summit event rules
@@ -650,10 +647,10 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             if (!is_null($attendee_id)) // add filter by attendee, this case me
             {
                 if($attendee_id !== 'me') return $this->error403();
-                $member_id = $this->resource_server_context->getCurrentUserExternalId();
-                if (is_null($member_id)) return $this->error404();
+                $current_member = $this->resource_server_context->getCurrentUser();
+                if (is_null($current_member)) return $this->error403();
 
-                $filter = FilterParser::parse('owner_id=='.$member_id, array
+                $filter = FilterParser::parse('owner_id=='.$current_member->getId(), array
                 (
                     'owner_id'   => array('=='),
                 ));
@@ -902,11 +899,10 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         }
 
         $data      = $data->all();
-        $member_id = $this->resource_server_context->getCurrentUserExternalId();
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if (is_null($current_member)) return $this->error403();
 
-        if (is_null($member_id)) return $this->error400();
-
-        $data['member_id'] = intval($member_id);
+        $data['member_id'] = $current_member->getId();
 
         return [$summit, $event, $data];
     }

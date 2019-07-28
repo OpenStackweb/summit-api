@@ -28,21 +28,17 @@ final class LocationImageActionEntityEventFactory
     public static function build(LocationImageAction $event, $type = 'UPDATE')
     {
         $resource_server_context = App::make(IResourceServerContext::class);
-        $member_repository       = App::make(IMemberRepository::class);
         $summit_repository       = App::make(ISummitRepository::class);
         $summit                  = $summit_repository->getById($event->getSummitId());
-        $owner_id                = $resource_server_context->getCurrentUserExternalId();
-
-        if (is_null($owner_id)) $owner_id = 0;
+        $owner                   = $resource_server_context->getCurrentUser();
 
         $entity_event = new SummitEntityEvent;
         $entity_event->setEntityClassName($event->getImageType());
         $entity_event->setEntityId($event->getEntityId());
         $entity_event->setType($type);
 
-        if ($owner_id > 0) {
-            $member = $member_repository->getById($owner_id);
-            $entity_event->setOwner($member);
+        if (!is_null($owner)) {
+            $entity_event->setOwner($owner);
         }
 
         $metadata = json_encode( ['location_id' => $event->getLocationId()]);

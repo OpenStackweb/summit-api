@@ -353,6 +353,9 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
             $last_event_id = Request::input('last_event_id', null);
             $from_date     = Request::input('from_date', null);
             $limit         = Request::input('limit', 25);
@@ -400,7 +403,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             list($last_event_id, $last_event_date, $list) = $this->summit_service->getSummitEntityEvents
             (
                 $summit,
-                $this->resource_server_context->getCurrentUserExternalId(),
+                $current_member->getId(),
                 $from_date,
                 intval($last_event_id),
                 intval($limit)
@@ -461,17 +464,15 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         try {
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
-            $member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($member_id)) {
-                throw new \HTTP401UnauthorizedException;
-            }
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) throw new \HTTP401UnauthorizedException;
 
             $attendee = $this->summit_service->confirmExternalOrderAttendee
             (
                 new ConfirmationExternalOrderRequest
                 (
                     $summit,
-                    intval($member_id),
+                    $current_member->getId(),
                     trim($external_order_id),
                     trim($external_attendee_id)
                 )

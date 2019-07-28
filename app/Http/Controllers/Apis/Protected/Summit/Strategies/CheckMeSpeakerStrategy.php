@@ -45,11 +45,11 @@ class CheckMeSpeakerStrategy implements ICheckSpeakerStrategy
     public function check($speaker_id, Summit $summit)
     {
         if (strtolower($speaker_id) === 'me') {
-            $member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($member_id)) {
+            $current_member  = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) {
                 return null;
             }
-            return $summit->getSpeakerByMemberId($member_id, false);
+            return $summit->getSpeakerByMemberId($current_member->getId(), false);
         }
         return $summit->getSpeaker(intval($speaker_id, false));
     }

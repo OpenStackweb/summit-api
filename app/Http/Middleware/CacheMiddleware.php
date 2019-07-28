@@ -75,7 +75,9 @@ final class CacheMiddleware
 
         if (str_contains($request->getPathInfo(), '/me'))
         {
-            $key .= ':' . $this->context->getCurrentUserExternalId();
+            $current_member = $this->context->getCurrentUser();
+            if(!is_null($current_member))
+                $key .= ':' .$current_member->getId();
         }
 
         $data         = $this->cache_service->getSingleValue($key);

@@ -141,6 +141,13 @@ class Member extends SilverstripeBaseModel
     private $email_verified_date;
 
     /**
+     *
+     * @ORM\Column(name="ExternalUserId", type="integer")
+     * @var int
+     */
+    private $user_external_id;
+
+    /**
      * @ORM\ManyToOne(targetEntity="models\main\File")
      * @ORM\JoinColumn(name="PhotoID", referencedColumnName="ID")
      * @var File
@@ -1275,6 +1282,22 @@ SQL;
         catch(\Exception $ex){
             return 0;
         }
+    }
+
+    /**
+     * @return int
+     */
+    public function getUserExternalId(): int
+    {
+        return $this->user_external_id;
+    }
+
+    /**
+     * @param int $user_external_id
+     */
+    public function setUserExternalId(int $user_external_id): void
+    {
+        $this->user_external_id = $user_external_id;
     }
 
 }

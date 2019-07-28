@@ -33,22 +33,16 @@ final class SummitEventDeletedCalendarSyncWorkRequestFactory
         $args                    = $event->getArgs();
         $params                  = $args->getParams();
         $resource_server_context = App::make(IResourceServerContext::class);
-        $member_repository       = App::make(IMemberRepository::class);
-        $owner_id                = $resource_server_context->getCurrentUserExternalId();
-        if($owner_id > 0){
-            $member = $member_repository->getById($owner_id);
-        }
-        $request = null;
+        $current_member          = $resource_server_context->getCurrentUser();
+        $request                 = null;
         if(isset($params['published']) && $params['published']){
             // just record the published state at the moment of the update
-
             $request = new AdminSummitEventActionSyncWorkRequest();
             $request->setSummitEventId ($params['id']);
             $request->setType(AbstractCalendarSyncWorkRequest::TypeRemove);
-            if($owner_id > 0){
-                $request->setCreatedBy($member);
+            if(!is_null($current_member)){
+                $request->setCreatedBy($current_member);
             }
-
         }
         return $request;
     }

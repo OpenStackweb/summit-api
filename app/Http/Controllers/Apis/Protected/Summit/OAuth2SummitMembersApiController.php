@@ -65,11 +65,8 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
         if (is_null($summit)) return $this->error404();
 
-        $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-        if (is_null($current_member_id)) return $this->error403();
-
-        $current_member = $this->repository->getById($current_member_id);
-        if (is_null($current_member)) return $this->error404();
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if (is_null($current_member)) return $this->error403();
 
         $fields    = Request::input('fields', null);
         $relations = Request::input('relations', null);
@@ -93,11 +90,8 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
-
-            $current_member = $this->repository->getById($current_member_id);
-            if (is_null($current_member)) return $this->error404();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $favorites = array();
             foreach ($current_member->getFavoritesSummitEventsBySummit($summit) as $favorite_event)
@@ -151,11 +145,8 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
-
-            $current_member = $this->repository->getById($current_member_id);
-            if (is_null($current_member)) return $this->error404();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $this->summit_service->addEventToMemberFavorites($summit, $current_member, intval($event_id));
 
@@ -196,11 +187,8 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
-
-            $current_member = $this->repository->getById($current_member_id);
-            if (is_null($current_member)) return $this->error404();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $this->summit_service->removeEventFromMemberFavorites($summit, $current_member, intval($event_id));
 
@@ -238,13 +226,10 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            $current_member = $this->repository->getById($current_member_id);
-            if (is_null($current_member)) return $this->error404();
-
-            $schedule = array();
+            $schedule = [];
             foreach ($current_member->getScheduleBySummit($summit) as $schedule_event)
             {
                 if(!$summit->isEventOnSchedule($schedule_event->getEvent()->getId())) continue;
@@ -296,11 +281,8 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
-
-            $current_member = $this->repository->getById($current_member_id);
-            if (is_null($current_member)) return $this->error404();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $this->summit_service->addEventToMemberSchedule($summit, $current_member, intval($event_id));
 
@@ -341,11 +323,8 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
-
-            $current_member = $this->repository->getById($current_member_id);
-            if (is_null($current_member)) return $this->error404();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $this->summit_service->removeEventFromMemberSchedule($summit, $current_member, intval($event_id));
 
@@ -386,11 +365,8 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
-
-            $current_member = $this->repository->getById($current_member_id);
-            if (is_null($current_member)) return $this->error404();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $event = $summit->getScheduleEvent(intval($event_id));
 

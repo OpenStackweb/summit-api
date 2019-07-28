@@ -42,4 +42,10 @@ interface IMemberRepository extends IBaseRepository
      * @return PagingResponse
      */
     public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+
+    /**
+     * @param int $external_id
+     * @return Member|null
+     */
+    public function getByExternalId(int $external_id):?Member;
 }

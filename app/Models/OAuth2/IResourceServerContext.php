@@ -1,5 +1,7 @@
 <?php namespace models\oauth2;
 
+    use models\main\Member;
+
     /**
      * Copyright 2015 OpenStack Foundation
      * Licensed under the Apache License, Version 2.0 (the "License");
@@ -66,4 +68,9 @@ interface IResourceServerContext
      * @return void
      */
     public function setAuthorizationContext(array $auth_context);
+
+    /**
+     * @return Member|null
+     */
+    public function getCurrentUser():?Member;
 }

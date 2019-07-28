@@ -46,11 +46,11 @@ class CheckMeAttendeeStrategy implements ICheckAttendeeStrategy
     public function check($attendee_id, Summit $summit)
     {
         if (strtolower($attendee_id) === 'me') {
-            $member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($member_id)) {
+            $current_member  = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) {
                 return null;
             }
-            return $summit->getAttendeeByMemberId($member_id);
+            return $summit->getAttendeeByMemberId($current_member->getId());
         }
         return null;
     }

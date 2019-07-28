@@ -171,10 +171,7 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
      */
     public function getMyMember(){
 
-        $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-        if (is_null($current_member_id)) return $this->error403();
-
-        $current_member = $this->repository->getById($current_member_id);
+        $current_member = $this->resource_server_context->getCurrentUser();
         if (is_null($current_member)) return $this->error404();
 
         $fields    = Request::input('fields', null);
@@ -207,10 +204,9 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
     public function getMemberAffiliations($member_id){
         try {
 
-            if(strtolower($member_id) == 'me'){
-                $member_id = $this->resource_server_context->getCurrentUserExternalId();
-            }
-            $member = $this->repository->getById($member_id);
+            $member = (strtolower($member_id) == 'me') ?
+                $this->resource_server_context->getCurrentUser() :
+                $this->repository->getById($member_id);
 
             if(is_null($member)) return $this->error404();
             $affiliations = $member->getAffiliations()->toArray();
@@ -261,11 +257,10 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             if(!Request::isJson()) return $this->error400();
             $data = Input::json();
 
-            if(strtolower($member_id) == 'me'){
-                $member_id = $this->resource_server_context->getCurrentUserExternalId();
-            }
+            $member = (strtolower($member_id) == 'me') ?
+                $this->resource_server_context->getCurrentUser() :
+                $this->repository->getById($member_id);
 
-            $member = $this->repository->getById($member_id);
             if(is_null($member)) return $this->error404();
 
             $rules = [
@@ -330,11 +325,10 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             if(!Request::isJson()) return $this->error400();
             $data = Input::json();
 
-            if(strtolower($member_id) == 'me'){
-                $member_id = $this->resource_server_context->getCurrentUserExternalId();
-            }
+            $member = (strtolower($member_id) == 'me') ?
+                $this->resource_server_context->getCurrentUser() :
+                $this->repository->getById($member_id);
 
-            $member = $this->repository->getById($member_id);
             if(is_null($member)) return $this->error404();
 
             $rules = [
@@ -392,11 +386,10 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
     public function deleteAffiliation($member_id, $affiliation_id){
         try{
 
-            if(strtolower($member_id) == 'me'){
-                $member_id = $this->resource_server_context->getCurrentUserExternalId();
-            }
+            $member = (strtolower($member_id) == 'me') ?
+                $this->resource_server_context->getCurrentUser() :
+                $this->repository->getById($member_id);
 
-            $member = $this->repository->getById($member_id);
             if(is_null($member)) return $this->error404();
 
             $this->member_service->deleteAffiliation($member, $affiliation_id);

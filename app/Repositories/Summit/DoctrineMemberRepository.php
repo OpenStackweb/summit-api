@@ -152,4 +152,15 @@ final class DoctrineMemberRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    /**
+     * @param int $external_id
+     * @return Member|null
+     */
+    public function getByExternalId(int $external_id): ?Member
+    {
+       return $this->findOneBy([
+           'user_external_id' => $external_id
+       ]);
+    }
 }

@@ -55,10 +55,10 @@ final class OAuth2TeamInvitationsApiController extends OAuth2ProtectedController
     public function getMyInvitations(){
 
         try {
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            $invitations = $this->repository->getInvitationsByInvitee($current_member_id);
+            $invitations = $this->repository->getInvitationsByInvitee($current_member->getId());
 
             $response    = new PagingResponse
             (
@@ -92,10 +92,10 @@ final class OAuth2TeamInvitationsApiController extends OAuth2ProtectedController
     public function getMyPendingInvitations(){
 
         try {
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            $invitations = $this->repository->getPendingInvitationsByInvitee($current_member_id);
+            $invitations = $this->repository->getPendingInvitationsByInvitee($current_member->getId());
 
             $response    = new PagingResponse
             (
@@ -129,10 +129,10 @@ final class OAuth2TeamInvitationsApiController extends OAuth2ProtectedController
     public function getMyAcceptedInvitations(){
 
         try {
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            $invitations = $this->repository->getAcceptedInvitationsByInvitee($current_member_id);
+            $invitations = $this->repository->getAcceptedInvitationsByInvitee($current_member->getId());
 
             $response    = new PagingResponse
             (
@@ -166,10 +166,10 @@ final class OAuth2TeamInvitationsApiController extends OAuth2ProtectedController
      */
     public function acceptInvitation($invitation_id){
         try {
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            $team_member = $this->service->acceptInvitation($invitation_id, $current_member_id);
+            $team_member = $this->service->acceptInvitation($invitation_id, $current_member->getId());
             return $this->created(SerializerRegistry::getInstance()->getSerializer($team_member)->serialize($expand = ''));
         }
         catch (ValidationException $ex1) {
@@ -193,9 +193,9 @@ final class OAuth2TeamInvitationsApiController extends OAuth2ProtectedController
      */
     public function declineInvitation($invitation_id){
         try {
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
-            $this->service->declineInvitation($invitation_id, $current_member_id);
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+            $this->service->declineInvitation($invitation_id, $current_member->getId());
             return $this->deleted();
         }
         catch (ValidationException $ex1) {

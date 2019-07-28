@@ -1,5 +1,4 @@
 <?php namespace App\Models\ResourceServer;
-
 /**
  * Copyright 2015 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,6 +27,23 @@ use Illuminate\Support\Facades\Log;
  */
 final class AccessTokenService implements IAccessTokenService
 {
+
+    static $access_token_keys = [
+        'access_token',
+        'scope',
+        'client_id',
+        'audience',
+        'expires_in',
+        'application_type',
+        'allowed_return_uris',
+        'allowed_origins',
+        'user_external_id',
+        'user_identifier',
+        'user_id',
+        'user_email',
+        'user_first_name',
+        'user_last_name',
+    ];
 
     /**
      * @var ICacheService
@@ -58,18 +74,7 @@ final class AccessTokenService implements IAccessTokenService
             throw new InvalidGrantTypeException(OAuth2Protocol::OAuth2Protocol_Error_InvalidToken);
         }
 
-        $token_info = $this->cache_service->getHash(md5($token_value),[
-            'access_token',
-            'scope',
-            'client_id',
-            'audience',
-            'user_id',
-            'user_external_id',
-            'expires_in',
-            'application_type',
-            'allowed_return_uris',
-            'allowed_origins'
-        ]);
+        $token_info = $this->cache_service->getHash(md5($token_value), self::$access_token_keys);
 
         if (count($token_info) === 0)
         {
@@ -109,19 +114,8 @@ final class AccessTokenService implements IAccessTokenService
      * @return AccessToken
      */
     private function unSerializeToken(array $token_info){
-        $token = AccessToken::createFromParams
-        (
-            $token_info['access_token'],
-            $token_info['scope'],
-            $token_info['client_id'],
-            $token_info['audience'],
-            isset($token_info['user_id'])? intval($token_info['user_id']):null,
-            isset($token_info['user_external_id'])? intval($token_info['user_external_id']) : null,
-            (int)$token_info['expires_in'],
-            $token_info['application_type'],
-            isset($token_info['allowed_return_uris']) ? $token_info['allowed_return_uris'] : null,
-            isset($token_info['allowed_origins']) ? $token_info['allowed_origins'] : null
-        );
+
+        $token = AccessToken::createFromParams($token_info);
 
         $str_token_info = "";
         foreach($token_info as $k => $v){
@@ -140,7 +134,29 @@ final class AccessTokenService implements IAccessTokenService
         Log::debug("getting token from remote call ...");
         $cache_lifetime = intval(Config::get('server.access_token_cache_lifetime', 300));
         $token_info     = $this->doIntrospectionRequest($token_value);
-        $this->cache_service->storeHash(md5($token_value), $token_info, $cache_lifetime );
+
+        // legacy fix
+        if(!array_key_exists("user_external_id" , $token_info)){
+            $token_info['user_external_id'] = null;
+        }
+
+        if(!array_key_exists("user_identifier" , $token_info)){
+            $token_info['user_identifier'] = null;
+        }
+
+        if(!array_key_exists("user_email" , $token_info)){
+            $token_info['user_email'] = null;
+        }
+
+        if(!array_key_exists("user_first_name" , $token_info)){
+            $token_info['user_first_name'] = null;
+        }
+
+        if(!array_key_exists("user_last_name" , $token_info)){
+            $token_info['user_last_name'] = null;
+        }
+
+        $this->cache_service->storeHash(md5($token_value), $token_info, $cache_lifetime);
         return $token_info;
     }
 
@@ -194,10 +210,7 @@ final class AccessTokenService implements IAccessTokenService
                 // invalid content type
                 throw new \Exception($response->getBody());
             }
-            $token_info   = json_decode($response->getBody()->getContents(), true);
-
-            return $token_info;
-
+            return json_decode($response->getBody()->getContents(), true);
         }
         catch (RequestException $ex) {
 

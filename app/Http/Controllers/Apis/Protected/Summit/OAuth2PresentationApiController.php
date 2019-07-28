@@ -310,14 +310,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             if(!Request::isJson()) return $this->error400();
 
-            $member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if(is_null($member_id))
-                return $this->error403();
-
-            $member = $this->member_repository->getById($member_id);
-
-            if(is_null($member))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $data = Input::json();
 
@@ -353,7 +347,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 'attendees_expected_learnt',
             ];
 
-            $presentation = $this->presentation_service->submitPresentation($summit, $member, HTMLCleaner::cleanData($data, $fields));
+            $presentation = $this->presentation_service->submitPresentation($summit, $current_member, HTMLCleaner::cleanData($data, $fields));
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize());
         }
@@ -387,14 +381,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             if(!Request::isJson()) return $this->error400();
 
-            $member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if(is_null($member_id))
-                return $this->error403();
-
-            $member = $this->member_repository->getById($member_id);
-
-            if(is_null($member))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $data = Input::json();
 
@@ -433,7 +421,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $presentation = $this->presentation_service->updatePresentationSubmission(
                 $summit,
                 $presentation_id,
-                $member,
+                $current_member,
                 HTMLCleaner::cleanData($data, $fields)
             );
 
@@ -467,20 +455,14 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if(is_null($member_id))
-                return $this->error403();
-
-            $member = $this->member_repository->getById($member_id);
-
-            if(is_null($member))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $presentation = $this->presentation_service->completePresentationSubmission
             (
                 $summit,
                 $presentation_id,
-                $member
+                $current_member
             );
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize());
@@ -513,16 +495,10 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            $member = $this->member_repository->getById($current_member_id);
-
-            if(is_null($member))
-                return $this->error403();
-
-            $this->presentation_service->deletePresentation($summit, $member, $presentation_id);
+            $this->presentation_service->deletePresentation($summit, $current_member, $presentation_id);
 
             return $this->deleted();
 
@@ -620,16 +596,15 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $member_id = $this->resource_server_context->getCurrentUserExternalId();
-            $member = $this->member_repository->getById($member_id);
-            if(is_null($member) || !$member instanceof Member) return $this->error404();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            if(!$member->isAdmin()){
+            if(!$current_member->isAdmin()){
                 // check if we could edit presentation
                 $presentation = $summit->getEvent($presentation_id);
                 if(is_null($presentation) || !$presentation instanceof Presentation)
                     return $this->error404();
-                if(!$member->hasSpeaker() || !$presentation->canEdit($member->getSpeaker()))
+                if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
                    return $this->error403();
             }
 
@@ -699,16 +674,15 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             if (is_null($summit)) return $this->error404();
 
 
-            $member_id = $this->resource_server_context->getCurrentUserExternalId();
-            $member = $this->member_repository->getById($member_id);
-            if(is_null($member) || !$member instanceof Member) return $this->error404();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            if(!$member->isAdmin()){
+            if(!$current_member->isAdmin()){
                 // check if we could edit presentation
                 $presentation = $summit->getEvent($presentation_id);
                 if(is_null($presentation) || !$presentation instanceof Presentation)
                     return $this->error404();
-                if(!$member->hasSpeaker() || !$presentation->canEdit($member->getSpeaker()))
+                if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
                     return $this->error403();
             }
 

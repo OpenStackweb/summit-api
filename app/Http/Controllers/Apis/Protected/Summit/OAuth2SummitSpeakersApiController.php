@@ -359,15 +359,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     public function getMySpeaker()
     {
         try {
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            $member = $this->member_repository->getById($current_member_id);
-            if (is_null($member))
-                return $this->error403();
-
-            $speaker = $this->speaker_repository->getByMember($member);
+            $speaker = $this->speaker_repository->getByMember($current_member);
             if (is_null($speaker)) return $this->error404();
 
             $serializer_type = $this->serializer_type_selector->getSerializerType();
@@ -401,22 +396,17 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     public function createMySpeaker()
     {
         try {
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
-                return $this->error403();
-
-            $member = $this->member_repository->getById($current_member_id);
-            if (is_null($member))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             // set data from current member ...
             $speaker = $this->service->addSpeaker([
-                'member_id' => $member->getIdentifier(),
-                'first_name' => $member->getFirstName(),
-                'last_name' => $member->getLastName(),
-                'bio' => $member->getBio(),
-                'twitter' => $member->getTwitterHandle(),
-                'irc' => $member->getIrcHandle(),
+                'member_id' => $current_member->getId(),
+                'first_name' => $current_member->getFirstName(),
+                'last_name' => $current_member->getLastName(),
+                'bio' => $current_member->getBio(),
+                'twitter' => $current_member->getTwitterHandle(),
+                'irc' => $current_member->getIrcHandle(),
             ]);
 
             $serializer_type = $this->serializer_type_selector->getSerializerType();
@@ -450,15 +440,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     public function updateMySpeaker()
     {
         try {
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            $member = $this->member_repository->getById($current_member_id);
-            if (is_null($member))
-                return $this->error403();
-
-            $speaker = $this->speaker_repository->getByMember($member);
+            $speaker = $this->speaker_repository->getByMember($current_member);
             if (is_null($speaker)) return $this->error404();
 
             return $this->updateSpeaker($speaker->getId());
@@ -667,15 +652,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
 
     public function addMySpeakerPhoto(LaravelRequest $request){
         try {
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            $member = $this->member_repository->getById($current_member_id);
-            if (is_null($member))
-                return $this->error403();
-
-            $speaker = $this->speaker_repository->getByMember($member);
+            $speaker = $this->speaker_repository->getByMember($current_member);
             if (is_null($speaker)) return $this->error404();
 
            return $this->addSpeakerPhoto($request, $speaker->getId());
@@ -702,18 +682,13 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
 
         try {
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
-                return $this->error403();
-
-            $member = $this->member_repository->getById($current_member_id);
-            if (is_null($member))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $speaker = $this->speaker_repository->getById($speaker_id);
             if (is_null($speaker)) return $this->error404();
 
-            if(!$speaker->canBeEditedBy($member)){
+            if(!$speaker->canBeEditedBy($current_member)){
                 return $this->error403();
             }
 
@@ -782,13 +757,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             if (!Request::isJson()) return $this->error400();
             $data = Input::json();
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
-                return $this->error403();
-
-            $creator = $this->member_repository->getById($current_member_id);
-            if (is_null($creator))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $rules = [
                 'title' => 'required|string|max:100',
@@ -834,7 +804,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'notes'
             ];
 
-            $speaker = $this->service->addSpeaker(HTMLCleaner::cleanData($data->all(), $fields), $creator);
+            $speaker = $this->service->addSpeaker(HTMLCleaner::cleanData($data->all(), $fields), $current_member);
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($speaker, SerializerRegistry::SerializerType_Private)->serialize());
         } catch (ValidationException $ex1) {
@@ -859,18 +829,13 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             if (!Request::isJson()) return $this->error400();
             $data = Input::json();
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
-                return $this->error403();
-
-            $member = $this->member_repository->getById($current_member_id);
-            if (is_null($member))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $speaker = $this->speaker_repository->getById($speaker_id);
             if (is_null($speaker)) return $this->error404();
 
-            if(!$speaker->canBeEditedBy($member)){
+            if(!$speaker->canBeEditedBy($current_member)){
                 return $this->error403();
             }
 
@@ -965,15 +930,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     public function getMySpeakerPresentationsByRoleAndBySelectionPlan($role, $selection_plan_id)
     {
         try {
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            $member = $this->member_repository->getById($current_member_id);
-            if (is_null($member))
-                return $this->error403();
-
-            $speaker = $this->speaker_repository->getByMember($member);
+            $speaker = $this->speaker_repository->getByMember($current_member);
             if (is_null($speaker))
                 return $this->error403();
 
@@ -1024,15 +984,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     public function getMySpeakerPresentationsByRoleAndBySummit($role, $summit_id)
     {
         try {
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            $member = $this->member_repository->getById($current_member_id);
-            if (is_null($member))
-                return $this->error403();
-
-            $speaker = $this->speaker_repository->getByMember($member);
+            $speaker = $this->speaker_repository->getByMember($current_member);
             if (is_null($speaker))
                 return $this->error403();
 
@@ -1082,11 +1037,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      */
     public function addSpeakerToMyPresentation($presentation_id, $speaker_id){
         try {
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            $this->summit_service->addSpeaker2Presentation($current_member_id, $speaker_id, $presentation_id);
+            $this->summit_service->addSpeaker2Presentation($current_member->getId(), $speaker_id, $presentation_id);
 
             return $this->updated();
 
@@ -1109,11 +1063,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      */
     public function addModeratorToMyPresentation($presentation_id, $speaker_id){
         try {
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            $this->summit_service->addModerator2Presentation($current_member_id, $speaker_id, $presentation_id);
+            $this->summit_service->addModerator2Presentation($current_member->getId(), $speaker_id, $presentation_id);
 
             return $this->updated();
 
@@ -1136,11 +1089,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      */
     public function removeSpeakerFromMyPresentation($presentation_id, $speaker_id){
         try {
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            $this->summit_service->removeSpeakerFromPresentation($current_member_id, $speaker_id, $presentation_id);
+            $this->summit_service->removeSpeakerFromPresentation($current_member->getId(), $speaker_id, $presentation_id);
 
             return $this->deleted();
 
@@ -1163,11 +1115,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      */
     public function removeModeratorFromMyPresentation($presentation_id, $speaker_id){
         try {
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            $this->summit_service->removeModeratorFromPresentation($current_member_id, $speaker_id, $presentation_id);
+            $this->summit_service->removeModeratorFromPresentation($current_member->getId(), $speaker_id, $presentation_id);
 
             return $this->deleted();
 
@@ -1189,11 +1140,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      */
     public function requestSpeakerEditPermission($speaker_id){
         try {
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            $request = $this->service->requestSpeakerEditPermission($current_member_id, $speaker_id);
+            $request = $this->service->requestSpeakerEditPermission($current_member->getId(), $speaker_id);
 
             return $this->created(
                 SerializerRegistry::getInstance()->getSerializer($request)
@@ -1217,11 +1167,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      */
     public function getSpeakerEditPermission($speaker_id){
         try {
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
-                return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            $request = $this->service->getSpeakerEditPermission($current_member_id, $speaker_id);
+            $request = $this->service->getSpeakerEditPermission($current_member->getId(), $speaker_id);
 
             return $this->ok(
                 SerializerRegistry::getInstance()->getSerializer($request)->serialize()

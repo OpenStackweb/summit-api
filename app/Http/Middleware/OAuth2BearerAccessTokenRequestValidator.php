@@ -185,19 +185,22 @@ class OAuth2BearerAccessTokenRequestValidator
             }
             Log::debug('setting resource server context ...');
             //set context for api and continue processing
-            $context = array
-            (
+            $context = [
                 'access_token'     => $access_token_value,
                 'expires_in'       => $token_info->getLifetime(),
                 'client_id'        => $token_info->getClientId(),
                 'scope'            => $token_info->getScope(),
                 'application_type' => $token_info->getApplicationType()
-            );
+            ];
 
             if (!is_null($token_info->getUserId()))
             {
                 $context['user_id']          = $token_info->getUserId();
                 $context['user_external_id'] = $token_info->getUserExternalId();
+                $context['user_identifier']  = $token_info->getUserIdentifier();
+                $context['user_email']       = $token_info->getUserEmail();
+                $context['user_first_name']  = $token_info->getUserFirstName();
+                $context['user_last_name']   = $token_info->getUserLastName();
             }
 
             $this->context->setAuthorizationContext($context);

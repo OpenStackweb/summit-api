@@ -514,8 +514,9 @@ trait SummitBookableVenueRoomApi
         try {
             if(!Request::isJson()) return $this->error400();
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
+            $current_member = $this->resource_server_context->getCurrentUser();
+
+            if (is_null($current_member))
                 return $this->error403();
 
             $summit = $summit_id === 'current' ? $this->repository->getCurrent() : $this->repository->getById(intval($summit_id));
@@ -527,7 +528,7 @@ trait SummitBookableVenueRoomApi
                 return $this->error404();
 
             $payload = Input::json()->all();
-            $payload['owner_id'] = $current_member_id;
+            $payload['owner_id'] = $current_member->getId();
             $rules   = SummitRoomReservationValidationRulesFactory::build($payload);
             // Creates a Validator instance and validates the data.
             $validation = Validator::make($payload, $rules);
@@ -572,18 +573,16 @@ trait SummitBookableVenueRoomApi
      */
     public function getMyBookableVenueRoomReservations($summit_id){
         try{
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
+            $current_member = $this->resource_server_context->getCurrentUser();
+
+            if (is_null($current_member))
                 return $this->error403();
 
             $summit = $summit_id === 'current' ? $this->repository->getCurrent() : $this->repository->getById(intval($summit_id));
             if (is_null($summit)) return $this->error404();
 
-            $member = $this->member_repository->getById($current_member_id);
-            if(is_null($member))
-                return $this->error403();
 
-            $reservations = $member->getReservationsBySummit($summit);
+            $reservations = $current_member->getReservationsBySummit($summit);
 
             $response = new PagingResponse
             (
@@ -628,18 +627,15 @@ trait SummitBookableVenueRoomApi
      */
     public function cancelMyBookableVenueRoomReservation($summit_id, $reservation_id){
         try{
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id))
+            $current_member = $this->resource_server_context->getCurrentUser();
+
+            if (is_null($current_member))
                 return $this->error403();
 
             $summit = $summit_id === 'current' ? $this->repository->getCurrent() : $this->repository->getById(intval($summit_id));
             if (is_null($summit)) return $this->error404();
 
-            $member = $this->member_repository->getById($current_member_id);
-            if(is_null($member))
-                return $this->error403();
-
-            $reservation = $this->location_service->cancelReservation($summit, $member, $reservation_id);
+            $reservation = $this->location_service->cancelReservation($summit, $current_member, $reservation_id);
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($reservation)->serialize());
         }

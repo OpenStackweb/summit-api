@@ -25,13 +25,11 @@ final class PresentationSpeakerDeletedEntityEventFactory
      * @return SummitEntityEvent[]
      */
     public static function build(PresentationSpeakerDeleted $event){
-        $list                            = [];
-        $args                            = $event->getArgs();
-        $resource_server_context         = App::make(\models\oauth2\IResourceServerContext::class);
-        $member_repository               = App::make(\models\main\IMemberRepository::class);
-        $owner_id                        = $resource_server_context->getCurrentUserExternalId();
-        if(is_null($owner_id)) $owner_id = 0;
-        $params                          = $args->getParams();
+        $list                    = [];
+        $args                    = $event->getArgs();
+        $resource_server_context = App::make(\models\oauth2\IResourceServerContext::class);
+        $owner                   = $resource_server_context->getCurrentUser();
+        $params                  = $args->getParams();
 
         foreach($params['summits'] as $summit) {
 
@@ -40,9 +38,8 @@ final class PresentationSpeakerDeletedEntityEventFactory
             $entity_event->setEntityId($params['id']);
             $entity_event->setType('DELETE');
 
-            if ($owner_id > 0) {
-                $member = $member_repository->getById($owner_id);
-                $entity_event->setOwner($member);
+            if (!is_null($owner)) {
+                $entity_event->setOwner($owner);
             }
 
             $entity_event->setSummit($summit);

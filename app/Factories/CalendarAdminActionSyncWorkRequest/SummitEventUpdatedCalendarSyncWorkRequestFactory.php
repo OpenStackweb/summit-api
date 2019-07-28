@@ -27,19 +27,15 @@ final class SummitEventUpdatedCalendarSyncWorkRequestFactory
      */
     public static function build(SummitEventUpdated $event){
         $resource_server_context         = App::make(\models\oauth2\IResourceServerContext::class);
-        $member_repository               = App::make(\models\main\IMemberRepository::class);
         $args                            = $event->getArgs();
-        $owner_id                        = $resource_server_context->getCurrentUserExternalId();
-        if(is_null($owner_id)) $owner_id = 0;
+        $current_member                  = $resource_server_context->getCurrentUser();
         // sync request from admin
         $request = new AdminSummitEventActionSyncWorkRequest();
         $request->setSummitEvent($event->getSummitEvent()) ;
         $request->setType(AbstractCalendarSyncWorkRequest::TypeUpdate);
-        if($owner_id > 0){
-            $member = $member_repository->getById($owner_id);
-            $request->setCreatedBy($member);
+        if(!is_null($current_member)){
+            $request->setCreatedBy($current_member);
         }
-
 
         if($args->hasChangedField('published')){
             $pub_old = intval($args->getOldValue('published'));

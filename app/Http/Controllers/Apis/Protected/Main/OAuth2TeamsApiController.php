@@ -82,11 +82,8 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
     public function getMyTeams(){
         try {
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
-
-            $current_member = $this->member_repository->getById($current_member_id);
-            if (is_null($current_member)) return $this->error404();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $teams    = $this->repository->getTeamsByMember($current_member);
 
@@ -135,10 +132,7 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
     public function getMyTeam($team_id){
         try {
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
-
-            $current_member = $this->member_repository->getById($current_member_id);
+            $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
             $team  = $this->repository->getById($team_id);
@@ -213,11 +207,8 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
                 'description',
             );
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
-
-            $current_member = $this->member_repository->getById($current_member_id);
-            if (is_null($current_member)) return $this->error404();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $team = $this->service->addTeam(HTMLCleaner::cleanData($data->all(), $fields), $current_member);
 
@@ -245,8 +236,8 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
     public function deleteTeam($team_id){
         try {
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $this->service->deleteTeam($team_id);
 
@@ -303,8 +294,8 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
                 'description',
             );
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $team = $this->service->updateTeam(HTMLCleaner::cleanData($data->all(), $fields), $team_id);
 
@@ -382,10 +373,7 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
 
             if(is_null($filter)) $filter = new Filter();
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
-
-            $current_member = $this->member_repository->getById($current_member_id);
+            $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
             $team  = $this->repository->getById($team_id);
@@ -450,8 +438,8 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
                 );
             }
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             if(!isset($values['priority']))
                 $values['priority'] =  PushNotificationMessagePriority::Normal;
@@ -504,8 +492,8 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
                 );
             }
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $invitation = $this->service->addMember2Team($team_id, $member_id, $values['permission']);
             return $this->created(SerializerRegistry::getInstance()->getSerializer($invitation)->serialize($expand = 'team,inviter,invitee'));
@@ -534,8 +522,8 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
     public function removedMemberFromMyTeam($team_id, $member_id){
         try {
 
-            $current_member_id = $this->resource_server_context->getCurrentUserExternalId();
-            if (is_null($current_member_id)) return $this->error403();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
             $this->service->removeMemberFromTeam($team_id, $member_id);
 

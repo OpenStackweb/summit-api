@@ -28,7 +28,7 @@ final class Version20190626125814 extends AbstractMigration
     public function up(Schema $schema)
     {
         $builder = new Builder($schema);
-        if($schema->hasTable("SummitRoomReservation")) {
+        if($builder->hasTable("SummitRoomReservation") && !$builder->hasColumns("SummitRoomReservation", ["PaymentGatewayClientToken","RefundedAmount"])) {
             $builder->table('SummitRoomReservation', function (Table $table) {
                 $table->text("PaymentGatewayClientToken");
                 $table->decimal("RefundedAmount", 9, 2)->setDefault('0.00');
@@ -41,6 +41,12 @@ final class Version20190626125814 extends AbstractMigration
      */
     public function down(Schema $schema)
     {
-
+        $builder = new Builder($schema);
+        if($builder->hasTable("SummitRoomReservation") && $builder->hasColumns("SummitRoomReservation", ["PaymentGatewayClientToken","RefundedAmount"])) {
+            $builder->table('SummitRoomReservation', function (Table $table) {
+                $table->dropColumn("PaymentGatewayClientToken");
+                $table->dropColumn("RefundedAmount");
+            });
+        }
     }
 }

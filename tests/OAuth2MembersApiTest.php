@@ -352,4 +352,43 @@ final class OAuth2MembersApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
     }
 
+
+    use InsertSummitTestData;
+
+    protected function setUp()
+    {
+        parent::setUp();
+        self::insertTestData();
+    }
+
+    public function tearDown()
+    {
+        self::clearTestData();
+        Mockery::close();
+    }
+
+    public function testGetAllSummitPermissions(){
+        self::$member2->addSummitEditPermission(self::$summit);
+        self::$member2->addSummitEditPermission(self::$summit2);
+
+        $params = [
+            'order' => '-id'
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+        $response = $this->action(
+            "GET",
+            "OAuth2MembersApiController@getAllSummitEditPermissions",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $pemissions = json_decode($content);
+        $this->assertTrue(!is_null($pemissions));
+        $this->assertResponseStatus(200);
+    }
 }

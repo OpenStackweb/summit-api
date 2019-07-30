@@ -55,7 +55,7 @@ final class OAuth2TrackQuestionsTemplateTest
      * @return mixed
      */
     public function testAddTrackQuestionTemplate(
-            $class_name = TrackTextBoxQuestionTemplate::ClassName, $extra_data = []){
+        $class_name = TrackTextBoxQuestionTemplate::ClassName, $extra_data = []){
         $params = [
             'expand' => 'tracks'
         ];

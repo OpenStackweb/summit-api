@@ -34,6 +34,9 @@ final class SummitScopes
     const AddMyScheduleShareable              = '%s/me/summits/events/schedule/shareable/add';
     const DeleteMyScheduleShareable           = '%s/me/summits/events/schedule/shareable/delete';
     const SendMyScheduleMail                  = '%s/me/summits/events/schedule/mail';
+    const EnterEvent                          = '%s/me/summits/events/enter';
+    const LeaveEvent                          = '%s/me/summits/events/leave';
+
 
     // registration
     const CreateRegistrationOrders            = '%s/summits/registration-orders/create';
@@ -50,7 +53,11 @@ final class SummitScopes
     const ReadBadgeScan                       = '%s/summits/badge-scans/read';
     const ReadMyBadgeScan                     = '%s/summits/badge-scans/read/me';
     const WriteRegistrationData               = '%s/summits/registration/write';
-
+    const ReadPaymentProfiles                 = '%s/summits/payment-gateway-profiles/read';
+    const WritePaymentProfiles                = '%s/summits/payment-gateway-profiles/write';
+    const WriteRegistrationInvitations        = '%s/summits/registration-invitations/write';
+    const ReadRegistrationInvitations         = '%s/summits/registration-invitations/read';
+    const ReadMyRegistrationInvitations       = '%s/summits/registration-invitations/read/me';
     // bookable rooms
     const ReadBookableRoomsData               = '%s/bookable-rooms/read';
     const WriteMyBookableRoomsReservationData = '%s/bookable-rooms/my-reservations/write';
@@ -91,4 +98,10 @@ final class SummitScopes
 
     const WriteTagsData                       = '%s/tags/write';
     const ReadTagsData                        = '%s/tags/read';
+
+    const ReadSummitAdminGroups               = '%s/summit-administrator-groups/read';
+    const WriteSummitAdminGroups              = '%s/summit-administrator-groups/write';
+
+    const ReadSummitMediaFileTypes            = '%s/summit-media-file-types/read';
+    const WriteSummitMediaFileTypes           = '%s/summit-media-file-types/write';
 }

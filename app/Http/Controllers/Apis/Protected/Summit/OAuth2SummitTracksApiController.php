@@ -439,6 +439,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                 'name'                      => 'required|string|max:50',
                 'description'               => 'required|string|max:500',
                 'code'                      => 'sometimes|string|max:5',
+                'color'                     => 'sometimes|hex_color|max:50',
                 'session_count'             => 'sometimes|integer',
                 'alternate_count'           => 'sometimes|integer',
                 'lightning_count'           => 'sometimes|integer',
@@ -537,6 +538,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
             $rules = [
                 'name'                      => 'sometimes|string|max:50',
                 'description'               => 'sometimes|string|max:500',
+                'color'                     => 'sometimes|hex_color|max:50',
                 'code'                      => 'sometimes|string|max:5',
                 'session_count'             => 'sometimes|integer',
                 'alternate_count'           => 'sometimes|integer',

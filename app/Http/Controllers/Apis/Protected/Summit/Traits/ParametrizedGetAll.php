@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Http\Exceptions\HTTP403ForbiddenException;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
@@ -166,16 +167,24 @@ trait ParametrizedGetAll
                     call_user_func($serializerType)
                 )
             );
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
+        }
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
+        }
+        catch (EntityNotFoundException $ex) {
+            Log::warning($ex);
+            return $this->error404(array('message' => $ex->getMessage()));
+        }
+        catch (\HTTP401UnauthorizedException $ex) {
+            Log::warning($ex);
             return $this->error401();
-        } catch (Exception $ex) {
+        }
+        catch(HTTP403ForbiddenException $ex){
+            Log::warning($ex);
+            return $this->error403();
+        }
+        catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -297,14 +306,14 @@ trait ParametrizedGetAll
                 call_user_func($getFormatters),
                 call_user_func($getColumns)
             );
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412($ex1->getMessages());
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
+        } catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
+        } catch (EntityNotFoundException $ex) {
+            Log::warning($ex);
+            return $this->error404(array('message' => $ex->getMessage()));
+        } catch (\HTTP401UnauthorizedException $ex) {
+            Log::warning($ex);
             return $this->error401();
         } catch (Exception $ex) {
             Log::error($ex);

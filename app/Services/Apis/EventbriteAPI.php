@@ -50,7 +50,6 @@ final class EventbriteAPI implements IEventbriteAPI
             $client = new Client();
 
             $query = [
-
                 'token' => $this->auth_info['token']
             ];
 

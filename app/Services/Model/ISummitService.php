@@ -444,4 +444,58 @@ interface ISummitService
 
 
     public function calculateFeedbackAverageForOngoingSummits():void;
+
+    /**
+     * @param Summit $summit
+     * @param Member $current_member
+     * @param int $event_id
+     * @return SummitEvent
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function enterTo(Summit $summit, Member $current_member, int $event_id):SummitEvent;
+
+    /**
+     * @param Summit $summit
+     * @param Member $current_member
+     * @param int $event_id
+     * @return SummitEvent
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function leaveFrom(Summit $summit, Member $current_member, int $event_id):SummitEvent;
+
+
+    /**
+     * @param Summit $summit
+     * @param int $event_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     * @return SummitEvent
+     */
+    public function addEventImage(Summit $summit, $event_id, UploadedFile $file,  $max_file_size = 10485760);
+
+    /**
+     * @param Summit $summit
+     * @param int $event_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     * @return void
+     */
+    public function removeEventImage(Summit $summit, $event_id):void;
+
+    /**
+     * @param int $summit_id
+     * @param int $days
+     * @param bool $negative
+     * @param bool $check_summit_ends
+     * @return void
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function advanceSummit(int $summit_id, int $days, bool $negative = false, $check_summit_ends = true):void;
 }

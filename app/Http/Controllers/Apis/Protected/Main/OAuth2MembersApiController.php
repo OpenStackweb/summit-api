@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Log;
 use utils\PagingInfo;
 use utils\PagingResponse;
-
+use Exception;
 /**
  * Class OAuth2MembersApiController
  * @package App\Http\Controllers
@@ -62,6 +62,9 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
      * @return mixed
      */
     public function getAll(){
+
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if (is_null($current_member)) return $this->error404();
 
         $values = Input::all();
 
@@ -152,7 +155,9 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                 (
                     Request::input('expand', ''),
                     $fields,
-                    $relations
+                    $relations,
+                    [],
+                    $current_member->isAdmin() ? SerializerRegistry::SerializerType_Admin : SerializerRegistry::SerializerType_Public
                 )
             );
         }

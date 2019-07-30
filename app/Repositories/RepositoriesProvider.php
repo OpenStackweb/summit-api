@@ -11,15 +11,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Models\Foundation\Main\Language;
 use App\Models\Foundation\Main\Repositories\ILanguageRepository;
+use App\Models\Foundation\Main\Repositories\ISummitAdministratorPermissionGroupRepository;
 use App\Models\Foundation\Summit\Defaults\DefaultSummitEventType;
 use App\Models\Foundation\Summit\DefaultTrackTagGroup;
+use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlow;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplate;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 use App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner;
 use App\Models\Foundation\Summit\Repositories\IDefaultSummitEventTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IDefaultTrackTagGroupRepository;
+use App\Models\Foundation\Summit\Repositories\IPaymentGatewayProfileRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationCategoryGroupRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationSpeakerSummitAssistanceConfirmationRequestRepository;
 use App\Models\Foundation\Summit\Repositories\IRSVPTemplateRepository;
@@ -27,12 +31,28 @@ use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerActiveInvolvementRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerEditPermissionRequestRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerOrganizationalRoleRepository;
+use App\Models\Foundation\Summit\Repositories\ISponsorRepository;
+use App\Models\Foundation\Summit\Repositories\ISponsorshipTypeRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitAccessLevelTypeRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRuleRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitBadgeFeatureTypeRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitBadgeTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitBookableVenueRoomAttributeTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitBookableVenueRoomAttributeValueRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitDocumentRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitEmailEventFlowRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitEventTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitLocationBannerRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitLocationRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitMediaFileTypeRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitMediaUploadTypeRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitOrderExtraQuestionTypeRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitRefundPolicyTypeRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitTaxTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
 use App\Models\Foundation\Summit\Repositories\ITrackQuestionTemplateRepository;
 use App\Models\Foundation\Summit\Repositories\ITrackTagGroupAllowedTagsRepository;
@@ -45,13 +65,15 @@ use Illuminate\Support\ServiceProvider;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\main\AssetsSyncRequest;
 use models\main\Company;
-use models\main\EmailCreationRequest;
 use models\main\File;
 use models\main\Group;
 use models\main\IOrganizationRepository;
 use models\main\Organization;
+use models\main\SummitAdministratorPermissionGroup;
+use models\summit\ISponsorBadgeScanRepository;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitTicketTypeRepository;
+use models\summit\PaymentGatewayProfile;
 use models\summit\PresentationCategory;
 use models\summit\PresentationCategoryGroup;
 use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
@@ -59,13 +81,30 @@ use models\summit\SpeakerActiveInvolvement;
 use models\summit\SpeakerOrganizationalRole;
 use models\summit\SpeakerRegistrationRequest;
 use models\summit\SpeakerSummitRegistrationPromoCode;
+use models\summit\Sponsor;
+use models\summit\SponsorBadgeScan;
+use models\summit\SponsorshipType;
 use models\summit\SummitAbstractLocation;
+use models\summit\SummitAccessLevelType;
+use models\summit\SummitAttendeeBadge;
+use models\summit\SummitAttendeeBadgePrintRule;
+use models\summit\SummitBadgeFeatureType;
+use models\summit\SummitBadgeType;
 use models\summit\SummitBookableVenueRoomAttributeType;
 use models\summit\SummitBookableVenueRoomAttributeValue;
+use models\summit\SummitDocument;
 use models\summit\SummitEventType;
+use models\summit\SummitMediaFileType;
+use models\summit\SummitMediaUploadType;
+use models\summit\SummitOrder;
+use models\summit\SummitOrderExtraQuestionType;
+use models\summit\SummitRefundPolicyType;
+use models\summit\SummitRegistrationInvitation;
 use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitRoomReservation;
+use models\summit\SummitTaxType;
 use models\summit\SummitTicketType;
+
 /**
  * Class RepositoriesProvider
  * @package repositories
@@ -98,8 +137,6 @@ final class RepositoriesProvider extends ServiceProvider
             function(){
                 return  EntityManager::getRepository(\App\Models\ResourceServer\EndPointRateLimitByIP::class);
             });
-
-
 
         App::singleton(
             'models\summit\ISummitRepository',
@@ -279,12 +316,6 @@ final class RepositoriesProvider extends ServiceProvider
             });
 
         App::singleton(
-            'models\main\IEmailCreationRequestRepository',
-            function(){
-                return  EntityManager::getRepository(EmailCreationRequest::class);
-            });
-
-        App::singleton(
             ISummitTicketTypeRepository::class,
             function(){
                 return  EntityManager::getRepository(SummitTicketType::class);
@@ -434,6 +465,139 @@ final class RepositoriesProvider extends ServiceProvider
             ISummitBookableVenueRoomAttributeValueRepository::class,
             function(){
                 return EntityManager::getRepository(SummitBookableVenueRoomAttributeValue::class);
+            }
+        );
+
+        App::singleton(
+            ISummitAccessLevelTypeRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitAccessLevelType::class);
+            }
+        );
+
+        App::singleton(
+            ISummitTaxTypeRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitTaxType::class);
+            }
+        );
+
+        App::singleton(
+            ISummitBadgeFeatureTypeRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitBadgeFeatureType::class);
+            }
+        );
+
+        App::singleton(
+            ISummitBadgeTypeRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitBadgeType::class);
+            }
+        );
+
+        App::singleton(
+            ISponsorRepository::class,
+            function(){
+                return EntityManager::getRepository(Sponsor::class);
+            }
+        );
+
+        App::singleton(
+            ISponsorshipTypeRepository::class,
+            function(){
+                return EntityManager::getRepository(SponsorshipType::class);
+            }
+        );
+
+        App::singleton(
+            ISummitRefundPolicyTypeRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitRefundPolicyType::class);
+            }
+        );
+
+        App::singleton(
+            ISummitOrderExtraQuestionTypeRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitOrderExtraQuestionType::class);
+            }
+        );
+
+        App::singleton(
+            ISummitOrderRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitOrder::class);
+            }
+        );
+
+        App::singleton(
+            ISummitAttendeeBadgeRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitAttendeeBadge::class);
+            }
+        );
+
+        App::singleton(
+            ISponsorBadgeScanRepository::class,
+            function(){
+                return EntityManager::getRepository(SponsorBadgeScan::class);
+            }
+        );
+
+        App::singleton(
+            ISummitAttendeeBadgePrintRuleRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitAttendeeBadgePrintRule::class);
+            }
+        );
+
+        App::singleton(
+            IPaymentGatewayProfileRepository::class,
+            function(){
+                return EntityManager::getRepository(PaymentGatewayProfile::class);
+            }
+        );
+
+        App::singleton(
+            ISummitEmailEventFlowRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitEmailEventFlow::class);
+            }
+        );
+
+        App::singleton(
+            ISummitDocumentRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitDocument::class);
+            }
+        );
+
+        App::singleton(
+            ISummitRegistrationInvitationRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitRegistrationInvitation::class);
+            }
+        );
+
+        App::singleton(
+            ISummitAdministratorPermissionGroupRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitAdministratorPermissionGroup::class);
+            }
+        );
+
+        App::singleton(
+            ISummitMediaFileTypeRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitMediaFileType::class);
+            }
+        );
+
+        App::singleton(
+            ISummitMediaUploadTypeRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitMediaUploadType::class);
             }
         );
 

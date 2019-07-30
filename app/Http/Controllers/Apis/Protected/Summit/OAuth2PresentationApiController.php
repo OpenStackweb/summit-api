@@ -11,14 +11,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Http\Utils\FileTypes;
 use App\Http\Utils\MultipartFormDataCleaner;
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\IMemberRepository;
-use models\main\Member;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
@@ -32,7 +30,6 @@ use models\summit\Presentation;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use services\model\IPresentationService;
-use utils\ParseMultiPartFormDataInputStream;
 /**
  * Class OAuth2PresentationApiController
  * @package App\Http\Controllers
@@ -131,7 +128,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             if (is_null($presentation)) return $this->error404();
 
-            $video = $presentation-getVideoBy($video_id);
+            $video = $presentation->getVideoBy($video_id);
 
             if (is_null($video)) return $this->error404();
 
@@ -350,7 +347,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $presentation = $this->presentation_service->submitPresentation($summit, $current_member, HTMLCleaner::cleanData($data, $fields));
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize());
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize(Request::input('expand', '')));
         }
         catch (EntityNotFoundException $ex1)
         {
@@ -426,7 +423,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 HTMLCleaner::cleanData($data, $fields)
             );
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize());
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize(Request::input('expand', '')));
         }
         catch (EntityNotFoundException $ex1)
         {
@@ -466,7 +463,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 $current_member
             );
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize());
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize(Request::input('expand', '')));
         }
         catch (EntityNotFoundException $ex1)
         {
@@ -532,7 +529,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             if (is_null($presentation)) return $this->error404();
 
-            $slides = $presentation-getSlides();
+            $slides = $presentation->getSlides();
 
             $items = [];
             foreach($slides as $i)
@@ -573,7 +570,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             if (is_null($presentation)) return $this->error404();
 
-            $slide = $presentation-getSlideBy($slide_id);
+            $slide = $presentation->getSlideBy($slide_id);
 
             if (is_null($slide)) return $this->error404();
 
@@ -794,7 +791,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             if (is_null($presentation)) return $this->error404();
 
-            $links = $presentation-getLinks();
+            $links = $presentation->getLinks();
 
             $items = [];
             foreach($links as $i)
@@ -835,7 +832,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             if (is_null($presentation)) return $this->error404();
 
-            $link = $presentation-getLinkBy($link_id);
+            $link = $presentation->getLinkBy($link_id);
 
             if (is_null($link)) return $this->error404();
 
@@ -1000,4 +997,260 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             return $this->error500($ex);
         }
     }
+
+    // MediaUploads
+
+    /**
+     * @param $summit_id
+     * @param $presentation_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getPresentationMediaUploads($summit_id, $presentation_id){
+        try {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $presentation = $this->presentation_repository->getById($presentation_id);
+
+            if (is_null($presentation) || !$presentation instanceof Presentation) return $this->error404();
+
+            $mediaUploads = $presentation->getMediaUploads();
+
+            $items = [];
+            foreach($mediaUploads as $i)
+            {
+                if($i instanceof IEntity)
+                {
+                    $i = SerializerRegistry::getInstance()->getSerializer($i)->serialize();
+                }
+                $items[] = $i;
+            }
+
+            return $this->ok($items);
+
+        } catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        } catch (EntityNotFoundException $ex2) {
+            Log::warning($ex2);
+            return $this->error404(array('message' => $ex2->getMessage()));
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $presentation_id
+     * @param $media_upload_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getPresentationMediaUpload($summit_id, $presentation_id, $media_upload_id){
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $presentation = $this->presentation_repository->getById($presentation_id);
+
+            if (is_null($presentation) || !$presentation instanceof Presentation) return $this->error404();
+
+            $mediaUpload = $presentation->getMediaUploadBy($media_upload_id);
+
+            if (is_null($mediaUpload)) return $this->error404();
+
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($mediaUpload)->serialize());
+
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param LaravelRequest $request
+     * @param $summit_id
+     * @param $presentation_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function addPresentationMediaUpload(LaravelRequest $request, $summit_id, $presentation_id){
+        try {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+            $serializeType = SerializerRegistry::SerializerType_Private;
+            if(!$current_member->isAdmin()){
+                $serializeType = SerializerRegistry::SerializerType_Public;
+                // check if we could edit presentation
+                $presentation = $summit->getEvent($presentation_id);
+                if(is_null($presentation) || !$presentation instanceof Presentation)
+                    return $this->error404();
+                if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
+                    return $this->error403();
+            }
+
+            $data = $request->all();
+
+            $rules = [
+                'media_upload_type_id' => 'required|integer',
+            ];
+
+            // Creates a Validator instance and validates the data.
+            $validation = Validator::make($data, $rules);
+
+            if ($validation->fails()) {
+                $ex = new ValidationException;
+                $ex->setMessages($validation->messages()->toArray());
+                throw $ex;
+            }
+
+            $mediaUpload = $this->presentation_service->addMediaUploadTo
+            (
+                $request,
+                $summit,
+                intval($presentation_id),
+                $data
+            );
+
+            $fields = Request::input('fields', '');
+            $relations = Request::input('relations', '');
+
+            $relations = !empty($relations) ? explode(',', $relations) : [];
+            $fields = !empty($fields) ? explode(',', $fields) : [];
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer
+            (
+                $mediaUpload, $serializeType)
+                ->serialize
+                (
+                    Request::input('expand', ''),
+                    $fields,
+                    $relations
+                )
+            );
+        }
+        catch (EntityNotFoundException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error404();
+        }
+        catch (ValidationException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error412($ex2->getMessages());
+        }
+        catch (Exception $ex)
+        {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param LaravelRequest $request
+     * @param $summit_id
+     * @param $presentation_id
+     * @param $media_upload_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function updatePresentationMediaUpload(LaravelRequest $request, $summit_id, $presentation_id, $media_upload_id){
+        try {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+            $serializeType = SerializerRegistry::SerializerType_Private;
+
+            if(!$current_member->isAdmin()){
+                $serializeType = SerializerRegistry::SerializerType_Public;
+                // check if we could edit presentation
+                $presentation = $summit->getEvent($presentation_id);
+                if(is_null($presentation) || !$presentation instanceof Presentation)
+                    return $this->error404();
+                if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
+                    return $this->error403();
+            }
+
+
+            $mediaUpload = $this->presentation_service->updateMediaUploadFrom
+            (
+                $request,
+                $summit,
+                intval($presentation_id),
+                intval($media_upload_id)
+            );
+
+            $fields = Request::input('fields', '');
+            $relations = Request::input('relations', '');
+
+            $relations = !empty($relations) ? explode(',', $relations) : [];
+            $fields = !empty($fields) ? explode(',', $fields) : [];
+
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer
+            (
+                $mediaUpload, $serializeType)
+                ->serialize
+                (
+                    Request::input('expand', ''),
+                    $fields,
+                    $relations
+                )
+            );
+        }
+        catch (EntityNotFoundException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error404();
+        }
+        catch (ValidationException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error412($ex2->getMessages());
+        }
+        catch (Exception $ex)
+        {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $presentation_id
+     * @param $media_upload_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function deletePresentationMediaUpload($summit_id, $presentation_id, $media_upload_id){
+        try {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $this->presentation_service->deleteMediaUpload($summit, intval($presentation_id), intval($media_upload_id));
+
+            return $this->deleted();
+        }
+        catch (EntityNotFoundException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error404();
+        }
+        catch (ValidationException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error412($ex2->getMessages());
+        }
+        catch (Exception $ex)
+        {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
 }

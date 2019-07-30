@@ -58,4 +58,12 @@ interface IBaseRepository
      */
     public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null);
 
+    /**
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return array
+     */
+    public function getAllIdsByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null):array;
+
 }

@@ -14,6 +14,7 @@
 use App\Models\ResourceServer\ResourceServerEntity;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\QueryBuilder;
 use LaravelDoctrine\ORM\Facades\Registry;
 /**
  * Class ConfigDoctrineRepository
@@ -31,5 +32,23 @@ abstract class ConfigDoctrineRepository extends DoctrineRepository
     {
         $this->manager_name = ResourceServerEntity::EntityManager;
         parent::__construct(Registry::getManager($this->manager_name), $class);
+    }
+
+    /**
+     * @param QueryBuilder $query
+     * @return QueryBuilder
+     */
+    protected function applyExtraFilters(QueryBuilder $query)
+    {
+        return $query;
+    }
+
+    /**
+     * @param QueryBuilder $query
+     * @return QueryBuilder
+     */
+    protected function applyExtraJoins(QueryBuilder $query)
+    {
+        return $query;
     }
 }

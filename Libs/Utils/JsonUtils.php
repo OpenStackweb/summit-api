@@ -86,7 +86,7 @@ abstract class JsonUtils
     public static function toJsonFloat($value)
     {
         if(empty($value)) return 0.00;
-        return floatval(number_format(floatval($value),2));
+        return floatval($value);
     }
 
     /**

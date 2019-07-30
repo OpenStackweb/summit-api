@@ -24,15 +24,22 @@ class FilterElement extends AbstractFilterElement
     private $field;
 
     /**
+     * @var string
+     */
+    private $same_field_op;
+
+    /**
      * @param $field
      * @param $value
      * @param $operator
+     * @param $same_field_op
      */
-    protected function __construct($field, $value, $operator)
+    protected function __construct($field, $value, $operator, $same_field_op)
     {
         parent::__construct($operator);
         $this->field    = $field;
         $this->value    = $value;
+        $this->same_field_op = $same_field_op;
     }
 
     /**
@@ -61,6 +68,13 @@ class FilterElement extends AbstractFilterElement
         switch($this->operator)
         {
             case 'like':
+                if(is_array($this->value)){
+                    $res = [];
+                    foreach ($this->value as $val){
+                        $res[]= empty($val) ? '' : "%".$val."%";
+                    }
+                    return $res;
+                }
                 return  empty($this->value) ? '' : "%".$this->value."%";
                 break;
             default:
@@ -69,38 +83,42 @@ class FilterElement extends AbstractFilterElement
         }
     }
 
-    public static function makeEqual($field, $value)
-    {
-        return new self($field, $value, '=');
+    public function getSameFieldOp():?string {
+        return $this->same_field_op;
     }
 
-    public static function makeGreather($field, $value)
+    public static function makeEqual($field, $value, $same_field_op = null)
     {
-        return new self($field, $value, '>');
+        return new self($field, $value, '=', $same_field_op);
     }
 
-    public static function makeGreatherOrEqual($field, $value)
+    public static function makeGreather($field, $value, $same_field_op = null)
     {
-        return new self($field, $value, '>=');
+        return new self($field, $value, '>', $same_field_op);
     }
 
-    public static function makeLower($field, $value)
+    public static function makeGreatherOrEqual($field, $value, $same_field_op = null)
     {
-        return new self($field, $value, '<');
+        return new self($field, $value, '>=', $same_field_op);
     }
 
-    public static function makeLowerOrEqual($field, $value)
+    public static function makeLower($field, $value, $same_field_op = null)
     {
-        return new self($field, $value, '<=');
+        return new self($field, $value, '<', $same_field_op);
     }
 
-    public static function makeNotEqual($field, $value)
+    public static function makeLowerOrEqual($field, $value, $same_field_op = null)
     {
-        return new self($field, $value, '<>');
+        return new self($field, $value, '<=', $same_field_op);
     }
 
-    public static function makeLike($field, $value)
+    public static function makeNotEqual($field, $value, $same_field_op = null)
     {
-        return new self($field, $value, 'like');
+        return new self($field, $value, '<>', $same_field_op);
+    }
+
+    public static function makeLike($field, $value, $same_field_op = null)
+    {
+        return new self($field, $value, 'like', $same_field_op);
     }
 }

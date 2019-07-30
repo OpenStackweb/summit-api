@@ -105,7 +105,7 @@ return [
             'host'     => env('REDIS_HOST'),
             'port'     => env('REDIS_PORT'),
             'database' => env('REDIS_DB'),
-            'password' => env('REDIS_PASSWORD'),
+            'password' => env('REDIS_PASSWORD','1qaz2wsx'),
         ],
 
     ],

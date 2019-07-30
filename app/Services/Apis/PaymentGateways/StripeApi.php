@@ -11,88 +11,110 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Services\Apis\CartAlreadyPaidException;
 use App\Services\Apis\IPaymentGatewayAPI;
 use Illuminate\Http\Request as LaravelRequest;
 use models\exceptions\ValidationException;
 use Stripe\Charge;
+use Stripe\Error\InvalidRequest;
 use Stripe\Error\SignatureVerification;
 use Stripe\Event;
 use Stripe\Stripe;
 use Stripe\PaymentIntent;
 use Stripe\WebhookSignature;
+use Stripe\WebhookEndpoint;
 use Illuminate\Support\Facades\Log;
+
 /**
  * Class StripesApi
  * @package App\Services\Apis\PaymentGateways
  */
 final class StripeApi implements IPaymentGatewayAPI
 {
-    /**
-     * @var string
-     */
-    private $api_key;
+    const Version = '2019-12-03';
 
     /**
      * @var string
      */
-    private $webhook_secret;
+    private $secret_key;
+
+    /**
+     * @var string
+     */
+    private $webhook_secret_key;
 
     /**
      * StripeApi constructor.
-     * @param string $api_key
-     * @param string $webhook_secret
+     * @param array $config
      */
-    public function __construct(?string $api_key, ?string $webhook_secret)
+    public function __construct(array $config)
     {
-        $this->api_key = $api_key;
-        $this->webhook_secret = $webhook_secret;
+        $this->secret_key = $config['secret_key'] ?? null;
+        $this->webhook_secret_key = $config['webhook_secret_key'] ?? null;
+
+        Log::debug
+        (
+            sprintf
+            (
+                "StripeApi::__construct secret_key %s  webhook_secret_key %s",
+                $this->secret_key,
+                $this->webhook_secret_key
+            )
+        );
+    }
+
+    /**
+     * @param string $webhook_secret_key
+     */
+    public function setWebHookSecretKey(string $webhook_secret_key):void{
+        $this->webhook_secret_key = $webhook_secret_key;
     }
 
     /**
      * @param array $payload
      * @return array
      */
-    public function generatePayment(array $payload):array
+    public function generatePayment(array $payload): array
     {
-        if(empty($this->api_key))
+        if (empty($this->secret_key))
             throw new \InvalidArgumentException();
 
-        Stripe::setApiKey($this->api_key);
+        Stripe::setApiKey($this->secret_key);
+        Stripe::setApiVersion(self::Version);
 
-        $amount   = $payload['amount'];
+        $amount = $payload['amount'];
         $currency = $payload['currency'];
 
-        if(!self::isZeroDecimalCurrency($currency)){
+        if (!self::isZeroDecimalCurrency($currency)) {
             /**
              * All API requests expect amounts to be provided in a currency’s smallest unit. For example,
              * to charge $10 USD, provide an amount value of 1000 (i.e, 1000 cents).
              * For zero-decimal currencies, still provide amounts as an integer but without multiplying by 100.
              * For example, to charge ¥500, simply provide an amount value of 500.
              */
-            $amount = $amount * 100 ;
+            $amount = $amount * 100;
         }
 
         $request = [
-            'amount'        => intval($amount),
-            'currency'      => $currency,
+            'amount' => intval($amount),
+            'currency' => $currency,
+            'payment_method_types' => ['card'],
         ];
 
-        if(isset($payload['receipt_email']))
-        {
-            $request['receipt_email']= trim($payload['receipt_email']);
+        if (isset($payload['receipt_email'])) {
+            $request['receipt_email'] = trim($payload['receipt_email']);
         }
 
-        if(isset($payload['metadata']))
-        {
-            $request['metadata']= $payload['metadata'];
+        if (isset($payload['metadata'])) {
+            $request['metadata'] = $payload['metadata'];
         }
 
         $intent = PaymentIntent::create($request);
 
         return [
-            'client_token'  => $intent->client_secret,
-            'cart_id'       => $intent->id,
+            'client_token' => $intent->client_secret,
+            'cart_id' => $intent->id,
         ];
     }
 
@@ -101,7 +123,8 @@ final class StripeApi implements IPaymentGatewayAPI
      * @return bool
      * @see https://stripe.com/docs/currencies#zero-decimal
      */
-    private static function isZeroDecimalCurrency(string $currency):bool{
+    private static function isZeroDecimalCurrency(string $currency): bool
+    {
         $zeroDecimalCurrencies = [
             'JPY',
             'BIF',
@@ -134,14 +157,27 @@ final class StripeApi implements IPaymentGatewayAPI
     {
         try {
 
-            WebhookSignature::verifyHeader(
-                $request->getContent(),
-                $request->header('Stripe-Signature'),
-                $this->webhook_secret
+            $signature = $request->header('Stripe-Signature');
+            $requestContent = $request->getContent();
+            Log::debug
+            (
+                sprintf
+                (
+                    "StripeApi::processCallback Stripe-Signature %s requestContent %s webHook Secret %s",
+                    $signature,
+                    $requestContent,
+                    $this->webhook_secret_key
+                )
             );
 
-            $event = Event::constructFrom(json_decode($request->getContent(), true));
-            if(!in_array($event->type, ["payment_intent.succeeded", "payment_intent.payment_failed"]))
+            WebhookSignature::verifyHeader(
+                $requestContent,
+                $signature,
+                $this->webhook_secret_key
+            );
+
+            $event = Event::constructFrom(json_decode($requestContent, true));
+            if (!in_array($event->type, ["payment_intent.succeeded", "payment_intent.payment_failed"]))
                 throw new \InvalidArgumentException();
 
             $intent = $event->data->object;
@@ -149,7 +185,7 @@ final class StripeApi implements IPaymentGatewayAPI
                 Log::debug("StripeApi::processCallback: payment_intent.succeeded");
                 return [
                     "event_type" => $event->type,
-                    "cart_id"  => $intent->id,
+                    "cart_id" => $intent->id,
                 ];
             }
 
@@ -158,25 +194,22 @@ final class StripeApi implements IPaymentGatewayAPI
                 $intent = $event->data->object;
                 return [
                     "event_type" => $event->type,
-                    "cart_id"    => $intent->id,
+                    "cart_id" => $intent->id,
                     "error" => [
                         "last_payment_error" => $intent->last_payment_error,
-                        "message" =>  $intent->last_payment_error->message
+                        "message" => $intent->last_payment_error->message
                     ]
                 ];
             }
 
             throw new ValidationException(sprintf("event type %s not handled!", $event->type));
-        }
-        catch(\UnexpectedValueException $e) {
+        } catch (\UnexpectedValueException $e) {
             // Invalid payload
-           throw $e;
-        }
-        catch(SignatureVerification $e) {
+            throw $e;
+        } catch (SignatureVerification $e) {
             // Invalid signature
             throw $e;
-        }
-        catch (\Exception $e){
+        } catch (\Exception $e) {
             throw $e;
         }
     }
@@ -187,7 +220,7 @@ final class StripeApi implements IPaymentGatewayAPI
      */
     public function isSuccessFullPayment(array $payload): bool
     {
-        if(isset($payload['event_type']) && $payload['event_type'] == "payment_intent.succeeded") return true;
+        if (isset($payload['event_type']) && $payload['event_type'] == "payment_intent.succeeded") return true;
         Log::debug("StripeApi::isSuccessFullPayment false");
         return false;
     }
@@ -198,10 +231,10 @@ final class StripeApi implements IPaymentGatewayAPI
      */
     public function getPaymentError(array $payload): ?string
     {
-        if(isset($payload['event_type']) && $payload['event_type'] == "payment_intent.payment_failed"){
-            if(isset($payload['error'])) {
+        if (isset($payload['event_type']) && $payload['event_type'] == "payment_intent.payment_failed") {
+            if (isset($payload['error'])) {
                 $error = $payload['error'];
-                if(isset($error["message"])) {
+                if (isset($error["message"])) {
                     return $error["message"];
                 }
             }
@@ -217,22 +250,24 @@ final class StripeApi implements IPaymentGatewayAPI
      */
     public function refundPayment(string $cart_id, float $amount, string $currency): void
     {
-        if(empty($this->api_key))
+        if (empty($this->secret_key))
             throw new \InvalidArgumentException();
 
-        Stripe::setApiKey($this->api_key);
+        Stripe::setApiKey($this->secret_key);
+        Stripe::setApiVersion(self::Version);
+
         $intent = PaymentIntent::retrieve($cart_id);
 
-        if(is_null($intent))
+        if (is_null($intent))
             throw new \InvalidArgumentException();
-        if(count($intent->charges->data) == 0)
+        if (count($intent->charges->data) == 0)
             throw new \InvalidArgumentException("this intent payment has no charges");
         $charge = $intent->charges->data[0];
-        if(!$charge instanceof Charge)
+        if (!$charge instanceof Charge)
             throw new \InvalidArgumentException();
         $params = [];
-        if($amount > 0 ){
-            if(!self::isZeroDecimalCurrency($currency)){
+        if ($amount > 0) {
+            if (!self::isZeroDecimalCurrency($currency)) {
                 /**
                  * All API requests expect amounts to be provided in a currency’s smallest unit. For example,
                  * to charge $10 USD, provide an amount value of 1000 (i.e, 1000 cents).
@@ -254,19 +289,24 @@ final class StripeApi implements IPaymentGatewayAPI
      */
     public function abandonCart(string $cart_id)
     {
-        if(empty($this->api_key))
+        if (empty($this->secret_key))
             throw new \InvalidArgumentException();
 
-        Stripe::setApiKey($this->api_key);
+        Stripe::setApiKey($this->secret_key);
+        Stripe::setApiVersion(self::Version);
+
         $intent = PaymentIntent::retrieve($cart_id);
 
-        if(is_null($intent))
+        if (is_null($intent))
             throw new \InvalidArgumentException();
 
-        if(!in_array($intent->status,[ PaymentIntent::STATUS_REQUIRES_PAYMENT_METHOD,
+        if (!in_array($intent->status, [
+            PaymentIntent::STATUS_REQUIRES_PAYMENT_METHOD,
             PaymentIntent::STATUS_REQUIRES_CAPTURE,
             PaymentIntent::STATUS_REQUIRES_CONFIRMATION,
-            PaymentIntent::STATUS_REQUIRES_ACTION
+            PaymentIntent::STATUS_REQUIRES_ACTION,
+            "requires_source",
+            "requires_source_action",
         ]))
             throw new CartAlreadyPaidException(sprintf("cart id %s has status %s", $cart_id, $intent->status));
 
@@ -279,11 +319,13 @@ final class StripeApi implements IPaymentGatewayAPI
      */
     public function canAbandon(string $status): bool
     {
-        return in_array($status,[
+        return in_array($status, [
             PaymentIntent::STATUS_REQUIRES_PAYMENT_METHOD,
             PaymentIntent::STATUS_REQUIRES_CAPTURE,
             PaymentIntent::STATUS_REQUIRES_CONFIRMATION,
-            PaymentIntent::STATUS_REQUIRES_ACTION
+            PaymentIntent::STATUS_REQUIRES_ACTION,
+            "requires_source",
+            "requires_source_action",
         ]);
     }
 
@@ -291,25 +333,88 @@ final class StripeApi implements IPaymentGatewayAPI
      * @param string $status
      * @return bool
      */
-    public function isSucceeded(string $status):bool {
+    public function isSucceeded(string $status): bool
+    {
         return $status == PaymentIntent::STATUS_SUCCEEDED;
     }
 
     /**
      * @param string $cart_id
-     * @return string
+     * @return string|null
      */
-    public function getCartStatus(string $cart_id): string
+    public function getCartStatus(string $cart_id): ?string
     {
-        if(empty($this->api_key))
+
+        if (empty($this->secret_key))
             throw new \InvalidArgumentException();
 
-        Stripe::setApiKey($this->api_key);
-        $intent = PaymentIntent::retrieve($cart_id);
+        Stripe::setApiKey($this->secret_key);
+        Stripe::setApiVersion(self::Version);
 
-        if(is_null($intent))
+        try {
+            $intent = PaymentIntent::retrieve($cart_id);
+
+            if (is_null($intent))
+                throw new \InvalidArgumentException();
+
+            return $intent->status;
+        }
+        catch(InvalidRequest $ex){
+            Log::warning(sprintf("StripeApi::getCartStatus cart_id %s code %s message %s", $cart_id, $ex->getCode(), $ex->getMessage()));
+            return null;
+        }
+    }
+
+    /**
+     * @param string $webhook_endpoint_url
+     * @return array
+     */
+    public function createWebHook(string $webhook_endpoint_url): array
+    {
+        if (empty($this->secret_key))
             throw new \InvalidArgumentException();
 
-        return $intent->status;
+        Stripe::setApiKey($this->secret_key);
+        Stripe::setApiVersion(self::Version);
+
+        $res = WebhookEndpoint::create([
+            'url' => $webhook_endpoint_url,
+            'enabled_events' => [
+                'payment_intent.succeeded',
+                'payment_intent.payment_failed',
+            ],
+        ]);
+
+        return [
+            'id' => $res->id,
+            'secret' => $res->secret,
+            'livemode' => $res->livemode
+        ];
+    }
+
+    /**
+     * @param string $id
+     * @return WebhookEndpoint
+     */
+    public function getWebHookById(string $id){
+
+        if (empty($this->secret_key))
+            throw new \InvalidArgumentException();
+
+        Stripe::setApiKey($this->secret_key);
+        Stripe::setApiVersion(self::Version);
+
+        return WebhookEndpoint::retrieve($id);
+    }
+
+    /**
+     * @param string $id
+     * @return void
+     */
+    public function deleteWebHookById(string $id):void{
+
+        $webhook = $this->getWebHookById($id);
+        if(!$webhook) return;
+        $webhook->delete();
     }
 }

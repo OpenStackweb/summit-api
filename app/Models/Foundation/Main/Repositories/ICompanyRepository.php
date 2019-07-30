@@ -12,12 +12,11 @@
  * limitations under the License.
  **/
 use models\utils\IBaseRepository;
-
 /**
  * Interface ICompanyRepository
  * @package models\main
  */
 interface ICompanyRepository extends IBaseRepository
 {
-
+    public function getByName(string $name):?Company;
 }

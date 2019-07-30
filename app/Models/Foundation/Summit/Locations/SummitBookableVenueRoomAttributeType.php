@@ -23,7 +23,7 @@ use models\utils\SilverstripeBaseModel;
  * @ORM\AssociationOverrides({
  *     @ORM\AssociationOverride(
  *          name="summit",
- *          inversedBy="booking_room_allowed_attributes"
+ *          inversedBy="meeting_booking_room_allowed_attributes"
  *     )
  * })
  * Class SummitBookableVenueRoomAttributeType
@@ -40,7 +40,7 @@ class SummitBookableVenueRoomAttributeType extends SilverstripeBaseModel
     use SummitOwned;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitBookableVenueRoomAttributeValue", mappedBy="type", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="SummitBookableVenueRoomAttributeValue", mappedBy="type", cascade={"persist"}, orphanRemoval=true)
      * @var ArrayCollection
      */
     private $values;

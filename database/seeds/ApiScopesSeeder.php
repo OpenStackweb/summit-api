@@ -37,6 +37,8 @@ final class ApiScopesSeeder extends Seeder
         $this->seedCompaniesScopes();
         $this->seedGroupsScopes();
         $this->seedOrganizationScopes();
+        $this->seedSummitAdminGroupScopes();
+        $this->seedSummitMediaFileTypes();
     }
 
     private function seedSummitScopes()
@@ -70,6 +72,17 @@ final class ApiScopesSeeder extends Seeder
                 'name' => sprintf(SummitScopes::DeleteMyFavorites, $current_realm),
                 'short_description' => 'Allows to remove Summit events as favorite',
                 'description' => 'Allows to remove Summit events as favorite',
+            ],
+            // enter/leave event
+            [
+                'name' => sprintf(SummitScopes::EnterEvent, $current_realm),
+                'short_description' => '',
+                'description' => '',
+            ],
+            [
+                'name' => sprintf(SummitScopes::LeaveEvent, $current_realm),
+                'short_description' => '',
+                'description' => '',
             ],
             [
                 'name' => sprintf(SummitScopes::AddMyRSVP, $current_realm),
@@ -311,6 +324,31 @@ final class ApiScopesSeeder extends Seeder
                 'short_description' => 'write badge scans',
                 'description' => 'write badge scans',
             ],
+            [
+                'name' => sprintf(SummitScopes::ReadPaymentProfiles, $current_realm),
+                'short_description' => 'read summit payment profiles',
+                'description' => 'read summit payment profiles',
+            ],
+            [
+                'name' => sprintf(SummitScopes::WritePaymentProfiles, $current_realm),
+                'short_description' => 'write summit payment profiles',
+                'description' => 'write summit payment profiles',
+            ],
+            [
+                'name' => sprintf(SummitScopes::WriteRegistrationInvitations, $current_realm),
+                'short_description' => 'write summit registration invitation',
+                'description' => 'write summit registration invitation',
+            ],
+            [
+                'name' => sprintf(SummitScopes::ReadRegistrationInvitations, $current_realm),
+                'short_description' => 'read summit registration invitation',
+                'description' => 'read summit registration invitation',
+            ],
+            [
+                'name' => sprintf(SummitScopes::ReadMyRegistrationInvitations, $current_realm),
+                'short_description' => 'read my summit registration invitation',
+                'description' => 'read my summit registration invitation',
+            ],
         ];
 
         foreach ($scopes as $scope_info) {
@@ -503,6 +541,70 @@ final class ApiScopesSeeder extends Seeder
                 'short_description' => 'Write Teams Data',
                 'description' => 'Grants write access for Teams Data',
             ),
+        ];
+
+        foreach ($scopes as $scope_info) {
+            $scope = new ApiScope();
+            $scope->setName($scope_info['name']);
+            $scope->setShortDescription($scope_info['short_description']);
+            $scope->setDescription($scope_info['description']);
+            $scope->setActive(true);
+            $scope->setDefault(false);
+            $scope->setApi($api);
+            EntityManager::persist($scope);
+        }
+
+        EntityManager::flush();
+    }
+
+    private function seedSummitAdminGroupScopes(){
+
+        $current_realm = Config::get('app.scope_base_realm');
+        $api           = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'summit-administrator-groups']);
+
+        $scopes = [
+            [
+                'name' => sprintf(SummitScopes::ReadSummitAdminGroups, $current_realm),
+                'short_description' => 'Get Summit Admin Groups Data',
+                'description' => 'Grants read only access for Summit Admin Groups Data',
+            ],
+            [
+                'name' => sprintf(SummitScopes::WriteSummitAdminGroups, $current_realm),
+                'short_description' => 'Write Summit Admin Groups Data',
+                'description' => 'Grants write access to Summit Admin Groups Data',
+            ],
+        ];
+
+        foreach ($scopes as $scope_info) {
+            $scope = new ApiScope();
+            $scope->setName($scope_info['name']);
+            $scope->setShortDescription($scope_info['short_description']);
+            $scope->setDescription($scope_info['description']);
+            $scope->setActive(true);
+            $scope->setDefault(false);
+            $scope->setApi($api);
+            EntityManager::persist($scope);
+        }
+
+        EntityManager::flush();
+    }
+
+    private function seedSummitMediaFileTypes(){
+
+        $current_realm = Config::get('app.scope_base_realm');
+        $api           = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'summit-media-file-types']);
+
+        $scopes = [
+            [
+                'name' => sprintf(SummitScopes::ReadSummitMediaFileTypes, $current_realm),
+                'short_description' => 'Get Summit Media File Types Data',
+                'description' => 'Grants read only access for Summit Media File Types Data',
+            ],
+            [
+                'name' => sprintf(SummitScopes::WriteSummitMediaFileTypes, $current_realm),
+                'short_description' => 'Write Summit Media File Types Data',
+                'description' => 'Grants write access to Summit Media File Types Data',
+            ],
         ];
 
         foreach ($scopes as $scope_info) {

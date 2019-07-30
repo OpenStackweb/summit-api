@@ -29,6 +29,7 @@ final class SummitAttendeeTicketFactory
      */
     public static function build(SummitAttendee $attendee, SummitTicketType $type, array $data){
         $ticket = new SummitAttendeeTicket();
+
         $attendee->addTicket($ticket);
 
         if(isset($data['external_order_id']))

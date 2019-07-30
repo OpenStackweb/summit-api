@@ -35,7 +35,30 @@ interface ISummitAttendeeRepository extends IBaseRepository
     /**
      * @param Summit $summit
      * @param Member $member
-     * @return SummitAttendee
+     * @return SummitAttendee|null
      */
-    public function getBySummitAndMember(Summit $summit, Member $member);
+    public function getBySummitAndMember(Summit $summit, Member $member):?SummitAttendee;
+
+    /**
+     * @param Summit $summit
+     * @param string $email
+     * @return SummitAttendee|null
+     */
+    public function getBySummitAndEmail(Summit $summit, string $email):?SummitAttendee;
+
+    /**
+     * @param Summit $summit
+     * @param string $email
+     * @param null|string $first_name
+     * @param null|string $last_name
+     * @param null|string $external_id
+     * @return SummitAttendee|null
+     */
+    public function getBySummitAndEmailAndFirstNameAndLastNameAndExternalId(Summit $summit, string $email, ?string $first_name = null, ?string $last_name = null, ?string $external_id = null):?SummitAttendee;
+
+    /**
+     * @param string $email
+     * @return mixed
+     */
+    public function getByEmail(string $email);
 }

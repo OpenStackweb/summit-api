@@ -31,16 +31,6 @@ final class DoctrineApiEndpointRepository
 {
 
     /**
-     * Initializes a new <tt>EntityRepository</tt>.
-     *
-     * @param EntityManager         $em    The EntityManager to use.
-     * @param ClassMetadata $class The class descriptor.
-     */
-    public function __construct($em, ClassMetadata $class)
-    {
-        parent::__construct($em, $class);
-    }
-    /**
      * @param string $url
      * @param string $http_method
      * @return IApiEndpoint
@@ -90,12 +80,4 @@ final class DoctrineApiEndpointRepository
         return [];
     }
 
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraFilters(QueryBuilder $query)
-    {
-        return $query;
-    }
 }

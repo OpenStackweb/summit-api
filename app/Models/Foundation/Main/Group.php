@@ -28,6 +28,7 @@ class Group extends SilverstripeBaseModel
         parent::__construct();
         $this->members  = new ArrayCollection();
         $this->groups   = new ArrayCollection();
+        $this->is_external = false;
     }
 
     /**
@@ -36,6 +37,14 @@ class Group extends SilverstripeBaseModel
     public function addMember(Member $member){
         if($this->members->contains($member)) return;
         $this->members->add($member);
+    }
+
+    /**
+     * @param Member $member
+     */
+    public function removeMember(Member $member){
+        if(!$this->members->contains($member)) return;
+        $this->members->removeElement($member);
     }
 
     /**
@@ -153,7 +162,7 @@ class Group extends SilverstripeBaseModel
     private $code;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\main\Member", mappedBy="groups")
+     * @ORM\ManyToMany(targetEntity="models\main\Member", mappedBy="groups", fetch="EXTRA_LAZY")
      */
     private $members;
 
@@ -167,4 +176,18 @@ class Group extends SilverstripeBaseModel
      * @ORM\OneToMany(targetEntity="Group", mappedBy="parent")
      */
     private $groups;
+
+    /**
+     * @ORM\Column(name="IsExternal", type="boolean")
+     * @var bool
+     */
+    private $is_external;
+
+    public function setExternal(){
+        $this->is_external = true;
+    }
+
+    public function isExternal():bool {
+        return $this->is_external;
+    }
 }

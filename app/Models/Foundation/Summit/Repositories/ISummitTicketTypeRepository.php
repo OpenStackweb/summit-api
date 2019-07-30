@@ -18,5 +18,18 @@ use App\Models\Foundation\Summit\Repositories\ISummitOwnedEntityRepository;
  */
 interface ISummitTicketTypeRepository extends ISummitOwnedEntityRepository
 {
+    /**
+     * @param Summit $summit
+     * @param array $ids
+     * @return SummitTicketType[]
+     */
+    public function getByIdsExclusiveLock(Summit $summit, array $ids);
+
+    /**
+     * @param Summit $summit
+     * @param string $type
+     * @return SummitTicketType|null
+     */
+    public function getByType(Summit $summit, string $type):?SummitTicketType;
 
 }

@@ -55,7 +55,7 @@ final class BaseSerializerTypeSelector implements ISerializerTypeSelector
         $serializer_type = SerializerRegistry::SerializerType_Public;
         $current_member  = $this->resource_server_context->getCurrentUser();
         if(!is_null($current_member)){
-            if($current_member->isOnGroup(IGroup::SummitAdministrators)){
+            if($current_member->isAdmin()){
                 $serializer_type = SerializerRegistry::SerializerType_Private;
             }
         }

@@ -48,7 +48,7 @@ class SummitPresentationComment extends SilverstripeBaseModel
     private $presentation;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="presentation_comments")
+     * @ORM\ManyToOne(targetEntity="models\main\Member")
      * @ORM\JoinColumn(name="CommenterID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */

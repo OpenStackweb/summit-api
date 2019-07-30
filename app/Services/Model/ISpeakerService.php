@@ -14,7 +14,6 @@
 use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
-use models\main\EmailCreationRequest;
 use models\main\File;
 use models\main\Member;
 use models\summit\PresentationSpeaker;
@@ -71,16 +70,6 @@ interface ISpeakerService
     public function registerSummitPromoCodeByValue(PresentationSpeaker $speaker, Summit $summit, $reg_code);
 
     /**
-     * @param int $speaker_id
-     * @param UploadedFile $file
-     * @param int $max_file_size
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     * @return File
-     */
-    public function addSpeakerPhoto($speaker_id, UploadedFile $file,  $max_file_size = 10485760);
-
-    /**
      * @param PresentationSpeaker $speaker_from
      * @param PresentationSpeaker $speaker_to
      * @param array $data
@@ -128,7 +117,7 @@ interface ISpeakerService
     /**
      * @param Summit $summit
      * @param int $assistance_id
-     * @return EmailCreationRequest
+     * @return void
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
@@ -169,4 +158,38 @@ interface ISpeakerService
      * @throws ValidationException
      */
     public function rejectSpeakerEditPermission(string $token, int $speaker_id):SpeakerEditPermissionRequest;
+
+    /**
+     * @param int $speaker_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     * @return File
+     */
+    public function addSpeakerPhoto($speaker_id, UploadedFile $file,  $max_file_size = 10485760);
+
+    /**
+     * @param $speaker_id
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function deleteSpeakerPhoto($speaker_id):void;
+
+    /**
+     * @param int $speaker_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     * @return File
+     */
+    public function addSpeakerBigPhoto($speaker_id, UploadedFile $file,  $max_file_size = 10485760);
+
+    /**
+     * @param $speaker_id
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function deleteSpeakerBigPhoto($speaker_id):void;
 }

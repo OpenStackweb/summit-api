@@ -114,6 +114,10 @@ final class DoctrineSummitEventRepository
                 'c',
                 "c.id :operator :value"
             ),
+            'selection_plan_id' => new DoctrineFilterMapping
+            (
+                "(selp.id :operator :value)"
+            ),
             'location_id' => new DoctrineLeftJoinFilterMapping
             (
                 'e.location',
@@ -200,6 +204,7 @@ final class DoctrineSummitEventRepository
             ->leftJoin("e.category", 'cc', Join::LEFT_JOIN)
             ->leftJoin("p.speakers", "sp", Join::LEFT_JOIN)
             ->leftJoin('p.selected_presentations', "ssp", Join::LEFT_JOIN)
+            ->leftJoin('p.selection_plan', "selp", Join::LEFT_JOIN)
             ->leftJoin('ssp.list', "sspl", Join::LEFT_JOIN)
             ->leftJoin('p.moderator', "spm", Join::LEFT_JOIN)
             ->leftJoin('spm.member', "spmm2", Join::LEFT_JOIN)
@@ -293,7 +298,7 @@ final class DoctrineSummitEventRepository
             ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
             ->leftJoin("e.category", 'cc', Join::LEFT_JOIN)
             ->leftJoin("p.speakers", "sp", Join::LEFT_JOIN)
-            ->leftJoin('p.selected_presentations', "ssp", Join::LEFT_JOIN)
+            ->leftJoin('p.selection_plan', "selp", Join::LEFT_JOIN)
             ->leftJoin('ssp.list', "sspl", Join::LEFT_JOIN)
             ->leftJoin('p.moderator', "spm", Join::LEFT_JOIN)
             ->leftJoin('sp.member', "spmm", Join::LEFT_JOIN)
@@ -354,7 +359,7 @@ final class DoctrineSummitEventRepository
     {
         $query =  $this->getEntityManager()->createQueryBuilder()
             ->select("e")
-            ->from(\models\summit\SummitEvent::class, "e")
+            ->from($this->getBaseEntity(), "e")
             ->join('e.summit', 's', Join::WITH, " s.id = :summit_id")
             ->where('e.published = 1')
             ->andWhere('e.external_id not in (:external_ids)')

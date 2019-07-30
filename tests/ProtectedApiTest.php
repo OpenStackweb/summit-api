@@ -18,12 +18,32 @@ use App\Models\ResourceServer\IAccessTokenService;
 use App\Security\SummitScopes;
 use App\Security\OrganizationScopes;
 use App\Security\MemberScopes;
+use App\Models\Foundation\Main\IGroup;
 /**
  * Class AccessTokenServiceStub
  */
 class AccessTokenServiceStub implements IAccessTokenService
 {
+    /**
+     * @param mixed $user_id
+     */
+    public function setUserId($user_id): void
+    {
+        $this->user_id = $user_id;
+    }
 
+    /**
+     * @param mixed $user_external_id
+     */
+    public function setUserExternalId($user_external_id): void
+    {
+        $this->user_external_id = $user_external_id;
+    }
+
+
+    private $user_id;
+
+    private $user_external_id;
     /**
      * @param string $token_value
      * @return AccessToken
@@ -70,6 +90,22 @@ class AccessTokenServiceStub implements IAccessTokenService
             sprintf(SummitScopes::ReadMyBookableRoomsReservationData, $url),
             sprintf(SummitScopes::WriteMyBookableRoomsReservationData, $url),
             sprintf(SummitScopes::SendMyScheduleMail, $url),
+            sprintf(SummitScopes::ReadMyRegistrationOrders, $url),
+            sprintf(SummitScopes::ReadRegistrationOrders, $url),
+            sprintf(SummitScopes::UpdateRegistrationOrders, $url),
+            sprintf(SummitScopes::CreateOfflineRegistrationOrders, $url),
+            sprintf(SummitScopes::DeleteRegistrationOrders, $url),
+            sprintf(SummitScopes::UpdateRegistrationOrders, $url),
+            sprintf(SummitScopes::UpdateMyRegistrationOrders, $url),
+            sprintf(SummitScopes::WriteBadgeScan, $url),
+            sprintf(SummitScopes::ReadBadgeScan, $url),
+            sprintf(SummitScopes::CreateRegistrationOrders, $url),
+            sprintf(SummitScopes::ReadSummitAdminGroups, $url),
+            sprintf(SummitScopes::WriteSummitAdminGroups, $url),
+            sprintf(SummitScopes::EnterEvent, $url),
+            sprintf(SummitScopes::LeaveEvent, $url),
+            sprintf(SummitScopes::ReadSummitMediaFileTypes, $url),
+            sprintf(SummitScopes::WriteSummitMediaFileTypes, $url),
         );
 
         return AccessToken::createFromParams(
@@ -78,12 +114,22 @@ class AccessTokenServiceStub implements IAccessTokenService
                 'scope'               => implode(' ', $scopes),
                 'client_id'           => '1',
                 'audience'            => $realm,
-                'user_id'             => '1',
-                'user_external_id'    => '13867',
+                'user_id'             => $this->user_id,
+                'user_external_id'    => $this->user_external_id,
                 'expires_in'          => 3600,
                 'application_type'    => 'WEB_APPLICATION',
                 'allowed_return_uris' => 'https://www.openstack.org/OpenStackIdAuthenticator,https://www.openstack.org/Security/login',
-                'allowed_origins'     =>  ''
+                'allowed_origins'     =>  '',
+                'user_groups' => [
+                    [
+                       'slug' => 'badge-printers',
+
+                    ],
+                     [
+                       'slug' => 'administrators',
+
+                    ],
+                ],
             ]
         );
     }
@@ -136,7 +182,23 @@ class AccessTokenServiceStub2 implements IAccessTokenService
             sprintf(OrganizationScopes::ReadOrganizationData, $url),
             sprintf(SummitScopes::WritePresentationMaterialsData, $url),
             sprintf(SummitScopes::ReadMyBookableRoomsReservationData, $url),
+            sprintf(SummitScopes::ReadRegistrationOrders, $url),
             sprintf(SummitScopes::WriteMyBookableRoomsReservationData, $url),
+            sprintf(SummitScopes::ReadMyRegistrationOrders, $url),
+            sprintf(SummitScopes::UpdateRegistrationOrders, $url),
+            sprintf(SummitScopes::UpdateMyRegistrationOrders, $url),
+            sprintf(SummitScopes::CreateOfflineRegistrationOrders, $url),
+            sprintf(SummitScopes::DeleteRegistrationOrders, $url),
+            sprintf(SummitScopes::UpdateRegistrationOrders, $url),
+            sprintf(SummitScopes::WriteBadgeScan, $url),
+            sprintf(SummitScopes::ReadBadgeScan, $url),
+            sprintf(SummitScopes::CreateRegistrationOrders, $url),
+            sprintf(SummitScopes::ReadSummitAdminGroups, $url),
+            sprintf(SummitScopes::WriteSummitAdminGroups, $url),
+            sprintf(SummitScopes::EnterEvent, $url),
+            sprintf(SummitScopes::LeaveEvent, $url),
+            sprintf(SummitScopes::ReadSummitMediaFileTypes, $url),
+            sprintf(SummitScopes::WriteSummitMediaFileTypes, $url),
         );
 
         return AccessToken::createFromParams(
@@ -150,37 +212,61 @@ class AccessTokenServiceStub2 implements IAccessTokenService
                 'expires_in'          => 3600,
                 'application_type'    => 'SERVICE',
                 'allowed_return_uris' => '',
-                'allowed_origins'     =>  ''
+                'allowed_origins'     =>  '',
+                'user_groups' => [
+                    [
+                        //'slug' => 'administrators'
+                    ]
+                ],
             ]
         );
     }
 }
+
+
 /**
  * Class ProtectedApiTest
  */
 abstract class ProtectedApiTest extends \Tests\BrowserKitTestCase
 {
+    use InsertMemberTestData;
 
     /**
      * @var string
      */
     protected $access_token;
 
+    protected $current_group = IGroup::Administrators;
+
+    static $service;
+    /**
+     * @return \Illuminate\Foundation\Application
+     */
     public function createApplication()
     {
         $app = parent::createApplication();
-        App::singleton('App\Models\ResourceServer\IAccessTokenService', 'AccessTokenServiceStub');
+        self::$service = new AccessTokenServiceStub();
+
+        App::singleton(IAccessTokenService::class, function () { return self::$service; });
         return $app;
     }
 
-    public function setUp()
-    {
-        $this->access_token = '123456789';
-        parent::setUp();
+    protected function setCurrentGroup(string $group){
+        $this->current_group = $group;
     }
 
-    public function tearDown()
+    protected function setUp()
     {
+        $this->access_token = 'TEST_ACCESS_TOKEN';
+        parent::setUp();
+        self::insertMemberTestData($this->current_group);
+        self::$service->setUserId(self::$member->getUserExternalId());
+        self::$service->setUserExternalId(self::$member->getUserExternalId());
+    }
+
+    protected function tearDown()
+    {
+        self::clearMemberTestData();
         Mockery::close();
         parent::tearDown();
     }

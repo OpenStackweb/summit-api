@@ -32,16 +32,16 @@ final class DoctrineMemberRepository
 
     /**
      * @param string $email
-     * @return Member
+     * @return Member|null
      */
-    public function getByEmail($email)
+    public function getByEmail($email): ?Member
     {
         return $this->getEntityManager()
             ->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")
             ->where("e.email = :email")
-            ->setParameter("email",trim($email))
+            ->setParameter("email", strtolower(trim($email)))
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
@@ -171,5 +171,37 @@ final class DoctrineMemberRepository
        return $this->findOneBy([
            'user_external_id' => $external_id
        ]);
+    }
+
+    public function getByExternalIdExclusiveLock(int $external_id): ?Member{
+        $query  =   $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->where("e.user_external_id = :user_external_id");
+
+        $query->setParameter("user_external_id", $external_id);
+
+        return $query->getQuery()
+            ->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE)
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getByEmailExclusiveLock($email): ?Member
+    {
+        $query  =   $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->where("e.email = :email");
+
+        $query->setParameter("email", $email);
+
+        return $query->getQuery()
+            ->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE)
+            ->getOneOrNullResult();
     }
 }

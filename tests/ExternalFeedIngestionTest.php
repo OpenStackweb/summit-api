@@ -26,6 +26,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use App\Services\Model\IScheduleIngestionService;
 use App\Services\Apis\ExternalScheduleFeeds\AbstractExternalScheduleFeed;
+use App\Models\Foundation\Summit\ISummitExternalScheduleFeedType;
 /**
  * Class ExternalFeedIngestionTest
  * @package Tests
@@ -103,6 +104,13 @@ JSON;
         $this->assertTrue(count($summitsWithExternalFeeds)>0);
     }
 
+    public function testIngestSummitById($summit_id = 5){
+        $repository = EntityManager::getRepository(Summit::class);
+        $summit = $repository->find($summit_id);
+        $service = App::make(IScheduleIngestionService::class);
+        $service->ingestSummit($summit);
+    }
+
     public function testUTFName(){
 
         $name = "Intel® Firmware Support Package (FSP) + EDK II for Cloud";
@@ -136,7 +144,7 @@ JSON;
         $summit = new Summit();
         $summit->setActive(true);
         // set feed type (sched)
-        $summit->setApiFeedType(IExternalScheduleFeedFactory::SchedType);
+        $summit->setApiFeedType(ISummitExternalScheduleFeedType::SchedType);
         $summit->setApiFeedUrl("");
         $summit->setApiFeedKey("");
         $summit->setTimeZoneId("America/Chicago");

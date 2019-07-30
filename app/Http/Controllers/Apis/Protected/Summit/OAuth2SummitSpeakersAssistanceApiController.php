@@ -412,8 +412,8 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
-            $mail_request = $this->service->sendSpeakerSummitAssistanceAnnouncementMail($summit, $assistance_id);
-            return $this->created($mail_request->getId());
+            $this->service->sendSpeakerSummitAssistanceAnnouncementMail($summit, $assistance_id);
+            return $this->created();
 
         } catch (ValidationException $ex1) {
             Log::warning($ex1);

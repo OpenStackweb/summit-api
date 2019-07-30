@@ -53,15 +53,6 @@ interface IAttendeeService
 
     /**
      * @param SummitAttendee $attendee
-     * @param array $data
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     * @return SummitAttendeeTicket
-     */
-    public function addAttendeeTicket(SummitAttendee $attendee, array $data);
-
-    /**
-     * @param SummitAttendee $attendee
      * @param int $ticket_id
      * @throws ValidationException
      * @throws EntityNotFoundException
@@ -82,8 +73,17 @@ interface IAttendeeService
      * @param Member $other_member
      * @param int $ticket_id
      * @return SummitAttendeeTicket
-     * @throws ValidationException
-     * @throws EntityNotFoundException
+     * @throws \Exception
      */
-    public function reassignAttendeeTicket(Summit $summit,SummitAttendee $attendee, Member $other_member, $ticket_id);
+    public function reassignAttendeeTicketByMember(Summit $summit, SummitAttendee $attendee, Member $other_member, int $ticket_id):SummitAttendeeTicket;
+
+    /**
+     * @param Summit $summit
+     * @param SummitAttendee $attendee
+     * @param int $ticket_id
+     * @param array $payload
+     * @return SummitAttendeeTicket
+     * @throws \Exception
+     */
+    public function reassignAttendeeTicket(Summit $summit, SummitAttendee $attendee, int $ticket_id, array $payload):SummitAttendeeTicket;
 }

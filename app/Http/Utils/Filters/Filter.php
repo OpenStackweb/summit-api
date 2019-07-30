@@ -154,17 +154,28 @@ final class Filter
             $values = $filter_key_values[$field];
             if(!is_array($values)) $values = [$values];
             foreach ($values as $val) {
-                $validation = Validator::make
-                (
-                    [$field => $val],
-                    [$field => $rule],
-                    $messages
-                );
-                if ($validation->fails()) {
-                    $ex = new ValidationException();
-                    throw $ex->setMessages($validation->messages()->toArray());
+                if(is_array($val)){
+                   foreach($val as $sub_val){
+                       self::_validate($field, $sub_val, $rule, $messages);
+                   }
+                }
+                else {
+                   self::_validate($field, $val, $rule, $messages);
                 }
             }
+        }
+    }
+
+    private static function _validate($field, $val, $rule, $messages){
+        $validation = Validator::make
+        (
+            [$field => $val],
+            [$field => $rule],
+            $messages
+        );
+        if ($validation->fails()) {
+            $ex = new ValidationException();
+            throw $ex->setMessages($validation->messages()->toArray());
         }
     }
 
@@ -257,22 +268,55 @@ final class Filter
                         }
 
                         if(!empty($condition)) $condition .= ' OR ';
-                        $bindings[sprintf($param_prefix, $param_idx)] = $value;
-                        $condition .= sprintf("%s %s :%s", $mapping_or[0], $filter->getOperator(), sprintf($param_prefix, $param_idx));
-                        ++$param_idx;
+                        /**********************/
+                        if(is_array($value)){
+                            $inner_condition = '( ';
+                            foreach ($value as $val) {
+                                $inner_condition .= sprintf(" %s %s :%s %s ", $mapping[0], $filter->getOperator(), sprintf($param_prefix, $param_idx), $filter->getSameFieldOp());
+                                $bindings[sprintf($param_prefix, $param_idx)] = $val;
+                                ++$param_idx;
+                            }
+                            $inner_condition = substr($inner_condition, 0, (strlen($filter->getSameFieldOp())+1) * -1);
+                            $inner_condition .= ' )';
+                            $condition .= $inner_condition;
+                        }
+                        else {
+                            $bindings[sprintf($param_prefix, $param_idx)] = $value;
+                            $condition .= sprintf("%s %s :%s", $mapping_or[0], $filter->getOperator(), sprintf($param_prefix, $param_idx));
+                            ++$param_idx;
+                        }
+                        /**********************/
+
                     }
                     $query->andWhere($condition);
                 }
                 else {
                     $mapping = explode(':', $mapping);
                     $value   = $filter->getValue();
+                    $condition = '';
 
                     if (count($mapping) > 1) {
                         $value = $this->convertValue($value, $mapping[1]);
                     }
-                    $bindings[sprintf($param_prefix, $param_idx)] = $value;
-                    $query = $query->andWhere(sprintf("%s %s :%s", $mapping[0], $filter->getOperator(), sprintf($param_prefix, $param_idx)));
-                    ++$param_idx;
+
+                    if(is_array($value)){
+                        $inner_condition = '( ';
+                        foreach ($value as $val) {
+                            $inner_condition .= sprintf(" %s %s :%s %s ", $mapping[0], $filter->getOperator(), sprintf($param_prefix, $param_idx), $filter->getSameFieldOp());
+                            $bindings[sprintf($param_prefix, $param_idx)] = $val;
+                            ++$param_idx;
+                        }
+                        $inner_condition = substr($inner_condition, 0, (strlen($filter->getSameFieldOp())+1) * -1);
+                        $inner_condition .= ' )';
+                        $condition .= $inner_condition;
+                    }
+                    else {
+                        $bindings[sprintf($param_prefix, $param_idx)] = $value;
+                        $condition .= sprintf("%s %s :%s", $mapping[0], $filter->getOperator(), sprintf($param_prefix, $param_idx));
+                        ++$param_idx;
+                    }
+
+                    $query->andWhere($condition);
                 }
             }
             else if (is_array($filter)) {
@@ -316,9 +360,23 @@ final class Filter
                                 }
 
                                 if(!empty($condition)) $condition .= ' OR ';
-                                $bindings[sprintf($param_prefix, $param_idx)] = $value;
-                                $condition .= sprintf(" %s %s :%s ", $mapping_or[0], $e->getOperator(), sprintf($param_prefix, $param_idx));
-                                ++$param_idx;
+
+                                if(is_array($value)){
+                                    $inner_condition = '( ';
+                                    foreach ($value as $val) {
+                                        $inner_condition .= sprintf(" %s %s :%s %s ", $mapping_or[0], $e->getOperator(), sprintf($param_prefix, $param_idx), $e->getSameFieldOp());
+                                        $bindings[sprintf($param_prefix, $param_idx)] = $val;
+                                        ++$param_idx;
+                                    }
+                                    $inner_condition = substr($inner_condition, 0, (strlen($e->getSameFieldOp())+1) * -1);
+                                    $inner_condition .= ' )';
+                                    $condition .= $inner_condition;
+                                }
+                                else {
+                                    $bindings[sprintf($param_prefix, $param_idx)] = $value;
+                                    $condition .= sprintf("%s %s :%s", $mapping_or[0], $e->getOperator(), sprintf($param_prefix, $param_idx));
+                                    ++$param_idx;
+                                }
                             }
                             if(!empty($sub_or_query)) $sub_or_query .= ' OR ';
                             $sub_or_query .= ' ( '.$condition.' ) ';
@@ -333,9 +391,22 @@ final class Filter
 
                             if(!empty($sub_or_query)) $sub_or_query .= ' OR ';
 
-                            $bindings[sprintf($param_prefix, $param_idx)] = $value;
-                            $sub_or_query .= sprintf(" %s %s :%s ", $mapping[0], $e->getOperator(), sprintf($param_prefix, $param_idx));
-                            ++$param_idx;
+                            if(is_array($value)){
+                                $inner_condition = '( ';
+                                foreach ($value as $val) {
+                                    $inner_condition .= sprintf(" %s %s :%s %s ", $mapping[0], $e->getOperator(), sprintf($param_prefix, $param_idx), $e->getSameFieldOp());
+                                    $bindings[sprintf($param_prefix, $param_idx)] = $val;
+                                    ++$param_idx;
+                                }
+                                $inner_condition = substr($inner_condition, 0, (strlen($e->getSameFieldOp())+1) * -1);
+                                $inner_condition .= ' )';
+                                $sub_or_query .= $inner_condition;
+                            }
+                            else {
+                                $bindings[sprintf($param_prefix, $param_idx)] = $value;
+                                $sub_or_query .= sprintf("%s %s :%s", $mapping[0], $e->getOperator(), sprintf($param_prefix, $param_idx));
+                                ++$param_idx;
+                            }
                         }
                     }
                 }
@@ -356,14 +427,36 @@ final class Filter
     {
         switch ($original_format) {
             case 'datetime_epoch':
+                if(is_array($value)){
+                    $res = [];
+                    foreach ($value as $val){
+                        $datetime = new \DateTime("@$val");
+                        $res[] = sprintf("%s", $datetime->format("Y-m-d H:i:s"));
+                    }
+                    return $res;
+                }
                 $datetime = new \DateTime("@$value");
                 return sprintf("%s", $datetime->format("Y-m-d H:i:s"));
                 break;
             case 'json_int':
+                if(is_array($value)){
+                    $res = [];
+                    foreach ($value as $val){
+                        $res[] = intval($val);
+                    }
+                    return $res;
+                }
                 return intval($value);
                 break;
             case 'json_string':
-                return sprintf("%s",$value);
+                if(is_array($value)){
+                    $res = [];
+                    foreach ($value as $val){
+                        $res[] = sprintf("%s", $val);
+                    }
+                    return $res;
+                }
+                return sprintf("%s", $value);
                 break;
             default:
                 return $value;
@@ -401,9 +494,21 @@ final class Filter
                     if (count($mapping) > 1) {
                         $filter->setValue($this->convertValue($value, $mapping[1]));
                     }
-                    $cond = sprintf(' %s %s :%s', $mapping[0], $op, sprintf($param_prefix, $param_idx));
-                    $this->bindings[sprintf($param_prefix, $param_idx)] = $filter->getValue();
-                    ++$param_idx;
+                    if(is_array($value)){
+                        $cond = '( ';
+                        foreach ($value as $val) {
+                            $cond .= sprintf(" %s %s :%s %s ", $mapping[0], $op, sprintf($param_prefix, $param_idx), $filter->getSameFieldOp());
+                            $this->bindings[sprintf($param_prefix, $param_idx)] = $val;
+                            ++$param_idx;
+                        }
+                        $cond = substr($cond, 0, (strlen($filter->getSameFieldOp())+1) * -1);
+                        $cond .= ' )';
+                    }
+                    else {
+                        $cond = sprintf(' %s %s :%s', $mapping[0], $op, sprintf($param_prefix, $param_idx));
+                        $this->bindings[sprintf($param_prefix, $param_idx)] = $filter->getValue();
+                        ++$param_idx;
+                    }
                     if (!empty($sql)) $sql .= " AND ";
                     $sql .= $cond;
                 }
@@ -420,9 +525,22 @@ final class Filter
                         if (count($mapping) > 1) {
                             $e->setValue($this->convertValue($value, $mapping[1]));
                         }
-                        $cond = sprintf(" %s %s :%s", $mapping[0], $op, sprintf($param_prefix, $param_idx));
-                        $this->bindings[sprintf($param_prefix, $param_idx)] = $e->getValue();
-                        ++$param_idx;
+
+                        if(is_array($value)){
+                            $cond = '( ';
+                            foreach ($value as $val) {
+                                $cond .= sprintf(" %s %s :%s %s ", $mapping[0], $op, sprintf($param_prefix, $param_idx), $e->getSameFieldOp());
+                                $this->bindings[sprintf($param_prefix, $param_idx)] = $val;
+                                ++$param_idx;
+                            }
+                            $cond = substr($cond, 0, (strlen($e->getSameFieldOp())+1) * -1);
+                            $cond .= ' )';
+                        }
+                        else {
+                            $cond = sprintf(" %s %s :%s", $mapping[0], $op, sprintf($param_prefix, $param_idx));
+                            $this->bindings[sprintf($param_prefix, $param_idx)] = $e->getValue();
+                            ++$param_idx;
+                        }
                         if (!empty($sql_or)) $sql_or .= " OR ";
                         $sql_or .= $cond;
                     }

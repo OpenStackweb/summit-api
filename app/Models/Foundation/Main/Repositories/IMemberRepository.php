@@ -25,9 +25,15 @@ interface IMemberRepository extends IBaseRepository
 {
     /**
      * @param string $email
-     * @return Member
+     * @return Member|null
      */
-    public function getByEmail($email);
+    public function getByEmail($email):?Member;
+
+    /**
+     * @param string $email
+     * @return Member|null
+     */
+    public function getByEmailExclusiveLock($email):?Member;
 
     /**
      * @param string $fullname
@@ -48,4 +54,10 @@ interface IMemberRepository extends IBaseRepository
      * @return Member|null
      */
     public function getByExternalId(int $external_id):?Member;
+
+    /**
+     * @param int $external_id
+     * @return Member|null
+     */
+    public function getByExternalIdExclusiveLock(int $external_id): ?Member;
 }

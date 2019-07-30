@@ -54,7 +54,6 @@ final class DoctrineGroupRepository
        return Group::class;
     }
 
-
     /**
      * @param string $slug
      * @return Group|null

@@ -38,6 +38,7 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
      * @var string
      */
     protected $manager_name;
+
     /**
      * @return EntityManager
      */
@@ -112,6 +113,12 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
     protected abstract function applyExtraFilters(QueryBuilder $query);
 
     /**
+     * @param QueryBuilder $query
+     * @return QueryBuilder
+     */
+    protected abstract function applyExtraJoins(QueryBuilder $query);
+
+    /**
      * @param PagingInfo $paging_info
      * @param Filter|null $filter
      * @param Order|null $order
@@ -123,6 +130,8 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
             ->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e");
+
+        $query = $this->applyExtraJoins($query);
 
         $query = $this->applyExtraFilters($query);
 
@@ -153,6 +162,39 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
             $paging_info->getLastPage($total),
             $data
         );
+    }
+
+    /**
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return array
+     */
+    public function getAllIdsByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null):array {
+
+        $query  = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e.id")
+            ->from($this->getBaseEntity(), "e");
+
+        $query = $this->applyExtraJoins($query);
+
+        $query = $this->applyExtraFilters($query);
+
+        if(!is_null($filter)){
+            $filter->apply2Query($query, $this->getFilterMappings());
+        }
+
+        if(!is_null($order)){
+            $order->apply2Query($query, $this->getOrderMappings());
+        }
+
+        $query = $query
+            ->setFirstResult($paging_info->getOffset())
+            ->setMaxResults($paging_info->getPerPage());
+
+        $res = $query->getQuery()->getArrayResult();
+        return array_column($res, 'id');
     }
 
     /**
@@ -301,6 +343,4 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
 
         return new LazyCriteriaCollection($persister, $criteria);
     }
-
-
 }

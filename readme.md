@@ -34,6 +34,10 @@ Laravel may require some permissions to be configured: folders within storage an
 
 php artisan doctrine:schema:create --sql --em=model > ss.sql
 
+## validate SS schema
+
+php artisan doctrine:schema:validate
+
 ## Doctrine Migrations
 
 # For Config Storage
@@ -57,3 +61,10 @@ php artisan doctrine:migrations:status --connection=model
 
 ## run
 php artisan doctrine:migrations:migrate --connection=model 
+
+## Queues
+
+php artisan queue:work
+
+# message broker
+php artisan queue:work message_broker

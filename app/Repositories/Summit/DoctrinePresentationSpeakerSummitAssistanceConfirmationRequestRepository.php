@@ -13,6 +13,7 @@
  **/
 use App\Models\Foundation\Summit\Repositories\IPresentationSpeakerSummitAssistanceConfirmationRequestRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
+use models\summit\PresentationSpeaker;
 use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
 use models\summit\Summit;
 use utils\DoctrineFilterMapping;
@@ -128,5 +129,46 @@ final class DoctrinePresentationSpeakerSummitAssistanceConfirmationRequestReposi
             $paging_info->getLastPage($total),
             $data
         );
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getBySpeaker(PresentationSpeaker $speaker, Summit $summit): ?PresentationSpeakerSummitAssistanceConfirmationRequest
+    {
+        return $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->where("e.summit = :summit")
+            ->andWhere("e.speaker = :speaker")
+            ->setParameter("speaker", $speaker)
+            ->setParameter("summit", $summit)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * @param PresentationSpeakerSummitAssistanceConfirmationRequest $request
+     * @return bool
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function existByHash(PresentationSpeakerSummitAssistanceConfirmationRequest $request): bool
+    {
+        $res =  $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->where("e.summit = :summit")
+            ->andWhere("e.speaker <> :speaker")
+            ->andWhere("e.confirmation_hash = :confirmation_hash")
+            ->setParameter("speaker", $request->getSpeaker())
+            ->setParameter("summit", $request->getSummit())
+            ->setParameter("confirmation_hash", $request->getConfirmationHash())
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+        return !is_null($res);
     }
 }

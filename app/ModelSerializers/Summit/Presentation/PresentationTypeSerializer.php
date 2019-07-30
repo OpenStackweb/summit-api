@@ -11,7 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use Libs\ModelSerializers\AbstractSerializer;
+use models\summit\PresentationType;
 /**
  * Class PresentationEventTypeSerializer
  * @package ModelSerializers
@@ -41,6 +42,36 @@ final class PresentationTypeSerializer extends SummitEventTypeSerializer
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
     {
         $values = parent::serialize($expand, $fields, $relations, $params);
+        $type = $this->object;
+        if (!$type instanceof PresentationType) return [];
+
+        $allowed_media_upload_types = [];
+
+        foreach ($type->getAllowedMediaUploadTypes() as $media_type){
+            $allowed_media_upload_types[] = $media_type->getId();
+        }
+
+        $values['allowed_media_upload_types'] = $allowed_media_upload_types;
+
+        if (!empty($expand)) {
+            foreach (explode(',', $expand) as $relation) {
+                $relation = trim($relation);
+                switch ($relation) {
+
+                    case 'allowed_media_upload_types': {
+                        unset($values['allowed_media_upload_types']);
+                        $allowed_media_upload_types = [];
+
+                        foreach ($type->getAllowedMediaUploadTypes() as $media_type){
+                            $allowed_media_upload_types[] = SerializerRegistry::getInstance()->getSerializer($media_type)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+
+                        $values['allowed_media_upload_types'] = $allowed_media_upload_types;
+                    }
+                        break;
+                }
+            }
+        }
         return $values;
     }
 }

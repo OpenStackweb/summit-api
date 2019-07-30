@@ -28,7 +28,7 @@ use Illuminate\Http\UploadedFile;
  * Interface ILocationService
  * @package App\Services\Model
  */
-interface ILocationService
+interface ILocationService extends IProcessPaymentService
 {
     /**
      * @param Summit $summit
@@ -226,13 +226,6 @@ interface ILocationService
      * @throws ValidationException
      */
     public function addBookableRoomReservation(Summit $summit, int $room_id, array $payload):SummitRoomReservation;
-
-    /**
-     * @param array $data
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function processBookableRoomPayment(array $payload):void;
 
     /**
      * @param Summit $sumit

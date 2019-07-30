@@ -70,9 +70,15 @@ class SummitBookableVenueRoom extends SummitVenueRoom
         if(!$this->summit->isBookingPeriodOpen())
             throw new ValidationException(sprintf("booking period is not open for summit %s", $this->summit->getId()));
 
-        $criteria   = Criteria::create();
-        $start_date = $reservation->getStartDatetime();
-        $end_date   = $reservation->getEndDatetime();
+        $criteria         = Criteria::create();
+        $start_date       = $reservation->getStartDatetime();
+        $end_date         = $reservation->getEndDatetime();
+        $summit           = $this->summit;
+        $local_start_date = $summit->convertDateFromUTC2TimeZone(clone $start_date);
+        $local_end_date   = $summit->convertDateFromUTC2TimeZone(clone $end_date);
+
+        if(!$summit->isTimeFrameOnBookingPeriod($local_start_date, $local_end_date))
+            throw new ValidationException("requested reservation slot does not belong to summit booking period");
 
         $criteria
             ->where(Criteria::expr()->eq('start_datetime', $start_date))
@@ -98,15 +104,8 @@ class SummitBookableVenueRoom extends SummitVenueRoom
         if($this->reservations->matching($criteria)->count() > 0)
             throw new ValidationException(sprintf("reservation overlaps an existent reservation (2)"));
 
-        $summit           = $this->summit;
-
-        $local_start_date = $summit->convertDateFromUTC2TimeZone($start_date);
-        $local_end_date   = $summit->convertDateFromUTC2TimeZone($end_date);
         $start_time       = $summit->getMeetingRoomBookingStartTime();
         $end_time         = $summit->getMeetingRoomBookingEndTime();
-
-        if(!$summit->isTimeFrameInsideSummitDuration($local_start_date, $local_end_date))
-            throw new ValidationException("requested reservation period does not belong to summit period");
 
         $local_start_time = new \DateTime("now", $this->summit->getTimeZone());
         $local_start_time->setTime(
@@ -226,10 +225,13 @@ class SummitBookableVenueRoom extends SummitVenueRoom
      * @return array
      * @throws ValidationException
      */
-    public function getAvailableSlots(\DateTime $day):array{
+    public function getAvailableSlots(\DateTime $day): array {
         $availableSlots     = [];
         $summit             = $this->summit;
-        $day                = $day->setTimezone($summit->getTimeZone())->setTime(0, 0,0);
+        $test_date          = clone $day;
+        // reset time only interest the date portion
+        $test_date          = $test_date->setTimezone($summit->getTimeZone())->setTime(0, 0,0);
+
         $booking_start_time = $summit->getMeetingRoomBookingStartTime();
         if(is_null($booking_start_time))
             throw new ValidationException("MeetingRoomBookingStartTime is null!");
@@ -238,44 +240,51 @@ class SummitBookableVenueRoom extends SummitVenueRoom
         if(is_null($booking_end_time))
             throw new ValidationException("MeetingRoomBookingEndTime is null!");
 
-        $booking_slot_len   = $summit->getMeetingRoomBookingSlotLength();
-        $start_datetime     = clone $day;
-        $end_datetime       = clone $day;
+        $booking_slot_len     = $summit->getMeetingRoomBookingSlotLength();
+        $local_start_datetime = clone $test_date;
+        $local_end_datetime   = clone $test_date;
 
-        $start_datetime->setTime(
+        // set the time frames
+
+        $local_start_datetime->setTimezone($summit->getTimeZone())->setTime(
             intval($booking_start_time->format("H")),
             intval($booking_start_time->format("i")),
             0);
-        $start_datetime->setTimezone($summit->getTimeZone());
 
-        $end_datetime->setTime(
+        $local_end_datetime->setTimezone($summit->getTimeZone())->setTime(
             intval($booking_end_time->format("H")),
             intval($booking_end_time->format("i")),
             00);
-        $end_datetime->setTimezone($summit->getTimeZone());
+
+        // check if day belongs to booking period
+
+        if(!$summit->isTimeFrameOnBookingPeriod($local_start_datetime, $local_end_datetime))
+            throw new ValidationException("requested day does not belong to summit booking period");
+
+        // now we have the allowed time frame for that particular day
+
         $criteria = Criteria::create();
-        if(!$summit->isTimeFrameInsideSummitDuration($start_datetime, $end_datetime))
-            throw new ValidationException("requested day does not belong to summit period");
 
         $criteria
-            ->where(Criteria::expr()->gte('start_datetime', $summit->convertDateFromTimeZone2UTC($start_datetime)))
-            ->andWhere(Criteria::expr()->lte('end_datetime', $summit->convertDateFromTimeZone2UTC($end_datetime)))
+            ->where(Criteria::expr()->gte('start_datetime', $summit->convertDateFromTimeZone2UTC($local_start_datetime)))
+            ->andWhere(Criteria::expr()->lte('end_datetime', $summit->convertDateFromTimeZone2UTC($local_end_datetime)))
             ->andWhere(Criteria::expr()->notIn("status", [
                 SummitRoomReservation::RequestedRefundStatus,
                 SummitRoomReservation::RefundedStatus,
                 SummitRoomReservation::Canceled,
             ]));
 
-        $reservations = $this->reservations->matching($criteria);
-
-        while($start_datetime <= $end_datetime) {
-            $current_time_slot_end = clone $start_datetime;
+        $reservations   = $this->reservations->matching($criteria);
+        // calculate all possible slots
+        while($local_start_datetime <= $local_end_datetime) {
+            $current_time_slot_end = clone $local_start_datetime;
             $current_time_slot_end->add(new \DateInterval("PT" . $booking_slot_len . 'M'));
-            if($current_time_slot_end<=$end_datetime)
-                $availableSlots[$start_datetime->format('Y-m-d H:i:s').'|'.$current_time_slot_end->format('Y-m-d H:i:s')] = true;
-            $start_datetime = $current_time_slot_end;
+            if($current_time_slot_end <= $local_end_datetime)
+                $availableSlots[$local_start_datetime->format('Y-m-d H:i:s').'|'.$current_time_slot_end->format('Y-m-d H:i:s')] = true;
+            $local_start_datetime = $current_time_slot_end;
         }
 
+        // and mark all not available slots on that time frame
         foreach ($reservations as $reservation){
             if(!$reservation instanceof SummitRoomReservation) continue;
             $availableSlots[
@@ -294,8 +303,10 @@ class SummitBookableVenueRoom extends SummitVenueRoom
      * @throws ValidationException
      */
     public function getFreeSlots(\DateTime $day):array{
-        $slots = $this->getAvailableSlots($day);
+
+        $slots      = $this->getAvailableSlots(clone $day);
         $free_slots = [];
+
         foreach ($slots as $label => $status){
             if(!$status) continue;
             $free_slots[] = $label;

@@ -13,16 +13,25 @@
  **/
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use App\Services\Apis\ExternalScheduleFeeds\IExternalScheduleFeedFactory;
+use App\Models\Foundation\Main\IGroup;
 /**
  * Class OAuth2SummitApiTest
  */
 final class OAuth2SummitApiTest extends ProtectedApiTest
 {
 
+    use InsertSummitTestData;
+
+    protected function setUp()
+    {
+        parent::setUp();
+        self::insertTestData();
+    }
+
     public function tearDown()
     {
+        self::clearTestData();
         Mockery::close();
     }
 
@@ -71,8 +80,66 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
 
         $start = time();
         $params = [
-            'relations'=>'none',
-            'expand'   => 'none',
+            'relations' => 'none',
+            'expand'    => 'none',
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitApiController@getAllSummits",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $summits = json_decode($content);
+        $end   = time();
+        $delta = $end - $start;
+        echo "execution call " . $delta . " seconds ...";
+        $this->assertTrue(!is_null($summits));
+        $this->assertTrue($summits->total == 1);
+        $this->assertResponseStatus(200);
+    }
+
+    public function testGetAllSummitsNoPermissions()
+    {
+        self::setMemberDefaultGroup(IGroup::SummitAdministrators);
+
+        $start = time();
+        $params = [
+            'relations' => 'none',
+            'expand'    => 'none',
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitApiController@getAllSummits",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $summits = json_decode($content);
+        $end   = time();
+        $delta = $end - $start;
+        echo "execution call " . $delta . " seconds ...";
+        $this->assertResponseStatus(403);
+    }
+
+    public function testGetAllSummitsAndPaymentProfiles()
+    {
+        $start = time();
+        $params = [
+            'relations' => 'payment_profiles',
+            'expand'    => 'none',
         ];
 
         $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
@@ -99,8 +166,52 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
     {
 
         $params = [
-
             'expand' => 'schedule',
+            'id'     => $summit_id
+        ];
+
+        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
+        $start = time();
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitApiController@getSummit",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+        $end   = time();
+        $delta = $end - $start;
+        echo "execution call " . $delta . " seconds ...";
+        $content = $response->getContent();
+        $summit = json_decode($content);
+        $this->assertTrue(!is_null($summit));
+        $this->assertResponseStatus(200);
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitApiController@getSummit",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $content = $response->getContent();
+        $summit  = json_decode($content);
+        $this->assertTrue(!is_null($summit));
+        $this->assertTrue(count($summit->schedule) > 0);
+        $this->assertResponseStatus(200);
+    }
+
+    public function testGetSummit2($summit_id = 12)
+    {
+
+        $params = [
+
+            'expand' => 'event_types,tracks',
             'id'     => $summit_id
         ];
 

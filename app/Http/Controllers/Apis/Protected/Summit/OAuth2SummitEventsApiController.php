@@ -435,6 +435,9 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 'end_date'                       => 'sometimes|required_with:start_date|date_format:U|after:start_date',
                 'track_id'                       => 'required|integer',
                 'rsvp_link'                      => 'sometimes|url',
+                'streaming_url'                  => 'sometimes|url',
+                'etherpad_link'                  => 'sometimes|url',
+                'meeting_url'                    => 'sometimes|url',
                 'rsvp_template_id'               => 'sometimes|integer',
                 'rsvp_max_user_number'           => 'required_with:rsvp_template_id|integer|min:0',
                 'rsvp_max_user_wait_list_number' => 'required_with:rsvp_template_id|integer|min:0',
@@ -451,6 +454,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 'moderator_speaker_id'           =>  'sometimes|integer',
                 // group event
                 'groups'                         =>  'sometimes|int_array',
+                'selection_plan_id'              =>  'sometimes|integer',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -512,6 +516,9 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 'title'                          => 'sometimes|string|max:255',
                 'description'                    => 'sometimes|string|max:1100',
                 'rsvp_link'                      => 'sometimes|url',
+                'streaming_url'                  => 'sometimes|url',
+                'etherpad_link'                  => 'sometimes|url',
+                'meeting_url'                    => 'sometimes|url',
                 'rsvp_template_id'               => 'sometimes|integer',
                 'rsvp_max_user_number'           => 'required_with:rsvp_template_id|integer|min:0',
                 'rsvp_max_user_wait_list_number' => 'required_with:rsvp_template_id|integer|min:0',
@@ -533,7 +540,8 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 'moderator_speaker_id'           => 'sometimes|integer',
                 // group event
                 'groups'                         => 'sometimes|int_array',
-                'occupancy'                      => 'sometimes|in:EMPTY,25%,50%,75%,FULL'
+                'occupancy'                      => 'sometimes|in:EMPTY,25%,50%,75%,FULL',
+                'selection_plan_id'              => 'sometimes|integer',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -1279,6 +1287,60 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($event)->serialize());
 
+        }
+        catch (ValidationException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message'=> $ex2->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    public function addEventImage(LaravelRequest $request, $summit_id, $event_id){
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $file = $request->file('file');
+            if (is_null($file)) {
+                return $this->error412(array('file param not set!'));
+            }
+
+            $image = $this->service->addEventImage($summit, $event_id, $file);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($image)->serialize());
+
+        }
+        catch (ValidationException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message'=> $ex2->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    public function deleteEventImage($summit_id, $event_id) {
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+            $this->service->removeEventImage($summit, $event_id);
+            return $this->deleted();
         }
         catch (ValidationException $ex1)
         {

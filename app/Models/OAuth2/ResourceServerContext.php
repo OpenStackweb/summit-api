@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Models\Foundation\Main\IGroup;
 use App\Services\Model\IMemberService;
 use Illuminate\Support\Facades\Log;
@@ -167,9 +168,8 @@ final class ResourceServerContext implements IResourceServerContext
             $member = null;
             // legacy test, for new IDP version this value came on null
             $id = $this->getCurrentUserExternalId();
-            Log::debug(sprintf("ResourceServerContext::getCurrentUser trying to get user by ExternalId %s", $id));
             if(!is_null($id) && !empty($id)){
-                $member = $this->member_repository->getById(intval($id));
+                $member = $this->member_repository->getByExternalIdExclusiveLock(intval($id));
                 if(!is_null($member)) return $this->checkGroups($member);
             }
 
@@ -178,11 +178,10 @@ final class ResourceServerContext implements IResourceServerContext
                 // try to get by external id
                 $id = $this->getCurrentUserId();
 
-                Log::debug(sprintf("ResourceServerContext::getCurrentUser trying to get user by id %s", $id));
                 if(is_null($id)) {
                     return null;
                 }
-                $member = $this->member_repository->getByExternalId(intval($id));
+                $member = $this->member_repository->getByExternalIdExclusiveLock(intval($id));
 
                 if(!is_null($member)){
                     $user_first_name  = $this->getAuthContextVar('user_first_name');
@@ -208,7 +207,7 @@ final class ResourceServerContext implements IResourceServerContext
                 $user_email       = $this->getAuthContextVar('user_email');
                 // at last resort try to get by email
                 Log::debug(sprintf("ResourceServerContext::getCurrentUser getting user by email %s", $user_email));
-                $member = $this->member_repository->getByEmail($user_email);
+                $member = $this->member_repository->getByEmailExclusiveLock($user_email);
 
                 if (is_null($member))  {// user exist on IDP but not in our local DB, proceed to create it
                     Log::debug
@@ -252,41 +251,20 @@ final class ResourceServerContext implements IResourceServerContext
      * @return Member
      */
     private function checkGroups(Member $member):Member{
+        Log::debug(sprintf("ResourceServerContext::checkGroups member %s %s", $member->getId(), $member->getEmail()));
         // check groups
-        $idpGroups = $this->getCurrentUserGroups();
-        foreach ($idpGroups as $idpGroup){
-            if(!isset($idp_group['slug'])) continue;
-            $code = trim($idpGroup['slug']);
-            if(!$member->isOnGroup($code, true)){
-                // add 2 group
-                $group = $this->group_repository->getBySlug($code);
-                if(is_null($group)){
-                    $group = new Group();
-                    $group->setCode($code);
-                    $group->setDescription($code);
-                    $group->setTitle($code);
-                    $this->group_repository->add($group, true);
-                }
-                $member->add2Group($group);
+        $groups = [];
+        foreach ($this->getCurrentUserGroups() as $idpGroup){
+            Log::debug(sprintf("ResourceServerContext::checkGroups member %s %s group %s", $member->getId(), $member->getEmail(), json_encode($idpGroup)));
+            $slug = $idpGroup['slug'] ?? '';
+            Log::debug(sprintf("ResourceServerContext::checkGroups member %s %s group slug %s", $member->getId(), $member->getEmail(), $slug));
+            if(empty($slug)){
+                continue;
             }
-            // map from super admin to admin
-            if($code === IGroup::SuperAdmins){
-                // try to add to admin too
-                if(!$member->isOnGroup(IGroup::Administrators, true)){
-                    // add it
-                    $group = $this->group_repository->getBySlug(IGroup::Administrators);
-                    if(is_null($group)){
-                        $group = new Group();
-                        $group->setCode(IGroup::Administrators);
-                        $group->setDescription(IGroup::Administrators);
-                        $group->setTitle(IGroup::Administrators);
-                        $this->group_repository->add($group, true);
-                    }
-                    $member->add2Group($group);
-                }
-            }
+            $groups[] = trim($slug);
+            Log::debug(sprintf("ResourceServerContext::checkGroups member %s %s slug %s", $member->getId(), $member->getEmail(), trim($idpGroup['slug'])));
         }
-        return $member;
+        return $this->member_service->synchronizeGroups($member, $groups);
     }
     /**
      * @return array
@@ -294,6 +272,10 @@ final class ResourceServerContext implements IResourceServerContext
     public function getCurrentUserGroups(): array
     {
         $res = $this->getAuthContextVar('user_groups');
-        return is_null($res)? [] : $res;
+        if(is_null($res)){
+            Log::debug("ResourceServerContext::getCurrentUserGroups is null");
+            return [];
+        }
+        return $res;
     }
 }

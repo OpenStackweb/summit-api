@@ -83,6 +83,7 @@ final class OAuth2TicketTypesApiTest extends ProtectedApiTest
         return $ticket_type;
     }
 
+
     /**
      * @param int $summit_id
      * @return mixed

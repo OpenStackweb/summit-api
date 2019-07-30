@@ -54,14 +54,37 @@ return [
             'visibility' => 'public',
         ],
 
-        's3' => [
-            'driver' => 's3',
-            'key' => 'your-key',
-            'secret' => 'your-secret',
-            'region' => 'your-region',
-            'bucket' => 'your-bucket',
+        'assets' => [
+            'driver'                => 'swift',
+            'auth_url'              => env('CLOUD_STORAGE_AUTH_URL'),
+            'region'                => env('CLOUD_STORAGE_REGION'),
+            'app_credential_id'     => env('CLOUD_STORAGE_APP_CREDENTIAL_ID'),
+            'app_credential_secret' => env('CLOUD_STORAGE_APP_CREDENTIAL_SECRET'),
+            'container'             => env('CLOUD_STORAGE_ASSETS_CONTAINER'),
         ],
 
+        'static_images' => [
+            'driver'                => 'swift',
+            'auth_url'              => env('CLOUD_STORAGE_AUTH_URL'),
+            'region'                => env('CLOUD_STORAGE_REGION'),
+            'app_credential_id'     => env('CLOUD_STORAGE_APP_CREDENTIAL_ID'),
+            'app_credential_secret' => env('CLOUD_STORAGE_APP_CREDENTIAL_SECRET'),
+            'container'             => env('CLOUD_STORAGE_IMAGES_CONTAINER'),
+        ],
+
+        'dropbox' => [
+            'driver' => 'dropbox',
+            'authorization_token' => env('DROPBOX_ACCESS_TOKEN'),
+        ],
+
+        'swift' => [
+            'driver'                => 'swift',
+            'auth_url'              => env('CLOUD_STORAGE_AUTH_URL'),
+            'region'                => env('CLOUD_STORAGE_REGION'),
+            'app_credential_id'     => env('CLOUD_STORAGE_APP_CREDENTIAL_ID'),
+            'app_credential_secret' => env('CLOUD_STORAGE_APP_CREDENTIAL_SECRET'),
+            'container'             => env('CLOUD_STORAGE_MEDIA_UPLOADS_CONTAINER'),
+        ]
     ],
 
 ];

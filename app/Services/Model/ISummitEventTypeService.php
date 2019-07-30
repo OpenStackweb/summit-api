@@ -57,4 +57,24 @@ interface ISummitEventTypeService
      */
     public function seedDefaultEventTypes(Summit $summit);
 
+    /**
+     * @param Summit $summit
+     * @param int $event_type_id
+     * @param int $document_id
+     * @return SummitEventType
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addSummitDocumentToEventType(Summit $summit, int $event_type_id, int $document_id):SummitEventType;
+
+    /**
+     * @param Summit $summit
+     * @param int $event_type_id
+     * @param int $document_id
+     * @return SummitEventType
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function removeSummitDocumentFromEventType(Summit $summit, int $event_type_id, int $document_id):SummitEventType;
+
 }

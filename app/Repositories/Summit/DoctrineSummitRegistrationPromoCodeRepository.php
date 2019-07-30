@@ -14,10 +14,14 @@
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Query\Expr\Join;
 use models\summit\ISummitRegistrationPromoCodeRepository;
+use models\summit\MemberSummitRegistrationDiscountCode;
 use models\summit\MemberSummitRegistrationPromoCode;
+use models\summit\SpeakerSummitRegistrationDiscountCode;
 use models\summit\SpeakerSummitRegistrationPromoCode;
+use models\summit\SponsorSummitRegistrationDiscountCode;
 use models\summit\SponsorSummitRegistrationPromoCode;
 use models\summit\Summit;
+use models\summit\SummitRegistrationDiscountCode;
 use models\summit\SummitRegistrationPromoCode;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineInstanceOfFilterMapping;
@@ -47,16 +51,12 @@ class DoctrineSummitRegistrationPromoCodeRepository
      * @param string $code
      * @return SummitRegistrationPromoCode|null
      */
-    public function getByCode($code){
+    public function getByCode(string $code):?SummitRegistrationPromoCode{
         $query  =   $this->getEntityManager()
             ->createQueryBuilder()
-            ->select("pc")
-            ->from(SummitRegistrationPromoCode::class, "pc")
-            ->leftJoin(MemberSummitRegistrationPromoCode::class, 'mpc', 'WITH', 'pc.id = mpc.id')
-            ->leftJoin(SponsorSummitRegistrationPromoCode::class, 'spc', 'WITH', 'mpc.id = spc.id')
-            ->leftJoin(SpeakerSummitRegistrationPromoCode::class, 'spkpc', 'WITH', 'spkpc.id = pc.id')
-
-            ->where("pc.code = :code");
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->where("e.code = :code");
 
         $query->setParameter("code", $code);
 
@@ -67,16 +67,15 @@ class DoctrineSummitRegistrationPromoCodeRepository
     {
         return [
             'code'          => 'pc.code:json_string',
-
             'sponsor' => new DoctrineFilterMapping
             (
-                "(spnr.name :operator :value)"
+                "(spnr.name :operator :value) OR (spnr2.name :operator :value)"
             ),
             'creator'       => new DoctrineFilterMapping
             (
                 "( concat(ct.first_name, ' ', ct.last_name) :operator :value ".
                 "OR ct.first_name :operator :value ".
-                "OR ct.last_name :operator :value )"
+                "OR ct.last_name :operator :value ) "
             ),
             'creator_email' => new DoctrineFilterMapping
             (
@@ -86,11 +85,15 @@ class DoctrineSummitRegistrationPromoCodeRepository
             (
                 "( concat(owr.first_name, ' ', owr.last_name) :operator :value ".
                 "OR owr.first_name :operator :value ".
-                "OR owr.last_name :operator :value )"
+                "OR owr.last_name :operator :value ) ".
+                "OR ( concat(owr2.first_name, ' ', owr2.last_name) :operator :value ".
+                "OR owr2.first_name :operator :value ".
+                "OR owr2.last_name :operator :value ) "
             ),
             'owner_email' => new DoctrineFilterMapping
             (
-                "(owr.email :operator :value)"
+                "(owr.email :operator :value) ".
+                "OR (owr2.email :operator :value) "
             ),
             'speaker'       => new DoctrineFilterMapping
             (
@@ -99,22 +102,35 @@ class DoctrineSummitRegistrationPromoCodeRepository
                 "OR spkr.first_name :operator :value ".
                 "OR spkr.last_name :operator :value ".
                 "OR spmm.first_name :operator :value ".
-                "OR spmm.last_name :operator :value )"
+                "OR spmm.last_name :operator :value ) ".
+                "OR ( concat(spkr2.first_name, ' ', spkr2.last_name) :operator :value ".
+                "OR concat(spmm2.first_name, ' ', spmm2.last_name) :operator :value ".
+                "OR spkr2.first_name :operator :value ".
+                "OR spkr2.last_name :operator :value ".
+                "OR spmm2.first_name :operator :value ".
+                "OR spmm2.last_name :operator :value ) "
             ),
             'speaker_email' => new DoctrineFilterMapping
             (
-                "(sprr.email :operator :value OR spmm.email :operator :value)"
+                "(sprr.email :operator :value OR spmm.email :operator :value) ".
+                "OR (sprr2.email :operator :value OR spmm2.email :operator :value) "
             ),
             'type' => new DoctrineFilterMapping
             (
-                "(mpc.type :operator :value OR spkpc.type :operator :value)"
+                "(mpc.type :operator :value OR spkpc.type :operator :value) ".
+                        " OR (mdc.type :operator :value OR spkdc.type :operator :value) "
             ),
            'class_name' => new DoctrineInstanceOfFilterMapping(
                "pc",
                [
-                   MemberSummitRegistrationPromoCode::ClassName  => MemberSummitRegistrationPromoCode::class,
-                   SpeakerSummitRegistrationPromoCode::ClassName => SpeakerSummitRegistrationPromoCode::class,
-                   SponsorSummitRegistrationPromoCode::ClassName => SponsorSummitRegistrationPromoCode::class
+                   SummitRegistrationPromoCode::ClassName           => SummitRegistrationPromoCode::class,
+                   SummitRegistrationDiscountCode::ClassName        => SummitRegistrationDiscountCode::class,
+                   MemberSummitRegistrationPromoCode::ClassName     => MemberSummitRegistrationPromoCode::class,
+                   SpeakerSummitRegistrationPromoCode::ClassName    => SpeakerSummitRegistrationPromoCode::class,
+                   SponsorSummitRegistrationPromoCode::ClassName    => SponsorSummitRegistrationPromoCode::class,
+                   MemberSummitRegistrationDiscountCode::ClassName  => MemberSummitRegistrationDiscountCode::class,
+                   SpeakerSummitRegistrationDiscountCode::ClassName => SpeakerSummitRegistrationDiscountCode::class,
+                   SponsorSummitRegistrationDiscountCode::ClassName => SponsorSummitRegistrationDiscountCode::class,
                ]
            )
         ];
@@ -146,20 +162,29 @@ class DoctrineSummitRegistrationPromoCodeRepository
         Order $order   = null
     )
     {
-        $query  =   $this->getEntityManager()
+        $query  =  $this->getEntityManager()
                     ->createQueryBuilder()
                     ->select("pc")
-                    ->from(SummitRegistrationPromoCode::class, "pc")
+                    ->from($this->getBaseEntity(), "pc")
+                    ->leftJoin(SummitRegistrationDiscountCode::class, 'dc', 'WITH', 'pc.id = dc.id')
+                    ->leftJoin(MemberSummitRegistrationDiscountCode::class, 'mdc', 'WITH', 'pc.id = mdc.id')
+                    ->leftJoin(SpeakerSummitRegistrationDiscountCode::class, 'spkdc', 'WITH', 'pc.id = spkdc.id')
+                    ->leftJoin(SponsorSummitRegistrationDiscountCode::class, 'spdc', 'WITH', 'pc.id = spdc.id')
                     ->leftJoin(MemberSummitRegistrationPromoCode::class, 'mpc', 'WITH', 'pc.id = mpc.id')
                     ->leftJoin(SponsorSummitRegistrationPromoCode::class, 'spc', 'WITH', 'mpc.id = spc.id')
                     ->leftJoin(SpeakerSummitRegistrationPromoCode::class, 'spkpc', 'WITH', 'spkpc.id = pc.id')
                     ->leftJoin('pc.summit', 's')
                     ->leftJoin('pc.creator', 'ct')
                     ->leftJoin("spkpc.speaker", "spkr")
+                    ->leftJoin("spkdc.speaker", "spkr2")
                     ->leftJoin('spkr.member', "spmm", Join::LEFT_JOIN)
+                    ->leftJoin('spkr2.member', "spmm2", Join::LEFT_JOIN)
                     ->leftJoin('spkr.registration_request', "sprr", Join::LEFT_JOIN)
+                    ->leftJoin('spkr2.registration_request', "sprr2", Join::LEFT_JOIN)
                     ->leftJoin("mpc.owner", "owr")
+                    ->leftJoin("mdc.owner", "owr2")
                     ->leftJoin("spc.sponsor", "spnr")
+                    ->leftJoin("spdc.sponsor", "spnr2")
                     ->where("s.id = :summit_id");
 
         $query->setParameter("summit_id", $summit->getId());
@@ -203,9 +228,63 @@ class DoctrineSummitRegistrationPromoCodeRepository
     public function getMetadata(Summit $summit)
     {
        return [
+           SummitRegistrationPromoCode::getMetadata(),
+           SummitRegistrationDiscountCode::getMetadata(),
            MemberSummitRegistrationPromoCode::getMetadata(),
            SpeakerSummitRegistrationPromoCode::getMetadata(),
-           SponsorSummitRegistrationPromoCode::getMetadata()
+           SponsorSummitRegistrationPromoCode::getMetadata(),
+           SponsorSummitRegistrationDiscountCode::getMetadata(),
+           SpeakerSummitRegistrationDiscountCode::getMetadata(),
+           MemberSummitRegistrationDiscountCode::getMetadata(),
        ];
+    }
+
+    /**
+     * @param Summit $sumit
+     * @param array $codes
+     * @return SummitRegistrationPromoCode|null
+     */
+    public function getByValuesExclusiveLock(Summit $summit, array $codes)
+    {
+        $query  =   $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->leftJoin('e.summit', 's')
+            ->where("s.id = :summit_id")
+            ->andWhere("e.code in (:codes)");
+
+        $query->setParameter("summit_id", $summit->getId());
+        $query->setParameter("codes", $codes);
+        return $query->getQuery()
+            ->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE)
+            ->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)
+            ->getResult();
+    }
+
+    /**
+     * @param Summit $summit
+     * @param string $code
+     * @return SummitRegistrationPromoCode|null
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws \Doctrine\ORM\TransactionRequiredException
+     */
+    public function getByValueExclusiveLock(Summit $summit, string $code): ?SummitRegistrationPromoCode
+    {
+        $query  =   $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->leftJoin('e.summit', 's')
+            ->where("s.id = :summit_id")
+            ->andWhere("e.code = :code");
+
+        $query->setParameter("code", strtoupper(trim($code)));
+        $query->setParameter("summit_id", $summit->getId());
+
+        return $query->getQuery()
+            ->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE)
+            ->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)
+            ->getOneOrNullResult();
     }
 }

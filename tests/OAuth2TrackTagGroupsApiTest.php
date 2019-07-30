@@ -188,7 +188,7 @@ final class OAuth2TrackTagGroupsApiTest extends ProtectedApiTest
         $params = [
             'id' => $summit_id,
             //AND FILTER
-            'filter' => ['tag=@101'],
+            'filter' => ['tag=@101||104'],
             'order'  => '+id',
             'expand' => 'tag,track_tag_group'
         ];

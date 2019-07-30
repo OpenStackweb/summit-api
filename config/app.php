@@ -19,6 +19,9 @@ return [
 
     'env' => env('APP_ENV', 'dev'),
 
+    // emails will be send to this email on dev/testing mode
+    'dev_email_to' => env('DEV_EMAIL_TO', null),
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode
@@ -152,13 +155,18 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         App\Repositories\RepositoriesProvider::class,
-        services\ServicesProvider::class,
+        App\Services\FileSystem\Swift\SwiftServiceProvider::class,
+        \App\Services\FileSystem\Dropbox\DropboxServiceProvider::class,
+        services\BaseServicesProvider::class,
+        services\ModelServicesProvider::class,
         factories\FactoriesProvider::class,
         App\Http\Utils\UtilsProvider::class,
         libs\utils\CustomDoctrineServiceProvider::class,
         LaravelDoctrine\Extensions\BeberleiExtensionsServiceProvider::class,
         Sichikawa\LaravelSendgridDriver\SendgridTransportServiceProvider::class,
         LaravelDoctrine\Migrations\MigrationsServiceProvider::class,
+        SimpleSoftwareIO\QrCode\QrCodeServiceProvider::class,
+        \App\Queue\RabbitMQServiceProvider::class,
     ],
 
     /*
@@ -206,7 +214,8 @@ return [
         'EntityManager' => LaravelDoctrine\ORM\Facades\EntityManager::class,
         'Registry'      => LaravelDoctrine\ORM\Facades\Registry::class,
         'Doctrine'      => LaravelDoctrine\ORM\Facades\Doctrine::class,
-        'Encryption' => services\utils\Facades\Encryption::class,
+        'Encryption'    => services\utils\Facades\Encryption::class,
+        'QrCode'        => SimpleSoftwareIO\QrCode\Facades\QrCode::class,
     ],
 
     'app_name'    => env('APP_NAME', 'Open Infrastructure Summit'),

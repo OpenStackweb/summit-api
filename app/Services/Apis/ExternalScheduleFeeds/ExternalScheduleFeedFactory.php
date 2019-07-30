@@ -14,6 +14,7 @@
 use models\summit\Summit;
 use GuzzleHttp\ClientInterface;
 use Illuminate\Support\Facades\App;
+use App\Models\Foundation\Summit\ISummitExternalScheduleFeedType;
 /**
  * Class ExternalScheduleFeedFactory
  * @package App\Services\Apis\ExternalScheduleFeeds
@@ -29,9 +30,9 @@ final class ExternalScheduleFeedFactory implements IExternalScheduleFeedFactory
     {
        $client = App::make(ClientInterface::class);
        switch ($summit->getApiFeedType()){
-           case IExternalScheduleFeedFactory::SchedType:
+           case ISummitExternalScheduleFeedType::SchedType:
                return new SchedScheduleFeed($summit, $client);
-           case IExternalScheduleFeedFactory::VanderpoelType:
+           case ISummitExternalScheduleFeedType::VanderpoelType:
                return new VanderpoelScheduleFeed($summit, $client);
        }
        return null;

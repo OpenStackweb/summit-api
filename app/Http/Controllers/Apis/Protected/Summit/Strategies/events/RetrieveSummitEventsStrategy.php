@@ -141,6 +141,7 @@ abstract class RetrieveSummitEventsStrategy
             'speaker_email'    => ['=@', '=='],
             'selection_status' => ['=='],
             'id'               => ['=='],
+            'selection_plan_id' => ['=='],
         ];
     }
 
@@ -164,6 +165,7 @@ abstract class RetrieveSummitEventsStrategy
             'speaker_id'      => 'sometimes|integer',
             'location_id'     => 'sometimes|integer',
             'id'              => 'sometimes|integer',
+            'selection_plan_id' => 'sometimes|integer',
         ];
     }
 }

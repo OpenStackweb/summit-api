@@ -23,8 +23,6 @@ use Illuminate\Support\Facades\Response;
 abstract class JsonController extends Controller
 {
 
-    protected $log_service;
-
     public function __construct()
     {
     }
@@ -76,7 +74,8 @@ abstract class JsonController extends Controller
      */
     protected function ok($data = 'ok')
     {
-        $res = Response::json($data, 200);
+        $res = $this->response2XX(200, $data);
+
         //jsonp
         if (Input::has('callback')) {
             $res->setCallback(Input::get('callback'));
@@ -92,17 +91,31 @@ abstract class JsonController extends Controller
 
     protected function error404($data = ['message' => 'Entity Not Found'])
     {
+        if(!is_array($data)){
+            $data = ['message' => $data];
+        }
         return Response::json($data, 404);
     }
 
     protected function error403($data = ['message' => 'Forbidden'])
     {
+        if(!is_array($data)){
+            $data = ['message' => $data];
+        }
         return Response::json($data, 403);
     }
 
     protected function error401($data = ['message' => 'You don\'t have access to this item through the API.'])
     {
+        if(!is_array($data)){
+            $data = ['message' => $data];
+        }
         return Response::json($data, 401);
+    }
+
+    protected function response2XX($code = 200, $data = '')
+    {
+        return Response::json($data, $code);
     }
 
     /**
@@ -121,6 +134,9 @@ abstract class JsonController extends Controller
      */
     protected function error412($messages)
     {
+        if(!is_array($messages)){
+            $messages = [$messages];
+        }
         return Response::json(array('message' => 'Validation Failed', 'errors' => $messages), 412);
     }
 
@@ -145,12 +161,13 @@ abstract class JsonController extends Controller
      * @param array $columns
      * @return \Illuminate\Http\Response
      */
-    private function csv($filename, array $items,  array $formatters = [], $field_separator = ",", $mime_type = 'application/vnd.ms-excel', array $columns = []){
+    protected function csv($filename, array $items,  array $formatters = [], $field_separator = ",", $mime_type = 'application/vnd.ms-excel', array $columns = []){
         $headers = [
             'Cache-Control'             => 'must-revalidate, post-check=0, pre-check=0',
             'Content-type'              => $mime_type,
             'Content-Transfer-Encoding' => 'binary',
             'Content-Disposition'       => 'attachment; filename='.$filename.".csv",
+            'Last-Modified: '           => gmdate('D, d M Y H:i:s').' GMT',
             'Expires'                   => '0',
             'Pragma'                    => 'public',
         ];
@@ -174,5 +191,24 @@ abstract class JsonController extends Controller
             200,
             $headers
         );
+    }
+
+    /**
+     * @param string $filename
+     * @param string $content
+     * @return \Illuminate\Http\Response
+     */
+    protected function pdf(string $filename, string $content){
+        $headers = [
+            'Cache-Control'             => 'must-revalidate, post-check=0, pre-check=0',
+            'Content-type'              => "application/pdf",
+            'Content-Transfer-Encoding' => 'binary',
+            'Content-Disposition'       => 'attachment; filename='.basename($filename),
+            'Expires'                   => '0',
+            'Last-Modified: '           => gmdate('D, d M Y H:i:s').' GMT',
+            'Pragma'                    => 'public',
+        ];
+
+        return Response::make($content, 200, $headers);
     }
 }

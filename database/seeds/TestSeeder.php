@@ -28,5 +28,9 @@ final class TestSeeder extends Seeder
         $this->call('ApiEndpointsSeeder');
         // summit
         $this->call('DefaultEventTypesSeeder');
+        $this->call('DefaultPrintRulesSeeder');
+        $this->call('SummitEmailFlowTypeSeeder');
+        $this->call('SummitEmailFlowEventSeeder');
+        $this->call('SummitMediaFileTypeSeeder');
     }
 }

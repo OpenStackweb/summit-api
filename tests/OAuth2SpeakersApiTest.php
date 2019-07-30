@@ -408,7 +408,7 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
             'page' => 1,
             'per_page' => 10,
             'filter' => [
-                'first_name=@b,last_name=@b,email=@b'
+                'first_name=@b||a,last_name=@b,email=@b'
             ],
             'order' => '+id'
         ];
@@ -472,7 +472,7 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
             'id' => 23,
             'page' => 1,
             'per_page' => 10,
-            'filter' => 'id==13869,id==19'
+            'filter[]' => 'id==13869||id==19'
         ];
 
         $headers = [
@@ -482,7 +482,38 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
 
         $response = $this->action(
             "GET",
-            "OAuth2SummitSpeakersApiController@getSpeakers",
+            "OAuth2SummitSpeakersApiController@getSpeakersOnSchedule",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $speakers = json_decode($content);
+        $this->assertTrue(!is_null($speakers));
+    }
+
+    public function testGetSpeakersOnSchedule($summit_id = 23)
+    {
+        $params = [
+
+            'id' => $summit_id,
+            'page' => 1,
+            'per_page' => 10,
+            'filter' => ['start_date>=1509753600','end_date<=1509839999']
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakersOnSchedule",
             $params,
             [],
             [],

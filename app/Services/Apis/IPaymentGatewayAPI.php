@@ -74,9 +74,9 @@ interface IPaymentGatewayAPI
 
     /**
      * @param string $cart_id
-     * @return string
+     * @return string|null
      */
-    public function getCartStatus(string $cart_id):string;
+    public function getCartStatus(string $cart_id):?string;
 
     /**
      * @param string $status

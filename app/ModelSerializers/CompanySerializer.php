@@ -12,15 +12,18 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class CompanySerializer
  * @package ModelSerializers
  */
 final class CompanySerializer extends SilverStripeSerializer
 {
-    protected static $array_mappings = array
-    (
+    protected static $array_mappings = [
         'Name' => 'name:json_string',
-    );
+        'LogoUrl' => 'logo:json_url',
+        'BigLogoUrl' => 'big_logo:json_url',
+        'Description' => 'description:json_string',
+        'Industry' => 'industry:json_string',
+        'Url' => 'url:json_string',
+    ];
 }

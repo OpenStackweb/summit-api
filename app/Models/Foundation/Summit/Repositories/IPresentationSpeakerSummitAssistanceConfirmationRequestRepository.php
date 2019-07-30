@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use models\summit\PresentationSpeaker;
+use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
 use models\summit\Summit;
 use models\utils\IBaseRepository;
 use utils\Filter;
@@ -32,4 +35,17 @@ interface IPresentationSpeakerSummitAssistanceConfirmationRequestRepository
      * @return PagingResponse
      */
     public function getBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+
+    /**
+     * @param PresentationSpeaker $speaker
+     * @param Summit $summit
+     * @return PresentationSpeakerSummitAssistanceConfirmationRequest|null
+     */
+    public function getBySpeaker(PresentationSpeaker $speaker, Summit $summit):?PresentationSpeakerSummitAssistanceConfirmationRequest;
+
+    /**
+     * @param PresentationSpeakerSummitAssistanceConfirmationRequest $request
+     * @return bool
+     */
+    public function existByHash(PresentationSpeakerSummitAssistanceConfirmationRequest $request):bool;
 }

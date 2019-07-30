@@ -21,8 +21,6 @@ final class SummitBookableVenueRoomAvailableSlotSerializer extends AbstractSeria
     protected static $array_mappings = [
         'StartDate'       => 'start_date:datetime_epoch',
         'EndDate'         => 'end_date:datetime_epoch',
-        'LocalStartDate'  => 'local_start_date:datetime_epoch',
-        'LocalEndDate'    => 'local_end_date:datetime_epoch',
         'Free'            => 'is_free:json_boolean',
         'Status'          => 'status:json_string',
     ];

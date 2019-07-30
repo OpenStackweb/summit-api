@@ -41,6 +41,8 @@ class ApiEndpointsSeeder extends Seeder
         $this->seedRegistrationOrderEndpoints();
         $this->seedAttendeeTicketsEndpoints();
         $this->seedAttendeeBadgesEndpoints();
+        $this->seedSummitAdministratorGroupsEndpoints();
+        $this->seedSummitMediaFileTypeEndpoints();
     }
 
     private function seedAttendeeBadgesEndpoints(){
@@ -302,6 +304,7 @@ class ApiEndpointsSeeder extends Seeder
     }
 
     private function seedRegistrationOrderEndpoints(){
+
         $current_realm = Config::get('app.scope_base_realm');
 
         $this->seedApiEndpoints('summits', [
@@ -493,6 +496,21 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name'        => 'resend-order',
+                'route'       => '/api/v1/summits/all/orders/{order_id}/resend',
+                'http_method' => 'PUT',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
                 'name'        => 'revoke-attendee-from-my-order',
                 'route'       => '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}/attendee',
                 'http_method' => 'DELETE',
@@ -509,11 +527,13 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
-                'name'        => 'reinvite-attendee-from-my-order',
+                'name'        => 'reinvite-attendee-from-order',
                 'route'       => '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}/attendee/reinvite',
                 'http_method' => 'PUT',
                 'scopes'      => [
                     sprintf(SummitScopes::UpdateMyRegistrationOrders, $current_realm),
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
                 ],
             ],
             [
@@ -569,6 +589,156 @@ class ApiEndpointsSeeder extends Seeder
                 'scopes'      => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm),
                     sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            // invitations
+            [
+                'name' => 'ingest-registration-invitations',
+                'route' => '/api/v1/summits/{id}/registration-invitations/csv',
+                'http_method' => 'POST',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteRegistrationInvitations, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name' => 'add-registration-invitation',
+                'route' => '/api/v1/summits/{id}/registration-invitations',
+                'http_method' => 'POST',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteRegistrationInvitations, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name' => 'send-registration-invitations',
+                'route' => '/api/v1/summits/{id}/registration-invitations/all/send',
+                'http_method' => 'PUT',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteRegistrationInvitations, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name' => 'get-registration-invitations-csv',
+                'route' => '/api/v1/summits/{id}/registration-invitations/csv',
+                'http_method' => 'GET',
+                'scopes'      => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadRegistrationInvitations, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name' => 'get-registration-invitations',
+                'route' => '/api/v1/summits/{id}/registration-invitations',
+                'http_method' => 'GET',
+                'scopes'      => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadRegistrationInvitations, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name' => 'get-registration-invitation-by-id',
+                'route' => '/api/v1/summits/{id}/registration-invitations/{invitation_id}',
+                'http_method' => 'GET',
+                'scopes'      => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadRegistrationInvitations, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name' => 'delete-registration-invitation-by-id',
+                'route' => '/api/v1/summits/{id}/registration-invitations/{invitation_id}',
+                'http_method' => 'DELETE',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteRegistrationInvitations, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name' => 'update-registration-invitation',
+                'route' => '/api/v1/summits/{id}/registration-invitations/{invitation_id}',
+                'http_method' => 'PUT',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteRegistrationInvitations, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name' => 'delete-registration-all',
+                'route' => '/api/v1/summits/{id}/registration-invitations/all',
+                'http_method' => 'DELETE',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteRegistrationInvitations, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name' => 'get-registration-invitation-by-token',
+                'route' => '/api/v1/summits/all/registration-invitations/{token}',
+                'http_method' => 'GET',
+                'scopes'      => [
+                    sprintf(SummitScopes::ReadMyRegistrationInvitations, $current_realm),
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -639,7 +809,6 @@ class ApiEndpointsSeeder extends Seeder
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
-                    IGroup::SummitAdministrators,
                 ]
             ],
             [
@@ -691,7 +860,6 @@ class ApiEndpointsSeeder extends Seeder
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
-                    IGroup::SummitAdministrators,
                 ]
             ],
             [
@@ -880,6 +1048,77 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'DELETE',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            // payment gateway profiles
+            [
+                'name' => 'get-payment-gateway-profiles',
+                'route' => '/api/v1/summits/{id}/payment-gateway-profiles',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadPaymentProfiles, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-payment-gateway-profile',
+                'route' => '/api/v1/summits/{id}/payment-gateway-profiles',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WritePaymentProfiles, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'get-payment-gateway-profile',
+                'route' => '/api/v1/summits/{id}/payment-gateway-profiles/{payment_profile_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadPaymentProfiles, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'update-payment-gateway-profile',
+                'route' => '/api/v1/summits/{id}/payment-gateway-profiles/{payment_profile_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WritePaymentProfiles, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-payment-gateway-profile',
+                'route' => '/api/v1/summits/{id}/payment-gateway-profiles/{payment_profile_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WritePaymentProfiles, $current_realm),
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1713,6 +1952,15 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'get-speakers-on-schedule',
+                'route' => '/api/v1/summits/{id}/speakers/on-schedule',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            [
                 'name' => 'add-speaker-by-summit',
                 'route' => '/api/v1/summits/{id}/speakers',
                 'http_method' => 'POST',
@@ -1747,12 +1995,30 @@ class ApiEndpointsSeeder extends Seeder
                 'scopes' => [
                     sprintf(SummitScopes::WriteSpeakersData, $current_realm),
                 ],
-                'authz_groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                    IGroup::SummitRegistrationAdmins,
-                ]
+            ],
+            [
+                'name' => 'delete-speaker-photo',
+                'route' => '/api/v1/speakers/{speaker_id}/photo',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                ],
+            ],
+            [
+                'name' => 'add-speaker-big-photo',
+                'route' => '/api/v1/speakers/{speaker_id}/big-photo',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                ],
+            ],
+            [
+                'name' => 'delete-speaker-big-photo',
+                'route' => '/api/v1/speakers/{speaker_id}/big-photo',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                ],
             ],
             [
                 'name' => 'add-speaker',
@@ -2103,6 +2369,30 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'update-event',
                 'route' => '/api/v1/summits/{id}/events/{event_id}',
                 'http_method' => 'PUT',
+                'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
+                ]
+            ],
+            [
+                'name' => 'add-event-image',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/image',
+                'http_method' => 'POST',
+                'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
+                ]
+            ],
+            [
+                'name' => 'delete-event-image',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/image',
+                'http_method' => 'DELETE',
                 'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3387,6 +3677,35 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
+
+            [
+                'name' => 'add-document-2-event-type',
+                'route' => '/api/v1/summits/{id}/event-types/{event_type_id}/summit-documents/{document_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteEventTypeData, $current_realm),
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'remove-document-from-event-type',
+                'route' => '/api/v1/summits/{id}/event-types/{event_type_id}/summit-documents/{document_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteEventTypeData, $current_realm),
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             //tracks
             [
                 'name' => 'get-tracks',
@@ -3981,6 +4300,52 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
+            // media uplods
+            [
+                'name' => 'get-presentation-media-uploads',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/media-uploads',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'get-presentation-media-upload',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/media-uploads/{media_upload_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'create-presentation-media-uploads',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/media-uploads',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WritePresentationMaterialsData, $current_realm),
+                    sprintf(SummitScopes::WritePresentationSlidesData, $current_realm)
+                ]
+            ],
+            [
+                'name' => 'update-presentation-media-uploads',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/media-uploads/{media_upload_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WritePresentationMaterialsData, $current_realm),
+                    sprintf(SummitScopes::WritePresentationSlidesData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'delete-presentation-media-uploads',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/media-uploads/{media_upload_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WritePresentationMaterialsData, $current_realm),
+                    sprintf(SummitScopes::WritePresentationSlidesData, $current_realm)
+                ],
+            ],
             //members
             [
                 'name' => 'create-schedule-shareable-link',
@@ -4075,6 +4440,24 @@ class ApiEndpointsSeeder extends Seeder
                     sprintf(SummitScopes::DeleteMySchedule, $current_realm),
                 ],
             ],
+            // enter/leave
+            [
+                'name' => 'enter-member-to-event',
+                'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/enter',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::EnterEvent, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'leave-member-from-event',
+                'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/leave',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::LeaveEvent, $current_realm)
+                ],
+            ],
+            //
             [
                 'name' => 'get-member-from-summit',
                 'route' => '/api/v1/summits/{id}/members',
@@ -4469,7 +4852,7 @@ class ApiEndpointsSeeder extends Seeder
             // selection plans
             [
                 'name' => 'get-current-selection-plan-by-status',
-                'route' => '/api/v1/summits/all/selection-plans/current/{status}',
+                'route' => '/api/v1/summits/{id}/selection-plans/current/{status}',
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm),
@@ -4669,7 +5052,236 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
+
+            // email-flows-events
+            [
+                'name' => 'get-all-email-flows-events',
+                'route' => '/api/v1/summits/{id}/email-flows-events',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'get-email-flows-event-by-id',
+                'route' => '/api/v1/summits/{id}/email-flows-events/{event_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'update-email-flows-event',
+                'route' => '/api/v1/summits/{id}/email-flows-events/{event_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            // summit documents
+            [
+                'name' => 'add-summit-document',
+                'route' => '/api/v1/summits/{id}/summit-documents',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'get-summit-documents',
+                'route' => '/api/v1/summits/{id}/summit-documents',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'get-summit-document',
+                'route' => '/api/v1/summits/{id}/summit-documents/{document_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'update-summit-document',
+                'route' => '/api/v1/summits/{id}/summit-documents/{document_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-summit-document',
+                'route' => '/api/v1/summits/{id}/summit-documents/{document_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-event-type-2-summit-document',
+                'route' => '/api/v1/summits/{id}/summit-documents/{document_id}/event-types/{event_type_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'remove-event-type-from-summit-document',
+                'route' => '/api/v1/summits/{id}/summit-documents/{document_id}/event-types/{event_type_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            // media-upload-types
+            [
+                'name' => 'get-all-media-upload-types',
+                'route' => '/api/v1/summits/{id}/media-upload-types',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-media-upload-types',
+                'route' => '/api/v1/summits/{id}/media-upload-types',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'get-media-upload-type',
+                'route' => '/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'update-media-upload-types',
+                'route' => '/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-media-upload-types',
+                'route' => '/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-event-type-2-media-upload-type',
+                'route' => '/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}/presentation-types/{event_type_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'remove-event-type-media-upload-type',
+                'route' => '/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}/presentation-types/{event_type_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'clone-media-upload-types',
+                'route' => '/api/v1/summits/{id}/media-upload-types/all/clone/{to_summit_id}',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
         ]);
+
     }
 
     /**
@@ -5126,4 +5738,178 @@ class ApiEndpointsSeeder extends Seeder
         );
     }
 
+    public function seedSummitAdministratorGroupsEndpoints(){
+        $current_realm = Config::get('app.scope_base_realm');
+
+        $this->seedApiEndpoints('summit-administrator-groups', [
+                [
+                    'name' => 'get-summit-administrator-groups',
+                    'route' => '/api/v1/summit-administrator-groups',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SummitScopes::ReadSummitAdminGroups, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'get-summit-administrator-group',
+                    'route' => '/api/v1/summit-administrator-groups/{group_id}',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SummitScopes::ReadSummitAdminGroups, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'add-summit-administrator-group',
+                    'route' => '/api/v1/summit-administrator-groups',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitAdminGroups, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'update-summit-administrator-group',
+                    'route' => '/api/v1/summit-administrator-groups/{group_id}',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitAdminGroups, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'delete-summit-administrator-group',
+                    'route' => '/api/v1/summit-administrator-groups/{group_id}',
+                    'http_method' => 'DELETE',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitAdminGroups, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'add-member-to-summit-administrator-group',
+                    'route' => '/api/v1/summit-administrator-groups/{group_id}/members/{member_id}',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitAdminGroups, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'remove-member-from-summit-administrator-group',
+                    'route' => '/api/v1/summit-administrator-groups/{group_id}/members/{member_id}',
+                    'http_method' => 'DELETE',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitAdminGroups, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'add-summit-to-summit-administrator-group',
+                    'route' => '/api/v1/summit-administrator-groups/{group_id}/summits/{summit_id}',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitAdminGroups, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'remove-summit-from-summit-administrator-group',
+                    'route' => '/api/v1/summit-administrator-groups/{group_id}/summits/{summit_id}',
+                    'http_method' => 'DELETE',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitAdminGroups, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+
+            ]
+        );
+    }
+
+    public function seedSummitMediaFileTypeEndpoints(){
+        $current_realm = Config::get('app.scope_base_realm');
+
+        $this->seedApiEndpoints('summit-media-file-types', [
+                [
+                    'name' => 'get-summit-media-file-types',
+                    'route' => '/api/v1/summit-media-file-types',
+                    'http_method' => 'GET',
+                    'scopes' => [sprintf(SummitScopes::ReadSummitMediaFileTypes, $current_realm)],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'get-summit-media-file-type-by-id',
+                    'route' => '/api/v1/summit-media-file-types/{id}',
+                    'http_method' => 'GET',
+                    'scopes' => [sprintf(SummitScopes::ReadSummitMediaFileTypes, $current_realm)],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'add-summit-media-file-type',
+                    'route' => '/api/v1/summit-media-file-types',
+                    'http_method' => 'POST',
+                    'scopes' => [sprintf(SummitScopes::WriteSummitMediaFileTypes, $current_realm)],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'update-summit-media-file-type',
+                    'route' => '/api/v1/summit-media-file-types/{id}',
+                    'http_method' => 'PUT',
+                    'scopes' => [sprintf(SummitScopes::WriteSummitMediaFileTypes, $current_realm)],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'delete-summit-media-file-type',
+                    'route' => '/api/v1/summit-media-file-types/{id}',
+                    'http_method' => 'DELETE',
+                    'scopes' => [sprintf(SummitScopes::WriteSummitMediaFileTypes, $current_realm)],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+            ]
+        );
+    }
 }

@@ -16,6 +16,7 @@ use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\Presentation;
 use models\summit\PresentationLink;
+use models\summit\PresentationMediaUpload;
 use models\summit\PresentationSlide;
 use models\summit\PresentationVideo;
 use models\summit\Summit;
@@ -85,9 +86,9 @@ interface IPresentationService
      * @param Summit $summit
      * @param Member $member
      * @param int $presentation_id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return void
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function deletePresentation(Summit $summit, Member $member, $presentation_id);
 
@@ -157,4 +158,45 @@ interface IPresentationService
      * @return void
      */
     public function deleteLink($presentation_id, $link_id);
+
+    /**
+     * @param LaravelRequest $request
+     * @param Summit $summit
+     * @param $presentation_id
+     * @param array $payload
+     * @return PresentationMediaUpload
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addMediaUploadTo
+    (
+        LaravelRequest $request,
+        Summit $summit,
+        int $presentation_id,
+        array $payload
+    ): PresentationMediaUpload;
+
+    /**
+     * @param LaravelRequest $request
+     * @param Summit $summit
+     * @param int $presentation_id
+     * @param int $media_upload_id
+     * @return PresentationMediaUpload
+     * @throws \Exception
+     */
+    public function updateMediaUploadFrom
+    (
+        LaravelRequest $request,
+        Summit $summit,
+        int $presentation_id,
+        int $media_upload_id
+    ): PresentationMediaUpload;
+
+    /**
+     * @param Summit $summit
+     * @param int $presentation_id
+     * @param int $media_upload_id
+     * @throws EntityNotFoundException
+     */
+    public function deleteMediaUpload(Summit $summit, int $presentation_id, int $media_upload_id): void;
 }

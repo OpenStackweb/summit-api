@@ -11,7 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use models\summit\PresentationCategory;
+
 /**
  * Class PresentationCategorySerializer
  * @package ModelSerializers
@@ -19,19 +21,20 @@ use models\summit\PresentationCategory;
 final class PresentationCategorySerializer extends SilverStripeSerializer
 {
     protected static $array_mappings =
-    [
-        'Title'                   => 'name:json_string',
-        'Description'             => 'description:json_string',
-        'Code'                    => 'code:json_string',
-        'Slug'                    => 'slug:json_string',
-        'SessionCount'            => 'session_count:json_int',
-        'AlternateCount'          => 'alternate_count:json_int',
-        'LightningCount'          => 'lightning_count:json_int',
-        'LightningAlternateCount' => 'lightning_alternate_count:json_int',
-        'VotingVisible'           => 'voting_visible:json_boolean',
-        'ChairVisible'            => 'chair_visible:json_boolean',
-        'SummitId'                => 'summit_id:json_int',
-    ];
+        [
+            'Title' => 'name:json_string',
+            'Description' => 'description:json_string',
+            'Code' => 'code:json_string',
+            'Slug' => 'slug:json_string',
+            'SessionCount' => 'session_count:json_int',
+            'AlternateCount' => 'alternate_count:json_int',
+            'LightningCount' => 'lightning_count:json_int',
+            'LightningAlternateCount' => 'lightning_alternate_count:json_int',
+            'VotingVisible' => 'voting_visible:json_boolean',
+            'ChairVisible' => 'chair_visible:json_boolean',
+            'SummitId' => 'summit_id:json_int',
+            'Color' => 'color:json_string',
+        ];
 
     /**
      * @param null $expand
@@ -40,25 +43,34 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $category = $this->object;
-        if(!$category instanceof PresentationCategory) return [];
-        $values      = parent::serialize($expand, $fields, $relations, $params);
-        $groups      = [];
+        if (!$category instanceof PresentationCategory) return [];
+        $values = parent::serialize($expand, $fields, $relations, $params);
+        $groups = [];
         $allowed_tag = [];
         $extra_questions = [];
         $summit = $category->getSummit();
 
-        foreach($category->getGroups() as $group){
+        $color  = isset($values['color']) ? $values['color']:'';
+        if(empty($color))
+            $color = 'f0f0ee';
+
+        if (strpos($color,'#') === false) {
+            $color = '#'.$color;
+        }
+        $values['color'] = $color;
+
+        foreach ($category->getGroups() as $group) {
             $groups[] = intval($group->getId());
         }
 
-        foreach($category->getAllowedTags() as $tag){
+        foreach ($category->getAllowedTags() as $tag) {
             $allowed_tag[] = $tag->getId();
         }
 
-        foreach($category->getExtraQuestions() as $question){
+        foreach ($category->getExtraQuestions() as $question) {
             $extra_questions[] = intval($question->getId());
         }
 
@@ -70,42 +82,45 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
             $exp_expand = explode(',', $expand);
             foreach ($exp_expand as $relation) {
                 switch (trim($relation)) {
-                    case 'track_groups': {
-                        $groups = [];
-                        unset($values['track_groups']);
-                        foreach ($category->getGroups() as $g) {
-                            $groups[] = SerializerRegistry::getInstance()->getSerializer($g)->serialize(null, [], ['none']);
-                        }
-                        $values['track_groups'] = $groups;
-                    }
-                    break;
-                }
-                switch (trim($relation)) {
-                    case 'allowed_tags': {
-                        $allowed_tags = [];
-                        unset($values['allowed_tags']);
-                        foreach ($category->getAllowedTags() as $tag) {
-                            $allowed_tag = SerializerRegistry::getInstance()->getSerializer($tag)->serialize(null, [], ['none']);
-                            $track_tag_group = $summit->getTrackTagGroupForTag($tag);
-                            if(!is_null($track_tag_group)){
-                                $allowed_tag['track_tag_group'] = SerializerRegistry::getInstance()->getSerializer($track_tag_group)->serialize(null, [], ['none']);
+                    case 'track_groups':
+                        {
+                            $groups = [];
+                            unset($values['track_groups']);
+                            foreach ($category->getGroups() as $g) {
+                                $groups[] = SerializerRegistry::getInstance()->getSerializer($g)->serialize(null, [], ['none']);
                             }
-                            $allowed_tags[] = $allowed_tag;
+                            $values['track_groups'] = $groups;
                         }
-                        $values['allowed_tags'] = $allowed_tags;
-                    }
-                    break;
+                        break;
                 }
                 switch (trim($relation)) {
-                    case 'extra_questions': {
-                        $extra_questions = [];
-                        unset($values['extra_questions']);
-                        foreach ($category->getExtraQuestions() as $question) {
-                            $extra_questions[] = SerializerRegistry::getInstance()->getSerializer($question)->serialize(null, [], ['none']);
+                    case 'allowed_tags':
+                        {
+                            $allowed_tags = [];
+                            unset($values['allowed_tags']);
+                            foreach ($category->getAllowedTags() as $tag) {
+                                $allowed_tag = SerializerRegistry::getInstance()->getSerializer($tag)->serialize(null, [], ['none']);
+                                $track_tag_group = $summit->getTrackTagGroupForTag($tag);
+                                if (!is_null($track_tag_group)) {
+                                    $allowed_tag['track_tag_group'] = SerializerRegistry::getInstance()->getSerializer($track_tag_group)->serialize(null, [], ['none']);
+                                }
+                                $allowed_tags[] = $allowed_tag;
+                            }
+                            $values['allowed_tags'] = $allowed_tags;
                         }
-                        $values['extra_questions'] = $extra_questions;
-                    }
-                    break;
+                        break;
+                }
+                switch (trim($relation)) {
+                    case 'extra_questions':
+                        {
+                            $extra_questions = [];
+                            unset($values['extra_questions']);
+                            foreach ($category->getExtraQuestions() as $question) {
+                                $extra_questions[] = SerializerRegistry::getInstance()->getSerializer($question)->serialize(null, [], ['none']);
+                            }
+                            $values['extra_questions'] = $extra_questions;
+                        }
+                        break;
                 }
             }
         }

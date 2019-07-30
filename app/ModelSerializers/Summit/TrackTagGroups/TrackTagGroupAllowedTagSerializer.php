@@ -40,7 +40,6 @@ final class TrackTagGroupAllowedTagSerializer extends AbstractSerializer
         if (!$allowed_tag instanceof TrackTagGroupAllowedTag) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-
         if (!empty($expand)) {
             $relations = explode(',', $expand);
             foreach ($relations as $relation) {
@@ -48,16 +47,18 @@ final class TrackTagGroupAllowedTagSerializer extends AbstractSerializer
 
                     case 'track_tag_group':{
                         unset($values['track_tag_group_id']);
-                        $values['track_tag_group'] = SerializerRegistry::getInstance()->getSerializer($allowed_tag->getTrackTagGroup())->serialize();
+                        $values['track_tag_group'] = SerializerRegistry::getInstance()
+                            ->getSerializer($allowed_tag->getTrackTagGroup())
+                            ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
-                        break;
-
+                    break;
                     case 'tag':{
                         unset($values['tag_id']);
-                        $values['tag'] = SerializerRegistry::getInstance()->getSerializer($allowed_tag->getTag())->serialize();
+                        $values['tag'] = SerializerRegistry::getInstance()
+                            ->getSerializer($allowed_tag->getTag())
+                            ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
-                        break;
-
+                    break;
                 }
             }
         }

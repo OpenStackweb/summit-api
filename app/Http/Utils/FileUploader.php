@@ -11,15 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Services\FileSystem\FileNameSanitizer;
 use App\Services\Model\IFolderService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use models\exceptions\ValidationException;
 use models\main\File;
-use  Behat\Transliterator\Transliterator;
 use models\main\IFolderRepository;
-
 /**
  * Class FileUploader
  * @package App\Http\Utils
@@ -32,11 +31,6 @@ final class FileUploader implements IFileUploader
     private $folder_service;
 
     /**
-     * @var IBucket
-     */
-    private $bucket;
-
-    /**
      * @var IFolderRepository
      */
     private $folder_repository;
@@ -45,20 +39,16 @@ final class FileUploader implements IFileUploader
      * FileUploader constructor.
      * @param IFolderService $folder_service
      * @param IFolderRepository $folder_repository
-     * @param IBucket $bucket
      */
     public function __construct
     (
         IFolderService $folder_service,
-        IFolderRepository $folder_repository,
-        IBucket $bucket
+        IFolderRepository $folder_repository
     )
     {
         $this->folder_service    = $folder_service;
         $this->folder_repository = $folder_repository;
-        $this->bucket            = $bucket;
     }
-
 
     private static $default_replacements = [
         '/\s/' => '-', // remove whitespace
@@ -70,22 +60,18 @@ final class FileUploader implements IFileUploader
 
     /**
      * @param UploadedFile $file
-     * @param $folder_name
+     * @param string $path
      * @param bool $is_image
      * @return File
      * @throws \Exception
      */
-    public function build(UploadedFile $file, $folder_name, $is_image = false){
+    public function build(UploadedFile $file, string $path, bool $is_image = false){
         $attachment = new File();
         try {
 
             $client_original_name = $file->getClientOriginalName();
             $ext                  = pathinfo($client_original_name, PATHINFO_EXTENSION);
-            $client_original_name = trim(Transliterator::utf8ToAscii($client_original_name));
-
-            foreach(self::$default_replacements as $regex => $replace) {
-                $client_original_name = preg_replace($regex, $replace, $client_original_name);
-            }
+            $client_original_name = FileNameSanitizer::sanitize($client_original_name);
 
             $idx = 1;
             $name  = pathinfo($client_original_name, PATHINFO_FILENAME);
@@ -105,18 +91,23 @@ final class FileUploader implements IFileUploader
                 throw new ValidationException("empty file name is not valid");
             }
 
-            Log::debug(sprintf("FileUploader::build: folder_name %s client original name %s", $folder_name, $client_original_name));
+            Log::debug(sprintf("FileUploader::build: folder_name %s client original name %s", $path, $client_original_name));
 
-            $local_path = Storage::putFileAs(sprintf('/public/%s', $folder_name), $file, $client_original_name);
+            $local_path = Storage::disk('public')->putFileAs
+            (
+                $path,
+                $file,
+                $client_original_name
+            );
 
             Log::debug(sprintf("FileUploader::build: saved to local path %s", $local_path));
 
-            Log::debug(sprintf("FileUploader::build: invoking folder service findOrMake folder_name %s", $folder_name));
-            $folder = $this->folder_service->findOrMake($folder_name);
-            $local_path = Storage::disk()->path($local_path);
+            Log::debug(sprintf("FileUploader::build: invoking folder service findOrMake folder_name %s", $path));
+            $folder = $this->folder_service->findOrMake($path);
+            $local_path = Storage::disk('public')->path($local_path);
             $attachment->setParent($folder);
             $attachment->setName($client_original_name);
-            $file_name = sprintf("assets/%s/%s", $folder_name, $client_original_name);
+            $file_name = sprintf("assets/%s/%s", $path, $client_original_name);
             Log::debug(sprintf("FileUploader::build file_name %s", $file_name));
             $attachment->setFilename($file_name);
             $title = str_replace(['-','_'],' ', preg_replace('/\.[^.]+$/', '', $title));
@@ -126,7 +117,13 @@ final class FileUploader implements IFileUploader
             if ($is_image) // set className
                 $attachment->setImage();
             Log::debug(sprintf("FileUploader::build uploading to bucket %s", $local_path));
-            $this->bucket->put($attachment, $local_path);
+            // store at cloud
+            Storage::disk('assets')->putFileAs
+            (
+                $path,
+                $file,
+                $client_original_name
+            );
             $attachment->setCloudMeta('LastPut', time());
             $attachment->setCloudStatus('Live');
             $attachment->setCloudSize(filesize($local_path));

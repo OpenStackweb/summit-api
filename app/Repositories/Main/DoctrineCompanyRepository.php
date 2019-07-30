@@ -52,4 +52,13 @@ final class DoctrineCompanyRepository
     {
         return Company::class;
     }
+
+    /**
+     * @param string $name
+     * @return Company|null
+     */
+    public function getByName(string $name): ?Company
+    {
+        return $this->findOneBy(['name' => trim($name)]);
+    }
 }

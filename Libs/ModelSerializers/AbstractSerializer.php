@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Log;
 use libs\utils\JsonUtils;
 use models\oauth2\IResourceServerContext;
 use models\utils\IEntity;
@@ -123,7 +125,7 @@ abstract class AbstractSerializer implements IModelSerializer
         return array_merge(array($class_name), $parents);
     }
 
-    const BoolType           = 'json_boolean';
+    const BoolType            = 'json_boolean';
     const EpochType           = 'datetime_epoch';
     const StringType          = 'json_string';
     const IntType             = 'json_int';
@@ -191,40 +193,40 @@ abstract class AbstractSerializer implements IModelSerializer
                     switch(strtolower($mapping[1]))
                     {
                         case 'datetime_epoch':
-                            {
-                                if(!is_null($value)) {
-                                    $value = $value->getTimestamp();
-                                }
+                        {
+                            if(!is_null($value)) {
+                                 $value = $value->getTimestamp();
                             }
+                        }
                             break;
                         case 'json_string':
-                            {
-                                $value = JsonUtils::toJsonString($value);
-                            }
+                        {
+                            $value = JsonUtils::toJsonString($value);
+                        }
                             break;
                         case 'json_boolean':
-                            {
-                                $value = JsonUtils::toJsonBoolean($value);
-                            }
+                        {
+                            $value = JsonUtils::toJsonBoolean($value);
+                        }
                             break;
                         case 'json_int':
-                            {
-                                $value = JsonUtils::toJsonInt($value);
-                            }
+                        {
+                            $value = JsonUtils::toJsonInt($value);
+                        }
                             break;
                         case 'json_float':
-                            {
-                                $value = JsonUtils::toJsonFloat($value);
-                            }
+                        {
+                            $value = JsonUtils::toJsonFloat($value);
+                        }
                             break;
                         case 'json_obfuscated_email':
-                            {
-                                $value = JsonUtils::toObfuscatedEmail($value);
-                            }
+                        {
+                            $value = JsonUtils::toObfuscatedEmail($value);
+                        }
                         case 'json_url':{
                             $value = JsonUtils::encodeUrl($value);
                         }
-                            break;
+                        break;
                     }
                 }
                 $new_values[$mapping[0]] = $value;
@@ -259,12 +261,16 @@ abstract class AbstractSerializer implements IModelSerializer
      * @param string $expand
      * @return string
      */
-    protected static function getExpandForPrefix(string $prefix, string $expand):string{
+    protected static function getExpandForPrefix(string $prefix, string $expand):string {
+
+        Log::debug(sprintf("AbstractSerializer::getExpandForPrefix prefix %s expand %s", $prefix, $expand));
+
         $prefix_expand = [];
         foreach(explode(',', $expand) as $e){
             if(strstr($e, $prefix.".")!==false)
                 $prefix_expand[] =  str_replace($prefix.".","", $e);
         }
+
         return implode(',', $prefix_expand);
     }
 }

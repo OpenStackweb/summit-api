@@ -1,4 +1,8 @@
 <?php namespace ModelSerializers;
+use Libs\ModelSerializers\AbstractSerializer;
+use models\summit\SummitDocument;
+use models\summit\SummitEventType;
+
 /**
  * Copyright 2016 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,6 +31,7 @@ class SummitEventTypeSerializer extends SilverStripeSerializer
         'AreSponsorsMandatory' => 'are_sponsors_mandatory:json_boolean',
         'AllowsAttachment'     => 'allows_attachment:json_boolean',
         'Default'              => 'is_default:json_boolean',
+        'SummitId'             => 'summit_id:json_int',
     ];
 
     /**
@@ -38,6 +43,8 @@ class SummitEventTypeSerializer extends SilverStripeSerializer
      */
     public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
     {
+        $event_type = $this->object;
+        if (!$event_type instanceof SummitEventType) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
         $color  = isset($values['color']) ? $values['color']:'';
         if(empty($color))
@@ -46,6 +53,35 @@ class SummitEventTypeSerializer extends SilverStripeSerializer
             $color = '#'.$color;
         }
         $values['color'] = $color;
+
+        $summit_documents  = [];
+        foreach ($event_type->getSummitDocuments() as $document) {
+            $summit_documents[] = $document->getId();
+        }
+
+        $values['summit_documents'] = $summit_documents;
+
+        if (!empty($expand)) {
+            $relations = explode(',', $expand);
+            foreach ($relations as $relation) {
+                $relation = trim($relation);
+                switch ($relation) {
+                    case 'summit_documents':{
+                        $summit_documents  = [];
+                        foreach ($event_type->getSummitDocuments() as $document) {
+                            $summit_documents[] = SerializerRegistry::getInstance()->getSerializer($document)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $values['summit_documents'] = $summit_documents;
+                    }
+                        break;
+                    case 'summit':{
+                        unset($values['summit_id']);
+                        $values['summit'] = SerializerRegistry::getInstance()->getSerializer($event_type->getSummit())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                    }
+                        break;
+                }
+            }
+        }
         return $values;
     }
 }

@@ -77,7 +77,6 @@ final class Version20190422160409 extends AbstractMigration
                 $table->bigInteger("api_id")->setUnsigned(true);
                 $table->index('api_id');
                 $table->foreign('apis','api_id', 'id');
-
             });
         }
 

@@ -17,7 +17,6 @@ use models\summit\ISummitEntityEventRepository;
 use models\summit\Summit;
 use models\summit\SummitEntityEvent;
 use App\Repositories\SilverStripeDoctrineRepository;
-
 /**
  * Class DoctrineSummitEntityEventRepository
  * @package App\Repositories\Summit
@@ -118,7 +117,7 @@ SQL;
 
         $entity_events = $native_query->getResult();
 
-        if($detach) $this->getEntityManager()->clear(\models\summit\SummitEntityEvent::class);
+        if($detach) $this->getEntityManager() ->clear(\models\summit\SummitEntityEvent::class);
 
         return $entity_events;
     }

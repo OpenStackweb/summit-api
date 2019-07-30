@@ -61,8 +61,24 @@ final class FilterParser
                     if (!in_array($op, $allowed_fields[$field])){
                         throw new FilterParserException(sprintf("%s op is not allowed for filter by field %s",$op, $field));
                     }
+                    // check if value has AND or OR values on same field
+                    $same_field_op = null;
+                    if(str_contains($value, '&&')){
+                        $values = explode('&&', $value);
+                        if (count($values) > 1) {
+                            $value = $values;
+                            $same_field_op = 'AND';
+                        }
+                    }
+                    else if(str_contains($value, '||')){
+                        $values = explode('||', $value);
+                        if (count($values) > 1) {
+                            $value = $values;
+                            $same_field_op = 'OR';
+                        }
+                    }
 
-                    $f_or = self::buildFilter($field, $op, $value);
+                    $f_or = self::buildFilter($field, $op, $value, $same_field_op);
                     if (!is_null($f_or))
                         $f[] = $f_or;
                 }
@@ -78,10 +94,21 @@ final class FilterParser
                 $field    = $operands[0];
                 $value    = $operands[1];
 
-                // parse AND on same fields
-                $values = explode('&&', $value);
-                if (count($values) > 1) {
-                    $value = $values;
+                // check if value has AND or OR values on same field
+                $same_field_op = null;
+                if(str_contains($value, '&&')){
+                    $values = explode('&&', $value);
+                    if (count($values) > 1) {
+                        $value = $values;
+                        $same_field_op = 'AND';
+                    }
+                }
+                else if(str_contains($value, '||')){
+                    $values = explode('||', $value);
+                    if (count($values) > 1) {
+                        $value = $values;
+                        $same_field_op = 'OR';
+                    }
                 }
 
                 if (!isset($allowed_fields[$field])){
@@ -96,7 +123,7 @@ final class FilterParser
 
                 $and_fields[] = $field;
 
-                $f = self::buildFilter($field, $op, $value);
+                $f = self::buildFilter($field, $op, $value, $same_field_op);
             }
 
             if (!is_null($f))
@@ -110,32 +137,33 @@ final class FilterParser
      *
      * @param string $field
      * @param string $op
-     * @param string $value
+     * @param mixed $value
+     * @param string $same_field_op
      * @return FilterElement|null
      */
-    public static function buildFilter($field, $op, $value)
+    public static function buildFilter($field, $op, $value, $same_field_op = null )
     {
         switch ($op) {
             case '==':
-                return FilterElement::makeEqual($field, $value);
+                return FilterElement::makeEqual($field, $value, $same_field_op);
                 break;
             case '=@':
-                return FilterElement::makeLike($field, $value);
+                return FilterElement::makeLike($field, $value, $same_field_op);
                 break;
             case '>':
-                return FilterElement::makeGreather($field, $value);
+                return FilterElement::makeGreather($field, $value, $same_field_op);
                 break;
             case '>=':
-                return FilterElement::makeGreatherOrEqual($field, $value);
+                return FilterElement::makeGreatherOrEqual($field, $value, $same_field_op);
                 break;
             case '<':
-                return FilterElement::makeLower($field, $value);
+                return FilterElement::makeLower($field, $value, $same_field_op);
                 break;
             case '<=':
-                return FilterElement::makeLowerOrEqual($field, $value);
+                return FilterElement::makeLowerOrEqual($field, $value, $same_field_op);
                 break;
             case '<>':
-                return FilterElement::makeNotEqual($field, $value);
+                return FilterElement::makeNotEqual($field, $value, $same_field_op);
                 break;
         }
         return null;

@@ -11,14 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 use App\Events\SummitEventCreated;
 use App\Events\SummitEventDeleted;
 use App\Events\SummitEventUpdated;
+use App\Models\Foundation\Summit\Events\SummitEventAttendanceMetric;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use models\exceptions\ValidationException;
 use models\main\Company;
+use models\main\File;
+use models\main\Member;
 use models\main\Tag;
 use models\utils\PreRemoveEventArgs;
 use models\utils\SilverstripeBaseModel;
@@ -28,6 +32,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Config;
 use Cocur\Slugify\Slugify;
 use Doctrine\ORM\Mapping AS ORM;
+
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitEventRepository")
  * @ORM\AssociationOverrides({
@@ -39,7 +44,12 @@ use Doctrine\ORM\Mapping AS ORM;
  * @ORM\Table(name="SummitEvent")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({"SummitEvent" = "SummitEvent", "Presentation" = "Presentation", "SummitGroupEvent" = "SummitGroupEvent", "SummitEventWithFile" = "SummitEventWithFile"})
+ * @ORM\DiscriminatorMap({
+ *     "SummitEvent" = "SummitEvent",
+ *     "Presentation" = "Presentation",
+ *     "SummitGroupEvent" = "SummitGroupEvent",
+ *     "SummitEventWithFile" = "SummitEventWithFile"
+ * })
  * @ORM\HasLifecycleCallbacks
  * Class SummitEvent
  * @package models\summit
@@ -187,7 +197,7 @@ class SummitEvent extends SilverstripeBaseModel
     protected $feedback;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\main\Tag", cascade={"persist"})
+     * @ORM\ManyToMany(targetEntity="models\main\Tag", cascade={"persist"}, inversedBy="events")
      * @ORM\JoinTable(name="SummitEvent_Tags",
      *      joinColumns={@ORM\JoinColumn(name="SummitEventID", referencedColumnName="ID")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="TagID", referencedColumnName="ID")}
@@ -196,30 +206,44 @@ class SummitEvent extends SilverstripeBaseModel
     protected $tags;
 
     /**
-     * @return string
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Events\SummitEventAttendanceMetric", mappedBy="event", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SummitEventAttendanceMetric[]
      */
-    public function getTitle()
-    {
-        return $this->title;
-    }
+    protected $attendance_metrics;
 
     /**
-     * @return boolean
+     * @ORM\Column(name="StreamingUrl", type="string")
+     * @var string
      */
-    public function isAllowFeedback()
-    {
-        return $this->getAllowFeedback();
-    }
+    protected $streaming_url;
 
     /**
-     * @return boolean
+     * @ORM\Column(name="EtherpadLink", type="string")
+     * @var string
      */
-    public function getAllowFeedback()
-    {
-        return $this->allow_feedback;
-    }
+    protected $etherpad_link;
 
-    use SummitOwned;
+    /**
+     * @ORM\Column(name="MeetingUrl", type="string")
+     * @var string
+     */
+    protected $meeting_url;
+    /**
+     * @var PreRemoveEventArgs
+     */
+    private $pre_remove_events;
+    /**
+     * @var PreUpdateEventArgs
+     */
+    private $pre_update_args;
+
+
+    /**
+     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
+     * @ORM\JoinColumn(name="ImageID", referencedColumnName="ID")
+     * @var File
+     */
+    private $image;
 
     /**
      * SummitEvent constructor.
@@ -229,45 +253,27 @@ class SummitEvent extends SilverstripeBaseModel
         parent::__construct();
 
         $this->allow_feedback = false;
-        $this->published      = false;
-        $this->avg_feedback   = 0;
-        $this->head_count     = 0;
+        $this->published = false;
+        $this->avg_feedback = 0;
+        $this->head_count = 0;
         $this->rsvp_max_user_number = 0;
         $this->rsvp_max_user_wait_list_number = 0;
 
-        $this->tags           = new ArrayCollection();
-        $this->feedback       = new ArrayCollection();
-        $this->sponsors       = new ArrayCollection();
-        $this->rsvp           = new ArrayCollection();
+        $this->tags = new ArrayCollection();
+        $this->feedback = new ArrayCollection();
+        $this->sponsors = new ArrayCollection();
+        $this->rsvp = new ArrayCollection();
+        $this->attendance_metrics = new ArrayCollection();
     }
 
+    use SummitOwned;
+
     /**
-     * @param PresentationCategory $category
-     * @return $this
+     * @return string
      */
-    public function setCategory(PresentationCategory $category)
+    public function getTitle()
     {
-        $this->category = $category;
-        return $this;
-    }
-
-    /**
-     * @return PresentationCategory
-     */
-    public function getCategory(){
-        return $this->category;
-    }
-
-    /**
-     * @return int
-     */
-    public function getCategoryId(){
-        try {
-            return !is_null($this->category)? $this->category->getId():0;
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
+        return $this->title;
     }
 
     /**
@@ -281,10 +287,59 @@ class SummitEvent extends SilverstripeBaseModel
     }
 
     /**
-     * @return string
+     * @return boolean
      */
-    public function getClassName(){
-        return "SummitEvent";
+    public function getAllowFeedback()
+    {
+        return $this->allow_feedback;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isAllowFeedback()
+    {
+        return $this->getAllowFeedback();
+    }
+
+    /**
+     * @param bool $allow_feeback
+     * @return $this
+     */
+    public function setAllowFeedBack($allow_feeback)
+    {
+        $this->allow_feedback = $allow_feeback;
+        return $this;
+    }
+
+    /**
+     * @return PresentationCategory
+     */
+    public function getCategory()
+    {
+        return $this->category;
+    }
+
+    /**
+     * @param PresentationCategory $category
+     * @return $this
+     */
+    public function setCategory(PresentationCategory $category)
+    {
+        $this->category = $category;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCategoryId()
+    {
+        try {
+            return !is_null($this->category) ? $this->category->getId() : 0;
+        } catch (\Exception $ex) {
+            return 0;
+        }
     }
 
     /**
@@ -356,11 +411,11 @@ class SummitEvent extends SilverstripeBaseModel
      */
     public function getRSVPLink()
     {
-        if($this->hasRSVPTemplate()){
+        if ($this->hasRSVPTemplate()) {
 
-            $summit         = $this->getSummit();
-            $schedule_page  = $summit->getSchedulePage();
-            if(empty($schedule_page)) return '';
+            $summit = $this->getSummit();
+            $schedule_page = $summit->getSchedulePage();
+            if (empty($schedule_page)) return '';
             $url = sprintf("%s%s/events/%s/%s/rsvp",
                 Config::get("server.assets_base_url", 'https://www.openstack.org/'),
                 $schedule_page,
@@ -373,69 +428,56 @@ class SummitEvent extends SilverstripeBaseModel
     }
 
     /**
+     * @param string $rsvp_link
+     */
+    public function setRSVPLink($rsvp_link)
+    {
+        $this->rsvp_link = $rsvp_link;
+        $this->rsvp_template = null;
+        $this->rsvp_max_user_wait_list_number = 0;
+        $this->rsvp_max_user_number = 0;
+    }
+
+    /**
      * @return bool
      */
-    public function hasRSVPTemplate(){
+    public function hasRSVPTemplate()
+    {
         return $this->getRSVPTemplateId() > 0;
     }
 
     /**
      * @return int
      */
-    public function getRSVPTemplateId(){
-        try{
+    public function getRSVPTemplateId()
+    {
+        try {
             return !is_null($this->rsvp_template) ? $this->rsvp_template->getId() : 0;
-        }
-        catch (\Exception $ex){
+        } catch (\Exception $ex) {
             return 0;
         }
     }
 
-    /**
-     * @return RSVPTemplate
-     */
-    public function getRSVPTemplate()
+    public function getSlug()
     {
-        return $this->rsvp_template;
-    }
-
-    /**
-     * @param RSVPTemplate $rsvp_template
-     */
-    public function setRSVPTemplate(RSVPTemplate $rsvp_template)
-    {
-        $this->rsvp_template = $rsvp_template;
-        $this->rsvp_link     = '';
+        $slugify = new Slugify();
+        return $slugify->slugify($this->title);
     }
 
     /**
      * @return bool
      */
-    public function hasRSVP(){
+    public function hasRSVP()
+    {
         return !empty($this->rsvp_link) || $this->hasRSVPTemplate();
     }
 
     /**
      * @return bool
      */
-    public function isExternalRSVP(){
-        return !empty($this->rsvp_link) && !$this->hasRSVPTemplate();
-    }
-
-    public function getSlug(){
-        $slugify = new Slugify();
-        return $slugify->slugify($this->title);
-    }
-
-    /**
-     * @param string $rsvp_link
-     */
-    public function setRSVPLink($rsvp_link)
+    public function isExternalRSVP()
     {
-        $this->rsvp_link     = $rsvp_link;
-        $this->rsvp_template = null;
-        $this->rsvp_max_user_wait_list_number = 0;
-        $this->rsvp_max_user_number = 0;
+        return !empty($this->rsvp_link) && !$this->hasRSVPTemplate();
     }
 
     /**
@@ -455,126 +497,23 @@ class SummitEvent extends SilverstripeBaseModel
     }
 
     /**
-     * @return bool
-     */
-    public function hasLocation(){
-        return $this->getLocationId() > 0;
-    }
-
-    /**
-     * @return int
-     */
-    public function getLocationId()
-    {
-        try {
-            return !is_null($this->location)? $this->location->getId():0;
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
-    /**
-     * @param DateTime $value
-     * @return $this
-     */
-    public function setStartDate(DateTime $value)
-    {
-        $summit = $this->getSummit();
-        if(!is_null($summit))
-        {
-            $value = $summit->convertDateFromTimeZone2UTC($value);
-        }
-        $this->start_date = $value;
-        return $this;
-    }
-
-    /**
-     * @return DateTime|null
-     */
-    public function getLocalStartDate()
-    {
-        if(!empty($this->start_date)) {
-            $value  = clone $this->start_date;
-            $summit = $this->getSummit();
-            if(!is_null($summit))
-            {
-                $res = $summit->convertDateFromUTC2TimeZone($value);
-            }
-            return $res;
-        }
-        return null;
-    }
-
-    /**
-     * @return \DateTime|null
-     */
-    public function getStartDate()
-    {
-        return $this->start_date;
-    }
-
-    /**
-     * @param DateTime $value
-     * @return $this
-     */
-    public function setEndDate(DateTime $value)
-    {
-        $summit = $this->getSummit();
-        if(!is_null($summit))
-        {
-            $value = $summit->convertDateFromTimeZone2UTC($value);
-        }
-        $this->end_date = $value;
-        return $this;
-    }
-
-    /**
-     * @return DateTime|null
-     */
-    public function getLocalEndDate()
-    {
-        if(!empty($this->end_date)) {
-            $value  = clone $this->end_date;
-            $summit = $this->getSummit();
-            if(!is_null($summit))
-            {
-                $res = $summit->convertDateFromUTC2TimeZone($value);
-            }
-            return $res;
-        }
-        return null;
-    }
-
-    /**
-     * @return \DateTime|null
-     */
-    public function getEndDate()
-    {
-       return $this->end_date;
-    }
-
-    /**
-     * @param bool $allow_feeback
-     * @return $this
-     */
-    public function setAllowFeedBack($allow_feeback)
-    {
-        $this->allow_feedback = $allow_feeback;
-        return $this;
-    }
-
-    /**
      * @return int
      */
     public function getTypeId()
     {
         try {
             return !is_null($this->type) ? $this->type->getId() : 0;
-        }
-        catch(\Exception $ex){
+        } catch (\Exception $ex) {
             return 0;
         }
+    }
+
+    /**
+     * @return SummitEventType
+     */
+    public function getType()
+    {
+        return $this->type;
     }
 
     /**
@@ -587,24 +526,8 @@ class SummitEvent extends SilverstripeBaseModel
         return $this;
     }
 
-    /**
-     * @return SummitEventType
-     */
-    public function getType(){
-        return $this->type;
-    }
-
-    /**
-     * @param SummitAbstractLocation $location
-     * @return $this
-     */
-    public function setLocation(SummitAbstractLocation $location)
+    public function clearLocation()
     {
-        $this->location = $location;
-        return $this;
-    }
-
-    public function clearLocation(){
         $this->location = null;
         return $this;
     }
@@ -618,11 +541,21 @@ class SummitEvent extends SilverstripeBaseModel
     }
 
     /**
+     * @param SummitAbstractLocation $location
+     * @return $this
+     */
+    public function setLocation(SummitAbstractLocation $location)
+    {
+        $this->location = $location;
+        return $this;
+    }
+
+    /**
      * @return array
      */
     public function getSponsorsIds()
     {
-        return $this->sponsors->map(function($entity)  {
+        return $this->sponsors->map(function ($entity) {
             return $entity->getId();
         })->toArray();
     }
@@ -638,26 +571,27 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @param Company $sponsor
      */
-    public function addSponsor(Company $sponsor){
+    public function addSponsor(Company $sponsor)
+    {
         $this->sponsors->add($sponsor);
     }
 
-
-    public function clearSponsors(){
+    public function clearSponsors()
+    {
         $this->sponsors->clear();
     }
 
-
     public function addFeedBack(SummitEventFeedback $feedback)
     {
-       $this->feedback->add($feedback);
-       $feedback->setEvent($this);
+        $this->feedback->add($feedback);
+        $feedback->setEvent($this);
     }
 
     /**
      * @return SummitEventFeedback[]
      */
-    public function getFeedback(){
+    public function getFeedback()
+    {
         $criteria = Criteria::create();
         $criteria = $criteria->orderBy(['created' => Criteria::DESC]);
         return $this->feedback->matching($criteria);
@@ -666,7 +600,8 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return ArrayCollection
      */
-    public function getTags(){
+    public function getTags()
+    {
         return $this->tags;
     }
 
@@ -675,7 +610,7 @@ class SummitEvent extends SilverstripeBaseModel
      */
     public function addTag(Tag $tag)
     {
-        if($this->tags->contains($tag)) return;
+        if ($this->tags->contains($tag)) return;
         $this->tags->add($tag);
     }
 
@@ -685,35 +620,35 @@ class SummitEvent extends SilverstripeBaseModel
     }
 
     /**
-     * @throws ValidationException
      * @return void
+     * @throws ValidationException
      */
     public function publish()
     {
-        if($this->isPublished())
+        if ($this->isPublished())
             throw new ValidationException('Already published Summit Event');
 
         $start_date = $this->getStartDate();
-        $end_date   = $this->getEndDate();
+        $end_date = $this->getEndDate();
 
-        if((is_null($start_date) || is_null($end_date)))
+        if ((is_null($start_date) || is_null($end_date)))
             throw new ValidationException('To publish this event you must define a start/end datetime!');
 
         $summit = $this->getSummit();
 
-        if(is_null($summit))
+        if (is_null($summit))
             throw new ValidationException('To publish you must assign a summit');
 
         $timezone = $summit->getTimeZoneId();
 
-        if(empty($timezone)){
+        if (empty($timezone)) {
             throw new ValidationException('Invalid Summit TimeZone!');
         }
 
-        if($end_date < $start_date)
+        if ($end_date < $start_date)
             throw new ValidationException('start datetime must be greather or equal than end datetime!');
 
-        if(!$summit->isEventInsideSummitDuration($this))
+        if (!$summit->isEventInsideSummitDuration($this))
             throw new ValidationException
             (
                 sprintf
@@ -724,7 +659,7 @@ class SummitEvent extends SilverstripeBaseModel
                 )
             );
 
-        $this->published      = true;
+        $this->published = true;
         $this->published_date = new DateTime();
     }
 
@@ -741,58 +676,110 @@ class SummitEvent extends SilverstripeBaseModel
      */
     public function getPublished()
     {
-        return  (bool)$this->published;
+        return (bool)$this->published;
     }
 
+    /**
+     * @return \DateTime|null
+     */
+    public function getStartDate()
+    {
+        return $this->start_date;
+    }
+
+    /**
+     * @param DateTime $value
+     * @return $this
+     */
+    public function setStartDate(DateTime $value)
+    {
+        $summit = $this->getSummit();
+        if (!is_null($summit)) {
+            $value = $summit->convertDateFromTimeZone2UTC($value);
+        }
+        $this->start_date = $value;
+        return $this;
+    }
+
+    public function setRawStartDate(DateTime $value){
+        $this->start_date = $value;
+    }
+
+    /**
+     * @return \DateTime|null
+     */
+    public function getEndDate()
+    {
+        return $this->end_date;
+    }
+
+    /**
+     * @param DateTime $value
+     * @return $this
+     */
+    public function setEndDate(DateTime $value)
+    {
+        $summit = $this->getSummit();
+        if (!is_null($summit)) {
+            $value = $summit->convertDateFromTimeZone2UTC($value);
+        }
+        $this->end_date = $value;
+        return $this;
+    }
+
+    public function setRawEndDate(DateTime $value){
+        $this->end_date = $value;
+    }
     /**
      * @return void
      */
     public function unPublish()
     {
-        $this->published     = false;
+        $this->published = false;
         $this->published_date = null;
     }
 
-    // events
-
-    /**
-     * @var PreRemoveEventArgs
-     */
-    private $pre_remove_events;
     /**
      * @ORM\PreRemove:
      */
-    public function deleting($args){
+    public function deleting($args)
+    {
         $this->pre_remove_events = new PreRemoveEventArgs
         (
             [
-                'id'         => $this->id,
+                'id' => $this->id,
                 'class_name' => $this->getClassName(),
-                'summit'     => $this->summit,
-                'published'  => $this->isPublished(),
+                'summit' => $this->summit,
+                'published' => $this->isPublished(),
             ]
         );
     }
 
     /**
+     * @return string
+     */
+    public function getClassName()
+    {
+        return "SummitEvent";
+    }
+
+    /**
      * @ORM\PostRemove:
      */
-    public function deleted($args){
+    public function deleted($args)
+    {
 
-        if($this->summit->isDeleting()) return;
-        Event::fire(new SummitEventDeleted($this,  $this->pre_remove_events ));
+        if (is_null($this->summit)) return;
+        if ($this->summit->isDeleting()) return;
+        Event::fire(new SummitEventDeleted($this, $this->pre_remove_events));
         $this->pre_remove_events = null;
     }
 
     /**
-     * @var PreUpdateEventArgs
-     */
-    private $pre_update_args;
-
-    /**
      * @ORM\PreUpdate:
      */
-    public function updating(PreUpdateEventArgs $args){
+    public function updating(PreUpdateEventArgs $args)
+    {
         $this->pre_update_args = $args;
     }
 
@@ -805,69 +792,14 @@ class SummitEvent extends SilverstripeBaseModel
         $this->pre_update_args = null;
     }
 
+    // events
+
     /**
      * @ORM\PostPersist
      */
-    public function inserted($args){
+    public function inserted($args)
+    {
         Event::fire(new SummitEventCreated($this, $args));
-    }
-
-    public function hasMetricsAvailable(){
-        if(is_null($this->location)) return false;
-        if(!$this->location instanceof SummitVenueRoom) return false;
-        return $this->location->getMetrics()->count() > 0;
-    }
-
-    /**
-     * @return SummitEventMetricsSnapshot[]
-     */
-    public function getMetricsSnapShots(){
-        $snapshots = [];
-        if(is_null($this->location)) return $snapshots;
-        if(!$this->location instanceof SummitVenueRoom) return $snapshots;
-        foreach($this->location->getMetrics() as $metric){
-            $snapshot =  $this->getMetricsValuesByType($metric);
-            if(is_null($snapshot)) continue;
-            $snapshots[] = $snapshot;
-        }
-        return $snapshots;
-    }
-
-    /**
-     * @param int $type_id
-     * @return SummitEventMetricsSnapshot
-     */
-    public function getMetricValuesByTypeId($type_id){
-
-        $metrics = [];
-        if(is_null($this->location)) return $metrics;
-        if(!$this->location instanceof SummitVenueRoom) return $metrics;
-
-        $metric_type = $this->location->getMetricsByType($type_id);
-        if(is_null($metric_type)) return $metrics;
-        if(!$metric_type instanceof RoomMetricType) return $metrics;
-
-        return $this->getMetricsValuesByType($metric_type);
-    }
-
-    /**
-     * @param RoomMetricType $type
-     * @return SummitEventMetricsSnapshot
-     */
-    private function getMetricsValuesByType(RoomMetricType $type){
-
-        $epoch_start_date = $this->getStartDate()->getTimestamp();
-        $epoch_end_date   = $this->getEndDate()->getTimestamp();
-
-        return new SummitEventMetricsSnapshot
-        (
-            $this,
-            $type,
-            $type->getMeanValueByTimeWindow($epoch_start_date, $epoch_end_date),
-            $type->getMaxValueByTimeWindow($epoch_start_date, $epoch_end_date),
-            $type->getMinValueByTimeWindow($epoch_start_date, $epoch_end_date),
-            $type->getCurrentValueByTimeWindow($epoch_start_date, $epoch_end_date)
-        );
     }
 
     /**
@@ -889,8 +821,29 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getLocationName(){
+    public function getLocationName()
+    {
         return $this->hasLocation() ? $this->location->getName() : 'TBD';
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasLocation()
+    {
+        return $this->getLocationId() > 0;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLocationId()
+    {
+        try {
+            return !is_null($this->location) ? $this->location->getId() : 0;
+        } catch (\Exception $ex) {
+            return 0;
+        }
     }
 
     /**
@@ -961,27 +914,46 @@ class SummitEvent extends SilverstripeBaseModel
      * @return string
      * @throws ValidationException
      */
-    public function getCurrentRSVPSubmissionSeatType():string{
+    public function getCurrentRSVPSubmissionSeatType(): string
+    {
 
-        if(!$this->hasRSVPTemplate())
+        if (!$this->hasRSVPTemplate())
             throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
 
-        if(!$this->getRSVPTemplate()->isEnabled()){
+        if (!$this->getRSVPTemplate()->isEnabled()) {
             throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
         }
 
         $count_regular = $this->getRSVPSeatTypeCount(RSVP::SeatTypeRegular);
-        if($count_regular < intval($this->rsvp_max_user_number)) return RSVP::SeatTypeRegular;
+        if ($count_regular < intval($this->rsvp_max_user_number)) return RSVP::SeatTypeRegular;
         $count_wait = $this->getRSVPSeatTypeCount(RSVP::SeatTypeWaitList);
-        if($count_wait < intval($this->rsvp_max_user_wait_list_number)) return RSVP::SeatTypeWaitList;
+        if ($count_wait < intval($this->rsvp_max_user_wait_list_number)) return RSVP::SeatTypeWaitList;
         throw new ValidationException(sprintf("Event %s is Full.", $this->id));
+    }
+
+    /**
+     * @return RSVPTemplate
+     */
+    public function getRSVPTemplate()
+    {
+        return $this->rsvp_template;
+    }
+
+    /**
+     * @param RSVPTemplate $rsvp_template
+     */
+    public function setRSVPTemplate(RSVPTemplate $rsvp_template)
+    {
+        $this->rsvp_template = $rsvp_template;
+        $this->rsvp_link = '';
     }
 
     /**
      * @param string $seat_type
      * @return int
      */
-    public function getRSVPSeatTypeCount(string $seat_type):int{
+    public function getRSVPSeatTypeCount(string $seat_type): int
+    {
         $criteria = Criteria::create();
         $criteria = $criteria->where(Criteria::expr()->eq('seat_type', $seat_type));
         return $this->rsvp->matching($criteria)->count();
@@ -991,13 +963,16 @@ class SummitEvent extends SilverstripeBaseModel
      * @param string $seat_type
      * @return bool
      */
-    public function couldAddSeatType(string $seat_type):bool{
-        switch($seat_type){
-            case RSVP::SeatTypeRegular: {
+    public function couldAddSeatType(string $seat_type): bool
+    {
+        switch ($seat_type) {
+            case RSVP::SeatTypeRegular:
+            {
                 $count_regular = $this->getRSVPSeatTypeCount(RSVP::SeatTypeRegular);
                 return $count_regular < intval($this->rsvp_max_user_number);
             }
-            case RSVP::SeatTypeWaitList: {
+            case RSVP::SeatTypeWaitList:
+            {
                 $count_wait = $this->getRSVPSeatTypeCount(RSVP::SeatTypeWaitList);
                 return $count_wait < intval($this->rsvp_max_user_wait_list_number);
             }
@@ -1005,28 +980,31 @@ class SummitEvent extends SilverstripeBaseModel
         return false;
     }
 
-    public function getRSVPRegularCount():?int{
-        return  $this->getRSVPSeatTypeCount(RSVP::SeatTypeRegular);
+    public function getRSVPRegularCount(): ?int
+    {
+        return $this->getRSVPSeatTypeCount(RSVP::SeatTypeRegular);
     }
 
-    public function getRSVPWaitCount():?int{
-        return  $this->getRSVPSeatTypeCount(RSVP::SeatTypeWaitList);
+    public function getRSVPWaitCount(): ?int
+    {
+        return $this->getRSVPSeatTypeCount(RSVP::SeatTypeWaitList);
     }
 
     /**
      * @param RSVP $rsvp
      * @throws ValidationException
      */
-    public function addRSVPSubmission(RSVP $rsvp){
-        if(!$this->hasRSVPTemplate()){
+    public function addRSVPSubmission(RSVP $rsvp)
+    {
+        if (!$this->hasRSVPTemplate()) {
             throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
         }
 
-        if(!$this->getRSVPTemplate()->isEnabled()){
+        if (!$this->getRSVPTemplate()->isEnabled()) {
             throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
         }
 
-        if($this->rsvp->contains($rsvp)) return;
+        if ($this->rsvp->contains($rsvp)) return;
         $this->rsvp->add($rsvp);
         $rsvp->setEvent($this);
     }
@@ -1034,8 +1012,9 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @param RSVP $rsvp
      */
-    public function removeRSVPSubmission(RSVP $rsvp){
-        if(!$this->rsvp->contains($rsvp)) return;
+    public function removeRSVPSubmission(RSVP $rsvp)
+    {
+        if (!$this->rsvp->contains($rsvp)) return;
         $this->rsvp->removeElement($rsvp);
         $rsvp->clearEvent();
     }
@@ -1043,34 +1022,241 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getStartDateNice():string
+    public function getDateNice(): string
     {
-        $start_date =  $this->getLocalStartDate();
-        if(empty($start_date)) return 'TBD';
+        $start_date = $this->getStartDateNice();
+        $end_date = $this->getEndDateNice();
+        $date_nice = '';
+
+        if ($start_date == 'TBD' || $end_date == 'TBD') return $start_date;
+
+        $date_nice = date('l, F j, g:ia', strtotime($start_date)) . '-' . date('g:ia', strtotime($end_date));
+        return $date_nice;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStartDateNice(): string
+    {
+        $start_date = $this->getLocalStartDate();
+        if (empty($start_date)) return 'TBD';
         return $start_date->format("Y-m-d H:i:s");
     }
 
     /**
-     * @return string
+     * @return DateTime|null
      */
-    public function getEndDateNice():string
+    public function getLocalStartDate()
     {
-        $end_date  = $this->getLocalEndDate();
-        if(empty($end_date)) return 'TBD';
-        return $end_date->format("Y-m-d H:i:s");
+        if (!empty($this->start_date)) {
+            $value = clone $this->start_date;
+            $summit = $this->getSummit();
+            if (!is_null($summit)) {
+                $res = $summit->convertDateFromUTC2TimeZone($value);
+            }
+            return $res;
+        }
+        return null;
     }
 
     /**
      * @return string
      */
-    public function getDateNice():string {
-        $start_date = $this->getStartDateNice();
-        $end_date   = $this->getEndDateNice();
-        $date_nice  = '';
+    public function getEndDateNice(): string
+    {
+        $end_date = $this->getLocalEndDate();
+        if (empty($end_date)) return 'TBD';
+        return $end_date->format("Y-m-d H:i:s");
+    }
 
-        if ($start_date == 'TBD' || $end_date == 'TBD') return $start_date;
+    /**
+     * @return DateTime|null
+     */
+    public function getLocalEndDate()
+    {
+        if (!empty($this->end_date)) {
+            $value = clone $this->end_date;
+            $summit = $this->getSummit();
+            if (!is_null($summit)) {
+                $res = $summit->convertDateFromUTC2TimeZone($value);
+            }
+            return $res;
+        }
+        return null;
+    }
 
-        $date_nice = date('l, F j, g:ia', strtotime($start_date)).'-'.date('g:ia', strtotime($end_date));
-        return $date_nice;
+    /**
+     * @return bool
+     */
+    public function isLive(): bool
+    {
+        return !empty($this->streaming_url);
+    }
+
+    /**
+     * @return string
+     */
+    public function getStreamingUrl(): ?string
+    {
+        return $this->streaming_url;
+    }
+
+    /**
+     * @param string $streaming_url
+     */
+    public function setStreamingUrl(?string $streaming_url): void
+    {
+        $this->streaming_url = $streaming_url;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEtherpadLink(): ?string
+    {
+        return $this->etherpad_link;
+    }
+
+    /**
+     * @param string $etherpad_link
+     */
+    public function setEtherpadLink(?string $etherpad_link): void
+    {
+        $this->etherpad_link = $etherpad_link;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMeetingUrl(): ?string
+    {
+        return $this->meeting_url;
+    }
+
+    /**
+     * @param string $meeting_url
+     */
+    public function setMeetingUrl(string $meeting_url): void
+    {
+        $this->meeting_url = $meeting_url;
+    }
+
+    /**
+     * @param Member $member
+     * @return SummitEventAttendanceMetric
+     * @throws \Exception
+     */
+    public function enter(Member $member){
+        // check if we have one
+        $criteria = Criteria::create();
+        $criteria = $criteria
+            ->where(Criteria::expr()->eq('member', $member))
+            ->andWhere(Criteria::expr()->isNull("outgress_date"));
+
+        $formerMetric = $this->attendance_metrics->matching($criteria)->first();
+
+        if($formerMetric and $formerMetric instanceof SummitEventAttendanceMetric){
+            // mark as leave
+            $formerMetric->abandon();
+        }
+
+        $metric = SummitEventAttendanceMetric::build($member, $this);
+        $this->attendance_metrics->add($metric);
+        return $metric;
+    }
+
+    /**
+     * @param Member $member
+     * @return mixed
+     * @throws ValidationException
+     */
+    public function leave(Member $member){
+        $criteria = Criteria::create();
+        $criteria = $criteria
+            ->where(Criteria::expr()->eq('member', $member))
+            ->andWhere(Criteria::expr()->isNull("outgress_date"))
+            ->orderBy(['ingress_date' => Criteria::DESC]);
+
+        $metric = $this->attendance_metrics->matching($criteria)->first();
+        if(!$metric)
+            throw new ValidationException(sprintf("User %s did not enter to event yet.", $member->getId()));
+        $metric->abandon();
+
+        return $metric;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTotalAttendanceCount():int{
+        return $this->attendance_metrics->count();
+    }
+
+    public function getAttendance(){
+        return $this->attendance_metrics;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCurrentAttendanceCount():int{
+        $criteria = Criteria::create();
+        $criteria = $criteria->where(Criteria::expr()->isNull('outgress_date'));
+        return $this->attendance_metrics->matching($criteria)->count();
+    }
+
+    public function getCurrentAttendance(){
+        $criteria = Criteria::create();
+        $criteria = $criteria->where(Criteria::expr()->isNull('outgress_date'));
+        return $this->attendance_metrics->matching($criteria)->toArray();
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasImage(){
+        return $this->getImageId() > 0;
+    }
+
+    /**
+     * @return int
+     */
+    public function getImageId()
+    {
+        try{
+            if(is_null($this->image)) return 0;
+            return $this->image->getId();
+        }
+        catch(\Exception $ex){
+            return 0;
+        }
+    }
+
+    public function getImage():?File{
+        return $this->image;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getImageUrl():?string{
+        $photoUrl = null;
+        if($this->hasImage() && $photo = $this->getImage()){
+            $photoUrl =  $photo->getUrl();
+        }
+        return $photoUrl;
+    }
+
+    /**
+     * @param File $image
+     */
+    public function setImage(File $image): void
+    {
+        $this->image = $image;
+    }
+
+    public function clearImage():void{
+        $this->image = null;
     }
 }

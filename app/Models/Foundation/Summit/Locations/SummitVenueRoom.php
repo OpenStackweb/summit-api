@@ -1,5 +1,4 @@
 <?php namespace models\summit;
-
 /**
  * Copyright 2015 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -53,13 +52,8 @@ class SummitVenueRoom extends SummitAbstractLocation implements IOrderable
     private $override_blackouts;
 
     /**
-     * @ORM\OneToMany(targetEntity="RoomMetricType", mappedBy="room", cascade={"persist"})
-     */
-    private $metrics;
-
-    /**
      * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist", "remove"})
-     * @ORM\JoinColumn(name="ImageID", referencedColumnName="ID", onDelete="CASCADE")
+     * @ORM\JoinColumn(name="ImageID", referencedColumnName="ID")
      * @var File
      */
     protected $image;
@@ -208,21 +202,6 @@ class SummitVenueRoom extends SummitAbstractLocation implements IOrderable
         $this->override_blackouts = $override_blackouts;
     }
 
-    /**
-     * @return ArrayCollection
-     */
-    public function getMetrics()
-    {
-        return $this->metrics;
-    }
-
-    /**
-     * @param ArrayCollection $metrics
-     */
-    public function setMetrics($metrics)
-    {
-        $this->metrics = $metrics;
-    }
 
     /**
      * SummitVenueRoom constructor.
@@ -230,21 +209,11 @@ class SummitVenueRoom extends SummitAbstractLocation implements IOrderable
     public function __construct()
     {
         parent::__construct();
-        $this->metrics            = new ArrayCollection();
         $this->override_blackouts = false;
         $this->capacity           = 0;
         $this->type               = self::TypeInternal;
     }
 
-    /**
-     * @param int $type_id
-     * @return RoomMetricType
-     */
-    public function getMetricByType($type_id){
-
-        $criteria = Criteria::create()->where(Criteria::expr()->eq("id", $type_id));
-        return $this->metrics->matching($criteria)->first();
-    }
 
     /**
      * @param SummitVenue|null $venue

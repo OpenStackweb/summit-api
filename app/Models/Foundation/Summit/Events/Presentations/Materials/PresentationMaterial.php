@@ -21,7 +21,9 @@ use Doctrine\ORM\Mapping AS ORM;
  * @ORM\Table(name="PresentationMaterial")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({"PresentationSlide" = "PresentationSlide", "PresentationVideo" = "PresentationVideo", "PresentationLink" = "PresentationLink"})
+ * @ORM\DiscriminatorMap(
+ *     {"PresentationSlide" = "PresentationSlide", "PresentationVideo" = "PresentationVideo",
+ *      "PresentationLink" = "PresentationLink", "PresentationMediaUpload" = "PresentationMediaUpload" })
  * @ORM\HasLifecycleCallbacks
  * Class PresentationMaterial
  * @package models\summit

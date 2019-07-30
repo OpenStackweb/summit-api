@@ -148,8 +148,9 @@ class OAuth2BearerAccessTokenRequestValidator
             if ((!in_array($realm, $audience))) {
                 throw new InvalidGrantTypeException(OAuth2Protocol::OAuth2Protocol_Error_InvalidToken);
             }
-            if ($token_info->getApplicationType() === 'JS_CLIENT' && str_contains($token_info->getAllowedOrigins(),
-                    $origin) === false
+            if (
+                $token_info->getApplicationType() === 'JS_CLIENT'
+                && (is_null($origin) || empty($origin)|| str_contains($token_info->getAllowedOrigins(), $origin) === false )
             ) {
                 //check origins
                 throw new OAuth2ResourceServerException(
@@ -197,6 +198,7 @@ class OAuth2BearerAccessTokenRequestValidator
 
             if (!is_null($token_info->getUserId()))
             {
+                Log::debug(sprintf("OAuth2BearerAccessTokenRequestValidator::handle user id is not null (%s)", $token_info->getUserId()));
                 $context['user_id']          = $token_info->getUserId();
                 $context['user_external_id'] = $token_info->getUserExternalId();
                 $context['user_identifier']  = $token_info->getUserIdentifier();

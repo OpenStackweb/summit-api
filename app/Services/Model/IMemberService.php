@@ -57,4 +57,33 @@ interface IMemberService
      * @return Member
      */
     public function registerExternalUser($user_external_id, string $email, string $first_name, string $last_name):Member;
+
+    /**
+     * @param $user_external_id
+     * @return Member
+     */
+    public function registerExternalUserById($user_external_id):Member;
+
+    /**
+     * @param Member $member
+     * @param array $groups
+     * @return Member
+     */
+    public function synchronizeGroups(Member $member, array $groups):Member;
+
+    /**
+     * @param string $email
+     * @return array|null
+     * @throws \Exception
+     */
+    public function checkExternalUser(string $email);
+
+    /**
+     * @param string $email
+     * @param string $first_name
+     * @param string $last_name
+     * @return array
+     * @throws \Exception
+     */
+    public function emitRegistrationRequest(string $email, string $first_name, string $last_name):array;
 }

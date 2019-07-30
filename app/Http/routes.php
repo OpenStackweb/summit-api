@@ -69,7 +69,8 @@ Route::group([
 
     // companies
     Route::group(['prefix'=>'companies'], function(){
-        Route::get('', 'OAuth2CompaniesApiController@getAll');
+        Route::get('', 'OAuth2CompaniesApiController@getAllCompanies');
+        Route::post('', 'OAuth2CompaniesApiController@add');
     });
 
     // organizations
@@ -83,34 +84,85 @@ Route::group([
         Route::get('', 'OAuth2GroupsApiController@getAll');
     });
 
+    // summit-media-file-types
+    Route::group(['prefix'=>'summit-media-file-types'], function(){
+        Route::get('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitMediaFileTypeApiController@getAll']);
+        Route::post('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitMediaFileTypeApiController@add']);
+        Route::group(['prefix'=>'{id}'], function(){
+            Route::get('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitMediaFileTypeApiController@get']);
+            Route::put('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitMediaFileTypeApiController@update']);
+            Route::delete('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitMediaFileTypeApiController@delete']);
+        });
+    });
+
     // summits
     Route::group(array('prefix' => 'summits'), function () {
 
         Route::get('',  [ 'middleware' => 'cache:'.Config::get('cache_api_response.get_summits_response_lifetime', 600), 'uses' => 'OAuth2SummitApiController@getSummits']);
 
         Route::group(['prefix' => 'all'], function () {
-            Route::get('',  'OAuth2SummitApiController@getAllSummits');
+
+            Route::get('', 'OAuth2SummitApiController@getAllSummits');
             Route::get('{id}',  'OAuth2SummitApiController@getAllSummitByIdOrSlug');
-            Route::group(['prefix' => 'selection-plans'], function () {
-                Route::get('current/{status}', ['uses' => 'OAuth2SummitSelectionPlansApiController@getCurrentSelectionPlanByStatus'])->where('status', 'submission|selection|voting');
-            });
+
             Route::group(['prefix' => 'locations'], function () {
                 // GET /api/v1/summits/all/locations/bookable-rooms/all/reservations/{id}
                 Route::get('bookable-rooms/all/reservations/{id}', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitLocationsApiController@getReservationById']);
             });
 
+            Route::group(['prefix' => 'registration-invitations'], function () {
+                Route::group(['prefix' => '{token}'], function () {
+                    Route::get('', ['uses' => 'OAuth2SummitRegistrationInvitationApiController@getInvitationByToken']);
+                });
+            });
+
+            Route::group(['prefix' => 'orders'], function () {
+                Route::get('me',  'OAuth2SummitOrdersApiController@getAllMyOrders');
+
+                Route::group(['prefix' => 'all'], function () {
+                    Route::group(['prefix' => 'tickets'], function () {
+                        Route::group(['prefix' => '{ticket_id}'], function () {
+                            Route::put('',  'OAuth2SummitOrdersApiController@updateTicketById');
+                            Route::get('pdf',  'OAuth2SummitOrdersApiController@getTicketPDFById');
+                        });
+
+                        Route::group(['prefix' => 'me'], function () {
+                            Route::get('',  'OAuth2SummitTicketApiController@getAllMyTickets');
+                        });
+                    });
+                });
+
+                Route::group(['prefix' => '{order_id}'], function () {
+                    Route::delete('refund',  'OAuth2SummitOrdersApiController@requestRefundMyOrder');
+                    Route::put('resend',   [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrdersApiController@reSendOrderEmail']);
+                    Route::put('', 'OAuth2SummitOrdersApiController@updateMyOrder');
+                    Route::group(['prefix' => 'tickets'], function () {
+                        Route::group(['prefix' => '{ticket_id}'], function () {
+                            Route::get('pdf',  'OAuth2SummitOrdersApiController@getTicketPDFByOrderId');
+                            Route::delete('refund',  'OAuth2SummitOrdersApiController@requestRefundMyTicket');
+                            Route::group(['prefix' => 'attendee'], function () {
+                                Route::put('',  'OAuth2SummitOrdersApiController@assignAttendee');
+                                Route::put('reinvite',  'OAuth2SummitOrdersApiController@reInviteAttendee');
+                                Route::delete('',  'OAuth2SummitOrdersApiController@removeAttendee');
+                            });
+                        });
+                    });
+                });
+
+            });
         });
 
         Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@addSummit']);
 
         Route::group(['prefix' => '{id}'], function () {
+
             Route::put('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@updateSummit']);
             Route::post('logo', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@addSummitLogo']);
             Route::delete('logo', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@deleteSummitLogo']);
             Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@deleteSummit']);
             Route::get('', [ 'middleware' => 'cache:'.Config::get('cache_api_response.get_summit_response_lifetime', 1200), 'uses' => 'OAuth2SummitApiController@getSummit'])->where('id', 'current|[0-9]+');
 
-            // selection plans
+            // selection plans crud
             Route::group(['prefix' => 'selection-plans'], function () {
                 Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addSelectionPlan']);
                 Route::group(['prefix' => '{selection_plan_id}'], function () {
@@ -159,39 +211,6 @@ Route::group([
 
             Route::get('entity-events', 'OAuth2SummitApiController@getSummitEntityEvents');
 
-            // attendees
-            Route::group(array('prefix' => 'attendees'), function () {
-
-                Route::get('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@getAttendeesBySummit']);
-                Route::get('me', 'OAuth2SummitAttendeesApiController@getOwnAttendee');
-                Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@addAttendee']);
-                Route::group(array('prefix' => '{attendee_id}'), function () {
-
-                    Route::get('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@getAttendee']);
-                    Route::put('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@updateAttendee']);
-                    Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@deleteAttendee']);
-                    Route::group(array('prefix' => 'schedule'), function ()
-                    {
-                        Route::get('', 'OAuth2SummitAttendeesApiController@getAttendeeSchedule')->where('attendee_id', 'me');
-
-                        Route::group(array('prefix' => '{event_id}'), function (){
-                            Route::post('', 'OAuth2SummitAttendeesApiController@addEventToAttendeeSchedule')->where('attendee_id', 'me|[0-9]+');
-                            Route::delete('', 'OAuth2SummitAttendeesApiController@removeEventFromAttendeeSchedule')->where('attendee_id', 'me|[0-9]+');
-                            Route::delete('/rsvp', 'OAuth2SummitAttendeesApiController@deleteEventRSVP')->where('attendee_id', 'me|[0-9]+');
-                            Route::put('/check-in', 'OAuth2SummitAttendeesApiController@checkingAttendeeOnEvent')->where('attendee_id', 'me|[0-9]+');
-                        });
-                    });
-                    Route::group(array('prefix' => 'tickets'), function ()
-                    {
-                        Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@addAttendeeTicket']);
-                        Route::group(array('prefix' => '{ticket_id}'), function (){
-                            Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@deleteAttendeeTicket']);
-                            Route::put('reassign/{other_member_id}', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@reassignAttendeeTicket']);
-                        });
-                    });
-                });
-            });
-
             // notifications
             Route::group(['prefix' => 'notifications'], function () {
                 Route::get('sent', 'OAuth2SummitNotificationsApiController@getAllApprovedByUser');
@@ -211,6 +230,7 @@ Route::group([
 
                 Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitSpeakersApiController@addSpeakerBySummit']);
                 Route::get('', 'OAuth2SummitSpeakersApiController@getSpeakers');
+                Route::get('on-schedule', 'OAuth2SummitSpeakersApiController@getSpeakersOnSchedule');
                 Route::get('me', 'OAuth2SummitSpeakersApiController@getMySummitSpeaker');
 
                 Route::group(['prefix' => '{speaker_id}'], function () {
@@ -273,11 +293,10 @@ Route::group([
                     Route::group(['prefix' => 'feedback'], function () {
                         Route::get('',  ['middleware' => 'cache:'.Config::get('cache_api_response.get_event_feedback_response_lifetime', 300), 'uses' => 'OAuth2SummitEventsApiController@getEventFeedback']);
                     });
-                });
 
-                Route::group(['prefix' => 'all'], function () {
-                    Route::group(['prefix' => 'published'], function () {
-                        Route::get('tags', 'OAuth2SummitEventsApiController@getScheduledEventsTags');
+                    Route::group(['prefix' => 'image'], function () {
+                        Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@addEventImage']);
+                        Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@deleteEventImage']);
                     });
                 });
             });
@@ -326,6 +345,18 @@ Route::group([
                             Route::get('', 'OAuth2PresentationApiController@getPresentationLink');
                             Route::put('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@updatePresentationLink' ]);
                             Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@deletePresentationLink' ]);
+                        });
+                    });
+
+                    // media uploads
+
+                    Route::group(['prefix' => 'media-uploads'], function () {
+                        Route::get('', 'OAuth2PresentationApiController@getPresentationMediaUploads');
+                        Route::post('', 'OAuth2PresentationApiController@addPresentationMediaUpload' );
+                        Route::group(['prefix' => '{media_upload_id}'], function () {
+                            Route::get('', 'OAuth2PresentationApiController@getPresentationMediaUpload');
+                            Route::put('','OAuth2PresentationApiController@updatePresentationMediaUpload' );
+                            Route::delete('',  'OAuth2PresentationApiController@deletePresentationMediaUpload' );
                         });
                     });
                 });
@@ -409,7 +440,7 @@ Route::group([
                             Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitLocationsApiController@addVenueBookableRoom']);
                             Route::group(['prefix' => '{room_id}'], function () {
                                 // GET /api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}
-                                Route::get('', 'OAuth2SummitLocationsApiController@getBookableVenueRoom');
+                                Route::get('', 'OAuth2SummitLocationsApiController@getBookableVenueRoomByVenue');
                                 // PUT /api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}
                                 Route::put('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitLocationsApiController@updateVenueBookableRoom']);
                                 // DELETE /api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}
@@ -550,6 +581,30 @@ Route::group([
                     Route::get('', 'OAuth2SummitsEventTypesApiController@getEventTypeBySummit');
                     Route::put('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitsEventTypesApiController@updateEventTypeBySummit']);
                     Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitsEventTypesApiController@deleteEventTypeBySummit']);
+
+                    Route::group(['prefix' => 'summit-documents'], function () {
+                        Route::group(['prefix' => '{document_id}'], function () {
+                            Route::put('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitsEventTypesApiController@addSummitDocument']);
+                            Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitsEventTypesApiController@removeSummitDocument']);
+                        });
+                    });
+                });
+            });
+
+            // documents
+            Route::group(['prefix' => 'summit-documents'], function () {
+                Route::get('', 'OAuth2SummitDocumentsApiController@getAllBySummit');
+                Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitDocumentsApiController@add']);
+                Route::group(['prefix' => '{document_id}'], function () {
+                    Route::get('', 'OAuth2SummitDocumentsApiController@get');
+                    Route::put('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitDocumentsApiController@update']);
+                    Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitDocumentsApiController@delete']);
+                    Route::group(['prefix' => 'event-types'], function () {
+                        Route::group(['prefix' => '{event_type_id}'], function () {
+                            Route::put('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitDocumentsApiController@addEventType']);
+                            Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitDocumentsApiController@removeEventType']);
+                        });
+                    });
                 });
             });
 
@@ -566,7 +621,276 @@ Route::group([
                 });
             });
 
-            // external orders
+            // begin registration endpoints
+
+            // tax-types
+            Route::group(['prefix' => 'tax-types'], function () {
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTaxTypeApiController@getAllBySummit']);
+                Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTaxTypeApiController@add']);
+                Route::group(['prefix' => '{tax_id}'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTaxTypeApiController@get']);
+                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTaxTypeApiController@update']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTaxTypeApiController@delete']);
+
+                    Route::group(['prefix' => 'ticket-types'], function () {
+                        Route::group(['prefix' => '{ticket_type_id}'], function () {
+                            Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTaxTypeApiController@addTaxToTicketType']);
+                            Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTaxTypeApiController@removeTaxFromTicketType']);
+                        });
+                    });
+                });
+            });
+
+            // payment-gateway-profiles
+            Route::group(['prefix' => 'payment-gateway-profiles'], function () {
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PaymentGatewayProfileApiController@getAllBySummit']);
+                Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2PaymentGatewayProfileApiController@add']);
+                Route::group(['prefix' => '{payment_profile_id}'], function () {
+                    Route::get('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2PaymentGatewayProfileApiController@get']);
+                    Route::put('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2PaymentGatewayProfileApiController@update']);
+                    Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2PaymentGatewayProfileApiController@delete']);
+                });
+            });
+
+            // refund-policies
+            Route::group(['prefix' => 'refund-policies'], function () {
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRefundPolicyTypeApiController@getAllBySummit']);
+                Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRefundPolicyTypeApiController@add']);
+                Route::group(['prefix' => '{policy_id}'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRefundPolicyTypeApiController@get']);
+                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRefundPolicyTypeApiController@update']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRefundPolicyTypeApiController@delete']);
+                });
+            });
+
+            // sponsors
+            Route::group(['prefix' => 'sponsors'], function () {
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getAllBySummit']);
+                Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@add']);
+                Route::group(['prefix' => '{sponsor_id}'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@get']);
+                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@update']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@delete']);
+                    Route::group(['prefix' => 'users'], function () {
+                        Route::group(['prefix' => '{member_id}'], function () {
+                            Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addSponsorUser']);
+                            Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@removeSponsorUser']);
+                        });
+                    });
+                });
+            });
+
+            // order-extra-questions
+            Route::group(['prefix' => 'order-extra-questions'], function () {
+                Route::get('metadata', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getMetadata']);
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getAllBySummit']);
+                Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@add']);
+                Route::group(['prefix' => '{question_id}'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@get']);
+                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@update']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@delete']);
+                    Route::group(['prefix' => 'values'], function () {
+                        Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@addQuestionValue']);
+                        Route::group(['prefix' => '{value_id}'], function () {
+                            Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@updateQuestionValue']);
+                            Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@deleteQuestionValue']);
+                        });
+                    });
+                });
+            });
+
+            // access-levels
+            Route::group(['prefix' => 'access-level-types'], function () {
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAccessLevelTypeApiController@getAllBySummit']);
+                Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAccessLevelTypeApiController@add']);
+                Route::group(['prefix' => '{level_id}'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAccessLevelTypeApiController@get']);
+                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAccessLevelTypeApiController@update']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAccessLevelTypeApiController@delete']);
+                });
+            });
+
+            // badge-feature-types
+            Route::group(['prefix' => 'badge-feature-types'], function () {
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeFeatureTypeApiController@getAllBySummit']);
+                Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeFeatureTypeApiController@add']);
+                Route::group(['prefix' => '{feature_id}'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeFeatureTypeApiController@get']);
+                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeFeatureTypeApiController@update']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeFeatureTypeApiController@delete']);
+                });
+            });
+
+            // badge-feature-types
+            Route::group(['prefix' => 'badge-scans'], function () {
+
+                Route::get('me','OAuth2SummitBadgeScanApiController@getAllMyBadgeScans' );
+                Route::get('', 'OAuth2SummitBadgeScanApiController@getAllBySummit');
+                Route::get('csv','OAuth2SummitBadgeScanApiController@getAllBySummitCSV');
+                Route::post('', "OAuth2SummitBadgeScanApiController@add");
+            });
+
+            // badge-types
+            Route::group(['prefix' => 'badge-types'], function () {
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@getAllBySummit']);
+                Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@add']);
+                Route::group(['prefix' => '{badge_type_id}'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@get']);
+                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@update']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@delete']);
+                    Route::group(['prefix' => 'access-levels'], function () {
+                        Route::group(['prefix' => '{access_level_id}'], function () {
+                            Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@addAccessLevelToBadgeType']);
+                            Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@removeAccessLevelFromBadgeType']);
+                        });
+                    });
+                    Route::group(['prefix' => 'features'], function () {
+                        Route::group(['prefix' => '{feature_id}'], function () {
+                            Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@addFeatureToBadgeType']);
+                            Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@removeFeatureFromBadgeType']);
+                        });
+                    });
+
+                });
+            });
+
+            // orders
+            Route::group(['prefix' => 'orders'], function () {
+                Route::get('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@getAllBySummit']);
+                Route::get('csv', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@getAllBySummitCSV']);
+                Route::post('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@add']);
+                Route::group(['prefix' => '{order_id}'], function () {
+                    Route::get('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@get']);
+                    Route::put('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@update']);
+                    Route::delete('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@delete']);
+                    Route::delete('refund', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@refundOrder']);
+
+                    Route::group(['prefix' => 'tickets'], function () {
+                        Route::post('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@addTicket']);
+                        Route::group(['prefix' => '{ticket_id}'], function () {
+                            Route::put('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@updateTicket']);
+                            Route::get('pdf', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@getTicketPDFBySummit']);
+                        });
+                    });
+                });
+                Route::post('reserve', 'OAuth2SummitOrdersApiController@reserve');
+                Route::group(['prefix' => '{hash}'], function () {
+                    Route::put('checkout', 'OAuth2SummitOrdersApiController@checkout');
+                    Route::group(['prefix' => 'tickets'], function () {
+                        Route::get('mine', 'OAuth2SummitOrdersApiController@getMyTicketByOrderHash');
+                    });
+                    Route::delete('', 'OAuth2SummitOrdersApiController@cancel');
+                });
+            });
+
+            // tickets
+            Route::group(['prefix' => 'tickets'], function () {
+                Route::get('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitTicketApiController@getAllBySummit']);
+                Route::group(['prefix' => 'csv'], function () {
+                    Route::get('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitTicketApiController@getAllBySummitCSV']);
+                    Route::get('template', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitTicketApiController@getImportTicketDataTemplate']);
+                    Route::post('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitTicketApiController@importTicketData']);
+                });
+
+                Route::post('ingest', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitTicketApiController@ingestExternalTicketData']);
+
+                Route::group(['prefix' => '{ticket_id}'], function () {
+                    Route::get('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitTicketApiController@get']);
+                    // badge endpoints
+                    Route::group(['prefix' => 'badge'], function () {
+                        Route::post('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitTicketApiController@createAttendeeBadge']);
+                        Route::get('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitTicketApiController@getAttendeeBadge']);
+                        Route::group(['prefix' => 'current'], function () {
+                            Route::delete('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitTicketApiController@deleteAttendeeBadge']);
+                            Route::put('print', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitTicketApiController@printAttendeeBadge']);
+                            Route::group(['prefix' => 'features'], function () {
+                                Route::group(['prefix' => '{feature_id}'], function () {
+                                    Route::put('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitTicketApiController@addAttendeeBadgeFeature']);
+                                    Route::delete('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitTicketApiController@removeAttendeeBadgeFeature']);
+                                });
+                            });
+                            Route::group(['prefix' => 'type'], function () {
+                                Route::group(['prefix' => '{type_id}'], function () {
+                                    Route::put('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitTicketApiController@updateAttendeeBadgeType']);
+                                });
+                            });
+                        });
+                    });
+                    // badge endpoints
+                    Route::delete('refund', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitTicketApiController@refundTicket']);
+                });
+            });
+
+            // attendees
+            Route::group(array('prefix' => 'attendees'), function () {
+
+                Route::get('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@getAttendeesBySummit']);
+                Route::get('csv', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@getAttendeesBySummitCSV']);
+                Route::get('me', 'OAuth2SummitAttendeesApiController@getOwnAttendee');
+                Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@addAttendee']);
+
+                Route::group(array('prefix' => '{attendee_id}'), function () {
+                    Route::get('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@getAttendee']);
+                    Route::put('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@updateAttendee']);
+                    Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@deleteAttendee']);
+                    // attendee schedule
+                    Route::group(array('prefix' => 'schedule'), function ()
+                    {
+                        Route::get('', 'OAuth2SummitAttendeesApiController@getAttendeeSchedule')->where('attendee_id', 'me');
+
+                        Route::group(array('prefix' => '{event_id}'), function (){
+                            Route::post('', 'OAuth2SummitAttendeesApiController@addEventToAttendeeSchedule')->where('attendee_id', 'me|[0-9]+');
+                            Route::delete('', 'OAuth2SummitAttendeesApiController@removeEventFromAttendeeSchedule')->where('attendee_id', 'me|[0-9]+');
+                            Route::delete('/rsvp', 'OAuth2SummitAttendeesApiController@deleteEventRSVP')->where('attendee_id', 'me|[0-9]+');
+                            Route::put('/check-in', 'OAuth2SummitAttendeesApiController@checkingAttendeeOnEvent')->where('attendee_id', 'me|[0-9]+');
+                        });
+                    });
+
+                    // attendee tickets
+                    Route::group(array('prefix' => 'tickets'), function ()
+                    {
+                        Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@addAttendeeTicket']);
+                        Route::group(array('prefix' => '{ticket_id}'), function (){
+                            Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@deleteAttendeeTicket']);
+                            Route::group(array('prefix' => 'reassign'), function (){
+                                Route::put('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@reassignAttendeeTicket']);
+                                Route::put('{other_member_id}', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@reassignAttendeeTicketByMember']);
+                            });
+                        });
+                    });
+                });
+            });
+
+            // invitations
+            Route::group(array('prefix' => 'registration-invitations'), function () {
+                Route::get('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationInvitationApiController@getAllBySummit']);
+                Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationInvitationApiController@add']);
+                Route::group(['prefix' => 'csv'], function () {
+                    Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationInvitationApiController@ingestInvitations']);
+                    Route::get('',  [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitRegistrationInvitationApiController@getAllBySummitCSV']);
+                });
+
+                Route::group(['prefix' => 'all'], function () {
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationInvitationApiController@deleteAll']);
+                    Route::put('send', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationInvitationApiController@send']);
+                });
+
+                Route::group(['prefix' => '{invitation_id}'], function () {
+                    Route::put('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationInvitationApiController@update'])->where('invitation_id', '[0-9]+');;
+                    Route::get('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationInvitationApiController@get'])->where('invitation_id', '[0-9]+');;
+                    Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationInvitationApiController@delete'])->where('invitation_id', '[0-9]+');;
+                });
+
+
+            });
+
+            // badges
+            Route::group(['prefix' => 'badges'], function () {
+                Route::get('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgesApiController@getAllBySummit']);
+                Route::get('csv', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgesApiController@getAllBySummitCSV']);
+            });
+
+            // external orders @todo to deprecate
             Route::group(['prefix' => 'external-orders'], function () {
                 Route::get('{external_order_id}', 'OAuth2SummitApiController@getExternalOrder');
                 Route::post('{external_order_id}/external-attendees/{external_attendee_id}/confirm', 'OAuth2SummitApiController@confirmExternalOrderAttendee');
@@ -619,6 +943,10 @@ Route::group([
 
                             Route::post('', 'OAuth2SummitMembersApiController@addEventToMemberSchedule')->where('member_id', 'me');
                             Route::delete('', 'OAuth2SummitMembersApiController@removeEventFromMemberSchedule')->where('member_id', 'me');
+
+
+                            Route::put('enter', 'OAuth2SummitMembersApiController@enterToEvent')->where('member_id', 'me');
+                            Route::post('leave', 'OAuth2SummitMembersApiController@leaveFromEvent')->where('member_id', 'me');
                         });
                     });
                 });
@@ -697,6 +1025,19 @@ Route::group([
                     Route::put('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@updatePromoCodeBySummit']);
                     Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@deletePromoCodeBySummit']);
                     Route::post('mail', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@sendPromoCodeMail']);
+                    Route::group(['prefix' => 'badge-features'], function () {
+                        Route::group(['prefix' => '{badge_feature_id}'], function () {
+                            Route::put('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@addBadgeFeatureToPromoCode']);
+                            Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@removeBadgeFeatureFromPromoCode']);
+                        });
+                    });
+
+                    Route::group(['prefix' => 'ticket-types'], function () {
+                        Route::group(['prefix' => '{ticket_type_id}'], function () {
+                            Route::put('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@addTicketTypeToPromoCode']);
+                            Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@removeTicketTypeFromPromoCode']);
+                        });
+                    });
                 });
             });
 
@@ -746,6 +1087,48 @@ Route::group([
                 });
             });
 
+            // email-flows-events
+            Route::group(['prefix' => 'email-flows-events'], function () {
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEmailEventFlowApiController@getAllBySummit']);
+                Route::group(['prefix' => '{event_id}'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEmailEventFlowApiController@get']);
+                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEmailEventFlowApiController@update']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEmailEventFlowApiController@delete']);
+                });
+            });
+
+            // media-upload-types
+
+            Route::group(['prefix' => 'media-upload-types'], function(){
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitMediaUploadTypeApiController@getAllBySummit']);
+                Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitMediaUploadTypeApiController@add']);
+                Route::group(['prefix' => '{media_upload_type_id}'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitMediaUploadTypeApiController@get']);
+                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitMediaUploadTypeApiController@update']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitMediaUploadTypeApiController@delete']);
+                    Route::group(['prefix' => 'presentation-types'] , function(){
+                        Route::group(['prefix' => '{event_type_id}'] , function(){
+                            Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitMediaUploadTypeApiController@addToPresentationType']);
+                            Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitMediaUploadTypeApiController@deleteFromPresentationType']);
+                        });
+                    });
+                });
+
+                Route::group(['prefix' => 'all'], function () {
+                    Route::post('clone/{to_summit_id}', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitMediaUploadTypeApiController@cloneMediaUploadTypes']);
+                });
+            });
+        });
+    });
+
+    // sponsorship-types
+    Route::group(['prefix' => 'sponsorship-types'], function () {
+        Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SponsorshipTypeApiController@getAll']);
+        Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SponsorshipTypeApiController@add']);
+        Route::group(['prefix' => '{id}'], function () {
+            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SponsorshipTypeApiController@get']);
+            Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SponsorshipTypeApiController@update']);
+            Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SponsorshipTypeApiController@delete']);
         });
     });
 
@@ -807,7 +1190,17 @@ Route::group([
             Route::put('','OAuth2SummitSpeakersApiController@updateSpeaker')->where('speaker_id', 'me|[0-9]+');
             Route::delete('',[ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitSpeakersApiController@deleteSpeaker'])->where('speaker_id', 'me|[0-9]+');
             Route::get('', 'OAuth2SummitSpeakersApiController@getSpeaker');
-            Route::post('/photo', 'OAuth2SummitSpeakersApiController@addSpeakerPhoto');
+            // speaker photos
+            Route::group(['prefix' => 'photo'], function () {
+                Route::post('', [ 'uses' => 'OAuth2SummitSpeakersApiController@addSpeakerPhoto']);
+                Route::delete('', ['uses' => 'OAuth2SummitSpeakersApiController@deleteSpeakerPhoto']);
+            });
+
+            Route::group(['prefix' => 'big-photo'], function () {
+                Route::post('', [ 'uses' => 'OAuth2SummitSpeakersApiController@addSpeakerBigPhoto']);
+                Route::delete('', [ 'uses' => 'OAuth2SummitSpeakersApiController@deleteSpeakerBigPhoto']);
+            });
+
         });
     });
 
@@ -848,9 +1241,34 @@ Route::group([
                     Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2TrackQuestionsTemplateApiController@deleteTrackQuestionTemplateValue']);
                 });
             });
-
         });
     });
+
+    // summit-administrator-groups
+    Route::group(['prefix'=>'summit-administrator-groups'], function(){
+        Route::get('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAdministratorPermissionGroupApiController@getAll']);
+        Route::post('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAdministratorPermissionGroupApiController@add']);
+        Route::group(['prefix'=>'{group_id}'], function() {
+            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAdministratorPermissionGroupApiController@get']);
+            Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAdministratorPermissionGroupApiController@delete']);
+            Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAdministratorPermissionGroupApiController@update']);
+
+            Route::group(['prefix'=>'members'], function() {
+                Route::group(['prefix'=>'{member_id}'], function() {
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAdministratorPermissionGroupApiController@addMember']);
+                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAdministratorPermissionGroupApiController@removeMember']);
+                });
+            });
+
+            Route::group(['prefix'=>'summits'], function() {
+                Route::group(['prefix'=>'{summit_id}'], function() {
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAdministratorPermissionGroupApiController@addSummit']);
+                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAdministratorPermissionGroupApiController@removeSummit']);
+                });
+            });
+        });
+    });
+
 });
 
 //OAuth2 Protected API V2

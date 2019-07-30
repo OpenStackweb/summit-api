@@ -132,7 +132,7 @@ final class AccessToken extends Token
         return $this->application_type;
     }
 
-    public function getAllowedOrigins()
+    public function getAllowedOrigins():?string
     {
         return $this->allowed_origins;
     }

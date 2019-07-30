@@ -14,13 +14,26 @@
 
 class OAuth2PresentationSubmissionTest extends ProtectedApiTest
 {
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testSubmitPresentation($summit_id = 25){
+    use InsertSummitTestData;
+
+    protected function setUp()
+    {
+        parent::setUp();
+
+        self::insertTestData();
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+    }
+
+    protected function tearDown()
+    {
+        self::clearTestData();
+        parent::tearDown();
+    }
+
+    public function testSubmitPresentation(){
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $title       = str_random(16).'_presentation';
@@ -30,11 +43,11 @@ class OAuth2PresentationSubmissionTest extends ProtectedApiTest
             'social_description'  => 'this is a social description',
             'level'  => 'N/A',
             'attendees_expected_learnt'  => 'super duper',
-            'type_id'  => 182,
-            'track_id'  => 262,
+            'type_id'  => self::$defaultEventType->getId(),
+            'track_id'  => self::$defaultTrack->getId(),
             'attending_media' => true,
             'links' => ['https://www.google.com'],
-            'tags' => ['Upstream Development']
+            //'tags' => ['Upstream Development']
         ];
 
         $headers = [
@@ -58,6 +71,22 @@ class OAuth2PresentationSubmissionTest extends ProtectedApiTest
         $presentation = json_decode($content);
         $this->assertTrue(!is_null($presentation));
         $this->assertEquals($title, $presentation->title);
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->id
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2PresentationApiController@completePresentationSubmission",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
         return $presentation;
     }
 

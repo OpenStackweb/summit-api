@@ -31,10 +31,6 @@ use ModelSerializers\ISerializerTypeSelector;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISpeakerService;
 use services\model\ISummitService;
-use utils\Filter;
-use utils\FilterElement;
-use utils\FilterParser;
-use utils\OrderParser;
 use utils\PagingInfo;
 use Illuminate\Http\Request as LaravelRequest;
 use utils\PagingResponse;
@@ -176,6 +172,72 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             null,
             function ($page,  $per_page,  $filter,  $order, $applyExtraFilters) use($summit) {
                 return $this->speaker_repository->getSpeakersBySummit
+                (
+                    $summit,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            },
+            [
+                'summit_id' => $summit_id,
+                'published' => true,
+                'summit' => $summit
+            ]
+        );
+    }
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function getSpeakersOnSchedule($summit_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        return $this->_getAll(
+            function(){
+                return [
+                    'first_name' => ['=@', '=='],
+                    'last_name'  => ['=@', '=='],
+                    'email'      => ['=@', '=='],
+                    'id'         => ['=='],
+                    'full_name'  => ['=@', '=='],
+                    'event_start_date' => ['>', '<', '<=', '>=', '=='],
+                    'event_end_date'   => ['>', '<', '<=', '>=', '=='],
+                ];
+            },
+            function(){
+                return [
+                    'first_name' => 'sometimes|string',
+                    'last_name'  => 'sometimes|string',
+                    'email'      => 'sometimes|string',
+                    'id'         => 'sometimes|integer',
+                    'full_name'  => 'sometimes|string',
+                    'event_start_date' => 'sometimes|date_format:U',
+                    'event_end_date' => 'sometimes|date_format:U',
+                ];
+            },
+            function()
+            {
+                return [
+                    'first_name',
+                    'last_name',
+                    'id',
+                    'email',
+                ];
+            },
+            function($filter) use($summit){
+                return $filter;
+            },
+            function(){
+                return $this->serializer_type_selector->getSerializerType();
+            },
+            null,
+            null,
+            function ($page,  $per_page,  $filter,  $order, $applyExtraFilters) use($summit) {
+                return $this->speaker_repository->getSpeakersBySummitAndOnSchedule
                 (
                     $summit,
                     new PagingInfo($page, $per_page),
@@ -500,7 +562,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'irc' => 'sometimes|string|max:50',
                 'twitter' => 'sometimes|string|max:50',
                 'member_id' => 'sometimes|integer',
-                'email' => 'sometimes|email:rfc,dns|max:50',
+                'email' => 'sometimes|email:rfc|max:50',
                 'on_site_phone' => 'sometimes|string|max:50',
                 'registered' => 'sometimes|boolean',
                 'is_confirmed' => 'sometimes|boolean',
@@ -579,7 +641,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'irc' => 'sometimes|string|max:50',
                 'twitter' => 'sometimes|string|max:50',
                 'member_id' => 'sometimes|integer',
-                'email' => 'sometimes|email:rfc,dns|max:50',
+                'email' => 'sometimes|email:rfc|max:50',
                 'on_site_phone' => 'sometimes|string|max:50',
                 'registered' => 'sometimes|boolean',
                 'is_confirmed' => 'sometimes|boolean',
@@ -656,50 +718,6 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     }
 
     /**
-     * @param LaravelRequest $request
-     * @param $speaker_id
-     * @return mixed
-     */
-    public function addSpeakerPhoto(LaravelRequest $request, $speaker_id)
-    {
-
-        try {
-
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
-
-            $speaker = $this->speaker_repository->getById($speaker_id);
-            if (is_null($speaker)) return $this->error404();
-
-            if(!$speaker->canBeEditedBy($current_member)){
-                return $this->error403();
-            }
-
-            $file = $request->file('file');
-            if (is_null($file)) {
-                return $this->error412(array('file param not set!'));
-            }
-
-            $photo = $this->service->addSpeakerPhoto($speaker_id, $file);
-
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($photo)->serialize());
-
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
-
-    /**
      * @param $speaker_from_id
      * @param $speaker_to_id
      * @return mixed
@@ -752,7 +770,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'irc' => 'sometimes|string|max:50',
                 'twitter' => 'sometimes|string|max:50',
                 'member_id' => 'sometimes|integer',
-                'email' => 'sometimes|email:rfc,dns|max:50',
+                'email' => 'sometimes|email:rfc|max:50',
                 'funded_travel' => 'sometimes|boolean',
                 'willing_to_travel' => 'sometimes|boolean',
                 'willing_to_present_video' => 'sometimes|boolean',
@@ -767,6 +785,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'organizational_roles' => 'sometimes|int_array',
                 'other_organizational_rol' => 'sometimes|string|max:255',
                 'active_involvements' => 'sometimes|int_array',
+                'company' => 'sometimes|string|max:255',
+                'phone_number' => 'sometimes|string|max:255',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -831,7 +851,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'irc' => 'sometimes|string|max:50',
                 'twitter' => 'sometimes|string|max:50',
                 'member_id' => 'sometimes|integer',
-                'email' => 'sometimes|email:rfc,dns|max:50',
+                'email' => 'sometimes|email:rfc|max:50',
                 'available_for_bureau' => 'sometimes|boolean',
                 'funded_travel' => 'sometimes|boolean',
                 'willing_to_travel' => 'sometimes|boolean',
@@ -846,6 +866,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'organizational_roles' => 'sometimes|int_array',
                 'other_organizational_rol' => 'sometimes|string|max:255',
                 'active_involvements' => 'sometimes|int_array',
+                'company' => 'sometimes|string|max:255',
+                'phone_number' => 'sometimes|string|max:255',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -1213,5 +1235,150 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             return response()->view('speakers.edit_permissions.rejected_error', [], 500);
         }
     }
+
+    /**
+     * @param LaravelRequest $request
+     * @param $speaker_id
+     * @return mixed
+     */
+    public function addSpeakerPhoto(LaravelRequest $request, $speaker_id)
+    {
+        try {
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $speaker = $this->speaker_repository->getById($speaker_id);
+            if (is_null($speaker)) return $this->error404();
+
+            if(!$speaker->canBeEditedBy($current_member)){
+                return $this->error403();
+            }
+
+            $file = $request->file('file');
+            if (is_null($file)) {
+                return $this->error412(array('file param not set!'));
+            }
+
+            $photo = $this->service->addSpeakerPhoto($speaker_id, $file);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($photo)->serialize());
+
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412(array($ex2->getMessage()));
+        } catch (\HTTP401UnauthorizedException $ex3) {
+            Log::warning($ex3);
+            return $this->error401();
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    public function deleteSpeakerPhoto($speaker_id){
+        try {
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $speaker = $this->speaker_repository->getById($speaker_id);
+            if (is_null($speaker)) return $this->error404();
+
+            if(!$speaker->canBeEditedBy($current_member)){
+                return $this->error403();
+            }
+
+            $this->service->deleteSpeakerPhoto($speaker_id);
+
+            return $this->deleted();
+
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412(array($ex2->getMessage()));
+        } catch (\HTTP401UnauthorizedException $ex3) {
+            Log::warning($ex3);
+            return $this->error401();
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    public function addSpeakerBigPhoto(LaravelRequest $request, $speaker_id){
+        try {
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $speaker = $this->speaker_repository->getById($speaker_id);
+            if (is_null($speaker)) return $this->error404();
+
+            if(!$speaker->canBeEditedBy($current_member)){
+                return $this->error403();
+            }
+
+            $file = $request->file('file');
+            if (is_null($file)) {
+                return $this->error412(array('file param not set!'));
+            }
+
+            $photo = $this->service->addSpeakerBigPhoto($speaker_id, $file);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($photo)->serialize());
+
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412(array($ex2->getMessage()));
+        } catch (\HTTP401UnauthorizedException $ex3) {
+            Log::warning($ex3);
+            return $this->error401();
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    public function deleteSpeakerBigPhoto($speaker_id){
+        try {
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $speaker = $this->speaker_repository->getById($speaker_id);
+            if (is_null($speaker)) return $this->error404();
+
+            if(!$speaker->canBeEditedBy($current_member)){
+                return $this->error403();
+            }
+
+            $this->service->deleteSpeakerBigPhoto($speaker_id);
+
+            return $this->deleted();
+
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412(array($ex2->getMessage()));
+        } catch (\HTTP401UnauthorizedException $ex3) {
+            Log::warning($ex3);
+            return $this->error401();
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
 
 }

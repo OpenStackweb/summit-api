@@ -30,7 +30,7 @@ class RetrieveAllUnPublishedSummitEventsStrategy extends RetrieveAllSummitEvents
     protected function getValidFilters()
     {
         $valid_filters = parent::getValidFilters();
-        $valid_filters['published']     = ['=='];
+        $valid_filters['published'] = ['=='];
         return $valid_filters;
     }
 

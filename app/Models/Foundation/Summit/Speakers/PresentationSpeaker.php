@@ -18,6 +18,7 @@ use App\Events\PresentationSpeakerCreated;
 use App\Events\PresentationSpeakerDeleted;
 use App\Events\PresentationSpeakerUpdated;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
+use Illuminate\Support\Facades\Log;
 use models\main\File;
 use models\main\Member;
 use models\utils\PreRemoveEventArgs;
@@ -117,6 +118,16 @@ class PresentationSpeaker extends SilverstripeBaseModel
     private $org_has_cloud;
 
     /**
+     * @ORM\Column(name="Company", type="string")
+     */
+    private $company;
+
+    /**
+     * @ORM\Column(name="PhoneNumber", type="string")
+     */
+    private $phone_number;
+
+    /**
      * @ORM\ManyToOne(targetEntity="SpeakerRegistrationRequest", cascade={"persist"}), orphanRemoval=true
      * @ORM\JoinColumn(name="RegistrationRequestID", referencedColumnName="ID")
      * @var SpeakerRegistrationRequest
@@ -159,6 +170,13 @@ class PresentationSpeaker extends SilverstripeBaseModel
      * @var File
      */
     private $photo;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
+     * @ORM\JoinColumn(name="BigPhotoID", referencedColumnName="ID")
+     * @var File
+     */
+    private $big_photo;
 
     /**
      * Owning side
@@ -1004,9 +1022,9 @@ class PresentationSpeaker extends SilverstripeBaseModel
     }
 
     /**
-     * @return File
+     * @return File|null
      */
-    public function getPhoto()
+    public function getPhoto():?File
     {
         return $this->photo;
     }
@@ -1098,6 +1116,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
      * @return $this
      */
     public function addSummitAssistance(PresentationSpeakerSummitAssistanceConfirmationRequest $assistance){
+        if($this->summit_assistances->contains($assistance)) return $this;
         $this->summit_assistances->add($assistance);
         $assistance->setSpeaker($this);
         return $this;
@@ -1220,16 +1239,25 @@ SQL;
         return $summits;
     }
 
-
-    /**
-     * @return null|string
-     */
+    /*
+    * @return null|string
+    */
     public function getEmail(){
-        if($this->hasMember()){
-            return $this->member->getEmail();
+        try {
+            if (!is_null($this->member)) {
+                return $this->member->getEmail();
+            }
         }
-        if($this->hasRegistrationRequest()){
-            return $this->registration_request->getEmail();
+        catch(\Exception $ex){
+            Log::warning($ex);
+        }
+        try {
+            if (!is_null($this->registration_request)) {
+                return $this->registration_request->getEmail();
+            }
+        }
+        catch(\Exception $ex){
+            Log::warning($ex);
         }
         return null;
     }
@@ -1256,10 +1284,10 @@ SQL;
     }
 
     /**
-     * @return PresentationSpeakerSummitAssistanceConfirmationRequest
+     * @return PresentationSpeakerSummitAssistanceConfirmationRequest|null
      */
     public function getLatestAssistance(){
-        return $this->summit_assistances->last();
+        return !is_null($this->summit_assistances) ? $this->summit_assistances->last() : null;
     }
 
     // life cycle events
@@ -1312,10 +1340,12 @@ SQL;
         $this->pre_update_args = null;
     }
 
+    public static $bypass_events = false;
     /**
      * @ORM\PostPersist
      */
     public function inserted($args){
+        if(self::$bypass_events) return;
         Event::fire(new PresentationSpeakerCreated($this, $args));
     }
 
@@ -1621,9 +1651,9 @@ SQL;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getProfilePhotoUrl():string{
+    public function getProfilePhotoUrl():?string{
         $photoUrl = null;
         if($this->hasPhoto() && $photo = $this->getPhoto()){
             $photoUrl =  $photo->getUrl();
@@ -1646,6 +1676,7 @@ SQL;
      * @return bool
      */
     public function canBeEditedBy(Member $member):bool{
+        Log::debug(sprintf("PresentationSpeaker::canBeEditedBy member %s speaker member id %s", $member->getId(), $this->getMemberId()));
         if($member->isAdmin()) return true;
         if($this->getMemberId() == $member->getId()) return true;
         $criteria = Criteria::create();
@@ -1654,4 +1685,95 @@ SQL;
             ->andWhere(Criteria::expr()->eq('approved', true));
         return $this->granted_edit_permissions->matching($criteria)->count() > 0 ;
     }
+
+    /**
+     * @return bool
+     */
+    public function hasBigPhoto(){
+        return $this->getBigPhotoId() > 0;
+    }
+
+    /**
+     * @return int
+     */
+    public function getBigPhotoId()
+    {
+        try{
+            if(is_null($this->big_photo)) return 0;
+            return $this->big_photo->getId();
+        }
+        catch(\Exception $ex){
+            Log::warning($ex);
+            return 0;
+        }
+    }
+
+    public function getBigPhoto():?File{
+        return $this->big_photo;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getBigProfilePhotoUrl():?string{
+        $photoUrl = null;
+        if($this->hasBigPhoto() && $photo = $this->getBigPhoto()){
+            $photoUrl =  $photo->getUrl();
+        }
+        if(empty($photoUrl)){
+            $photoUrl = File::getCloudLinkForImages("generic-speaker-icon.png");
+        }
+        return $photoUrl;
+    }
+
+    /**
+     * @param File $big_photo
+     */
+    public function setBigPhoto(File $big_photo): void
+    {
+        $this->big_photo = $big_photo;
+    }
+
+    public function clearBigPhoto():void{
+        $this->big_photo = null;
+    }
+
+    public function clearPhoto():void{
+        $this->photo = null;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCompany()
+    {
+        return $this->company;
+    }
+
+    /**
+     * @param mixed $company
+     */
+    public function setCompany($company): void
+    {
+        $this->company = $company;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPhoneNumber()
+    {
+        return $this->phone_number;
+    }
+
+    /**
+     * @param mixed $phoner_number
+     */
+    public function setPhoneNumber($phone_number): void
+    {
+        $this->phone_number = $phone_number;
+    }
+
+
+
 }

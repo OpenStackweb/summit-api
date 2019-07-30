@@ -92,9 +92,9 @@ final class DoctrineTransactionService implements ITransactionService
                 }
             } catch (Exception $ex) {
                 Log::warning("rolling back transaction");
+                Log::warning($ex);
                 $em->close();
                 $con->rollBack();
-                Log::error($ex);
                 throw $ex;
             }
         }

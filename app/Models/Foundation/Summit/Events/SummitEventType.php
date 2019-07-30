@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Doctrine\Common\Collections\ArrayCollection;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
@@ -71,6 +73,11 @@ class SummitEventType extends SilverstripeBaseModel
      * @var bool
      */
     protected $is_default;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="SummitDocument", mappedBy="event_types")
+     */
+    private $summit_documents;
 
     /**
      * @return string
@@ -223,6 +230,7 @@ class SummitEventType extends SilverstripeBaseModel
         $this->are_sponsors_mandatory = false;
         $this->allows_attachment      = false;
         $this->is_private             = false;
+        $this->summit_documents       = new ArrayCollection();
     }
 
     /**
@@ -287,4 +295,21 @@ SQL;
         return $res;
     }
 
+    public function getSummitDocuments(){
+        return $this->summit_documents;
+    }
+
+    public function addSummitDocument(SummitDocument $doc){
+        if($this->summit_documents->contains($doc)) return;
+        $this->summit_documents->add($doc);
+    }
+
+    public function removeSummitDocument(SummitDocument $doc){
+        if(!$this->summit_documents->contains($doc)) return;
+        $this->summit_documents->removeElement($doc);
+    }
+
+    public function clearSummitDocuments(){
+        $this->summit_documents->clear();
+    }
 }

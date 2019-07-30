@@ -27,6 +27,6 @@ class PresentationMaterialSerializer extends SilverStripeSerializer
         'Featured'       => 'featured:json_boolean',
         'Order'          => 'order:json_int',
         'PresentationId' => 'presentation_id:json_int',
-        'ClassName'      =>  'class_name:json_text',
+        'ClassName'      => 'class_name:json_text',
     ];
 }

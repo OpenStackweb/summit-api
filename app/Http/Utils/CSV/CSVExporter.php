@@ -48,21 +48,24 @@ final class CSVExporter
      * @return string
      */
     public function export(array $items, $field_separator = ",", array $header = [], array $formatters){
-        $flag   = false;
-        $output = '';
+        $flag           = false;
+        $output         = '';
+        $header         = [];
+        $originalHeader = [];
+
         foreach ($items as $row) {
             if (!$flag) {
                 // display field/column names as first row
                 if(!count($header))
-                    $header = array_keys($row);
+                    $originalHeader = $header = array_keys($row);
                 array_walk($header, array($this, 'cleanData'));
                 $output .= implode($field_separator, $header) . PHP_EOL;;
                 $flag = true;
             }
             array_walk($row, array($this, 'cleanData'));
             $values = [];
-            foreach ($header as $key){
-               $val      = isset($row[$key])? $row[$key] : '';
+            foreach ($originalHeader as $key){
+               $val = $row[$key] ?? '';
                if(isset($formatters[$key]))
                    $val = $formatters[$key]->format($val);
                if(is_array($val)) $val = '';

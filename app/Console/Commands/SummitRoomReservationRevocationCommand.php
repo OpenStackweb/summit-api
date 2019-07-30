@@ -11,15 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
 use App\Services\Model\ILocationService;
 use Illuminate\Support\Facades\Log;
-use libs\utils\ITransactionService;
-use models\summit\SummitRoomReservation;
-use models\utils\SilverstripeBaseModel;
-use utils\Filter;
-use utils\FilterElement;
-use utils\PagingInfo;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;
 use Exception;

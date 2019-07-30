@@ -11,8 +11,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Summit\Events\SummitEventAttendanceMetric;
 use App\ModelSerializers\CCLA\TeamSerializer;
 use App\ModelSerializers\FileSerializer;
+use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
+use App\ModelSerializers\ISummitOrderSerializerTypes;
 use App\ModelSerializers\LanguageSerializer;
 use App\ModelSerializers\Locations\SummitBookableVenueRoomAttributeTypeSerializer;
 use App\ModelSerializers\Locations\SummitBookableVenueRoomAttributeValueSerializer;
@@ -48,6 +52,7 @@ use App\ModelSerializers\ResourceServer\ApiScopeSerializer;
 use App\ModelSerializers\ResourceServer\ApiSerializer;
 use App\ModelSerializers\Software\OpenStackComponentSerializer;
 use App\ModelSerializers\Software\OpenStackReleaseSerializer;
+use App\ModelSerializers\Summit\AdminStripePaymentProfileSerializer;
 use App\ModelSerializers\Summit\AdminSummitSerializer;
 use App\ModelSerializers\Summit\PersonalCalendarShareInfoSerializer;
 use App\ModelSerializers\Summit\Presentation\SummitPresentationCommentSerializer;
@@ -56,6 +61,12 @@ use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackDropDownQuestio
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackMultiValueQuestionTemplateSerializer;
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackQuestionValueTemplateSerializer;
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackSingleValueTemplateQuestionSerializer;
+use App\ModelSerializers\Summit\Registration\SummitAttendeeCSVSerializer;
+use App\ModelSerializers\Summit\Registration\SummitAttendeeTicketCSVSerializer;
+use App\ModelSerializers\Summit\SponsorBadgeScanCSVSerializer;
+use App\ModelSerializers\Summit\SponsorBadgeScanSerializer;
+use App\ModelSerializers\Summit\StripePaymentProfileSerializer;
+use App\ModelSerializers\Summit\SummitAttendeeBadgeSerializer;
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPDropDownQuestionTemplateSerializer;
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPLiteralContentQuestionTemplateSerializer;
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPMultiValueQuestionTemplateSerializer;
@@ -64,6 +75,7 @@ use App\ModelSerializers\Summit\RSVP\Templates\RSVPSingleValueTemplateQuestionSe
 use App\ModelSerializers\Summit\RSVPTemplateSerializer;
 use App\ModelSerializers\Summit\ScheduledSummitLocationBannerSerializer;
 use App\ModelSerializers\Summit\SelectionPlanSerializer;
+use App\ModelSerializers\Summit\SummitEmailEventFlowSerializer;
 use App\ModelSerializers\Summit\SummitLocationBannerSerializer;
 use App\ModelSerializers\Summit\TrackTagGroups\TrackTagGroupAllowedTagSerializer;
 use App\ModelSerializers\Summit\TrackTagGroups\TrackTagGroupSerializer;
@@ -100,6 +112,8 @@ final class SerializerRegistry
 
     const SerializerType_Public  = 'PUBLIC';
     const SerializerType_Private = 'PRIVATE';
+    const SerializerType_Admin   = 'ADMIN';
+    const SerializerType_CSV     = 'CSV';
 
     private function __clone(){}
 
@@ -125,12 +139,23 @@ final class SerializerRegistry
         $this->registry['ApiScope']              = ApiScopeSerializer::class;
         $this->registry['ApiEndpointAuthzGroup'] = ApiEndpointAuthzGroupSerializer::class;
         //
+
+        $this->registry['SummitEventAttendanceMetric'] = SummitEventAttendanceMetricSerializer::class;
+        $this->registry['StripePaymentProfile'] = [
+            self::SerializerType_Public => StripePaymentProfileSerializer::class,
+            self::SerializerType_Private  => AdminStripePaymentProfileSerializer::class,
+        ];
+
+        $this->registry['SummitAdministratorPermissionGroup'] = SummitAdministratorPermissionGroupSerializer::class;
+
         $this->registry['Summit']      =
             [
                 self::SerializerType_Public  =>  SummitSerializer::class,
                 self::SerializerType_Private =>  AdminSummitSerializer::class
             ];
 
+        $this->registry['SummitDocument']             = SummitDocumentSerializer::class;
+        $this->registry['SummitEmailEventFlow']       = SummitEmailEventFlowSerializer::class;
         $this->registry['SelectionPlan']              = SelectionPlanSerializer::class;
         $this->registry['SummitWIFIConnection']       = SummitWIFIConnectionSerializer::class;
         $this->registry['SummitType']                 = SummitTypeSerializer::class;
@@ -150,10 +175,10 @@ final class SerializerRegistry
         $this->registry['TrackDropDownQuestionTemplate'] = TrackDropDownQuestionTemplateSerializer::class;
         $this->registry['TrackCheckBoxListQuestionTemplate'] = TrackMultiValueQuestionTemplateSerializer::class;
         $this->registry['TrackRadioButtonListQuestionTemplate'] = TrackMultiValueQuestionTemplateSerializer::class;
+
         // events
         $this->registry['SummitEvent']                = SummitEventSerializer::class;
         $this->registry['SummitGroupEvent']           = SummitGroupEventSerializer::class;
-        $this->registry['SummitEventMetricsSnapshot'] = SummitEventMetricsSnapshotSerializer::class;
         $this->registry['TrackTagGroup']              = TrackTagGroupSerializer::class;
         $this->registry['Presentation']               =
             [
@@ -163,9 +188,15 @@ final class SerializerRegistry
 
 
         $this->registry['SummitPresentationComment']  = SummitPresentationCommentSerializer::class;
+        $this->registry['SummitMediaFileType']        = SummitMediaFileTypeSerializer::class;
+        $this->registry['SummitMediaUploadType']      = SummitMediaUploadTypeSerializer::class;
         $this->registry['PresentationVideo']          = PresentationVideoSerializer::class;
         $this->registry['PresentationSlide']          = PresentationSlideSerializer::class;
         $this->registry['PresentationLink']           = PresentationLinkSerializer::class;
+        $this->registry['PresentationMediaUpload'] = [
+            self::SerializerType_Public  =>  PresentationMediaUploadSerializer::class,
+            self::SerializerType_Private =>  AdminPresentationMediaUploadSerializer::class
+        ];
         $this->registry['Company']                    = CompanySerializer::class;
 
         $this->registry['PresentationSpeaker']        =
@@ -202,19 +233,74 @@ final class SerializerRegistry
         $this->registry['SpeakerOrganizationalRole']  = SpeakerOrganizationalRoleSerializer::class;
 
         $this->registry['SummitEventFeedback']         = SummitEventFeedbackSerializer::class;
-        $this->registry['SummitAttendee']              = SummitAttendeeSerializer::class;
-        $this->registry['SummitAttendeeTicket']        = SummitAttendeeTicketSerializer::class;
         $this->registry['SummitMemberSchedule']        = SummitMemberScheduleSerializer::class;
         $this->registry['SummitMemberFavorite']        = SummitMemberFavoriteSerializer::class;
         $this->registry['SummitEntityEvent']           = SummitEntityEventSerializer::class;
         $this->registry['SummitEventWithFile']         = SummitEventWithFileSerializer::class;
         $this->registry['SummitScheduleEmptySpot']     = SummitScheduleEmptySpotSerializer::class;
+
         // promo codes
         $this->registry['SummitRegistrationPromoCode']        = SummitRegistrationPromoCodeSerializer::class;
         $this->registry['MemberSummitRegistrationPromoCode']  = MemberSummitRegistrationPromoCodeSerializer::class;
         $this->registry['SpeakerSummitRegistrationPromoCode'] = SpeakerSummitRegistrationPromoCodeSerializer::class;
         $this->registry['SponsorSummitRegistrationPromoCode'] = SponsorSummitRegistrationPromoCodeSerializer::class;
         $this->registry['PresentationSpeakerSummitAssistanceConfirmationRequest'] = PresentationSpeakerSummitAssistanceConfirmationRequestSerializer::class;
+        $this->registry['SummitRegistrationDiscountCodeTicketTypeRule'] = SummitRegistrationDiscountCodeTicketTypeRuleSerializer::class;
+        $this->registry['SummitRegistrationDiscountCode'] = SummitRegistrationDiscountCodeSerializer::class;
+        $this->registry['MemberSummitRegistrationDiscountCode'] = MemberSummitRegistrationDiscountCodeSerializer::class;
+        $this->registry['SpeakerSummitRegistrationDiscountCode'] = SpeakerSummitRegistrationDiscountCodeSerializer::class;
+        $this->registry['SponsorSummitRegistrationDiscountCode'] = SponsorSummitRegistrationDiscountCodeSerializer::class;
+
+        // registration
+        $this->registry['SummitRegistrationInvitation']  =
+        [
+            self::SerializerType_Public  => SummitRegistrationInvitationSerializer::class,
+            self::SerializerType_CSV     => SummitRegistrationInvitationCSVSerializer::class,
+        ];
+        $this->registry['SummitAccessLevelType']  = SummitAccessLevelTypeSerializer::class;
+        $this->registry['SummitTaxType']          = SummitTaxTypeSerializer::class;
+        $this->registry['SummitBadgeType']        = SummitBadgeTypeSerializer::class;
+        $this->registry['SummitBadgeFeatureType'] = SummitBadgeFeatureTypeSerializer::class;
+        $this->registry['SummitRefundPolicyType'] = SummitRefundPolicyTypeSerializer::class;
+        $this->registry['SummitOrderExtraQuestionValue'] = SummitOrderExtraQuestionValueSerializer::class;
+        $this->registry['SummitOrderExtraQuestionType'] = SummitOrderExtraQuestionTypeSerializer::class;
+
+        // orders
+
+        $this->registry['SummitOrder'] =[
+            self::SerializerType_Public                   => SummitOrderBaseSerializer::class,
+            ISummitOrderSerializerTypes::CheckOutType     => SummitOrderBaseSerializer::class,
+            ISummitOrderSerializerTypes::ReservationType  => SummitOrderReservationSerializer::class,
+            ISummitOrderSerializerTypes::AdminType        => SummitOrderAdminSerializer::class,
+        ];
+
+        $this->registry['SummitOrderExtraQuestionAnswer'] = SummitOrderExtraQuestionAnswerSerializer::class;
+        $this->registry['SummitAttendee']                 = [
+            self::SerializerType_Public  => SummitAttendeeSerializer::class,
+            self::SerializerType_Private => SummitAttendeeSerializer::class,
+            self::SerializerType_CSV     => SummitAttendeeCSVSerializer::class,
+        ];
+        $this->registry['SummitAttendeeTicket']           = [
+            self::SerializerType_Public                          => BaseSummitAttendeeTicketSerializer::class,
+            ISummitAttendeeTicketSerializerTypes::AdminType      => SummitAttendeeTicketSerializer::class,
+            ISummitAttendeeTicketSerializerTypes::PublicEdition  => PublicEditionSummitAttendeeTicketSerializer::class,
+            ISummitAttendeeTicketSerializerTypes::GuestEdition   => GuestEditionSummitAttendeeTicketSerializer::class,
+            self::SerializerType_CSV                             => SummitAttendeeTicketCSVSerializer::class,
+        ];
+
+        $this->registry['SummitAttendeeBadge']            = SummitAttendeeBadgeSerializer::class;
+        $this->registry['SponsorBadgeScan']               = [
+            self::SerializerType_Public  => SponsorBadgeScanSerializer::class,
+            self::SerializerType_CSV     => SponsorBadgeScanCSVSerializer::class,
+        ];
+
+        $this->registry['SummitAttendeeTicketTax']        = SummitAttendeeTicketTaxSerializer::class;
+
+        // summit sponsors
+
+        $this->registry['SponsorshipType'] = SponsorshipTypeSerializer::class;
+        $this->registry['Sponsor'] = SponsorSerializer::class;
+
         // locations
         $this->registry['SummitVenue']                           = SummitVenueSerializer::class;
         $this->registry['SummitVenueRoom']                       = SummitVenueRoomSerializer::class;
@@ -238,9 +324,10 @@ final class SerializerRegistry
         $this->registry['PersonalCalendarShareInfo'] = PersonalCalendarShareInfoSerializer::class;
 
         // member
-        $this->registry['Member']                          = [
+        $this->registry['Member'] = [
             self::SerializerType_Public  => PublicMemberSerializer::class,
-            self::SerializerType_Private => OwnMemberSerializer::class
+            self::SerializerType_Private => OwnMemberSerializer::class,
+            self::SerializerType_Admin   => AdminMemberSerializer::class
         ];
 
         $this->registry['Group']                           = GroupSerializer::class;

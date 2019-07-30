@@ -108,5 +108,8 @@ return [
     */
 
     'sendmail' => '/usr/sbin/sendmail -bs',
-
+    'service_base_url' => env('MAIL_API_BASE_URL'),
+    'service_client_id' => env('MAIL_API_OAUTH2_CLIENT_ID'),
+    'service_client_secret' => env('MAIL_API_OAUTH2_CLIENT_SECRET'),
+    'service_client_scopes' => env('MAIL_API_OAUTH2_CLIENT_SCOPES'),
 ];

@@ -37,7 +37,10 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
         'Email'                   => 'email:json_obfuscated_email',
         'MemberID'                => 'member_id:json_int',
         'RegistrationRequestId'   => 'registration_request_id:json_int',
-        'ProfilePhotoUrl'         => 'pic:json_url'
+        'ProfilePhotoUrl'         => 'pic:json_url',
+        'BigProfilePhotoUrl'      => 'big_pic:json_url',
+        'Company'                 => 'company:json_string',
+        'PhoneNumber'             => 'phone_number:json_string',
     ];
 
     protected static $allowed_relations = [

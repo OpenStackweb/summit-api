@@ -12,16 +12,21 @@
  * limitations under the License.
  **/
 use Illuminate\Mail\Message;
+use Illuminate\Support\Facades\Log;
+use libs\utils\ICacheService;
 use Monolog\Handler\MailHandler;
 use Monolog\Logger;
 use Monolog\Formatter\LineFormatter;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\App;
 /**
  * Class LaravelMailerHandler
  * @package App\Http\Utils\Logs
  */
 final class LaravelMailerHandler extends MailHandler
 {
+    // in seconds
+    const TIME_BETWEEN_SAME_ERROR = 60 * 60;
     /**
      * The email addresses to which the message will be sent
      * @var array
@@ -67,16 +72,24 @@ final class LaravelMailerHandler extends MailHandler
     protected $from = null;
 
     /**
-     * @param string|array $to             The receiver of the mail
-     * @param string       $subject        The subject of the mail
-     * @param string       $from           The sender of the mail
-     * @param int          $level          The minimum logging level at which this handler will be triggered
-     * @param bool         $bubble         Whether the messages that are handled can bubble up the stack or not
-     * @param int          $maxColumnWidth The maximum column width that the message lines will have
+     * @var ICacheService
      */
-    public function __construct($to, $subject, $from, $level = Logger::ERROR, $bubble = true, $maxColumnWidth = 70)
+    private $cacheService;
+
+    /**
+     * LaravelMailerHandler constructor.
+     * @param ICacheService $cacheService
+     * @param $to
+     * @param $subject
+     * @param $from
+     * @param int $level
+     * @param bool $bubble
+     * @param int $maxColumnWidth
+     */
+    public function __construct(ICacheService $cacheService, $to, $subject, $from, $level = Logger::ERROR, $bubble = true, $maxColumnWidth = 70)
     {
         parent::__construct($level, $bubble);
+        $this->cacheService = $cacheService;
         $this->from = $from;
         $this->to = is_array($to) ? $to : array($to);
         $this->subject = $subject;
@@ -122,10 +135,22 @@ final class LaravelMailerHandler extends MailHandler
     {
         $content = wordwrap($content, $this->maxColumnWidth);
 
+
         $subject = $this->subject;
         if ($records) {
             $subjectFormatter = new LineFormatter($this->subject);
             $subject = $subjectFormatter->format($this->getHighestRecord($records));
+        }
+
+        // to avoid bloating inboxes/quotas
+        if($this->cacheService){
+            $footPrint = md5($subject.$content);
+            if($this->cacheService->exists($footPrint)){
+                // short circuit
+                Log::debug(sprintf("LaravelMailerHandler::send skipping exception %s %s", $subject, $content));
+                return;
+            }
+            $this->cacheService->setSingleValue($footPrint, $footPrint, LaravelMailerHandler::TIME_BETWEEN_SAME_ERROR);
         }
 
         foreach ($this->to as $to) {

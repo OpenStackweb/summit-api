@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use Doctrine\ORM\Mapping AS ORM;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use models\utils\SilverstripeBaseModel;
 use Illuminate\Support\Facades\Config;
 /**
@@ -275,27 +277,29 @@ class File extends SilverstripeBaseModel
      */
     public function getCloudLink()
     {
-        $relativeLink = ltrim($this->getRelativeLinkFor(), '/');
-
-        return
-            sprintf("%s/%s/%s",
-                Config::get("cloudstorage.base_url") ,
-                Config::get("cloudstorage.assets_container"),
-                $relativeLink);
+        try {
+            $relativeLink = ltrim($this->getRelativeLinkFor(), '/');
+            return Storage::disk('assets')->url($relativeLink);
+        }
+        catch (\Exception $ex){
+            Log::warning($ex);
+            return null;
+        }
     }
 
     /**
      * @param string $imageRelativePath
-     * @return string
+     * @return string|null
      */
-    public static function getCloudLinkForImages(string $imageRelativePath):string {
-        $imageRelativePath = ltrim($imageRelativePath, '/');
-
-        return
-            sprintf("%s/%s/%s",
-                Config::get("cloudstorage.base_url") ,
-                Config::get("cloudstorage.images_container"),
-                $imageRelativePath);
+    public static function getCloudLinkForImages(string $imageRelativePath):?string {
+        try {
+            $imageRelativePath = ltrim($imageRelativePath, '/');
+            return Storage::disk('static_images')->url($imageRelativePath);
+        }
+        catch (\Exception $ex){
+            Log::warning($ex);
+            return null;
+        }
     }
 
     /**

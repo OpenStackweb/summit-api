@@ -54,4 +54,5 @@ abstract class OAuth2ProtectedController extends JsonController
     {
         return $this->repository;
     }
+
 }

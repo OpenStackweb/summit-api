@@ -28,7 +28,6 @@ final class UtilsProvider extends ServiceProvider
     public function register()
     {
         // file uploadedr service
-        App::singleton(IBucket::class, SwiftBucket::class);
         App::singleton(IFileUploader ::class, FileUploader::class);
     }
 }

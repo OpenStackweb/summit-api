@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SummitBookableVenueRoom;
 use ModelSerializers\Locations\SummitVenueRoomSerializer;
 use ModelSerializers\SerializerRegistry;
@@ -35,7 +37,10 @@ class SummitBookableVenueRoomSerializer extends SummitVenueRoomSerializer
 
         $attributes = [];
         foreach ($room->getAttributes() as $attribute){
-            $attributes[] = SerializerRegistry::getInstance()->getSerializer($attribute)->serialize($expand);
+            $attributes[] = SerializerRegistry::getInstance()->getSerializer($attribute)->serialize
+            (
+                AbstractSerializer::filterExpandByPrefix($expand, 'attributes')
+            );
         }
         $values['attributes'] = $attributes;
         return $values;

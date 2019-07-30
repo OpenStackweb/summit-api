@@ -67,11 +67,6 @@ interface IResourceServerContext
     public function setAuthorizationContext(array $auth_context);
 
     /**
-     * @return Member|null
-     */
-    public function getCurrentUser(): ?Member;
-
-    /**
      * @return null|string
      */
     public function getAllowedOrigins();
@@ -80,4 +75,15 @@ interface IResourceServerContext
      * @return null|string
      */
     public function getAllowedReturnUris();
+
+    /**
+     * @return Member|null
+     */
+    public function getCurrentUser():?Member;
+
+    /**
+     * @return array
+     */
+    public function getCurrentUserGroups():array;
+
 }

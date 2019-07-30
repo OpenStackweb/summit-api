@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Summit\Events\SummitEventAttendanceMetric;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SummitEvent;
 /**
@@ -41,7 +43,12 @@ class SummitEventSerializer extends SilverStripeSerializer
         'RSVPWaitCount'             => 'rsvp_wait_count:json_int',
         'ExternalRSVP'              => 'rsvp_external:json_boolean',
         'CategoryId'                => 'track_id:json_int',
-        'Occupancy'                 => 'occupancy:json_string'
+        'StreamingUrl'              => 'streaming_url:json_string',
+        'EtherpadLink'              => 'etherpad_link:json_string',
+        'MeetingUrl'                => 'meeting_url:json_string',
+        'TotalAttendanceCount'      => 'attendance_count:json_int',
+        'CurrentAttendanceCount'    => 'current_attendance_count:json_int',
+        'ImageUrl'                  => 'image:json_url',
     ];
 
     protected static $allowed_fields = [
@@ -65,15 +72,22 @@ class SummitEventSerializer extends SilverStripeSerializer
         'rsvp_template_id',
         'rsvp_max_user_number',
         'rsvp_max_user_wait_list_number',
-        'occupancy',
         'rsvp_regular_count',
         'rsvp_wait_count',
+        'streaming_url',
+        'etherpad_link',
+        'meeting_url',
+        'attendance_count',
+        'current_attendance_count',
+        'image',
     ];
 
     protected static $allowed_relations = [
         'sponsors',
         'tags',
         'feedback',
+        'attendance',
+        'current_attendance',
     ];
 
     /**
@@ -111,6 +125,22 @@ class SummitEventSerializer extends SilverStripeSerializer
                 $feedback[] = $f->getId();
             }
             $values['feedback'] = $feedback;
+        }
+
+        if(in_array('current_attendance', $relations)){
+            $attendance = [];
+            foreach ($event->getCurrentAttendance() as $a){
+                $attendance[] = SerializerRegistry::getInstance()->getSerializer($a)->serialize();
+            }
+            $values['current_attendance'] = $attendance;
+        }
+
+        if(in_array('attendance', $relations)){
+            $attendance = [];
+            foreach ($event->getAttendance() as $a){
+                $attendance[] = SerializerRegistry::getInstance()->getSerializer($a)->serialize();
+            }
+            $values['attendance'] = $attendance;
         }
 
         if (!empty($expand)) {
@@ -158,15 +188,6 @@ class SummitEventSerializer extends SilverStripeSerializer
                     break;
                 }
             }
-        }
-
-        if(in_array('metrics', $relations)){
-            // show metrics snapshot
-            $metrics = [];
-            foreach($event->getMetricsSnapShots() as $snapshot){
-                $metrics[] = SerializerRegistry::getInstance()->getSerializer($snapshot)->serialize();
-            }
-            $values['metrics'] = $metrics;
         }
 
         return $values;

@@ -179,4 +179,9 @@ class SpeakerRegistrationRequest extends SilverstripeBaseModel
     {
         return $this->token;
     }
+
+    public function confirm():void{
+        $this->confirmation_date = new \DateTime('now', new \DateTimeZone('UTC'));
+        $this->is_confirmed = true;
+    }
 }

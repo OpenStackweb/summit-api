@@ -12,8 +12,6 @@
  * limitations under the License.
  **/
 use Illuminate\Database\Seeder;
-use LaravelDoctrine\ORM\Facades\EntityManager;
-use Illuminate\Support\Facades\DB;
 use App\Models\Foundation\Summit\Defaults\DefaultSummitEventType;
 use App\Models\Foundation\Summit\Defaults\DefaultPresentationType;
 use LaravelDoctrine\ORM\Facades\Registry;

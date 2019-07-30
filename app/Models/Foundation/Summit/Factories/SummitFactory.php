@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use models\exceptions\ValidationException;
 use models\summit\Summit;
 /**
  * Class SummitFactory
@@ -57,10 +59,6 @@ final class SummitFactory
             $summit->setDatesLabel(trim($data['dates_label']));
         }
 
-        if(isset($data['external_summit_id']) ){
-            $summit->setExternalSummitId(trim($data['external_summit_id']));
-        }
-
         if(isset($data['calendar_sync_name']) ){
             $summit->setCalendarSyncName(trim($data['calendar_sync_name']));
         }
@@ -69,53 +67,101 @@ final class SummitFactory
             $summit->setCalendarSyncDesc(trim($data['calendar_sync_desc']));
         }
 
+        // BOOKING PERIOD
         if(array_key_exists('begin_allow_booking_date', $data) && array_key_exists('end_allow_booking_date', $data)) {
             if (isset($data['begin_allow_booking_date']) && isset($data['end_allow_booking_date'])) {
-                $start_datetime = intval($data['begin_allow_booking_date']);
-                $start_datetime = new \DateTime("@$start_datetime");
-                $start_datetime->setTimezone($summit->getTimeZone());
-                $end_datetime = intval($data['end_allow_booking_date']);
-                $end_datetime = new \DateTime("@$end_datetime");
-                $end_datetime->setTimezone($summit->getTimeZone());
-                // set local time from UTC
-                $summit->setBeginAllowBookingDate($start_datetime);
-                $summit->setEndAllowBookingDate($end_datetime);
+                $val1 = intval($data['begin_allow_booking_date']);
+                if($val1 > 0) {
+                    $start_datetime = new \DateTime("@$val1");
+                    $start_datetime->setTimezone($summit->getTimeZone());
+                    // set local time from UTC
+                    $summit->setBeginAllowBookingDate($start_datetime);
+                }
+                else{
+                    $summit->clearAllowBookingDates();
+                }
+
+                $val2 = intval($data['end_allow_booking_date']);
+                if($val2 > 0) {
+                    $end_datetime = new \DateTime("@$val2");
+                    $end_datetime->setTimezone($summit->getTimeZone());
+                    // set local time from UTC
+                    $summit->setEndAllowBookingDate($end_datetime);
+                }
+                else{
+                    $summit->clearAllowBookingDates();
+                }
             }
             else{
                 $summit->clearAllowBookingDates();
             }
         }
-
+        // SUMMIT PERIOD
         if(array_key_exists('start_date', $data) && array_key_exists('end_date', $data)) {
             if (isset($data['start_date']) && isset($data['end_date'])) {
-                $start_datetime = intval($data['start_date']);
-                $start_datetime = new \DateTime("@$start_datetime");
-                $start_datetime->setTimezone($summit->getTimeZone());
-                $end_datetime = intval($data['end_date']);
-                $end_datetime = new \DateTime("@$end_datetime");
-                $end_datetime->setTimezone($summit->getTimeZone());
 
-                // set local time from UTC
-                $summit->setBeginDate($start_datetime);
-                $summit->setEndDate($end_datetime);
+                $val1 = intval($data['start_date']);
+                if($val1 > 0) {
+                    $start_datetime = new \DateTime("@$val1");
+                    $start_datetime->setTimezone($summit->getTimeZone());
+                    // set local time from UTC
+                    $summit->setBeginDate($start_datetime);
+                }
+                else{
+                    $summit->clearBeginEndDates();
+                }
+
+                $val2 = intval($data['end_date']);
+                if($val2 > 0) {
+                    $end_datetime = new \DateTime("@$val2");
+                    $end_datetime->setTimezone($summit->getTimeZone());
+                    // set local time from UTC
+                    $summit->setEndDate($end_datetime);
+                }
+                else{
+                    $summit->clearBeginEndDates();
+                }
             }
             else{
                 $summit->clearBeginEndDates();
             }
         }
 
+        // REGISTRATION PERIOD
         if(array_key_exists('registration_begin_date', $data) && array_key_exists('registration_end_date', $data)) {
             if (isset($data['registration_begin_date']) && isset($data['registration_end_date'])) {
-                $start_datetime = intval($data['registration_begin_date']);
-                $start_datetime = new \DateTime("@$start_datetime");
-                $start_datetime->setTimezone($summit->getTimeZone());
-                $end_datetime = intval($data['registration_end_date']);
-                $end_datetime = new \DateTime("@$end_datetime");
-                $end_datetime->setTimezone($summit->getTimeZone());
 
-                // set local time from UTC
-                $summit->setRegistrationBeginDate($start_datetime);
-                $summit->setRegistrationEndDate($end_datetime);
+                $val1 = intval($data['registration_begin_date']);
+
+                if($val1 > 0) {
+                    $start_datetime = new \DateTime("@$val1");
+                    $start_datetime->setTimezone($summit->getTimeZone());
+                    // set local time from UTC
+                    $summit->setRegistrationBeginDate($start_datetime);
+                }
+                else{
+                    $summit->clearRegistrationDates();
+                }
+
+                $val2 = intval($data['registration_end_date']);
+                if($val2 > 0) {
+                    $end_datetime = new \DateTime("@$val2");
+                    $end_datetime->setTimezone($summit->getTimeZone());
+                    // set local time from UTC
+                    $summit->setRegistrationEndDate($end_datetime);
+
+                    $summit_end_date   = $summit->getLocalEndDate();
+
+                    if(!is_null($summit_end_date)){
+                        // registration end date could be after summit end date due people could get registered after summit is end
+                        // to obtain access to summit content ( mainly for virtual events)
+                        if($start_datetime > $summit_end_date)
+                            throw new ValidationException("The Registration Begin Date cannot be after the Summit End Date.");
+                    }
+                }
+                else{
+                    $summit->clearRegistrationDates();
+                }
             }
             else{
                 $summit->clearRegistrationDates();
@@ -124,30 +170,81 @@ final class SummitFactory
 
         if(array_key_exists('start_showing_venues_date', $data)){
             if (isset($data['start_showing_venues_date'])) {
-                $start_datetime = intval($data['start_showing_venues_date']);
-                $start_datetime = new \DateTime("@$start_datetime");
-                $start_datetime->setTimezone($summit->getTimeZone());
-
-                // set local time from UTC
-                $summit->setStartShowingVenuesDate($start_datetime);
+                $val = intval($data['start_showing_venues_date']);
+                if($val > 0) {
+                    $start_datetime = new \DateTime("@$val");
+                    $start_datetime->setTimezone($summit->getTimeZone());
+                    // set local time from UTC
+                    $summit->setStartShowingVenuesDate($start_datetime);
+                }
+                else{
+                    $summit->clearStartShowingVenuesDate();
+                }
             }
             else{
                 $summit->clearStartShowingVenuesDate();
             }
         }
 
+        if(array_key_exists('reassign_ticket_till_date', $data)){
+            if (isset($data['reassign_ticket_till_date'])) {
+
+                $val = intval($data['reassign_ticket_till_date']);
+                if($val > 0) {
+                    $date = new \DateTime("@$val");
+                    $date->setTimezone($summit->getTimeZone());
+
+
+                    // set local time from UTC
+                    $summit->setReassignTicketTillDate($date);
+                }
+                else
+                {
+                    $summit->clearReassignTicketTillDate();
+                }
+            }
+            else{
+                $summit->clearReassignTicketTillDate();
+            }
+        }
+
         if(array_key_exists('schedule_start_date', $data)) {
             if (isset($data['schedule_start_date'])) {
-                $start_datetime = intval($data['schedule_start_date']);
-                $start_datetime = new \DateTime("@$start_datetime");
-                $start_datetime->setTimezone($summit->getTimeZone());
+                $val = intval($data['schedule_start_date']);
+                if($val > 0) {
+                    $start_datetime = new \DateTime("@$val");
+                    $start_datetime->setTimezone($summit->getTimeZone());
 
-                // set local time from UTC
-                $summit->setScheduleDefaultStartDate($start_datetime);
+                    // set local time from UTC
+                    $summit->setScheduleDefaultStartDate($start_datetime);
+                }
+                else{
+                    $summit->clearScheduleDefaultStartDate();
+                }
             }
             else{
                 $summit->clearScheduleDefaultStartDate();
             }
+        }
+
+        if(isset($data['link']) ){
+            $summit->setLink(trim($data['link']));
+        }
+
+        if(isset($data['registration_disclaimer_mandatory']) ){
+            $registration_disclaimer_mandatory = boolval($data['registration_disclaimer_mandatory']);
+            $summit->setRegistrationDisclaimerMandatory($registration_disclaimer_mandatory);
+            if($registration_disclaimer_mandatory){
+
+                $registration_disclaimer_content = $data['registration_disclaimer_content'] ?? '';
+                if(empty($registration_disclaimer_content)){
+                    throw new ValidationException("registration_disclaimer_content is mandatory");
+                }
+            }
+        }
+
+        if(isset($data['registration_disclaimer_content'])){
+            $summit->setRegistrationDisclaimerContent(trim($data['registration_disclaimer_content']));
         }
 
         if(isset($data['link']) ){
@@ -185,12 +282,17 @@ final class SummitFactory
             $summit->setMeetingRoomBookingSlotLength(intval($data['meeting_room_booking_slot_length']));
         }
 
+        if(isset($data['registration_reminder_email_days_interval']) ){
+            // days
+            $summit->setRegistrationReminderEmailDaysInterval(intval($data['registration_reminder_email_days_interval']));
+        }
+
         if(isset($data['meeting_room_booking_max_allowed']) ){
             // maximun books per user
             $summit->setMeetingRoomBookingMaxAllowed(intval($data['meeting_room_booking_max_allowed']));
         }
 
-        // external feed
+        // external schedule feed
 
         if(isset($data['api_feed_type'])){
             $summit->setApiFeedType($data['api_feed_type']);
@@ -268,6 +370,52 @@ final class SummitFactory
 
         if(isset($data['schedule_twitter_text'])){
             $summit->setScheduleTwitterText(trim($data['schedule_twitter_text']));
+        }
+
+        // external registration feed
+
+        if(isset($data['external_summit_id']) ){
+            $summit->setExternalSummitId(trim($data['external_summit_id']));
+        }
+
+        if(isset($data['external_registration_feed_type']) ){
+            $summit->setExternalRegistrationFeedType(trim($data['external_registration_feed_type']));
+        }
+
+        if(isset($data['external_registration_feed_api_key']) ){
+            $summit->setExternalRegistrationFeedApiKey(trim($data['external_registration_feed_api_key']));
+        }
+
+        $summit->generateRegistrationSlugPrefix();
+
+        // urls
+
+        if(isset($data['default_page_url']) ){
+            $summit->setDefaultPageUrl(trim($data['default_page_url']));
+        }
+
+        if(isset($data['speaker_confirmation_default_page_url']) ){
+            $summit->setSpeakerConfirmationDefaultPageUrl(trim($data['speaker_confirmation_default_page_url']));
+        }
+
+        if(isset($data['virtual_site_url']) ){
+            $summit->setVirtualSiteUrl(trim($data['virtual_site_url']));
+        }
+
+        if(isset($data['marketing_site_url']) ){
+            $summit->setMarketingSiteUrl(trim($data['marketing_site_url']));
+        }
+
+        if(isset($data['virtual_site_oauth2_client_id']) ){
+            $summit->setVirtualSiteOAuth2ClientId(trim($data['virtual_site_oauth2_client_id']));
+        }
+
+        if(isset($data['marketing_site_oauth2_client_id']) ){
+            $summit->setMarketingSiteOAuth2ClientId(trim($data['marketing_site_oauth2_client_id']));
+        }
+
+        if(isset($data['support_email']) ){
+            $summit->setSupportEmail(trim($data['support_email']));
         }
 
         return $summit;

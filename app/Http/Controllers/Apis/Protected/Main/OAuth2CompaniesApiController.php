@@ -11,122 +11,102 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Services\Model\ICompanyService;
 use models\main\ICompanyRepository;
 use models\oauth2\IResourceServerContext;
-use utils\Filter;
-use utils\FilterParser;
-use utils\FilterParserException;
-use utils\OrderParser;
-use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Log;
-use utils\PagingInfo;
-use models\exceptions\EntityNotFoundException;
+use models\utils\IEntity;
+use ModelSerializers\SerializerRegistry;
 use models\exceptions\ValidationException;
-use Illuminate\Support\Facades\Input;
-use Illuminate\Support\Facades\Validator;
 /**
  * Class OAuth2CompaniesApiController
  * @package App\Http\Controllers
  */
 final class OAuth2CompaniesApiController extends OAuth2ProtectedController
 {
+
     /**
-     * OAuth2MembersApiController constructor.
+     * @var ICompanyService
+     */
+    private $service;
+
+    /**
+     * OAuth2CompaniesApiController constructor.
      * @param ICompanyRepository $company_repository
      * @param IResourceServerContext $resource_server_context
+     * @param ICompanyService $service
      */
     public function __construct
     (
         ICompanyRepository $company_repository,
-        IResourceServerContext $resource_server_context
+        IResourceServerContext $resource_server_context,
+        ICompanyService $service
     )
     {
         parent::__construct($resource_server_context);
         $this->repository = $company_repository;
+        $this->service = $service;
     }
 
-    public function getAll(){
+    use ParametrizedGetAll;
 
-        $values = Input::all();
+    /**
+     * @return mixed
+     */
+    public function getAllCompanies(){
 
-        $rules = array
-        (
-            'page'     => 'integer|min:1',
-            'per_page' => 'required_with:page|integer|min:5|max:100',
-        );
-
-        try {
-
-            $validation = Validator::make($values, $rules);
-
-            if ($validation->fails()) {
-                $ex = new ValidationException();
-                throw $ex->setMessages($validation->messages()->toArray());
-            }
-
-            // default values
-            $page     = 1;
-            $per_page = 5;
-
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
-            }
-
-            $filter = null;
-
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'),  array
-                (
+        return $this->_getAll(
+            function(){
+                return [
                     'name' => ['=@', '=='],
-                ));
-            }
-
-            $order = null;
-
-            if (Input::has('order'))
+                ];
+            },
+            function(){
+                return [
+                    'name' => 'sometimes|string',
+                ];
+            },
+            function()
             {
-                $order = OrderParser::parse(Input::get('order'), array
-                (
+                return [
                     'name',
                     'id',
-                ));
+                ];
+            },
+            function($filter){
+                return $filter;
+            },
+            function(){
+                return SerializerRegistry::SerializerType_Public;
             }
-
-            if(is_null($filter)) $filter = new Filter();
-
-            $data      = $this->repository->getAllByPage(new PagingInfo($page, $per_page), $filter, $order);
-            $fields    = Request::input('fields', '');
-            $fields    = !empty($fields) ? explode(',', $fields) : [];
-            $relations = Request::input('relations', '');
-            $relations = !empty($relations) ? explode(',', $relations) : [];
-
-            return $this->ok
-            (
-                $data->toArray
-                (
-                    Request::input('expand', ''),
-                    $fields,
-                    $relations
-                )
-            );
-        }
-        catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        }
-        catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412($ex2->getMessages());
-        }
-        catch(FilterParserException $ex3){
-            Log::warning($ex3);
-            return $this->error412($ex3->getMessages());
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        );
     }
 
+    use AddEntity;
+
+    /**
+     * @param array $payload
+     * @return array
+     */
+    function getAddValidationRules(array $payload): array
+    {
+        return [
+            'name'        => 'required|string',
+            'description' => 'nullable|string',
+            'url'         => 'nullable|url',
+            'industry'    => 'nullable|string',
+            'city'        => 'nullable|string',
+            'state'       => 'nullable|string',
+            'country'     => 'nullable|string',
+        ];
+    }
+
+    /**
+     * @param array $payload
+     * @return IEntity
+     * @throws ValidationException
+     */
+    protected function addEntity(array $payload): IEntity
+    {
+        return $this->service->addCompany($payload);
+    }
 }

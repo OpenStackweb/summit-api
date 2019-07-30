@@ -28,6 +28,13 @@ class BaseEntity implements IEntity
     protected $id;
 
     /**
+     * @return bool
+     */
+    public function isNew():bool{
+        return is_null($this->id);
+    }
+
+    /**
      * @return int
      */
     public function getIdentifier()

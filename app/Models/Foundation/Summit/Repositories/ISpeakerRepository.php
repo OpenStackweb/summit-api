@@ -33,6 +33,15 @@ interface ISpeakerRepository extends IBaseRepository
     public function getSpeakersBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null);
 
     /**
+     * @param Summit $summit
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return mixed
+     */
+    public function getSpeakersBySummitAndOnSchedule(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+
+    /**
      * @param Member $member
      * @return PresentationSpeaker
      */

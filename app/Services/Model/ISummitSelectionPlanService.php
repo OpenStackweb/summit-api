@@ -69,8 +69,9 @@ interface ISummitSelectionPlanService
 
 
     /**
+     * @param Summit $summit
      * @param string $status
      * @return SelectionPlan|null
      */
-    public function getCurrentSelectionPlanByStatus($status);
+    public function getCurrentSelectionPlanByStatus(Summit $summit, $status);
 }

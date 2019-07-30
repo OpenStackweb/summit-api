@@ -20,24 +20,41 @@ use Exception;
  */
 class ValidationException extends Exception
 {
+    /**
+     * @var array
+     */
     private $messages;
 
+    /**
+     * ValidationException constructor.
+     * @param string $message
+     * @param int $code
+     * @param Exception|null $previous
+     */
     public function __construct($message = '', $code = 0, Exception $previous = null)
     {
         parent::__construct($message, $code, $previous);
+        if(!is_array($message)){
+            $message = [$message];
+        }
+        $this->messages = $message;
     }
 
-    public function setMessages($messages)
+    /**
+     * @param array $messages
+     * @return $this
+     */
+    public function setMessages(array $messages)
     {
         $this->messages = $messages;
         return $this;
     }
 
-    public function getMessages()
+    public function getMessages():array
     {
         if(is_null($this->messages))
         {
-            $this->messages = array($this->getMessage());
+            $this->messages = [$this->getMessage()];
         }
         return $this->messages;
     }

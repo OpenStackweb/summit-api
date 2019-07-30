@@ -11,8 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
+
 /**
  * Class DoctrineJoinFilterMapping
  * @package utils
@@ -50,26 +52,60 @@ class DoctrineJoinFilterMapping extends FilterMapping
      * @param FilterElement $filter
      * @return QueryBuilder
      */
-    public function apply(QueryBuilder $query, FilterElement $filter){
-        $param_count = $query->getParameters()->count() + 1;
-        $where       = $this->where;
-        $has_param   = false;
+    public function apply(QueryBuilder $query, FilterElement $filter)
+    {
+        $value = $filter->getValue();
 
-        if(strstr($where,":value")) {
-            $where = str_replace(":value", ":value_" . $param_count, $where);
-            $has_param = true;
-        }
+        if (is_array($value)) {
+            $inner_where = '( ';
 
-        if(strstr($where,":operator"))
-            $where = str_replace(":operator", $filter->getOperator(), $where);
+            foreach ($value as $val) {
+                $param_count = $query->getParameters()->count() + 1;
+                $where = $this->where;
+                $has_param = false;
 
-        if(!in_array($this->alias, $query->getAllAliases()))
-            $query->innerJoin($this->table, $this->alias, Join::WITH);
+                if (strstr($where, ":value")) {
+                    $where = str_replace(":value", ":value_" . $param_count, $where);
+                    $has_param = true;
+                }
 
-        $query = $query->andWhere($where);
+                if (strstr($where, ":operator"))
+                    $where = str_replace(":operator", $filter->getOperator(), $where);
 
-        if($has_param){
-            $query = $query->setParameter(":value_".$param_count, $filter->getValue());
+                if ($has_param) {
+                    $query = $query->setParameter(":value_" . $param_count, $val);
+                }
+                $inner_where .= $where . " " . $filter->getSameFieldOp() . " ";
+            }
+            $inner_where = substr($inner_where, 0, (strlen($filter->getSameFieldOp()) + 1) * -1);
+            $inner_where .= ' )';
+
+            if (!in_array($this->alias, $query->getAllAliases()))
+                $query->innerJoin($this->table, $this->alias, Join::WITH);
+
+            $query = $query->andWhere($inner_where);
+
+        } else {
+            $param_count = $query->getParameters()->count() + 1;
+            $where = $this->where;
+            $has_param = false;
+
+            if (strstr($where, ":value")) {
+                $where = str_replace(":value", ":value_" . $param_count, $where);
+                $has_param = true;
+            }
+
+            if (strstr($where, ":operator"))
+                $where = str_replace(":operator", $filter->getOperator(), $where);
+
+            if (!in_array($this->alias, $query->getAllAliases()))
+                $query->innerJoin($this->table, $this->alias, Join::WITH);
+
+            $query = $query->andWhere($where);
+
+            if ($has_param) {
+                $query = $query->setParameter(":value_" . $param_count, $filter->getValue());
+            }
         }
 
         return $query;
@@ -81,25 +117,60 @@ class DoctrineJoinFilterMapping extends FilterMapping
      * @param FilterElement $filter
      * @return string
      */
-    public function applyOr(QueryBuilder $query, FilterElement $filter){
-        $param_count = $query->getParameters()->count() + 1;
-        $where       = $this->where;
-        $has_param   = false;
+    public function applyOr(QueryBuilder $query, FilterElement $filter)
+    {
+        $value = $filter->getValue();
+        if (is_array($value)) {
+            $inner_where = '( ';
 
-        if(strstr($where,":value")) {
+            foreach ($value as $val) {
+                $param_count = $query->getParameters()->count() + 1;
+                $where = $this->where;
+                $has_param = false;
+
+                if (strstr($where, ":value")) {
+                    $where = str_replace(":value", ":value_" . $param_count, $where);
+                    $has_param = true;
+                }
+
+                if (strstr($where, ":operator"))
+                    $where = str_replace(":operator", $filter->getOperator(), $where);
+
+                if ($has_param) {
+                    $query->setParameter(":value_" . $param_count, $value);
+                }
+
+                $inner_where .= $where . " " . $filter->getSameFieldOp() . " ";
+            }
+
+            $inner_where = substr($inner_where, 0, (strlen($filter->getSameFieldOp()) + 1) * -1);
+            $inner_where .= ' )';
+
+            if (!in_array($this->alias, $query->getAllAliases()))
+                $query->innerJoin($this->table, $this->alias, Join::WITH);
+
+            return $inner_where;
+        }
+
+        $param_count = $query->getParameters()->count() + 1;
+        $where = $this->where;
+        $has_param = false;
+
+        if (strstr($where, ":value")) {
             $where = str_replace(":value", ":value_" . $param_count, $where);
             $has_param = true;
         }
 
-        if(strstr($where,":operator"))
+        if (strstr($where, ":operator"))
             $where = str_replace(":operator", $filter->getOperator(), $where);
 
-        if(!in_array($this->alias, $query->getAllAliases()))
+        if (!in_array($this->alias, $query->getAllAliases()))
             $query->innerJoin($this->table, $this->alias, Join::WITH);
 
-        if($has_param){
-            $query->setParameter(":value_".$param_count, $filter->getValue());
+        if ($has_param) {
+            $query->setParameter(":value_" . $param_count, $value);
         }
+
         return $where;
     }
 

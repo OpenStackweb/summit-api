@@ -53,13 +53,53 @@ interface ISummitPromoCodeService
      */
     public function deletePromoCode(Summit $summit, $promo_code_id);
 
-
     /**
      * @param Summit $summit
      * @param int $promo_code_id
-     * @return EmailCreationRequest
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
     public function sendPromoCodeMail(Summit $summit, $promo_code_id);
+
+    /**
+     * @param Summit $summit
+     * @param int $promo_code_id
+     * @param int $ticket_type_id
+     * @param array $data
+     * @return SummitRegistrationPromoCode
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addPromoCodeTicketTypeRule(Summit $summit, int $promo_code_id, int $ticket_type_id, array $data):SummitRegistrationPromoCode;
+
+    /**
+     * @param Summit $summit
+     * @param int $promo_code_id
+     * @param int $ticket_type_id
+     * @return SummitRegistrationPromoCode
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function removePromoCodeTicketTypeRule(Summit $summit, int $promo_code_id, int $ticket_type_id):SummitRegistrationPromoCode;
+
+    /**
+     * @param Summit $summit
+     * @param int $promo_code_id
+     * @param int $badge_feature_id
+     * @return SummitRegistrationPromoCode
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addPromoCodeBadgeFeature(Summit $summit, int $promo_code_id, int $badge_feature_id):SummitRegistrationPromoCode;
+
+    /**
+     * @param Summit $summit
+     * @param int $promo_code_id
+     * @param int $badge_feature_id
+     * @return SummitRegistrationPromoCode
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function removePromoCodeBadgeFeature(Summit $summit, int $promo_code_id, int $badge_feature_id):SummitRegistrationPromoCode;
+
 }

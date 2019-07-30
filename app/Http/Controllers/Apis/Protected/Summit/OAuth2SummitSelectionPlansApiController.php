@@ -73,14 +73,14 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
 
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($selection_plan)->serialize(Request::input('expand', '')));
         }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
         }
-        catch(EntityNotFoundException $ex2)
+        catch(EntityNotFoundException $ex)
         {
-            Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
+            Log::warning($ex);
+            return $this->error404($ex->getMessage());
         }
         catch (Exception $ex) {
             Log::error($ex);
@@ -119,14 +119,14 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($selection_plan)->serialize());
         }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
         }
-        catch(EntityNotFoundException $ex2)
+        catch(EntityNotFoundException $ex)
         {
-            Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
+            Log::warning($ex);
+            return $this->error404($ex->getMessage());
         }
         catch (Exception $ex) {
             Log::error($ex);
@@ -164,14 +164,14 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($selection_plan)->serialize());
         }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
         }
-        catch(EntityNotFoundException $ex2)
+        catch(EntityNotFoundException $ex)
         {
-            Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
+            Log::warning($ex);
+            return $this->error404($ex->getMessage());
         }
         catch (Exception $ex) {
             Log::error($ex);
@@ -194,14 +194,14 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
 
             return $this->deleted();
         }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
         }
-        catch(EntityNotFoundException $ex2)
+        catch(EntityNotFoundException $ex)
         {
-            Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
+            Log::warning($ex);
+            return $this->error404($ex->getMessage());
         }
         catch (Exception $ex) {
             Log::error($ex);
@@ -225,14 +225,14 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
 
             return $this->deleted();
         }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
         }
-        catch(EntityNotFoundException $ex2)
+        catch(EntityNotFoundException $ex)
         {
-            Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
+            Log::warning($ex);
+            return $this->error404($ex->getMessage());
         }
         catch (Exception $ex) {
             Log::error($ex);
@@ -256,14 +256,14 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
 
             return $this->deleted();
         }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
         }
-        catch(EntityNotFoundException $ex2)
+        catch(EntityNotFoundException $ex)
         {
-            Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
+            Log::warning($ex);
+            return $this->error404($ex->getMessage());
         }
         catch (Exception $ex) {
             Log::error($ex);
@@ -272,26 +272,30 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
     }
 
     /**
-     * @param string $status
-     * @return mixed
+     * @param $summit_id
+     * @param $status
+     * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function getCurrentSelectionPlanByStatus($status){
+    public function getCurrentSelectionPlanByStatus($summit_id, $status){
         try {
 
-            $selection_plan = $this->selection_plan_service->getCurrentSelectionPlanByStatus($status);
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $selection_plan = $this->selection_plan_service->getCurrentSelectionPlanByStatus($summit, $status);
 
             if (is_null($selection_plan)) return $this->error404();
 
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($selection_plan)->serialize(Request::input('expand', '')));
         }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
         }
-        catch(EntityNotFoundException $ex2)
+        catch(EntityNotFoundException $ex)
         {
-            Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
+            Log::warning($ex);
+            return $this->error404($ex->getMessage());
         }
         catch (Exception $ex) {
             Log::error($ex);

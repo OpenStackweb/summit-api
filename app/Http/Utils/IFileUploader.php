@@ -21,10 +21,10 @@ interface IFileUploader
 {
     /**
      * @param UploadedFile $file
-     * @param $folder_name
+     * @param string $path
      * @param bool $is_image
      * @return File
      * @throws \Exception
      */
-    public function build(UploadedFile $file, $folder_name, $is_image = false);
+    public function build(UploadedFile $file, string $path, bool $is_image = false);
 }

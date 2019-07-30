@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\Presentation;
 /**
@@ -33,6 +32,7 @@ class PresentationSerializer extends SummitEventSerializer
         'StatusNice'              => 'status:json_string',
         'ProgressNice'            => 'progress:json_string',
         'Slug'                    => 'slug:json_string',
+        'SelectionStatus'         => 'selection_status:string',
     ];
 
     protected static $allowed_fields = [
@@ -47,10 +47,12 @@ class PresentationSerializer extends SummitEventSerializer
         'attending_media',
         'status',
         'progress',
+        'selection_status',
     ];
 
     protected static $allowed_relations = [
         'slides',
+        'media_uploads',
         'videos',
         'speakers',
         'links',
@@ -121,6 +123,21 @@ class PresentationSerializer extends SummitEventSerializer
             $values['videos'] = $videos;
         }
 
+        if(in_array('media_uploads', $relations))
+        {
+            $media_uploads = [];
+            $serializerType = SerializerRegistry::SerializerType_Public;
+            $currentUser = $this->resource_server_context->getCurrentUser();
+            if(!is_null($currentUser) && $currentUser->isAdmin()){
+                $serializerType = SerializerRegistry::SerializerType_Private;
+            }
+
+            foreach ($presentation->getMediaUploads() as $mediaUpload) {
+                $media_uploads[] = SerializerRegistry::getInstance()->getSerializer($mediaUpload, $serializerType)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'media_uploads'));;
+            }
+            $values['media_uploads'] = $media_uploads;
+        }
+
         if(in_array('extra_questions', $relations))
         {
             $answers = [];
@@ -146,8 +163,13 @@ class PresentationSerializer extends SummitEventSerializer
                     }
                     case 'creator':{
                         if($presentation->getCreatorId() > 0) {
+                            $member = $this->resource_server_context->getCurrentUser();
+                            $type = SerializerRegistry::SerializerType_Public;
+                            if(!is_null($member) && $member->isAdmin()){
+                                $type = SerializerRegistry::SerializerType_Admin;
+                            }
                             unset($values['creator_id']);
-                            $values['creator'] = SerializerRegistry::getInstance()->getSerializer($presentation->getCreator())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $values['creator'] = SerializerRegistry::getInstance()->getSerializer($presentation->getCreator(), $type)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                     }
                     break;

@@ -23,7 +23,7 @@ class CORSRequestPreflightData
 
 	// ttl on seconds
 	public static $cache_lifetime   = 10;
-	public static $cache_attributes = array('sender', 'uri', 'origin', 'expected_method', 'expected_custom_headers',  'allows_credentials');
+	public static $cache_attributes = ['sender', 'uri', 'origin', 'expected_method', 'expected_custom_headers', 'allows_credentials'];
 
 	/** Final HTTP request expected method */
 	private $expected_method = null;
@@ -69,7 +69,7 @@ class CORSRequestPreflightData
 	 */
 	public function toArray()
 	{
-		$res                            = array();
+		$res                            = [];
 		$res['sender']                  = $this->sender;
 		$res['uri']                     = $this->uri;
 		$res['origin']                  = $this->origin;

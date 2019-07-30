@@ -18,10 +18,6 @@ use models\summit\Summit;
  */
 interface IExternalScheduleFeedFactory
 {
-    const NoneType       = '';
-    const VanderpoelType = 'Vanderpoel';
-    const SchedType      = 'Sched';
-
     /**
      * @param Summit $summit
      * @return IExternalScheduleFeed|null

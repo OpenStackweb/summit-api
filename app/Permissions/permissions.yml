@@ -1,5 +1,7 @@
 # here you define per Entity ClassName allowed fields to edit per user role
 - SummitEvent:
+  - super-admins:
+    - __all__
   - administrators:
     - __all__
   - summit-front-end-administrators:
@@ -7,6 +9,8 @@
   - summit-room-administrators:
     - occupancy
 - Presentation:
+  - super-admins:
+    - __all__
   - administrators:
     - __all__
   - summit-front-end-administrators:

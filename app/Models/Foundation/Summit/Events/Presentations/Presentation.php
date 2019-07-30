@@ -20,6 +20,7 @@ use App\Models\Foundation\Summit\SelectionPlan;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\ArrayCollection;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplate;
+use Illuminate\Support\Facades\Config;
 use models\exceptions\ValidationException;
 use models\main\Member;
 /**
@@ -85,37 +86,37 @@ class Presentation extends SummitEvent
      * @ORM\Column(name="Level", type="string")
      * @var string
      */
-    private $level;
+    protected $level;
 
     /**
      * @ORM\Column(name="Slug", type="string")
      * @var string
      */
-    private $slug;
+    protected $slug;
 
     /**
      * @ORM\Column(name="Status", type="string")
      * @var string
      */
-    private $status;
+    protected $status;
 
     /**
      * @ORM\Column(name="Progress", type="integer")
      * @var int
      */
-    private $progress;
+    protected $progress;
 
     /**
      * @ORM\Column(name="ProblemAddressed", type="string")
      * @var string
      */
-    private $problem_addressed;
+    protected $problem_addressed;
 
     /**
      * @ORM\Column(name="AttendeesExpectedLearnt", type="string")
      * @var string
      */
-    private $attendees_expected_learnt;
+    protected $attendees_expected_learnt;
 
     /**
      * @ORM\Column(name="ToRecord", type="boolean")
@@ -134,7 +135,7 @@ class Presentation extends SummitEvent
      * @ORM\JoinColumn(name="ModeratorID", referencedColumnName="ID", onDelete="SET NULL")
      * @var PresentationSpeaker
      */
-    private $moderator;
+    protected $moderator;
 
 
     /**
@@ -142,26 +143,26 @@ class Presentation extends SummitEvent
      * @ORM\JoinColumn(name="CreatorID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */
-    private $creator;
+    protected $creator;
 
     /**
      * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="presentations")
      * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
      * @var SelectionPlan
      */
-    private $selection_plan;
+    protected $selection_plan;
 
     /**
      * @ORM\OneToMany(targetEntity="models\summit\PresentationMaterial", mappedBy="presentation", cascade={"persist", "remove"}, orphanRemoval=true)
      * @var PresentationMaterial[]
      */
-    private $materials;
+    protected $materials;
 
     /**
      * @ORM\OneToMany(targetEntity="models\summit\SummitPresentationComment", mappedBy="presentation", cascade={"persist", "remove"}, orphanRemoval=true)
      * @var SummitPresentationComment[]
      */
-    private $comments;
+    protected $comments;
 
     /**
      * @ORM\ManyToMany(targetEntity="models\summit\PresentationSpeaker", inversedBy="presentations")
@@ -175,19 +176,19 @@ class Presentation extends SummitEvent
      * }
      * )
      */
-    private $speakers;
+    protected $speakers;
 
     /**
      * @ORM\OneToMany(targetEntity="models\summit\SummitSelectedPresentation", mappedBy="presentation", cascade={"persist", "remove"}, orphanRemoval=true)
      * @var SummitSelectedPresentation[]
      */
-    private $selected_presentations;
+    protected $selected_presentations;
 
     /**
      * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackAnswer", mappedBy="presentation", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var TrackAnswer[]
      */
-    private $answers;
+    protected $answers;
 
     /**
      * @return bool
@@ -219,13 +220,13 @@ class Presentation extends SummitEvent
     public function __construct()
     {
         parent::__construct();
-        $this->progress        = self::PHASE_NEW;
-        $this->materials       = new ArrayCollection();
-        $this->speakers        = new ArrayCollection();
-        $this->answers         = new ArrayCollection();
-        $this->comments        = new ArrayCollection();
-        $this->to_record       = false;
-        $this->attending_media = false;
+        $this->progress              = self::PHASE_NEW;
+        $this->materials             = new ArrayCollection();
+        $this->speakers              = new ArrayCollection();
+        $this->answers               = new ArrayCollection();
+        $this->comments              = new ArrayCollection();
+        $this->to_record             = false;
+        $this->attending_media       = false;
     }
 
     /**
@@ -390,6 +391,18 @@ class Presentation extends SummitEvent
     }
 
     /**
+     * @param int $mediaUploadId
+     * @return PresentationMediaUpload
+     */
+    public function getMediaUploadBy($mediaUploadId){
+        $res = $this->materials
+            ->filter(function( $element) use($mediaUploadId) { return $element instanceof PresentationMediaUpload && $element->getId() == $mediaUploadId; })
+            ->first();
+        return $res === false ? null : $res;
+    }
+
+
+    /**
      * @param PresentationVideo $video
      */
     public function removeVideo(PresentationVideo $video){
@@ -411,6 +424,14 @@ class Presentation extends SummitEvent
     public function removeLink(PresentationLink  $link){
         $this->materials->removeElement($link);
         $link->unsetPresentation();
+    }
+
+    /**
+     * @param PresentationMediaUpload $mediaUpload
+     */
+    public function removeMediaUpload(PresentationMediaUpload $mediaUpload){
+        $this->materials->removeElement($mediaUpload);
+        $mediaUpload->unsetPresentation();
     }
 
     /**
@@ -449,9 +470,28 @@ class Presentation extends SummitEvent
     }
 
     /**
+     * @return PresentationMediaUpload[]
+     */
+    public function getMediaUploads()
+    {
+        return $this->materials->filter(function( $element) { return $element instanceof PresentationMediaUpload; });
+    }
+
+    /**
+     * @param PresentationMediaUpload $mediaUpload
+     * @return $this
+     */
+    public function addMediaUpload(PresentationMediaUpload $mediaUpload){
+        $this->materials->add($mediaUpload);
+        $mediaUpload->setPresentation($this);
+        $mediaUpload->setOrder($this->getMaterialsMaxOrder() + 1);
+        return $this;
+    }
+
+    /**
      * @return int
      */
-    private function getMaterialsMaxOrder(){
+    protected function getMaterialsMaxOrder(){
         $criteria = Criteria::create();
         $criteria->orderBy(['order' => 'DESC']);
         $material = $this->materials->matching($criteria)->first();
@@ -906,7 +946,7 @@ class Presentation extends SummitEvent
         return $this->slug;
     }
 
-    private static $default_replacements = [
+    protected static $default_replacements = [
         '/\s/' => '-', // remove whitespace
         '/_/' => '-', // underscores to dashes
         '/[^A-Za-z0-9+.\-]+/' => '', // remove non-ASCII chars, only allow alphanumeric plus dash and dot
@@ -932,6 +972,22 @@ class Presentation extends SummitEvent
         $this->title = $title;
         $this->generateSlug();
         return $this;
+    }
+
+    /**
+     * Gets a link to edit this presentation
+     *
+     * @return  string
+     */
+    public function getEditLink():string
+    {
+        return sprintf
+        (
+            "%s/app/%s/presentations/%s/summary",
+            Config::get('cfp.base_url'),
+            $this->summit->getRawSlug(),
+            $this->id
+        );
     }
 
 }

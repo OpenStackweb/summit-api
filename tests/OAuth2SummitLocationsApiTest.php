@@ -11,7 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Summit\Factories\SummitLocationFactory;
 use  LaravelDoctrine\ORM\Facades\EntityManager;
+use models\summit\SummitBookableVenueRoom;
+
 /**
  * Class OAuth2SummitLocationsApiTest
  */
@@ -20,6 +24,39 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
     public function testGetFolder(){
         $service = \Illuminate\Support\Facades\App::make(\App\Services\Model\IFolderService::class);
         $folder  =    $service->findOrMake('summits/1/locations/292/maps');
+    }
+
+    use InsertSummitTestData;
+
+    private static $bookable_room;
+
+    protected function setUp()
+    {
+        parent::setUp();
+        self::insertTestData();
+
+        $data = [
+            'name'            => 'test bookable room',
+            'capacity'       =>  10,
+            'description'    => 'test bookable room',
+            'time_slot_cost' => 200,
+            'currency'       => 'USD',
+        ];
+
+        $data['class_name'] = SummitBookableVenueRoom::ClassName;
+        self::$bookable_room = SummitLocationFactory::build($data);
+
+        self::$summit->addLocation(self::$bookable_room);
+        self::$mainVenue->addRoom(self::$bookable_room);
+
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+    }
+
+    protected function tearDown()
+    {
+        self::clearTestData();
+        parent::tearDown();
     }
 
     public function testGetCurrentSummitLocations($summit_id = 23)
@@ -1353,7 +1390,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
 
     // bookable rooms tests
 
-    public function testSummitGetBookableRoomsFilterDiffValuesSameColumn($summit_id = 27)
+    public function testSummitGetBookableRoomsFilterDiffValuesSameColumn($summit_id = 6)
     {
         $params = [
             'id'       => $summit_id,
@@ -1362,8 +1399,9 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'order'    => '-id',
             'expand'   => 'venue,attribute_type',
             'filter'   => [
-                "attribute==Beer&&Screen",
-                "capacity<=20"
+                "availability_day==1579086000",
+                "attribute==",
+                "capacity>=1"
             ],
         ];
 
@@ -1391,7 +1429,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($rooms));
     }
 
-    public function testSummitGetBookableRoomAvailability($summit_id = 27, $room_id = 922, $day = 1572829200)
+    public function testSummitGetBookableRoomAvailability($summit_id = 6, $room_id = 20, $day = 1579172400)
     {
         $params = [
             'id'       => $summit_id,
@@ -1429,18 +1467,17 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
      * @param int $start_date
      * @return mixed
      */
-    public function testBookableRoomReservation($summit_id =27, $start_date = 1572919200, $end_date = 1572922800){
-        $bookable_room = $this->testAddBookableRoom($summit_id);
+    public function testBookableRoomReservation(){
         $params = [
-            'id'       => $summit_id,
-            'room_id'  => $bookable_room->id,
+            'id'       => self::$summit->getId(),
+            'room_id'  => self::$bookable_room->getId(),
         ];
 
         $data = [
             'currency'   => 'USD',
             'amount'     => 200,
-            'start_datetime' => $start_date,
-            'end_datetime'   => $end_date,
+            'start_datetime' => 1572919200,
+            'end_datetime'   => 1572922800,
         ];
 
         $headers = [

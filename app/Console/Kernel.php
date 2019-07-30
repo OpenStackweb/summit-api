@@ -11,10 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-use App\Console\Commands\SummitEventSetAvgRateProcessor;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\App;
 use models\summit\CalendarSync\CalendarSyncInfo;
 /**
  * Class Kernel
@@ -37,6 +36,9 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\SummitRoomReservationRevocationCommand::class,
         \App\Console\Commands\ExternalScheduleFeedIngestionCommand::class,
         \App\Console\Commands\SummitEventSetAvgRateProcessor::class,
+        \App\Console\Commands\RegistrationSummitOrderRevocationCommand::class,
+        \App\Console\Commands\RegistrationSummitOrderReminderEmailCommand::class,
+        \App\Console\Commands\SummitForwardXDays::class,
     ];
 
     /**
@@ -48,6 +50,8 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // regenerate available summits cache
+
+        $env = App::environment();
 
         $schedule->command('summit:json-generator')->everyFiveMinutes()->withoutOverlapping();
 
@@ -79,5 +83,18 @@ class Kernel extends ConsoleKernel
 
         // AVG schedule feedback rate
         $schedule->command("summit:feedback-avg-rate-processor")->everyFifteenMinutes()->withoutOverlapping();
+        // registration orders
+
+        $schedule->command('summit:order-reservation-revocation')->everyFiveMinutes()->withoutOverlapping();
+
+        // reminder emails
+
+        $schedule->command('summit:registration-order-reminder-action-email')->everyThirtyMinutes()->timezone(new \DateTimeZone('UTC'))->withoutOverlapping();
+
+        // production YOCO (13) advance AT 0700 AM ( 12:00 AM PST)
+
+        if ($env == 'production') {
+            $schedule->command("summit:forward-x-days", [13, 2, '--check-ended'])->dailyAt("07:00")->timezone('UTC')->withoutOverlapping();
+        }
     }
 }

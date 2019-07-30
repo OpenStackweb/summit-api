@@ -14,16 +14,16 @@
 
 class OAuth2AttendeesApiTest extends ProtectedApiTest
 {
-    public function testGetAttendees(){
+    public function testGetAttendees($summit_id=23){
 
         $params = [
 
-            'id'       => 23,
+            'id'       => $summit_id,
             'page'     => 1,
             'per_page' => 10,
             'order'    => '+id',
             'filter'   => 'email=@jimmy',
-            'expand'   => 'member,schedule,rsvp'
+            'expand'   => 'member,schedule,rsvp,tickets, tickets.ticket_type'
         ];
 
         $headers = [
@@ -197,17 +197,24 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
         $this->assertResponseStatus(204);
     }
 
-    public function testUpdateAttendee(){
-        $attendee = $this->testGetAttendeeByID(12642);
+    public function testUpdateAttendee($summit_id = 27, $attendee_id = 18502){
+
 
         $params = [
-            'id' => 23,
-            'attendee_id' => $attendee->id
+            'id' => $summit_id,
+            'attendee_id' => $attendee_id
         ];
 
         $data = [
-            'member_id'          => $attendee->member->id,
-            'share_contact_info' => true
+            'share_contact_info' => true,
+            'first_name' => 'Sebastian',
+            'surname' => 'Marcet',
+            'email' => 'smarcet@gmail.com',
+            'extra_questions' => [
+                ['question_id' => 3, 'answer' => 'XL'],
+                ['question_id' => 4, 'answer' => 'None'],
+                ['question_id' => 5, 'answer' => 'None'],
+            ]
         ];
 
         $headers = [
@@ -227,7 +234,7 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
         );
 
         $content = $response->getContent();
-        $this->assertResponseStatus(204);
+        $this->assertResponseStatus(201);
         $attendee = json_decode($content);
         $this->assertTrue(!is_null($attendee));
         return $attendee;

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Http\Utils\FilterAvailableSummitsStrategy;
+use function GuzzleHttp\Psr7\str;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
@@ -54,10 +55,8 @@ class CurrentSummitFinderStrategy implements ISummitFinderStrategy
     public function find($summit_id)
     {
         $summit = $summit_id === 'current' ? $this->repository->getCurrent() : $this->repository->getById(intval($summit_id));
-        if(is_null($summit)) return null;
-        $show_all = FilterAvailableSummitsStrategy::shouldReturnAllSummits($this->resource_server_ctx);
-        if($show_all) return $summit;
-        if(!$summit->isAvailableOnApi()) return null;
+        if(is_null($summit))
+            $summit = $this->repository->getBySlug(strval($summit_id));
         return $summit;
     }
 }

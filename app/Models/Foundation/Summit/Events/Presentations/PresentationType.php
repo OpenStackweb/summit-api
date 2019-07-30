@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use Doctrine\Common\Collections\ArrayCollection;
 use models\summit\SummitEventType;
 use Doctrine\ORM\Mapping AS ORM;
 /**
@@ -82,6 +83,11 @@ class PresentationType extends SummitEventType
      * @var string
      */
     protected $moderator_label;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="SummitMediaUploadType", mappedBy="presentation_types")
+     */
+    protected $allowed_media_upload_types;
 
     /**
      * @param Summit $summit
@@ -290,5 +296,28 @@ SQL;
         $this->use_moderator              = false;
         $this->is_moderator_mandatory     = false;
         $this->should_be_available_on_cfp = false;
+        $this->allowed_media_upload_types = new ArrayCollection();
+        $this->max_moderators = 0;
+        $this->max_speakers = 0;
+        $this->min_moderators = 0;
+        $this->min_speakers = 0;
+    }
+
+    public function addAllowedMediaUploadType(SummitMediaUploadType $type){
+        if($this->allowed_media_upload_types->contains($type)) return;
+        $this->allowed_media_upload_types->add($type);
+    }
+
+    public function removeAllowedMediaUploadType(SummitMediaUploadType $type){
+        if(!$this->allowed_media_upload_types->contains($type)) return;
+        $this->allowed_media_upload_types->removeElement($type);
+    }
+
+    public function clearAllowedMediaUploadType(){
+        $this->allowed_media_upload_types->clear();
+    }
+
+    public function getAllowedMediaUploadTypes(){
+        return $this->allowed_media_upload_types;
     }
 }

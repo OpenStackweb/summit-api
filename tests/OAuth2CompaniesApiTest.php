@@ -20,14 +20,14 @@ class OAuth2CompaniesApiTest extends ProtectedApiTest
 
         $params = [
             //AND FILTER
-            'filter' => ['name=@tip'],
+            'filter' => ['name=@Dell\,'],
             'order'  => '-id'
         ];
 
         $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
         $response = $this->action(
             "GET",
-            "OAuth2CompaniesApiController@getAll",
+            "OAuth2CompaniesApiController@getAllCompanies",
             $params,
             array(),
             array(),
@@ -39,6 +39,35 @@ class OAuth2CompaniesApiTest extends ProtectedApiTest
         $companies = json_decode($content);
         $this->assertTrue(!is_null($companies));
         $this->assertResponseStatus(200);
+    }
+
+    public function testAddCompany(){
+        $data = [
+            'name' => str_random(16).'_company',
+            'description' => str_random(16).'_description',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2CompaniesApiController@add",
+            [],
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $company = json_decode($content);
+        $this->assertTrue(!is_null($company));
+        return $company;
     }
 
 }

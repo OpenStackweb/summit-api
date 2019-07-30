@@ -22,6 +22,8 @@ interface IGroup
     const Administrators           = 'administrators';
     const SuperAdmins              = 'super-admins';
     const BadgePrinters            = 'badge-printers';
+    const TrackChairs              = 'track-chairs';
+    const TrackChairsAdmins        = 'track-chairs-admins';
     const CommunityMembers         = 'community-members';
     const FoundationMembers        = 'foundation-members';
     const SummitAdministrators     = 'summit-front-end-administrators';

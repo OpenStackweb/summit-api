@@ -121,5 +121,25 @@ final class ApiSeeder extends Seeder
 
         EntityManager::flush();
 
+        // summit administrator groups
+
+        $api = new Api();
+        $api->setName('summit-administrator-groups');
+        $api->setActive(true);
+        $api->setDescription('Summit Administrator Groups API');
+
+        EntityManager::persist($api);
+
+        // summit-media-file-types
+
+        $api = new Api();
+        $api->setName('summit-media-file-types');
+        $api->setActive(true);
+        $api->setDescription('Summit Media File Types API');
+
+        EntityManager::persist($api);
+
+        EntityManager::flush();
+
     }
 }

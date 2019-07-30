@@ -40,9 +40,12 @@ class SummitBookableVenueRoomAttributeValueSerializer extends SilverStripeSerial
             foreach ($exp_expand as $relation) {
                 $relation = trim($relation);
                 switch ($relation) {
-                    case 'attribute_type': {
+                    case 'type': {
                         unset($values['type_id']);
-                        $values['type'] = SerializerRegistry::getInstance()->getSerializer($attr_value->getType())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        $values['type'] = SerializerRegistry::getInstance()->getSerializer
+                        (
+                            $attr_value->getType()
+                        )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                     break;
 

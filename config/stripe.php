@@ -14,7 +14,12 @@
 return [
     // Set your secret key: remember to change this to your live secret key in production
     // See your keys here: https://dashboard.stripe.com/account/apikeys
-    "private_key" => env('STRIPE_PRIVATE_KEY', ''),
+    "booking_private_key" => env('STRIPE_BOOKING_PRIVATE_KEY', ''),
     // You can find your endpoint's secret in your webhook settings
-    "endpoint_secret" =>  env('STRIPE_ENDPOINT_SECRET', ''),
+    "booking_endpoint_secret" =>  env('STRIPE_BOOKING_ENDPOINT_SECRET', ''),
+    // Set your secret key: remember to change this to your live secret key in production
+    // See your keys here: https://dashboard.stripe.com/account/apikeys
+    "registration_private_key" => env('STRIPE_REGISTRATION_PRIVATE_KEY', ''),
+    // You can find your endpoint's secret in your webhook settings
+    "registration_endpoint_secret" =>  env('STRIPE_REGISTRATION_ENDPOINT_SECRET', ''),
 ];

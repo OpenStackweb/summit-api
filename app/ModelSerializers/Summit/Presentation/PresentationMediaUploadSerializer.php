@@ -1,0 +1,81 @@
+<?php namespace ModelSerializers;
+/**
+ * Copyright 2020 OpenStack Foundation
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ **/
+use App\Services\Filesystem\FileDownloadStrategyFactory;
+use Illuminate\Support\Facades\Log;
+use Libs\ModelSerializers\AbstractSerializer;
+use models\summit\PresentationMediaUpload;
+/**
+ * Class PresentationMediaUploadSerializer
+ * @package ModelSerializers
+ */
+class PresentationMediaUploadSerializer extends PresentationMaterialSerializer
+{
+    protected static $array_mappings = array
+    (
+        'Filename' => 'filename:json_text',
+        'MediaUploadTypeId' => 'media_upload_type_id:json_int'
+    );
+
+    /**
+     * @param null $expand
+     * @param array $fields
+     * @param array $relations
+     * @param array $params
+     * @return array
+     */
+    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    {
+        $values = parent::serialize($expand, $fields, $relations, $params);
+        $mediaUpload  = $this->object;
+        if(!$mediaUpload instanceof PresentationMediaUpload) return [];
+        unset($values['name']);
+        unset($values['description']);
+        unset($values['display_on_site']);
+        unset($values['featured']);
+        $values['display_on_site'] = false;
+
+        $mediaUploadType =  $mediaUpload->getMediaUploadType();
+        if(!is_null($mediaUploadType)){
+            try {
+                $values['name'] = $mediaUploadType->getName();
+                $values['description'] = $mediaUploadType->getDescription();
+                $strategy = FileDownloadStrategyFactory::build($mediaUploadType->getPublicStorageType());
+                if (!is_null($strategy)) {
+                    $values['public_url'] = $strategy->getUrl($mediaUpload->getRelativePath());
+                    $values['display_on_site'] = true;
+                }
+            }
+            catch (\Exception $ex){
+                Log::warning($ex);
+            }
+        }
+
+        if (!empty($expand)) {
+            foreach (explode(',', $expand) as $relation) {
+                $relation = trim($relation);
+                switch ($relation) {
+                    case 'media_upload_type': {
+                        unset($values['media_upload_type_id']);
+                        $type = $mediaUpload->getMediaUploadType();
+                        if(!is_null($type))
+                            $values['media_upload_type'] = SerializerRegistry::getInstance()->getSerializer($type)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                    }
+                  break;
+                }
+            }
+        }
+
+        return $values;
+    }
+}

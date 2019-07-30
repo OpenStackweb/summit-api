@@ -158,7 +158,7 @@ final class AccessTokenService implements IAccessTokenService
         }
 
         if(array_key_exists("user_groups" , $token_info)){
-            $token_info['user_groups'] = json_encode($token_info['user_groups']);
+           $token_info['user_groups'] = json_encode($token_info['user_groups']);
         }
 
         $this->cache_service->storeHash(md5($token_value), $token_info, $cache_lifetime);
@@ -200,7 +200,7 @@ final class AccessTokenService implements IAccessTokenService
             }
             // http://docs.guzzlephp.org/en/stable/request-options.html
             $response = $client->request('POST',
-                "{$auth_server_url}/oauth2/token/introspection",
+                  "{$auth_server_url}/oauth2/token/introspection",
                 [
                     'form_params'  => ['token' => $token_value],
                     'auth'         => [$client_id, $client_secret],

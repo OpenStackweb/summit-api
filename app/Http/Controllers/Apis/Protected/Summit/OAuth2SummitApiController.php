@@ -11,7 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Http\Exceptions\HTTP403ForbiddenException;
+use App\Models\Foundation\Main\IGroup;
+use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use Exception;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
@@ -19,6 +22,7 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\SummitAdministratorPermissionGroup;
 use models\oauth2\IResourceServerContext;
 use models\summit\ConfirmationExternalOrderRequest;
 use models\summit\IEventFeedbackRepository;
@@ -28,14 +32,24 @@ use models\summit\ISummitRepository;
 use ModelSerializers\ISerializerTypeSelector;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISummitService;
-use utils\PagingResponse;
+use utils\Filter;
+use utils\FilterElement;
+use utils\Order;
+use utils\OrderElement;
 use Illuminate\Http\Request as LaravelRequest;
+
+
 /**
  * Class OAuth2SummitApiController
  * @package App\Http\Controllers
  */
 final class OAuth2SummitApiController extends OAuth2ProtectedController
 {
+
+    /**
+     * @var IBuildDefaultPaymentGatewayProfileStrategy
+     */
+    private $build_default_payment_gateway_profile_strategy;
 
     /**
      * @var ISummitService
@@ -70,6 +84,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
      * @param IEventFeedbackRepository $event_feedback_repository
      * @param ISummitService $summit_service
      * @param ISerializerTypeSelector $serializer_type_selector
+     * @param IBuildDefaultPaymentGatewayProfileStrategy $build_default_payment_gateway_profile_strategy
      * @param IResourceServerContext $resource_server_context
      */
     public function __construct
@@ -80,89 +95,185 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         IEventFeedbackRepository $event_feedback_repository,
         ISummitService $summit_service,
         ISerializerTypeSelector $serializer_type_selector,
+        IBuildDefaultPaymentGatewayProfileStrategy $build_default_payment_gateway_profile_strategy,
         IResourceServerContext $resource_server_context
-    ) {
+    )
+    {
         parent::__construct($resource_server_context);
 
-        $this->repository                = $summit_repository;
-        $this->speaker_repository        = $speaker_repository;
-        $this->event_repository          = $event_repository;
+        $this->repository = $summit_repository;
+        $this->speaker_repository = $speaker_repository;
+        $this->event_repository = $event_repository;
         $this->event_feedback_repository = $event_feedback_repository;
-        $this->serializer_type_selector  = $serializer_type_selector;
-        $this->summit_service            = $summit_service;
+        $this->serializer_type_selector = $serializer_type_selector;
+        $this->build_default_payment_gateway_profile_strategy = $build_default_payment_gateway_profile_strategy;
+        $this->summit_service = $summit_service;
     }
+
+    use ParametrizedGetAll;
+
 
     /**
      * @return mixed
      */
     public function getSummits()
     {
-        try {
+        $current_member = $this->resource_server_context->getCurrentUser();
 
-            $expand    = Request::input('expand', '');
-            $fields    = Request::input('fields', '');
-            $relations = Request::input('relations', '');
-
-            $relations = !empty($relations) ? explode(',', $relations) : [];
-            $fields    = !empty($fields) ? explode(',', $fields) : [];
-
-            $summits = [];
-
-            foreach($this->repository->getAvailables() as $summit){
-                $summits[] = SerializerRegistry::getInstance()->getSerializer($summit)->serialize($expand, $fields, $relations);
-            }
-
-            $response = new PagingResponse
-            (
-                count($summits),
-                count($summits),
-                1,
-                1,
-                $summits
-            );
-
-            return $this->ok($response->toArray());
+        if (!is_null($current_member) && !$current_member->isAdmin() && $current_member->isSummitAdmin() && !$current_member->hasAllowedSummits()) {
+            return $this->error403(['message' => sprintf("Member %s has not permission for any Summit", $current_member->getId())]);
         }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+
+        return $this->_getAll(
+            function () {
+                return [
+                    'name' => ['=@', '=='],
+                    'start_date' => ['==', '<', '>', '<=', '>='],
+                    'end_date' => ['==', '<', '>', '<=', '>='],
+                    'registration_begin_date' => ['==', '<', '>', '<=', '>='],
+                    'registration_end_date' => ['==', '<', '>', '<=', '>='],
+                    'ticket_types_count' => ['==', '<', '>', '<=', '>=', '<>'],
+                ];
+            },
+            function () {
+                return [
+                    'name' => 'sometimes|required|string',
+                    'start_date' => 'sometimes|required|date_format:U',
+                    'end_date' => 'sometimes|required_with:start_date|date_format:U|after:start_date',
+                    'registration_begin_date' => 'sometimes|required|date_format:U',
+                    'registration_end_date' => 'sometimes|required_with:start_date|date_format:U|after:registration_begin_date',
+                    'ticket_types_count' => 'sometimes|required|integer'
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'name',
+                    'begin_date',
+                    'registration_begin_date'
+                ];
+            },
+            function ($filter) use ($current_member) {
+                if ($filter instanceof Filter) {
+                    $filter->addFilterCondition(FilterElement::makeEqual('available_on_api', '1'));
+                    if (!is_null($current_member) && !$current_member->isAdmin() && $current_member->isSummitAdmin()) {
+                        // filter only the ones that we are allowed to see
+                        $filter->addFilterCondition
+                        (
+                            FilterElement::makeEqual
+                            (
+                                'summit_id',
+                                $current_member->getAllAllowedSummitsIds(),
+                                "OR"
+
+                            )
+                        );
+
+                    }
+                }
+                return $filter;
+            },
+            function () {
+                return $this->serializer_type_selector->getSerializerType();
+            },
+            function () {
+                return new Order([
+                    OrderElement::buildAscFor("begin_date"),
+                ]);
+            },
+            function () {
+                return PHP_INT_MAX;
+            },
+            null,
+            [
+                'build_default_payment_gateway_profile_strategy' => $this->build_default_payment_gateway_profile_strategy
+            ]
+        );
     }
 
     /**
      * @return mixed
      */
-    public function getAllSummits(){
-             try {
+    public function getAllSummits()
+    {
 
-            $expand    = Request::input('expand', '');
-            $fields    = Request::input('fields', '');
-            $relations = Request::input('relations', '');
+        $current_member = $this->resource_server_context->getCurrentUser();
 
-            $relations = !empty($relations) ? explode(',', $relations) : [];
-            $fields    = !empty($fields) ? explode(',', $fields) : [];
+        if (!is_null($current_member) && !$current_member->isAdmin() && $current_member->isSummitAdmin() && !$current_member->hasAllowedSummits()) {
+            return $this->error403(['message' => sprintf("Member %s has not permission for any Summit", $current_member->getId())]);
+        }
 
-            $summits = [];
+        return $this->_getAll(
+            function () {
+                return [
+                    'name' => ['=@', '=='],
+                    'start_date' => ['==', '<', '>', '=>', '>='],
+                    'end_date' => ['==', '<', '>', '=>', '>='],
+                    'registration_begin_date' => ['==', '<', '>', '=>', '>='],
+                    'registration_end_date' => ['==', '<', '>', '=>', '>='],
+                    'ticket_types_count' => ['==', '<', '>', '=>', '>=', '<>'],
+                    'submission_begin_date' => ['==', '<', '>', '=>', '>='],
+                    'submission_end_date' => ['==', '<', '>', '=>', '>='],
+                    'selection_plan_enabled' => ['=='],
+                ];
+            },
+            function () {
+                return [
+                    'name' => 'sometimes|required|string',
+                    'start_date' => 'sometimes|required|date_format:U',
+                    'end_date' => 'sometimes|required_with:start_date|date_format:U|after:start_date',
+                    'registration_begin_date' => 'sometimes|required|date_format:U',
+                    'registration_end_date' => 'sometimes|required_with:start_date|date_format:U|after:registration_begin_date',
+                    'ticket_types_count' => 'sometimes|required|integer',
+                    'submission_begin_date' => 'sometimes|required|date_format:U',
+                    'submission_end_date' => 'sometimes|required_with:submission_begin_date|date_format:U',
+                    'selection_plan_enabled' => 'sometimes|required|boolean',
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'name',
+                    'start_date',
+                    'registration_begin_date'
+                ];
+            },
+            function ($filter) use ($current_member) {
+                if ($filter instanceof Filter) {
+                    if (!is_null($current_member) && !$current_member->isAdmin() && $current_member->isSummitAdmin()) {
+                        // filter only the ones that we are allowed to see
+                        $filter->addFilterCondition
+                        (
+                            FilterElement::makeEqual
+                            (
+                                'summit_id',
+                                $current_member->getAllAllowedSummitsIds(),
+                                "OR"
 
-            foreach($this->repository->getAllOrderedByBeginDate()as $summit){
-                $summits[] = SerializerRegistry::getInstance()->getSerializer($summit)->serialize($expand, $fields, $relations);
+                            )
+                        );
+
+                    }
+                }
+                return $filter;
+            },
+            function () {
+                return $this->serializer_type_selector->getSerializerType();
             }
-
-            $response = new PagingResponse
-            (
-                count($summits),
-                count($summits),
-                1,
-                1,
-                $summits
-            );
-
-            return $this->ok($response->toArray());
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            ,
+            function () {
+                return new Order([
+                    OrderElement::buildAscFor("begin_date"),
+                ]);
+            },
+            function () {
+                return PHP_INT_MAX;
+            },
+            null,
+            [
+                'build_default_payment_gateway_profile_strategy' => $this->build_default_payment_gateway_profile_strategy
+            ]
+        );
     }
 
     /**
@@ -175,22 +286,29 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         try {
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators))
+                return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
             $serializer_type = $this->serializer_type_selector->getSerializerType();
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($summit, $serializer_type)->serialize($expand));
-        }
-        catch(HTTP403ForbiddenException $ex1){
+            return $this->ok
+            (
+                SerializerRegistry::getInstance()
+                    ->getSerializer($summit, $serializer_type)
+                    ->serialize($expand, [], [], [
+                        'build_default_payment_gateway_profile_strategy' => $this->build_default_payment_gateway_profile_strategy
+                    ])
+            );
+        } catch (HTTP403ForbiddenException $ex1) {
             Log::warning($ex1);
             return $this->error403();
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
     }
 
-
     /**
-     * @return mixed
+     * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function getAllCurrentSummit()
     {
@@ -199,36 +317,62 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         try {
             $summit = $this->repository->getCurrent();
             if (is_null($summit)) return $this->error404();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators))
+                return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
             $serializer_type = $this->serializer_type_selector->getSerializerType();
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($summit, $serializer_type)->serialize($expand));
-        }
-        catch(HTTP403ForbiddenException $ex1){
+            return $this->ok
+            (
+                SerializerRegistry::getInstance()
+                    ->getSerializer($summit, $serializer_type)
+                    ->serialize($expand, [], [], [
+                        'build_default_payment_gateway_profile_strategy' => $this->build_default_payment_gateway_profile_strategy
+                    ])
+            );
+        } catch (HTTP403ForbiddenException $ex1) {
             Log::warning($ex1);
             return $this->error403();
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
     }
 
-    public function getAllSummitByIdOrSlug($id){
+    /**
+     * @param $id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getAllSummitByIdOrSlug($id)
+    {
 
         $expand = Request::input('expand', '');
 
         try {
             $summit = $this->repository->getById(intval($id));
-            if(is_null($summit))
+            if (is_null($summit))
                 $summit = $this->repository->getBySlug(trim($id));
+
             if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators))
+                return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
+
             $serializer_type = $this->serializer_type_selector->getSerializerType();
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($summit, $serializer_type)->serialize($expand));
-        }
-        catch(HTTP403ForbiddenException $ex1){
+
+            return $this->ok
+            (
+                SerializerRegistry::getInstance()
+                    ->getSerializer($summit, $serializer_type)
+                    ->serialize($expand, [], [],
+                        [
+                            'build_default_payment_gateway_profile_strategy' => $this->build_default_payment_gateway_profile_strategy
+                        ])
+            );
+        } catch (HTTP403ForbiddenException $ex1) {
             Log::warning($ex1);
             return $this->error403();
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -237,15 +381,19 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
     /**
      * @return mixed
      */
-    public function addSummit(){
+    public function addSummit()
+    {
         try {
 
-            if(!Request::isJson()) return $this->error400();
+            if (!Request::isJson()) return $this->error400();
             $payload = Input::json()->all();
 
             $rules = SummitValidationRulesFactory::build($payload);
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
+            $validation = Validator::make($payload, $rules, $messages = [
+                'slug.required' => 'A Slug is required.',
+                'schedule_start_date.before_or_equal' => 'Show on schedule page needs to be after the start of the Show And Before of the Show End.',
+            ]);
 
             if ($validation->fails()) {
                 $messages = $validation->messages()->toArray();
@@ -259,17 +407,13 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             $summit = $this->summit_service->addSummit($payload);
             $serializer_type = $this->serializer_type_selector->getSerializerType();
             return $this->created(SerializerRegistry::getInstance()->getSerializer($summit, $serializer_type)->serialize());
-        }
-        catch (ValidationException $ex1) {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412([$ex1->getMessage()]);
-        }
-        catch(EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
-        }
-        catch (Exception $ex) {
+            return $this->error404(['message' => $ex2->getMessage()]);
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -279,10 +423,11 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
-    public function updateSummit($summit_id){
+    public function updateSummit($summit_id)
+    {
         try {
 
-            if(!Request::isJson()) return $this->error400();
+            if (!Request::isJson()) return $this->error400();
             $payload = Input::json()->all();
 
             $rules = SummitValidationRulesFactory::build($payload, true);
@@ -298,20 +443,23 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 );
             }
 
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators))
+                return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
+
             $summit = $this->summit_service->updateSummit($summit_id, $payload);
             $serializer_type = $this->serializer_type_selector->getSerializerType();
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($summit, $serializer_type)->serialize());
-        }
-        catch (ValidationException $ex1) {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412([$ex1->getMessage()]);
-        }
-        catch(EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
-        }
-        catch (Exception $ex) {
+            return $this->error404(['message' => $ex2->getMessage()]);
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -321,23 +469,20 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
-    public function deleteSummit($summit_id){
+    public function deleteSummit($summit_id)
+    {
         try {
 
             $this->summit_service->deleteSummit($summit_id);
 
             return $this->deleted();
-        }
-        catch (ValidationException $ex1) {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412([$ex1->getMessage()]);
-        }
-        catch(EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
-        }
-        catch (Exception $ex) {
+            return $this->error404(['message' => $ex2->getMessage()]);
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -354,40 +499,37 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $current_member    = $this->resource_server_context->getCurrentUser();
-            $current_member_id = is_null($current_member)? null : $current_member->getId();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            $current_member_id = is_null($current_member) ? null : $current_member->getId();
 
             $last_event_id = Request::input('last_event_id', null);
-            $from_date     = Request::input('from_date', null);
-            $limit         = Request::input('limit', 25);
+            $from_date = Request::input('from_date', null);
+            $limit = Request::input('limit', 25);
 
             $rules = [
                 'last_event_id' => 'sometimes|required|integer',
-                'from_date'     => 'sometimes|required|integer',
-                'limit'         => 'sometimes|required|integer',
+                'from_date' => 'sometimes|required|integer',
+                'limit' => 'sometimes|required|integer',
             ];
 
             $data = [];
 
-            if (!is_null($last_event_id))
-            {
+            if (!is_null($last_event_id)) {
                 $data['last_event_id'] = $last_event_id;
             }
 
-            if (!is_null($from_date))
-            {
+            if (!is_null($from_date)) {
                 $data['from_date'] = $from_date;
             }
 
-            if(!is_null($limit)){
+            if (!is_null($limit)) {
                 $data['limit'] = $limit;
             }
 
             // Creates a Validator instance and validates the data.
             $validation = Validator::make($data, $rules);
 
-            if ($validation->fails())
-            {
+            if ($validation->fails()) {
                 $messages = $validation->messages()->toArray();
 
                 return $this->error412
@@ -396,8 +538,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 );
             }
 
-            if (!is_null($from_date))
-            {
+            if (!is_null($from_date)) {
                 $from_date = new \DateTime("@$from_date", new \DateTimeZone("UTC"));
             }
 
@@ -421,9 +562,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             )*/
                 $list
             );
-        }
-        catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -434,22 +573,20 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
      * @param $external_order_id
      * @return mixed
      */
-    public function getExternalOrder($summit_id, $external_order_id){
+    public function getExternalOrder($summit_id, $external_order_id)
+    {
         try {
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $order = $this->summit_service->getExternalOrder($summit, $external_order_id);
             return $this->ok($order);
-        }
-        catch (EntityNotFoundException $ex1) {
+        } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404(array('message' => $ex1->getMessage()));
-        }
-        catch (ValidationException $ex2) {
+        } catch (ValidationException $ex2) {
             Log::warning($ex2);
             return $this->error412($ex2->getMessages());
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -461,7 +598,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
      * @param $external_attendee_id
      * @return mixed
      */
-    public function confirmExternalOrderAttendee($summit_id, $external_order_id, $external_attendee_id){
+    public function confirmExternalOrderAttendee($summit_id, $external_order_id, $external_attendee_id)
+    {
         try {
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -480,23 +618,27 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             );
 
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($attendee)->serialize());
-        }
-        catch (EntityNotFoundException $ex1) {
+        } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404(array('message' => $ex1->getMessage()));
-        }
-        catch (ValidationException $ex2) {
+        } catch (ValidationException $ex2) {
             Log::warning($ex2);
             return $this->error412($ex2->getMessages());
-        }
-        catch (\HTTP401UnauthorizedException $ex3) {
+        } catch (\HTTP401UnauthorizedException $ex3) {
             Log::warning($ex3);
             return $this->error401();
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
+    }
+
+    /**
+     * @return ISummitRepository
+     */
+    protected function getSummitRepository(): ISummitRepository
+    {
+        return $this->repository;
     }
 
     /**
@@ -504,7 +646,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function addSummitLogo(LaravelRequest $request, $summit_id){
+    public function addSummitLogo(LaravelRequest $request, $summit_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
@@ -514,6 +657,10 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             if (is_null($file)) {
                 return $this->error412(array('file param not set!'));
             }
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators))
+                return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
 
             $photo = $this->summit_service->addSummitLogo($summit_id, $file);
 
@@ -538,11 +685,16 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function deleteSummitLogo($summit_id){
+    public function deleteSummitLogo($summit_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators))
+                return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
 
             $this->summit_service->deleteSummitLogo($summit_id);
 

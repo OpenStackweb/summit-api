@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use GuzzleHttp\Exception\ClientException;
+use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -25,7 +26,9 @@ use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitTicketTypeRepository;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
+use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
+use models\summit\SummitTicketType;
 use services\apis\IEventbriteAPI;
 /**
  * Class AttendeeService
@@ -88,28 +91,43 @@ final class AttendeeService extends AbstractService implements IAttendeeService
     /**
      * @param Summit $summit
      * @param array $data
-     * @return SummitAttendee
+     * @return mixed|SummitAttendee
+     * @throws \Exception
      */
     public function addAttendee(Summit $summit, array $data)
     {
         return $this->tx_service->transaction(function() use($summit, $data){
 
-            if(!isset($data['member_id']))
-                throw new ValidationException("member_id is required");
+            $member    = null;
+            $member_id = $data['member_id'] ?? 0;
+            $member_id = intval($member_id);
+            $email     = $data['email'] ?? null;
 
-            $member_id = intval($data['member_id']);
-            $member    = $this->member_repository->getById($member_id);
+            if($member_id > 0 && !empty($email)){
+                // both are defined
+                throw new ValidationException("you should define a member_id or an email, not both");
+            }
 
-            if(is_null($member))
-                throw new EntityNotFoundException("member not found");
+            if($member_id > 0 ) {
 
-            // check if attendee already exist for this summit
+                $member = $this->member_repository->getById($member_id);
+                if (is_null($member) || !$member instanceof Member)
+                    throw new EntityNotFoundException("member not found");
 
-            $old_attendee = $this->attendee_repository->getBySummitAndMember($summit, $member);
-            if(!is_null($old_attendee))
-                throw new ValidationException(sprintf("attendee already exist for summit id %s and member id %s", $summit->getId(), $member->getIdentifier()));
+                $old_attendee = $this->attendee_repository->getBySummitAndMember($summit, $member);
 
-            $attendee = SummitAttendeeFactory::build($summit, $member, $data);
+                if (!is_null($old_attendee))
+                    throw new ValidationException(sprintf("attendee already exist for summit id %s and member id %s", $summit->getId(), $member->getIdentifier()));
+
+            }
+
+            if(!empty($email)) {
+                $old_attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($email));
+                if (!is_null($old_attendee))
+                    throw new ValidationException(sprintf("attendee already exist for summit id %s and email %s", $summit->getId(), trim($data['email'])));
+            }
+
+            $attendee = SummitAttendeeFactory::build($summit, $data, $member);
 
             $this->attendee_repository->add($attendee);
 
@@ -152,97 +170,30 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             if(is_null($attendee))
                 throw new EntityNotFoundException(sprintf("attendee does not belongs to summit id %s", $summit->getId()));
 
-            if(!isset($data['member_id']))
-                throw new ValidationException("member_id is required");
+            $member = null;
+            if(isset($data['member_id'])) {
+                $member_id = intval($data['member_id']);
+                $member = $this->member_repository->getById($member_id);
 
-            $member_id = intval($data['member_id']);
-            $member    = $this->member_repository->getById($member_id);
+                if (is_null($member))
+                    throw new EntityNotFoundException("member not found");
 
-            if(is_null($member))
-                throw new EntityNotFoundException("member not found");
+                $old_attendee = $this->attendee_repository->getBySummitAndMember($summit, $member);
+                if(!is_null($old_attendee) && $old_attendee->getId() != $attendee->getId())
+                    throw new ValidationException(sprintf("another attendee (%s) already exist for summit id %s and member id %s", $old_attendee->getId(), $summit->getId(), $member->getIdentifier()));
+            }
+
+            if(isset($data['email'])) {
+                $old_attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($data['email']));
+                if(!is_null($old_attendee) && $old_attendee->getId() != $attendee->getId())
+                    throw new ValidationException(sprintf("attendee already exist for summit id %s and email %s", $summit->getId(), trim($data['email'])));
+            }
 
             // check if attendee already exist for this summit
 
-            $old_attendee = $this->attendee_repository->getBySummitAndMember($summit, $member);
-            if(!is_null($old_attendee) && $old_attendee->getId() != $attendee->getId())
-                throw new ValidationException(sprintf("another attendee (%s) already exist for summit id %s and member id %s", $old_attendee->getId(), $summit->getId(), $member->getIdentifier()));
+            SummitAttendeeFactory::populate($summit, $attendee , $data, $member);
 
-            return SummitAttendeeFactory::updateMainData($summit, $attendee, $member , $data);
-
-        });
-    }
-
-    /**
-     * @param SummitAttendee $attendee
-     * @param array $data
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     * @return SummitAttendeeTicket
-     */
-    public function addAttendeeTicket(SummitAttendee $attendee, array $data){
-        return $this->tx_service->transaction(function() use($attendee, $data){
-
-            if(!isset($data['ticket_type_id']))
-                throw new ValidationException("ticket_type_id is mandatory!");
-
-            $type = $this->ticket_type_repository->getById(intval($data['ticket_type_id']));
-
-            if(is_null($type))
-                throw new EntityNotFoundException(sprintf("ticket type %s not found!", $data['ticket_type_id']));
-
-            $old_ticket = $this->ticket_repository->getByExternalOrderIdAndExternalAttendeeId
-            (
-                $data['external_order_id'],
-                $data['external_attendee_id']
-            );
-
-            if(!is_null($old_ticket)) {
-                if ($old_ticket->hasOwner())
-                    throw new ValidationException
-                    (
-                        sprintf
-                        (
-                            "external_order_id %s - external_attendee_id %s already assigned to attendee id %s",
-                            $data['external_order_id'],
-                            $data['external_attendee_id'],
-                            $old_ticket->getOwner()->getId()
-                        )
-                    );
-                $this->ticket_repository->delete($old_ticket);
-            }
-
-            // validate with external api ...
-
-            try {
-                $external_order          = $this->eventbrite_api->getOrder($data['external_order_id']);
-                $external_attendee_found = false;
-                $summit_external_id      = $external_order['event_id'];
-
-                if (intval($attendee->getSummit()->getSummitExternalId()) !== intval($summit_external_id))
-                    throw new ValidationException('order %s does not belongs to current summit!', $summit_external_id);
-
-                foreach ($external_order['attendees'] as $external_attendee){
-                   if($data['external_attendee_id'] == $external_attendee['id']){
-                       $external_attendee_found = true;
-                       break;
-                   }
-                }
-                if(!$external_attendee_found){
-                    throw new ValidationException
-                    (
-                      sprintf("external_attendee_id %s does not belongs to external_order_id %s", $data['external_attendee_id'], $data['external_order_id'])
-                    );
-                }
-            }
-            catch (ClientException $ex1) {
-                if ($ex1->getCode() === 400)
-                    throw new EntityNotFoundException('external order does not exists!');
-                if ($ex1->getCode() === 403)
-                    throw new EntityNotFoundException('external order does not exists!');
-                throw $ex1;
-            }
-
-            return SummitAttendeeTicketFactory::build($attendee, $type, $data);
+            return $attendee;
         });
     }
 
@@ -301,31 +252,110 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      * @param Member $other_member
      * @param int $ticket_id
      * @return SummitAttendeeTicket
-     * @throws ValidationException
-     * @throws EntityNotFoundException
+     * @throws \Exception
      */
-    public function reassignAttendeeTicket(Summit $summit, SummitAttendee $attendee, Member $other_member, $ticket_id)
+    public function reassignAttendeeTicketByMember(Summit $summit, SummitAttendee $attendee, Member $other_member, int $ticket_id):SummitAttendeeTicket
     {
         return $this->tx_service->transaction(function() use($summit, $attendee, $other_member, $ticket_id){
-            $ticket = $this->ticket_repository->getById($ticket_id);
-            if(is_null($ticket)){
+            $ticket = $this->ticket_repository->getByIdExclusiveLock($ticket_id);
+
+            if(is_null($ticket) || !$ticket instanceof SummitAttendeeTicket){
                 throw new EntityNotFoundException("ticket not found");
             }
 
             $new_owner = $this->attendee_repository->getBySummitAndMember($summit, $other_member);
             if(is_null($new_owner)){
-                $new_owner = SummitAttendeeFactory::build($summit, $other_member, []);
+                $new_owner = SummitAttendeeFactory::build($summit,[
+                    'first_name' => $other_member->getFirstName(),
+                    'last_name'  => $other_member->getLastName(),
+                    'email'      => $other_member->getEmail(),
+                ], $other_member);
                 $this->attendee_repository->add($new_owner);
             }
+
+            $attendee->sendRevocationTicketEmail($ticket);
 
             $attendee->removeTicket($ticket);
 
             $new_owner->addTicket($ticket);
 
-            if(!$attendee->hasTickets()){
-                $this->attendee_repository->delete($attendee);
-            }
+            $ticket->generateQRCode();
+            $ticket->generateHash();
+
+            $new_owner->sendInvitationEmail($ticket);
+
             return $ticket;
         });
     }
+
+
+    /**
+     * @param Summit $summit
+     * @param SummitAttendee $attendee
+     * @param int $ticket_id
+     * @param array $payload
+     * @return SummitAttendeeTicket
+     * @throws \Exception
+     */
+    public function reassignAttendeeTicket(Summit $summit, SummitAttendee $attendee, int $ticket_id, array $payload):SummitAttendeeTicket
+    {
+        return $this->tx_service->transaction(function() use($summit, $attendee, $ticket_id, $payload){
+            $ticket = $this->ticket_repository->getByIdExclusiveLock($ticket_id);
+
+            if(is_null($ticket) || !$ticket instanceof SummitAttendeeTicket){
+                throw new EntityNotFoundException("ticket not found");
+            }
+
+            $attendee_email = $payload['attendee_email'] ?? null;
+
+            $new_owner = $this->attendee_repository->getBySummitAndEmail($summit , $attendee_email);
+
+            if(is_null($new_owner)){
+                Log::debug(sprintf("attendee %s does no exists .. creating it ", $attendee_email));
+                $attendee_payload = [
+                    'email'  => $attendee_email
+                ];
+
+                $new_owner = SummitAttendeeFactory::build
+                (
+                    $summit,
+                    $attendee_payload,
+                    $this->member_repository->getByEmail($attendee_email)
+                );
+
+                $this->attendee_repository->add($new_owner);
+            }
+
+            $attendee_payload = [];
+
+            if(isset($payload['attendee_first_name']))
+                $attendee_payload['first_name'] = $payload['attendee_first_name'];
+
+            if(isset($payload['attendee_last_name']))
+                $attendee_payload['last_name'] = $payload['attendee_last_name'];
+
+            if(isset($payload['attendee_company']))
+                $attendee_payload['company'] = $payload['attendee_company'];
+
+            if(isset($payload['extra_questions']))
+                $attendee_payload['extra_questions'] = $payload['extra_questions'];
+
+            SummitAttendeeFactory::populate($summit, $new_owner , $attendee_payload);
+
+            $attendee->sendRevocationTicketEmail($ticket);
+
+            $attendee->removeTicket($ticket);
+
+            $new_owner->addTicket($ticket);
+
+            $ticket->generateQRCode();
+            $ticket->generateHash();
+
+            $new_owner->sendInvitationEmail($ticket);
+
+            return $ticket;
+        });
+
+    }
+
 }

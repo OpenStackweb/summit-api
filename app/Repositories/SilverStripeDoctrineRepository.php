@@ -61,6 +61,14 @@ abstract class SilverStripeDoctrineRepository extends DoctrineRepository
     }
 
     /**
+     * @param QueryBuilder $query
+     * @return QueryBuilder
+     */
+    protected function applyExtraJoins(QueryBuilder $query){
+        return $query;
+    }
+
+    /**
      * @param string $group_code
      * @return bool
      */
@@ -69,5 +77,11 @@ abstract class SilverStripeDoctrineRepository extends DoctrineRepository
         $member              = $resource_server_ctx->getCurrentUser();
         if(is_null($member)) return false;
         return $member->isOnGroup($group_code);
+    }
+
+    public function deleteAll():void{
+        foreach ($this->getAll() as $entity){
+            $this->delete($entity);
+        }
     }
 }

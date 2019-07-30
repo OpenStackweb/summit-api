@@ -21,7 +21,6 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
 {
 
     protected static $array_mappings = [
-
         'FirstName'       => 'first_name:json_string',
         'LastName'        => 'last_name:json_string',
         'Gender'          => 'gender:json_string',
@@ -43,7 +42,9 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
         'favorite_summit_events',
         'feedback',
         'schedule_summit_events',
+        'summit_tickets',
         'rsvp',
+        'sponsor_memberships',
     ];
 
     private static $expand_group_events = [
@@ -101,6 +102,16 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
             $values['team_memberships'] = $res;
         }
 
+        if(in_array('sponsor_memberships', $relations)){
+            $res = [];
+            foreach ($member->getSponsorMemberships() as $sponsor_membership){
+                $res[] = SerializerRegistry::getInstance()
+                    ->getSerializer($sponsor_membership)
+                    ->serialize('summit,company,sponsorship');
+            }
+            $values['sponsor_memberships'] = $res;
+        }
+
         if(in_array('favorite_summit_events', $relations) && !is_null($summit)){
             $res = [];
             foreach ($member->getFavoritesEventsIds($summit) as $event_id){
@@ -117,6 +128,14 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
             }
 
             $values['schedule_summit_events'] = $schedule;
+        }
+
+        if(in_array('summit_tickets', $relations) && !is_null($summit)){
+            $res = [];
+            foreach ($member->getPaidSummitTicketsIds($summit) as $ticket_id){
+                $res[] = intval($ticket_id);
+            }
+            $values['summit_tickets'] = $res;
         }
 
         if (!empty($expand)) {
@@ -180,6 +199,18 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         $values['schedule_summit_events'] = $schedule;
                     }
                     break;
+                    case 'summit_tickets':{
+                        if(!in_array('summit_tickets', $relations)) break;
+                        if(is_null($summit)) break;
+                        $summit_tickets = [];
+                        foreach ($member->getPaidSummitTickets($summit) as $ticket){
+                            $summit_tickets[] = SerializerRegistry::getInstance()
+                                ->getSerializer($ticket)
+                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $values['summit_tickets'] = $summit_tickets;
+                    }
+                        break;
                     case 'rsvp':{
                         if(!in_array('rsvp', $relations)) break;
                         if(is_null($summit)) break;

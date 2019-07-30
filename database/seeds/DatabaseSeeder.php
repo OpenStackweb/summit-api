@@ -22,5 +22,7 @@ final class DatabaseSeeder extends Seeder
         $this->call('ApiEndpointsSeeder');
         // summit
         $this->call('DefaultEventTypesSeeder');
+        $this->call('DefaultPrintRulesSeeder');
+        $this->call('SummitMediaFileTypeSeeder');
     }
 }

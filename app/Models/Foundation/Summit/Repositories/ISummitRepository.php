@@ -69,4 +69,14 @@ interface ISummitRepository extends IBaseRepository
      * @return Summit[]
      */
     public function getOnGoing(): array;
+
+    /**
+     * @return array
+     */
+    public function getNotEnded():array;
+
+    /**
+     * @return array
+     */
+    public function getAllWithExternalRegistrationFeed():array;
 }

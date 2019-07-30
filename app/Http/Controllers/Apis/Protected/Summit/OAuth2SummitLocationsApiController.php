@@ -17,7 +17,6 @@ use App\Models\Foundation\Summit\Locations\SummitLocationConstants;
 use App\Models\Foundation\Summit\Repositories\ISummitLocationBannerRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitLocationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
-use App\Services\Apis\IPaymentGatewayAPI;
 use App\Services\Model\ILocationService;
 use Exception;
 use Illuminate\Http\Request as LaravelRequest;
@@ -96,11 +95,6 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     private $location_banners_repository;
 
     /**
-     * @var IPaymentGatewayAPI
-     */
-    private $payment_gateway;
-
-    /**
      * @var ISummitRoomReservationRepository
      */
     private $reservation_repository;
@@ -117,7 +111,6 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param ISummitRoomReservationRepository $reservation_repository
      * @param ISummitService $summit_service
      * @param ILocationService $location_service
-     * @param IPaymentGatewayAPI $payment_gateway
      * @param IResourceServerContext $resource_server_context
      */
     public function __construct
@@ -132,7 +125,6 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         ISummitRoomReservationRepository $reservation_repository,
         ISummitService $summit_service,
         ILocationService $location_service,
-        IPaymentGatewayAPI $payment_gateway,
         IResourceServerContext $resource_server_context
     ) {
         parent::__construct($resource_server_context);
@@ -145,7 +137,6 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         $this->location_banners_repository = $location_banners_repository;
         $this->location_service            = $location_service;
         $this->summit_service              = $summit_service;
-        $this->payment_gateway             = $payment_gateway;
         $this->reservation_repository      = $reservation_repository;
     }
 

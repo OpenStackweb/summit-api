@@ -97,6 +97,12 @@ class PresentationCategory extends SilverstripeBaseModel
     private $chair_visible;
 
     /**
+     * @ORM\Column(name="Color", type="string")
+     * @var string
+     */
+    protected $color;
+
+    /**
      * @return string
      */
     public function getDescription()
@@ -481,5 +487,21 @@ SQL;
         $res =  $native_query->getResult();
 
         return $res;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getColor():?string
+    {
+        return $this->color;
+    }
+
+    /**
+     * @param string|null $color
+     */
+    public function setColor(?string $color)
+    {
+        $this->color = $color;
     }
 }

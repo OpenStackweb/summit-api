@@ -157,10 +157,11 @@ final class DoctrineSummitLocationRepository
 
         if($filter->hasFilter("availability_day")){
             // special case, we need to figure if each room has available slots
-            $res = $query->getQuery()->execute();
-            $rooms = [];
+            $res              = $query->getQuery()->execute();
+            $rooms            = [];
             $availability_day = $filter->getUniqueFilter("availability_day")->getValue();
-            $day   = new \DateTime("@$availability_day");
+            $day              = new \DateTime("@$availability_day");
+
             foreach ($res as $room){
                 if(!$room instanceof SummitBookableVenueRoom) continue;
                 if(count($room->getFreeSlots($day)) > 0)

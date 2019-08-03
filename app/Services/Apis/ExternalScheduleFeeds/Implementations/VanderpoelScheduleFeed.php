@@ -54,7 +54,7 @@ final class VanderpoelScheduleFeed extends AbstractExternalScheduleFeed
                             'full_name'  => $speakerFullName,
                             'first_name' => trim($speaker['first_name']),
                             'last_name'  => trim($speaker['last_name']),
-                            'email'      => sprintf("%s@vanderpoel.com", $speakerFullName),
+                            'email'      => $this->getDefaultSpeakerEmail($speakerFullName),
                             'company'    => trim($speaker['company']),
                             'position'   => trim($speaker['job_title']),
                             'avatar'     => trim($speaker['photo']),
@@ -82,5 +82,10 @@ final class VanderpoelScheduleFeed extends AbstractExternalScheduleFeed
     public function getSpeakers(): array
     {
         return $this->speakers;
+    }
+
+    public function getDefaultSpeakerEmail(string $speakerFullName): string
+    {
+        return sprintf("%s@vanderpoel.com", strtolower($speakerFullName));
     }
 }

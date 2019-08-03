@@ -94,14 +94,18 @@ final class SchedScheduleFeed  extends AbstractExternalScheduleFeed
         foreach($response as $speaker){
             if(!isset($speaker['name'])) continue;
             $speakerFullNameParts = explode(" ", $speaker['name']);
-            $speakerFirstName     = trim(trim(array_pop($speakerFullNameParts)));
-            $speakerLastName      = trim(implode(" ", $speakerFullNameParts));
+            $speakerLastName    = trim(trim(array_pop($speakerFullNameParts)));
+            $speakerFirstName   = trim(implode(" ", $speakerFullNameParts));
+            $email              = trim($speaker['email']);
+
+            if(empty($email))
+                $email = $this->getDefaultSpeakerEmail(trim($speaker['name']));
 
             $speakers[trim($speaker['name'])] = [
                 'full_name'  => trim($speaker['name']),
                 'first_name' => trim($speakerFirstName),
                 'last_name'  => trim($speakerLastName),
-                'email'      => trim($speaker['email']),
+                'email'      => $email,
                 'company'    => trim($speaker['company']),
                 'position'   => trim($speaker['position']),
                 'avatar'     => trim($speaker['avatar']),
@@ -109,5 +113,10 @@ final class SchedScheduleFeed  extends AbstractExternalScheduleFeed
         }
 
         return $speakers;
+    }
+
+    public function getDefaultSpeakerEmail(string $speakerFullName): string
+    {
+        return sprintf("%s@sched.com",  ltrim(str_replace(",", "",str_replace(" ", "",strtolower($speakerFullName)))), ".");
     }
 }

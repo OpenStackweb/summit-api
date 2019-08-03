@@ -19,8 +19,10 @@ use Mockery;
 use models\summit\Summit;
 use App\Services\Apis\ExternalScheduleFeeds\IExternalScheduleFeedFactory;
 use App\Services\Apis\ExternalScheduleFeeds\ExternalScheduleFeedFactory;
+use models\summit\SummitVenue;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
+use App\Services\Model\IScheduleIngestionService;
 /**
  * Class ExternalFeedIngestionTest
  * @package Tests
@@ -43,10 +45,18 @@ JSON;
 JSON;
 
         $summit = new Summit();
+        $summit->setActive(true);
         // set feed type (sched)
         $summit->setApiFeedType(IExternalScheduleFeedFactory::SchedType);
         $summit->setApiFeedUrl("https://localhost.com");
         $summit->setApiFeedKey("secret");
+        $summit->setTimeZoneId("America/Chicago");
+        $summit->setBeginDate(new \DateTime("2019-03-12"));
+        $summit->setEndDate(new \DateTime("2019-03-16"));
+
+        $mainVenue = new SummitVenue();
+        $mainVenue->setIsMain(true);
+        $summit->addLocation($mainVenue);
 
         $factory = new ExternalScheduleFeedFactory();
         // mock events response
@@ -78,6 +88,10 @@ JSON;
 
         $this->assertTrue(count($events) == 218);
         $this->assertTrue(count($speakers) == 1009);
+
+        $service = App::make(IScheduleIngestionService::class);
+
+        $service->ingestSummit($summit);
     }
 
     public function testGetSummitWithFeeds(){

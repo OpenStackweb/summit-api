@@ -207,10 +207,18 @@ final class ScheduleIngestionService
                         if (isset($event['speakers'])) {
                             foreach ($event['speakers'] as $speakerFullName) {
                                 $speakerFullNameParts = explode(" ", $speakerFullName);
-                                $speakerFirstName = trim(trim(array_pop($speakerFullNameParts)));
-                                $speakerLastName = trim(implode(" ", $speakerFullNameParts));
+                                $speakerLastName = trim(trim(array_pop($speakerFullNameParts)));
+                                $speakerFirstName = trim(implode(" ", $speakerFullNameParts));
 
                                 $foundSpeaker = isset($speakers[$speakerFullName]) ? $speakers[$speakerFullName] : null;
+                                if(is_null($foundSpeaker)){
+                                    // partial match
+                                    $result_array = preg_grep("/{$speakerFullName}/i",array_keys($speakers));
+                                    if(count($result_array) > 0){
+                                        $foundSpeaker = $speakers[array_values($result_array)[0]];
+                                    }
+                                }
+
                                 $speakerEmail = $foundSpeaker && isset($foundSpeaker['email']) ? $foundSpeaker['email'] : null;
                                 $companyName = $foundSpeaker && isset($foundSpeaker['company']) ? $foundSpeaker['company'] : null;
                                 $companyPosition = $foundSpeaker && isset($foundSpeaker['position']) ? $foundSpeaker['position'] : null;;

@@ -65,5 +65,7 @@ abstract class AbstractExternalScheduleFeed implements IExternalScheduleFeed
         }
     }
 
+    abstract public function getDefaultSpeakerEmail(string $speakerFullName):string;
+
 
 }

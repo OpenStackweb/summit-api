@@ -144,7 +144,13 @@ final class SerializerRegistry
         $this->registry['SummitGroupEvent']           = SummitGroupEventSerializer::class;
         $this->registry['SummitEventMetricsSnapshot'] = SummitEventMetricsSnapshotSerializer::class;
         $this->registry['TrackTagGroup']              = TrackTagGroupSerializer::class;
-        $this->registry['Presentation']               = PresentationSerializer::class;
+        $this->registry['Presentation']               =
+            [
+                self::SerializerType_Public  =>  PresentationSerializer::class,
+                self::SerializerType_Private =>  AdminPresentationSerializer::class
+            ];
+
+
         $this->registry['SummitPresentationComment']  = SummitPresentationCommentSerializer::class;
         $this->registry['PresentationVideo']          = PresentationVideoSerializer::class;
         $this->registry['PresentationSlide']          = PresentationSlideSerializer::class;

@@ -11,8 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Input;
 use utils\Filter;
 use utils\FilterParser;
+use utils\Order;
+use utils\OrderParser;
+
 /**
  * Class RetrieveAllUnPublishedSummitEventsStrategy
  * @package App\Http\Controllers
@@ -25,7 +30,7 @@ class RetrieveAllUnPublishedSummitEventsStrategy extends RetrieveAllSummitEvents
     protected function getValidFilters()
     {
         $valid_filters = parent::getValidFilters();
-        $valid_filters['published'] = ['=='];
+        $valid_filters['published']     = ['=='];
         return $valid_filters;
     }
 
@@ -37,5 +42,25 @@ class RetrieveAllUnPublishedSummitEventsStrategy extends RetrieveAllSummitEvents
         $filter = parent::buildFilter();
         $filter->addFilterCondition(FilterParser::buildFilter('published','==','0'));
         return $filter;
+    }
+
+    /**
+     * @return null|Order
+     */
+    protected function buildOrder(){
+        $order = null;
+        if (Input::has('order'))
+        {
+            $order = OrderParser::parse(Input::get('order'), [
+                'title',
+                'start_date',
+                'end_date',
+                'id',
+                'created',
+                'track',
+                'trackchairsel'
+            ]);
+        }
+        return $order;
     }
 }

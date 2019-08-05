@@ -32,6 +32,19 @@ final class Order
     }
 
     /**
+     * @param string $field
+     * @return bool
+     */
+    public function hasOrder(string $field):bool{
+        foreach ($this->ordering as $order){
+            if ($order instanceof OrderElement && $order->getField() == $field) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * @param QueryBuilder $query
      * @param array $mappings
      * @return $this

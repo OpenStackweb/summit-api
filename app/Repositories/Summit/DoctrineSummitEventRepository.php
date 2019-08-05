@@ -168,13 +168,14 @@ final class DoctrineSummitEventRepository
     protected function getOrderMappings()
     {
         return [
-            'title'       => 'e.title',
-            'id'          => 'e.id',
-            'start_date'  => 'e.start_date',
-            'end_date'    => 'e.end_date',
-            'created'     => 'e.created',
-            'track'       => 'cc.title',
-            'location'    => 'l.name',
+            'title'         => 'e.title',
+            'id'            => 'e.id',
+            'start_date'    => 'e.start_date',
+            'end_date'      => 'e.end_date',
+            'created'       => 'e.created',
+            'track'         => 'cc.title',
+            'location'      => 'l.name',
+            'trackchairsel' => 'ssp.order'
         ];
     }
 
@@ -186,10 +187,13 @@ final class DoctrineSummitEventRepository
      */
     public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
     {
-        $class  = $filter->hasFilter('speaker')
+        $class  =
+           $filter->hasFilter('speaker')
         || $filter->hasFilter('speaker_id')
         || $filter->hasFilter('selection_status')
-        || $filter->hasFilter('speaker_email')?
+        || $filter->hasFilter('speaker_email')
+        || $order->hasOrder('trackchairsel')
+               ?
             \models\summit\Presentation::class:
             \models\summit\SummitEvent::class;
 

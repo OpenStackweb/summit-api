@@ -887,6 +887,43 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($events));
     }
 
+    public function testGetUnpublishedEventBySummiOrderedByTrackSelChair($summit_id=27)
+    {
+        $params = [
+
+            'id' => $summit_id,
+            'order' => '+trackchairsel',
+            'filter' =>
+                [
+                    'selection_status==alternate',
+                ],
+            'expand' => 'speakers',
+        ];
+
+        $headers = [
+
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action
+        (
+            "GET",
+            "OAuth2SummitEventsApiController@getUnpublishedEvents",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $events = json_decode($content);
+        $this->assertTrue(!is_null($events));
+    }
+
     public function testGetUnpublishedEventBySummitOrderByTrack($summit_id=26)
     {
         $params = [

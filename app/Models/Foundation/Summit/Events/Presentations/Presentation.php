@@ -678,6 +678,38 @@ class Presentation extends SummitEvent
         return Presentation::SelectionStatus_Alternate;
     }
 
+    public function getRank():?int{
+        $session_sel = $this->createQuery("SELECT sp from models\summit\SummitSelectedPresentation sp 
+            JOIN sp.list l
+            JOIN sp.presentation p
+            WHERE p.id = :presentation_id 
+            AND sp.collection = :collection
+            AND l.list_type = :list_type
+            AND l.list_class = :list_class")
+            ->setParameter('presentation_id' , $this->id)
+            ->setParameter('collection',  SummitSelectedPresentation::CollectionSelected)
+            ->setParameter('list_type',  SummitSelectedPresentationList::Group)
+            ->setParameter('list_class',  SummitSelectedPresentationList::Session)->getResult();
+
+        // Error out if a talk has more than one selection
+        if (count($session_sel) > 1) {
+            throw new ValidationException('presentation has more than 1 (one) selection.');
+        }
+
+        $selection = null;
+
+        if (count($session_sel) == 1) {
+            $selection = $session_sel[0];
+        }
+
+        if (!$selection) {
+            return null;
+        }
+
+        return $selection->getOrder();
+
+    }
+
     /**
      * @return SelectionPlan
      */

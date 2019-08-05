@@ -111,7 +111,7 @@ final class PagingResponse
         {
             if($i instanceof IEntity)
             {
-                $i = SerializerRegistry::getInstance()->getSerializer($i)->serialize($expand, $fields, $relations, $params);
+                $i = SerializerRegistry::getInstance()->getSerializer($i, $serializer_type)->serialize($expand, $fields, $relations, $params);
             }
             $items[] = $i;
         }

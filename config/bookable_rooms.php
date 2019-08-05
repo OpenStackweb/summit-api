@@ -14,4 +14,5 @@
 return [
     'reservation_lifetime' => env('BOOKABLE_ROOMS_RESERVATION_LIFETIME', 5),
     'admin_email' => env('BOOKABLE_ROOMS_ADMIN_EMAIL'),
+    'enable_bookable_rooms_reservation_revocation' => env('ENABLE_BOOKABLE_ROOMS_RESERVATION_REVOCATION', false),
 ];

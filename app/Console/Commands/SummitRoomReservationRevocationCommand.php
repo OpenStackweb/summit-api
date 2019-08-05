@@ -83,6 +83,11 @@ final class SummitRoomReservationRevocationCommand extends Command {
      */
     public function handle()
     {
+        $enabled = Config::get("bookable_rooms.enable_bookable_rooms_reservation_revocation", false);
+        if(!$enabled){
+            $this->info("task is not enabled!");
+            return false;
+        }
 
         try {
 

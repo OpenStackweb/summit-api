@@ -13,6 +13,7 @@
  **/
 use Illuminate\Console\Command;
 use App\Services\Model\IMemberActionsCalendarSyncProcessingService;
+use Illuminate\Support\Facades\Config;
 use models\summit\CalendarSync\CalendarSyncInfo;
 use Illuminate\Support\Facades\Log;
 /**
@@ -59,6 +60,12 @@ final class MemberActionsCalendarSyncProcessingCommand extends Command
 
     public function handle()
     {
+        $enabled = boolval(Config::get("cal_sync.enable_cal_sync", true));
+        if(!$enabled){
+            $this->info("task is not enabled!");
+            return false;
+        }
+
         $batch_size = $this->argument('batch_size');
         $provider   = $this->argument('provider');
         if(!CalendarSyncInfo::isValidProvider($provider)){

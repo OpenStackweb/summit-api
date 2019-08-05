@@ -13,6 +13,8 @@
  **/
 use Illuminate\Console\Command;
 use App\Services\Model\IAdminActionsCalendarSyncProcessingService;
+use Illuminate\Support\Facades\Config;
+
 /**
  * Class AdminActionsCalendarSyncProcessingCommand
  * @package App\Console\Commands
@@ -57,6 +59,12 @@ final class AdminActionsCalendarSyncProcessingCommand extends Command
 
     public function handle()
     {
+        $enabled = boolval(Config::get("cal_sync.enable_cal_sync", true));
+        if(!$enabled){
+            $this->info("task is not enabled!");
+            return false;
+        }
+
         $batch_size = $this->argument('batch_size');
         if(empty($batch_size))
             $batch_size = PHP_INT_MAX;

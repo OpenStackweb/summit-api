@@ -895,7 +895,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             'order' => '+trackchairsel',
             'filter' =>
                 [
-                    'selection_status==alternate',
+                    'track_id==314',
+                    'selection_status==accepted',
                 ],
             'expand' => 'speakers',
         ];

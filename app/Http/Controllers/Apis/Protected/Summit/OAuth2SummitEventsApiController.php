@@ -951,7 +951,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $order  = Request::input('order', '');
             $filter = Request::input('filter', '');
             $serializer_type = SerializerRegistry::SerializerType_Public;
-            if(strstr($order, "trackchairsel") !== false || strstr($filter, "selection_status") !== false ){
+            if(strstr($order, "trackchairsel") !== false){
                 $serializer_type = SerializerRegistry::SerializerType_Private;
             }
             $response = $strategy->getEvents(['summit_id' => $summit_id]);

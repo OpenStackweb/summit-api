@@ -192,8 +192,7 @@ final class DoctrineSummitEventRepository
         || $filter->hasFilter('speaker_id')
         || $filter->hasFilter('selection_status')
         || $filter->hasFilter('speaker_email')
-        || $order->hasOrder('trackchairsel')
-               ?
+        || (!is_null($order) && $order->hasOrder('trackchairsel'))?
             \models\summit\Presentation::class:
             \models\summit\SummitEvent::class;
 

@@ -353,8 +353,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
+            $current_member    = $this->resource_server_context->getCurrentUser();
+            $current_member_id = is_null($current_member)? null : $current_member->getId();
 
             $last_event_id = Request::input('last_event_id', null);
             $from_date     = Request::input('from_date', null);
@@ -403,7 +403,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             list($last_event_id, $last_event_date, $list) = $this->summit_service->getSummitEntityEvents
             (
                 $summit,
-                $current_member->getId(),
+                $current_member_id,
                 $from_date,
                 intval($last_event_id),
                 intval($limit)

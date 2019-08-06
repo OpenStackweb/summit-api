@@ -125,20 +125,23 @@ final class ResourceServerContext implements IResourceServerContext
     {
         return $this->tx_service->transaction(function() {
             $member = null;
-            // legacy test
+            // legacy test, for new IDP version this value came on null
             $id = $this->getCurrentUserExternalId();
-            if(is_null($id)) return null;
-            // get by id ( legacy test)
-            $member = $this->member_repository->getById(intval($id));
+            if(!is_null($id)){
+                $member = $this->member_repository->getById(intval($id));
+                if(is_null($member)) return $member;
+            }
+
             // is null
             if(is_null($member)){
+                // try to get by external id
                 $id = $this->getCurrentUserId();
                 if(is_null($id)) return null;
-                $member = $this->member_repository->getById(intval($id));
+                $member = $this->member_repository->getByExternalId(intval($id));
             }
 
             if(is_null($member)){
-
+                // we assume that is new idp version and claims alreaady exists on context
                 $user_external_id = $this->getAuthContextVar('user_id');
                 $user_first_name  = $this->getAuthContextVar('user_first_name');
                 $user_last_name   = $this->getAuthContextVar('user_last_name');

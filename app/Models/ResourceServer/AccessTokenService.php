@@ -156,6 +156,12 @@ final class AccessTokenService implements IAccessTokenService
             $token_info['user_last_name'] = null;
         }
 
+        // remove user groups for now, we don use it and its an array
+        // and cant be serialize on redis as it is , need to convert format
+        if(array_key_exists("user_groups" , $token_info)){
+            unset($token_info['user_groups']);
+        }
+
         $this->cache_service->storeHash(md5($token_value), $token_info, $cache_lifetime);
         return $token_info;
     }

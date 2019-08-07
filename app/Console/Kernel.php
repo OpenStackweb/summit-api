@@ -14,6 +14,8 @@
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use models\summit\CalendarSync\CalendarSyncInfo;
+use models\summit\ISummitRepository;
+use Illuminate\Support\Facades\App;
 /**
  * Class Kernel
  * @package App\Console
@@ -46,22 +48,11 @@ class Kernel extends ConsoleKernel
     {
         //Current
         $schedule->command('summit:json-generator')->everyFiveMinutes()->withoutOverlapping();
-        /**
-         * REMARK : remember to add new summit ids before they start officially
-         */
-        $summit_ids = [
-            6,  //Austin
-            7,  //BCN
-            22, //Boston
-            23, //Sydney
-            24, //Vancouver BC
-            25, //Berlin
-            26, //Denver,
-            27, //Shanghai
-        ];
 
-        foreach ($summit_ids as $summit_id)
-            $schedule->command('summit:json-generator',[$summit_id])->everyFiveMinutes()->withoutOverlapping();
+        $summit_repository = App::make(ISummitRepository::class);
+
+        foreach ($summit_repository->getAvailables() as $summit)
+            $schedule->command('summit:json-generator',[$summit->getId()])->everyFiveMinutes()->withoutOverlapping();
 
         // list of available summits
         $schedule->command('summit-list:json-generator')->everyFiveMinutes()->withoutOverlapping();
@@ -70,7 +61,9 @@ class Kernel extends ConsoleKernel
 
         // Admin Actions
         $schedule->command('summit:admin-schedule-action-process')->withoutOverlapping();
+
         // Member Actions
+
         // Google Calendar
         $schedule->command('summit:member-schedule-action-process', [CalendarSyncInfo::ProviderGoogle, 1000])->withoutOverlapping();
         // Outlook
@@ -80,7 +73,7 @@ class Kernel extends ConsoleKernel
 
         // redeem code processor
 
-        $schedule->command('summit:promo-codes-redeem-processor', [end($summit_ids)])->daily()->withoutOverlapping();
+        //$schedule->command('summit:promo-codes-redeem-processor', [end($summit_ids)])->daily()->withoutOverlapping();
 
         // bookable rooms
 

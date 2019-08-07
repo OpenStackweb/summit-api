@@ -2550,6 +2550,36 @@ SQL;
      */
     public function setMeetingRoomBookingSlotLength(int $meeting_room_booking_slot_length): void
     {
+        if($meeting_room_booking_slot_length <= 0)
+            throw new ValidationException("meeting_room_booking_slot_length should be greather than zero");
+
+        if($this->meeting_room_booking_slot_length != $meeting_room_booking_slot_length){
+            // only allow to change if we dont have any reservation
+            $sql = <<<SQL
+select COUNT(SummitRoomReservation.ID) from SummitRoomReservation
+INNER JOIN SummitBookableVenueRoom S on SummitRoomReservation.RoomID = S.ID
+INNER JOIN SummitVenueRoom R ON R.ID = S.ID
+INNER JOIN SummitVenue V ON V.ID = R.VenueID
+INNER JOIN SummitAbstractLocation L on V.ID = L.ID
+WHERE L.SummitID = :summit_id AND (
+    SummitRoomReservation.Status = 'Reserved' OR
+        SummitRoomReservation.Status = 'Payed');
+SQL;
+
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(
+                [
+                    'summit_id' => $this->getId(),
+                ]
+            );
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $reservation_count = count($res) > 0 ? $res[0] : 0;
+            if($reservation_count > 0)
+            {
+                throw new ValidationException("summit already has reservations with that slot len!");
+            }
+        }
+
         $this->meeting_room_booking_slot_length = $meeting_room_booking_slot_length;
     }
 

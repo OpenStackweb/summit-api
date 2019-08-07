@@ -47,7 +47,7 @@ final class DoctrineSpeakerRepository
         if(!is_null($filter))
         {
             $where_conditions = $filter->toRawSQL([
-
+                'full_name'  => 'FullName',
                 'first_name' => 'FirstName',
                 'last_name'  => 'LastName',
                 'email'      => 'Email',
@@ -78,7 +78,7 @@ FROM (
 	IFNULL(S.FirstName, M.FirstName) AS FirstName,
 	IFNULL(S.LastName, M.Surname) AS LastName,
 	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-	IFNULL(M.Email, R.Email) AS Email,
+	IFNULL(M.Email, R.Email) AS Email
 	FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
 	LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
@@ -360,7 +360,8 @@ SQL;
                 'first_name' => 'FirstName',
                 'last_name'  => 'LastName',
                 'email'      => 'Email',
-                'id'         => 'ID'
+                'id'         => 'ID',
+                'full_name'  =>  "FullName",
             ));
         }
 

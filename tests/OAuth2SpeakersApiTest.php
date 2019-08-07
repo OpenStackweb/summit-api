@@ -315,6 +315,43 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($speakers));
     }
 
+    /**
+     * @param int $summit_id
+     */
+    public function testGetCurrentSummitSpeakersByName($summit_id=27)
+    {
+        $params = [
+
+            'id'       => $summit_id,
+            'page'     => 1,
+            'per_page' => 10,
+            'filter'   => [
+                'first_name=@b,last_name=@b,email=@b'
+            ],
+            'order'    => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakers",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $speakers = json_decode($content);
+        $this->assertTrue(!is_null($speakers));
+    }
+
     public function testGetCurrentSummitSpeakersOrderByEmail()
     {
         $params = [

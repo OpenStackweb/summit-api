@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use models\summit\SummitVenueRoom;
 use ModelSerializers\SerializerRegistry;
 /**
  * Class SummitVenueRoomSerializer
@@ -28,7 +29,12 @@ class SummitVenueRoomSerializer extends SummitAbstractLocationSerializer
     public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
     {
         $room   = $this->object;
+        if(!$room instanceof SummitVenueRoom) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
+
+        if($room->hasImage()){
+            $values['image'] = SerializerRegistry::getInstance()->getSerializer($room->getImage())->serialize();
+        }
 
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);

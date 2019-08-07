@@ -16,6 +16,8 @@ use App\Models\Foundation\Main\IOrderable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
+use models\main\File;
+
 /**
  * @ORM\Entity
  * @ORM\Table(name="SummitVenueRoom")
@@ -54,6 +56,48 @@ class SummitVenueRoom extends SummitAbstractLocation implements IOrderable
      * @ORM\OneToMany(targetEntity="RoomMetricType", mappedBy="room", cascade={"persist"})
      */
     private $metrics;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="models\main\File", fetch="EAGER", cascade={"persist"})
+     * @ORM\JoinColumn(name="ImageID", referencedColumnName="ID", onDelete="CASCADE")
+     * @var File
+     */
+    protected $image;
+
+    /**
+     * @return File
+     */
+    public function getImage()
+    {
+        return $this->image;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasImage(){
+        return $this->getImageId() > 0;
+    }
+
+    /**
+     * @return int
+     */
+    public function getImageId(){
+        try{
+            return !is_null($this->image) ? $this->image->getId() : 0;
+        }
+        catch(\Exception $ex){
+            return 0;
+        }
+    }
+
+    /**
+     * @param File $image
+     */
+    public function setImage($image)
+    {
+        $this->image = $image;
+    }
 
     /**
      * @return string
@@ -159,7 +203,6 @@ class SummitVenueRoom extends SummitAbstractLocation implements IOrderable
     {
         $this->override_blackouts = $override_blackouts;
     }
-
 
     /**
      * @return ArrayCollection

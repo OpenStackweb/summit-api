@@ -2235,6 +2235,108 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         }
     }
 
+
+    /**
+     * @param LaravelRequest $request
+     * @param $room_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function addVenueRoomImage(LaravelRequest $request, $summit_id, $venue_id, $room_id){
+        try {
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+            $summit    = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $venue = $summit->getLocation($venue_id);
+
+            if (is_null($venue)) {
+                return $this->error404();
+            }
+
+            if (!$venue instanceof SummitVenue) {
+                return $this->error404();
+            }
+
+            $room = $venue->getRoom($room_id);
+
+            if (is_null($room)) {
+                return $this->error404();
+            }
+
+            $file = $request->file('file');
+            if (is_null($file)) {
+                return $this->error412(array('file param not set!'));
+            }
+
+            $photo = $this->location_service->addRoomImage($summit, $venue_id, $room_id, $file);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($photo)->serialize());
+
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412(array($ex2->getMessage()));
+        } catch (\HTTP401UnauthorizedException $ex3) {
+            Log::warning($ex3);
+            return $this->error401();
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $venue_id
+     * @param $room_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function removeVenueRoomImage($summit_id, $venue_id, $room_id){
+        try {
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+            $summit    = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $venue = $summit->getLocation($venue_id);
+
+            if (is_null($venue)) {
+                return $this->error404();
+            }
+
+            if (!$venue instanceof SummitVenue) {
+                return $this->error404();
+            }
+
+            $room = $venue->getRoom($room_id);
+
+            if (is_null($room)) {
+                return $this->error404();
+            }
+
+            $room = $this->location_service->removeRoomImage($summit, $venue_id, $room_id);
+
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($room)->serialize());
+
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412(array($ex2->getMessage()));
+        } catch (\HTTP401UnauthorizedException $ex3) {
+            Log::warning($ex3);
+            return $this->error401();
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
     // bookable rooms
 
     use SummitBookableVenueRoomApi;

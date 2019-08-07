@@ -58,7 +58,7 @@ class SummitVenueRoom extends SummitAbstractLocation implements IOrderable
     private $metrics;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", fetch="EAGER", cascade={"persist"})
+     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist", "remove"}, orphanRemoval=true)
      * @ORM\JoinColumn(name="ImageID", referencedColumnName="ID", onDelete="CASCADE")
      * @var File
      */
@@ -89,6 +89,10 @@ class SummitVenueRoom extends SummitAbstractLocation implements IOrderable
         catch(\Exception $ex){
             return 0;
         }
+    }
+
+    public function clearImage(){
+        $this->image = null;
     }
 
     /**

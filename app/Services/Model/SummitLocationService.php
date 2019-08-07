@@ -43,6 +43,7 @@ use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\File;
 use models\main\IMemberRepository;
 use models\main\Member;
 use models\summit\Summit;
@@ -2251,6 +2252,88 @@ final class SummitLocationService
             }
 
             $room->removeAttribute($attribute);
+
+            return $room;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param UploadedFile $venue_id
+     * @param int $room_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @return mixed|File
+     * @throws \Exception
+     */
+    public function addRoomImage(Summit $summit, $venue_id, $room_id, UploadedFile $file, $max_file_size = 10485760)
+    {
+        return $this->tx_service->transaction(function () use ($summit, $venue_id, $room_id, $file, $max_file_size) {
+
+            $allowed_extensions = ['png', 'jpg', 'jpeg', 'gif', 'pdf'];
+
+            $room = $summit->getLocation($room_id);
+            if (is_null($room)) {
+                throw new EntityNotFoundException
+                (
+                   'room not found'
+                );
+            }
+
+            if (!$room instanceof SummitVenueRoom) {
+                throw new EntityNotFoundException
+                (
+                    'room not found'
+                );
+            }
+
+            if (!in_array($file->extension(), $allowed_extensions)) {
+                throw new ValidationException("file does not has a valid extension ('png','jpg','jpeg','gif','pdf').");
+            }
+
+            if ($file->getSize() > $max_file_size) {
+                throw new ValidationException(sprintf("file exceeds max_file_size (%s MB).", ($max_file_size / 1024) / 1024));
+            }
+
+            $image = $this->file_uploader->build($file, sprintf('summits/%s/locations/%s/rooms', $summit->getId(), $venue_id ), true);
+            $room->setImage($image);
+
+            return $image;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $venue_id
+     * @param int $room_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     * @return SummitVenueRoom
+     */
+    public function removeRoomImage(Summit $summit, int $venue_id, int $room_id): SummitVenueRoom
+    {
+        return $this->tx_service->transaction(function () use ($summit, $venue_id, $room_id) {
+
+
+            $room = $summit->getLocation($room_id);
+            if (is_null($room)) {
+                throw new EntityNotFoundException
+                (
+                    'room not found'
+                );
+            }
+
+            if (!$room instanceof SummitVenueRoom) {
+                throw new EntityNotFoundException
+                (
+                    'room not found'
+                );
+            }
+
+            if(!$room->hasImage())
+                throw new ValidationException("room has no image set");
+
+            $room->clearImage();
 
             return $room;
         });

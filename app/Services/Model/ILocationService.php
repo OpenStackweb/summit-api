@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner;
+use models\main\File;
 use models\main\Member;
 use models\summit\SummitBookableVenueRoom;
 use models\summit\SummitLocationImage;
@@ -306,4 +307,26 @@ interface ILocationService
      * @throws ValidationException
      */
     public function deleteVenueBookableRoomAttribute(Summit $summit, int $venue_id, int $room_id, int $attribute_id):SummitBookableVenueRoom;
+
+
+    /**
+     * @param Summit $summit
+     * @param UploadedFile $venue_id
+     * @param int $room_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @return mixed|File
+     * @throws \Exception
+     */
+    public function addRoomImage(Summit $summit, $venue_id, $room_id, UploadedFile $file, $max_file_size = 10485760);
+
+    /**
+     * @param Summit $summit
+     * @param int $venue_id
+     * @param int $room_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     * @return SummitVenueRoom
+     */
+    public function removeRoomImage(Summit $summit, int $venue_id, int $room_id):SummitVenueRoom;
 }

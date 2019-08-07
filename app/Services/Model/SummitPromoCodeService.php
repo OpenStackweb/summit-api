@@ -237,11 +237,11 @@ final class SummitPromoCodeService
             $name  = null;
             $email = null;
 
-            if($promo_code instanceof SpeakerSummitRegistrationPromoCode){
+            if($promo_code instanceof SpeakerSummitRegistrationPromoCode && $promo_code->hasSpeaker()){
                 $name  = $promo_code->getSpeaker()->getFullName();
                 $email = $promo_code->getSpeaker()->getEmail();
             }
-            if($promo_code instanceof MemberSummitRegistrationPromoCode){
+            if($promo_code instanceof MemberSummitRegistrationPromoCode && $promo_code->hasOwner()){
                 $name  = $promo_code->getFullName();
                 $email = $promo_code->getEmail();
             }

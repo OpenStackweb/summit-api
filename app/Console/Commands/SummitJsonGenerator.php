@@ -94,6 +94,8 @@ final class SummitJsonGenerator extends Command {
 
         if(is_null($summit)) return;
 
+        if(!$summit->isAvailableOnApi()) return;
+
 		$this->info(sprintf("processing summit id %s", $summit->getIdentifier()));
         $start  = time();
         $expand = 'schedule';

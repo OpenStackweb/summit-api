@@ -58,7 +58,7 @@ class SummitVenueRoom extends SummitAbstractLocation implements IOrderable
     private $metrics;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist", "remove"}, orphanRemoval=true)
+     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist", "remove"})
      * @ORM\JoinColumn(name="ImageID", referencedColumnName="ID", onDelete="CASCADE")
      * @var File
      */

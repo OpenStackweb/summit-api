@@ -106,7 +106,7 @@ final class ScheduleIngestionService
     public function ingestAllSummits(): void
     {
         $this->tx_service->transaction(function () {
-            foreach ($this->summit_repository->getActivesWithExternalFeed() as $summit) {
+            foreach ($this->summit_repository->getWithExternalFeed() as $summit) {
                 try {
                     $processedExternalIds = $this->ingestSummit($summit);
                     foreach ($summit->getPublishedPresentations() as $presentation) {

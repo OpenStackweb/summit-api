@@ -65,5 +65,5 @@ interface ISummitRepository extends IBaseRepository
     /**
      * @return Summit[]
      */
-    public function getActivesWithExternalFeed():array;
+    public function getWithExternalFeed():array;
 }

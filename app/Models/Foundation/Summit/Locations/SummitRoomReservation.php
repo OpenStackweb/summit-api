@@ -311,9 +311,13 @@ class SummitRoomReservation extends SilverstripeBaseModel
         $this->payment_gateway_client_token = $payment_gateway_client_token;
     }
 
+    /**
+     * @throws ValidationException
+     */
     public function setPayed():void{
         if($this->status == self::Canceled)
             throw new ValidationException("reservation is already cancelled!");
+
         $this->status = self::PayedStatus;
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
         $this->approved_payment_date = $now;

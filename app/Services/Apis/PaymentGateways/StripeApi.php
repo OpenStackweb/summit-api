@@ -14,13 +14,13 @@
 use App\Services\Apis\IPaymentGatewayAPI;
 use Illuminate\Http\Request as LaravelRequest;
 use models\exceptions\ValidationException;
-use models\summit\SummitRoomReservation;
 use Stripe\Charge;
 use Stripe\Error\SignatureVerification;
 use Stripe\Event;
 use Stripe\Stripe;
 use Stripe\PaymentIntent;
 use Stripe\WebhookSignature;
+use Illuminate\Support\Facades\Log;
 /**
  * Class StripesApi
  * @package App\Services\Apis\PaymentGateways
@@ -145,6 +145,7 @@ final class StripeApi implements IPaymentGatewayAPI
 
             $intent = $event->data->object;
             if ($event->type == "payment_intent.succeeded") {
+                Log::debug("StripeApi::processCallback: payment_intent.succeeded");
                 return [
                     "event_type" => $event->type,
                     "cart_id"  => $intent->id,
@@ -152,6 +153,7 @@ final class StripeApi implements IPaymentGatewayAPI
             }
 
             if ($event->type == "payment_intent.payment_failed") {
+                Log::debug("StripeApi::processCallback: payment_intent.payment_failed");
                 $intent = $event->data->object;
                 return [
                     "event_type" => $event->type,
@@ -184,7 +186,8 @@ final class StripeApi implements IPaymentGatewayAPI
      */
     public function isSuccessFullPayment(array $payload): bool
     {
-        if(isset($payload['type']) && $payload['type'] == "payment_intent.succeeded") return true;
+        if(isset($payload['event_type']) && $payload['event_type'] == "payment_intent.succeeded") return true;
+        Log::debug("StripeApi::isSuccessFullPayment false");
         return false;
     }
 
@@ -194,9 +197,13 @@ final class StripeApi implements IPaymentGatewayAPI
      */
     public function getPaymentError(array $payload): ?string
     {
-        if(isset($payload['type']) && $payload['type'] == "payment_intent.payment_failed"){
-            $error_message = $payload['error']["message"];
-            return $error_message;
+        if(isset($payload['event_type']) && $payload['event_type'] == "payment_intent.payment_failed"){
+            if(isset($payload['error'])) {
+                $error = $payload['error'];
+                if(isset($error["message"])) {
+                    return $error["message"];
+                }
+            }
         }
         return null;
     }

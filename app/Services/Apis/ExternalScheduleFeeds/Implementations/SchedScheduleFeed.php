@@ -96,7 +96,7 @@ final class SchedScheduleFeed  extends AbstractExternalScheduleFeed
             $speakerFullNameParts = explode(" ", $speaker['name']);
             $speakerLastName    = trim(trim(array_pop($speakerFullNameParts)));
             $speakerFirstName   = trim(implode(" ", $speakerFullNameParts));
-            $email              = trim($speaker['email']);
+            $email              = isset($speaker['email']) ? trim($speaker['email']) : null;
 
             if(empty($email))
                 $email = $this->getDefaultSpeakerEmail(trim($speaker['name']));

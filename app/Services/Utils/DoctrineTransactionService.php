@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use Closure;
 use LaravelDoctrine\ORM\Facades\Registry;
+
 /**
  * Class DoctrineTransactionService
  * @package services\utils
@@ -35,6 +36,7 @@ final class DoctrineTransactionService implements ITransactionService
         $this->manager_name = $manager_name;
     }
 
+
     /**
      * Execute a Closure within a transaction.
      *
@@ -47,6 +49,13 @@ final class DoctrineTransactionService implements ITransactionService
     {
         $em  = Registry::getManager($this->manager_name);
         $con = $em->getConnection();
+
+        if (!$em->isOpen()) {
+            Log::warning("entity manager closed!, trying to re open...");
+            $em = $em->create($con->getConnection(), $em->getConfiguration());
+            $con = $em->getConnection();
+        }
+
         try {
             $con->beginTransaction(); // suspend auto-commit
             $result = $callback($this);

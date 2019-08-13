@@ -105,20 +105,29 @@ final class ScheduleIngestionService
      */
     public function ingestAllSummits(): void
     {
-        $this->tx_service->transaction(function () {
             foreach ($this->summit_repository->getWithExternalFeed() as $summit) {
-                try {
-                    $processedExternalIds = $this->ingestSummit($summit);
-                    foreach ($summit->getPublishedPresentations() as $presentation) {
-                        if ($presentation instanceof Presentation && !empty($presentation->getExternalId()) && !in_array($presentation->getExternalId(), $processedExternalIds))
-                            $this->event_repository->delete($presentation);
+
+                $processedExternalIds = $this->tx_service->transaction(function () use($summit) {
+                    try {
+                       return $this->ingestSummit($summit);
+                    } catch (Exception $ex) {
+                        Log::error(sprintf("error external feed for summit id %s", $summit->getId()));
+                        Log::error($ex);
                     }
-                } catch (Exception $ex) {
-                    Log::error(sprintf("error external feed for summit id %", $summit->getId()));
-                    Log::error($ex);
-                }
+                });
+
+                $this->tx_service->transaction(function () use($summit, $processedExternalIds) {
+                    foreach ($summit->getPublishedPresentations() as $presentation) {
+                        try {
+                            if ($presentation instanceof Presentation && !empty($presentation->getExternalId()) && !in_array($presentation->getExternalId(), $processedExternalIds))
+                                $this->event_repository->delete($presentation);
+                        }
+                        catch (Exception $ex) {
+                            Log::error($ex);
+                        }
+                    }
+                });
             }
-        });
     }
 
     /**
@@ -133,8 +142,7 @@ final class ScheduleIngestionService
             $processedExternalIds = [];
 
             try {
-                if (!$summit->isActive())
-                    throw new ValidationException(sprintf("summit %s is not active!", $summit->getId()));
+                Log::debug(sprintf("ingesting summit %s", $summit->getId()));
                 $feed = $this->feed_factory->build($summit);
                 if (is_null($feed))
                     throw new \InvalidArgumentException("invalid feed");
@@ -315,12 +323,12 @@ final class ScheduleIngestionService
 
                         $processedExternalIds[] = $event['external_id'];
                     } catch (Exception $ex) {
-                        Log::warning(sprintf("error external feed for summit id %", $summit->getId()));
+                        Log::warning(sprintf("error external feed for summit id %s", $summit->getId()));
                         Log::warning($ex);
                     }
                 }
             } catch (Exception $ex) {
-                Log::warning(sprintf("error external feed for summit id %", $summit->getId()));
+                Log::warning(sprintf("error external feed for summit id %s", $summit->getId()));
                 Log::warning($ex);
             }
 

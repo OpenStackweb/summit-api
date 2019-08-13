@@ -943,7 +943,7 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getExternalId(): string
+    public function getExternalId(): ?string
     {
         return $this->external_id;
     }

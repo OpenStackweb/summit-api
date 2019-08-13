@@ -24,7 +24,7 @@ interface IExternalScheduleFeedFactory
 
     /**
      * @param Summit $summit
-     * @return IExternalScheduleFeed
+     * @return IExternalScheduleFeed|null
      */
-    public function build(Summit $summit): IExternalScheduleFeed;
+    public function build(Summit $summit): ?IExternalScheduleFeed;
 }

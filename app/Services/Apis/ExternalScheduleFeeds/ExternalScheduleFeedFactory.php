@@ -25,7 +25,7 @@ final class ExternalScheduleFeedFactory implements IExternalScheduleFeedFactory
      * @param Summit $summit
      * @return IExternalScheduleFeed
      */
-    public function build(Summit $summit): IExternalScheduleFeed
+    public function build(Summit $summit): ?IExternalScheduleFeed
     {
        $client = App::make(ClientInterface::class);
        switch ($summit->getApiFeedType()){

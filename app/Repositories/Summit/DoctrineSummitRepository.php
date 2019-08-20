@@ -170,7 +170,11 @@ final class DoctrineSummitRepository
             ->select("e")
             ->from(\models\summit\Summit::class, "e")
             ->where("e.api_feed_type is not null")
-            //->andWhere("e.api_feed_type <> '' ")
+            ->andWhere("e.api_feed_type <> ''")
+            ->andWhere("e.api_feed_url is not null")
+            ->andWhere("e.api_feed_url <> ''")
+            ->andWhere("e.api_feed_key is not null")
+            ->andWhere("e.api_feed_key <>''")
             ->orderBy('e.begin_date', 'DESC')
             ->getQuery()
             ->getResult();

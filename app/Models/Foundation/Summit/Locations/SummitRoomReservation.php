@@ -16,6 +16,7 @@ use App\Events\BookableRoomReservationRefundAccepted;
 use App\Events\PaymentBookableRoomReservationConfirmed;
 use App\Events\RequestedBookableRoomReservationRefund;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use models\utils\SilverstripeBaseModel;
@@ -315,8 +316,9 @@ class SummitRoomReservation extends SilverstripeBaseModel
      * @throws ValidationException
      */
     public function setPayed():void{
-        if($this->status == self::Canceled)
-            throw new ValidationException("reservation is already cancelled!");
+        if($this->status != self::ReservedStatus){
+            Log::warning("setting payed status to SummitRoomReservation %s with status %s", $this->getId(), $this->status);
+        }
 
         $this->status = self::PayedStatus;
         $now = new \DateTime('now', new \DateTimeZone('UTC'));

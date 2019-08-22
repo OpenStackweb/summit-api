@@ -1862,7 +1862,7 @@ final class SummitLocationService
 
             $status        = $reservation->getStatus();
             $validStatuses = [SummitRoomReservation::RequestedRefundStatus, SummitRoomReservation::PayedStatus];
-            if(in_array($status, $validStatuses))
+            if(!in_array($status, $validStatuses))
                 throw new ValidationException
                 (
                     sprintf

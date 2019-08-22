@@ -15,6 +15,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\summit\SummitRoomReservation;
+use models\utils\SilverstripeBaseModel;
 use utils\Filter;
 use utils\FilterElement;
 use utils\PagingInfo;
@@ -93,16 +94,18 @@ final class SummitRoomReservationRevocationCommand extends Command {
 
             $this->info("processing summit room reservations");
             $start   = time();
-
-            $this->tx_service->transaction(function(){
+            $lifetime = intval(Config::get("bookable_rooms.reservation_lifetime", 30));
+            Log::info(sprintf("SummitRoomReservationRevocationCommand: using lifetime of %s ", $lifetime));
+            $this->tx_service->transaction(function() use($lifetime){
                 $filter = new Filter();
                 $filter->addFilterCondition(FilterElement::makeEqual('status', SummitRoomReservation::ReservedStatus));
-                $eol = new \DateTime('now', new \DateTimeZone('UTC'));
-                $lifetime = intval(Config::get("bookable_rooms.reservation_lifetime", 5));
+                $eol = new \DateTime('now', new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone));
+
                 $eol->sub(new \DateInterval('PT'.$lifetime.'M'));
                 $filter->addFilterCondition(FilterElement::makeLowerOrEqual('created', $eol->getTimestamp() ));
                 $page  = $this->reservations_repository->getAllByPage(new PagingInfo(1, 100), $filter);
                 foreach($page->getItems() as $reservation){
+                    Log::warning(sprintf("cancelling reservation %s create at %s", $reservation->getId(), $reservation->getCreated()->format("Y-m-d h:i:sa")));
                     $reservation->cancel();
                 }
             });

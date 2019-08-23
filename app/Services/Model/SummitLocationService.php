@@ -1692,7 +1692,7 @@ final class SummitLocationService
     {
         return $this->tx_service->transaction(function () use ($summit, $room_id, $payload) {
 
-            $room = $summit->getLocation($room_id);
+            $room = $this->location_repository->find($room_id, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
 
             if (is_null($room)) {
                 throw new EntityNotFoundException("room not found");

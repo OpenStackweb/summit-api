@@ -82,11 +82,11 @@ class SummitBookableVenueRoom extends SummitVenueRoom
             ]));
 
         if($this->reservations->matching($criteria)->count() > 0)
-            throw new ValidationException(sprintf("reservation overlaps an existent reservation"));
+            throw new ValidationException(sprintf("reservation overlaps an existent reservation (1)"));
 
         $criteria
-            ->where(Criteria::expr()->lte('start_datetime', $end_date))
-            ->andWhere(Criteria::expr()->gte('end_datetime', $start_date))
+            ->where(Criteria::expr()->lt('start_datetime', $end_date))
+            ->andWhere(Criteria::expr()->gt('end_datetime', $start_date))
             ->andWhere(Criteria::expr()->notIn("status", [
                 SummitRoomReservation::RequestedRefundStatus,
                 SummitRoomReservation::RefundedStatus,
@@ -94,7 +94,7 @@ class SummitBookableVenueRoom extends SummitVenueRoom
             ]));
 
         if($this->reservations->matching($criteria)->count() > 0)
-            throw new ValidationException(sprintf("reservation overlaps an existent reservation"));
+            throw new ValidationException(sprintf("reservation overlaps an existent reservation (2)"));
 
         $summit           = $this->summit;
 

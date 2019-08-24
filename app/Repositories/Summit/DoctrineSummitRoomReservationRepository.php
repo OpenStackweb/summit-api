@@ -55,6 +55,12 @@ class DoctrineSummitRoomReservationRepository
                 'r',
                 "r.id :operator :value"
             ),
+            'room_name' => new DoctrineJoinFilterMapping
+            (
+                'e.room',
+                'r',
+                "r.name :operator ':value'"
+            ),
             'venue_id' => new DoctrineJoinFilterMapping
             (
                 'r.venue',
@@ -77,7 +83,7 @@ class DoctrineSummitRoomReservationRepository
             (
                 'e.owner',
                 'o',
-                "o.email :operator :value"
+                "o.email :operator ':value'"
             ),
         ];
     }
@@ -141,6 +147,8 @@ class DoctrineSummitRoomReservationRepository
             'id'              => 'e.id',
             'start_datetime'  => 'e.start_datetime',
             'end_datetime'    => 'e.end_datetime',
+            'room_name'       => 'r1.name',
+            'room_id'         => 'r1.id'
         ];
     }
 

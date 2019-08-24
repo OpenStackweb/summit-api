@@ -105,14 +105,14 @@ class SummitRoomReservation extends SilverstripeBaseModel
 
     const ReservedStatus         = "Reserved";
     const ErrorStatus            = "Error";
-    const PayedStatus            = "Payed";
+    const PaidStatus             = "Paid";
     const RequestedRefundStatus  = "RequestedRefund";
     const RefundedStatus         = "Refunded";
     const Canceled               = "Canceled";
 
     public static $valid_status = [
         self::ReservedStatus,
-        self::PayedStatus,
+        self::PaidStatus,
         self::RequestedRefundStatus,
         self::RefundedStatus,
         self::ErrorStatus,
@@ -315,12 +315,12 @@ class SummitRoomReservation extends SilverstripeBaseModel
     /**
      * @throws ValidationException
      */
-    public function setPayed():void{
+    public function setPaid():void{
         if($this->status != self::ReservedStatus){
             Log::warning("setting payed status to SummitRoomReservation %s with status %s", $this->getId(), $this->status);
         }
 
-        $this->status = self::PayedStatus;
+        $this->status = self::PaidStatus;
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
         $this->approved_payment_date = $now;
         Event::fire(new PaymentBookableRoomReservationConfirmed($this->getId()));

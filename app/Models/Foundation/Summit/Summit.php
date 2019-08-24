@@ -2563,7 +2563,7 @@ INNER JOIN SummitVenue V ON V.ID = R.VenueID
 INNER JOIN SummitAbstractLocation L on V.ID = L.ID
 WHERE L.SummitID = :summit_id AND (
     SummitRoomReservation.Status = 'Reserved' OR
-        SummitRoomReservation.Status = 'Payed');
+        SummitRoomReservation.Status = 'Paid');
 SQL;
 
             $stmt = $this->prepareRawSQL($sql);

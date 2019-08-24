@@ -1791,7 +1791,7 @@ final class SummitLocationService
             try {
                 if ($this->payment_gateway->isSuccessFullPayment($payload)) {
                     Log::debug("SummitLocationService::processBookableRoomPayment: payment is sucessfull");
-                    $reservation->setPayed();
+                    $reservation->setPaid();
                     return;
                 }
             }

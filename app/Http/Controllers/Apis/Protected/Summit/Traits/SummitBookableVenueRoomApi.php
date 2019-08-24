@@ -350,6 +350,8 @@ trait SummitBookableVenueRoomApi
                     'id',
                     'start_datetime',
                     'end_datetime',
+                    'room_name',
+                    'room_id'
                 ]);
             }
 

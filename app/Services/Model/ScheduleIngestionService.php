@@ -105,29 +105,25 @@ final class ScheduleIngestionService
      */
     public function ingestAllSummits(): void
     {
-            foreach ($this->summit_repository->getWithExternalFeed() as $summit) {
 
-                $processedExternalIds = $this->tx_service->transaction(function () use($summit) {
+        $summits = $this->tx_service->transaction(function () {
+            return $this->summit_repository->getWithExternalFeed();
+        });
+
+        foreach ($summits as $summit) {
+
+            $processedExternalIds = $this->ingestSummit($summit);
+
+            $this->tx_service->transaction(function () use ($summit, $processedExternalIds) {
+                foreach ($this->event_repository->getPublishedEventsBySummitNotInExternalIds($summit, $processedExternalIds) as $presentation) {
                     try {
-                       return $this->ingestSummit($summit);
+                       $this->event_repository->delete($presentation);
                     } catch (Exception $ex) {
-                        Log::error(sprintf("error external feed for summit id %s", $summit->getId()));
                         Log::error($ex);
                     }
-                });
-
-                $this->tx_service->transaction(function () use($summit, $processedExternalIds) {
-                    foreach ($summit->getPublishedPresentations() as $presentation) {
-                        try {
-                            if ($presentation instanceof Presentation && !empty($presentation->getExternalId()) && !in_array($presentation->getExternalId(), $processedExternalIds))
-                                $this->event_repository->delete($presentation);
-                        }
-                        catch (Exception $ex) {
-                            Log::error($ex);
-                        }
-                    }
-                });
-            }
+                }
+            });
+        }
     }
 
     /**
@@ -138,29 +134,28 @@ final class ScheduleIngestionService
     public function ingestSummit(Summit $summit): array
     {
 
-        return $this->tx_service->transaction(function () use ($summit) {
-            $processedExternalIds = [];
+        $processedExternalIds = [];
 
-            try {
-                Log::debug(sprintf("ingesting summit %s", $summit->getId()));
-                $feed = $this->feed_factory->build($summit);
-                if (is_null($feed))
-                    throw new \InvalidArgumentException("invalid feed");
+        try {
+            $start = time();
+            $summit_id = $summit->getId();
+            Log::debug(sprintf("ScheduleIngestionService::ingestSummit:: ingesting summit %s", $summit->getId()));
+            $feed = $this->feed_factory->build($summit);
+            if (is_null($feed))
+                throw new \InvalidArgumentException("invalid feed");
 
+            $this->tx_service->transaction(function () use ($summit_id) {
+                $summit = $this->summit_repository->getById($summit_id);
                 $mainVenues = $summit->getMainVenues();
                 if (count($mainVenues) == 0)
                     throw new ValidationException(sprintf("summit %s does not has a main venue set!", $summit->getId()));
-                // get first as default
-                $mainVenue = $mainVenues[0];
+
 
                 if (is_null($summit->getBeginDate()) || is_null($summit->getEndDate()))
                     throw new ValidationException(sprintf("summit %s does not has set begin date/end date", $summit->getId()));
 
                 if (is_null($summit->getTimeZone()))
                     throw new ValidationException(sprintf("summit %s does not has set a valid time zone", $summit->getId()));
-
-                $events = $feed->getEvents();
-                $speakers = $feed->getSpeakers();
 
                 // get presentation type from summit
                 $presentationType = $summit->getEventTypeByType(IPresentationType::Presentation);
@@ -174,39 +169,40 @@ final class ScheduleIngestionService
                     $presentationType->setMinModerators(0);
                     $summit->addEventType($presentationType);
                 }
+            });
 
-                $trackStorage = [];
-                $locationStorage = [];
-                $affiliationStorage = [];
+            $events = $feed->getEvents();
+            $speakers = $feed->getSpeakers();
 
-                foreach ($events as $event) {
+            foreach ($events as $event) {
 
-                    try {
+                try {
 
-                        // track
+                    $external_id = $this->tx_service->transaction(function () use ($summit_id, $event, $speakers) {
 
+                        Log::debug(sprintf("processing event %s - %s for summit %s", $event['external_id'], $event['title'], $summit_id));
+                        // get first as default
+                        $summit = $this->summit_repository->getById($summit_id);
+                        if (is_null($summit) || !$summit instanceof Summit) return null;
+                        $mainVenues = $summit->getMainVenues();
+                        $mainVenue = $mainVenues[0];
+                        $presentationType = $summit->getEventTypeByType(IPresentationType::Presentation);
                         $track = $summit->getPresentationCategoryByTitle($event['track']);
-                        if (is_null($track) && isset($trackStorage[$event['track']]))
-                            $track = $trackStorage[$event['track']];
 
                         if (is_null($track)) {
                             $track = new PresentationCategory();
                             $track->setTitle($event['track']);
                             $summit->addPresentationCategory($track);
-                            $trackStorage[$event['track']] = $track;
                         }
 
                         // location
                         $location = null;
                         if (isset($event['location'])) {
                             $location = $summit->getLocationByName($event['location']);
-                            if (is_null($location) && isset($locationStorage[$event['location']]))
-                                $location = $locationStorage[$event['location']];
                             if (is_null($location)) {
                                 $location = new SummitVenueRoom();
                                 $location->setName($event['location']);
                                 $mainVenue->addRoom($location);
-                                $locationStorage[$event['location']] = $location;
                             }
                         }
 
@@ -219,10 +215,10 @@ final class ScheduleIngestionService
                                 $speakerFirstName = trim(implode(" ", $speakerFullNameParts));
 
                                 $foundSpeaker = isset($speakers[$speakerFullName]) ? $speakers[$speakerFullName] : null;
-                                if(is_null($foundSpeaker)){
+                                if (is_null($foundSpeaker)) {
                                     // partial match
-                                    $result_array = preg_grep("/{$speakerFullName}/i",array_keys($speakers));
-                                    if(count($result_array) > 0){
+                                    $result_array = preg_grep("/{$speakerFullName}/i", array_keys($speakers));
+                                    if (count($result_array) > 0) {
                                         $foundSpeaker = $speakers[array_values($result_array)[0]];
                                     }
                                 }
@@ -245,8 +241,6 @@ final class ScheduleIngestionService
                                 // check affiliations
                                 if (!empty($companyName)) {
                                     $affiliation = $member->getAffiliationByOrgName($companyName);
-                                    if (is_null($affiliation) && isset($affiliationStorage[sprintf("%s_%s", $member->getId(), $companyName)]))
-                                        $affiliation = $affiliationStorage[sprintf("%s_%s", $member->getId(), $companyName)];
 
                                     if (is_null($affiliation)) {
                                         $affiliation = new Affiliation();
@@ -259,7 +253,6 @@ final class ScheduleIngestionService
                                         $affiliation->setOrganization($org);
                                         $affiliation->setIsCurrent(true);
                                         $member->addAffiliation($affiliation);
-                                        $affiliationStorage[sprintf("%s_%s", $member->getId(), $companyName)] = $affiliation;
                                     }
                                 }
 
@@ -321,18 +314,26 @@ final class ScheduleIngestionService
                         if (!$presentation->isPublished())
                             $presentation->publish();
 
-                        $processedExternalIds[] = $event['external_id'];
-                    } catch (Exception $ex) {
-                        Log::warning(sprintf("error external feed for summit id %s", $summit->getId()));
-                        Log::warning($ex);
-                    }
-                }
-            } catch (Exception $ex) {
-                Log::warning(sprintf("error external feed for summit id %s", $summit->getId()));
-                Log::warning($ex);
-            }
+                        return $event['external_id'];
+                    });
+                    if (!is_null($external_id))
+                        $processedExternalIds[] = $external_id;
 
-            return $processedExternalIds;
-        });
+                } catch (Exception $ex) {
+                    Log::warning(sprintf("error external feed for summit id %s", $summit->getId()));
+                    Log::warning($ex);
+                }
+            }
+            $end = time();
+            $delta = $end - $start;
+            log::debug(sprintf("ScheduleIngestionService::ingestSummit execution call %s seconds - summit %s", $delta, $summit->getId()));
+
+        } catch (Exception $ex) {
+            Log::warning(sprintf("error external feed for summit id %s", $summit->getId()));
+            Log::warning($ex);
+        }
+
+        return $processedExternalIds;
+
     }
 }

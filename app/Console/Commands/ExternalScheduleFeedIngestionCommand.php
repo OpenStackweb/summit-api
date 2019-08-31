@@ -59,6 +59,7 @@ final class ExternalScheduleFeedIngestionCommand extends Command {
 
     public function handle()
     {
+        $this->info("starting summits external ingestion");
         $start  = time();
         $this->service->ingestAllSummits();
         $end   = time();

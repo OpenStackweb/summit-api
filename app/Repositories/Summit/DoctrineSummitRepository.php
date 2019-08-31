@@ -175,7 +175,7 @@ final class DoctrineSummitRepository
             ->andWhere("e.api_feed_url <> ''")
             ->andWhere("e.api_feed_key is not null")
             ->andWhere("e.api_feed_key <>''")
-            ->orderBy('e.begin_date', 'DESC')
+            ->orderBy('e.id', 'DESC')
             ->getQuery()
             ->getResult();
     }

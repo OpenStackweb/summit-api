@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\main\IMemberRepository;
@@ -126,31 +125,25 @@ final class ResourceServerContext implements IResourceServerContext
     public function getCurrentUser(): ?Member
     {
         return $this->tx_service->transaction(function() {
-            Log::debug("ResourceServerContext::getCurrentUser");
             $member = null;
             // legacy test, for new IDP version this value came on null
             $id = $this->getCurrentUserExternalId();
             if(!is_null($id)){
-                Log::debug(sprintf("ResourceServerContext::getCurrentUser: getCurrentUserExternalId is %s", $id));
                 $member = $this->member_repository->getById(intval($id));
                 if(!is_null($member)) return $member;
             }
 
             // is null
             if(is_null($member)){
-                Log::debug("ResourceServerContext::getCurrentUser: getCurrentUserExternalId is null");
                 // try to get by external id
                 $id = $this->getCurrentUserId();
                 if(is_null($id)) {
-                    Log::debug("ResourceServerContext::getCurrentUser: getCurrentUserId is null");
                     return null;
                 }
-                Log::debug(sprintf("ResourceServerContext::getCurrentUser: getCurrentUserId is %s", $id));
                 $member = $this->member_repository->getByExternalId(intval($id));
             }
 
             if(is_null($member)){
-                Log::debug("ResourceServerContext::getCurrentUser: member is null");
                 // we assume that is new idp version and claims alreaady exists on context
                 $user_external_id = $this->getAuthContextVar('user_id');
                 $user_first_name  = $this->getAuthContextVar('user_first_name');

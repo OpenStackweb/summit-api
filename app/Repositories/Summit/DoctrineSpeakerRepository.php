@@ -489,8 +489,8 @@ SQL;
     public function getByFullName(string $fullname): ?PresentationSpeaker
     {
         $speakerFullNameParts = explode(" ", $fullname);
-        $speakerFirstName     = trim(trim(array_pop($speakerFullNameParts)));
-        $speakerLastName      = trim(implode(" ", $speakerFullNameParts));
+        $speakerLastName      = trim(trim(array_pop($speakerFullNameParts)));
+        $speakerFirstName     = trim(implode(" ", $speakerFullNameParts));
 
         return $this->getEntityManager()
             ->createQueryBuilder()

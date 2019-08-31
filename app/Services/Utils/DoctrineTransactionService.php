@@ -15,7 +15,8 @@ use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use Closure;
 use LaravelDoctrine\ORM\Facades\Registry;
-
+use Doctrine\DBAL\Exception\RetryableException;
+use Exception;
 /**
  * Class DoctrineTransactionService
  * @package services\utils
@@ -27,6 +28,8 @@ final class DoctrineTransactionService implements ITransactionService
      */
     private $manager_name;
 
+    const MaxRetries = 3;
+
     /**
      * DoctrineTransactionService constructor.
      * @param string $manager_name
@@ -35,7 +38,6 @@ final class DoctrineTransactionService implements ITransactionService
     {
         $this->manager_name = $manager_name;
     }
-
 
     /**
      * Execute a Closure within a transaction.
@@ -47,25 +49,57 @@ final class DoctrineTransactionService implements ITransactionService
      */
     public function transaction(Closure $callback)
     {
-        $em  = Registry::getManager($this->manager_name);
-        $con = $em->getConnection();
+        $retry  = 0;
+        $done   = false;
+        $result = null;
 
-        if (!$em->isOpen()) {
-            Log::warning("entity manager closed!, trying to re open...");
-            $em = $em->create($con->getConnection(), $em->getConfiguration());
-            $con = $em->getConnection();
+        while (!$done and $retry < self::MaxRetries) {
+            try {
+                $em  = Registry::getManager($this->manager_name);
+                $con = $em->getConnection();
+
+                /**
+                 * Some database systems close the connection after a period of time, in MySQL this is system variable
+                 * `wait_timeout`. Given the daemon is meant to run indefinitely we need to make sure we have an open
+                 * connection before working any job. Otherwise we would see `MySQL has gone away` type errors.
+                 */
+
+                if ($con->ping() === false) {
+                    Log::warning("DoctrineTransactionService::transaction: conn is closed... reconecting");
+                    $con->close();
+                    $con->connect();
+                }
+
+                if (!$em->isOpen()) {
+                    Log::warning("DoctrineTransactionService::transaction: entity manager is closed!, trying to re open...");
+                    $em = Registry::resetManager($this->manager_name);
+                    // new entity manager
+                    $con = $em->getConnection();
+                }
+
+                $con->beginTransaction(); // suspend auto-commit
+                $result = $callback($this);
+                $em->flush();
+                $con->commit();
+                $done = true;
+            } catch (RetryableException $ex) {
+                Log::warning("retrying ...");
+                Registry::resetManager($this->manager_name);
+                $con->rollBack();
+                Log::warning($ex);
+                $retry++;
+                if ($retry === self::MaxRetries) {
+                    throw $ex;
+                }
+            } catch (Exception $ex) {
+                Log::warning("rolling back transaction");
+                $em->close();
+                $con->rollBack();
+                Log::error($ex);
+                throw $ex;
+            }
         }
 
-        try {
-            $con->beginTransaction(); // suspend auto-commit
-            $result = $callback($this);
-            $em->flush();
-            $con->commit();
-        } catch (\Exception $e) {
-            $con->rollBack();
-            Log::error($e);
-            throw $e;
-        }
         return $result;
     }
 }

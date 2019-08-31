@@ -14,6 +14,7 @@
 use App\Models\Foundation\Main\IGroup;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use models\summit\ISummitEventRepository;
+use models\summit\Summit;
 use models\summit\SummitEvent;
 use App\Repositories\SilverStripeDoctrineRepository;
 use utils\DoctrineCaseFilterMapping;
@@ -350,5 +351,24 @@ final class DoctrineSummitEventRepository
             $paging_info->getLastPage($total),
             $data
         );
+    }
+
+    /**
+     * @param Summit $summit,
+     * @param array $external_ids
+     * @return mixed
+     */
+    public function getPublishedEventsBySummitNotInExternalIds(Summit $summit, array $external_ids)
+    {
+        $query =  $this->getEntityManager()->createQueryBuilder()
+            ->select("e")
+            ->from(\models\summit\SummitEvent::class, "e")
+            ->join('e.summit', 's', Join::WITH, " s.id = :summit_id")
+            ->where('e.published = 1')
+            ->andWhere('e.external_id not in (:external_ids)')
+            ->setParameter('summit_id', $summit->getId())
+            ->setParameter('external_ids', $external_ids);
+
+        return $query->getQuery()->getResult();
     }
 }

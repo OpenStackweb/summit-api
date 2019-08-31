@@ -168,14 +168,16 @@ final class DoctrineSummitRepository
     {
         return $this->getEntityManager()->createQueryBuilder()
             ->select("e")
-            ->from(\models\summit\Summit::class, "e")
+            ->from($this->getBaseEntity(), "e")
             ->where("e.api_feed_type is not null")
             ->andWhere("e.api_feed_type <> ''")
             ->andWhere("e.api_feed_url is not null")
             ->andWhere("e.api_feed_url <> ''")
             ->andWhere("e.api_feed_key is not null")
             ->andWhere("e.api_feed_key <>''")
+            ->andWhere("e.end_date >= :now")
             ->orderBy('e.id', 'DESC')
+            ->setParameter("now", new \DateTime('now', new \DateTimeZone('UTC')))
             ->getQuery()
             ->getResult();
     }

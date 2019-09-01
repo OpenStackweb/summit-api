@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Events\CreatedBookableRoomReservation;
 use App\Events\FloorDeleted;
 use App\Events\FloorInserted;
@@ -55,6 +56,7 @@ use models\summit\SummitRoomReservation;
 use models\summit\SummitVenue;
 use models\summit\SummitVenueFloor;
 use models\summit\SummitVenueRoom;
+
 /**
  * Class SummitLocationService
  * @package App\Services\Model
@@ -1710,14 +1712,14 @@ final class SummitLocationService
                 throw new EntityNotFoundException('member not found');
             }
 
-            if($owner->getReservationsCountBySummit($summit) >= $summit->getMeetingRoomBookingMaxAllowed())
-                throw new ValidationException(sprintf("member %s already reached maximun quantity of reservations (%s)", $owner->getId(),  $summit->getMeetingRoomBookingMaxAllowed() ));
+            if ($owner->getReservationsCountBySummit($summit) >= $summit->getMeetingRoomBookingMaxAllowed())
+                throw new ValidationException(sprintf("member %s already reached maximun quantity of reservations (%s)", $owner->getId(), $summit->getMeetingRoomBookingMaxAllowed()));
 
             $payload['owner'] = $owner;
 
             $currency = trim($payload['currency']);
 
-            if($room->getCurrency() != $currency){
+            if ($room->getCurrency() != $currency) {
                 throw new ValidationException
                 (
                     sprintf
@@ -1731,7 +1733,7 @@ final class SummitLocationService
 
             $amount = intval($payload['amount']);
 
-            if($room->getTimeSlotCost() != $amount){
+            if ($room->getTimeSlotCost() != $amount) {
                 throw new ValidationException
                 (
                     sprintf
@@ -1751,20 +1753,20 @@ final class SummitLocationService
             $result = $this->payment_gateway->generatePayment
             (
                 [
-                    "amount"        => $reservation->getAmount(),
-                    "currency"      => $reservation->getCurrency(),
+                    "amount" => $reservation->getAmount(),
+                    "currency" => $reservation->getCurrency(),
                     "receipt_email" => $reservation->getOwner()->getEmail(),
-                    "metadata"      => [
-                        "type"    => "bookable_room_reservation",
+                    "metadata" => [
+                        "type" => "bookable_room_reservation",
                         "room_id" => $room->getId(),
                     ]
                 ]
             );
 
-            if(!isset($result['cart_id']))
+            if (!isset($result['cart_id']))
                 throw new ValidationException("payment gateway error");
 
-            if(!isset($result['client_token']))
+            if (!isset($result['client_token']))
                 throw new ValidationException("payment gateway error");
 
             $reservation->setPaymentGatewayCartId($result['cart_id']);
@@ -1782,7 +1784,7 @@ final class SummitLocationService
     {
         $this->tx_service->transaction(function () use ($payload) {
 
-            $reservation = $this->reservation_repository->getByPaymentGatewayCartId($payload['cart_id']);
+            $reservation = $this->reservation_repository->getByPaymentGatewayCartIdExclusiveLock($payload['cart_id']);
 
             if (is_null($reservation)) {
                 throw new EntityNotFoundException(sprintf("there is no reservation with cart_id %s", $payload['cart_id']));
@@ -1794,8 +1796,7 @@ final class SummitLocationService
                     $reservation->setPaid();
                     return;
                 }
-            }
-            catch (ValidationException $ex){
+            } catch (ValidationException $ex) {
                 Log::error($ex);
                 Log::warning("doing refund of cancelled reservation");
                 $reservation->setStatus(SummitRoomReservation::RequestedRefundStatus);
@@ -1860,9 +1861,9 @@ final class SummitLocationService
                 throw new EntityNotFoundException();
             }
 
-            $status        = $reservation->getStatus();
+            $status = $reservation->getStatus();
             $validStatuses = [SummitRoomReservation::RequestedRefundStatus, SummitRoomReservation::PayedStatus];
-            if(!in_array($status, $validStatuses))
+            if (!in_array($status, $validStatuses))
                 throw new ValidationException
                 (
                     sprintf
@@ -1872,18 +1873,17 @@ final class SummitLocationService
                     )
                 );
 
-            if($amount <= 0){
+            if ($amount <= 0) {
                 throw new ValidationException("can not refund an amount lower than zero!");
             }
 
-            if($amount > intval($reservation->getAmount())){
+            if ($amount > intval($reservation->getAmount())) {
                 throw new ValidationException("can not refund an amount greater than paid one!");
             }
 
-            try{
+            try {
                 $this->payment_gateway->refundPayment($reservation->getPaymentGatewayCartId(), $amount, $reservation->getCurrency());
-            }
-            catch (\Exception $ex){
+            } catch (\Exception $ex) {
                 throw new ValidationException($ex->getMessage());
             }
 
@@ -2153,7 +2153,7 @@ final class SummitLocationService
             if (!$venue instanceof SummitVenue) {
                 throw new EntityNotFoundException
                 (
-                   "venue not found"
+                    "venue not found"
                 );
             }
 
@@ -2277,7 +2277,7 @@ final class SummitLocationService
             if (is_null($room)) {
                 throw new EntityNotFoundException
                 (
-                   'room not found'
+                    'room not found'
                 );
             }
 
@@ -2296,7 +2296,7 @@ final class SummitLocationService
                 throw new ValidationException(sprintf("file exceeds max_file_size (%s MB).", ($max_file_size / 1024) / 1024));
             }
 
-            $image = $this->file_uploader->build($file, sprintf('summits/%s/locations/%s/rooms', $summit->getId(), $venue_id ), true);
+            $image = $this->file_uploader->build($file, sprintf('summits/%s/locations/%s/rooms', $summit->getId(), $venue_id), true);
             $room->setImage($image);
 
             return $image;
@@ -2331,12 +2331,51 @@ final class SummitLocationService
                 );
             }
 
-            if(!$room->hasImage())
+            if (!$room->hasImage())
                 throw new ValidationException("room has no image set");
 
             $room->clearImage();
 
             return $room;
         });
+    }
+
+    /**
+     * @param int $minutes
+     */
+    public function revokeBookableRoomsReservedOlderThanNMinutes(int $minutes): void
+    {
+        // this is done in this way to avoid db lock contentions
+        $reservations = $this->tx_service->transaction(function () use ($minutes) {
+            return $this->reservation_repository->getAllReservedOlderThanXMinutes($minutes);
+        });
+
+        foreach ($reservations as $reservation) {
+
+            $this->tx_service->transaction(function () use ($reservation) {
+
+                try {
+                    $reservation = $this->reservation_repository->getByIdExclusiveLock($reservation->getId());
+                    if (!$reservation instanceof SummitRoomReservation) return;
+
+                    Log::warning(sprintf("cancelling reservation %s created at %s", $reservation->getId(), $reservation->getCreated()->format("Y-m-d h:i:sa")));
+                    $status = $this->payment_gateway->getCartStatus($reservation->getPaymentGatewayCartId());
+                    if (!$this->payment_gateway->canAbandon($status)) {
+                        Log::warning(sprintf("reservation %s created at %s can not be cancelled external status %s", $reservation->getId(), $reservation->getCreated()->format("Y-m-d h:i:sa"), $status));
+                        if($this->payment_gateway->isSucceeded($status)){
+                            $reservation->setPaid();
+                        }
+                        return;
+                    }
+
+                    $this->payment_gateway->abandonCart($reservation->getPaymentGatewayCartId());
+
+                    $reservation->cancel();
+                } catch (\Exception $ex) {
+                    Log::warning($ex);
+                }
+
+            });
+        }
     }
 }

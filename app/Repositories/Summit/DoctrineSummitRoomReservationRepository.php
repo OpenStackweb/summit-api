@@ -16,6 +16,7 @@ use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use models\summit\Summit;
 use models\summit\SummitRoomReservation;
+use models\utils\SilverstripeBaseModel;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineJoinFilterMapping;
 use utils\Filter;
@@ -26,7 +27,7 @@ use utils\PagingResponse;
  * Class DoctrineSummitRoomReservationRepository
  * @package App\Repositories\Summit
  */
-class DoctrineSummitRoomReservationRepository
+final class DoctrineSummitRoomReservationRepository
     extends SilverStripeDoctrineRepository
     implements ISummitRoomReservationRepository
 {
@@ -156,10 +157,42 @@ class DoctrineSummitRoomReservationRepository
      * @param string $payment_gateway_cart_id
      * @return SummitRoomReservation|null
      */
-    public function getByPaymentGatewayCartId(string $payment_gateway_cart_id):?SummitRoomReservation
+    public function getByPaymentGatewayCartIdExclusiveLock(string $payment_gateway_cart_id):?SummitRoomReservation
     {
-        return $this->findOneBy(["payment_gateway_cart_id" => trim($payment_gateway_cart_id)]);
+        $query = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->where("e.payment_gateway_cart_id = payment_gateway_cart_id");
+
+        $query->setParameter("payment_gateway_cart_id", trim($payment_gateway_cart_id));
+
+        return $query->getQuery()->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE)->getOneOrNullResult();
     }
 
+    /**
+     * @param int $minutes
+     * @param int $max
+     * @return mixed
+     * @throws \Exception
+     */
+    public function getAllReservedOlderThanXMinutes(int $minutes, int $max = 100)
+    {
+        $eol = new \DateTime('now', new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone));
+        $eol->sub(new \DateInterval('PT' . $minutes . 'M'));
+
+        $query = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->where("e.created <= :eol")
+            ->andWhere("e.status = :status");
+
+        $query->setParameter("eol", $eol);
+        $query->setParameter("status", SummitRoomReservation::ReservedStatus);
+
+        return $query->getQuery()->setMaxResults($max)->getResult();
+
+    }
 
 }

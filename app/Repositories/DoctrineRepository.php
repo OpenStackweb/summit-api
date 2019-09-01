@@ -31,9 +31,21 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 abstract class DoctrineRepository extends EntityRepository implements IBaseRepository
 {
 
+    /**
+     * @param int $id
+     * @return IEntity|null|object
+     */
     public function getById($id)
     {
         return $this->find($id);
+    }
+
+    /**
+     * @param int $id
+     * @return IEntity|null|object
+     */
+    public function getByIdExclusiveLock($id){
+        return $this->find($id, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
     }
 
     /**

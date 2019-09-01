@@ -12,6 +12,15 @@
  * limitations under the License.
  **/
 use Illuminate\Http\Request as LaravelRequest;
+use Exception;
+
+/**
+ * Class CartAlreadyPaidException
+ * @package App\Services\Apis
+ */
+class CartAlreadyPaidException extends Exception {
+
+}
 /**
  * Interface IPaymentGatewayAPI
  * @package App\Services\Apis
@@ -49,4 +58,29 @@ interface IPaymentGatewayAPI
      * @throws \InvalidArgumentException
      */
     public function refundPayment(string $cart_id, float $amount,  string $currency): void;
+
+    /**
+     * @param string $cart_id
+     * @return mixed|void
+     * @throws CartAlreadyPaidException
+     */
+    public function abandonCart(string $cart_id);
+
+    /**
+     * @param string $status
+     * @return bool
+     */
+    public function canAbandon(string $status):bool;
+
+    /**
+     * @param string $cart_id
+     * @return string
+     */
+    public function getCartStatus(string $cart_id):string;
+
+    /**
+     * @param string $status
+     * @return bool
+     */
+    public function isSucceeded(string $status):bool;
 }

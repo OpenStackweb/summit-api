@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
+use App\Services\Model\ILocationService;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\summit\SummitRoomReservation;
@@ -52,29 +53,22 @@ final class SummitRoomReservationRevocationCommand extends Command {
 
 
     /**
-     * @var ISummitRoomReservationRepository
+     * @var ILocationService
      */
-    private $reservations_repository;
+    private $location_service;
 
-    /**
-     * @var ITransactionService
-     */
-    private $tx_service;
 
     /**
      * SummitRoomReservationRevocationCommand constructor.
-     * @param ISummitRoomReservationRepository $reservations_repository
-     * @param ITransactionService $tx_service
+     * @param ILocationService $location_service
      */
     public function __construct
     (
-        ISummitRoomReservationRepository $reservations_repository,
-        ITransactionService $tx_service
+        ILocationService $location_service
     )
     {
         parent::__construct();
-        $this->reservations_repository = $reservations_repository;
-        $this->tx_service              = $tx_service;
+        $this->location_service = $location_service;
     }
 
     /**
@@ -96,20 +90,7 @@ final class SummitRoomReservationRevocationCommand extends Command {
             $start   = time();
             $lifetime = intval(Config::get("bookable_rooms.reservation_lifetime", 30));
             Log::info(sprintf("SummitRoomReservationRevocationCommand: using lifetime of %s ", $lifetime));
-            $this->tx_service->transaction(function() use($lifetime){
-                $filter = new Filter();
-                $filter->addFilterCondition(FilterElement::makeEqual('status', SummitRoomReservation::ReservedStatus));
-                $eol = new \DateTime('now', new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone));
-
-                $eol->sub(new \DateInterval('PT'.$lifetime.'M'));
-                $filter->addFilterCondition(FilterElement::makeLowerOrEqual('created', $eol->getTimestamp() ));
-                $page  = $this->reservations_repository->getAllByPage(new PagingInfo(1, 100), $filter);
-                foreach($page->getItems() as $reservation){
-                    Log::warning(sprintf("cancelling reservation %s create at %s", $reservation->getId(), $reservation->getCreated()->format("Y-m-d h:i:sa")));
-                    $reservation->cancel();
-                }
-            });
-
+            $this->location_service->revokeBookableRoomsReservedOlderThanNMinutes($lifetime);
             $end   = time();
             $delta = $end - $start;
             $this->info(sprintf("execution call %s seconds", $delta));

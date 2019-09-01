@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Services\Apis\CartAlreadyPaidException;
 use App\Services\Apis\IPaymentGatewayAPI;
 use Illuminate\Http\Request as LaravelRequest;
 use models\exceptions\ValidationException;
@@ -244,5 +245,71 @@ final class StripeApi implements IPaymentGatewayAPI
             $params['amount'] = intval($amount);
         }
         $charge->refund($params);
+    }
+
+    /**
+     * @param string $cart_id
+     * @return mixed|void
+     * @throws CartAlreadyPaidException
+     */
+    public function abandonCart(string $cart_id)
+    {
+        if(empty($this->api_key))
+            throw new \InvalidArgumentException();
+
+        Stripe::setApiKey($this->api_key);
+        $intent = PaymentIntent::retrieve($cart_id);
+
+        if(is_null($intent))
+            throw new \InvalidArgumentException();
+
+        if(!in_array($intent->status,[ PaymentIntent::STATUS_REQUIRES_PAYMENT_METHOD,
+            PaymentIntent::STATUS_REQUIRES_CAPTURE,
+            PaymentIntent::STATUS_REQUIRES_CONFIRMATION,
+            PaymentIntent::STATUS_REQUIRES_ACTION
+        ]))
+            throw new CartAlreadyPaidException(sprintf("cart id %s has status %s", $cart_id, $intent->status));
+
+        $intent->cancel();
+    }
+
+    /**
+     * @param string $status
+     * @return bool
+     */
+    public function canAbandon(string $status): bool
+    {
+        return in_array($status,[
+            PaymentIntent::STATUS_REQUIRES_PAYMENT_METHOD,
+            PaymentIntent::STATUS_REQUIRES_CAPTURE,
+            PaymentIntent::STATUS_REQUIRES_CONFIRMATION,
+            PaymentIntent::STATUS_REQUIRES_ACTION
+        ]);
+    }
+
+    /**
+     * @param string $status
+     * @return bool
+     */
+    public function isSucceeded(string $status):bool {
+        return $status == PaymentIntent::STATUS_SUCCEEDED;
+    }
+
+    /**
+     * @param string $cart_id
+     * @return string
+     */
+    public function getCartStatus(string $cart_id): string
+    {
+        if(empty($this->api_key))
+            throw new \InvalidArgumentException();
+
+        Stripe::setApiKey($this->api_key);
+        $intent = PaymentIntent::retrieve($cart_id);
+
+        if(is_null($intent))
+            throw new \InvalidArgumentException();
+
+        return $intent->status;
     }
 }

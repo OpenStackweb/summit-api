@@ -27,6 +27,12 @@ interface IBaseRepository
     public function getById($id);
 
     /**
+     * @param int $id
+     * @return IEntity
+     */
+    public function getByIdExclusiveLock($id);
+
+    /**
      * @param IEntity $entity
      * @param bool $sync
      * @return void

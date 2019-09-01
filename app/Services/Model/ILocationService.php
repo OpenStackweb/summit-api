@@ -329,4 +329,9 @@ interface ILocationService
      * @return SummitVenueRoom
      */
     public function removeRoomImage(Summit $summit, int $venue_id, int $room_id):SummitVenueRoom;
+
+    /**
+     * @param int $minutes
+     */
+    public function revokeBookableRoomsReservedOlderThanNMinutes(int $minutes):void;
 }

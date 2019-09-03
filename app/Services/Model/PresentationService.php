@@ -267,9 +267,23 @@ final class PresentationService
             // check qty
 
             $limit = $this->getSubmissionLimitFor($summit);
-            $count = count($current_speaker->getPresentationsBySelectionPlanAndRole($current_selection_plan, PresentationSpeaker::ROLE_CREATOR)) +
-                count($current_speaker->getPresentationsBySelectionPlanAndRole($current_selection_plan, PresentationSpeaker::ROLE_MODERATOR)) +
-                count($current_speaker->getPresentationsBySelectionPlanAndRole($current_selection_plan, PresentationSpeaker::ROLE_SPEAKER));
+            $presentations = [];
+            foreach ($current_speaker->getPresentationsBySelectionPlanAndRole($current_selection_plan, PresentationSpeaker::ROLE_CREATOR)  as $p){
+                if(isset($presentations[$p->getId()])) continue;
+                $presentations[$p->getId()] = $p->getId();
+            }
+
+            foreach ($current_speaker->getPresentationsBySelectionPlanAndRole($current_selection_plan, PresentationSpeaker::ROLE_MODERATOR)  as $p){
+                if(isset($presentations[$p->getId()])) continue;
+                $presentations[$p->getId()] = $p->getId();
+            }
+
+            foreach ($current_speaker->getPresentationsBySelectionPlanAndRole($current_selection_plan, PresentationSpeaker::ROLE_SPEAKER)  as $p){
+                if(isset($presentations[$p->getId()])) continue;
+                $presentations[$p->getId()] = $p->getId();
+            }
+
+            $count = count($presentations);
 
             if ($count >= $limit)
                 throw new ValidationException(trans(

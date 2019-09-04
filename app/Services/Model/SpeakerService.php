@@ -182,15 +182,15 @@ final class SpeakerService
 
             $speaker = new PresentationSpeaker();
             $speaker->setCreatedFromApi(true);
-            $member_id = 0;
+            $member_id = intval($data['member_id'] ?? 0);
+            $email = trim($data['email'] ??  '');
 
-            if (!isset($data['email']) && !isset($data['member_id']))
+            if (empty($email) && $member_id == 0)
                 throw
                 new ValidationException
                 (trans("validation_errors.SpeakerService.addSpeaker.MissingMemberOrEmail"));
 
-            if (isset($data['member_id']) && intval($data['member_id']) > 0) {
-                $member_id = intval($data['member_id']);
+            if ($member_id > 0) {
                 $member = $this->member_repository->getById($member_id);
                 if (is_null($member))
                     throw new EntityNotFoundException(sprintf("member id %s does not exists!", $member_id));
@@ -211,8 +211,7 @@ final class SpeakerService
 
             $this->updateSpeakerMainData($speaker, $data);
 
-            if ($member_id === 0 && isset($data['email'])) {
-                $email = trim($data['email']);
+            if ($member_id == 0 && !empty($emai)) {
                 $member = $this->member_repository->getByEmail($email);
                 if (is_null($member)) {
                     $this->registerSpeaker($speaker, $email);

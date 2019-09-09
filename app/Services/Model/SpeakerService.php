@@ -192,7 +192,7 @@ final class SpeakerService
 
             if ($member_id > 0) {
                 $member = $this->member_repository->getById($member_id);
-                if (is_null($member))
+                if (is_null($member) || !$member instanceof Member)
                     throw new EntityNotFoundException(sprintf("member id %s does not exists!", $member_id));
 
                 $existent_speaker = $this->speaker_repository->getByMember($member);
@@ -209,13 +209,9 @@ final class SpeakerService
                 $speaker->setMember($member);
             }
 
-            $this->updateSpeakerMainData($speaker, $data);
-
             if ($member_id == 0 && !empty($emai)) {
                 $member = $this->member_repository->getByEmail($email);
                 if (is_null($member)) {
-                    $this->registerSpeaker($speaker, $email);
-                } else {
                     $existent_speaker = $this->speaker_repository->getByMember($member);
                     if (!is_null($existent_speaker))
                         throw new ValidationException
@@ -228,8 +224,15 @@ final class SpeakerService
 
                         );
                     $speaker->setMember($member);
+
+                }
+
+                if(!$speaker->hasMember()){
+                    $this->registerSpeaker($speaker, $email);
                 }
             }
+
+            $this->updateSpeakerMainData($speaker, $data);
 
             $this->speaker_repository->add($this->updateSpeakerRelations($speaker, $data));
 

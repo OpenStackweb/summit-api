@@ -224,7 +224,7 @@ class Member extends SilverstripeBaseModel
 
     /**
      * @var PresentationSpeaker
-     * @ORM\OneToOne(targetEntity="models\summit\PresentationSpeaker", mappedBy="member")
+     * @ORM\OneToOne(targetEntity="models\summit\PresentationSpeaker", mappedBy="member", cascade={"persist"})
      */
     private $speaker;
 
@@ -1282,6 +1282,14 @@ SQL;
         catch(\Exception $ex){
             return 0;
         }
+    }
+
+    public function setSpeaker(PresentationSpeaker $speaker){
+        $this->speaker = $speaker;
+    }
+
+    public function clearSpeaker(){
+        $this->speaker = null;
     }
 
     /**

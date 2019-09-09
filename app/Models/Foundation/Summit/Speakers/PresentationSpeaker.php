@@ -161,8 +161,9 @@ class PresentationSpeaker extends SilverstripeBaseModel
     private $photo;
 
     /**
-     * @ORM\OneToOne(targetEntity="models\main\Member",inversedBy="speaker")
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID")
+     * Owning side
+     * @ORM\OneToOne(targetEntity="models\main\Member",inversedBy="speaker", cascade={"persist"})
+     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", nullable=triue)
      * @var Member
      */
     private $member;
@@ -1023,6 +1024,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
      */
     public function setMember(Member $member){
         $this->member = $member;
+        $member->setSpeaker($this);
     }
 
     /**

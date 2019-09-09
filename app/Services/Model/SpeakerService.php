@@ -186,6 +186,8 @@ final class SpeakerService
             $member_id = intval($data['member_id'] ?? 0);
             $email = trim($data['email'] ??  '');
 
+            Log::debug(sprintf("SpeakerService::addSpeaker: member id %s email %s", $member_id, $email));
+
             if (empty($email) && $member_id == 0)
                 throw
                 new ValidationException
@@ -210,15 +212,15 @@ final class SpeakerService
                 $speaker->setMember($member);
             }
 
-            if ($member_id == 0 && !empty($emai)) {
-                Log::debug(sprintf("SpeakerService::addSpeaker: member id is zero email is %s", $emai));
+            if ($member_id == 0 && !empty($email)) {
+                Log::debug(sprintf("SpeakerService::addSpeaker: member id is zero email is %s", $email));
                 $member = $this->member_repository->getByEmail($email);
                 if (!is_null($member)) {
-                    Log::debug(sprintf("SpeakerService::addSpeaker: member %s found, setting it to speaker", $emai));
+                    Log::debug(sprintf("SpeakerService::addSpeaker: member %s found, setting it to speaker", $email));
                     $speaker->setMember($member);
                 }
                 if (is_null($member)) {
-                    Log::debug(sprintf("SpeakerService::addSpeaker: member %s not found", $emai));
+                    Log::debug(sprintf("SpeakerService::addSpeaker: member %s not found", $email));
                     $existent_speaker = $this->speaker_repository->getByMember($member);
                     if (!is_null($existent_speaker))
                         throw new ValidationException

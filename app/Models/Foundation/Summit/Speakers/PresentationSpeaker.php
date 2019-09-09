@@ -163,7 +163,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
     /**
      * Owning side
      * @ORM\OneToOne(targetEntity="models\main\Member",inversedBy="speaker", cascade={"persist"})
-     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", nullable=triue)
+     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", nullable=true)
      * @var Member
      */
     private $member;

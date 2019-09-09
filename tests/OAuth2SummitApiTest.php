@@ -387,7 +387,7 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
 
         $summit = $this->testAddSummit();
         $params = [
-            'id' => $summit->id
+            'id' => 31
         ];
 
         $headers = [

@@ -1657,6 +1657,7 @@ final class SummitService extends AbstractService implements ISummitService
                 );
             }
 
+            $summit->markAsDeleted();
             $this->summit_repository->delete($summit);
 
             Event::fire(new SummitDeleted($summit_id));

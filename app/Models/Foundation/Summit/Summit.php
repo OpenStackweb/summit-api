@@ -600,6 +600,17 @@ class Summit extends SilverstripeBaseModel
         $this->notifications = new ArrayCollection;
         $this->selection_plans = new ArrayCollection;
         $this->meeting_booking_room_allowed_attributes = new ArrayCollection();
+        $this->mark_as_deleted = false;
+    }
+
+    private $mark_as_deleted;
+
+    public function markAsDeleted(){
+        $this->mark_as_deleted = true;
+    }
+
+    public function isDeleting():bool{
+        return $this->mark_as_deleted;
     }
 
     /**

@@ -779,6 +779,7 @@ class SummitEvent extends SilverstripeBaseModel
      */
     public function deleted($args){
 
+        if($this->summit->isDeleting()) return;
         Event::fire(new SummitEventDeleted($this,  $this->pre_remove_events ));
         $this->pre_remove_events = null;
     }

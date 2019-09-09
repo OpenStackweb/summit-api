@@ -92,7 +92,7 @@ final class OAuth2TrackTagGroupsApiTest extends ProtectedApiTest
         //$new_track_tag_group = $this->testAddTrackTagGroup($summit_id);
         $params = [
             'id' => $summit_id,
-            'track_tag_group_id' => 26,
+            'track_tag_group_id' => 25,
             'expand' => 'allowed_tags,tag'
         ];
 
@@ -102,7 +102,7 @@ final class OAuth2TrackTagGroupsApiTest extends ProtectedApiTest
             'name'           => $name,
             'label'         => $label,
             'order'  => 1,
-            'allowed_tags' => ['101','Case Study', 'Demo', 'Demo2'],
+            'allowed_tags' => ['Symantec','Platinum Member', 'Marketplace', 'Enterprise', 'Tag Loco'],
         ];
 
         $headers = [

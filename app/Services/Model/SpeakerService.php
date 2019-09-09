@@ -27,6 +27,7 @@ use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IFolderService;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -210,8 +211,14 @@ final class SpeakerService
             }
 
             if ($member_id == 0 && !empty($emai)) {
+                Log::debug(sprintf("SpeakerService::addSpeaker: member id is zero email is %s", $emai));
                 $member = $this->member_repository->getByEmail($email);
+                if (!is_null($member)) {
+                    Log::debug(sprintf("SpeakerService::addSpeaker: member %s found, setting it to speaker", $emai));
+                    $speaker->setMember($member);
+                }
                 if (is_null($member)) {
+                    Log::debug(sprintf("SpeakerService::addSpeaker: member %s not found", $emai));
                     $existent_speaker = $this->speaker_repository->getByMember($member);
                     if (!is_null($existent_speaker))
                         throw new ValidationException
@@ -223,11 +230,6 @@ final class SpeakerService
                                 ])
 
                         );
-                    $speaker->setMember($member);
-
-                }
-
-                if(!$speaker->hasMember()){
                     $this->registerSpeaker($speaker, $email);
                 }
             }

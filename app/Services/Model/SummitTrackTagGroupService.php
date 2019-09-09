@@ -15,6 +15,7 @@ use App\Models\Foundation\Summit\Factories\TrackTagGroupFactory;
 use App\Models\Foundation\Summit\Repositories\IDefaultTrackTagGroupRepository;
 use App\Models\Foundation\Summit\TrackTagGroup;
 use App\Models\Foundation\Summit\TrackTagGroupAllowedTag;
+use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -165,9 +166,13 @@ implements ISummitTrackTagGroupService
             if (isset($data['allowed_tags'])) {
                 $track_tag_group->clearAllowedTags();
                 foreach ($data['allowed_tags'] as $str_tag) {
+                    Log::debug("updating allowed tags for track group");
+                    Log::debug(sprintf("trying to get tag %s ...", $str_tag));
                     $tag = $this->tag_repository->getByTag($str_tag);
-                    if(is_null($tag))
+                    if(is_null($tag)) {
+                        Log::debug(sprintf("creating tag %s ...", $str_tag));
                         $tag = new Tag(trim($str_tag));
+                    }
                     $track_tag_group->addTag($tag);
                 }
             }

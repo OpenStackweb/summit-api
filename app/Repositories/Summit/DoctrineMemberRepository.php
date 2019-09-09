@@ -35,7 +35,15 @@ final class DoctrineMemberRepository
      */
     public function getByEmail($email)
     {
-        $this->findOneBy(['email' => trim($email)]);
+        return $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->where("e.email = :email")
+            ->setParameter("email",trim($email))
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 
     /**

@@ -113,9 +113,21 @@ class SummitVenue extends SummitGeoLocatedLocation
      * @param int $room_id
      * @return SummitVenueRoom|null
      */
-    public function getRoom($room_id){
+    public function getRoom($room_id):?SummitVenueRoom{
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($room_id)));
+        $room = $this->rooms->matching($criteria)->first();
+        return $room === false ? null : $room;
+    }
+
+
+    /**
+     * @param string $name
+     * @return SummitVenueRoom|null
+     */
+    public function getRoomByName(string $name):?SummitVenueRoom{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('name', trim($name)));
         $room = $this->rooms->matching($criteria)->first();
         return $room === false ? null : $room;
     }

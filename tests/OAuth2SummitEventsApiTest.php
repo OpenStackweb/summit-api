@@ -515,7 +515,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
     {
         $params = array
         (
-            'id' => 6,
+            'id' => 29,
         );
 
         $headers = array

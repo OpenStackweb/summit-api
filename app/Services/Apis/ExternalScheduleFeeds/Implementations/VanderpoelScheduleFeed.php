@@ -47,16 +47,16 @@ final class VanderpoelScheduleFeed extends AbstractExternalScheduleFeed
 
             if(isset($event['speakers'])){
                 foreach($event['speakers'] as $speaker){
-                    $speakerFullName = trim($speaker['first_name']).' '.trim($speaker['last_name']);
+                    $speakerFullName = trim(utf8_encode($speaker['first_name'])).' '.trim(utf8_encode($speaker['last_name']));
                     $speakers[]      = $speakerFullName;
                     if(!isset($this->speakers[$speakerFullName]))
                         $this->speakers[$speakerFullName] = [
                             'full_name'  => $speakerFullName,
-                            'first_name' => trim($speaker['first_name']),
-                            'last_name'  => trim($speaker['last_name']),
+                            'first_name' => trim(utf8_encode($speaker['first_name'])),
+                            'last_name'  => trim(utf8_encode($speaker['last_name'])),
                             'email'      => $this->getDefaultSpeakerEmail($speakerFullName),
-                            'company'    => trim($speaker['company']),
-                            'position'   => trim($speaker['job_title']),
+                            'company'    => trim(utf8_encode($speaker['company'])),
+                            'position'   => trim(utf8_encode($speaker['job_title'])),
                             'avatar'     => trim($speaker['photo']),
                         ];
                 }
@@ -66,14 +66,14 @@ final class VanderpoelScheduleFeed extends AbstractExternalScheduleFeed
 
             $events[] = [
                 'external_id' => trim($event['id']),
-                'title'       => trim($event['title']),
-                'abstract'    => trim($event['abstract']),
+                'title'       => trim(utf8_encode($event['title'])),
+                'abstract'    => trim(utf8_encode($event['abstract'])),
                 'track'       => $track,
-                'location'    => trim($event['room']),
+                'location'    => trim(utf8_encode($event['room'])),
                 'start_date'  => $event['start_timestamp'],
                 'end_date'    => $event['end_timestamp'],
                 'speakers'    => $speakers,
-                'tags'        => $event["keywords"]
+                'tags'        => utf8_encode($event["keywords"])
             ];
         }
         return $events;

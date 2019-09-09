@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\Repositories\ISummitLocationRepository;
 use App\Services\Apis\ExternalScheduleFeeds\IExternalScheduleFeedFactory;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
@@ -77,6 +78,10 @@ final class ScheduleIngestionService
      */
     private $tag_repository;
 
+    /**
+     * @var ISummitLocationRepository
+     */
+    private $location_repository;
 
     public function __construct
     (
@@ -85,6 +90,7 @@ final class ScheduleIngestionService
         ISpeakerRepository $speaker_repository,
         IOrganizationRepository $org_repository,
         ISummitEventRepository $event_repository,
+        ISummitLocationRepository $location_repository,
         IExternalScheduleFeedFactory $feed_factory,
         ITagRepository $tag_repository,
         ITransactionService $tx_service
@@ -98,6 +104,7 @@ final class ScheduleIngestionService
         $this->event_repository = $event_repository;
         $this->tag_repository = $tag_repository;
         $this->feed_factory = $feed_factory;
+        $this->location_repository = $location_repository;
     }
 
     /**
@@ -135,6 +142,9 @@ final class ScheduleIngestionService
     {
 
         $processedExternalIds = [];
+        $locations_pool = [];
+        $speaker_pool = [];
+        $tracks_pool = [];
 
         try {
             $start = time();
@@ -170,7 +180,6 @@ final class ScheduleIngestionService
                     $summit->addEventType($presentationType);
                 }
             });
-
             $events = $feed->getEvents();
             $speakers = $feed->getSpeakers();
 
@@ -198,10 +207,10 @@ final class ScheduleIngestionService
                         // location
                         $location = null;
                         if (isset($event['location'])) {
-                            $location = $summit->getLocationByName($event['location']);
+                            $location = $mainVenue->getRoomByName($event['location']);
                             if (is_null($location)) {
                                 $location = new SummitVenueRoom();
-                                $location->setName($event['location']);
+                                $location->setName(trim($event['location']));
                                 $mainVenue->addRoom($location);
                             }
                         }
@@ -237,6 +246,9 @@ final class ScheduleIngestionService
                                     $member->setLastName($speakerLastName);
                                     $this->member_repository->add($member, true);
                                 }
+                                $member->setEmail($speakerEmail);
+                                $member->setFirstName($speakerFirstName);
+                                $member->setLastName($speakerLastName);
 
                                 // check affiliations
                                 if (!empty($companyName)) {
@@ -267,6 +279,11 @@ final class ScheduleIngestionService
                                     $speaker->setMember($member);
                                     $this->speaker_repository->add($speaker, true);
                                 }
+
+                                $speaker->setFirstName($speakerFirstName);
+                                $speaker->setLastName($speakerLastName);
+                                $speaker->setTitle($speakerTitle);
+                                $speaker->setMember($member);
 
                                 $presentationSpeakers[] = $speaker;
                             }

@@ -59,7 +59,8 @@ final class DoctrineTagRepository
                 ->from(\models\main\Tag::class, "t")
                 ->where('UPPER(TRIM(t.tag)) = UPPER(TRIM(:tag))')
                 ->setParameter('tag', $tag)
-                ->getQuery()->getFirstResult();
+                ->setMaxResults(1)
+                ->getQuery()->getOneOrNullResult();
         }
         catch(NoResultException $e){
             return null;

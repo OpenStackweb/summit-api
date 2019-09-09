@@ -73,10 +73,21 @@ final class VanderpoelScheduleFeed extends AbstractExternalScheduleFeed
                 'start_date'  => $event['start_timestamp'],
                 'end_date'    => $event['end_timestamp'],
                 'speakers'    => $speakers,
-                'tags'        => utf8_encode($event["keywords"])
+                'tags'        => self::encode_array($event["keywords"])
             ];
         }
         return $events;
+    }
+
+    private static function encode_array($array){
+        if(is_array($array)){
+            $res = [];
+            foreach ($array as $element){
+                $res[] = utf8_encode($element);
+            }
+            return $res;
+        }
+        return $array;
     }
 
     public function getSpeakers(): array

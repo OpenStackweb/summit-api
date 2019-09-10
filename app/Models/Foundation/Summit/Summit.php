@@ -603,6 +603,9 @@ class Summit extends SilverstripeBaseModel
         $this->mark_as_deleted = false;
     }
 
+    /**
+     * @var bool
+     */
     private $mark_as_deleted;
 
     public function markAsDeleted(){
@@ -610,7 +613,7 @@ class Summit extends SilverstripeBaseModel
     }
 
     public function isDeleting():bool{
-        return $this->mark_as_deleted;
+        return is_null($this->mark_as_deleted)? false : $this->mark_as_deleted;
     }
 
     /**

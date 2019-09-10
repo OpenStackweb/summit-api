@@ -77,7 +77,7 @@ final class FolderService
                     $item->setName($part);
                     $item->setTitle($part);
                     $item->setFilename($file_name);
-                    $this->folder_repository->add($item);
+                    $this->folder_repository->add($item, true);
                 }
                 $parent = $item;
             }

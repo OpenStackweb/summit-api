@@ -33,7 +33,7 @@ final class DoctrineFolderRepository
 
         $query = <<<SQL
       select * from File where ClassName = 'Folder' AND 
-      Name = :folder_name
+      Name = :folder_name LIMIT 0,1;
 SQL;
         // build rsm here
         $rsm = new ResultSetMappingBuilder($this->_em);
@@ -54,7 +54,7 @@ SQL;
 
         $query = <<<SQL
       select * from File where ClassName = 'Folder' AND 
-      FileName = :file_name
+      FileName = :file_name  LIMIT 0,1;
 SQL;
         // build rsm here
         $rsm = new ResultSetMappingBuilder($this->_em);
@@ -83,7 +83,7 @@ SQL;
     {
         $query = <<<SQL
       select * from File where ClassName = 'Folder' AND 
-      Name = :folder_name and ParentID = :parent_id
+      Name = :folder_name and ParentID = :parent_id LIMIT 0,1;
 SQL;
         // build rsm here
         $rsm = new ResultSetMappingBuilder($this->_em);

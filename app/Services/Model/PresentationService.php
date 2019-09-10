@@ -714,7 +714,7 @@ final class PresentationService
 
                 $slideFile = $this->file_uploader->build(
                     $file,
-                    sprintf('summits/%s/presentations/%s/slides/', $presentation->getSummitId(), $presentation_id),
+                    sprintf('summits/%s/presentations/%s/slides', $presentation->getSummitId(), $presentation_id),
                     false);
                 $slide->setSlide($slideFile);
             }
@@ -806,7 +806,7 @@ final class PresentationService
                     throw new ValidationException(sprintf("file exceeds max_file_size (%s MB).", ($max_file_size / 1024) / 1024));
                 }
 
-                $slideFile = $this->file_uploader->build($file, sprintf('summits/%s/presentations/%s/slides/', $presentation->getSummitId(), $presentation_id), false);
+                $slideFile = $this->file_uploader->build($file, sprintf('summits/%s/presentations/%s/slides', $presentation->getSummitId(), $presentation_id), false);
                 $slide->setSlide($slideFile);
                 $slide->clearLink();
             }

@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\main\File;
 use models\main\IFolderRepository;
@@ -46,7 +48,7 @@ final class FolderService
     public function findOrMake($folder_name)
     {
         return $this->tx_service->transaction(function() use($folder_name){
-
+           Log::debug(sprintf("FolderService::findOrMake folder_name %s", $folder_name));
            $folder = $this->folder_repository->getFolderByFileName($folder_name);
            if(!is_null($folder)) return $folder;
 
@@ -57,10 +59,12 @@ final class FolderService
             $item        = null;
             $file_name   = null;
             foreach($parts as $part) {
+                Log::debug(sprintf("FolderService::findOrMake part %s", $part));
                 if(!$part) continue; // happens for paths with a trailing slash
                 if(!empty($file_name))
                     $file_name .= '/';
                 $file_name .= $part;
+                Log::debug(sprintf("FolderService::findOrMake file_name %s", $file_name));
                 $item = is_null($parent) ?
                     $this->folder_repository->getFolderByName($part) :
                     $this->folder_repository->getFolderByNameAndParent($part, $parent);

@@ -11,19 +11,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\NativeQuery;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\utils\IBaseRepository;
 use models\utils\IEntity;
-use models\utils\SilverstripeBaseModel;
+use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
 use utils\PagingResponse;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Doctrine\ORM\LazyCriteriaCollection;
 /**
  * Class DoctrineRepository
  * @package App\Repositories
@@ -32,9 +35,17 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
 {
 
     /**
-     * @param int $id
-     * @return IEntity|null|object
+     * @var string
      */
+    protected $manager_name;
+    /**
+     * @return EntityManager
+     */
+    protected function getEntityManager()
+    {
+        return Registry::getManager($this->manager_name);
+    }
+
     public function getById($id)
     {
         return $this->find($id);
@@ -57,9 +68,9 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
      */
     public function add($entity, $sync = false)
     {
-        $this->_em->persist($entity);
+        $this->getEntityManager()->persist($entity);
         if($sync)
-            $this->_em->flush($entity);
+            $this->getEntityManager()->flush($entity);
     }
 
     /**
@@ -68,7 +79,7 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
      */
     public function delete($entity)
     {
-        $this->_em->remove($entity);
+        $this->getEntityManager()->remove($entity);
     }
 
     /**
@@ -143,5 +154,153 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
             $data
         );
     }
+
+    /**
+     * Creates a new QueryBuilder instance that is prepopulated for this entity name.
+     *
+     * @param string $alias
+     * @param string $indexBy The index for the from.
+     *
+     * @return QueryBuilder
+     */
+    public function createQueryBuilder($alias, $indexBy = null)
+    {
+        return $this->getEntityManager()->createQueryBuilder()
+            ->select($alias)
+            ->from($this->_entityName, $alias, $indexBy);
+    }
+
+    /**
+     * Creates a new result set mapping builder for this entity.
+     *
+     * The column naming strategy is "INCREMENT".
+     *
+     * @param string $alias
+     *
+     * @return ResultSetMappingBuilder
+     */
+    public function createResultSetMappingBuilder($alias)
+    {
+        $rsm = new ResultSetMappingBuilder($this->getEntityManager(), ResultSetMappingBuilder::COLUMN_RENAMING_INCREMENT);
+        $rsm->addRootEntityFromClassMetadata($this->_entityName, $alias);
+
+        return $rsm;
+    }
+
+    /**
+     * Creates a new Query instance based on a predefined metadata named query.
+     *
+     * @param string $queryName
+     *
+     * @return Query
+     */
+    public function createNamedQuery($queryName)
+    {
+        return $this->getEntityManager()->createQuery($this->_class->getNamedQuery($queryName));
+    }
+
+    /**
+     * Creates a native SQL query.
+     *
+     * @param string $queryName
+     *
+     * @return NativeQuery
+     */
+    public function createNativeNamedQuery($queryName)
+    {
+        $queryMapping   = $this->_class->getNamedNativeQuery($queryName);
+        $rsm            = new Query\ResultSetMappingBuilder($this->getEntityManager());
+        $rsm->addNamedNativeQueryMapping($this->_class, $queryMapping);
+
+        return $this->getEntityManager()->createNativeQuery($queryMapping['query'], $rsm);
+    }
+
+    /**
+     * Clears the repository, causing all managed entities to become detached.
+     *
+     * @return void
+     */
+    public function clear()
+    {
+        $this->getEntityManager()->clear($this->_class->rootEntityName);
+    }
+
+    /**
+     * Finds an entity by its primary key / identifier.
+     *
+     * @param mixed    $id          The identifier.
+     * @param int|null $lockMode    One of the \Doctrine\DBAL\LockMode::* constants
+     *                              or NULL if no specific lock mode should be used
+     *                              during the search.
+     * @param int|null $lockVersion The lock version.
+     *
+     * @return object|null The entity instance or NULL if the entity can not be found.
+     */
+    public function find($id, $lockMode = null, $lockVersion = null)
+    {
+        return $this->getEntityManager()->find($this->_entityName, $id, $lockMode, $lockVersion);
+    }
+
+    /**
+     * Finds entities by a set of criteria.
+     *
+     * @param array      $criteria
+     * @param array|null $orderBy
+     * @param int|null   $limit
+     * @param int|null   $offset
+     *
+     * @return array The objects.
+     */
+    public function findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+    {
+        $persister = $this->getEntityManager()->getUnitOfWork()->getEntityPersister($this->_entityName);
+
+        return $persister->loadAll($criteria, $orderBy, $limit, $offset);
+    }
+
+    /**
+     * Finds a single entity by a set of criteria.
+     *
+     * @param array      $criteria
+     * @param array|null $orderBy
+     *
+     * @return object|null The entity instance or NULL if the entity can not be found.
+     */
+    public function findOneBy(array $criteria, array $orderBy = null)
+    {
+        $persister = $this->getEntityManager()->getUnitOfWork()->getEntityPersister($this->_entityName);
+
+        return $persister->load($criteria, null, null, [], null, 1, $orderBy);
+    }
+
+    /**
+     * Counts entities by a set of criteria.
+     *
+     * @todo Add this method to `ObjectRepository` interface in the next major release
+     *
+     * @param array $criteria
+     *
+     * @return int The cardinality of the objects that match the given criteria.
+     */
+    public function count(array $criteria)
+    {
+        return $this->getEntityManager()->getUnitOfWork()->getEntityPersister($this->_entityName)->count($criteria);
+    }
+
+    /**
+     * Select all elements from a selectable that match the expression and
+     * return a new collection containing these elements.
+     *
+     * @param \Doctrine\Common\Collections\Criteria $criteria
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function matching(Criteria $criteria)
+    {
+        $persister = $this->getEntityManager()->getUnitOfWork()->getEntityPersister($this->_entityName);
+
+        return new LazyCriteriaCollection($persister, $criteria);
+    }
+
 
 }

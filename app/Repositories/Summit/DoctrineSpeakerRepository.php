@@ -145,7 +145,7 @@ SUMMIT_SPEAKERS
 SQL;
 
 
-        $stm   = $this->_em->getConnection()->executeQuery($query_count, $bindings);
+        $stm   = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings);
 
         $total = intval($stm->fetchColumn(0));
 
@@ -309,11 +309,11 @@ SQL;
         $rsm->addFieldResult('p', 'PhotoName', 'name');
         $rsm->addFieldResult('m', 'MemberID', 'id');*/
 
-        $rsm = new ResultSetMappingBuilder($this->_em);
+        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
         $rsm->addRootEntityFromClassMetadata(\models\summit\PresentationSpeaker::class, 's', ['Title' => 'SpeakerTitle']);
 
         // build rsm here
-        $native_query = $this->_em->createNativeQuery($query, $rsm);
+        $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
 
         foreach($bindings as $k => $v)
             $native_query->setParameter($k, $v);
@@ -382,7 +382,7 @@ SUMMIT_SPEAKERS
 SQL;
 
 
-        $stm   = $this->_em->getConnection()->executeQuery($query_count, $bindings);
+        $stm   = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings);
 
         $total = intval($stm->fetchColumn(0));
 
@@ -441,11 +441,11 @@ SQL;
         $rsm->addFieldResult('p', 'PhotoName', 'name');
         $rsm->addFieldResult('m', 'MemberID', 'id');*/
 
-        $rsm = new ResultSetMappingBuilder($this->_em);
+        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
         $rsm->addRootEntityFromClassMetadata(\models\summit\PresentationSpeaker::class, 's', ['Title' => 'SpeakerTitle']);
 
         // build rsm here
-        $native_query = $this->_em->createNativeQuery($query, $rsm);
+        $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
 
         foreach($bindings as $k => $v)
             $native_query->setParameter($k, $v);

@@ -59,7 +59,7 @@ final class DoctrineSummitAttendeeTicketRepository
      */
     public function delete($entity)
     {
-        $this->_em->getConnection()->delete("
+        $this->getEntityManager()->getConnection()->delete("
         SummitAttendeeTicket
         ", ["ID" => $entity->getIdentifier()]);
     }

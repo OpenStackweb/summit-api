@@ -111,14 +111,14 @@ SQL;
  ORDER BY Created ASC LIMIT {$limit};
 SQL;
 
-        $rsm = new ResultSetMappingBuilder($this->_em);
+        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
         $rsm->addRootEntityFromClassMetadata(\models\summit\SummitEntityEvent::class, 'e');
         // build rsm here
-        $native_query = $this->_em->createNativeQuery($query, $rsm);
+        $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
 
         $entity_events = $native_query->getResult();
 
-        if($detach) $this->_em ->clear(\models\summit\SummitEntityEvent::class);
+        if($detach) $this->getEntityManager()->clear(\models\summit\SummitEntityEvent::class);
 
         return $entity_events;
     }
@@ -133,7 +133,7 @@ SQL;
 SELECT ID FROM SummitEntityEvent WHERE SummitID = {$summit->getId()} ORDER BY ID DESC LIMIT 1;
 SQL;
 
-        return intval($this->_em->getConnection()->executeQuery($query)->fetchColumn(0));
+        return intval($this->getEntityManager()->getConnection()->executeQuery($query)->fetchColumn(0));
     }
 
     /**

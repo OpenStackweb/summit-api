@@ -32,8 +32,8 @@ abstract class SilverStripeDoctrineRepository extends DoctrineRepository
      */
     public function __construct($em, ClassMetadata $class)
     {
-        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
-        parent::__construct($em, $class);
+        $this->manager_name = SilverstripeBaseModel::EntityManager;
+        parent::__construct(Registry::getManager(SilverstripeBaseModel::EntityManager), $class);
     }
 
     /**
@@ -68,7 +68,6 @@ abstract class SilverStripeDoctrineRepository extends DoctrineRepository
         $resource_server_ctx = App::make(\models\oauth2\IResourceServerContext::class);
         $member              = $resource_server_ctx->getCurrentUser();
         if(is_null($member)) return false;
-            return $member->isOnGroup($group_code);
-        return false;
+        return $member->isOnGroup($group_code);
     }
 }

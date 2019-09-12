@@ -36,9 +36,9 @@ final class DoctrineFolderRepository
       Name = :folder_name LIMIT 0,1;
 SQL;
         // build rsm here
-        $rsm = new ResultSetMappingBuilder($this->_em);
+        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
         $rsm->addRootEntityFromClassMetadata(\models\main\File::class, 'f');
-        $native_query = $this->_em->createNativeQuery($query, $rsm);
+        $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
 
         $native_query->setParameter("folder_name", $folder_name);
 
@@ -57,9 +57,9 @@ SQL;
       FileName = :file_name  LIMIT 0,1;
 SQL;
         // build rsm here
-        $rsm = new ResultSetMappingBuilder($this->_em);
+        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
         $rsm->addRootEntityFromClassMetadata(\models\main\File::class, 'f');
-        $native_query = $this->_em->createNativeQuery($query, $rsm);
+        $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
 
         $native_query->setParameter("file_name", $file_name);
 
@@ -86,9 +86,9 @@ SQL;
       Name = :folder_name and ParentID = :parent_id LIMIT 0,1;
 SQL;
         // build rsm here
-        $rsm = new ResultSetMappingBuilder($this->_em);
+        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
         $rsm->addRootEntityFromClassMetadata(\models\main\File::class, 'f');
-        $native_query = $this->_em->createNativeQuery($query, $rsm);
+        $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
 
         $native_query->setParameter("folder_name", $folder_name);
         $native_query->setParameter("parent_id", $parent->getId());

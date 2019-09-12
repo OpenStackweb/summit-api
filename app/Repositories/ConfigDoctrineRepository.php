@@ -29,7 +29,7 @@ abstract class ConfigDoctrineRepository extends DoctrineRepository
      */
     public function __construct($em, ClassMetadata $class)
     {
-        $em = Registry::getManager(ResourceServerEntity::EntityManager);
-        parent::__construct($em, $class);
+        $this->manager_name = ResourceServerEntity::EntityManager;
+        parent::__construct(Registry::getManager($this->manager_name), $class);
     }
 }

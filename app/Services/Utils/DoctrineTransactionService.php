@@ -65,7 +65,6 @@ final class DoctrineTransactionService implements ITransactionService
                  */
 
                 if ($con->ping() === false) {
-                    Log::warning("DoctrineTransactionService::transaction: conn is closed... reconecting");
                     $con->close();
                     $con->connect();
                 }

@@ -51,9 +51,9 @@ final class DoctrineSpeakerOrganizationalRoleRepository
       Role = :role
 SQL;
         // build rsm here
-        $rsm = new ResultSetMappingBuilder($this->_em);
+        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
         $rsm->addRootEntityFromClassMetadata(SpeakerOrganizationalRole::class, 'r');
-        $native_query = $this->_em->createNativeQuery($query, $rsm);
+        $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
 
         $native_query->setParameter("role", $role);
 

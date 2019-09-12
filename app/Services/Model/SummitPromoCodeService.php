@@ -231,9 +231,6 @@ final class SummitPromoCodeService
             if(is_null($promo_code))
                 throw new EntityNotFoundException(trans('not_found_errors.promo_code_email_code_not_found', [ 'promo_code_id' => $promo_code_id, 'summit_id' => $summit->getId()]));
 
-            if ($promo_code->isEmailSent())
-                throw new ValidationException(trans('validation_errors.promo_code_email_send_already_sent'));
-
             $name  = null;
             $email = null;
 
@@ -246,7 +243,7 @@ final class SummitPromoCodeService
                 $email = $promo_code->getEmail();
             }
 
-            if(empty($name)){
+            if(empty($email)){
                 throw new ValidationException(trans("validation_errors.promo_code_email_send_empty_email"));
             }
 

@@ -57,7 +57,7 @@ final class DoctrineMemberRepository
         $query  = $this->getEntityManager()
                 ->createQueryBuilder()
                 ->select("m")
-                ->from(\models\main\Member::class, "m")
+                ->from($this->getBaseEntity(), "m")
                 ->andWhere("m.first_name is not null")
                 ->andWhere("m.last_name is not null");
 
@@ -65,10 +65,13 @@ final class DoctrineMemberRepository
 
             $filter->apply2Query($query, [
                 'irc'         => 'm.irc_handle:json_string',
+                'created'     => 'm.created:datetime_epoch',
+                'last_edited' => 'm.last_edited:datetime_epoch',
                 'twitter'     => 'm.twitter_handle:json_string',
                 'first_name'  => 'm.first_name:json_string',
                 'last_name'   => 'm.last_name:json_string',
                 'github_user' => 'm.github_user:json_string',
+                'full_name'   => "concat(m.first_name, ' ', m.last_name) :operator ':value'",
                 'email'       => ['m.email:json_string', 'm.second_email:json_string', 'm.third_email:json_string'],
                 'group_slug'  => new DoctrineJoinFilterMapping
                 (
@@ -89,12 +92,13 @@ final class DoctrineMemberRepository
 
         if (!is_null($order)) {
 
-            $order->apply2Query($query, array
-            (
+            $order->apply2Query($query, [
                 'id'          => 'm.id',
                 'first_name'  => 'm.first_name',
                 'last_name'   => 'm.last_name',
-            ));
+                'created'     => 'm.created',
+                'last_edited' => 'm.last_edited',
+            ]);
         } else {
             //default order
             $query = $query->addOrderBy("m.first_name",'ASC');

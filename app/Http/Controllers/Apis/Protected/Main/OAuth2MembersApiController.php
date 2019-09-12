@@ -103,6 +103,9 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                     'email_verified' => ['=='],
                     'active'         => ['=='],
                     'github_user'    => ['=@', '=='],
+                    'full_name'      => ['=@', '=='],
+                    'created'        => ['>', '<', '<=', '>=', '=='],
+                    'last_edited'    => ['>', '<', '<=', '>=', '=='],
                 ]);
             }
 
@@ -119,6 +122,9 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                 'email_verified' => 'sometimes|required|boolean',
                 'active'         => 'sometimes|required|boolean',
                 'github_user'    => 'sometimes|required|string',
+                'full_name'      => 'sometimes|required|string',
+                'created'        => 'sometimes|required|date_format:U',
+                'last_edited'    => 'sometimes|required|date_format:U',
             ]);
 
             $order = null;
@@ -129,6 +135,8 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                     'first_name',
                     'last_name',
                     'id',
+                    'created',
+                    'last_edited',
                 ]);
             }
 

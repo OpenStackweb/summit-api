@@ -169,6 +169,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'last_name' => ['=@', '=='],
                     'email' => ['=@', '=='],
                     'id' => ['=='],
+                    'full_name' => ['=@', '=='],
                 ]);
             }
 

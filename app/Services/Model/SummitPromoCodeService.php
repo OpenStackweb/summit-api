@@ -254,8 +254,8 @@ final class SummitPromoCodeService
             // create email request
             $email_request = new MemberPromoCodeEmailCreationRequest();
             $email_request->setPromoCode($promo_code);
-            $email_request->setEmail($name);
-            $email_request->setName($email);
+            $email_request->setEmail($email);
+            $email_request->setName($name);
             $this->email_creation_request_repository->add($email_request);
             $promo_code->setEmailSent(true);
             return $email_request;

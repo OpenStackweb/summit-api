@@ -40,6 +40,9 @@ class MemberPromoCodeEmailCreationRequest extends EmailCreationRequest
      */
     protected $name;
 
+    /**
+     * MemberPromoCodeEmailCreationRequest constructor.
+     */
     public function __construct()
     {
         $this->template_name = "member-promo-code";

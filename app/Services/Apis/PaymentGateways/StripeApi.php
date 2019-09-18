@@ -43,7 +43,7 @@ final class StripeApi implements IPaymentGatewayAPI
      * @param string $api_key
      * @param string $webhook_secret
      */
-    public function __construct(string $api_key, string $webhook_secret)
+    public function __construct(?string $api_key, ?string $webhook_secret)
     {
         $this->api_key = $api_key;
         $this->webhook_secret = $webhook_secret;

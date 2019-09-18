@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright 2017 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,17 +23,17 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $suffix = str_random(16);
 
         $data = [
-            'title'      => 'Developer!',
+            'title' => 'Developer!',
             'first_name' => 'Sebastian',
-            'last_name'  => 'Marcet',
-            'email'      => "smarcet.{$suffix}@gmail.com",
-            'languages'  => [1,2,3],
+            'last_name' => 'Marcet',
+            'email' => "smarcet.{$suffix}@gmail.com",
+            'languages' => [1, 2, 3],
             'other_presentation_links' => [
                 [
                     'link' => 'https://www.openstack.org',
@@ -66,20 +67,71 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
 
     public function testPostSpeaker()
     {
-        $email_rand       = 'smarcet'.str_random(16);
+        $email_rand = 'smarcet' . str_random(16);
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $data = [
-            'title'                    => 'Developer!',
-            'first_name'               => 'Sebastian',
-            'last_name'                => 'Marcet',
-            'email'                    => $email_rand.'@gmail.com',
-            'notes'                    => 'test',
+            'title' => 'Developer!',
+            'first_name' => 'Sebastian',
+            'last_name' => 'Marcet',
+            'email' => $email_rand . '@gmail.com',
+            'notes' => 'test',
             'willing_to_present_video' => true,
+        ];
+
+        $response = $this->action
+        (
+            "POST",
+            "OAuth2SummitSpeakersApiController@addSpeaker",
+            [],
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(201);
+        $content = $response->getContent();
+        $speaker = json_decode($content);
+        $this->assertTrue($speaker->id > 0);
+        $this->assertTrue($speaker->notes == "test");
+        $this->assertTrue($speaker->willing_to_present_video == true);
+        return $speaker;
+    }
+
+    public function testPostSpeaker1()
+    {
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $data = [
+            "areas_of_expertise" => ["tester"],
+            "available_for_bureau" => false,
+            "bio" => "<p>nad</p>",
+            "country" => "AS",
+            "email" => "santi2288@test.com",
+            "first_name" => "Test",
+            "funded_travel" => false,
+            "id" => 0,
+            "irc" => "",
+            "languages" => [27],
+            "last_name" => "Tester",
+            "org_has_cloud" => false,
+            "organizational_roles" => [4, 8, 10],
+            "other_presentation_links" => [],
+            "title" => "Mr",
+            "travel_preferences" => [],
+            "twitter" => "",
+            "willing_to_present_video" => false,
+            "willing_to_travel" => false,
         ];
 
         $response = $this->action
@@ -109,14 +161,14 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $data = [
-            'title'                    => 'Developer update!',
-            'first_name'               => 'Sebastian update',
-            'last_name'                => 'Marcet update',
-            'notes'                    => 'test update',
+            'title' => 'Developer update!',
+            'first_name' => 'Sebastian update',
+            'last_name' => 'Marcet update',
+            'notes' => 'test update',
             'willing_to_present_video' => false,
         ];
 
@@ -149,7 +201,7 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
 
@@ -179,14 +231,14 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $data = [
-            'title'             => 'Developer!',
-            'first_name'        => 'Sebastian',
-            'last_name'         => 'Marcet',
-            'email'             => 'sebastian.ge7.marcet@gmail.com',
+            'title' => 'Developer!',
+            'first_name' => 'Sebastian',
+            'last_name' => 'Marcet',
+            'email' => 'sebastian.ge7.marcet@gmail.com',
             'registration_code' => 'SPEAKER_00001'
         ];
 
@@ -218,15 +270,15 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $data = [
 
-            'title'             => 'Developer!',
-            'first_name'        => 'Sebastian',
-            'last_name'         => 'Marcet',
-            'email'             => 'sebastian@tipit.net',
+            'title' => 'Developer!',
+            'first_name' => 'Sebastian',
+            'last_name' => 'Marcet',
+            'email' => 'sebastian@tipit.net',
         ];
 
         $response = $this->action
@@ -252,17 +304,17 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
     {
         $params = [
 
-            'id'         => $summit_id,
+            'id' => $summit_id,
             'speaker_id' => 9161
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $data = [
-            'title'             => 'Legend!!!',
+            'title' => 'Legend!!!',
         ];
 
         $response = $this->action
@@ -288,15 +340,15 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
     {
         $params = [
 
-            'id'       => 26,
-            'page'     => 1,
+            'id' => 26,
+            'page' => 1,
             'per_page' => 10,
-            'order'    => '+id'
+            'order' => '+id'
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -318,22 +370,22 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
     /**
      * @param int $summit_id
      */
-    public function testGetCurrentSummitSpeakersByName($summit_id=27)
+    public function testGetCurrentSummitSpeakersByName($summit_id = 27)
     {
         $params = [
 
-            'id'       => $summit_id,
-            'page'     => 1,
+            'id' => $summit_id,
+            'page' => 1,
             'per_page' => 10,
-            'filter'   => [
+            'filter' => [
                 'first_name=@b,last_name=@b,email=@b'
             ],
-            'order'    => '+id'
+            'order' => '+id'
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -356,15 +408,15 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
     {
         $params = [
 
-            'id'       => 23,
-            'page'     => 1,
+            'id' => 23,
+            'page' => 1,
             'per_page' => 10,
-            'order'    => '+email'
+            'order' => '+email'
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -387,15 +439,15 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
     {
         $params = [
 
-            'id'       => 23,
-            'page'     => 1,
+            'id' => 23,
+            'page' => 1,
             'per_page' => 10,
-            'filter'   => 'id==13869,id==19'
+            'filter' => 'id==13869,id==19'
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -417,13 +469,13 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
     public function testGetCurrentSummitSpeakersByID()
     {
         $params = [
-            'id'          => 23,
-            'speaker_id'  => 13869
+            'id' => 23,
+            'speaker_id' => 13869
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -442,7 +494,8 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($speaker));
     }
 
-    public function testGetSpeaker(){
+    public function testGetSpeaker()
+    {
 
         $params = [
             'speaker_id' => 12927
@@ -450,7 +503,7 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -469,14 +522,15 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($speaker));
     }
 
-    public function testGetMySpeaker(){
+    public function testGetMySpeaker()
+    {
 
         $params = [
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -495,14 +549,15 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($speaker));
     }
 
-    public function testCreateMySpeaker(){
+    public function testCreateMySpeaker()
+    {
 
         $params = [
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -522,28 +577,29 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
     }
 
 
-    public function testMergeSpeakers(){
+    public function testMergeSpeakers()
+    {
 
         $params = [
             'speaker_from_id' => 3643,
-            'speaker_to_id'   => 1
+            'speaker_to_id' => 1
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $data = [
-            'title'                => 1,
-            'bio'                  => 1,
-            'first_name'           => 1,
-            'last_name'            => 1,
-            'irc'                  => 1,
-            'twitter'              => 1,
-            'pic'                  => 1,
+            'title' => 1,
+            'bio' => 1,
+            'first_name' => 1,
+            'last_name' => 1,
+            'irc' => 1,
+            'twitter' => 1,
+            'pic' => 1,
             'registration_request' => 1,
-            'member'               => 1,
+            'member' => 1,
         ];
 
         $response = $this->action(
@@ -563,28 +619,29 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($speaker));
     }
 
-    public function testMergeSpeakersSame(){
+    public function testMergeSpeakersSame()
+    {
 
         $params = [
             'speaker_from_id' => 1,
-            'speaker_to_id'   => 1
+            'speaker_to_id' => 1
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $data = [
-            'title'                => 1,
-            'bio'                  => 1,
-            'first_name'           => 1,
-            'last_name'            => 1,
-            'irc'                  => 1,
-            'twitter'              => 1,
-            'pic'                  => 1,
+            'title' => 1,
+            'bio' => 1,
+            'first_name' => 1,
+            'last_name' => 1,
+            'irc' => 1,
+            'twitter' => 1,
+            'pic' => 1,
             'registration_request' => 1,
-            'member'               => 1,
+            'member' => 1,
         ];
 
         $response = $this->action(
@@ -613,7 +670,7 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -641,7 +698,7 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -665,7 +722,7 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $params = [
@@ -695,7 +752,7 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $params = [

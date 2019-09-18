@@ -217,10 +217,6 @@ final class SpeakerService
                 $member = $this->member_repository->getByEmail($email);
                 if (!is_null($member)) {
                     Log::debug(sprintf("SpeakerService::addSpeaker: member %s found, setting it to speaker", $email));
-                    $speaker->setMember($member);
-                }
-                if (is_null($member)) {
-                    Log::debug(sprintf("SpeakerService::addSpeaker: member %s not found", $email));
                     $existent_speaker = $this->speaker_repository->getByMember($member);
                     if (!is_null($existent_speaker))
                         throw new ValidationException
@@ -232,7 +228,13 @@ final class SpeakerService
                                 ])
 
                         );
-                    $this->registerSpeaker($speaker, $email);
+                    $speaker->setMember($member);
+                }
+                if (is_null($member)) {
+                    Log::debug(sprintf("SpeakerService::addSpeaker: member %s not found", $email));
+                    $request = $this->registerSpeaker($speaker, $email);
+                    if(!is_null($creator))
+                        $request->setProposer($creator);
                 }
             }
 

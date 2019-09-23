@@ -20,9 +20,12 @@ use models\summit\Summit;
 use App\Services\Apis\ExternalScheduleFeeds\IExternalScheduleFeedFactory;
 use App\Services\Apis\ExternalScheduleFeeds\ExternalScheduleFeedFactory;
 use models\summit\SummitVenue;
+use models\utils\SilverstripeBaseModel;
+use LaravelDoctrine\ORM\Facades\Registry;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use App\Services\Model\IScheduleIngestionService;
+use App\Services\Apis\ExternalScheduleFeeds\AbstractExternalScheduleFeed;
 /**
  * Class ExternalFeedIngestionTest
  * @package Tests
@@ -98,5 +101,18 @@ JSON;
         $repository = EntityManager::getRepository(Summit::class);
         $summitsWithExternalFeeds = $repository->getActivesWithExternalFeed();
         $this->assertTrue(count($summitsWithExternalFeeds)>0);
+    }
+
+    public function testUTFName(){
+        $name = "Intel® Firmware Support Package (FSP) + EDK II for Cloud";
+        $output = utf8_encode($name);
+        $output2 = AbstractExternalScheduleFeed::convert2UTF8($name);
+        $output3 =  mb_detect_encoding($name);
+
+        $name2 = 'Raphaël';
+        $output = utf8_encode($name2);
+        $output2 = AbstractExternalScheduleFeed::convert2UTF8($name2);
+        $output3 =  mb_detect_encoding($name2);
+
     }
 }

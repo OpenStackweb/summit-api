@@ -56,10 +56,10 @@ final class SchedScheduleFeed  extends AbstractExternalScheduleFeed
 
             $events[] = [
                 'external_id' => trim($event['event_key']),
-                'title'       => trim(utf8_encode($event['name'])),
-                'abstract'    => isset($event['description']) ? trim(utf8_encode($event['description'])) : '',
-                'track'       => trim(utf8_encode($event['event_type'])),
-                'location'    => trim(utf8_encode($event['venue'])),
+                'title'       => trim(AbstractExternalScheduleFeed::convert2UTF8($event['name'])),
+                'abstract'    => isset($event['description']) ? trim(AbstractExternalScheduleFeed::convert2UTF8($event['description'])) : '',
+                'track'       => trim(AbstractExternalScheduleFeed::convert2UTF8($event['event_type'])),
+                'location'    => trim(AbstractExternalScheduleFeed::convert2UTF8($event['venue'])),
                 "start_date"  => $event_start->getTimestamp(),
                 "end_date"    => $event_end->getTimestamp(),
                 'speakers'    => $speakers
@@ -93,22 +93,22 @@ final class SchedScheduleFeed  extends AbstractExternalScheduleFeed
         $speakers = [];
         foreach($response as $speaker){
             if(!isset($speaker['name'])) continue;
-            $speakerFullNameParts = explode(" ", utf8_encode($speaker['name']));
+            $speakerFullNameParts = explode(" ", AbstractExternalScheduleFeed::convert2UTF8($speaker['name']));
             $speakerLastName    = trim(trim(array_pop($speakerFullNameParts)));
             $speakerFirstName   = trim(implode(" ", $speakerFullNameParts));
-            $email              = isset($speaker['email']) ? trim(utf8_encode($speaker['email'])) : null;
+            $email              = isset($speaker['email']) ? trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['email'])) : null;
 
             if(empty($email))
-                $email = $this->getDefaultSpeakerEmail(trim(utf8_encode($speaker['name'])));
+                $email = $this->getDefaultSpeakerEmail(trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['name'])));
 
-            $speakers[trim(utf8_encode($speaker['name']))] = [
-                'full_name'  => trim(utf8_encode($speaker['name'])),
-                'first_name' => trim(utf8_encode($speakerFirstName)),
-                'last_name'  => trim(utf8_encode($speakerLastName)),
-                'email'      => utf8_encode($email),
-                'company'    => trim(utf8_encode($speaker['company'])),
-                'position'   => trim(utf8_encode($speaker['position'])),
-                'avatar'     => trim(utf8_encode($speaker['avatar'])),
+            $speakers[trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['name']))] = [
+                'full_name'  => trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['name'])),
+                'first_name' => trim(AbstractExternalScheduleFeed::convert2UTF8($speakerFirstName)),
+                'last_name'  => trim(AbstractExternalScheduleFeed::convert2UTF8($speakerLastName)),
+                'email'      => AbstractExternalScheduleFeed::convert2UTF8($email),
+                'company'    => trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['company'])),
+                'position'   => trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['position'])),
+                'avatar'     => trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['avatar'])),
             ];
         }
 

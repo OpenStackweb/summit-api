@@ -47,16 +47,16 @@ final class VanderpoelScheduleFeed extends AbstractExternalScheduleFeed
 
             if(isset($event['speakers'])){
                 foreach($event['speakers'] as $speaker){
-                    $speakerFullName = trim(utf8_encode($speaker['first_name'])).' '.trim(utf8_encode($speaker['last_name']));
+                    $speakerFullName = trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['first_name'])).' '.trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['last_name']));
                     $speakers[]      = $speakerFullName;
                     if(!isset($this->speakers[$speakerFullName]))
                         $this->speakers[$speakerFullName] = [
                             'full_name'  => $speakerFullName,
-                            'first_name' => trim(utf8_encode($speaker['first_name'])),
-                            'last_name'  => trim(utf8_encode($speaker['last_name'])),
+                            'first_name' => trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['first_name'])),
+                            'last_name'  => trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['last_name'])),
                             'email'      => $this->getDefaultSpeakerEmail($speakerFullName),
-                            'company'    => trim(utf8_encode($speaker['company'])),
-                            'position'   => trim(utf8_encode($speaker['job_title'])),
+                            'company'    => trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['company'])),
+                            'position'   => trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['job_title'])),
                             'avatar'     => trim($speaker['photo']),
                         ];
                 }
@@ -66,10 +66,10 @@ final class VanderpoelScheduleFeed extends AbstractExternalScheduleFeed
 
             $events[] = [
                 'external_id' => trim($event['id']),
-                'title'       => trim(utf8_encode($event['title'])),
-                'abstract'    => trim(utf8_encode($event['abstract'])),
+                'title'       => trim(AbstractExternalScheduleFeed::convert2UTF8($event['title'])),
+                'abstract'    => trim(AbstractExternalScheduleFeed::convert2UTF8($event['abstract'])),
                 'track'       => $track,
-                'location'    => trim(utf8_encode($event['room'])),
+                'location'    => trim(AbstractExternalScheduleFeed::convert2UTF8($event['room'])),
                 'start_date'  => $event['start_timestamp'],
                 'end_date'    => $event['end_timestamp'],
                 'speakers'    => $speakers,
@@ -83,7 +83,7 @@ final class VanderpoelScheduleFeed extends AbstractExternalScheduleFeed
         if(is_array($array)){
             $res = [];
             foreach ($array as $element){
-                $res[] = utf8_encode($element);
+                $res[] = AbstractExternalScheduleFeed::convert2UTF8($element);
             }
             return $res;
         }

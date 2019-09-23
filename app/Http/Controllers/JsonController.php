@@ -36,9 +36,25 @@ abstract class JsonController extends Controller
         return Response::json(array('message' => 'server error'), 500);
     }
 
+    /**
+     * @param $mixed
+     * @return array|bool|null|string|string[]
+     */
+    static function utf8ize($mixed) {
+        if (is_array($mixed)) {
+            foreach ($mixed as $key => $value) {
+                $mixed[$key] = self::utf8ize($value);
+            }
+        } elseif (is_string($mixed)) {
+            return mb_convert_encoding($mixed, "UTF-8", "UTF-8");
+        }
+        return $mixed;
+    }
+
+
     protected function created($data = 'ok')
     {
-        $res = Response::json($data, 201);
+        $res = Response::json(self::utf8ize($data), 201);
         //jsonp
         if (Input::has('callback')) {
             $res->setCallback(Input::get('callback'));
@@ -49,7 +65,7 @@ abstract class JsonController extends Controller
 
     protected function deleted($data = 'ok')
     {
-        $res = Response::json($data, 204);
+        $res = Response::json(self::utf8ize($data), 204);
         //jsonp
         if (Input::has('callback')) {
             $res->setCallback(Input::get('callback'));
@@ -60,7 +76,7 @@ abstract class JsonController extends Controller
 
     protected function updated($data = 'ok', $has_content = true)
     {
-        $res = Response::json($data, $has_content ? 201 : 204);
+        $res = Response::json(self::utf8ize($data), $has_content ? 201 : 204);
         //jsonp
         if (Input::has('callback')) {
             $res->setCallback(Input::get('callback'));
@@ -68,13 +84,14 @@ abstract class JsonController extends Controller
         return $res;
     }
 
+
     /**
      * @param mixed $data
      * @return mixed
      */
     protected function ok($data = 'ok')
     {
-        $res = Response::json($data, 200);
+        $res = Response::json(self::utf8ize($data), 200);
         //jsonp
         if (Input::has('callback')) {
             $res->setCallback(Input::get('callback'));

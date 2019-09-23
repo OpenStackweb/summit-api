@@ -104,15 +104,30 @@ JSON;
     }
 
     public function testUTFName(){
+
         $name = "Intel® Firmware Support Package (FSP) + EDK II for Cloud";
         $output = utf8_encode($name);
+        $this->assertTrue($output != $name);
         $output2 = AbstractExternalScheduleFeed::convert2UTF8($name);
+        $this->assertTrue($output2 == $name);
         $output3 =  mb_detect_encoding($name);
+        $this->assertTrue($output3 == 'UTF-8');
 
         $name2 = 'Raphaël';
         $output = utf8_encode($name2);
+        $this->assertTrue($output != $name);
         $output2 = AbstractExternalScheduleFeed::convert2UTF8($name2);
+        $this->assertTrue($output2 == $name2);
         $output3 =  mb_detect_encoding($name2);
+        $this->assertTrue($output3 == 'UTF-8');
+
+        $name3 = 'SONiC – Reliability, Manageability and Extensibility';
+        $output = utf8_encode($name3);
+        $this->assertTrue($output != $name3);
+        $output2 = AbstractExternalScheduleFeed::convert2UTF8($name3);
+        $this->assertTrue($output2 == $name3);
+        $output3 =  mb_detect_encoding($name3);
+        $this->assertTrue($output3 == 'ASCII');
 
     }
 }

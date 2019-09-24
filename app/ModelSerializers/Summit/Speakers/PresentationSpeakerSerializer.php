@@ -33,25 +33,12 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
         'FundedTravel'          => 'funded_travel:json_boolean',
         'WillingToTravel'       => 'willing_to_travel:json_boolean',
         'WillingToPresentVideo' => 'willing_to_present_video:json_boolean',
+        'Email'                 => 'email:json_obfuscated_email',
     ];
 
     protected static $allowed_relations = [
         'member',
     ];
-
-    /**
-     * @param PresentationSpeaker $speaker
-     * @return null|string|string[]
-     */
-    protected function getSpeakerEmail(PresentationSpeaker $speaker){
-        $email = $speaker->getEmail();
-        $em   = explode("@", $email);
-        $name = implode(array_slice($em, 0, count($em) - 1), '@');
-        $len  = floor(strlen($name) / 2);
-
-        $obfuscated_email = substr($name, 0, $len) . str_repeat('*', $len) . "@" . end($em);
-        return $obfuscated_email;
-    }
 
     /**
      * @param null $expand
@@ -68,7 +55,6 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
         if(!$speaker instanceof PresentationSpeaker) return [];
 
         $values                            = parent::serialize($expand, $fields, $relations, $params);
-        $values['email']                   = $this->getSpeakerEmail($speaker);
         $summit_id                         = isset($params['summit_id'])? intval($params['summit_id']):null;
         $published                         = isset($params['published'])? intval($params['published']):true;
         if(!is_null($summit_id)) {

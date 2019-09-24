@@ -184,6 +184,11 @@ abstract class AbstractSerializer implements IModelSerializer
                             $value = JsonUtils::toJsonFloat($value);
                         }
                             break;
+                        case 'json_obfuscated_email':
+                        {
+                            $value = JsonUtils::toObfuscatedEmail($value);
+                        }
+                        break;
                     }
                 }
                 $new_values[$mapping[0]] = $value;
@@ -210,7 +215,6 @@ abstract class AbstractSerializer implements IModelSerializer
             if(strlen($res) > 0) $res .= ',';
             $res .= explode('.', strtolower(trim($filtered_expand_elem)))[1];
         }
-
         return $res;
     }
 }

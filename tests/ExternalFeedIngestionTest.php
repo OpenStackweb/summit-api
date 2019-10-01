@@ -130,4 +130,30 @@ JSON;
         $this->assertTrue($output3 == 'ASCII');
 
     }
+
+    public function testIngestSummit(){
+
+        $summit = new Summit();
+        $summit->setActive(true);
+        // set feed type (sched)
+        $summit->setApiFeedType(IExternalScheduleFeedFactory::SchedType);
+        $summit->setApiFeedUrl("");
+        $summit->setApiFeedKey("");
+        $summit->setTimeZoneId("America/Chicago");
+        $summit->setBeginDate(new \DateTime("2019-09-1"));
+        $summit->setEndDate(new \DateTime("2019-09-30"));
+
+
+        $mainVenue = new SummitVenue();
+        $mainVenue->setIsMain(true);
+        $summit->addLocation($mainVenue);
+
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $em->persist($summit);
+        $em->flush();
+
+        $service = App::make(IScheduleIngestionService::class);
+
+        $service->ingestSummit($summit);
+    }
 }

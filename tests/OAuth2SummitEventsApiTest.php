@@ -437,18 +437,16 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         //return $event;
     }
 
-    public function testCurrentSummitEventsWithFilter()
+    public function testCurrentSummitEventsWithFilter($summit_id=27)
     {
-        $params = array
-        (
-            'id' => 6,
-            'expand' => 'feedback',
-            'filter' => array
-            (
-                'tags=@design',
-                'start_date>1445895000'
-            )
-        );
+        $params = [
+            'id'       => $summit_id,
+            "expand"   => "speakers,type",
+            "page"     =>  1,
+            "per_page" => 10,
+            "filter"   =>  "title=@Project Leaders,abstract=@Project Leaders,tags=@Project Leaders,speaker=@Project Leaders,speaker_email=@Project Leaders,id==Project Leaders",
+            "order"    => "+id"
+        ];
 
         $headers = array
         (

@@ -14,6 +14,7 @@
 use App\Models\Foundation\Main\IGroup;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use models\summit\ISummitEventRepository;
+use models\summit\Presentation;
 use models\summit\Summit;
 use models\summit\SummitEvent;
 use App\Repositories\SilverStripeDoctrineRepository;
@@ -188,21 +189,19 @@ final class DoctrineSummitEventRepository
      */
     public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
     {
-        $class  =
-           $filter->hasFilter('speaker')
-        || $filter->hasFilter('speaker_id')
-        || $filter->hasFilter('selection_status')
-        || $filter->hasFilter('speaker_email')
-        || (!is_null($order) && $order->hasOrder('trackchairsel'))?
-            \models\summit\Presentation::class:
-            \models\summit\SummitEvent::class;
 
         $query  = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
-            ->from($class, "e")
+            ->from($this->getBaseEntity(), "e")
+            ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')
             ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
             ->leftJoin("e.category", 'cc', Join::LEFT_JOIN)
-        ;
+            ->leftJoin("p.speakers", "sp", Join::LEFT_JOIN)
+            ->leftJoin('p.selected_presentations', "ssp", Join::LEFT_JOIN)
+            ->leftJoin('ssp.list', "sspl", Join::LEFT_JOIN)
+            ->leftJoin('p.moderator', "spm", Join::LEFT_JOIN)
+            ->leftJoin('sp.member', "spmm", Join::LEFT_JOIN)
+            ->leftJoin('sp.registration_request', "sprr", Join::LEFT_JOIN);
 
         if(!is_null($filter)){
             $filter->apply2Query($query, $this->getFilterMappings());
@@ -216,14 +215,6 @@ final class DoctrineSummitEventRepository
             $query = $query->addOrderBy("e.end_date", 'ASC');
         }
 
-        if($class == \models\summit\Presentation::class) {
-            $query = $query->leftJoin("e.speakers", "sp", Join::WITH);
-            $query = $query->leftJoin('e.selected_presentations', "ssp", Join::LEFT_JOIN);
-            $query = $query->leftJoin('ssp.list', "sspl", Join::LEFT_JOIN);
-            $query = $query->leftJoin('e.moderator', "spm", Join::LEFT_JOIN);
-            $query = $query->leftJoin('sp.member', "spmm", Join::LEFT_JOIN);
-            $query = $query->leftJoin('sp.registration_request', "sprr", Join::LEFT_JOIN);
-        }
 
         $can_view_private_events = self::isCurrentMemberOnGroup(IGroup::SummitAdministrators);
 
@@ -286,17 +277,19 @@ final class DoctrineSummitEventRepository
      */
     public function getAllByPageLocationTBD(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
     {
-        $class  = $filter->hasFilter('speaker')
-        || $filter->hasFilter('selection_status')
-        || $filter->hasFilter('speaker_email')?
-            \models\summit\Presentation::class:
-            \models\summit\SummitEvent::class;
 
         $query  = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
-            ->from($class, "e")
+            ->from($this->getBaseEntity(), "e")
+            ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')
             ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
             ->leftJoin("e.category", 'cc', Join::LEFT_JOIN)
+            ->leftJoin("p.speakers", "sp", Join::LEFT_JOIN)
+            ->leftJoin('p.selected_presentations', "ssp", Join::LEFT_JOIN)
+            ->leftJoin('ssp.list', "sspl", Join::LEFT_JOIN)
+            ->leftJoin('p.moderator', "spm", Join::LEFT_JOIN)
+            ->leftJoin('sp.member', "spmm", Join::LEFT_JOIN)
+            ->leftJoin('sp.registration_request', "sprr", Join::LEFT_JOIN)
             ->where("l.id is null");
 
         if(!is_null($filter)){
@@ -309,15 +302,6 @@ final class DoctrineSummitEventRepository
             //default order
             $query = $query->addOrderBy("e.start_date",'ASC');
             $query = $query->addOrderBy("e.end_date", 'ASC');
-        }
-
-        if($class == \models\summit\Presentation::class) {
-            $query = $query->leftJoin("e.speakers", "sp", Join::WITH);
-            $query = $query->leftJoin('e.selected_presentations', "ssp", Join::LEFT_JOIN);
-            $query = $query->leftJoin('ssp.list', "sspl", Join::LEFT_JOIN);
-            $query = $query->leftJoin('e.moderator', "spm", Join::LEFT_JOIN);
-            $query = $query->leftJoin('sp.member', "spmm", Join::LEFT_JOIN);
-            $query = $query->leftJoin('sp.registration_request', "sprr", Join::LEFT_JOIN);
         }
 
         $can_view_private_events = self::isCurrentMemberOnGroup(IGroup::SummitAdministrators);

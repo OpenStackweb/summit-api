@@ -161,6 +161,12 @@ class SummitBookableVenueRoom extends SummitVenueRoom
                 )
             );
 
+        $now_utc    = new \DateTime('now', new \DateTimeZone('UTC'));
+        // we cant choose the slots on the past or slots that are going on
+        if((($now_utc > $end_date) || ( $start_date <= $now_utc && $now_utc <= $end_date ))){
+            throw new ValidationException("selected slot is on the past");
+        }
+
         $this->reservations->add($reservation);
         $reservation->setRoom($this);
         return $this;

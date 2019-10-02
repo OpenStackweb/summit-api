@@ -13,6 +13,9 @@
  **/
 final class SummitBookableVenueRoomAvailableSlot
 {
+    const StatusAvailable     = "Available";
+    const StatusBooked        = "Booked";
+    const StatusUnAvailable   = "UnAvailable";
     /**
      * @var \DateTime
      */
@@ -83,6 +86,19 @@ final class SummitBookableVenueRoomAvailableSlot
 
     public function isFree():bool{
         return $this->is_free;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStatus():string{
+        $res        = $this->is_free ? self::StatusAvailable : self::StatusBooked;
+        $now_utc    = new \DateTime('now', new \DateTimeZone('UTC'));
+        // we cant choose the slots on the past or slots that are going on
+        if($this->is_free && (($now_utc > $this->end_date) || ( $this->start_date <= $now_utc && $now_utc <= $this->end_date ))){
+            $res = self::StatusUnAvailable;
+        }
+        return $res;
     }
 
 }

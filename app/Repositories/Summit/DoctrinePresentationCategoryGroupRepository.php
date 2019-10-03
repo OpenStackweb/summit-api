@@ -58,19 +58,19 @@ final class DoctrinePresentationCategoryGroupRepository
             ),
             'track_title' => new DoctrineFilterMapping
             (
-                "(cat.title :operator ':value')"
+                "(cat.title :operator :value)"
             ),
             'track_code' => new DoctrineFilterMapping
             (
-                "(cat.code :operator ':value')"
+                "(cat.code :operator :value)"
             ),
             'group_title' => new DoctrineFilterMapping
             (
-                "(grp.title :operator ':value')"
+                "(grp.title :operator :value)"
             ),
             'group_code' => new DoctrineFilterMapping
             (
-                "(grp.code :operator ':value')"
+                "(grp.code :operator :value)"
             ),
         ];
     }

@@ -36,7 +36,7 @@ final class DoctrineSummitBookableVenueRoomAttributeTypeRepository
             (
                 'e.summit',
                 's',
-                "s.id :operator ':value'"
+                "s.id :operator :value"
             ),
         ];
     }

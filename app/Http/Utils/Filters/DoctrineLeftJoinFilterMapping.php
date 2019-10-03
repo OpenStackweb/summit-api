@@ -25,11 +25,13 @@ class DoctrineLeftJoinFilterMapping extends DoctrineJoinFilterMapping
      * @return QueryBuilder
      */
     public function apply(QueryBuilder $query, FilterElement $filter){
-        $where = str_replace(":value", $filter->getValue(), $this->where);
+        $param_count = $query->getParameters()->count() + 1;
+        $where = str_replace(":value", ":value_".$param_count, $this->where);
         $where = str_replace(":operator", $filter->getOperator(), $where);
         if(!in_array($this->alias, $query->getAllAliases()))
             $query->leftJoin($this->table, $this->alias, Join::WITH);
-        return $query->andWhere($where);
+
+        return $query->andWhere($where)->setParameter(":value_".$param_count, $filter->getValue());
     }
 
     /**
@@ -38,10 +40,12 @@ class DoctrineLeftJoinFilterMapping extends DoctrineJoinFilterMapping
      * @return string
      */
     public function applyOr(QueryBuilder $query, FilterElement $filter){
-        $where = str_replace(":value", $filter->getValue(), $this->where);
+        $param_count = $query->getParameters()->count() + 1;
+        $where = str_replace(":value", ":value_".$param_count, $this->where);
         $where = str_replace(":operator", $filter->getOperator(), $where);
         if(!in_array($this->alias, $query->getAllAliases()))
             $query->leftJoin($this->table, $this->alias, Join::WITH);
+        $query->setParameter(":value_".$param_count, $filter->getValue());
         return $where;
     }
 }

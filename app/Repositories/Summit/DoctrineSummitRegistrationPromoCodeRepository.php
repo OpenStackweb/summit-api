@@ -70,44 +70,44 @@ class DoctrineSummitRegistrationPromoCodeRepository
 
             'sponsor' => new DoctrineFilterMapping
             (
-                "(spnr.name :operator ':value')"
+                "(spnr.name :operator :value)"
             ),
             'creator'       => new DoctrineFilterMapping
             (
-                "( concat(ct.first_name, ' ', ct.last_name) :operator ':value' ".
-                "OR ct.first_name :operator ':value' ".
-                "OR ct.last_name :operator ':value' )"
+                "( concat(ct.first_name, ' ', ct.last_name) :operator :value ".
+                "OR ct.first_name :operator :value ".
+                "OR ct.last_name :operator :value )"
             ),
             'creator_email' => new DoctrineFilterMapping
             (
-                "(ct.email :operator ':value')"
+                "(ct.email :operator :value)"
             ),
             'owner'       => new DoctrineFilterMapping
             (
-                "( concat(owr.first_name, ' ', owr.last_name) :operator ':value' ".
-                "OR owr.first_name :operator ':value' ".
-                "OR owr.last_name :operator ':value' )"
+                "( concat(owr.first_name, ' ', owr.last_name) :operator :value ".
+                "OR owr.first_name :operator :value ".
+                "OR owr.last_name :operator :value )"
             ),
             'owner_email' => new DoctrineFilterMapping
             (
-                "(owr.email :operator ':value')"
+                "(owr.email :operator :value)"
             ),
             'speaker'       => new DoctrineFilterMapping
             (
-                "( concat(spkr.first_name, ' ', spkr.last_name) :operator ':value' ".
-                "OR concat(spmm.first_name, ' ', spmm.last_name) :operator ':value' ".
-                "OR spkr.first_name :operator ':value' ".
-                "OR spkr.last_name :operator ':value' ".
-                "OR spmm.first_name :operator ':value' ".
-                "OR spmm.last_name :operator ':value' )"
+                "( concat(spkr.first_name, ' ', spkr.last_name) :operator :value ".
+                "OR concat(spmm.first_name, ' ', spmm.last_name) :operator :value ".
+                "OR spkr.first_name :operator :value ".
+                "OR spkr.last_name :operator :value ".
+                "OR spmm.first_name :operator :value ".
+                "OR spmm.last_name :operator :value )"
             ),
             'speaker_email' => new DoctrineFilterMapping
             (
-                "(sprr.email :operator ':value' OR spmm.email :operator ':value')"
+                "(sprr.email :operator :value OR spmm.email :operator :value)"
             ),
             'type' => new DoctrineFilterMapping
             (
-                "(mpc.type :operator ':value' OR spkpc.type :operator ':value')"
+                "(mpc.type :operator :value OR spkpc.type :operator :value)"
             ),
            'class_name' => new DoctrineInstanceOfFilterMapping(
                "pc",

@@ -67,31 +67,31 @@ final class DoctrineSummitAttendeeRepository
                 (
                     'a.member',
                     'm',
-                    "m.first_name :operator ':value'"
+                    "m.first_name :operator :value"
                 ),
                 'last_name'  => new DoctrineLeftJoinFilterMapping
                 (
                     'a.member',
                     'm',
-                    "m.last_name :operator ':value'"
+                    "m.last_name :operator :value"
                 ),
                 'email'  => new DoctrineLeftJoinFilterMapping
                 (
                     'a.member',
                     'm',
-                    "m.email :operator ':value'"
+                    "m.email :operator :value"
                 ),
                 'external_order_id'  => new DoctrineLeftJoinFilterMapping
                 (
                     'a.tickets',
                     't',
-                    "t.external_order_id :operator ':value'"
+                    "t.external_order_id :operator :value"
                 ),
                 'external_attendee_id'  => new DoctrineLeftJoinFilterMapping
                 (
                     'a.tickets',
                     't',
-                    "t.external_attendee_id :operator ':value'"
+                    "t.external_attendee_id :operator :value"
                 ),
             ]);
         }

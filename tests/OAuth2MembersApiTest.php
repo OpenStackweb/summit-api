@@ -41,6 +41,32 @@ final class OAuth2MembersApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
     }
 
+    public function testGetMemberByFullName()
+    {
+
+        $params = [
+            //AND FILTER
+            'filter' => ['full_name=@Seba'],
+            'order'  => '+first_name,-last_name'
+        ];
+
+        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
+        $response = $this->action(
+            "GET",
+            "OAuth2MembersApiController@getAll",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $content = $response->getContent();
+        $members = json_decode($content);
+        $this->assertTrue(!is_null($members));
+        $this->assertResponseStatus(200);
+    }
+
     public function testGetMembersEmpty()
     {
 

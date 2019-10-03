@@ -69,7 +69,7 @@ final class DoctrineSummitLocationRepository
             'capacity'       => 'r.capacity',
             'attribute'      => new DoctrineFilterMapping
             (
-                "(bra.value :operator ':value' or bra.id = ':value')"
+                "(bra.value :operator :value or bra.id = :value)"
             ),
             'class_name'     => new DoctrineInstanceOfFilterMapping(
                 "al",

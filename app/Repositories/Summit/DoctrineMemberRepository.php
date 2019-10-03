@@ -15,6 +15,7 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 use models\main\IMemberRepository;
 use models\main\Member;
 use App\Repositories\SilverStripeDoctrineRepository;
+use utils\DoctrineFilterMapping;
 use utils\DoctrineJoinFilterMapping;
 use utils\Filter;
 use utils\Order;
@@ -71,13 +72,13 @@ final class DoctrineMemberRepository
                 'first_name'  => 'm.first_name:json_string',
                 'last_name'   => 'm.last_name:json_string',
                 'github_user' => 'm.github_user:json_string',
-                'full_name'   => "concat(m.first_name, ' ', m.last_name) :operator ':value'",
+                'full_name'   => new DoctrineFilterMapping("concat(m.first_name, ' ', m.last_name) :operator :value"),
                 'email'       => ['m.email:json_string', 'm.second_email:json_string', 'm.third_email:json_string'],
                 'group_slug'  => new DoctrineJoinFilterMapping
                 (
                     'm.groups',
                     'g',
-                    "g.code :operator ':value'"
+                    "g.code :operator :value"
                 ),
                 'group_id'    => new DoctrineJoinFilterMapping
                 (

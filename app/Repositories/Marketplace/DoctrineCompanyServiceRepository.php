@@ -41,7 +41,7 @@ abstract class DoctrineCompanyServiceRepository extends SilverStripeDoctrineRepo
             (
                 'e.company',
                 'c',
-                "c.name :operator ':value'"
+                "c.name :operator :value"
             ),
         ];
     }

@@ -60,7 +60,7 @@ final class DoctrineSummitRoomReservationRepository
             (
                 'e.room',
                 'r',
-                "r.name :operator ':value'"
+                "r.name :operator :value"
             ),
             'venue_id' => new DoctrineJoinFilterMapping
             (
@@ -78,13 +78,13 @@ final class DoctrineSummitRoomReservationRepository
             (
                 'e.owner',
                 'o',
-                "LOWER(CONCAT(o.first_name, ' ', o.last_name)) :operator ':value'"
+                "LOWER(CONCAT(o.first_name, ' ', o.last_name)) :operator :value"
             ),
             'owner_email' => new DoctrineJoinFilterMapping
             (
                 'e.owner',
                 'o',
-                "o.email :operator ':value'"
+                "o.email :operator :value"
             ),
         ];
     }

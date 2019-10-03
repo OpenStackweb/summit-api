@@ -46,7 +46,7 @@ final class DoctrineSummitTrackRepository
             'code'        => 't.code:json_string',
             'group_name'  => new DoctrineFilterMapping
             (
-                "(g.name :operator ':value')"
+                "(g.name :operator :value)"
             ),
         ];
     }

@@ -92,7 +92,7 @@ final class DoctrineSummitEventRepository
             (
                 'e.tags',
                 't',
-                "t.tag :operator ':value'"
+                "t.tag :operator :value"
             ),
             'summit_id'=> new DoctrineJoinFilterMapping
             (
@@ -120,19 +120,19 @@ final class DoctrineSummitEventRepository
             ),
             'speaker' => new DoctrineFilterMapping
             (
-                "( concat(sp.first_name, ' ', sp.last_name) :operator ':value' ".
-                "OR concat(spm.first_name, ' ', spm.last_name) :operator ':value' ".
-                "OR concat(spmm.first_name, ' ', spmm.last_name) :operator ':value' ".
-                "OR sp.first_name :operator ':value' ".
-                "OR sp.last_name :operator ':value' ".
-                "OR spm.first_name :operator ':value' ".
-                "OR spm.last_name :operator ':value' ".
-                "OR spmm.first_name :operator ':value' ".
-                "OR spmm.last_name :operator ':value' )"
+                "( concat(sp.first_name, ' ', sp.last_name) :operator :value ".
+                "OR concat(spm.first_name, ' ', spm.last_name) :operator :value ".
+                "OR concat(spmm.first_name, ' ', spmm.last_name) :operator :value ".
+                "OR sp.first_name :operator :value ".
+                "OR sp.last_name :operator :value ".
+                "OR spm.first_name :operator :value ".
+                "OR spm.last_name :operator :value ".
+                "OR spmm.first_name :operator :value ".
+                "OR spmm.last_name :operator :value) "
             ),
             'speaker_email' => new DoctrineFilterMapping
             (
-                "(sprr.email :operator ':value' OR spmm.email :operator ':value')"
+                "(sprr.email :operator :value OR spmm.email :operator :value)"
             ),
             'speaker_id' => new DoctrineFilterMapping
             (

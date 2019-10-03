@@ -35,13 +35,13 @@ final class DoctrineSummitBookableVenueRoomAttributeValueRepository
                 (
                     'e.summit',
                     's',
-                    "s.id :operator ':value'"
+                    "s.id :operator :value"
                 ),
                 'type_id' => new DoctrineJoinFilterMapping
                 (
                     'e.type',
                     't',
-                    "t.id :operator ':value'"
+                    "t.id :operator :value"
                 ),
             ];
     }

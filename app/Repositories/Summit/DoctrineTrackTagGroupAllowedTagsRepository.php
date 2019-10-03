@@ -34,7 +34,7 @@ final class DoctrineTrackTagGroupAllowedTagsRepository
         return [
             'tag'  => new DoctrineFilterMapping
             (
-                "(tg.tag :operator ':value')"
+                "(tg.tag :operator :value)"
             ),
         ];
     }

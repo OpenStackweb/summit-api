@@ -49,16 +49,16 @@ final class DoctrinePresentationSpeakerSummitAssistanceConfirmationRequestReposi
             'confirmation_date' => 'r.confirmation_date:datetime_epoch',
             'speaker'           => new DoctrineFilterMapping
             (
-                "( concat(spkr.first_name, ' ', spkr.last_name) :operator ':value' ".
-                "OR concat(spmm.first_name, ' ', spmm.last_name) :operator ':value' ".
-                "OR spkr.first_name :operator ':value' ".
-                "OR spkr.last_name :operator ':value' ".
-                "OR spmm.first_name :operator ':value' ".
-                "OR spmm.last_name :operator ':value' )"
+                "( concat(spkr.first_name, ' ', spkr.last_name) :operator :value ".
+                "OR concat(spmm.first_name, ' ', spmm.last_name) :operator :value ".
+                "OR spkr.first_name :operator :value ".
+                "OR spkr.last_name :operator :value ".
+                "OR spmm.first_name :operator :value ".
+                "OR spmm.last_name :operator :value )"
             ),
             'speaker_email' => new DoctrineFilterMapping
             (
-                "(sprr.email :operator ':value' OR spmm.email :operator ':value')"
+                "(sprr.email :operator :value OR spmm.email :operator :value)"
             ),
         ];
     }

@@ -24,5 +24,6 @@ final class SummitBookableVenueRoomAvailableSlotSerializer extends AbstractSeria
         'LocalStartDate'  => 'local_start_date:datetime_epoch',
         'LocalEndDate'    => 'local_end_date:datetime_epoch',
         'Free'            => 'is_free:json_boolean',
+        'Status'          => 'status:json_string',
     ];
 }

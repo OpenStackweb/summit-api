@@ -178,7 +178,8 @@ FROM (
 	IFNULL(S.LastName, M.Surname) AS LastName,
 	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
     IFNULL(M.Email,R.Email) AS Email,
-    S.PhotoID
+    S.PhotoID,
+    R.ID AS RegistrationRequestID
     FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
 	LEFT JOIN File F ON F.ID = S.PhotoID
@@ -212,7 +213,8 @@ FROM (
 	IFNULL(S.LastName, M.Surname) AS LastName,
 	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
     IFNULL(M.Email,R.Email) AS Email,
-    S.PhotoID
+    S.PhotoID,
+    R.ID AS RegistrationRequestID
     FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
     LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
@@ -245,7 +247,8 @@ FROM (
 	IFNULL(S.LastName, M.Surname) AS LastName,
 	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
     IFNULL(M.Email,R.Email) AS Email,
-    S.PhotoID
+    S.PhotoID,
+    R.ID AS RegistrationRequestID
     FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
     LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
@@ -278,7 +281,8 @@ FROM (
 	IFNULL(S.LastName, M.Surname) AS LastName,
     IFNULL(M.Email,R.Email) AS Email,
     CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-    S.PhotoID
+    S.PhotoID,
+    R.ID AS RegistrationRequestID
     FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
     LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
@@ -406,7 +410,6 @@ FROM (
     S.AvailableForBureau,
     S.FundedTravel,
     S.Country,
-    S.MemberID,
     S.WillingToTravel,
     S.WillingToPresentVideo,
     S.Notes,

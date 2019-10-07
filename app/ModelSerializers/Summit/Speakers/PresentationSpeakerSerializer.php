@@ -33,7 +33,9 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
         'FundedTravel'          => 'funded_travel:json_boolean',
         'WillingToTravel'       => 'willing_to_travel:json_boolean',
         'WillingToPresentVideo' => 'willing_to_present_video:json_boolean',
-        'Email'                 => 'email:json_obfuscated_email',
+        'Email'                   => 'email:json_obfuscated_email',
+        'MemberID'                => 'member_id:json_int',
+        'RegistrationRequestId'   => 'registration_request_id:json_int'
     ];
 
     protected static $allowed_relations = [

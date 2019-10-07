@@ -19,16 +19,9 @@ use models\summit\PresentationSpeaker;
 final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerializer
 {
     protected static $array_mappings = [
-        'Notes'=> 'notes:json_string'
+        'Notes' => 'notes:json_string',
+        'Email' => 'email:json_string',
     ];
-
-    /**
-     * @param PresentationSpeaker $speaker
-     * @return null|string|string[]
-     */
-    protected function getSpeakerEmail(PresentationSpeaker $speaker){
-        return $speaker->getEmail();
-    }
 
     /**
      * @param null $expand

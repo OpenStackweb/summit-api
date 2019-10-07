@@ -52,11 +52,28 @@ class DoctrineJoinFilterMapping extends FilterMapping
      */
     public function apply(QueryBuilder $query, FilterElement $filter){
         $param_count = $query->getParameters()->count() + 1;
-        $where = str_replace(":value", ":value_".$param_count, $this->where);
-        $where = str_replace(":operator", $filter->getOperator(), $where);
+        $where       = $this->where;
+        $has_param   = false;
+
+        if(strstr($where,":value")) {
+            $where = str_replace(":value", ":value_" . $param_count, $where);
+            $has_param = true;
+        }
+
+        if(strstr($where,":operator"))
+            $where = str_replace(":operator", $filter->getOperator(), $where);
+
         if(!in_array($this->alias, $query->getAllAliases()))
             $query->innerJoin($this->table, $this->alias, Join::WITH);
-        return $query->andWhere($where)->setParameter(":value_".$param_count, $filter->getValue());
+
+        $query = $query->andWhere($where);
+
+        if($has_param){
+            $query = $query->setParameter(":value_".$param_count, $filter->getValue());
+        }
+
+        return $query;
+
     }
 
     /**
@@ -66,11 +83,23 @@ class DoctrineJoinFilterMapping extends FilterMapping
      */
     public function applyOr(QueryBuilder $query, FilterElement $filter){
         $param_count = $query->getParameters()->count() + 1;
-        $where = str_replace(":value", ":value_".$param_count, $this->where);
-        $where = str_replace(":operator", $filter->getOperator(), $where);
+        $where       = $this->where;
+        $has_param   = false;
+
+        if(strstr($where,":value")) {
+            $where = str_replace(":value", ":value_" . $param_count, $where);
+            $has_param = true;
+        }
+
+        if(strstr($where,":operator"))
+            $where = str_replace(":operator", $filter->getOperator(), $where);
+
         if(!in_array($this->alias, $query->getAllAliases()))
             $query->innerJoin($this->table, $this->alias, Join::WITH);
-        $query->setParameter(":value_".$param_count, $filter->getValue());
+
+        if($has_param){
+            $query->setParameter(":value_".$param_count, $filter->getValue());
+        }
         return $where;
     }
 }

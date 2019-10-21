@@ -1302,6 +1302,24 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'add-venue-floor-image',
+                'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/image',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'remove-venue-floor-image',
+                'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/image',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                ],
+            ],
+            [
                 'name' => 'get-venue-floor-bookable-room',
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms/{room_id}',
                 'http_method' => 'GET',

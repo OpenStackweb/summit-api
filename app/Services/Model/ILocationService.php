@@ -308,17 +308,16 @@ interface ILocationService
      */
     public function deleteVenueBookableRoomAttribute(Summit $summit, int $venue_id, int $room_id, int $attribute_id):SummitBookableVenueRoom;
 
-
     /**
      * @param Summit $summit
-     * @param UploadedFile $venue_id
+     * @param int $venue_id
      * @param int $room_id
      * @param UploadedFile $file
      * @param int $max_file_size
      * @return mixed|File
      * @throws \Exception
      */
-    public function addRoomImage(Summit $summit, $venue_id, $room_id, UploadedFile $file, $max_file_size = 10485760);
+    public function addRoomImage(Summit $summit, int $venue_id, $room_id, UploadedFile $file, $max_file_size = 10485760);
 
     /**
      * @param Summit $summit
@@ -329,6 +328,28 @@ interface ILocationService
      * @return SummitVenueRoom
      */
     public function removeRoomImage(Summit $summit, int $venue_id, int $room_id):SummitVenueRoom;
+
+    /**
+     * @param Summit $summit
+     * @param int $venue_id
+     * @param int $floor_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @return mixed|File
+     * @throws \Exception
+     */
+    public function addFloorImage(Summit $summit, int $venue_id, int $floor_id, UploadedFile $file, $max_file_size = 10485760);
+
+    /**
+     * @param Summit $summit
+     * @param int $venue_id
+     * @param int $floor_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     * @return SummitVenueFloor
+     */
+    public function removeFloorImage(Summit $summit, int $venue_id, int $floor_id):SummitVenueFloor;
+
 
     /**
      * @param int $minutes

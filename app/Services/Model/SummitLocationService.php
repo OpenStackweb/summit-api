@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Events\CreatedBookableRoomReservation;
 use App\Events\FloorDeleted;
 use App\Events\FloorInserted;
@@ -56,7 +55,6 @@ use models\summit\SummitRoomReservation;
 use models\summit\SummitVenue;
 use models\summit\SummitVenueFloor;
 use models\summit\SummitVenueRoom;
-
 /**
  * Class SummitLocationService
  * @package App\Services\Model
@@ -94,6 +92,11 @@ final class SummitLocationService
      * @var ISummitRoomReservationRepository
      */
     private $reservation_repository;
+
+    /**
+     * @var IFileUploader
+     */
+    private $file_uploader;
 
     /**
      * SummitLocationService constructor.
@@ -2260,14 +2263,14 @@ final class SummitLocationService
 
     /**
      * @param Summit $summit
-     * @param UploadedFile $venue_id
+     * @param int $venue_id
      * @param int $room_id
      * @param UploadedFile $file
      * @param int $max_file_size
      * @return mixed|File
      * @throws \Exception
      */
-    public function addRoomImage(Summit $summit, $venue_id, $room_id, UploadedFile $file, $max_file_size = 10485760)
+    public function addRoomImage(Summit $summit, int $venue_id, $room_id, UploadedFile $file, $max_file_size = 10485760)
     {
         return $this->tx_service->transaction(function () use ($summit, $venue_id, $room_id, $file, $max_file_size) {
 
@@ -2377,5 +2380,104 @@ final class SummitLocationService
 
             });
         }
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $venue_id
+     * @param int $floor_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @return mixed|File
+     * @throws \Exception
+     */
+    public function addFloorImage(Summit $summit, int $venue_id, int $floor_id, UploadedFile $file, $max_file_size = 10485760)
+    {
+        return $this->tx_service->transaction(function () use ($summit, $venue_id, $floor_id, $file, $max_file_size) {
+
+            $allowed_extensions = ['png', 'jpg', 'jpeg', 'gif', 'pdf'];
+
+            $venue = $summit->getLocation($venue_id);
+
+            if (is_null($venue)) {
+                throw new EntityNotFoundException
+                (
+                    'room not found'
+                );
+            }
+
+            if (!$venue instanceof SummitVenue) {
+                throw new EntityNotFoundException
+                (
+                    'room not found'
+                );
+            }
+
+            $floor = $venue->getFloor($floor_id);
+
+            if (is_null($floor))
+                throw new EntityNotFoundException
+                (
+                    'floor not found'
+                );
+
+            if (!in_array($file->extension(), $allowed_extensions)) {
+                throw new ValidationException("file does not has a valid extension ('png','jpg','jpeg','gif','pdf').");
+            }
+
+            if ($file->getSize() > $max_file_size) {
+                throw new ValidationException(sprintf("file exceeds max_file_size (%s MB).", ($max_file_size / 1024) / 1024));
+            }
+
+            $image = $this->file_uploader->build($file, sprintf('summits/%s/locations/%s/floors', $summit->getId(), $venue_id), true);
+            $floor->setImage($image);
+
+            return $image;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $venue_id
+     * @param int $floor_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     * @return SummitVenueFloor
+     */
+    public function removeFloorImage(Summit $summit, int $venue_id, int $floor_id): SummitVenueFloor
+    {
+        return $this->tx_service->transaction(function () use ($summit, $venue_id, $floor_id) {
+
+            $venue = $summit->getLocation($venue_id);
+
+            if (is_null($venue)) {
+                throw new EntityNotFoundException
+                (
+                    'room not found'
+                );
+            }
+
+            if (!$venue instanceof SummitVenue) {
+                throw new EntityNotFoundException
+                (
+                    'room not found'
+                );
+            }
+
+            $floor = $venue->getFloor($floor_id);
+
+            if (is_null($floor))
+                throw new EntityNotFoundException
+                (
+                    'floor not found'
+                );
+
+            if (!$floor->hasImage())
+                throw new ValidationException("floor has no image set");
+
+            $floor->clearImage();
+
+            return $floor;
+        });
     }
 }

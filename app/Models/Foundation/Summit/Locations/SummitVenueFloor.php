@@ -190,6 +190,29 @@ class SummitVenueFloor extends SilverstripeBaseModel
     }
 
     /**
+     * @return bool
+     */
+    public function hasImage(){
+        return $this->getImageId() > 0;
+    }
+
+    /**
+     * @return int
+     */
+    public function getImageId(){
+        try{
+            return !is_null($this->image) ? $this->image->getId() : 0;
+        }
+        catch(\Exception $ex){
+            return 0;
+        }
+    }
+
+    public function clearImage(){
+        $this->image = null;
+    }
+
+    /**
      * @param SummitVenueRoom $room
      */
     public function addRoom(SummitVenueRoom $room){

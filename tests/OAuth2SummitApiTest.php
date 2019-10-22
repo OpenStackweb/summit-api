@@ -37,7 +37,6 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
 
         $app->instance(\App\Http\Utils\IFileUploader::class, $fileUploaderMock);
 
-
         return $app;
     }
 
@@ -1441,6 +1440,50 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
             array(),
             [
                 'file' => UploadedFile::fake()->image('slide.pdf')
+            ],
+            $headers,
+            json_encode($video_data)
+        );
+
+        $video_id = $response->getContent();
+        $this->assertResponseStatus(201);
+        return intval($video_id);
+    }
+
+
+    public function testAddPresentationSlideInvalidName($summit_id=25){
+
+        $repo   =  EntityManager::getRepository(\models\summit\Summit::class);
+        $summit = $repo->getById($summit_id);
+        $presentation = $summit->getPublishedPresentations()[0];
+        $params = array
+        (
+            'id' => $summit_id,
+            'presentation_id' => $presentation->getId(),
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
+
+        $video_data = array
+        (
+            'name' => 'test slide',
+            'description' => 'test slide',
+            'display_on_site' => true,
+        );
+
+        $response = $this->action
+        (
+            "POST",
+            "OAuth2PresentationApiController@addPresentationSlide",
+            $params,
+            array(),
+            array(),
+            [
+                'file' => UploadedFile::fake()->image('invalid image.jpeg')
             ],
             $headers,
             json_encode($video_data)

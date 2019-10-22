@@ -95,4 +95,13 @@ SQL;
 
         return $native_query->getOneOrNullResult();
     }
+
+    /**
+     * @param string $name
+     * @return bool
+     */
+    public function existByName(string $name): bool
+    {
+        return $this->count(['name'=> trim($name)]) > 0;
+    }
 }

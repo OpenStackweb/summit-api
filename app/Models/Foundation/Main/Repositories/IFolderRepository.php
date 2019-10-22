@@ -25,6 +25,12 @@ interface IFolderRepository extends IBaseRepository
     public function getFolderByName($folder_name);
 
     /**
+     * @param string $name
+     * @return bool
+     */
+    public function existByName(string $name):bool;
+
+    /**
      * @param string $file_name
      * @return File
      */

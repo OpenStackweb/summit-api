@@ -15,7 +15,11 @@ use App\Services\Model\IFolderService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use models\exceptions\ValidationException;
 use models\main\File;
+use  Behat\Transliterator\Transliterator;
+use models\main\IFolderRepository;
+
 /**
  * Class FileUploader
  * @package App\Http\Utils
@@ -33,14 +37,36 @@ final class FileUploader implements IFileUploader
     private $bucket;
 
     /**
+     * @var IFolderRepository
+     */
+    private $folder_repository;
+
+    /**
      * FileUploader constructor.
      * @param IFolderService $folder_service
+     * @param IFolderRepository $folder_repository
      * @param IBucket $bucket
      */
-    public function __construct(IFolderService $folder_service, IBucket $bucket){
-        $this->folder_service = $folder_service;
-        $this->bucket = $bucket;
+    public function __construct
+    (
+        IFolderService $folder_service,
+        IFolderRepository $folder_repository,
+        IBucket $bucket
+    )
+    {
+        $this->folder_service    = $folder_service;
+        $this->folder_repository = $folder_repository;
+        $this->bucket            = $bucket;
     }
+
+
+    private static $default_replacements = [
+        '/\s/' => '-', // remove whitespace
+        '/_/' => '-', // underscores to dashes
+        '/[^A-Za-z0-9+.\-]+/' => '', // remove non-ASCII chars, only allow alphanumeric plus dash and dot
+        '/[\-]{2,}/' => '-', // remove duplicate dashes
+        '/^[\.\-_]+/' => '', // Remove all leading dots, dashes or underscores
+    ];
 
     /**
      * @param UploadedFile $file
@@ -54,6 +80,27 @@ final class FileUploader implements IFileUploader
         try {
 
             $client_original_name = $file->getClientOriginalName();
+            $client_original_name = Transliterator::utf8ToAscii($client_original_name);
+
+            foreach(self::$default_replacements as $regex => $replace) {
+                $client_original_name = preg_replace($regex, $replace, $client_original_name);
+            }
+
+            $idx = 1;
+            $ext   = pathinfo($client_original_name, PATHINFO_EXTENSION);
+            $name  = pathinfo($client_original_name, PATHINFO_FILENAME);
+
+            while($this->folder_repository->existByName($client_original_name)){
+                $client_original_name = $name.$idx.'.'.$ext;
+                ++$idx;
+            }
+
+            $title = pathinfo($client_original_name, PATHINFO_FILENAME);
+
+            if(empty($title)){
+                throw new ValidationException("empty file name is not valid");
+            }
+
             Log::debug(sprintf("FileUploader::build: folder_name %s client original name %s", $folder_name, $client_original_name));
 
             $local_path = Storage::putFileAs(sprintf('/public/%s', $folder_name), $file, $client_original_name);
@@ -67,8 +114,8 @@ final class FileUploader implements IFileUploader
             $attachment->setName($client_original_name);
             $file_name = sprintf("assets/%s/%s", $folder_name, $client_original_name);
             Log::debug(sprintf("FileUploader::build file_name %s", $file_name));
-            $title = str_replace(array('-', '_'), ' ', preg_replace('/\.[^.]+$/', '', $file->getClientOriginalName()));
             $attachment->setFilename($file_name);
+            $title = str_replace(['-','_'],' ', preg_replace('/\.[^.]+$/', '', $title));
             Log::debug(sprintf("FileUploader::build title %s", $title));
             $attachment->setTitle($title);
             $attachment->setShowInSearch(true);
@@ -79,7 +126,10 @@ final class FileUploader implements IFileUploader
             $attachment->setCloudMeta('LastPut', time());
             $attachment->setCloudStatus('Live');
             $attachment->setCloudSize(filesize($local_path));
-
+        }
+        catch(ValidationException $ex){
+            Log::warning($ex);
+            throw $ex;
         }
         catch (\Exception $ex){
             Log::error($ex);

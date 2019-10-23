@@ -80,15 +80,19 @@ final class FileUploader implements IFileUploader
         try {
 
             $client_original_name = $file->getClientOriginalName();
-            $client_original_name = Transliterator::utf8ToAscii($client_original_name);
+            $ext                  = pathinfo($client_original_name, PATHINFO_EXTENSION);
+            $client_original_name = trim(Transliterator::utf8ToAscii($client_original_name));
 
             foreach(self::$default_replacements as $regex => $replace) {
                 $client_original_name = preg_replace($regex, $replace, $client_original_name);
             }
 
             $idx = 1;
-            $ext   = pathinfo($client_original_name, PATHINFO_EXTENSION);
             $name  = pathinfo($client_original_name, PATHINFO_FILENAME);
+            if(empty($name)){
+                $client_original_name = uniqid().'.'.$ext;
+                $name  = pathinfo($client_original_name, PATHINFO_FILENAME);
+            }
 
             while($this->folder_repository->existByName($client_original_name)){
                 $client_original_name = $name.$idx.'.'.$ext;

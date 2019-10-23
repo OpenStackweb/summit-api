@@ -1483,7 +1483,7 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
             array(),
             array(),
             [
-                'file' => UploadedFile::fake()->image('invalid image.jpeg')
+                'file' => UploadedFile::fake()->image('IMG 0008 副本 白底.jpg')
             ],
             $headers,
             json_encode($video_data)

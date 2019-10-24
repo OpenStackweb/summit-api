@@ -35,6 +35,7 @@ class AbstractMemberSerializer extends SilverStripeSerializer
         'Country'         => 'country:json_string',
         'Active'          => 'active:json_boolean',
         'EmailVerified'   => 'email_verified:json_boolean',
+        'ProfilePhotoUrl' => 'pic:json_url',
     ];
 
     protected static $allowed_relations = [
@@ -57,8 +58,7 @@ class AbstractMemberSerializer extends SilverStripeSerializer
 
         if(!count($relations)) $relations = $this->getAllowedRelations();
 
-        $values           = parent::serialize($expand, $fields, $relations, $params);
-        $values['pic']    = $member->getProfilePhotoUrl();
+        $values = parent::serialize($expand, $fields, $relations, $params);
 
         if(in_array('groups', $relations))
             $values['groups'] = $member->getGroupsIds();

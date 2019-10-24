@@ -21,21 +21,22 @@ use models\summit\PresentationSpeaker;
 class PresentationSpeakerSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
-        'FirstName'             => 'first_name:json_string',
-        'LastName'              => 'last_name:json_string',
-        'Title'                 => 'title:json_string',
-        'Bio'                   => 'bio:json_string',
-        'IRCHandle'             => 'irc:json_string',
-        'TwitterName'           => 'twitter:json_string',
-        'OrgHasCloud'           => 'org_has_cloud:json_boolean',
-        'Country'               => 'country:json_string',
-        'AvailableForBureau'    => 'available_for_bureau:json_boolean',
-        'FundedTravel'          => 'funded_travel:json_boolean',
-        'WillingToTravel'       => 'willing_to_travel:json_boolean',
-        'WillingToPresentVideo' => 'willing_to_present_video:json_boolean',
+        'FirstName'               => 'first_name:json_string',
+        'LastName'                => 'last_name:json_string',
+        'Title'                   => 'title:json_string',
+        'Bio'                     => 'bio:json_string',
+        'IRCHandle'               => 'irc:json_string',
+        'TwitterName'             => 'twitter:json_string',
+        'OrgHasCloud'             => 'org_has_cloud:json_boolean',
+        'Country'                 => 'country:json_string',
+        'AvailableForBureau'      => 'available_for_bureau:json_boolean',
+        'FundedTravel'            => 'funded_travel:json_boolean',
+        'WillingToTravel'         => 'willing_to_travel:json_boolean',
+        'WillingToPresentVideo'   => 'willing_to_present_video:json_boolean',
         'Email'                   => 'email:json_obfuscated_email',
         'MemberID'                => 'member_id:json_int',
-        'RegistrationRequestId'   => 'registration_request_id:json_int'
+        'RegistrationRequestId'   => 'registration_request_id:json_int',
+        'ProfilePhotoUrl'         => 'pic:json_url'
     ];
 
     protected static $allowed_relations = [
@@ -63,8 +64,6 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
             $values['presentations']           = $speaker->getPresentationIds($summit_id, $published);
             $values['moderated_presentations'] = $speaker->getModeratedPresentationIds($summit_id, $published);
         }
-
-        $values['pic'] = $speaker->getProfilePhotoUrl();
 
         if (in_array('member', $relations) && $speaker->hasMember())
         {

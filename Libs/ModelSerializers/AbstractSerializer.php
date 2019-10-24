@@ -1,5 +1,4 @@
 <?php namespace Libs\ModelSerializers;
-
 /**
  * Copyright 2016 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use libs\utils\JsonUtils;
 use models\oauth2\IResourceServerContext;
 use models\utils\IEntity;
-
 /**
  * Class AbstractSerializer
  * @package Libs\ModelSerializers
@@ -187,6 +184,9 @@ abstract class AbstractSerializer implements IModelSerializer
                         case 'json_obfuscated_email':
                         {
                             $value = JsonUtils::toObfuscatedEmail($value);
+                        }
+                        case 'json_url':{
+                            $value = JsonUtils::encodeUrl($value);
                         }
                         break;
                     }

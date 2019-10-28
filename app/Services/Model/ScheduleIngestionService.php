@@ -196,7 +196,9 @@ final class ScheduleIngestionService
                         $mainVenues = $summit->getMainVenues();
                         $mainVenue = $mainVenues[0];
                         $presentationType = $summit->getEventTypeByType(IPresentationType::Presentation);
-                        $track = $summit->getPresentationCategoryByTitle($event['track']);
+                        $track_title      = $event['track'];
+                        if(empty($track_title)) $track_title = 'TBD';
+                        $track  = $summit->getPresentationCategoryByTitle($track_title);
 
                         if (is_null($track)) {
                             $track = new PresentationCategory();

@@ -56,10 +56,10 @@ final class SchedScheduleFeed  extends AbstractExternalScheduleFeed
 
             $events[] = [
                 'external_id' => trim($event['event_key']),
-                'title'       => trim(AbstractExternalScheduleFeed::convert2UTF8($event['name'])),
+                'title'       => isset($event['name']) ? trim(AbstractExternalScheduleFeed::convert2UTF8($event['name'])) : '',
                 'abstract'    => isset($event['description']) ? trim(AbstractExternalScheduleFeed::convert2UTF8($event['description'])) : '',
-                'track'       => trim(AbstractExternalScheduleFeed::convert2UTF8($event['event_type'])),
-                'location'    => trim(AbstractExternalScheduleFeed::convert2UTF8($event['venue'])),
+                'track'       => isset($event['event_type']) ? trim(AbstractExternalScheduleFeed::convert2UTF8($event['event_type'])) : '',
+                'location'    => isset($event['venue']) ? trim(AbstractExternalScheduleFeed::convert2UTF8($event['venue'])) : '',
                 "start_date"  => $event_start->getTimestamp(),
                 "end_date"    => $event_end->getTimestamp(),
                 'speakers'    => $speakers

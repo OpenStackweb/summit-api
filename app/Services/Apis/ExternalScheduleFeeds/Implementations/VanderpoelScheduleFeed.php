@@ -55,25 +55,25 @@ final class VanderpoelScheduleFeed extends AbstractExternalScheduleFeed
                             'first_name' => trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['first_name'])),
                             'last_name'  => trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['last_name'])),
                             'email'      => $this->getDefaultSpeakerEmail($speakerFullName),
-                            'company'    => trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['company'])),
-                            'position'   => trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['job_title'])),
-                            'avatar'     => trim($speaker['photo']),
+                            'company'    => isset($speaker['company']) ? trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['company'])): '',
+                            'position'   => isset($speaker['job_title']) ? trim(AbstractExternalScheduleFeed::convert2UTF8($speaker['job_title'])): '',
+                            'avatar'     => isset($speaker['photo']) ? trim($speaker['photo']) : '',
                         ];
                 }
             }
 
-            $track = ucwords(str_replace($this::CHARS_TO_REMOVE, " ", trim($event["track"])));
+            $track = isset($event["track"]) ? ucwords(str_replace($this::CHARS_TO_REMOVE, " ", trim($event["track"]))) : '';
 
             $events[] = [
                 'external_id' => trim($event['id']),
-                'title'       => trim(AbstractExternalScheduleFeed::convert2UTF8($event['title'])),
-                'abstract'    => trim(AbstractExternalScheduleFeed::convert2UTF8($event['abstract'])),
+                'title'       => isset($event['title']) ? trim(AbstractExternalScheduleFeed::convert2UTF8($event['title'])): '',
+                'abstract'    => isset($event['abstract']) ? trim(AbstractExternalScheduleFeed::convert2UTF8($event['abstract'])) : '',
                 'track'       => $track,
-                'location'    => trim(AbstractExternalScheduleFeed::convert2UTF8($event['room'])),
+                'location'    => isset($event['room']) ? trim(AbstractExternalScheduleFeed::convert2UTF8($event['room'])) : '',
                 'start_date'  => $event['start_timestamp'],
                 'end_date'    => $event['end_timestamp'],
                 'speakers'    => $speakers,
-                'tags'        => self::encode_array($event["keywords"])
+                'tags'        => isset($event["keywords"]) ? self::encode_array($event["keywords"]) : [],
             ];
         }
         return $events;

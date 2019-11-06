@@ -2029,6 +2029,18 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'DELETE',
                 'scopes' => [sprintf(SummitScopes::WriteSummitData, $current_realm)],
             ],
+            [
+                'name' => 'get-member-from-summit',
+                'route' => '/api/v1/summits/{id}/members',
+                'http_method' => 'GET',
+                'scopes' => [sprintf(SummitScopes::ReadAllSummitData, $current_realm)],
+            ],
+            [
+                'name' => 'get-member-from-summit-csv',
+                'route' => '/api/v1/summits/{id}/members/csv',
+                'http_method' => 'GET',
+                'scopes' => [sprintf(SummitScopes::ReadAllSummitData, $current_realm)],
+            ],
             // notifications
             [
                 'name' => 'get-notifications',

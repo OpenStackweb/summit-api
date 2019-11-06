@@ -557,6 +557,8 @@ Route::group([
 
             // members
             Route::group(array('prefix' => 'members'), function () {
+                Route::get("",  [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitMembersApiController@getAllBySummit']);
+                Route::get("csv",  [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' => 'OAuth2SummitMembersApiController@getAllBySummitCSV']);
                 Route::group(array('prefix' => '{member_id}'), function () {
                     Route::get('', 'OAuth2SummitMembersApiController@getMyMember')->where('member_id', 'me');
                     // favorites

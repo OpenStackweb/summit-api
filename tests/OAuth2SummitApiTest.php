@@ -1309,6 +1309,67 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($member));
     }
 
+    /**
+     * @param int $summit_id
+     */
+    public function testGetMembersBySummit($summit_id = 27)
+    {
+
+        $params = [
+
+            'expand'    => 'attendee,speaker,feedback,groups,presentations',
+            'id'        => $summit_id,
+            'filter'   => 'schedule_event_id==23828'
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitMembersApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $members = json_decode($content);
+        $this->assertTrue(!is_null($members));
+    }
+
+    /**
+     * @param int $summit_id
+     */
+    public function testGetMembersBySummitCSV($summit_id = 27)
+    {
+
+        $params = [
+
+            'expand'    => 'attendee,speaker,feedback,groups,presentations',
+            'id'        => $summit_id,
+            'filter'   => 'schedule_event_id==23828'
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitMembersApiController@getAllBySummitCSV",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $csv = $content;
+        $this->assertTrue(!empty($csv));
+    }
+
+
     public function testCurrentSummitMyMemberFavorites()
     {
         $params = array

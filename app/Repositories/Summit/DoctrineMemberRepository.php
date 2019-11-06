@@ -62,19 +62,29 @@ final class DoctrineMemberRepository
                 ->andWhere("m.first_name is not null")
                 ->andWhere("m.last_name is not null");
 
+
+        if($filter->hasFilter("summit_id") || $filter->hasFilter("schedule_event_id")){
+            $query = $query
+                ->leftJoin("m.schedule","sch")
+                ->leftJoin("sch.event", "evt")
+                ->leftJoin("evt.summit", "s");
+        }
+
         if(!is_null($filter)){
 
             $filter->apply2Query($query, [
-                'irc'         => 'm.irc_handle:json_string',
-                'created'     => 'm.created:datetime_epoch',
-                'last_edited' => 'm.last_edited:datetime_epoch',
-                'twitter'     => 'm.twitter_handle:json_string',
-                'first_name'  => 'm.first_name:json_string',
-                'last_name'   => 'm.last_name:json_string',
-                'github_user' => 'm.github_user:json_string',
-                'full_name'   => new DoctrineFilterMapping("concat(m.first_name, ' ', m.last_name) :operator :value"),
-                'email'       => ['m.email:json_string', 'm.second_email:json_string', 'm.third_email:json_string'],
-                'group_slug'  => new DoctrineJoinFilterMapping
+                'irc'               => 'm.irc_handle:json_string',
+                'created'           => 'm.created:datetime_epoch',
+                'last_edited'       => 'm.last_edited:datetime_epoch',
+                'twitter'           => 'm.twitter_handle:json_string',
+                'first_name'        => 'm.first_name:json_string',
+                'last_name'         => 'm.last_name:json_string',
+                'github_user'       => 'm.github_user:json_string',
+                'schedule_event_id' => 'evt.id',
+                'summit_id'         => 's.id',
+                'full_name'         => new DoctrineFilterMapping("concat(m.first_name, ' ', m.last_name) :operator :value"),
+                'email'             => ['m.email:json_string', 'm.second_email:json_string', 'm.third_email:json_string'],
+                'group_slug'        => new DoctrineJoinFilterMapping
                 (
                     'm.groups',
                     'g',

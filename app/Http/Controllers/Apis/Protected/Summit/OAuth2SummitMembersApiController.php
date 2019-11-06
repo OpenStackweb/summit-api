@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Http\Utils\CurrentAffiliationsCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Http\Utils\PagingConstants;
 use Illuminate\Support\Facades\Log;
@@ -548,6 +550,29 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
     public function getAllBySummitCSV($summit_id){
         $values = Input::all();
 
+        $allowed_columns = [
+            "id",
+            "created",
+            "last_edited",
+            "first_name",
+            "last_name",
+            "email",
+            "country",
+            "gender",
+            "github_user",
+            "bio",
+            "linked_in",
+            "irc",
+            "twitter",
+            "state",
+            "country",
+            "active",
+            "email_verified",
+            "pic",
+            "affiliations",
+            "groups"
+        ];
+
         $rules = [
         ];
 
@@ -635,7 +660,18 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             $relations = Request::input('relations', '');
             $relations = !empty($relations) ? explode(',', $relations) : [];
 
-            $list     =  $data->toArray
+            $columns_param = Input::get("columns", "");
+            $columns = [];
+            if(!empty($columns_param))
+                $columns  = explode(',', $columns_param);
+            $diff     = array_diff($columns, $allowed_columns);
+            if(count($diff) > 0){
+                throw new ValidationException(sprintf("columns %s are not allowed!", implode(",", $diff)));
+            }
+            if(empty($columns))
+                $columns = $allowed_columns;
+
+            $list =  $data->toArray
             (
                 Request::input('expand', ''),
                 $fields,
@@ -650,9 +686,11 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
                 $filename,
                 $list['data'],
                 [
-                    'created'     => new EpochCellFormatter(),
-                    'last_edited' => new EpochCellFormatter(),
-                ]
+                    'created'      => new EpochCellFormatter(),
+                    'last_edited'  => new EpochCellFormatter(),
+                    'affiliations' => new CurrentAffiliationsCellFormatter(),
+                ],
+                $columns
             );
         }
         catch (EntityNotFoundException $ex1) {

@@ -65,6 +65,7 @@ final class CSVExporter
                $val      = isset($row[$key])? $row[$key] : '';
                if(isset($formatters[$key]))
                    $val = $formatters[$key]->format($val);
+               if(is_array($val)) $val = '';
                $values[] = $val;
             }
             $output .= implode($field_separator, $values) . PHP_EOL;;
@@ -75,7 +76,7 @@ final class CSVExporter
     function cleanData(&$str)
     {
         if (is_null($str)) {$str = ''; return;};
-        if (is_array($str)) {$str = ''; return;};
+        if (is_array($str)) {return;};
         $str = preg_replace("/\t/", "\\t", $str);
         $str = preg_replace("/\r?\n/", "\\n", $str);
         $str = preg_replace("/,/", "-", $str);

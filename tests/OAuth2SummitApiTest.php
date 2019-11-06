@@ -1349,7 +1349,8 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
 
             'expand'    => 'attendee,speaker,feedback,groups,presentations',
             'id'        => $summit_id,
-            'filter'   => 'schedule_event_id==23828'
+            'filter'   => 'schedule_event_id==24015',
+            'columns'  => 'id,first_name,last_name,email,affiliations',
         ];
 
         $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];

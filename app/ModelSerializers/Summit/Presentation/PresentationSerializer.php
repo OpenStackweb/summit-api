@@ -30,6 +30,7 @@ class PresentationSerializer extends SummitEventSerializer
         'AttendingMedia'          => 'attending_media:json_boolean',
         'StatusNice'              => 'status:json_string',
         'ProgressNice'            => 'progress:json_string',
+        'Slug'                    => 'slug:json_string',
     ];
 
     protected static $allowed_fields = [

@@ -957,5 +957,4 @@ class SummitEvent extends SilverstripeBaseModel
         $this->external_id = $external_id;
     }
 
-
 }

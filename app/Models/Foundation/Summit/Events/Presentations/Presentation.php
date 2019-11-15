@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\Main\OrderableChilds;
+use Behat\Transliterator\Transliterator;
 use Doctrine\ORM\Mapping AS ORM;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackAnswer;
 use App\Models\Foundation\Summit\SelectionPlan;
@@ -78,6 +79,12 @@ class Presentation extends SummitEvent
      * @var string
      */
     private $level;
+
+    /**
+     * @ORM\Column(name="Slug", type="string")
+     * @var string
+     */
+    private $slug;
 
     /**
      * @ORM\Column(name="Status", type="string")
@@ -880,6 +887,42 @@ class Presentation extends SummitEvent
      */
     public function isSubmitted():bool {
         return $this->progress == Presentation::PHASE_COMPLETE && $this->status == Presentation::STATUS_RECEIVED;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSlug(): ?string
+    {
+        return $this->slug;
+    }
+
+    private static $default_replacements = [
+        '/\s/' => '-', // remove whitespace
+        '/_/' => '-', // underscores to dashes
+        '/[^A-Za-z0-9+.\-]+/' => '', // remove non-ASCII chars, only allow alphanumeric plus dash and dot
+        '/[\-]{2,}/' => '-', // remove duplicate dashes
+        '/^[\.\-_]+/' => '', // Remove all leading dots, dashes or underscores
+    ];
+
+    public function generateSlug():void{
+        if(empty($this->title)) return;
+        $this->slug = trim(Transliterator::utf8ToAscii($this->title));
+
+        foreach(self::$default_replacements as $regex => $replace) {
+            $this->slug = preg_replace($regex, $replace, $this->slug);
+        }
+    }
+
+    /**
+     * @param string $title
+     * @return $this
+     */
+    public function setTitle($title)
+    {
+        $this->title = $title;
+        $this->generateSlug();
+        return $this;
     }
 
 }

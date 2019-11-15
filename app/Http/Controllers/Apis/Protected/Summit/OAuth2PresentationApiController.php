@@ -698,7 +698,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 'name'            => 'nullable|text:512',
                 'description'     => 'nullable|string',
                 'display_on_site' => 'nullable|boolean',
-                'featured'        => 'snullable|boolean',
+                'featured'        => 'nullable|boolean',
                 'order'           => 'nullable|integer|min:1',
             ];
 

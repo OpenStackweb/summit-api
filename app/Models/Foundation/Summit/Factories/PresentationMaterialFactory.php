@@ -32,7 +32,7 @@ abstract class PresentationMaterialFactory
             $presentationMaterial->setDescription(trim($data['description']));
 
         if(isset($data['display_on_site']))
-            $presentationMaterial->setDisplayOnSite(isset($data['display_on_site']) ? (bool)$data['display_on_site'] : true);
+            $presentationMaterial->setDisplayOnSite(isset($data['display_on_site']) ? boolval($data['display_on_site']) : true);
 
         return $presentationMaterial;
     }

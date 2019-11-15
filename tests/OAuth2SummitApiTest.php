@@ -1483,7 +1483,7 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $headers = array
         (
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
+            "CONTENT_TYPE" => "multipart/form-data; boundary=----WebKitFormBoundaryBkSYnzBIiFtZu4pb"
         );
 
         $video_data = array

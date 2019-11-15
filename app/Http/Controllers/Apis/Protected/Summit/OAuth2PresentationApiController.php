@@ -13,6 +13,7 @@
  **/
 
 use App\Http\Utils\FileTypes;
+use App\Http\Utils\MultipartFormDataCleaner;
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -608,15 +609,17 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                    return $this->error403();
             }
 
-            $data  = $request->all();
+            $data = $request->all();
+            $data = MultipartFormDataCleaner::cleanBool('display_on_site', $data);
+            $data = MultipartFormDataCleaner::cleanBool('featured', $data);
 
             $rules = [
                 'file'            => 'required_without:link',
                 'link'            => 'required_without:file|url',
                 'name'            => 'required|text:512',
-                'description'     => 'sometimes|required|string',
-                'display_on_site' => 'sometimes|required|boolean',
-                'featured'        => 'sometimes|required|boolean',
+                'description'     => 'nullable|string',
+                'display_on_site' => 'nullable|boolean',
+                'featured'        => 'nullable|boolean',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -673,7 +676,6 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
@@ -686,15 +688,18 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                     return $this->error403();
             }
 
-            $data  = $request->all();
+            $data = $request->all();
+            $data = MultipartFormDataCleaner::cleanBool('display_on_site', $data);
+            $data = MultipartFormDataCleaner::cleanBool('featured', $data);
+            $data = MultipartFormDataCleaner::cleanInt('order', $data);
 
             $rules = [
                 'link'            => 'nullable|url',
-                'name'            => 'sometimes|required|text:512',
-                'description'     => 'sometimes|required|string',
-                'display_on_site' => 'sometimes|required|boolean',
-                'featured'        => 'sometimes|required|boolean',
-                'order'           => 'sometimes|integer|min:1',
+                'name'            => 'nullable|text:512',
+                'description'     => 'nullable|string',
+                'display_on_site' => 'nullable|boolean',
+                'featured'        => 'snullable|boolean',
+                'order'           => 'nullable|integer|min:1',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -854,13 +859,16 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $data  = $request->all();
+            $data = $request->all();
+            $data = MultipartFormDataCleaner::cleanBool('display_on_site', $data);
+            $data = MultipartFormDataCleaner::cleanBool('featured', $data);
+
             $rules = [
                 'link'            => 'required|url',
                 'name'            => 'required|text:512',
-                'description'     => 'sometimes|required|string',
-                'display_on_site' => 'sometimes|required|boolean',
-                'featured'        => 'sometimes|required|boolean',
+                'description'     => 'nullable|string',
+                'display_on_site' => 'nullable|boolean',
+                'featured'        => 'nullable|boolean',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -911,15 +919,18 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $data  = $request->all();
+            $data = $request->all();
+            $data = MultipartFormDataCleaner::cleanBool('display_on_site', $data);
+            $data = MultipartFormDataCleaner::cleanBool('featured', $data);
+            $data = MultipartFormDataCleaner::cleanInt('order', $data);
 
             $rules = [
                 'link'            => 'sometimes|required|url',
                 'name'            => 'sometimes|required|text:512',
-                'description'     => 'sometimes|required|string',
-                'display_on_site' => 'sometimes|required|boolean',
-                'featured'        => 'sometimes|required|boolean',
-                'order'           => 'sometimes|integer|min:1',
+                'description'     => 'nullable|string',
+                'display_on_site' => 'nullable|boolean',
+                'featured'        => 'nullable|boolean',
+                'order'           => 'nullable|integer|min:1',
             ];
 
             // Creates a Validator instance and validates the data.

@@ -224,7 +224,9 @@ final class SummitSelectionPlanService
 
             foreach($summits as $summit){
                 $selection_plan = $summit->getCurrentSelectionPlanByStatus($status);
-                if(!is_null($selection_plan)) return $selection_plan;
+                if(is_null($selection_plan)) continue;
+                if(!$selection_plan->IsEnabled()) continue;
+                return $selection_plan;
             }
 
             return null;

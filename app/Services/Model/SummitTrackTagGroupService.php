@@ -177,6 +177,8 @@ implements ISummitTrackTagGroupService
                 }
             }
 
+            $track_tag_group = TrackTagGroupFactory::populate($track_tag_group, $summit, $data);
+
             if (isset($data['order']) && intval($data['order']) != $track_tag_group->getOrder()) {
                 // request to update order
                 $summit->recalculateTrackTagGroupOrder($track_tag_group, intval($data['order']));

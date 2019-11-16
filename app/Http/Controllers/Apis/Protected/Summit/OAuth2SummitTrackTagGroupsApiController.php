@@ -260,7 +260,12 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
             if(!Request::isJson()) return $this->error400();
             $data = Input::json();
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            $summit = SummitFinderStrategyFactory::build
+            (
+                $this->summit_repository,
+                $this->resource_server_context
+            )->find($summit_id);
+
             if (is_null($summit)) return $this->error404();
 
             $rules = [

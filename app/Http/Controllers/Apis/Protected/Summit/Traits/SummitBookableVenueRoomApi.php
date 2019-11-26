@@ -253,7 +253,10 @@ trait SummitBookableVenueRoomApi
                     'start_datetime',
                     'end_datetime',
                     'room_name',
-                    'room_id'
+                    'room_id',
+                    'status',
+                    'created',
+                    'owner_name',
                 ]);
             }
 
@@ -351,10 +354,12 @@ trait SummitBookableVenueRoomApi
                     'start_datetime',
                     'end_datetime',
                     'room_name',
-                    'room_id'
+                    'room_id',
+                    'status',
+                    'created',
+                    'owner_name',
                 ]);
             }
-
 
             $data = $this->reservation_repository->getAllBySummitByPage($summit, new PagingInfo($page, $per_page), $filter, $order);
 

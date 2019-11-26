@@ -43,6 +43,23 @@ final class DoctrineSummitRoomReservationRepository
     /**
      * @return array
      */
+    protected function getOrderMappings()
+    {
+        return [
+            'id'              => 'e.id',
+            'start_datetime'  => 'e.start_datetime',
+            'end_datetime'    => 'e.end_datetime',
+            'room_name'       => 'r1.name',
+            'room_id'         => 'r1.id',
+            'status'          => 'e.status',
+            'created'         => 'e.created',
+            'owner_name'      => "LOWER(CONCAT(o1.first_name, ' ', o1.last_name))",
+        ];
+    }
+
+    /**
+     * @return array
+     */
     protected function getFilterMappings()
     {
         return [
@@ -103,6 +120,7 @@ final class DoctrineSummitRoomReservationRepository
             ->select("e")
             ->from($this->getBaseEntity(), "e")
             ->join("e.room","r1")
+            ->join("e.owner","o1")
             ->join("r1.venue", "v1")
             ->join("v1.summit", "s1")
             ->where("s1.id = ".$summit->getId())
@@ -137,20 +155,6 @@ final class DoctrineSummitRoomReservationRepository
             $paging_info->getLastPage($total),
             $data
         );
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'id'              => 'e.id',
-            'start_datetime'  => 'e.start_datetime',
-            'end_datetime'    => 'e.end_datetime',
-            'room_name'       => 'r1.name',
-            'room_id'         => 'r1.id'
-        ];
     }
 
     /**

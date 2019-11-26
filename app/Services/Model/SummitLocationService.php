@@ -1865,7 +1865,7 @@ final class SummitLocationService
             }
 
             $status = $reservation->getStatus();
-            $validStatuses = [SummitRoomReservation::RequestedRefundStatus, SummitRoomReservation::PayedStatus];
+            $validStatuses = [SummitRoomReservation::RequestedRefundStatus, SummitRoomReservation::PaidStatus];
             if (!in_array($status, $validStatuses))
                 throw new ValidationException
                 (

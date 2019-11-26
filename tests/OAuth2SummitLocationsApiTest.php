@@ -1746,7 +1746,8 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
     public function testGetAllReservationsBySummit($summit_id =27){
         $params = [
             'id' => $summit_id,
-            'filter' => 'status==Reserved,room_id==1'
+            'filter' => 'status==Reserved,room_id==1',
+            'order'  => '+owner_name'
         ];
 
         $headers =

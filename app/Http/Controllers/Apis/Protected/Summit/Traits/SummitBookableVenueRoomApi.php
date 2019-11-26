@@ -1044,7 +1044,7 @@ trait SummitBookableVenueRoomApi
             $amount = intval($payload['amount']);
             $reservation = $this->location_service->refundReservation($room, $reservation_id, $amount);
 
-            return $this->updateVenueBookableRoom(SerializerRegistry::getInstance()->getSerializer($reservation)->serialize());
+            return  SerializerRegistry::getInstance()->getSerializer($reservation)->serialize();
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);

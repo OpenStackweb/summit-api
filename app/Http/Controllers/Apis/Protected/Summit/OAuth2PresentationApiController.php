@@ -162,7 +162,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $rules =
             [
                 'youtube_id'      => 'required|alpha_dash',
-                'name'            => 'sometimes|required|text:512',
+                'name'            => 'sometimes|required|string:512',
                 'description'     => 'sometimes|required|string',
                 'featured'        => 'sometimes|required|boolean',
                 'display_on_site' => 'sometimes|required|boolean',
@@ -223,7 +223,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $rules = [
                 'youtube_id'     => 'required|alpha_dash',
-                'name'            => 'sometimes|required|text:512',
+                'name'            => 'sometimes|required|string:512',
                 'description'     => 'sometimes|required|string',
                 'display_on_site' => 'sometimes|required|boolean',
                 'featured'        => 'sometimes|required|boolean',
@@ -616,7 +616,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $rules = [
                 'file'            => 'required_without:link',
                 'link'            => 'required_without:file|url',
-                'name'            => 'required|text:512',
+                'name'            => 'required|string:512',
                 'description'     => 'nullable|string',
                 'display_on_site' => 'nullable|boolean',
                 'featured'        => 'nullable|boolean',
@@ -695,7 +695,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $rules = [
                 'link'            => 'nullable|url',
-                'name'            => 'nullable|text:512',
+                'name'            => 'nullable|string:512',
                 'description'     => 'nullable|string',
                 'display_on_site' => 'nullable|boolean',
                 'featured'        => 'nullable|boolean',
@@ -865,7 +865,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $rules = [
                 'link'            => 'required|url',
-                'name'            => 'required|text:512',
+                'name'            => 'required|string:512',
                 'description'     => 'nullable|string',
                 'display_on_site' => 'nullable|boolean',
                 'featured'        => 'nullable|boolean',
@@ -926,7 +926,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $rules = [
                 'link'            => 'sometimes|required|url',
-                'name'            => 'sometimes|required|text:512',
+                'name'            => 'sometimes|required|string:512',
                 'description'     => 'nullable|string',
                 'display_on_site' => 'nullable|boolean',
                 'featured'        => 'nullable|boolean',

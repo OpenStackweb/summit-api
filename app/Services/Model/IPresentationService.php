@@ -106,7 +106,7 @@ interface IPresentationService
         $presentation_id,
         array $slide_data,
         array $allowed_extensions = [],
-        $max_file_size = 10485760
+        $max_file_size = 62914560
     );
 
     /**
@@ -126,7 +126,7 @@ interface IPresentationService
         $slide_id,
         array $slide_data,
         array $allowed_extensions = [],
-        $max_file_size = 10485760
+        $max_file_size = 62914560
     );
 
     /**

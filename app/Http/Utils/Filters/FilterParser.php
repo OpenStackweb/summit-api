@@ -23,9 +23,9 @@ final class FilterParser
      */
     public static function parse($filters, $allowed_fields = array())
     {
-        $res        = [];
-        $matches    = [];
-        $and_fields = [];
+        $res                 = [];
+        $matches             = [];
+        $and_fields          = [];
 
         if (!is_array($filters))
             $filters = array($filters);
@@ -75,17 +75,24 @@ final class FilterParser
                 $field    = $operands[0];
                 $value    = $operands[1];
 
+                // parse AND on same fields
+                $values = explode('&&', $value);
+                if (count($values) > 1) {
+                    $value = $values;
+                }
+
                 if (!isset($allowed_fields[$field])){
                     throw new FilterParserException(sprintf("filter by field %s is not allowed", $field));
                 }
                 if (!in_array($op, $allowed_fields[$field])){
                     throw new FilterParserException(sprintf("%s op is not allowed for filter by field %s",$op, $field));
-                }
 
+                }
                 if(in_array($field, $and_fields))
                     throw new FilterParserException(sprintf("filter by field %s is already on an and expression", $field));
 
                 $and_fields[] = $field;
+
                 $f = self::buildFilter($field, $op, $value);
             }
 

@@ -23,6 +23,7 @@ use models\summit\SummitGeoLocatedLocation;
 use models\summit\SummitHotel;
 use models\summit\SummitVenue;
 use utils\DoctrineFilterMapping;
+use utils\DoctrineHavingFilterMapping;
 use utils\DoctrineInstanceOfFilterMapping;
 use utils\Filter;
 use utils\Order;
@@ -67,9 +68,11 @@ final class DoctrineSummitLocationRepository
             'time_slot_cost' => 'br.time_slot_cost',
             'currency'       => 'br.currency',
             'capacity'       => 'r.capacity',
-            'attribute'      => new DoctrineFilterMapping
+            'attribute'      => new DoctrineHavingFilterMapping
             (
-                "(bra.value :operator :value or bra.id = :value)"
+                "bra.value in (:value) or bra.id in (:value)",
+                "al.id",
+                "count(al) = :value_count"
             ),
             'class_name'     => new DoctrineInstanceOfFilterMapping(
                 "al",

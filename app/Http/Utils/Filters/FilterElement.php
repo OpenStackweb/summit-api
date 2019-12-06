@@ -54,7 +54,7 @@ class FilterElement extends AbstractFilterElement
     }
 
     /**
-     * @return string
+     * @return mixed
      */
     public function getValue()
     {

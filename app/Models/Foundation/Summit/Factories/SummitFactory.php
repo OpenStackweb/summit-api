@@ -69,6 +69,23 @@ final class SummitFactory
             $summit->setCalendarSyncDesc(trim($data['calendar_sync_desc']));
         }
 
+        if(array_key_exists('begin_allow_booking_date', $data) && array_key_exists('end_allow_booking_date', $data)) {
+            if (isset($data['begin_allow_booking_date']) && isset($data['end_allow_booking_date'])) {
+                $start_datetime = intval($data['begin_allow_booking_date']);
+                $start_datetime = new \DateTime("@$start_datetime");
+                $start_datetime->setTimezone($summit->getTimeZone());
+                $end_datetime = intval($data['end_allow_booking_date']);
+                $end_datetime = new \DateTime("@$end_datetime");
+                $end_datetime->setTimezone($summit->getTimeZone());
+                // set local time from UTC
+                $summit->setBeginAllowBookingDate($start_datetime);
+                $summit->setEndAllowBookingDate($end_datetime);
+            }
+            else{
+                $summit->clearAllowBookingDates();
+            }
+        }
+
         if(array_key_exists('start_date', $data) && array_key_exists('end_date', $data)) {
             if (isset($data['start_date']) && isset($data['end_date'])) {
                 $start_datetime = intval($data['start_date']);

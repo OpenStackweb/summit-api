@@ -201,6 +201,18 @@ class Summit extends SilverstripeBaseModel
     private $meeting_booking_room_allowed_attributes;
 
     /**
+     * @ORM\Column(name="BeginAllowBookingDate", type="datetime")
+     * @var \DateTime
+     */
+    private $begin_allow_booking_date;
+
+    /**
+     * @ORM\Column(name="EndAllowBookingDate", type="datetime")
+     * @var \DateTime
+     */
+    private $end_allow_booking_date;
+
+    /**
      * @ORM\OneToMany(targetEntity="SummitEvent", mappedBy="summit", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      */
     private $events;
@@ -2738,4 +2750,51 @@ SQL;
         $this->api_feed_key = $api_feed_key;
     }
 
+    /**
+     * @return DateTime
+     */
+    public function getBeginAllowBookingDate(): ?DateTime
+    {
+        return $this->begin_allow_booking_date;
+    }
+
+    /**
+     * @param DateTime $begin_allow_booking_date
+     */
+    public function setBeginAllowBookingDate(DateTime $begin_allow_booking_date): void
+    {
+        $this->begin_allow_booking_date = $begin_allow_booking_date;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getEndAllowBookingDate(): ?DateTime
+    {
+        return $this->end_allow_booking_date;
+    }
+
+    /**
+     * @param DateTime $end_allow_booking_date
+     */
+    public function setEndAllowBookingDate(DateTime $end_allow_booking_date): void
+    {
+        $this->end_allow_booking_date = $end_allow_booking_date;
+    }
+
+    public function clearAllowBookingDates():void{
+        $this->begin_allow_booking_date = $this->end_allow_booking_date = null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isBookingPeriodOpen():bool{
+        $now_utc = new \DateTime('now', new \DateTimeZone('UTC'));
+        if(!is_null($this->begin_allow_booking_date) && !is_null($this->end_allow_booking_date)){
+            return $now_utc >= $this->begin_allow_booking_date  && $now_utc <= $this->end_allow_booking_date;
+        }
+
+        return false;
+    }
 }

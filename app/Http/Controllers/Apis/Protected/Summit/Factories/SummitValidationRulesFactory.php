@@ -49,6 +49,8 @@ final class SummitValidationRulesFactory
                 'api_feed_type'                    => sprintf('nullable|in:%s',implode(',', Summit::$valid_feed_types)),
                 'api_feed_url'                     => 'nullable|string|url|required_with:api_feed_type',
                 'api_feed_key'                     => 'nullable|string|required_with:api_feed_type',
+                'begin_allow_booking_date'  => 'nullable|date_format:U',
+                'end_allow_booking_date'    => 'nullable|required_with:begin_allow_booking_date|date_format:U|after_or_equal:begin_allow_booking_date',
             ];
         }
 
@@ -80,6 +82,8 @@ final class SummitValidationRulesFactory
             'api_feed_type'                    => sprintf('nullable|in:%s',implode(',', Summit::$valid_feed_types)),
             'api_feed_url'                     => 'nullable|string|url|required_with:api_feed_type',
             'api_feed_key'                     => 'nullable|string|required_with:api_feed_type',
+            'begin_allow_booking_date'  => 'nullable|date_format:U',
+            'end_allow_booking_date'    => 'nullable|required_with:begin_allow_booking_date|date_format:U|after_or_equal:begin_allow_booking_date',
         ];
     }
 }

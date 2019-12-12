@@ -26,5 +26,9 @@ final class AdminSummitSerializer extends SummitSerializer
         'ExternalSummitId'            => 'external_summit_id:json_string',
         'CalendarSyncName'            => 'calendar_sync_name:json_string',
         'CalendarSyncDesc'            => 'calendar_sync_desc:json_string',
+        // External Feeds
+        'ApiFeedType'                 => 'api_feed_type:json_string',
+        'ApiFeedUrl'                  => 'api_feed_url:json_string',
+        'ApiFeedKey'                  => 'api_feed_key:json_string',
     ];
 }

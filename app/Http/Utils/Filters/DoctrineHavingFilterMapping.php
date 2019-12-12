@@ -11,7 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use Doctrine\ORM\QueryBuilder;
+
 /**
  * Class DoctrineHavingFilterMapping
  * @package utils
@@ -27,6 +29,7 @@ class DoctrineHavingFilterMapping extends DoctrineFilterMapping
      * @var string
      */
     protected $having;
+
     /**
      * DoctrineFilterMapping constructor.
      * @param string $condition
@@ -35,7 +38,7 @@ class DoctrineHavingFilterMapping extends DoctrineFilterMapping
     {
         parent::__construct($condition);
         $this->groupBy = $groupBy;
-        $this->having  = $having;
+        $this->having = $having;
     }
 
     /**
@@ -43,33 +46,56 @@ class DoctrineHavingFilterMapping extends DoctrineFilterMapping
      * @param FilterElement $filter
      * @return QueryBuilder
      */
-    public function apply(QueryBuilder $query, FilterElement $filter){
-        $param_count = $query->getParameters()->count() + 1;
+    public function apply(QueryBuilder $query, FilterElement $filter)
+    {
+        $param_count = $query->getParameters()->count();
         $where       = $this->where;
         $has_param   = false;
-        $value       = $filter->getValue();
 
-        if(strstr($where,":value")) {
-            $where = str_replace(":value", ":value_" . $param_count, $where);
-            $has_param = true;
+        $value = $filter->getValue();
+
+        if (!empty($where)) {
+            if (strstr($where, ":value")) {
+                ++$param_count;
+                $where = str_replace(":value", ":value_" . $param_count, $where);
+                $has_param = true;
+            }
+
+            if (strstr($where, ":operator"))
+                $where = str_replace(":operator", $filter->getOperator(), $where);
+
+            $query = $query->andWhere($where);
+
+            if ($has_param) {
+                $query = $query->setParameter(":value_" . $param_count, $value);
+            }
         }
 
-        if(strstr($where,":operator"))
-            $where = str_replace(":operator", $filter->getOperator(), $where);
-
-        $query = $query->andWhere($where);
-
-        if($has_param){
-            $query = $query->setParameter(":value_".$param_count, $value);
+        if (!empty($this->groupBy)) {
+            $query = $query->addGroupBy($this->groupBy);
         }
 
-        $query = $query->addGroupBy($this->groupBy);
+        if (!empty($this->having)) {
+            $has_param = false;
+            if (strstr($this->having, ":value_count") && is_array($value)) {
+                $this->having = str_replace(":value_count", count($value), $this->having);
+            }
 
-        if(strstr($this->having,":value_count") && is_array($value)){
-            $this->having = str_replace(":value_count", count($value), $this->having);
+            if (strstr($this->having, ":value")) {
+                ++$param_count;
+                $this->having = str_replace(":value", ":value_" . $param_count, $this->having);
+                $has_param = true;
+            }
+
+            if (strstr($this->having, ":operator"))
+                $this->having = str_replace(":operator", $filter->getOperator(), $this->having);
+
+            if ($has_param) {
+                $query = $query->setParameter(":value_" . $param_count, $value);
+            }
+
+            $query = $query->andHaving($this->having);
         }
-
-        $query = $query->andHaving($this->having);
 
         return $query;
     }

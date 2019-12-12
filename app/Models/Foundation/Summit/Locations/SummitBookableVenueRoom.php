@@ -67,8 +67,10 @@ class SummitBookableVenueRoom extends SummitVenueRoom
      */
     public function addReservation(SummitRoomReservation $reservation){
 
-        $criteria = Criteria::create();
+        if(!$this->summit->isBookingPeriodOpen())
+            throw new ValidationException(sprintf("booking period is not open for summit %s", $this->summit->getId()));
 
+        $criteria   = Criteria::create();
         $start_date = $reservation->getStartDatetime();
         $end_date   = $reservation->getEndDatetime();
 

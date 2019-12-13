@@ -59,6 +59,7 @@ class SummitSerializer extends SilverStripeSerializer
         'MeetingRoomBookingMaxAllowed'                   => 'meeting_room_booking_max_allowed:json_int',
         'BeginAllowBookingDate'                          => 'begin_allow_booking_date:datetime_epoch',
         'EndAllowBookingDate'                            => 'end_allow_booking_date:datetime_epoch',
+        'LogoUrl'                                        => 'logo:json_url'
     ];
 
     protected static $allowed_relations = [
@@ -94,11 +95,6 @@ class SummitSerializer extends SilverStripeSerializer
             $time_zone_info['offset'] = $timezone->getOffset($now);
             $values['time_zone']      = $time_zone_info;
         }
-
-        $values['logo'] = ($summit->hasLogo()) ?
-            $summit->getLogo()->getUrl()
-            : null;
-
         // pages info
         $main_page                             = $summit->getMainPage();
         $schedule_page                         = $summit->getSchedulePage();

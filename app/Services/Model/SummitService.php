@@ -2053,4 +2053,40 @@ final class SummitService extends AbstractService implements ISummitService
 
         });
     }
+
+
+    /**
+     * @param int $summit_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     * @return File
+     */
+    public function addSummitLogo(int $summit_id, UploadedFile $file, $max_file_size = 10485760)
+    {
+        return $this->tx_service->transaction(function () use ($summit_id, $file, $max_file_size) {
+
+            $allowed_extensions = ['png', 'jpg', 'jpeg', 'gif', 'pdf'];
+
+            $summit = $this->summit_repository->getById($summit_id);
+
+            if (is_null($summit) || !$summit instanceof Summit) {
+                throw new EntityNotFoundException('summit not found!');
+            }
+
+            if (!in_array($file->extension(), $allowed_extensions)) {
+                throw new ValidationException("file does not has a valid extension ('png','jpg','jpeg','gif','pdf').");
+            }
+
+            if ($file->getSize() > $max_file_size) {
+                throw new ValidationException(sprintf("file exceeds max_file_size (%s MB).", ($max_file_size / 1024) / 1024));
+            }
+
+            $photo = $this->file_uploader->build($file, sprintf('summits/%s', $summit->getId()), true);
+            $summit->setLogo($photo);
+
+            return $photo;
+        });
+    }
 }

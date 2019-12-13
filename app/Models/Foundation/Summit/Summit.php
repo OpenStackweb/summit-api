@@ -804,6 +804,13 @@ class Summit extends SilverstripeBaseModel
     }
 
     /**
+     * @param File $logo
+     */
+    public function setLogo(File $logo):void{
+        $this->logo = $logo;
+    }
+
+    /**
      * @return bool
      */
     public function hasLogo()
@@ -2796,5 +2803,16 @@ SQL;
         }
 
         return false;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLogoUrl():string {
+        $logoUrl = null;
+        if($this->hasLogo() && $logo = $this->getLogo()){
+            $logoUrl =  $logo->getUrl();
+        }
+        return $logoUrl;
     }
 }

@@ -335,4 +335,14 @@ interface ISummitService
      * @throws EntityNotFoundException
      */
     public function deleteBookableRoomAttributeValue(Summit $summit, int $type_id, int $value_id):void;
+
+    /**
+     * @param int $summit_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     * @return File
+     */
+    public function addSummitLogo(int $summit_id, UploadedFile $file,  $max_file_size = 10485760);
 }

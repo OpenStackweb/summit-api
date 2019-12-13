@@ -29,6 +29,7 @@ use ModelSerializers\ISerializerTypeSelector;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISummitService;
 use utils\PagingResponse;
+use Illuminate\Http\Request as LaravelRequest;
 /**
  * Class OAuth2SummitApiController
  * @package App\Http\Controllers
@@ -493,6 +494,41 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             return $this->error401();
         }
         catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param LaravelRequest $request
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function addSummitLogo(LaravelRequest $request, $summit_id){
+        try {
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $file = $request->file('file');
+            if (is_null($file)) {
+                return $this->error412(array('file param not set!'));
+            }
+
+            $photo = $this->summit_service->addSummitLogo($summit_id, $file);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($photo)->serialize());
+
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412(array($ex2->getMessage()));
+        } catch (\HTTP401UnauthorizedException $ex3) {
+            Log::warning($ex3);
+            return $this->error401();
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }

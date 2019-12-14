@@ -48,7 +48,8 @@ abstract class JsonUtils
      * @param string $url
      * @return string
      */
-    public static function encodeUrl(string $url):string{
+    public static function encodeUrl(?string $url):?string{
+        if(empty($url)) return null;
         $url= rawurlencode($url);
         $url = str_replace("%3A",":", $url);
         $url = str_replace("%2F","/", $url);

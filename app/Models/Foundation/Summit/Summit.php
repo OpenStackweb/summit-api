@@ -2808,7 +2808,7 @@ SQL;
     /**
      * @return string
      */
-    public function getLogoUrl():string {
+    public function getLogoUrl():?string {
         $logoUrl = null;
         if($this->hasLogo() && $logo = $this->getLogo()){
             $logoUrl =  $logo->getUrl();

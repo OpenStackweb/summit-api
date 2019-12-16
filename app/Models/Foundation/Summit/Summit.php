@@ -20,6 +20,7 @@ use App\Models\Foundation\Summit\TrackTagGroup;
 use App\Models\Foundation\Summit\TrackTagGroupAllowedTag;
 use App\Models\Utils\TimeZoneEntity;
 use App\Services\Apis\ExternalScheduleFeeds\IExternalScheduleFeedFactory;
+use Cocur\Slugify\Slugify;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
@@ -2538,10 +2539,10 @@ SQL;
     /**
      * @param string $slug
      */
-    public function setRawSlug(string $slug):void{
-        $this->slug = $slug;
+    public function setRawSlug(string $slug):void {
+        $slugify    = new Slugify();
+        $this->slug = $slugify->slugify($slug);
     }
-
     /**
      * @return DateTime
      */

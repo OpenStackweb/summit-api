@@ -247,7 +247,7 @@ class Summit extends SilverstripeBaseModel
     private $speaker_assistances;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File")
+     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
      * @ORM\JoinColumn(name="LogoID", referencedColumnName="ID")
      * @var File
      */

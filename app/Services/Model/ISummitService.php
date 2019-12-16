@@ -345,4 +345,11 @@ interface ISummitService
      * @return File
      */
     public function addSummitLogo(int $summit_id, UploadedFile $file,  $max_file_size = 10485760);
+
+    /**
+     * @param int $summit
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function deleteSummitLogo(int $summit_id):void;
 }

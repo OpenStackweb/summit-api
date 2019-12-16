@@ -112,6 +112,14 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'delete-summit-logo',
+                'route' => '/api/v1/summits/{id}/logo',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+            ],
+            [
                 'name' => 'delete-summit',
                 'route' => '/api/v1/summits/{id}',
                 'http_method' => 'DELETE',

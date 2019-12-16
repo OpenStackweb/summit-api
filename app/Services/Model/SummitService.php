@@ -2109,4 +2109,23 @@ final class SummitService extends AbstractService implements ISummitService
             return $photo;
         });
     }
+
+    /**
+     * @param int $summit_id
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function deleteSummitLogo(int $summit_id): void
+    {
+        return $this->tx_service->transaction(function () use ($summit_id) {
+
+            $summit = $this->summit_repository->getById($summit_id);
+
+            if (is_null($summit) || !$summit instanceof Summit) {
+                throw new EntityNotFoundException('summit not found!');
+            }
+
+            $summit->clearLogo();
+        });
+    }
 }

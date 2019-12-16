@@ -810,6 +810,10 @@ class Summit extends SilverstripeBaseModel
         $this->logo = $logo;
     }
 
+    public function clearLogo():void{
+        $this->logo = null;
+    }
+
     /**
      * @return bool
      */

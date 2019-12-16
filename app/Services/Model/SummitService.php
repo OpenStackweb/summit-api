@@ -1559,6 +1559,16 @@ final class SummitService extends AbstractService implements ISummitService
                 );
             }
 
+            $slug = $data['slug'] ?? null;
+            if(!empty($slug)){
+                // check if exist another summit with that slug
+
+                $old_summit = $this->summit_repository->getBySlug(trim($slug));
+                if(!is_null($old_summit)){
+                    throw new ValidationException(sprintf("slug %s already belongs to another summit", $slug));
+                }
+            }
+
             $summit = SummitFactory::build($data);
             // seed default event types
             foreach($this->default_event_types_repository->getAll() as $default_event_type){
@@ -1610,6 +1620,16 @@ final class SummitService extends AbstractService implements ISummitService
                             ['active_summit_id' => $active_summit->getId()]
                         )
                     );
+                }
+            }
+
+            $slug = $data['slug'] ?? null;
+            if(!empty($slug)){
+                // check if exist another summit with that slug
+
+                $old_summit = $this->summit_repository->getBySlug(trim($slug));
+                if(!is_null($old_summit) && $summit_id != $old_summit->getId()){
+                    throw new ValidationException(sprintf("slug %s already belongs to another summit", $slug));
                 }
             }
 

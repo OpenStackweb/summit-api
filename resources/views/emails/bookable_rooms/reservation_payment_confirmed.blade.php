@@ -5,20 +5,22 @@
 </head>
 <body>
 <p>
-    Dear {!! $reservation->getOwner()->getFullName() !!},
+    Dear {!! $owner_fullname !!}
 </p>
 <p>
-    Your Reservation for room {!! $reservation->getRoom()->getCompleteName() !!} has been confirmed.
+    Your Reservation for room {!! $room_complete_name !!} has been confirmed.
 </p>
 <p>
     Please take note of the reservation info bellow:
 </p>
 <p>
-    From  {!! $reservation->getLocalStartDatetime()->format("Y-m-d H:i:s") !!}
-    To    {!! $reservation->getLocalEndDatetime()->format("Y-m-d H:i:s") !!}
-    Room Capacity {!! $reservation->getRoom()->getCapacity() !!}
-    Amount  {!! $reservation->getAmount() !!}
-    Currency {!! $reservation->getCurrency() !!}
+    <ul>
+        <li>{!! $room_complete_name !!}</li>
+        <li>From {!! $reservation_start_datetime !!}</li>
+        <li>To {!! $reservation_end_datetime !!}</li>
+        <li>Room Capacity {!! $room_capacity !!}</li>
+        <li>Amount {!! $reservation_currency !!} {!! $reservation_amount !!}</li>
+    </ul>
 </p>
 <p>Cheers,<br/>{!! Config::get('app.tenant_name') !!} Support Team</p>
 </body>

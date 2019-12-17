@@ -5,10 +5,10 @@
 </head>
 <body>
 <p>
-    Dear {!! $reservation->getOwner()->getFullName() !!},
+    Dear {!! $owner_fullname !!}
 </p>
 <p>
-    Your Reservation for room {!! $reservation->getRoom()->getCompleteName() !!} has been created successfully.
+    Your Reservation for room {!! $room_complete_name !!} has been created successfully.
 </p>
 <p>Cheers,<br/>{!! Config::get('app.tenant_name') !!} Support Team</p>
 </body>

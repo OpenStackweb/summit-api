@@ -26,11 +26,12 @@ final class BookableRoomReservationRefundRequestedAdminEmail extends AbstractBoo
      */
     public function build()
     {
-        $subject = Config::get("mail.bookable_room_reservation_refund_requeted_admin_email_subject");
-        if(empty($subject))
-            $subject = sprintf("[%s] There is a new reservation refund request available!", Config::get('app.app_name'));
-
-        return $this->from(Config::get("mail.from"))
+        $subject = sprintf("[%s] There is a new reservation refund request available!", $this->summit_name);
+        $from = Config::get("mail.from");
+        if(empty($from)){
+            throw new \InvalidArgumentException("mail.from is not set");
+        }
+        return $this->from($from)
             ->to(Config::get("bookable_rooms.admin_email"))
             ->subject($subject)
             ->view('emails.bookable_rooms.reservation_refund_requested_admin');

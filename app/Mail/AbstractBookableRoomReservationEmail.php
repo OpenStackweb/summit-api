@@ -14,7 +14,6 @@
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use models\summit\SummitRoomReservation;
 /**
  * Class AbstractBookableRoomReservationEmailextends
@@ -25,18 +24,83 @@ abstract class AbstractBookableRoomReservationEmail extends Mailable
     use Queueable, SerializesModels;
 
     /**
-     * @var SummitRoomReservation
+     * @var string
      */
-    public $reservation;
+    public $owner_fullname;
 
     /**
-     * AbstractBookableRoomReservationEmailextends constructor.
+     * @var string
+     */
+    public $owner_email;
+
+    /**
+     * @var string
+     */
+    public $room_complete_name;
+
+    /**
+     * @var int
+     */
+    public $room_capacity;
+
+    /**
+     * @var string
+     */
+    public $reservation_start_datetime;
+
+    /**
+     * @var string
+     */
+    public $reservation_end_datetime;
+
+    /**
+     * @var string
+     */
+    public $reservation_created_datetime;
+
+    /**
+     * @var int
+     */
+    public $reservation_amount;
+
+    /**
+     * @var int
+     */
+    public $reservation_id;
+
+    /**
+     * @var int
+     */
+    public $reservation_refunded_amount;
+
+    /**
+     * @var string
+     */
+    public $reservation_currency;
+
+    /**
+     * @var string
+     */
+    public $summit_name;
+
+    /**
+     * AbstractBookableRoomReservationEmail constructor.
      * @param SummitRoomReservation $reservation
      */
     public function __construct(SummitRoomReservation $reservation)
     {
-        $this->reservation = $reservation;
+        $this->owner_fullname = $reservation->getOwner()->getFullName();
+        $this->owner_email = $reservation->getOwner()->getEmail();
+        $this->room_complete_name = $reservation->getRoom()->getCompleteName();
+        $this->reservation_start_datetime = $reservation->getLocalStartDatetime()->format("Y-m-d H:i:s");
+        $this->reservation_end_datetime = $reservation->getLocalEndDatetime()->format("Y-m-d H:i:s");
+        $this->reservation_created_datetime = $reservation->getCreated()->format("Y-m-d H:i:s");
+        $this->reservation_amount = $reservation->getAmount();
+        $this->reservation_currency = $reservation->getCurrency();
+        $this->reservation_id = $reservation->getId();
+        $this->room_capacity = $reservation->getRoom()->getCapacity();
+        $this->summit_name = $reservation->getRoom()->getSummit()->getName();
+        $this->reservation_refunded_amount = $reservation->getRefundedAmount();
     }
-
 
 }

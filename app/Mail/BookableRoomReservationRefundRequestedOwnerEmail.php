@@ -25,6 +25,15 @@ final class BookableRoomReservationRefundRequestedOwnerEmail extends AbstractBoo
      */
     public function build()
     {
-        return $this->view('view.name');
+
+        $subject = sprintf("[%s] Your Room Reservation Refund is requested!", $this->summit_name);
+        $from = Config::get("mail.from");
+        if(empty($from)){
+            throw new \InvalidArgumentException("mail.from is not set");
+        }
+        return $this->from($from)
+            ->to($this->owner_email)
+            ->subject($subject)
+            ->view('emails.bookable_rooms.reservation_refund_requested_owner');
     }
 }

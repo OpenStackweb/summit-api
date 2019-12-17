@@ -8,17 +8,19 @@
     There is a new reservation refund request available to process
 </p>
 <p>
-    Please take note of the reservation info bellow:
+    Please take note of the reservation info below:
 </p>
 <p>
-    Id  {!! $reservation->getId()!!}
-    Owner  {!! $reservation->getOwner()->getFullName()!!}
-    Email  {!! $reservation->getOwner()->getEmail()!!}
-    From  {!! $reservation->getLocalStartDatetime()->format("Y-m-d H:i:s") !!}
-    To    {!! $reservation->getLocalEndDatetime()->format("Y-m-d H:i:s") !!}
-    Created {!! $reservation->getCreated()->format("Y-m-d H:i:s") !!}
-    Amount  {!! $reservation->getAmount() !!}
-    Currency {!! $reservation->getCurrency() !!}
+    <ul>
+    <li>Id {!! $reservation_id!!}</li>
+    <li>{!! $room_complete_name !!}</li>
+    <li>Owner {!! $owner_fullname!!}</li>
+    <li>Email {!! $owner_email !!}</li>
+    <li>From {!! $reservation_start_datetime !!}</li>
+    <li>To {!! $reservation_end_datetime !!}</li>
+    <li>Created {!! $reservation_created_datetime !!}</li>
+    <li>Amount {!! $reservation_currency !!} {!! $reservation_amount !!}</li>
+</ul>
 </p>
 <p>Cheers,<br/>{!! Config::get('app.tenant_name') !!} Support Team</p>
 </body>

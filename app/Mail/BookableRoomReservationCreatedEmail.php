@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Config;
  */
 final class BookableRoomReservationCreatedEmail extends AbstractBookableRoomReservationEmail
 {
+
     /**
      * Build the message.
      *
@@ -25,12 +26,13 @@ final class BookableRoomReservationCreatedEmail extends AbstractBookableRoomRese
      */
     public function build()
     {
-        $subject = Config::get("mail.bookable_room_reservation_created_email_subject");
-        if(empty($subject))
-            $subject = sprintf("[%s] Room Reservation Created", Config::get('app.app_name'));
-
-        return $this->from(Config::get("mail.from"))
-            ->to($this->reservation->getOwner()->getEmail())
+        $subject = sprintf("[%s] Room Reservation Created", $this->summit_name);
+        $from = Config::get("mail.from");
+        if(empty($from)){
+            throw new \InvalidArgumentException("mail.from is not set");
+        }
+        return $this->from($from)
+            ->to($this->owner_email)
             ->subject($subject)
             ->view('emails.bookable_rooms.reservation_created');
     }

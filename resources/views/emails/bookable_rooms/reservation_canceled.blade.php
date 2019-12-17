@@ -5,20 +5,21 @@
 </head>
 <body>
 <p>
-    Dear {!! $reservation->getOwner()->getFullName() !!},
+    Dear {!! $owner_fullname !!}
 </p>
 <p>
-    Your Reservation for room {!! $reservation->getRoom()->getCompleteName() !!} got canceled because you did not take any action to pay it.
+    Your Reservation for room {!! $room_complete_name !!} got canceled because you did not take any action to pay it.
 </p>
 <p>
-    Id  {!! $reservation->getId()!!}
-    Owner  {!! $reservation->getOwner()->getFullName()!!}
-    Email  {!! $reservation->getOwner()->getEmail()!!}
-    From  {!! $reservation->getLocalStartDatetime()->format("Y-m-d H:i:s") !!}
-    To    {!! $reservation->getLocalEndDatetime()->format("Y-m-d H:i:s") !!}
-    Created {!! $reservation->getCreated()->format("Y-m-d H:i:s") !!}
-    Amount  {!! $reservation->getAmount() !!}
-    Currency {!! $reservation->getCurrency() !!}
+<ul>
+    <li>Id {!! $reservation_id !!}</li>
+    <li>Owner {!! $owner_fullname!!}</li>
+    <li>Email {!! $owner_email!!}</li>
+    <li>From {!! $reservation_start_datetime !!}</li>
+    <li>To {!! $reservation_end_datetime !!}</li>
+    <li>Created {!!$reservation_created_datetime !!}</li>
+    <li>Amount {!! $reservation_currency !!} {!! $reservation_amount !!}</li>
+</ul>
 </p>
 <p>Cheers,<br/>{!! Config::get('app.tenant_name') !!} Support Team</p>
 </body>

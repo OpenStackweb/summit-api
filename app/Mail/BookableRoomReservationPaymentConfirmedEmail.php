@@ -26,12 +26,13 @@ final class BookableRoomReservationPaymentConfirmedEmail extends AbstractBookabl
      */
     public function build()
     {
-        $subject = Config::get("mail.bookable_room_reservation_payment_confirmed_email_subject");
-        if(empty($subject))
-            $subject = sprintf("[%s] Your Room Reservation is confirmed!", Config::get('app.app_name'));
-
-        return $this->from(Config::get("mail.from"))
-            ->to($this->reservation->getOwner()->getEmail())
+        $subject = sprintf("[%s] Your Room Reservation is confirmed!", $this->summit_name);
+        $from = Config::get("mail.from");
+        if(empty($from)){
+            throw new \InvalidArgumentException("mail.from is not set");
+        }
+        return $this->from($from)
+            ->to($this->owner_email)
             ->subject($subject)
             ->view('emails.bookable_rooms.reservation_payment_confirmed');
     }

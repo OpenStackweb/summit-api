@@ -26,12 +26,13 @@ final class BookableRoomReservationRefundAcceptedEmail extends AbstractBookableR
      */
     public function build()
     {
-        $subject = Config::get("mail.bookable_room_reservation_refund_accepted_email_subject");
-        if(empty($subject))
-            $subject = sprintf("[%s] Your Room Reservation Refund is Accepted!", Config::get('app.app_name'));
-
-        return $this->from(Config::get("mail.from"))
-            ->to($this->reservation->getOwner()->getEmail())
+        $subject = sprintf("[%s] Your Room Reservation Refund is Accepted!", $this->summit_name);
+        $from = Config::get("mail.from");
+        if(empty($from)){
+            throw new \InvalidArgumentException("mail.from is not set");
+        }
+        return $this->from($from)
+            ->to($this->owner_email)
             ->subject($subject)
             ->view('emails.bookable_rooms.reservation_refund_accepted');
     }

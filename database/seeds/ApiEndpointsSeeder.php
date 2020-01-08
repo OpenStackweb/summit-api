@@ -2068,6 +2068,15 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'get-sent-notifications',
+                'route' => '/api/v1/summits/{id}/notifications/sent',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadNotifications, $current_realm)
+                ],
+            ],
+            [
                 'name' => 'get-notifications-csv',
                 'route' => '/api/v1/summits/{id}/notifications/csv',
                 'http_method' => 'GET',

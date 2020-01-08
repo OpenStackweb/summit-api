@@ -75,6 +75,12 @@ Route::group([
                     });
                 });
             });
+
+            // notifications
+            Route::group(['prefix' => 'notifications'], function () {
+                Route::get('sent', 'OAuth2SummitNotificationsApiController@getAllApprovedByUser');
+            });
+
         });
     });
 

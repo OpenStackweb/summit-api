@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\Repositories\IPushNotificationRepository;
+use models\main\Member;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
@@ -29,5 +30,28 @@ interface ISummitNotificationRepository extends IPushNotificationRepository
      * @param Order|null $order
      * @return PagingResponse
      */
-    public function getAllByPageBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+    public function getAllByPageBySummit
+    (
+        Summit $summit,
+        PagingInfo $paging_info,
+        Filter $filter = null,
+        Order $order = null
+    ):PagingResponse;
+
+    /**
+     * @param Member|null $current_member
+     * @param Summit $summit
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getAllByPageByUserBySummit
+    (
+        ?Member $current_member,
+        Summit $summit,
+        PagingInfo $paging_info,
+        Filter $filter = null,
+        Order $order = null
+    ):PagingResponse;
 }

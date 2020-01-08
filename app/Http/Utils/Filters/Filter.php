@@ -40,10 +40,10 @@ final class Filter
     }
 
     /**
-     * @param FilterElement $filter
+     * @param FilterElement|array $filter
      * @return $this
      */
-    public function addFilterCondition(FilterElement $filter)
+    public function addFilterCondition($filter)
     {
         $this->filters[] = $filter;
         return $this;

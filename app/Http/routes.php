@@ -194,6 +194,7 @@ Route::group([
 
             // notifications
             Route::group(['prefix' => 'notifications'], function () {
+                Route::get('sent', 'OAuth2SummitNotificationsApiController@getAllApprovedByUser');
                 Route::get('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' =>  'OAuth2SummitNotificationsApiController@getAll']);
                 Route::get('csv', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' =>  'OAuth2SummitNotificationsApiController@getAllCSV']);
                 Route::post('', [ 'middleware' => 'auth.user:administrators|summit-front-end-administrators', 'uses' =>  'OAuth2SummitNotificationsApiController@addPushNotification']);

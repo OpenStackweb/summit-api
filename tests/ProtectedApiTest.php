@@ -78,7 +78,7 @@ class AccessTokenServiceStub implements IAccessTokenService
                 'client_id'           => '1',
                 'audience'            => $realm,
                 'user_id'             => '1',
-                'user_external_id'    => '11624',
+                'user_external_id'    => '13867',
                 'expires_in'          => 3600,
                 'application_type'    => 'WEB_APPLICATION',
                 'allowed_return_uris' => '',

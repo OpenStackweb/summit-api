@@ -11,19 +11,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Query\Expr\Join;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use models\main\Member;
 use models\summit\ISummitNotificationRepository;
 use models\summit\Summit;
 use models\summit\SummitPushNotification;
 use App\Repositories\SilverStripeDoctrineRepository;
+use models\summit\SummitPushNotificationChannel;
+use utils\DoctrineFilterMapping;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
 use utils\PagingResponse;
-
 /**
  * Class DoctrineSummitNotificationRepository
  * @package App\Repositories\Summit
@@ -45,6 +47,12 @@ final class DoctrineSummitNotificationRepository
             'created'   => 'n.created:datetime_epoch',
             'is_sent'   => 'n.is_sent:json_boolean',
             'approved'  => 'n.approved:json_boolean',
+            'recipient_id'  => new DoctrineFilterMapping("
+                r.id :operator :value
+            "),
+            'group_id'  => new DoctrineFilterMapping("
+                g.id :operator :value
+            ")
         ];
     }
 
@@ -61,23 +69,63 @@ final class DoctrineSummitNotificationRepository
     }
 
     /**
+     * @param Member|null $current_member
      * @param Summit $summit
      * @param PagingInfo $paging_info
      * @param Filter|null $filter
      * @param Order|null $order
      * @return PagingResponse
      */
-    public function getAllByPageBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null)
+    public function getAllByPageByUserBySummit
+    (
+        ?Member $current_member,
+        Summit $summit,
+        PagingInfo $paging_info,
+        Filter $filter = null,
+        Order $order = null
+    ):PagingResponse
     {
-        $query = $this->getEntityManager()->createQueryBuilder()
-            ->select("n")
-            ->from(SummitPushNotification::class, "n")
-            ->leftJoin('n.summit_event', 'e')
-            ->join('n.summit', 's', Join::WITH, " s.id = :summit_id")
-            ->setParameter('summit_id', $summit->getId());
+        $query = $this->createBaseQuery($summit);
+
+        $query->orWhere(sprintf("n.channel = '%s'", SummitPushNotificationChannel::Everyone));
+        $query->orWhere(sprintf("n.channel = '%s'", SummitPushNotificationChannel::Summit));
+
+        if(!is_null($current_member)){
+
+            $groups_ids = $current_member->getGroupsIds();
+            $events_ids = $current_member->getScheduledEventsIds($summit);
+
+            $query->orWhere(sprintf("r = :current_member and n.channel = '%s'", SummitPushNotificationChannel::Members))->setParameter("current_member", $current_member);
+
+            if(count($groups_ids) > 0){
+                $query->orWhere(sprintf("g.id in (:groups_ids) and n.channel = '%s'", SummitPushNotificationChannel::Group))->setParameter("groups_ids", $groups_ids);
+            }
+
+            if(count($events_ids) > 0){
+                $query->orWhere(sprintf("e.id in (:events_id) and n.channel = '%s'", SummitPushNotificationChannel::Event))->setParameter('events_id', $events_ids);
+                $query->orWhere(sprintf("n.channel = '%s'", SummitPushNotificationChannel::Attendees));
+            }
+
+            if($current_member->hasSpeaker() && $current_member->getSpeaker()->isSpeakerOfSummit($summit)){
+                $query->orWhere(sprintf("n.channel = '%s'", SummitPushNotificationChannel::Speakers));
+            }
+        }
+        return $this->applyPaginationLogic($query, $paging_info, $filter, $order);
+    }
+
+    /**
+     * @param QueryBuilder $query
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    private function applyPaginationLogic(QueryBuilder $query,
+                                          PagingInfo $paging_info,
+                                          Filter $filter = null,
+                                          Order $order = null):PagingResponse{
 
         if (!is_null($filter)) {
-
             $filter->apply2Query($query, $this->getFilterMappings());
         }
 
@@ -106,6 +154,40 @@ final class DoctrineSummitNotificationRepository
             $paging_info->getLastPage($total),
             $data
         );
+    }
+    /**
+     * @param Summit $summit
+     * @return QueryBuilder
+     */
+    private function createBaseQuery( Summit $summit):QueryBuilder{
+        return $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("n")
+            ->from(SummitPushNotification::class, "n")
+            ->leftJoin('n.summit_event', 'e')
+            ->leftJoin('n.group', 'g')
+            ->leftJoin('n.recipients', 'r')
+            ->join('n.summit', 's', Join::WITH, " s.id = :summit_id")
+            ->setParameter('summit_id', $summit->getId());
+    }
+
+
+    /**
+     * @param Summit $summit
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getAllByPageBySummit
+    (
+        Summit $summit,
+        PagingInfo $paging_info,
+        Filter $filter = null,
+        Order $order = null
+    ):PagingResponse
+    {
+        return $this->applyPaginationLogic($this->createBaseQuery($summit), $paging_info, $filter, $order);
     }
 
     /**

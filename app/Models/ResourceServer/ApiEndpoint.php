@@ -188,6 +188,11 @@ class ApiEndpoint extends ResourceServerEntity implements IApiEndpoint
     private $scopes;
 
     /**
+     * @ORM\OneToMany(targetEntity="ApiEndpointAuthzGroup", mappedBy="api_endpoint", cascade={"persist"})
+     */
+    private $authz_groups;
+
+    /**
      * @ORM\Column(name="name", type="string")
      * @var string
      */
@@ -250,6 +255,7 @@ class ApiEndpoint extends ResourceServerEntity implements IApiEndpoint
         $this->rate_limit       = 0;
         $this->rate_limit_decay = 0;
         $this->scopes           = new ArrayCollection();
+        $this->authz_groups     = new ArrayCollection();
     }
 
     /**
@@ -315,5 +321,26 @@ class ApiEndpoint extends ResourceServerEntity implements IApiEndpoint
     {
         $this->rate_limit_decay = $rate_limit_decay;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getAuthzGroups()
+    {
+        return $this->authz_groups;
+    }
+
+    /**
+     * @param string $slug
+     * @return ApiEndpointAuthzGroup
+     */
+    public function addAuthGroup(string $slug):ApiEndpointAuthzGroup{
+        $authz_group = new ApiEndpointAuthzGroup();
+        $authz_group->setSlug(trim($slug));
+        $authz_group->setApiEndpoint($this);
+        $this->authz_groups->add($authz_group);
+        return $authz_group;
+    }
+
 
 }

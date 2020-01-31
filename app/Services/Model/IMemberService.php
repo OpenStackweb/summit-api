@@ -48,4 +48,13 @@ interface IMemberService
      * @return void
      */
     public function deleteRSVP(Member $member, $rsvp_id);
+
+    /**
+     * @param $user_external_id
+     * @param string $email
+     * @param string $first_name
+     * @param string $last_name
+     * @return Member
+     */
+    public function registerExternalUser($user_external_id, string $email, string $first_name, string $last_name):Member;
 }

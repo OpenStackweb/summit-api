@@ -76,16 +76,21 @@ final class ApiScopesSeeder extends Seeder
                 'short_description' => 'Write Summit Data',
                 'description' => 'Grants write access for Summits Data',
             ],
-            array(
+            [
+                'name' => sprintf(SummitScopes::WriteRegistrationData, $current_realm),
+                'short_description' => 'Write Registration Data',
+                'description' => 'Grants write access for Registration Data',
+            ],
+            [
                 'name' => sprintf(SummitScopes::WriteEventData, $current_realm),
                 'short_description' => 'Write Summit Events',
                 'description' => 'Grants write access for Summits Events',
-            ),
-            array(
+            ],
+            [
                 'name' => sprintf(SummitScopes::WritePresentationData, $current_realm),
                 'short_description' => 'Write Summit Presentations',
                 'description' => 'Grants write access for Summits Presentations',
-            ),
+            ],
             array(
                 'name' => sprintf('%s/summits/delete-event', $current_realm),
                 'short_description' => 'Delete Summit Events',
@@ -96,26 +101,26 @@ final class ApiScopesSeeder extends Seeder
                 'short_description' => 'Publish/UnPublish Summit Events',
                 'description' => 'Grants Publish/UnPublish access for Summits Events',
             ),
-            array(
+            [
                 'name' => sprintf('%s/summits/read-external-orders', $current_realm),
                 'short_description' => 'Allow to read External Orders',
                 'description' => 'Allow to read External Orders',
-            ),
-            array(
+            ],
+            [
                 'name' => sprintf('%s/summits/confirm-external-orders', $current_realm),
                 'short_description' => 'Allow to confirm External Orders',
                 'description' => 'Allow to confirm External Orders',
-            ),
-            array(
+            ],
+            [
                 'name' => sprintf('%s/summits/write-videos', $current_realm),
                 'short_description' => 'Allow to write presentation videos',
                 'description' => 'Allow to write presentation videos',
-            ),
-            array(
+            ],
+            [
                 'name' => sprintf('%s/summits/read-notifications', $current_realm),
                 'short_description' => 'Allow to read summit notifications',
                 'description' => 'Allow to read summit notifications',
-            ),
+            ],
             [
                 'name' => sprintf(SummitScopes::WriteSpeakersData, $current_realm),
                 'short_description' => 'Write Speakers Data',
@@ -195,6 +200,71 @@ final class ApiScopesSeeder extends Seeder
                 'name' => sprintf(SummitScopes::WriteMyBookableRoomsReservationData, $current_realm),
                 'short_description' => 'Write my bookable rooms reservations',
                 'description' => 'Write my bookable rooms reservations',
+            ],
+            [
+                'name' => sprintf(SummitScopes::CreateOfflineRegistrationOrders, $current_realm),
+                'short_description' => 'Create summit offline registration orders',
+                'description' => 'Create summit offline registration orders',
+            ],
+            [
+                'name' => sprintf(SummitScopes::CreateRegistrationOrders, $current_realm),
+                'short_description' => 'Create summit registration orders',
+                'description' => 'Create summit registration orders',
+            ],
+            [
+                'name' => sprintf(SummitScopes::DeleteRegistrationOrders, $current_realm),
+                'short_description' => 'Delete summit registration orders',
+                'description' => 'Delete summit registration orders',
+            ],
+            [
+                'name' => sprintf(SummitScopes::DeleteMyRegistrationOrders, $current_realm),
+                'short_description' => 'Delete my summit registration orders',
+                'description' => 'Delete my summit registration orders',
+            ],
+            [
+                'name' => sprintf(SummitScopes::ReadMyRegistrationOrders, $current_realm),
+                'short_description' => 'Read my summit registration orders',
+                'description' => 'Read my summit registration orders',
+            ],
+            [
+                'name' => sprintf(SummitScopes::ReadRegistrationOrders, $current_realm),
+                'short_description' => 'Read summit registration orders',
+                'description' => 'Read summit registration orders',
+            ],
+            [
+                'name' => sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                'short_description' => 'Update summit registration orders',
+                'description' => 'Update summit registration orders',
+            ],
+            [
+                'name' => sprintf(SummitScopes::UpdateMyRegistrationOrders, $current_realm),
+                'short_description' => 'Update my summit registration orders',
+                'description' => 'Update my summit registration orders',
+            ],
+            [
+                'name' => sprintf(SummitScopes::UpdateRegistrationOrdersBadges, $current_realm),
+                'short_description' => 'Update  summit registration orders badges',
+                'description' => 'Update summit registration orders badges',
+            ],
+            [
+                'name' => sprintf(SummitScopes::PrintRegistrationOrdersBadges, $current_realm),
+                'short_description' => 'print summit registration orders badges',
+                'description' => 'print summit registration orders badges',
+            ],
+            [
+                'name' => sprintf(SummitScopes::ReadMyBadgeScan, $current_realm),
+                'short_description' => 'read my badge scans',
+                'description' => 'read my badge scans',
+            ],
+            [
+                'name' => sprintf(SummitScopes::ReadBadgeScan, $current_realm),
+                'short_description' => 'read badge scans',
+                'description' => 'read badge scans',
+            ],
+            [
+                'name' => sprintf(SummitScopes::WriteBadgeScan, $current_realm),
+                'short_description' => 'write badge scans',
+                'description' => 'write badge scans',
             ],
         ];
 
@@ -321,11 +391,16 @@ final class ApiScopesSeeder extends Seeder
         $api           = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'companies']);
 
         $scopes = [
-            array(
+            [
                 'name'              => sprintf('%s/companies/read', $current_realm),
                 'short_description' => 'Get Companies Data',
                 'description'       => 'Grants read only access for Companies Data',
-            ),
+            ],
+            [
+                'name'              => sprintf('%s/companies/write', $current_realm),
+                'short_description' => 'Write Companies Data',
+                'description'       => 'Grants write only access for Companies Data',
+            ],
         ];
 
         foreach ($scopes as $scope_info) {

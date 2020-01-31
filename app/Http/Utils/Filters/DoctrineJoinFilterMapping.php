@@ -102,4 +102,5 @@ class DoctrineJoinFilterMapping extends FilterMapping
         }
         return $where;
     }
+
 }

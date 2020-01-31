@@ -580,22 +580,19 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     public function testCurrentSummitPublishedEventsBySummitType()
     {
-        $params = array
-        (
-            'id' => 6,
-            'expand' => 'feedback',
-            'filter' => array
-            (
-                'summit_type_id==2',
-            )
-        );
+        $params = [
 
-        $headers = array
-        (
+            'id' => 6,
+            'expand' => 'feedback,location,location.venue,location.floor',
+            'filter' => [
+                'summit_type_id==2',
+            ]
+        ];
+
+        $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
             "CONTENT_TYPE" => "application/json"
-        );
-
+        ];
 
         $response = $this->action
         (

@@ -35,13 +35,16 @@ final class FilterParser
 
             $f = null;
             // parse OR filters
-            $or_filters = explode(',', $filter);
+            $or_filters = preg_split("|(?<!\\\),|", $filter);
+
 
             if (count($or_filters) > 1) {
                 $f = [];
                 foreach ($or_filters as $of) {
 
                     //single filter
+                    if(empty($of)) continue;
+
                     preg_match('/[=<>][=>@]{0,1}/', $of, $matches);
 
                     if (count($matches) != 1)

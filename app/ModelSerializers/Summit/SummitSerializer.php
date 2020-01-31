@@ -1,5 +1,4 @@
 <?php namespace ModelSerializers;
-
 /**
  * Copyright 2016 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +14,7 @@
 use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Security\SummitScopes;
 use Illuminate\Support\Facades\Config;
+use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\Summit;
 use DateTime;
 /**
@@ -109,7 +109,7 @@ class SummitSerializer extends SilverStripeSerializer
         if(in_array('ticket_types', $relations)) {
             $ticket_types = [];
             foreach ($summit->getTicketTypes() as $ticket) {
-                $ticket_types[] = SerializerRegistry::getInstance()->getSerializer($ticket)->serialize($expand);
+                $ticket_types[] = SerializerRegistry::getInstance()->getSerializer($ticket)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'ticket_types'));
             }
             $values['ticket_types'] = $ticket_types;
         }
@@ -127,7 +127,12 @@ class SummitSerializer extends SilverStripeSerializer
         if(in_array('locations', $relations)) {
             $locations = [];
             foreach ($summit->getLocations() as $location) {
-                $locations[] = SerializerRegistry::getInstance()->getSerializer($location)->serialize($expand);
+                $locations[] = SerializerRegistry::getInstance()->getSerializer($location)->serialize(
+                    // is user is already expanding by schedule, its the total expand of the venues
+                    str_contains('schedule', $expand)?
+                        'floors,rooms':
+                        AbstractSerializer::filterExpandByPrefix($expand, 'locations')
+                );
             }
             $values['locations'] = $locations;
         }
@@ -136,7 +141,7 @@ class SummitSerializer extends SilverStripeSerializer
         if(in_array('wifi_connections', $relations)) {
             $wifi_connections = [];
             foreach ($summit->getWifiConnections() as $wifi_connection) {
-                $wifi_connections[] = SerializerRegistry::getInstance()->getSerializer($wifi_connection)->serialize($expand);
+                $wifi_connections[] = SerializerRegistry::getInstance()->getSerializer($wifi_connection)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'wifi_connections'));
             }
             $values['wifi_connections'] = $wifi_connections;
         }
@@ -145,19 +150,20 @@ class SummitSerializer extends SilverStripeSerializer
         if(in_array('selection_plans', $relations)) {
             $selection_plans = [];
             foreach ($summit->getSelectionPlans() as $selection_plan) {
-                $selection_plans[] = SerializerRegistry::getInstance()->getSerializer($selection_plan)->serialize($expand);
+                $selection_plans[] = SerializerRegistry::getInstance()->getSerializer($selection_plan)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'selection_plans'));
             }
             $values['selection_plans'] = $selection_plans;
         }
 
         if (!empty($expand)) {
-            $expand = explode(',', $expand);
-            foreach ($expand as $relation) {
-                switch (trim($relation)) {
+
+            foreach (explode(',', $expand) as $relation) {
+                $relation = trim($relation);
+                switch ($relation) {
                     case 'event_types':{
                         $event_types = [];
                         foreach ($summit->getEventTypes() as $event_type) {
-                            $event_types[] = SerializerRegistry::getInstance()->getSerializer($event_type)->serialize();
+                            $event_types[] = SerializerRegistry::getInstance()->getSerializer($event_type)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['event_types'] = $event_types;
                     }
@@ -165,7 +171,7 @@ class SummitSerializer extends SilverStripeSerializer
                     case 'tracks':{
                         $presentation_categories = [];
                         foreach ($summit->getPresentationCategories() as $cat) {
-                            $presentation_categories[] = SerializerRegistry::getInstance()->getSerializer($cat)->serialize();
+                            $presentation_categories[] = SerializerRegistry::getInstance()->getSerializer($cat)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['tracks'] = $presentation_categories;
                     }
@@ -174,7 +180,7 @@ class SummitSerializer extends SilverStripeSerializer
                         // track_groups
                         $track_groups = [];
                         foreach ($summit->getCategoryGroups() as $group) {
-                            $track_groups[] = SerializerRegistry::getInstance()->getSerializer($group)->serialize();
+                            $track_groups[] = SerializerRegistry::getInstance()->getSerializer($group)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['track_groups'] = $track_groups;
                     }
@@ -182,7 +188,7 @@ class SummitSerializer extends SilverStripeSerializer
                     case 'sponsors':{
                         $sponsors = [];
                         foreach ($summit->getSponsors() as $company) {
-                            $sponsors[] = SerializerRegistry::getInstance()->getSerializer($company)->serialize();
+                            $sponsors[] = SerializerRegistry::getInstance()->getSerializer($company)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['sponsors'] = $sponsors;
                     }
@@ -193,7 +199,7 @@ class SummitSerializer extends SilverStripeSerializer
                             $speakers[] =
                                 SerializerRegistry::getInstance()->getSerializer($speaker)->serialize
                                 (
-                                    null, [], [],
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation), [], [],
                                     [
                                         'summit_id' => $summit->getId(),
                                         'published' => true
@@ -267,7 +273,7 @@ class SummitSerializer extends SilverStripeSerializer
                         {
                             unset($values['type_id']);
                             $values['type'] = $summit->hasType() ?
-                                SerializerRegistry::getInstance()->getSerializer($summit->getType())->serialize() : null;
+                                SerializerRegistry::getInstance()->getSerializer($summit->getType())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation)) : null;
                         }
                     }
                     break;

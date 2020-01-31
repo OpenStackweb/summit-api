@@ -14,8 +14,6 @@
  **/
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
-use Request;
-
 /**
  * Class PagingResponse
  * @package utils
@@ -124,5 +122,12 @@ final class PagingResponse
             'last_page'    =>  $this->last_page,
             'data'         =>  $items,
         ];
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasMoreItems():bool {
+        return $this->page < $this->last_page;
     }
 }

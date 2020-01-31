@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\SelectionPlan;
+use Libs\ModelSerializers\AbstractSerializer;
 use ModelSerializers\SerializerRegistry;
 use ModelSerializers\SilverStripeSerializer;
 /**
@@ -56,18 +57,19 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
         if (!empty($expand)) {
             $relations = explode(',', $expand);
             foreach ($relations as $relation) {
-                switch (trim($relation)) {
+                $relation = trim($relation);
+                switch ($relation) {
                     case 'track_groups':{
                         $category_groups  = [];
                         foreach ($selection_plan->getCategoryGroups() as $group) {
-                            $category_groups[] = SerializerRegistry::getInstance()->getSerializer($group)->serialize($expand);
+                            $category_groups[] = SerializerRegistry::getInstance()->getSerializer($group)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['track_groups'] = $category_groups;
                     }
                     break;
                     case 'summit':{
                         unset($values['summit_id']);
-                        $values['summit'] = SerializerRegistry::getInstance()->getSerializer($selection_plan->getSummit())->serialize();
+                        $values['summit'] = SerializerRegistry::getInstance()->getSerializer($selection_plan->getSummit())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                     break;
                 }

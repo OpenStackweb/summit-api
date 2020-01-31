@@ -31,6 +31,14 @@ class Group extends SilverstripeBaseModel
     }
 
     /**
+     * @param Member $member
+     */
+    public function addMember(Member $member){
+        if($this->members->contains($member)) return;
+        $this->members->add($member);
+    }
+
+    /**
      * @return string
      */
     public function getTitle()

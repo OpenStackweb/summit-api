@@ -141,12 +141,19 @@ abstract class AbstractSerializer implements IModelSerializer
             foreach ($mappings as $attribute => $mapping) {
                 $mapping = preg_split('/:/', $mapping);
                 if(count($fields) > 0 && !in_array($mapping[0], $fields)) continue;
-                $value = null;
+                $value        = null;
+                $method_found = false;
                 foreach($method_prefix as $prefix){
                     if(method_exists($this->object, $prefix.$attribute)){
-                        $value   = call_user_func([$this->object, $prefix.$attribute ]);
+                        $value = call_user_func([$this->object, $prefix.$attribute ]);
+                        $method_found = true;
                         break;
                     }
+                }
+
+                if(!$method_found){
+                    //try dynamic one
+                    $value = call_user_func([$this->object, 'get'.$attribute ]);
                 }
 
                 if(count($mapping) > 1)
@@ -155,40 +162,40 @@ abstract class AbstractSerializer implements IModelSerializer
                     switch(strtolower($mapping[1]))
                     {
                         case 'datetime_epoch':
-                        {
-                            if(!is_null($value)) {
-                                 $value = $value->getTimestamp();
+                            {
+                                if(!is_null($value)) {
+                                    $value = $value->getTimestamp();
+                                }
                             }
-                        }
                             break;
                         case 'json_string':
-                        {
-                            $value = JsonUtils::toJsonString($value);
-                        }
+                            {
+                                $value = JsonUtils::toJsonString($value);
+                            }
                             break;
                         case 'json_boolean':
-                        {
-                            $value = JsonUtils::toJsonBoolean($value);
-                        }
+                            {
+                                $value = JsonUtils::toJsonBoolean($value);
+                            }
                             break;
                         case 'json_int':
-                        {
-                            $value = JsonUtils::toJsonInt($value);
-                        }
+                            {
+                                $value = JsonUtils::toJsonInt($value);
+                            }
                             break;
                         case 'json_float':
-                        {
-                            $value = JsonUtils::toJsonFloat($value);
-                        }
+                            {
+                                $value = JsonUtils::toJsonFloat($value);
+                            }
                             break;
                         case 'json_obfuscated_email':
-                        {
-                            $value = JsonUtils::toObfuscatedEmail($value);
-                        }
+                            {
+                                $value = JsonUtils::toObfuscatedEmail($value);
+                            }
                         case 'json_url':{
                             $value = JsonUtils::encodeUrl($value);
                         }
-                        break;
+                            break;
                     }
                 }
                 $new_values[$mapping[0]] = $value;
@@ -208,13 +215,27 @@ abstract class AbstractSerializer implements IModelSerializer
 
         $expand_to    = explode(',', $expand_str);
         $filtered_expand  = array_filter($expand_to, function($element) use($prefix){
-            return preg_match('/^' . preg_quote($prefix, '/') . '/', strtolower(trim($element))) > 0;
+            return preg_match('/^' . preg_quote($prefix, '/') . '\./', strtolower(trim($element))) > 0;
         });
         $res = '';
         foreach($filtered_expand as $filtered_expand_elem){
             if(strlen($res) > 0) $res .= ',';
-            $res .= explode('.', strtolower(trim($filtered_expand_elem)))[1];
+            $res .= str_replace_first($prefix.".","", strtolower(trim($filtered_expand_elem)));
         }
         return $res;
+    }
+
+    /**
+     * @param string $prefix
+     * @param string $expand
+     * @return string
+     */
+    protected static function getExpandForPrefix(string $prefix, string $expand):string{
+        $prefix_expand = [];
+        foreach(explode(',', $expand) as $e){
+            if(strstr($e, $prefix.".")!==false)
+                $prefix_expand[] =  str_replace($prefix.".","", $e);
+        }
+        return implode(',', $prefix_expand);
     }
 }

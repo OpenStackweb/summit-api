@@ -21,6 +21,22 @@ final class SummitScopes
     const ReadSummitData                      = '%s/summits/read';
     const ReadAllSummitData                   = '%s/summits/read/all';
 
+    // registration
+    const CreateRegistrationOrders            = '%s/summits/registration-orders/create';
+    const CreateOfflineRegistrationOrders     = '%s/summits/registration-orders/create/offline';
+    const UpdateRegistrationOrders            = '%s/summits/registration-orders/update';
+    const UpdateRegistrationOrdersBadges      = '%s/summits/registration-orders/badges/update';
+    const PrintRegistrationOrdersBadges       = '%s/summits/registration-orders/badges/print';
+    const UpdateMyRegistrationOrders          = '%s/summits/registration-orders/update/me';
+    const DeleteRegistrationOrders            = '%s/summits/registration-orders/delete';
+    const DeleteMyRegistrationOrders          = '%s/summits/registration-orders/delete/me';
+    const ReadMyRegistrationOrders            = '%s/summits/registration-orders/read/me';
+    const ReadRegistrationOrders              = '%s/summits/registration-orders/read';
+    const WriteBadgeScan                      = '%s/summits/badge-scans/write';
+    const ReadBadgeScan                       = '%s/summits/badge-scans/read';
+    const ReadMyBadgeScan                     = '%s/summits/badge-scans/read/me';
+    const WriteRegistrationData               = '%s/summits/registration/write';
+
     // bookable rooms
     const ReadBookableRoomsData               = '%s/bookable-rooms/read';
     const WriteMyBookableRoomsReservationData = '%s/bookable-rooms/my-reservations/write';

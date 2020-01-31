@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SummitVenueRoom;
 use ModelSerializers\SerializerRegistry;
 /**
@@ -39,18 +41,19 @@ class SummitVenueRoomSerializer extends SummitAbstractLocationSerializer
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);
             foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
+                $relation = trim($relation);
+                switch ($relation) {
                     case 'floor': {
                         if($room->hasFloor()) {
                             unset($values['floor_id']);
-                            $values['floor'] = SerializerRegistry::getInstance()->getSerializer($room->getFloor())->serialize();
+                            $values['floor'] = SerializerRegistry::getInstance()->getSerializer($room->getFloor())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                     }
                     break;
                     case 'venue': {
                         if($room->hasVenue()) {
                             unset($values['venue_id']);
-                            $values['venue'] = SerializerRegistry::getInstance()->getSerializer($room->getVenue())->serialize();
+                            $values['venue'] = SerializerRegistry::getInstance()->getSerializer($room->getVenue())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                     }
                     break;

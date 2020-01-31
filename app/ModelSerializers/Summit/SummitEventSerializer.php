@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\AbstractSerializer;
 use libs\utils\JsonUtils;
 use models\summit\SummitEvent;
 /**
@@ -102,11 +104,12 @@ class SummitEventSerializer extends SilverStripeSerializer
 
         if (!empty($expand)) {
             foreach (explode(',', $expand) as $relation) {
-                switch (trim($relation)) {
+                $relation = trim($relation);
+                switch ($relation) {
                     case 'feedback': {
                         $feedback = array();
                         foreach ($event->getFeedback() as $f) {
-                            $feedback[] = SerializerRegistry::getInstance()->getSerializer($f)->serialize();
+                            $feedback[] = SerializerRegistry::getInstance()->getSerializer($f)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['feedback'] = $feedback;
                     }
@@ -114,25 +117,25 @@ class SummitEventSerializer extends SilverStripeSerializer
                     case 'location': {
                         if($event->hasLocation()){
                             unset($values['location_id']);
-                            $values['location'] = SerializerRegistry::getInstance()->getSerializer($event->getLocation())->serialize($expand);
+                            $values['location'] = SerializerRegistry::getInstance()->getSerializer($event->getLocation())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                     }
                     break;
                     case 'sponsors': {
                         $sponsors = array();
                         foreach ($event->getSponsors() as $s) {
-                            $sponsors[] = SerializerRegistry::getInstance()->getSerializer($s)->serialize();
+                            $sponsors[] = SerializerRegistry::getInstance()->getSerializer($s)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['sponsors'] = $sponsors;
                     }
                     break;
                     case 'track': {
                        unset($values['track_id']);
-                       $values['track'] = SerializerRegistry::getInstance()->getSerializer($event->getCategory())->serialize($expand);
+                       $values['track'] = SerializerRegistry::getInstance()->getSerializer($event->getCategory())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                     case 'type': {
                         unset($values['type_id']);
-                        $values['type'] = SerializerRegistry::getInstance()->getSerializer($event->getType())->serialize($expand);
+                        $values['type'] = SerializerRegistry::getInstance()->getSerializer($event->getType())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                     break;
                 }

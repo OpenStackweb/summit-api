@@ -27,6 +27,7 @@ final class ApiSeeder extends Seeder
     {
 
         DB::table('endpoint_api_scopes')->delete();
+        DB::table('endpoint_api_authz_groups')->delete();
         DB::table('api_scopes')->delete();
         DB::table('api_endpoints')->delete();
         DB::table('apis')->delete();

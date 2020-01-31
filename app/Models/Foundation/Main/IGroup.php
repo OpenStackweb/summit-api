@@ -1,5 +1,4 @@
 <?php namespace App\Models\Foundation\Main;
-
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,8 +20,11 @@
 interface IGroup
 {
     const Administrators           = 'administrators';
+    const SuperAdmins              = 'super-admins';
+    const BadgePrinters            = 'badge-printers';
     const CommunityMembers         = 'community-members';
     const FoundationMembers        = 'foundation-members';
     const SummitAdministrators     = 'summit-front-end-administrators';
     const SummitRoomAdministrators = 'summit-room-administrators';
+    const SummitRegistrationAdmins = 'summit-registration-administrators';
 }

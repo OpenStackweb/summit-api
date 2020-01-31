@@ -11,8 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Services\Model\IMemberService;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
+use models\main\Group;
+use models\main\IGroupRepository;
 use models\main\IMemberRepository;
 use models\main\Member;
 /**
@@ -33,14 +36,34 @@ final class ResourceServerContext implements IResourceServerContext
     private $tx_service;
 
     /**
+     * @var IMemberService
+     */
+    private $member_service;
+
+    /**
+     * @var IGroupRepository
+     */
+    private $group_repository;
+
+    /**
      * ResourceServerContext constructor.
+     * @param IGroupRepository $group_repository
      * @param IMemberRepository $member_repository
+     * @param IMemberService $member_service
      * @param ITransactionService $tx_service
      */
-    public function __construct(IMemberRepository $member_repository, ITransactionService $tx_service)
+    public function __construct
+    (
+        IGroupRepository $group_repository,
+        IMemberRepository $member_repository,
+        IMemberService $member_service,
+        ITransactionService $tx_service
+    )
     {
         $this->member_repository = $member_repository;
-        $this->tx_service = $tx_service;
+        $this->group_repository  = $group_repository;
+        $this->member_service    = $member_service;
+        $this->tx_service        = $tx_service;
     }
 
     /**
@@ -53,7 +76,7 @@ final class ResourceServerContext implements IResourceServerContext
      */
     public function getCurrentScope()
     {
-        return isset($this->auth_context['scope']) ? explode(' ', $this->auth_context['scope']) : array();
+        return isset($this->auth_context['scope']) ? explode(' ', $this->auth_context['scope']) : [];
     }
 
     /**
@@ -63,7 +86,6 @@ final class ResourceServerContext implements IResourceServerContext
     {
         return $this->getAuthContextVar('access_token');
     }
-
 
     /**
      * @return null|string
@@ -128,43 +150,113 @@ final class ResourceServerContext implements IResourceServerContext
             $member = null;
             // legacy test, for new IDP version this value came on null
             $id = $this->getCurrentUserExternalId();
+            Log::debug(sprintf("ResourceServerContext::getCurrentUser trying to get user by ExternalId %s", $id));
             if(!is_null($id)){
                 $member = $this->member_repository->getById(intval($id));
-                if(!is_null($member)) return $member;
+                if(!is_null($member)) return $this->checkGroups($member);
             }
 
             // is null
             if(is_null($member)){
                 // try to get by external id
                 $id = $this->getCurrentUserId();
+
+                Log::debug(sprintf("ResourceServerContext::getCurrentUser trying to get user by id %s", $id));
                 if(is_null($id)) {
                     return null;
                 }
                 $member = $this->member_repository->getByExternalId(intval($id));
+
+                if(!is_null($member)){
+                    $user_first_name  = $this->getAuthContextVar('user_first_name');
+                    $user_last_name   = $this->getAuthContextVar('user_last_name');
+                    $user_email       = $this->getAuthContextVar('user_email');
+
+                    if(!empty($user_email))
+                        $member->setEmail($user_email);
+                    if(!empty($user_first_name))
+                        $member->setFirstName($user_first_name);
+                    if(!empty($user_last_name))
+                        $member->setLastName($user_last_name);
+
+                    return $this->checkGroups($member);
+                }
             }
 
-            if(is_null($member)){
-                // we assume that is new idp version and claims alreaady exists on context
+            if(is_null($member)) {
+                // we assume that is new idp version and claims already exists on context
                 $user_external_id = $this->getAuthContextVar('user_id');
                 $user_first_name  = $this->getAuthContextVar('user_first_name');
                 $user_last_name   = $this->getAuthContextVar('user_last_name');
                 $user_email       = $this->getAuthContextVar('user_email');
                 // at last resort try to get by email
-                $member           = $this->member_repository->getByEmail($user_email);
+                Log::debug(sprintf("ResourceServerContext::getCurrentUser getting user by email %s", $user_email));
+                $member = $this->member_repository->getByEmail($user_email);
 
-                if(is_null($member))  // user exist on IDP but not in our local DB, proceed to create it
-                    $member = new Member();
+                if (is_null($member))  {// user exist on IDP but not in our local DB, proceed to create it
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "ResourceServerContext::getCurrentUser creating user email %s user_external_id %s fname %s lname %s",
+                            $user_email,
+                            $user_external_id,
+                            $user_first_name,
+                            $user_last_name
+                        )
+                    );
 
-                $member->setEmail($user_email);
-                $member->setFirstName($user_first_name);
-                $member->setLastName($user_last_name);
+                    $member = $this->member_service->registerExternalUser
+                    (
+                        $user_external_id,
+                        $user_email,
+                        $user_first_name,
+                        $user_last_name
+                    );
+                }
+
+                if(!empty($user_email))
+                    $member->setEmail($user_email);
+                if(!empty($user_first_name))
+                    $member->setFirstName($user_first_name);
+                if(!empty($user_last_name))
+                    $member->setLastName($user_last_name);
+
                 $member->setUserExternalId($user_external_id);
 
-                if($member->getId() == 0)
-                    $this->member_repository->add($member);
             }
 
-            return $member;
+            return $this->checkGroups($member);
         });
+    }
+
+    private function checkGroups(Member $member):Member{
+        // check groups
+        $idp_groups = $this->getCurrentUserGroups();
+        foreach ($idp_groups as $idp_group){
+            if(!isset($idp_group['slug'])) continue;
+            $code = trim($idp_group['slug']);
+            if(!$member->isOnGroup($code, true)){
+                // add it
+                $group = $this->group_repository->getBySlug($code);
+                if(is_null($group)){
+                    $group = new Group();
+                    $group->setCode($code);
+                    $group->setDescription($code);
+                    $group->setTitle($code);
+                    $this->group_repository->add($group, true);
+                }
+                $member->add2Group($group);
+            }
+        }
+        return $member;
+    }
+    /**
+     * @return array
+     */
+    public function getCurrentUserGroups(): array
+    {
+        $res = $this->getAuthContextVar('user_groups');
+        return is_null($res)? [] : $res;
     }
 }

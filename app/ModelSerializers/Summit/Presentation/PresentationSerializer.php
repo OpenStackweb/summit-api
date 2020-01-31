@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\Presentation;
 /**
  * Class PresentationSerializer
@@ -81,7 +83,7 @@ class PresentationSerializer extends SummitEventSerializer
         {
             $slides = [];
             foreach ($presentation->getSlides() as $slide) {
-                $slide_values  = SerializerRegistry::getInstance()->getSerializer($slide)->serialize();
+                $slide_values  = SerializerRegistry::getInstance()->getSerializer($slide)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'slides'));
                 if(empty($slide_values['link'])) continue;
                 $slides[] = $slide_values;
             }
@@ -92,7 +94,7 @@ class PresentationSerializer extends SummitEventSerializer
         {
             $public_comments = [];
             foreach ($presentation->getPublicComments() as $comment) {
-                $public_comments[] = SerializerRegistry::getInstance()->getSerializer($comment)->serialize($expand);
+                $public_comments[] = SerializerRegistry::getInstance()->getSerializer($comment)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'public_comments'));
             }
             $values['public_comments'] = $public_comments;
         }
@@ -101,7 +103,7 @@ class PresentationSerializer extends SummitEventSerializer
         {
             $links = [];
             foreach ($presentation->getLinks() as $link) {
-                $link_values  = SerializerRegistry::getInstance()->getSerializer($link)->serialize();
+                $link_values  = SerializerRegistry::getInstance()->getSerializer($link)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'links'));
                 if(empty($link_values['link'])) continue;
                 $links[] = $link_values;
             }
@@ -112,7 +114,7 @@ class PresentationSerializer extends SummitEventSerializer
         {
             $videos = [];
             foreach ($presentation->getVideos() as $video) {
-                $video_values   = SerializerRegistry::getInstance()->getSerializer($video)->serialize();
+                $video_values   = SerializerRegistry::getInstance()->getSerializer($video)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'videos'));
                 if(empty($video_values['youtube_id'])) continue;
                 $videos[] = $video_values;
             }
@@ -130,28 +132,29 @@ class PresentationSerializer extends SummitEventSerializer
 
         if (!empty($expand)) {
             foreach (explode(',', $expand) as $relation) {
-                switch (trim($relation)) {
+                $relation = trim($relation);
+                switch ($relation) {
                     case 'speakers': {
                         $speakers = [];
                         foreach ($presentation->getSpeakers() as $s) {
-                            $speakers[] = SerializerRegistry::getInstance()->getSerializer($s)->serialize();
+                            $speakers[] = SerializerRegistry::getInstance()->getSerializer($s)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['speakers'] = $speakers;
                         if(isset($values['moderator_speaker_id']) && intval($values['moderator_speaker_id']) > 0 ){
-                            $values['moderator'] = SerializerRegistry::getInstance()->getSerializer($presentation->getModerator())->serialize();
+                            $values['moderator'] = SerializerRegistry::getInstance()->getSerializer($presentation->getModerator())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                     }
                     case 'creator':{
                         if($presentation->getCreatorId() > 0) {
                             unset($values['creator_id']);
-                            $values['creator'] = SerializerRegistry::getInstance()->getSerializer($presentation->getCreator())->serialize();
+                            $values['creator'] = SerializerRegistry::getInstance()->getSerializer($presentation->getCreator())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                     }
                     break;
                     case 'selection_plan':{
                         if($presentation->getSelectionPlanId() > 0) {
                             unset($values['selection_plan_id']);
-                            $values['selection_plan'] = SerializerRegistry::getInstance()->getSerializer($presentation->getSelectionPlan())->serialize();
+                            $values['selection_plan'] = SerializerRegistry::getInstance()->getSerializer($presentation->getSelectionPlan())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                     }
                     break;

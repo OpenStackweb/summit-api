@@ -206,4 +206,12 @@ class SummitVenue extends SummitGeoLocatedLocation
         $room->clearVenue();
         return $this;
     }
+
+    public function hasRooms():bool{
+        return $this->rooms->count() > 0;
+    }
+
+    public function hasFloors():bool{
+        return $this->floors->count() > 0;
+    }
 }

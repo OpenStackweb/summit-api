@@ -11,10 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Affiliation;
+use models\main\IMemberRepository;
 use models\main\IOrganizationRepository;
 use models\main\Member;
 use DateTime;
@@ -33,18 +36,26 @@ final class MemberService
     private $organization_repository;
 
     /**
+     * @var IMemberRepository
+     */
+    private $member_repository;
+
+    /**
      * MemberService constructor.
+     * @param IMemberRepository $member_repository
      * @param IOrganizationRepository $organization_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
     (
+        IMemberRepository $member_repository,
         IOrganizationRepository $organization_repository,
         ITransactionService $tx_service
     )
     {
         parent::__construct($tx_service);
         $this->organization_repository = $organization_repository;
+        $this->member_repository       = $member_repository;
     }
 
     /**
@@ -191,6 +202,28 @@ final class MemberService
 
             $member->addAffiliation($affiliation);
             return $affiliation;
+        });
+    }
+
+    /**
+     * @param $user_external_id
+     * @param string $email
+     * @param string $first_name
+     * @param string $last_name
+     * @return Member
+     */
+    public function registerExternalUser($user_external_id, string $email, string $first_name, string $last_name): Member
+    {
+        return $this->tx_service->transaction(function() use($user_external_id, $email, $first_name, $last_name){
+            Log::debug(sprintf("MemberService::registerExternalUser - user_external_id %s email %s first_name %s last_name %s", $user_external_id, $email, $first_name, $last_name));
+            $member = new Member();
+            $member->setEmail($email);
+            $member->setFirstName($first_name);
+            $member->setLastName($last_name);
+            $member->setUserExternalId($user_external_id);
+            $this->member_repository->add($member, true);
+            //Event::fire(new NewMember($member->getId()));
+            return $member;
         });
     }
 }

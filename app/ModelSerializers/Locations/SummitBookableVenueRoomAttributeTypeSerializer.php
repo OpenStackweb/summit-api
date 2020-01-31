@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SummitBookableVenueRoomAttributeType;
 use ModelSerializers\SerializerRegistry;
 use ModelSerializers\SilverStripeSerializer;
@@ -40,12 +42,13 @@ class SummitBookableVenueRoomAttributeTypeSerializer extends SilverStripeSeriali
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);
             foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
+                $relation = trim($relation);
+                switch ($relation) {
                     case 'values': {
                         unset($values['values']);
                         $attr_values = [];
                         foreach ($attr_type->getValues() as $attr_val){
-                            $attr_values[] = SerializerRegistry::getInstance()->getSerializer($attr_val)->serialize();
+                            $attr_values[] = SerializerRegistry::getInstance()->getSerializer($attr_val)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['values'] = $attr_values;
                     }

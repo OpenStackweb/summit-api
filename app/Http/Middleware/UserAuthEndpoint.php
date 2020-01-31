@@ -11,8 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Models\ResourceServer\ApiEndpoint;
+use App\Models\ResourceServer\IApiEndpointRepository;
 use Closure;
 use Illuminate\Support\Facades\Response;
+use libs\utils\RequestUtils;
 use models\main\IMemberRepository;
 use models\oauth2\IResourceServerContext;
 /**
@@ -33,18 +36,26 @@ final class UserAuthEndpoint
     private $member_repository;
 
     /**
+     * @var IApiEndpointRepository
+     */
+    private $endpoint_repository;
+
+    /**
      * UserAuthEndpoint constructor.
      * @param IResourceServerContext $context
      * @param IMemberRepository $member_repository
+     * @param IApiEndpointRepository $endpoint_repository
      */
     public function __construct
     (
         IResourceServerContext $context,
-        IMemberRepository $member_repository
+        IMemberRepository $member_repository,
+        IApiEndpointRepository $endpoint_repository
     )
     {
         $this->context           = $context;
         $this->member_repository = $member_repository;
+        $this->endpoint_repository  = $endpoint_repository;
     }
 
     /**
@@ -53,16 +64,19 @@ final class UserAuthEndpoint
      * @param $required_groups
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function handle($request, Closure $next, $required_groups)
+    public function handle($request, Closure $next)
     {
-
         $current_member = $this->context->getCurrentUser();
         if (is_null($current_member)) return $next($request);
-
-        $required_groups = explode('|', $required_groups);
+        $method = $request->getMethod();
+        $route = RequestUtils::getCurrentRoutePath($request);
+        $endpoint = $this->endpoint_repository->getApiEndpointByUrlAndMethod($route, $method);
+        if(is_null($endpoint)) return $next($request);
+        if(!$endpoint instanceof ApiEndpoint) return $next($request);
+        $required_groups = $endpoint->getAuthzGroups();
 
         foreach ($required_groups as $required_group) {
-            if($current_member->isOnGroup($required_group))
+            if($current_member->isOnGroup($required_group->getSlug()))
                 return $next($request);
         }
 

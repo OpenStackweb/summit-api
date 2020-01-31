@@ -27,6 +27,8 @@ use models\summit\SummitEvent;
 use models\summit\SummitEventFeedback;
 use models\summit\SummitRoomReservation;
 use models\utils\SilverstripeBaseModel;
+use models\oauth2\IResourceServerContext;
+use Illuminate\Support\Facades\App;
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * @ORM\Entity
@@ -622,14 +624,27 @@ class Member extends SilverstripeBaseModel
     }
 
     /**
-     * @param string $code
+     * @param $code
+     * @param bool $skip_external
      * @return bool
      */
-    public function isOnGroup($code){
+    public function isOnGroup($code, $skip_external = false){
         if($this->isAdmin()) return true;
         $group = $this->getGroupByCode($code);
-        return $group != false && !is_null($group);
+        $res   = $group != false && !is_null($group);
+        if(!$res && !$skip_external){
+            $resource_server_ctx = App::make(IResourceServerContext::class);
+            if($resource_server_ctx instanceof IResourceServerContext){
+                foreach($resource_server_ctx->getCurrentUserGroups() as $group)
+                {
+                    if(isset($group['slug']) && trim($group['slug']) == $code)
+                        return true;
+                }
+            }
+        }
+        return $res;
     }
+
 
     /**
      * @param string $code
@@ -1306,6 +1321,15 @@ SQL;
     public function setUserExternalId(int $user_external_id): void
     {
         $this->user_external_id = $user_external_id;
+    }
+
+    /**
+     * @param Group $group
+     */
+    public function add2Group(Group $group){
+        if($this->groups->contains($group)) return;
+        $this->groups->add($group);
+        $group->addMember($this);
     }
 
 }

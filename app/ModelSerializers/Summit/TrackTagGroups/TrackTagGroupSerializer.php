@@ -42,9 +42,11 @@ final class TrackTagGroupSerializer extends SilverStripeSerializer
         $track_tag_group = $this->object;
         if (!$track_tag_group instanceof TrackTagGroup) return [];
         $allowed_tags = [];
+
         foreach($track_tag_group->getAllowedTags() as $allowed_tag){
             $allowed_tags[] = $allowed_tag->getId();
         }
+
         $values['allowed_tags'] = $allowed_tags;
 
         if (!empty($expand)) {

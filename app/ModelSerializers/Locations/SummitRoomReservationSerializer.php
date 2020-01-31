@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SummitRoomReservation;
 use ModelSerializers\SerializerRegistry;
 use ModelSerializers\SilverStripeSerializer;
@@ -52,15 +54,16 @@ final class SummitRoomReservationSerializer extends SilverStripeSerializer
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);
             foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
+                $relation = trim($relation);
+                switch ($relation) {
                     case 'room': {
                         unset($values['room_id']);
-                        $values['room'] = SerializerRegistry::getInstance()->getSerializer($reservation->getRoom())->serialize($expand);
+                        $values['room'] = SerializerRegistry::getInstance()->getSerializer($reservation->getRoom())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                     break;
                     case 'owner': {
                         unset($values['owner_id']);
-                        $values['owner'] = SerializerRegistry::getInstance()->getSerializer($reservation->getOwner())->serialize($expand);
+                        $values['owner'] = SerializerRegistry::getInstance()->getSerializer($reservation->getOwner())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                     break;
                 }

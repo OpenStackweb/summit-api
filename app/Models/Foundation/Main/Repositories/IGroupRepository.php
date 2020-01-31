@@ -12,12 +12,11 @@
  * limitations under the License.
  **/
 use models\utils\IBaseRepository;
-
 /**
  * Interface IGroupRepository
  * @package models\main
  */
 interface IGroupRepository extends IBaseRepository
 {
-
+    public function getBySlug(string $slug): ?Group;
 }

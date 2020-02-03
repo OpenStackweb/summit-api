@@ -44,6 +44,14 @@ interface ISummitEventRepository extends IBaseRepository
      * @param Order|null $order
      * @return PagingResponse
      */
+    public function getAllPublishedTagsByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null):PagingResponse;
+
+    /**
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
     public function getAllByPageLocationTBD(PagingInfo $paging_info, Filter $filter = null, Order $order = null);
 
     /**

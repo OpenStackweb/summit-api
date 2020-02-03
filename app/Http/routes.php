@@ -266,6 +266,12 @@ Route::group([
                     Route::post('/attachment', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@addEventAttachment']);
                     Route::get('/feedback/{attendee_id?}',  ['middleware' => 'cache:'.Config::get('cache_api_response.get_event_feedback_response_lifetime', 300), 'uses' => 'OAuth2SummitEventsApiController@getEventFeedback'] )->where('attendee_id', 'me|[0-9]+');
                 });
+
+                Route::group(['prefix' => 'all'], function () {
+                    Route::group(['prefix' => 'published'], function () {
+                        Route::get('tags', 'OAuth2SummitEventsApiController@getScheduledEventsTags');
+                    });
+                });
             });
 
             // presentations

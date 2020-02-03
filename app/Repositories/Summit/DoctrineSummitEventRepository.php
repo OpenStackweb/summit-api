@@ -13,6 +13,7 @@
  **/
 use App\Models\Foundation\Main\IGroup;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use models\main\Tag;
 use models\summit\ISummitEventRepository;
 use models\summit\Presentation;
 use models\summit\Summit;
@@ -355,5 +356,61 @@ final class DoctrineSummitEventRepository
             ->setParameter('external_ids', $external_ids);
 
         return $query->getQuery()->getResult();
+    }
+
+    /**
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getAllPublishedTagsByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse
+    {
+
+        $query  = $this->getEntityManager()->createQueryBuilder()
+            ->select("distinct t")
+            ->from(Tag::class, "t")
+            ->join("t.events", 'e')
+            ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id');
+
+        if(!is_null($filter)){
+            $filter->apply2Query($query, [
+                'tag' => 't.tag:json_string',
+                'summit_id'=> new DoctrineJoinFilterMapping
+                (
+                    'e.summit',
+                    's',
+                    "s.id  :operator :value"
+                ),
+            ]);
+        }
+
+        if (!is_null($order)) {
+            $order->apply2Query($query, [
+                'tag' => 't.tag',
+            ]);
+        } else {
+            $query = $query->addOrderBy("t.tag", 'ASC');
+        }
+
+        $query = $query
+            ->setFirstResult($paging_info->getOffset())
+            ->setMaxResults($paging_info->getPerPage());
+
+        $paginator = new Paginator($query, $fetchJoinCollection = true);
+        $total     = $paginator->count();
+        $data      = [];
+
+        foreach($paginator as $entity)
+            $data[]= $entity;
+
+        return new PagingResponse
+        (
+            $total,
+            $paging_info->getPerPage(),
+            $paging_info->getCurrentPage(),
+            $paging_info->getLastPage($total),
+            $data
+        );
     }
 }

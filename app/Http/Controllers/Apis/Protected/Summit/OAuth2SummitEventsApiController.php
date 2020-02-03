@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use Exception;
@@ -31,12 +30,13 @@ use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISummitService;
+use utils\Filter;
+use utils\FilterElement;
 use utils\FilterParser;
 use utils\FilterParserException;
 use utils\OrderParser;
 use utils\PagingInfo;
 use utils\PagingResponse;
-
 /**
  * Class OAuth2SummitEventsApiController
  * @package App\Http\Controllers
@@ -195,6 +195,55 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             Log::error($ex);
             return $this->error500($ex);
         }
+    }
+
+    use ParametrizedGetAll;
+
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getScheduledEventsTags($summit_id){
+        $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        return $this->getAll(
+            function(){
+                return [
+                    'tag' => ['=@', '=='],
+                ];
+            },
+            function(){
+                return [
+                    'tag' => 'sometimes|string',
+                ];
+            },
+            function()
+            {
+                return [
+                    'tag'
+                ];
+            },
+            function($filter) use($summit){
+                if($filter instanceof Filter){
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+                }
+                return $filter;
+            },
+            function(){
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page,  $per_page,  $filter,  $order, $applyExtraFilters){
+                return $this->event_repository->getAllPublishedTagsByPage
+                (
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
     }
 
     /**

@@ -11,10 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use Doctrine\Common\Collections\ArrayCollection;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
-
 /**
  * @ORM\Entity
  * @ORM\Table(name="Tag")
@@ -30,6 +29,11 @@ class Tag extends SilverstripeBaseModel
      * @var string
      */
     private $tag;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="models\summit\SummitEvent", mappedBy="tags")
+     */
+    private $events;
 
     /**
      * @return string
@@ -55,6 +59,11 @@ class Tag extends SilverstripeBaseModel
     {
         parent::__construct();
         $this->tag = $tag;
+        $this->events = new ArrayCollection();
+    }
+
+    public function getEvents(){
+        return $this->events;
     }
 
 }

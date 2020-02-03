@@ -1,5 +1,4 @@
 <?php namespace App\Http\Controllers;
-
 /**
  * Copyright 2015 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use models\oauth2\IResourceServerContext;
 use models\utils\IBaseRepository;
-
 /**
  * Class OAuth2ProtectedController
  * OAuth2 Protected Base API
@@ -42,4 +39,19 @@ abstract class OAuth2ProtectedController extends JsonController
         $this->resource_server_context = $resource_server_context;
     }
 
+    /**
+     * @return IResourceServerContext
+     */
+    protected function getResourceServerContext(): IResourceServerContext
+    {
+        return $this->resource_server_context;
+    }
+
+    /**
+     * @return IBaseRepository
+     */
+    protected function getRepository(): IBaseRepository
+    {
+        return $this->repository;
+    }
 }

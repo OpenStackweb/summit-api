@@ -84,6 +84,7 @@ final class DoctrineSummitEventRepository
             'id'             => 'e.id:json_int',
             'title'          => 'e.title:json_string',
             'abstract'       => 'e.abstract:json_string',
+            'level'          => 'p.level:json_string',
             'social_summary' => 'e.social_summary:json_string',
             'published'      => 'e.published',
             'start_date'     => 'e.start_date:datetime_epoch',

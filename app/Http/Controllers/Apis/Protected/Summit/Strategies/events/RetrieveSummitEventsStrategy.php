@@ -74,10 +74,18 @@ abstract class RetrieveSummitEventsStrategy
      * @return null|Filter
      */
     protected function buildFilter(){
-        $filter = null;
+
         if (Input::has('filter')) {
             $filter = FilterParser::parse(Input::get('filter'), $this->getValidFilters());
         }
+
+        if(is_null($filter)) $filter = new Filter();
+
+        $filter_validator_rules = $this->getFilterValidatorRules();
+        if(count($filter_validator_rules)) {
+            $filter->validate($filter_validator_rules);
+        }
+
         return $filter;
     }
 
@@ -119,6 +127,7 @@ abstract class RetrieveSummitEventsStrategy
             'abstract'         => ['=@', '=='],
             'social_summary'   => ['=@', '=='],
             'tags'             => ['=@', '=='],
+            'level'            => ['=@', '=='],
             'start_date'       => ['>', '<', '<=', '>=', '=='],
             'end_date'         => ['>', '<', '<=', '>=', '=='],
             'summit_type_id'   => ['=='],
@@ -130,6 +139,29 @@ abstract class RetrieveSummitEventsStrategy
             'speaker_email'    => ['=@', '=='],
             'selection_status' => ['=='],
             'id'               => ['=='],
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function getFilterValidatorRules():array{
+        return [
+            'title'           => 'sometimes|string',
+            'abstract'        => 'sometimes|string',
+            'social_summary'  => 'sometimes|string',
+            'tags'            => 'sometimes|string',
+            'level'           => 'sometimes|string',
+            'speaker'         => 'sometimes|string',
+            'speaker_email'   => 'sometimes|string',
+            'start_date'      => 'sometimes|date_format:U',
+            'end_date'        => 'sometimes|date_format:U',
+            'summit_type_id'  => 'sometimes|integer',
+            'event_type_id'   => 'sometimes|integer',
+            'track_id'        => 'sometimes|integer',
+            'speaker_id'      => 'sometimes|integer',
+            'location_id'     => 'sometimes|integer',
+            'id'              => 'sometimes|integer',
         ];
     }
 }

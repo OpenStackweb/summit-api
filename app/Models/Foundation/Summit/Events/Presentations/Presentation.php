@@ -37,6 +37,13 @@ class Presentation extends SummitEvent
     const SelectionStatus_Unaccepted = 'unaccepted';
     const SelectionStatus_Alternate  = 'alternate';
 
+    const BeginnerLevel     = 'Beginner';
+    const IntermediateLevel = 'Intermediate';
+    const AdvancedLevel     = 'Advanced';
+    const NALevel           = 'N/A';
+
+    const ValidLevels       = [self::BeginnerLevel, self::IntermediateLevel, self::AdvancedLevel, self::NALevel];
+
     /**
      * Defines the phase that a presentation has been created, but
      * no information has been saved to it.
@@ -231,9 +238,13 @@ class Presentation extends SummitEvent
 
     /**
      * @param string $level
+     * @throws ValidationException
      */
-    public function setLevel($level)
+    public function setLevel(string $level):void
     {
+        if(!in_array($level, self::ValidLevels))
+            throw new ValidationException(sprintf("Level %s is invalid.", $level));
+
         $this->level = $level;
     }
 
@@ -278,7 +289,7 @@ class Presentation extends SummitEvent
     }
 
     /**
-     * @return PresentationSpeaker[]
+     * @return ArrayCollection
      */
     public function getSpeakers()
     {

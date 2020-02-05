@@ -75,6 +75,8 @@ abstract class RetrieveSummitEventsStrategy
      */
     protected function buildFilter(){
 
+        $filter = null;
+
         if (Input::has('filter')) {
             $filter = FilterParser::parse(Input::get('filter'), $this->getValidFilters());
         }

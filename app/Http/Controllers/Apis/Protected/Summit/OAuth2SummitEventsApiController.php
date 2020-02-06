@@ -207,7 +207,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
         if (is_null($summit)) return $this->error404();
 
-        return $this->getAll(
+        return $this->_getAll(
             function(){
                 return [
                     'tag' => ['=@', '=='],
@@ -247,7 +247,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     }
 
     /**
-     * @return mixed
+     * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function getAllEvents()
     {

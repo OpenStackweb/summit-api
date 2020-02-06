@@ -612,6 +612,10 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($events));
     }
 
+    /**
+     * @param int $summit_id
+     * @param string $level
+     */
     public function testGetScheduledEventsBySummitAndLevel($summit_id = 27, $level = 'N/A')
     {
         $params = [
@@ -621,6 +625,43 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             'filter' => [
                 "level=={$level}"
             ]
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action
+        (
+            "GET",
+            "OAuth2SummitEventsApiController@getScheduledEvents",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $events = json_decode($content);
+        $this->assertTrue(!is_null($events));
+    }
+
+    /**
+     * @param int $summit_id
+     */
+    public function testGetScheduledEventsBySummit($summit_id = 27)
+    {
+        $params = [
+
+            'id' => $summit_id,
+            'expand' => 'type,track,location,location.venue,location.floor',
+            'page' => 2,
+            'per_page' => 100,
+            'order'  => '+start_date'
         ];
 
         $headers = [

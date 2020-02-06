@@ -13,7 +13,6 @@
  **/
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
-use App\Http\Utils\PagingConstants;
 use App\Services\Model\ISummitPushNotificationService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -23,21 +22,22 @@ use models\summit\ISummitNotificationRepository;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Input;
 use models\summit\ISummitRepository;
-use models\summit\SummitPushNotificationChannel;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterElement;
-use utils\FilterParser;
-use utils\OrderParser;
 use utils\PagingInfo;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Request;
+use Exception;
 /**
  * Class OAuth2SummitNotificationsApiController
  * @package App\Http\Controllers
  */
 class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
 {
+
+    use ParametrizedGetAll;
+
     /**
      * @var ISummitRepository
      */
@@ -84,91 +84,60 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
      */
     public function getAll($summit_id)
     {
-        try
-        {
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+        $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
+        if (is_null($summit)) return $this->error404();
 
-            $values = Input::all();
-
-            $rules = [
-                'page'     => 'integer|min:1',
-                'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::MinPageSize, PagingConstants::MaxPageSize),
-            ];
-
-            $validation = Validator::make($values, $rules);
-
-            if ($validation->fails()) {
-                $ex = new ValidationException();
-                throw $ex->setMessages($validation->messages()->toArray());
-            }
-
-            // default values
-            $page     = 1;
-            $per_page = PagingConstants::DefaultPageSize;
-
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
-            }
-
-            $filter = null;
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+        return $this->_getAll(
+            function(){
+                return [
+                    'message'   => ['=@', '=='],
                     'channel'   => ['=='],
                     'sent_date' => ['>', '<', '<=', '>=', '=='],
                     'created'   => ['>', '<', '<=', '>=', '=='],
                     'is_sent'   => ['=='],
                     'approved'  => ['=='],
                     'event_id'  => ['=='],
-                ]);
-            }
-
-            if(is_null($filter)) $filter = new Filter();
-
-            $filter->validate([
-                'channel'   => 'sometimes|in:EVERYONE,SPEAKERS,ATTENDEES,MEMBERS,SUMMIT,EVENT,GROUP',
-                'sent_date' => 'sometimes|date_format:U',
-                'created'   => 'sometimes|date_format:U',
-                'is_sent'   => 'sometimes|boolean',
-                'approved'  => 'sometimes|boolean',
-                'event_id'  => 'sometimes|integer',
-            ]);
-
-            $order = null;
-
-            if (Input::has('order'))
+                ];
+            },
+            function(){
+                return [
+                    'message'   => 'sometimes|string',
+                    'channel'   => 'sometimes|in:EVERYONE,SPEAKERS,ATTENDEES,MEMBERS,SUMMIT,EVENT,GROUP',
+                    'sent_date' => 'sometimes|date_format:U',
+                    'created'   => 'sometimes|date_format:U',
+                    'is_sent'   => 'sometimes|boolean',
+                    'approved'  => 'sometimes|boolean',
+                    'event_id'  => 'sometimes|integer',
+                ];
+            },
+            function()
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                return [
 
                     'sent_date',
                     'created',
                     'id',
-                ]);
-            }
-
-            $result = $this->repository->getAllByPageBySummit($summit, new PagingInfo($page, $per_page), $filter, $order);
-
-            return $this->ok
-            (
-                $result->toArray(Request::input('expand', ''),[],[],['summit_id' => $summit_id])
-            );
-        }
-        catch (EntityNotFoundException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error404();
-        }
-        catch (ValidationException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error412($ex2->getMessages());
-        }
-        catch (\Exception $ex)
-        {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+                ];
+            },
+            function($filter) use($summit){
+                return $filter;
+            },
+            function(){
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page,  $per_page,  $filter,  $order, $applyExtraFilters) use ($summit){
+                return  $this->repository->getAllByPageBySummit
+                (
+                    $summit,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            },
+            ['summit_id' => $summit_id]
+        );
     }
 
 
@@ -177,89 +146,59 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function getAllApprovedByUser($summit_id){
-        try
-        {
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
 
-            $current_member = $this->resource_server_context->getCurrentUser();
-            $values         = Input::all();
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
 
-            $rules = [
-                'page'     => 'integer|min:1',
-                'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::MinPageSize, PagingConstants::MaxPageSize),
-            ];
+        $current_member = $this->resource_server_context->getCurrentUser();
 
-            $validation = Validator::make($values, $rules);
 
-            if ($validation->fails()) {
-                $ex = new ValidationException();
-                throw $ex->setMessages($validation->messages()->toArray());
-            }
-
-            // default values
-            $page     = 1;
-            $per_page = PagingConstants::DefaultPageSize;
-
-            if (Input::has('page')) {
-                $page = intval(Input::get('page'));
-            }
-
-            if (Input::has('per_page')) {
-                $per_page = intval(Input::get('per_page'));
-            }
-
-            $filter = null;
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+        return $this->_getAll(
+            function(){
+                return [
+                    'message'   => ['=@', '=='],
                     'sent_date' => ['>', '<', '<=', '>=', '=='],
                     'created'   => ['>', '<', '<=', '>=', '=='],
-                ]);
-            }
-
-            if(is_null($filter)) $filter = new Filter();
-
-            $filter->validate([
-                'sent_date' => 'sometimes|date_format:U',
-                'created'   => 'sometimes|date_format:U',
-            ]);
-
-            $order = null;
-
-            if (Input::has('order'))
+                ];
+            },
+            function(){
+                return [
+                    'message'   => 'sometimes|string',
+                    'sent_date' => 'sometimes|date_format:U',
+                    'created'   => 'sometimes|date_format:U',
+                ];
+            },
+            function()
             {
-                $order = OrderParser::parse(Input::get('order'), [
-
+                return [
                     'sent_date',
                     'created',
                     'id',
-                ]);
-            }
-
-            $filter->addFilterCondition(FilterElement::makeEqual("is_sent", true));
-
-            $result = $this->repository->getAllByPageByUserBySummit($current_member, $summit, new PagingInfo($page, $per_page), $filter, $order);
-
-            return $this->ok
-            (
-                $result->toArray(Request::input('expand', ''),[],[],['summit_id' => $summit_id])
-            );
-        }
-        catch (EntityNotFoundException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error404();
-        }
-        catch (ValidationException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error412($ex2->getMessages());
-        }
-        catch (\Exception $ex)
-        {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+                ];
+            },
+            function($filter) use($summit){
+                if($filter instanceof Filter) {
+                    $filter->addFilterCondition(FilterElement::makeEqual("is_sent", true));
+                }
+                return $filter;
+            },
+            function(){
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page,  $per_page,  $filter,  $order, $applyExtraFilters) use ($current_member, $summit){
+                return  $this->repository->getAllByPageByUserBySummit
+                (
+                    $current_member,
+                    $summit,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            },
+            ['summit_id' => $summit_id]
+        );
     }
 
     /**
@@ -268,83 +207,72 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
      */
     public function getAllCSV($summit_id)
     {
-        try
-        {
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
 
-            // default values
-            $page     = 1;
-            $per_page = PHP_INT_MAX;
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
 
-
-            $filter = null;
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+        return $this->_getAllCSV(
+            function(){
+                return [
+                    'message'   => ['=@', '=='],
                     'channel'   => ['=='],
                     'sent_date' => ['>', '<', '<=', '>=', '=='],
                     'created'   => ['>', '<', '<=', '>=', '=='],
                     'is_sent'   => ['=='],
                     'approved'  => ['=='],
                     'event_id'  => ['=='],
-                ]);
-            }
-
-            if(is_null($filter)) $filter = new Filter();
-
-            $filter->validate([
-                'channel'   => 'sometimes|in:EVERYONE,SPEAKERS,ATTENDEES,MEMBERS,SUMMIT,EVENT,GROUP',
-                'sent_date' => 'sometimes|date_format:U',
-                'created'   => 'sometimes|date_format:U',
-                'is_sent'   => 'sometimes|boolean',
-                'approved'  => 'sometimes|boolean',
-                'event_id'  => 'sometimes|integer',
-            ]);
-
-            $order = null;
-
-            if (Input::has('order'))
+                ];
+            },
+            function(){
+                return [
+                    'message'   => 'sometimes|string',
+                    'channel'   => 'sometimes|in:EVERYONE,SPEAKERS,ATTENDEES,MEMBERS,SUMMIT,EVENT,GROUP',
+                    'sent_date' => 'sometimes|date_format:U',
+                    'created'   => 'sometimes|date_format:U',
+                    'is_sent'   => 'sometimes|boolean',
+                    'approved'  => 'sometimes|boolean',
+                    'event_id'  => 'sometimes|integer',
+                ];
+            },
+            function()
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                return [
 
                     'sent_date',
                     'created',
                     'id',
-                ]);
-            }
-
-            $data     = $this->repository->getAllByPageBySummit($summit, new PagingInfo($page, $per_page), $filter, $order);
-            $filename = "push-notification-" . date('Ymd');
-            $list     =  $data->toArray();
-            return $this->export
-            (
-                'csv',
-                $filename,
-                $list['data'],
-                [
+                ];
+            },
+            function($filter) use($summit){
+                return $filter;
+            },
+            function(){
+                return SerializerRegistry::SerializerType_Public;
+            },
+            function(){
+                return [
                     'created'     => new EpochCellFormatter,
                     'last_edited' => new EpochCellFormatter,
                     'sent_date'   => new EpochCellFormatter,
                     'is_sent'     => new BooleanCellFormatter,
                     'approved'    => new BooleanCellFormatter,
-                ]
-            );
-        }
-        catch (EntityNotFoundException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error404();
-        }
-        catch (ValidationException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error412($ex2->getMessages());
-        }
-        catch (\Exception $ex)
-        {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+                ];
+            },
+            function(){
+              return [];
+            },
+            "push-notification-" . date('Ymd'),
+            ['summit_id' => $summit_id],
+            function ($page,  $per_page,  $filter,  $order, $applyExtraFilters) use ($summit){
+                return  $this->repository->getAllByPageBySummit
+                (
+                    $summit,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
     }
 
     /**
@@ -483,7 +411,7 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
             Log::warning($ex2);
             return $this->error404(['message'=> $ex2->getMessage()]);
         }
-        catch (\Exception $ex) {
+        catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }

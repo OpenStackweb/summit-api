@@ -21,7 +21,7 @@ final class OAuth2SummitNotificationsApiControllerTest extends ProtectedApiTest
      * @param int $summit_id
      * @return mixed
      */
-    public function testGetApprovedSummitNotifications($summit_id = 24)
+    public function testGetApprovedSummitNotifications($summit_id = 27)
     {
         $params = [
             'id' => $summit_id,
@@ -67,11 +67,12 @@ final class OAuth2SummitNotificationsApiControllerTest extends ProtectedApiTest
     public function testGetSentSummitNotifications($summit_id = 27)
     {
         $params = [
-            'id' => $summit_id,
-            'page' => 1,
+            'id'       => $summit_id,
+            'page'     => 1,
             'per_page' => 15,
-            'order' => '+sent_date',
-            'expand' => 'owner,approved_by',
+            'order'    => '+sent_date',
+         //   'filter'   => 'message=@Shanghai',
+            //'expand'   => 'owner,approved_by',
         ];
 
         $headers = [

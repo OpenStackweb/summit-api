@@ -42,6 +42,7 @@ final class DoctrineSummitNotificationRepository
     {
         return [
             'event_id'  => 'e.id:json_int',
+            'message'   => 'n.message:json_string',
             'channel'   => 'n.channel:json_string',
             'sent_date' => 'n.sent_date:datetime_epoch',
             'created'   => 'n.created:datetime_epoch',

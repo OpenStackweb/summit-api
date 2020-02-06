@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\AbstractSerializer;
 use models\main\PushNotificationMessage;
 use ModelSerializers\SerializerRegistry;
 use ModelSerializers\SilverStripeSerializer;
@@ -46,20 +48,20 @@ class PushNotificationMessageSerializer extends SilverStripeSerializer
         $values = parent::serialize($expand, $fields, $relations, $params);
 
         if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
+            foreach (explode(',', $expand) as $relation) {
+                $relation = trim($relation);
+                switch ($relation) {
 
                     case 'owner': {
                          if(!$notification->hasOwner()) continue;
                          unset($values['owner_id']);
-                         $values['owner'] = SerializerRegistry::getInstance()->getSerializer($notification->getOwner())->serialize();
+                         $values['owner'] = SerializerRegistry::getInstance()->getSerializer($notification->getOwner())->serialize(AbstractSerializer::filterExpandByPrefix($relation, $expand));
                     }
                     break;
                     case 'approved_by': {
                         if(!$notification->hasApprovedBy()) continue;
                         unset($values['approved_by_id']);
-                        $values['approved_by'] = SerializerRegistry::getInstance()->getSerializer($notification->getApprovedBy())->serialize();
+                        $values['approved_by'] = SerializerRegistry::getInstance()->getSerializer($notification->getApprovedBy())->serialize(AbstractSerializer::filterExpandByPrefix($relation, $expand));
                     }
                     break;
 

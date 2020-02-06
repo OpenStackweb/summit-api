@@ -172,8 +172,8 @@ final class DoctrineSummitEventRepository
     protected function getOrderMappings()
     {
         return [
-            'title'         => 'e.title',
             'id'            => 'e.id',
+            'title'         => 'e.title',
             'start_date'    => 'e.start_date',
             'end_date'      => 'e.end_date',
             'created'       => 'e.created',
@@ -211,10 +211,14 @@ final class DoctrineSummitEventRepository
 
         if (!is_null($order)) {
             $order->apply2Query($query, $this->getOrderMappings());
+            if(!$order->hasOrder('id')) {
+                $query = $query->addOrderBy("e.id", 'ASC');
+            }
         } else {
             //default order
             $query = $query->addOrderBy("e.start_date",'ASC');
             $query = $query->addOrderBy("e.end_date", 'ASC');
+            $query = $query->addOrderBy("e.id", 'ASC');
         }
 
 

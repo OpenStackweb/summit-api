@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Config;
 use Monolog\Handler\StreamHandler;
 
 return [
@@ -40,14 +41,14 @@ return [
 
         'single' => [
             'driver' => 'single',
-            'path' => storage_path('logs/laravel.log'),
-            'level' => 'debug',
+            'path' => storage_path('/logs/laravel-'.get_current_user().'.log'),
+            'level' => Config::get('log.level', 'debug'),
         ],
 
         'daily' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/laravel.log'),
-            'level' => 'debug',
+            'path' => storage_path('/logs/laravel-'.get_current_user().'.log'),
+            'level' => Config::get('log.level', 'debug'),
             'days' => 7,
         ],
 
@@ -69,12 +70,12 @@ return [
 
         'syslog' => [
             'driver' => 'syslog',
-            'level' => 'debug',
+            'level' => Config::get('log.level', 'debug'),
         ],
 
         'errorlog' => [
             'driver' => 'errorlog',
-            'level' => 'debug',
+            'level' => Config::get('log.level', 'debug'),
         ],
     ],
 

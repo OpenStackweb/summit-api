@@ -43,6 +43,7 @@ final class AccessTokenService implements IAccessTokenService
         'user_email',
         'user_first_name',
         'user_last_name',
+        'user_groups',
     ];
 
     /**
@@ -156,10 +157,8 @@ final class AccessTokenService implements IAccessTokenService
             $token_info['user_last_name'] = null;
         }
 
-        // remove user groups for now, we don use it and its an array
-        // and cant be serialize on redis as it is , need to convert format
         if(array_key_exists("user_groups" , $token_info)){
-            unset($token_info['user_groups']);
+            $token_info['user_groups'] = json_encode($token_info['user_groups']);
         }
 
         $this->cache_service->storeHash(md5($token_value), $token_info, $cache_lifetime);
@@ -201,7 +200,7 @@ final class AccessTokenService implements IAccessTokenService
             }
             // http://docs.guzzlephp.org/en/stable/request-options.html
             $response = $client->request('POST',
-                  "{$auth_server_url}/oauth2/token/introspection",
+                "{$auth_server_url}/oauth2/token/introspection",
                 [
                     'form_params'  => ['token' => $token_value],
                     'auth'         => [$client_id, $client_secret],

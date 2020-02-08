@@ -201,6 +201,7 @@ class OAuth2BearerAccessTokenRequestValidator
                 $context['user_email']       = $token_info->getUserEmail();
                 $context['user_first_name']  = $token_info->getUserFirstName();
                 $context['user_last_name']   = $token_info->getUserLastName();
+                $context['user_groups']      = $token_info->getUserGroups();
             }
 
             $this->context->setAuthorizationContext($context);

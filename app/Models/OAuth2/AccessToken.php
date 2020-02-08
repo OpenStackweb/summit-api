@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class AccessToken
  * http://tools.ietf.org/html/rfc6749#section-1.4
@@ -75,6 +74,11 @@ final class AccessToken extends Token
      */
     private $user_last_name;
 
+    /**
+     * @var array
+     */
+    private $user_groups;
+
     private static function getValueFromInfo(string $key, array $token_info){
         return isset($token_info[$key])? $token_info[$key] :null;
     }
@@ -101,7 +105,15 @@ final class AccessToken extends Token
         $instance->allowed_return_uris = self::getValueFromInfo('allowed_return_uris', $token_info);
         $instance->application_type    = $token_info['application_type'];
         $instance->allowed_origins     = self::getValueFromInfo('allowed_origins', $token_info);
-
+        $instance->user_groups         = self::getValueFromInfo('user_groups', $token_info);
+        if(!empty($instance->user_groups)) {
+            if(is_string($instance->user_groups))
+                $instance->user_groups = json_decode($instance->user_groups, true);
+        }
+        else
+        {
+            $instance->user_groups = [];
+        }
         return $instance;
     }
 
@@ -178,5 +190,12 @@ final class AccessToken extends Token
     public function getUserLastName(): ?string
     {
         return $this->user_last_name;
+    }
+
+    /**
+     * @return array
+     */
+    public function getUserGroups():array {
+        return $this->user_groups;
     }
 }

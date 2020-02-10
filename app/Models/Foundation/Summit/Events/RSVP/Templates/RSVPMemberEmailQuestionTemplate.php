@@ -38,4 +38,17 @@ class RSVPMemberEmailQuestionTemplate extends RSVPTextBoxQuestionTemplate
     public static function getMetadata(){
         return array_merge(RSVPTextBoxQuestionTemplate::getMetadata(), self::$metadata);
     }
+
+    /**
+     * @param array|string $value
+     * @return bool
+     */
+    public function isValidValue($value): bool
+    {
+        if(!is_string($value)) return false;
+        if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
+           return false;
+        }
+        return true;
+    }
 }

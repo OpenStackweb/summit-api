@@ -38,4 +38,17 @@ class RSVPRadioButtonListQuestionTemplate extends RSVPMultiValueQuestionTemplate
     public static function getMetadata(){
         return array_merge(RSVPMultiValueQuestionTemplate::getMetadata(), self::$metadata);
     }
+
+    /**
+     * @param array|string $value
+     * @return bool
+     */
+    public function isValidValue($value): bool
+    {
+        if(!is_string($value)) return false;
+        $valId = intval($value);
+        $val   = $this->getValueById($valId);
+        if(is_null($val)) return false;
+        return true;
+    }
 }

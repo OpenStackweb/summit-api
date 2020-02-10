@@ -82,6 +82,17 @@ class AppServiceProvider extends ServiceProvider
         'groups'                    =>  'sometimes|int_array',
     ];
 
+
+    static $rsvp_answer_dto_fields = [
+       'question_id',
+        'value',
+    ];
+
+    static $rsvp_answer_validation_rules = [
+        'question_id'  => 'required|integer',
+        'value'        => 'sometimes|string_or_string_array',
+    ];
+
     /**
      * Bootstrap any application services.
      * @return void
@@ -178,10 +189,32 @@ class AppServiceProvider extends ServiceProvider
             $validator->addReplacer('string_array', function($message, $attribute, $rule, $parameters) use ($validator) {
                 return sprintf("%s should be an array of strings", $attribute);
             });
-            if(!is_array($value)) return false;
+            if(!is_array($value))
+                return false;
             foreach($value as $element)
             {
-                if(!is_string($element)) return false;
+                if(!is_string($element))
+                    return false;
+            }
+            return true;
+        });
+
+        Validator::extend('string_or_string_array', function($attribute, $value, $parameters, $validator)
+        {
+            $validator->addReplacer('string_or_string_array', function($message, $attribute, $rule, $parameters) use ($validator) {
+                return sprintf("%s should be a string or an array of strings", $attribute);
+            });
+
+            if(is_string($value))
+                return true;
+
+            if(!is_array($value))
+                return false;
+
+            foreach($value as $element)
+            {
+                if(!is_string($element))
+                    return false;
             }
             return true;
         });
@@ -617,6 +650,31 @@ class AppServiceProvider extends ServiceProvider
 
         Validator::extend('greater_than', function ($attribute, $value, $otherValue) {
             return intval($value) > intval($otherValue[0]);
+        });
+
+        Validator::extend('rsvp_answer_dto_array', function($attribute, $value, $parameters, $validator)
+        {
+            $validator->addReplacer('rsvp_answer_dto_array', function($message, $attribute, $rule, $parameters) use ($validator) {
+                return sprintf
+                (
+                    "%s should be an array of rsvp answer data {question_id : int, value: string, values: string array}",
+                    $attribute);
+            });
+            if(!is_array($value)) return false;
+            foreach($value as $element)
+            {
+                foreach($element as $key => $element_val){
+                    if(!in_array($key, self::$rsvp_answer_dto_fields))
+                        return false;
+                }
+
+                // Creates a Validator instance and validates the data.
+                $validation = Validator::make($element, self::$rsvp_answer_validation_rules);
+
+                if($validation->fails())
+                    return false;
+            }
+            return true;
         });
     }
 

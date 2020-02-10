@@ -11,11 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use App\Models\Foundation\Summit\Events\RSVP\RSVPMultiValueQuestionTemplate;
+use App\Models\Foundation\Summit\Events\RSVP\RSVPQuestionTemplate;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
-use Doctrine\Common\Collections\ArrayCollection;
-
 /**
  * @ORM\Entity
  * @ORM\Table(name="RSVPAnswer")
@@ -25,47 +24,41 @@ use Doctrine\Common\Collections\ArrayCollection;
 class RSVPAnswer extends SilverstripeBaseModel
 {
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\RSVP", inversedBy="answers", fetch="LAZY")
-     * @ORM\JoinColumn(name="RSVPID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var SummitAttendee
-     */
-    private $rsvp;
-
-    /**
      * @ORM\Column(name="Value", type="string")
      * @var string
      */
     private $value;
 
     /**
-     * @return SummitAttendee
+     * @ORM\ManyToOne(targetEntity="models\summit\RSVP", inversedBy="answers")
+     * @ORM\JoinColumn(name="RSVPID", referencedColumnName="ID", onDelete="CASCADE")
+     * @var RSVP
      */
-    public function getRsvp()
-    {
-        return $this->rsvp;
-    }
+    private $rsvp;
 
     /**
-     * @param SummitAttendee $rsvp
+     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\Events\RSVP\RSVPQuestionTemplate")
+     * @ORM\JoinColumn(name="QuestionID", referencedColumnName="ID")
+     * @var RSVPQuestionTemplate
      */
-    public function setRsvp($rsvp)
-    {
-        $this->rsvp = $rsvp;
-    }
+    private $question;
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getValue()
+    public function getValue():?string
     {
         return $this->value;
     }
 
     /**
-     * @param string $value
+     * @param array|string $value
      */
     public function setValue($value)
     {
+        if (is_array($value)) {
+            $value = implode(',', $value);
+        }
         $this->value = $value;
     }
 
@@ -74,20 +67,65 @@ class RSVPAnswer extends SilverstripeBaseModel
      */
     public function getQuestionId()
     {
-        return $this->question_id;
+        try{
+            return $this->question->getId();
+        }
+        catch(\Exception $ex){
+            return 0;
+        }
     }
 
     /**
-     * @param int $question_id
+     * @return int
      */
-    public function setQuestionId($question_id)
+    public function getRSVPId()
     {
-        $this->question_id = $question_id;
+        try{
+            return $this->rsvp->getId();
+        }
+        catch(\Exception $ex){
+            return 0;
+        }
     }
 
     /**
-     * @ORM\Column(name="QuestionID", type="integer")
-     * @var int
+     * @return RSVP
      */
-    private $question_id;
+    public function getRsvp(): RSVP
+    {
+        return $this->rsvp;
+    }
+
+    /**
+     * @param RSVP $rsvp
+     */
+    public function setRsvp(RSVP $rsvp): void
+    {
+        $this->rsvp = $rsvp;
+    }
+
+    /**
+     * @return RSVPQuestionTemplate
+     */
+    public function getQuestion(): RSVPQuestionTemplate
+    {
+        return $this->question;
+    }
+
+    /**
+     * @param RSVPQuestionTemplate $question
+     */
+    public function setQuestion(RSVPQuestionTemplate $question): void
+    {
+        $this->question = $question;
+    }
+
+    public function clearRSVP(){
+        $this->rsvp = null;
+    }
+
+    public function clearQuestion(){
+        $this->question = null;
+    }
+
 }

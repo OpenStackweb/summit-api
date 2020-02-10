@@ -117,4 +117,25 @@ class RSVPDropDownQuestionTemplate extends RSVPMultiValueQuestionTemplate
     public static function getMetadata(){
         return array_merge(RSVPMultiValueQuestionTemplate::getMetadata(), self::$metadata);
     }
+
+    /**
+     * @param array|string $value
+     * @return bool
+     */
+    public function isValidValue($value): bool
+    {
+        if(!$this->is_multiselect){
+            if(!is_string($value)) return false;
+            $valId = intval($value);
+            $val   = $this->getValueById($valId);
+            if(is_null($val)) return false;
+            return true;
+        }
+        if(!is_array($value)) return false;
+        foreach($value as $valId){
+            $val   = $this->getValueById(intval($valId));
+            if(is_null($val)) return false;
+        }
+        return true;
+    }
 }

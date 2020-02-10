@@ -3954,10 +3954,28 @@ class ApiEndpointsSeeder extends Seeder
                 'scopes' => [sprintf('%s/me/summits/events/favorites/add', $current_realm)],
             ],
             [
+                'name' => 'add-rsvp-member',
+                'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/rsvp',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'update-rsvp-member',
+                'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/rsvp',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+            ],
+            [
                 'name' => 'delete-rsvp-member',
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/rsvp',
                 'http_method' => 'DELETE',
-                'scopes' => [sprintf(SummitScopes::WriteSummitData, $current_realm)],
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
             ],
             [
                 'name' => 'remove-from-own-member-favorites',

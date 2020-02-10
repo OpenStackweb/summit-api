@@ -14,6 +14,8 @@
 use App\EntityPersisters\AdminSummitEventActionSyncWorkRequestPersister;
 use App\EntityPersisters\AdminSummitLocationActionSyncWorkRequestPersister;
 use App\EntityPersisters\EntityEventPersister;
+use App\Events\RSVPCreated;
+use App\Events\RSVPUpdated;
 use App\Factories\CalendarAdminActionSyncWorkRequest\AdminSummitLocationActionSyncWorkRequestFactory;
 use App\Factories\CalendarAdminActionSyncWorkRequest\SummitEventDeletedCalendarSyncWorkRequestFactory;
 use App\Factories\CalendarAdminActionSyncWorkRequest\SummitEventUpdatedCalendarSyncWorkRequestFactory;
@@ -44,13 +46,16 @@ use App\Mail\BookableRoomReservationPaymentConfirmedEmail;
 use App\Mail\BookableRoomReservationRefundAcceptedEmail;
 use App\Mail\BookableRoomReservationRefundRequestedAdminEmail;
 use App\Mail\BookableRoomReservationRefundRequestedOwnerEmail;
+use App\Mail\Schedule\RSVPRegularSeatMail;
+use App\Mail\Schedule\RSVPWaitListSeatMail;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Mail;
 use LaravelDoctrine\ORM\Facades\EntityManager;
+use models\main\Member;
+use models\summit\RSVP;
 use models\summit\SummitRoomReservation;
-
 /**
  * Class EventServiceProvider
  * @package App\Providers
@@ -375,6 +380,40 @@ final class EventServiceProvider extends ServiceProvider
             $reservation = $repository->find($event->getReservationId());
             if(is_null($reservation) || ! $reservation instanceof SummitRoomReservation) return;
             Mail::send(new BookableRoomReservationCanceledEmail($reservation));
+        });
+
+        Event::listen(RSVPCreated::class, function($event){
+            if(!$event instanceof RSVPCreated) return;
+
+            $rsvp_id = $event->getRsvpId();
+
+            $rsvp_repository = EntityManager::getRepository(RSVP::class);
+
+            $rsvp = $rsvp_repository->find($rsvp_id);
+            if(is_null($rsvp) || ! $rsvp instanceof RSVP) return;
+
+            if($rsvp->getSeatType() == RSVP::SeatTypeRegular)
+                Mail::send(new RSVPRegularSeatMail($rsvp));
+
+            if($rsvp->getSeatType() == RSVP::SeatTypeWaitList)
+                Mail::send(new RSVPWaitListSeatMail($rsvp));
+        });
+
+        Event::listen(RSVPUpdated::class, function($event){
+            if(!$event instanceof RSVPUpdated) return;
+
+            $rsvp_id = $event->getRsvpId();
+
+            $rsvp_repository = EntityManager::getRepository(RSVP::class);
+
+            $rsvp = $rsvp_repository->find($rsvp_id);
+            if(is_null($rsvp) || ! $rsvp instanceof RSVP) return;
+
+            if($rsvp->getSeatType() == RSVP::SeatTypeRegular)
+                Mail::send(new RSVPRegularSeatMail($rsvp));
+
+            if($rsvp->getSeatType() == RSVP::SeatTypeWaitList)
+                Mail::send(new RSVPWaitListSeatMail($rsvp));
         });
     }
 }

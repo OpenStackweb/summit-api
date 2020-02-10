@@ -134,7 +134,7 @@ class RSVPTemplate extends SilverstripeBaseModel
     }
 
     /**
-     * @return RSVPQuestionTemplate[]
+     * @return ArrayCollection|\Doctrine\Common\Collections\Collection
      */
     public function getQuestions()
     {

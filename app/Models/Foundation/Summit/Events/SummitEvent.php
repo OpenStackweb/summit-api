@@ -957,4 +957,120 @@ class SummitEvent extends SilverstripeBaseModel
         $this->external_id = $external_id;
     }
 
+    /**
+     * @return string
+     * @throws ValidationException
+     */
+    public function getCurrentRSVPSubmissionSeatType():string{
+
+        if(!$this->hasRSVPTemplate())
+            throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
+
+        if(!$this->getRSVPTemplate()->isEnabled()){
+            throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
+        }
+
+        $count_regular = $this->getRSVPSeatTypeCount(RSVP::SeatTypeRegular);
+        if($count_regular < intval($this->rsvp_max_user_number)) return RSVP::SeatTypeRegular;
+        $count_wait = $this->getRSVPSeatTypeCount(RSVP::SeatTypeWaitList);
+        if($count_wait < intval($this->rsvp_max_user_wait_list_number)) return RSVP::SeatTypeWaitList;
+        throw new ValidationException(sprintf("Event %s is Full.", $this->id));
+    }
+
+    /**
+     * @param string $seat_type
+     * @return int
+     */
+    public function getRSVPSeatTypeCount(string $seat_type):int{
+        $criteria = Criteria::create();
+        $criteria = $criteria->where(Criteria::expr()->eq('seat_type', $seat_type));
+        return $this->rsvp->matching($criteria)->count();
+    }
+
+    /**
+     * @param string $seat_type
+     * @return bool
+     */
+    public function couldAddSeatType(string $seat_type):bool{
+        switch($seat_type){
+            case RSVP::SeatTypeRegular: {
+                $count_regular = $this->getRSVPSeatTypeCount(RSVP::SeatTypeRegular);
+                return $count_regular < intval($this->rsvp_max_user_number);
+            }
+            case RSVP::SeatTypeWaitList: {
+                $count_wait = $this->getRSVPSeatTypeCount(RSVP::SeatTypeWaitList);
+                return $count_wait < intval($this->rsvp_max_user_wait_list_number);
+            }
+        }
+        return false;
+    }
+
+    public function getRSVPRegularCount():?int{
+        return  $this->getRSVPSeatTypeCount(RSVP::SeatTypeRegular);
+    }
+
+    public function getRSVPWaitCount():?int{
+        return  $this->getRSVPSeatTypeCount(RSVP::SeatTypeWaitList);
+    }
+
+    /**
+     * @param RSVP $rsvp
+     * @throws ValidationException
+     */
+    public function addRSVPSubmission(RSVP $rsvp){
+        if(!$this->hasRSVPTemplate()){
+            throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
+        }
+
+        if(!$this->getRSVPTemplate()->isEnabled()){
+            throw new ValidationException(sprintf("Event %s has not RSVP configured.", $this->id));
+        }
+
+        if($this->rsvp->contains($rsvp)) return;
+        $this->rsvp->add($rsvp);
+        $rsvp->setEvent($this);
+    }
+
+    /**
+     * @param RSVP $rsvp
+     */
+    public function removeRSVPSubmission(RSVP $rsvp){
+        if(!$this->rsvp->contains($rsvp)) return;
+        $this->rsvp->removeElement($rsvp);
+        $rsvp->clearEvent();
+    }
+
+    /**
+     * @return string
+     */
+    public function getStartDateNice():string
+    {
+        $start_date =  $this->getLocalStartDate();
+        if(empty($start_date)) return 'TBD';
+        return $start_date->format("Y-m-d H:i:s");
+    }
+
+    /**
+     * @return string
+     */
+    public function getEndDateNice():string
+    {
+        $end_date  = $this->getLocalEndDate();
+        if(empty($end_date)) return 'TBD';
+        return $end_date->format("Y-m-d H:i:s");
+    }
+
+    /**
+     * @return string
+     */
+    public function getDateNice():string {
+        $start_date = $this->getStartDateNice();
+        $end_date   = $this->getEndDateNice();
+        $date_nice  = '';
+
+        if ($start_date == 'TBD' || $end_date == 'TBD') return $start_date;
+
+        $date_nice = date('l, F j, g:ia', strtotime($start_date)).'-'.date('g:ia', strtotime($end_date));
+        return $date_nice;
+    }
 }

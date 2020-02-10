@@ -38,4 +38,5 @@ class RSVPTextBoxQuestionTemplate extends RSVPSingleValueTemplateQuestion
     public static function getMetadata(){
         return array_merge(RSVPSingleValueTemplateQuestion::getMetadata(), self::$metadata);
     }
+
 }

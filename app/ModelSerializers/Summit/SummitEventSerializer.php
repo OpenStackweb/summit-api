@@ -11,9 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use Libs\ModelSerializers\AbstractSerializer;
-use libs\utils\JsonUtils;
 use models\summit\SummitEvent;
 /**
  * Class SummitEventSerializer
@@ -39,13 +37,14 @@ class SummitEventSerializer extends SilverStripeSerializer
         'RSVPTemplateId'            => 'rsvp_template_id:json_int',
         'RSVPMaxUserNumber'         => 'rsvp_max_user_number:json_int',
         'RSVPMaxUserWaitListNumber' => 'rsvp_max_user_wait_list_number:json_int',
+        'RSVPRegularCount'          => 'rsvp_regular_count:json_int',
+        'RSVPWaitCount'             => 'rsvp_wait_count:json_int',
         'ExternalRSVP'              => 'rsvp_external:json_boolean',
         'CategoryId'                => 'track_id:json_int',
         'Occupancy'                 => 'occupancy:json_string'
     ];
 
     protected static $allowed_fields = [
-
         'id',
         'title',
         'description',
@@ -67,6 +66,8 @@ class SummitEventSerializer extends SilverStripeSerializer
         'rsvp_max_user_number',
         'rsvp_max_user_wait_list_number',
         'occupancy',
+        'rsvp_regular_count',
+        'rsvp_wait_count',
     ];
 
     protected static $allowed_relations = [
@@ -107,7 +108,7 @@ class SummitEventSerializer extends SilverStripeSerializer
                 $relation = trim($relation);
                 switch ($relation) {
                     case 'feedback': {
-                        $feedback = array();
+                        $feedback = [];
                         foreach ($event->getFeedback() as $f) {
                             $feedback[] = SerializerRegistry::getInstance()->getSerializer($f)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
@@ -121,8 +122,15 @@ class SummitEventSerializer extends SilverStripeSerializer
                         }
                     }
                     break;
+                    case 'rsvp_template': {
+                        if($event->hasRSVPTemplate()){
+                            unset($values['rsvp_template_id']);
+                            $values['rsvp_template'] = SerializerRegistry::getInstance()->getSerializer($event->getRSVPTemplate())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                    }
+                        break;
                     case 'sponsors': {
-                        $sponsors = array();
+                        $sponsors = [];
                         foreach ($event->getSponsors() as $s) {
                             $sponsors[] = SerializerRegistry::getInstance()->getSerializer($s)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }

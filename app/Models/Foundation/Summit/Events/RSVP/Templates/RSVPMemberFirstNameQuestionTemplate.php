@@ -38,4 +38,14 @@ class RSVPMemberFirstNameQuestionTemplate extends RSVPTextBoxQuestionTemplate
     public static function getMetadata(){
         return array_merge(RSVPTextBoxQuestionTemplate::getMetadata(), self::$metadata);
     }
+
+    /**
+     * @param array|string $value
+     * @return bool
+     */
+    public function isValidValue($value): bool
+    {
+        if(!is_string($value)) return false;
+        return true;
+    }
 }

@@ -62,4 +62,15 @@ class RSVPSingleValueTemplateQuestion extends RSVPQuestionTemplate
     public static function getMetadata(){
         return array_merge(RSVPQuestionTemplate::getMetadata(), self::$metadata);
     }
+
+    /**
+     * @param array|string $value
+     * @return bool
+     */
+    public function isValidValue($value): bool
+    {
+        if(empty($value) && !$this->is_mandatory) return true;
+        if(!is_string($value)) return false;
+        return true;
+    }
 }

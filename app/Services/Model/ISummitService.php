@@ -17,6 +17,7 @@ use models\exceptions\ValidationException;
 use models\main\File;
 use models\main\Member;
 use models\summit\ConfirmationExternalOrderRequest;
+use models\summit\RSVP;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitBookableVenueRoomAttributeType;
@@ -142,14 +143,6 @@ interface ISummitService
      * @throws EntityNotFoundException
      */
     public function addEventToMemberFavorites(Summit $summit, Member $member, $event_id);
-
-    /**
-     * @param Summit $summit
-     * @param Member $member
-     * @param $event_id
-     * @return bool
-     */
-    public function unRSVPEvent(Summit $summit, Member $member, $event_id);
 
     /**
      * @param Summit $summit
@@ -352,4 +345,36 @@ interface ISummitService
      * @throws EntityNotFoundException
      */
     public function deleteSummitLogo(int $summit_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param Member $member
+     * @param int $event_id
+     * @param array $data
+     * @return RSVP
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function addRSVP(Summit $summit, Member $member, int $event_id, array $data):RSVP;
+
+    /**
+     * @param Summit $summit
+     * @param Member $member
+     * @param int $event_id
+     * @param array $data
+     * @return RSVP
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function updateRSVP(Summit $summit, Member $member, int $event_id, array $data):RSVP;
+
+    /**
+     * @param Summit $summit
+     * @param Member $member
+     * @param int $event_id
+     * @return bool
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function unRSVPEvent(Summit $summit, Member $member, int $event_id);
 }

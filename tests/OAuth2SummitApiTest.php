@@ -686,29 +686,6 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $this->assertResponseStatus(204);
     }
 
-    public function testCurrentSummitMyAttendeeScheduleUnRSVP($event_id = 18639, $summit_id = 22)
-    {
-        //$this->testCurrentSummitMyAttendeeAddToSchedule($event_id, $summit_id);
-        $params = array
-        (
-            'id'          => $summit_id,
-            'attendee_id' => 'me',
-            'event_id'    => $event_id
-        );
-
-        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
-        $response = $this->action(
-            "DELETE",
-            "OAuth2SummitAttendeesApiController@deleteEventRSVP",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-    }
 
     public function testGetMySpeakerFromCurrentSummit()
     {
@@ -1443,31 +1420,6 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $content = $response->getContent();
         $this->assertResponseStatus(204);
     }
-
-    public function testCurrentSummitMyMemberScheduleUnRSVP($event_id = 18639, $summit_id = 22)
-    {
-        //$this->testCurrentSummitMyAttendeeAddToSchedule($event_id, $summit_id);
-        $params = array
-        (
-            'id'          => $summit_id,
-            'member_id' => 'me',
-            'event_id'    => $event_id
-        );
-
-        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
-        $response = $this->action(
-            "DELETE",
-            "OAuth2SummitMembersApiController@deleteEventRSVP",
-            $params,
-            array(),
-            array(),
-            array(),
-            $headers
-        );
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-    }
-
 
     public function testAddPresentationSlide($summit_id=25){
 

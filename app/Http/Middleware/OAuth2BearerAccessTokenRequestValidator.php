@@ -186,11 +186,13 @@ class OAuth2BearerAccessTokenRequestValidator
             Log::debug('setting resource server context ...');
             //set context for api and continue processing
             $context = [
-                'access_token'     => $access_token_value,
-                'expires_in'       => $token_info->getLifetime(),
-                'client_id'        => $token_info->getClientId(),
-                'scope'            => $token_info->getScope(),
-                'application_type' => $token_info->getApplicationType()
+                'access_token'        => $access_token_value,
+                'expires_in'          => $token_info->getLifetime(),
+                'client_id'           => $token_info->getClientId(),
+                'scope'               => $token_info->getScope(),
+                'application_type'    => $token_info->getApplicationType(),
+                'allowed_origins'     => $token_info->getAllowedOrigins(),
+                'allowed_return_uris' => $token_info->getAllowedReturnUris()
             ];
 
             if (!is_null($token_info->getUserId()))

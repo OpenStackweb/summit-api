@@ -15,10 +15,13 @@ use App\Events\MyFavoritesAdd;
 use App\Events\MyFavoritesRemove;
 use App\Events\MyScheduleAdd;
 use App\Events\MyScheduleRemove;
+use App\Events\RSVPCreated;
+use App\Events\RSVPUpdated;
 use App\Events\SummitDeleted;
 use App\Events\SummitUpdated;
 use App\Http\Utils\IFileUploader;
 use App\Models\Foundation\Summit\Factories\SummitFactory;
+use App\Models\Foundation\Summit\Factories\SummitRSVPFactory;
 use App\Models\Foundation\Summit\Repositories\IDefaultSummitEventTypeRepository;
 use App\Models\Utils\IntervalParser;
 use App\Permissions\IPermissionsManager;
@@ -52,6 +55,7 @@ use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
 use models\summit\Presentation;
 use models\summit\PresentationType;
+use models\summit\RSVP;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
@@ -1229,37 +1233,6 @@ final class SummitService extends AbstractService implements ISummitService
 
     /**
      * @param Summit $summit
-     * @param Member $member
-     * @param $event_id
-     * @return bool
-     */
-    public function unRSVPEvent(Summit $summit, Member $member, $event_id)
-    {
-        return $this->tx_service->transaction(function () use ($summit, $member, $event_id) {
-
-            $event = $summit->getScheduleEvent($event_id);
-            if (is_null($event)) {
-                throw new EntityNotFoundException('event not found on summit!');
-            }
-
-            if(!Summit::allowToSee($event, $member))
-                throw new EntityNotFoundException('event not found on summit!');
-
-            $rsvp = $member->getRsvpByEvent($event_id);
-
-            if(is_null($rsvp))
-                throw new ValidationException(sprintf("rsvp for event id %s does not exist for your member", $event_id));
-
-            $this->rsvp_repository->delete($rsvp);
-
-            $this->removeEventFromMemberSchedule($summit, $member, $event_id ,false);
-
-            return true;
-        });
-    }
-
-    /**
-     * @param Summit $summit
      * @param int $event_id
      * @param UploadedFile $file
      * @param int $max_file_size
@@ -2128,4 +2101,158 @@ final class SummitService extends AbstractService implements ISummitService
             $summit->clearLogo();
         });
     }
+
+    /**
+     * @param Summit $summit
+     * @param Member $member
+     * @param int $event_id
+     * @param array $data
+     * @return RSVP
+     * @throws Exception
+     */
+    public function addRSVP(Summit $summit, Member $member, int $event_id, array $data): RSVP
+    {
+        $rsvp = $this->tx_service->transaction(function () use ($summit, $member, $event_id, $data) {
+
+            $event = $this->event_repository->getByIdExclusiveLock($event_id);
+
+            if (is_null($event) || !$event instanceof SummitEvent) {
+                throw new EntityNotFoundException('Event not found on summit.');
+            }
+
+            if ($event->getSummitId() != $summit->getId()) {
+                throw new EntityNotFoundException('Event not found on summit.');
+            }
+
+            if(!Summit::allowToSee($event, $member))
+                throw new EntityNotFoundException('Event not found on summit.');
+
+            if (!$event->hasRSVPTemplate()) {
+                throw new EntityNotFoundException('Event not found on summit.');
+            }
+
+            // add to schedule the RSVP event
+            if (!$member->isOnSchedule($event)) {
+               $this->addEventToMemberSchedule($summit, $member, $event_id, false);
+            }
+
+            $old_rsvp = $member->getRsvpByEvent($event_id);
+
+            if (!is_null($old_rsvp))
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Member %s already submitted an rsvp for event %s on summit %s.",
+                        $member->getId(),
+                        $event_id,
+                        $summit->getId()
+                    )
+                );
+
+            // create RSVP
+
+            return SummitRSVPFactory::build($event, $member, $data);
+        });
+
+        Event::fire(new RSVPCreated($rsvp));
+
+        return $rsvp;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param Member $member
+     * @param int $event_id
+     * @param array $data
+     * @return RSVP
+     * @throws Exception
+     */
+    public function updateRSVP(Summit $summit, Member $member, int $event_id, array $data): RSVP
+    {
+        return $this->tx_service->transaction(function () use ($summit, $member, $event_id, $data) {
+
+            $event = $this->event_repository->getByIdExclusiveLock($event_id);
+
+            if (is_null($event) || !$event instanceof SummitEvent) {
+                throw new EntityNotFoundException('Event not found on summit.');
+            }
+
+            if ($event->getSummitId() != $summit->getId()) {
+                throw new EntityNotFoundException('Event not found on summit.');
+            }
+
+            if (!Summit::allowToSee($event, $member))
+                throw new EntityNotFoundException('Event not found on summit.');
+
+            if (!$event->hasRSVPTemplate()) {
+                throw new EntityNotFoundException('Event not found on summit.');
+            }
+
+            // add to schedule the RSVP event
+            if (!$member->isOnSchedule($event)) {
+                throw new EntityNotFoundException('Event not found on summit.');
+            }
+
+            $rsvp = $member->getRsvpByEvent($event->getId());
+
+            if (is_null($rsvp))
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Member %s did not submitted an rsvp for event %s on summit %s.",
+                        $member->getId(),
+                        $event_id,
+                        $summit->getId()
+                    )
+                );
+
+            // update RSVP
+
+            $rsvp = SummitRSVPFactory::populate($rsvp, $event, $member, $data);
+
+            Event::fire(new RSVPUpdated($rsvp));
+
+            return $rsvp;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param Member $member
+     * @param int $event_id
+     * @return bool|mixed
+     * @throws Exception
+     */
+    public function unRSVPEvent(Summit $summit, Member $member, int $event_id)
+    {
+        return $this->tx_service->transaction(function () use ($summit, $member, $event_id) {
+
+            $event = $this->event_repository->getByIdExclusiveLock($event_id);
+
+            if (is_null($event) || !$event instanceof SummitEvent) {
+                throw new EntityNotFoundException('Event not found on summit.');
+            }
+
+            if ($event->getSummitId() != $summit->getId()) {
+                throw new EntityNotFoundException('Event not found on summit.');
+            }
+
+            if(!Summit::allowToSee($event, $member))
+                throw new EntityNotFoundException('Event not found on summit.');
+
+            $rsvp = $member->getRsvpByEvent($event_id);
+
+            if(is_null($rsvp))
+                throw new ValidationException(sprintf("RSVP for event id %s does not exist for your member.", $event_id));
+
+            $this->rsvp_repository->delete($rsvp);
+
+            $this->removeEventFromMemberSchedule($summit, $member, $event_id ,false);
+
+            return true;
+        });
+    }
+
 }

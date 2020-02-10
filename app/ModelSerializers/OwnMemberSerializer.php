@@ -11,8 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use Libs\ModelSerializers\AbstractSerializer;
 use models\main\Member;
-
 /**
  * Class OwnMemberSerializer
  * @package ModelSerializers
@@ -120,9 +120,10 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
         }
 
         if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
+
+            foreach (explode(',', $expand) as $relation) {
+                $relation = trim($relation);
+                switch ($relation) {
 
                     case 'attendee': {
                         if (!is_null($attendee))
@@ -180,7 +181,7 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         foreach ($member->getRsvpBySummit($summit) as $rsvp){
                             $rsvps[] = SerializerRegistry::getInstance()
                                 ->getSerializer($rsvp)
-                                ->serialize($expand);
+                                ->serialize(AbstractSerializer::filterExpandByPrefix($relation, $expand));
                         }
                         $values['rsvp'] = $rsvps;
                     }

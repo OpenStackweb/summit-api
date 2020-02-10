@@ -16,22 +16,20 @@ use Doctrine\DBAL\Schema\Schema as Schema;
 use LaravelDoctrine\Migrations\Schema\Builder;
 use LaravelDoctrine\Migrations\Schema\Table;
 /**
- * Class Version20191212002736
+ * Class Version20200212125943
  * @package Database\Migrations\Model
  */
-final class Version20191212002736 extends AbstractMigration
+class Version20200212125943 extends AbstractMigration
 {
-
     /**
      * @param Schema $schema
      */
     public function up(Schema $schema)
     {
         $builder = new Builder($schema);
-        if($schema->hasTable("Summit") && !$builder->hasColumn("Summit", "BeginAllowBookingDate")) {
-            $builder->table('Summit', function (Table $table) {
-                $table->dateTime("BeginAllowBookingDate")->setNotnull(false);
-                $table->dateTime("EndAllowBookingDate")->setNotnull(false);
+        if($schema->hasTable("RSVP") && !$builder->hasColumn("RSVP", "EventUri")) {
+            $builder->table('RSVP', function (Table $table) {
+                $table->string("EventUri")->setNotnull(false);
             });
         }
     }
@@ -42,10 +40,9 @@ final class Version20191212002736 extends AbstractMigration
     public function down(Schema $schema)
     {
         $builder = new Builder($schema);
-        if($schema->hasTable("Summit") && $builder->hasColumn("Summit", "BeginAllowBookingDate")) {
-            $builder->table('Member', function (Table $table) {
-                $table->dropColumn("BeginAllowBookingDate");
-                $table->dropColumn("EndAllowBookingDate");
+        if($schema->hasTable("RSVP") && $builder->hasColumn("RSVP", "EventUri")) {
+            $builder->table('RSVP', function (Table $table) {
+                $table->dropColumn("EventUri");
             });
         }
     }

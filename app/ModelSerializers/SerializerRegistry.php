@@ -167,6 +167,7 @@ final class SerializerRegistry
 
         // RSVP
         $this->registry['RSVP']                       = RSVPSerializer::class;
+        $this->registry['RSVPAnswer']                 = RSVPAnswerSerializer::class;
         $this->registry['RSVPTemplate']               = RSVPTemplateSerializer::class;
         $this->registry['RSVPQuestionValueTemplate']  = RSVPQuestionValueTemplateSerializer::class;
 

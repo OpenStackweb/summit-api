@@ -29,20 +29,20 @@ class RSVPMultiValueQuestionTemplate extends RSVPQuestionTemplate
      * @ORM\Column(name="EmptyString", type="string")
      * @var string
      */
-    private $empty_string;
+    protected $empty_string;
 
     /**
      * @ORM\OneToMany(targetEntity="RSVPQuestionValueTemplate", mappedBy="owner", cascade={"persist", "remove"}, orphanRemoval=true)
      * @var RSVPQuestionValueTemplate[]
      */
-    private $values;
+    protected $values;
 
     /**
      * @ORM\ManyToOne(targetEntity="RSVPQuestionValueTemplate", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="DefaultValueID", referencedColumnName="ID")
      * @var RSVPQuestionValueTemplate
      */
-    private $default_value;
+    protected $default_value;
 
     /**
      * @return string

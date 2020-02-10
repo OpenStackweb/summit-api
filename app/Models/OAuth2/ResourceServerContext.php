@@ -90,6 +90,22 @@ final class ResourceServerContext implements IResourceServerContext
     /**
      * @return null|string
      */
+    public function getAllowedOrigins()
+    {
+        return $this->getAuthContextVar('allowed_origins');
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getAllowedReturnUris()
+    {
+        return $this->getAuthContextVar('allowed_return_uris');
+    }
+
+    /**
+     * @return null|string
+     */
     public function getCurrentAccessTokenLifetime()
     {
         return $this->getAuthContextVar('expires_in');

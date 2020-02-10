@@ -81,7 +81,7 @@ class AccessTokenServiceStub implements IAccessTokenService
                 'user_external_id'    => '13867',
                 'expires_in'          => 3600,
                 'application_type'    => 'WEB_APPLICATION',
-                'allowed_return_uris' => '',
+                'allowed_return_uris' => 'https://www.openstack.org/OpenStackIdAuthenticator,https://www.openstack.org/Security/login',
                 'allowed_origins'     =>  ''
             ]
         );

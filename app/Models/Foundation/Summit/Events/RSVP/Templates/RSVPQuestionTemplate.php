@@ -213,4 +213,12 @@ class RSVPQuestionTemplate extends SilverstripeBaseModel implements IOrderable
         return self::$metadata;
     }
 
+    /**
+     * @param array|string|null $value
+     * @return bool
+     */
+    public function isValidValue($value):bool {
+        return true;
+    }
+
 }

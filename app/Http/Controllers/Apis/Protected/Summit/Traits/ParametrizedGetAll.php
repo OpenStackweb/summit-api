@@ -37,17 +37,20 @@ trait ParametrizedGetAll
     /**
      * @param int $page
      * @param int $per_page
-     * @param Filter $filter
-     * @param Order $order
-     * @param callable $applyExtraFilters
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @param callable|null $applyExtraFilters
      * @return \utils\PagingResponse
      */
-    protected function defaultQuery(int $page, int $per_page, Filter $filter, Order $order, callable $applyExtraFilters)
+    protected function defaultQuery(int $page, int $per_page, ?Filter $filter, ?Order $order, ?callable $applyExtraFilters = null)
     {
+        if(!is_null($applyExtraFilters))
+            $filter = call_user_func($applyExtraFilters, $filter);
+
         return $this->getRepository()->getAllByPage
         (
             new PagingInfo($page, $per_page),
-            call_user_func($applyExtraFilters, $filter),
+            $filter,
             $order
         );
     }

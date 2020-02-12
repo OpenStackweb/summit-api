@@ -84,7 +84,7 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
      */
     public function getAll($summit_id)
     {
-        $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
         if (is_null($summit)) return $this->error404();
 
         return $this->_getAll(

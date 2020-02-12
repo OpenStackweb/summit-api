@@ -40,13 +40,13 @@ return [
 
         'single' => [
             'driver' => 'single',
-            'path' => storage_path('/logs/laravel-'.get_current_user().'.log'),
+            'path' => storage_path('/logs/laravel-'.php_sapi_name().'.log'),
             'level' =>  env('LOG_LEVEL', 'error'),
         ],
 
         'daily' => [
             'driver' => 'daily',
-            'path' => storage_path('/logs/laravel-'.get_current_user().'.log'),
+            'path' => storage_path('/logs/laravel-'.php_sapi_name().'.log'),
             'level' =>  env('LOG_LEVEL', 'error'),
             'days' => 7,
         ],

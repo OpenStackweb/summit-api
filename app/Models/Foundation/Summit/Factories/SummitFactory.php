@@ -204,6 +204,72 @@ final class SummitFactory
             $summit->setApiFeedKey(trim($data['api_feed_key']));
         }
 
+        // schedule
+
+        if(isset($data['schedule_default_page_url'])){
+            $summit->setScheduleDefaultPageUrl(trim($data['schedule_default_page_url']));
+        }
+
+        if(isset($data['schedule_default_event_detail_url'])){
+            $summit->setScheduleDefaultEventDetailUrl(trim($data['schedule_default_event_detail_url']));
+        }
+
+        if(isset($data['schedule_og_site_name'])){
+            $summit->setScheduleOgSiteName(trim($data['schedule_og_site_name']));
+        }
+
+        if(isset($data['schedule_og_image_url'])){
+            $summit->setScheduleOgImageUrl(trim($data['schedule_og_image_url']));
+        }
+
+        if(isset($data['schedule_og_image_secure_url'])){
+            $summit->setScheduleOgImageSecureUrl(trim($data['schedule_og_image_secure_url']));
+        }
+
+        if(isset($data['schedule_og_image_width'])){
+            $summit->setScheduleOgImageWidth(intval($data['schedule_og_image_width']));
+        }
+
+        if(isset($data['schedule_og_image_height'])){
+            $summit->setScheduleOgImageHeight(intval($data['schedule_og_image_height']));
+        }
+
+        if(isset($data['schedule_facebook_app_id'])){
+            $summit->setScheduleFacebookAppId(trim($data['schedule_facebook_app_id']));
+        }
+
+        if(isset($data['schedule_ios_app_name'])){
+            $summit->setScheduleIosAppName(trim($data['schedule_ios_app_name']));
+        }
+
+        if(isset($data['schedule_ios_app_store_id'])){
+            $summit->setScheduleIosAppStoreId(trim($data['schedule_ios_app_store_id']));
+        }
+
+        if(isset($data['schedule_ios_app_custom_schema'])){
+            $summit->setScheduleIosAppCustomSchema(trim($data['schedule_ios_app_custom_schema']));
+        }
+
+        if(isset($data['schedule_android_app_name'])){
+            $summit->setScheduleAndroidAppName(trim($data['schedule_android_app_name']));
+        }
+
+        if(isset($data['schedule_android_app_package'])){
+            $summit->setScheduleAndroidAppPackage(trim($data['schedule_android_app_package']));
+        }
+
+        if(isset($data['schedule_android_custom_schema'])){
+            $summit->setScheduleAndroidCustomSchema(trim($data['schedule_android_custom_schema']));
+        }
+
+        if(isset($data['schedule_twitter_app_name'])){
+            $summit->setScheduleTwitterAppName(trim($data['schedule_twitter_app_name']));
+        }
+
+        if(isset($data['schedule_twitter_text'])){
+            $summit->setScheduleTwitterText(trim($data['schedule_twitter_text']));
+        }
+
         return $summit;
     }
 }

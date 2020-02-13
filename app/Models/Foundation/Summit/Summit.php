@@ -18,6 +18,7 @@ use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Foundation\Summit\TrackTagGroup;
 use App\Models\Foundation\Summit\TrackTagGroupAllowedTag;
+use App\Models\Utils\GetDefaultValueFromConfig;
 use App\Models\Utils\TimeZoneEntity;
 use App\Services\Apis\ExternalScheduleFeeds\IExternalScheduleFeedFactory;
 use Cocur\Slugify\Slugify;
@@ -41,6 +42,9 @@ class Summit extends SilverstripeBaseModel
 {
 
     use TimeZoneEntity;
+
+    use GetDefaultValueFromConfig;
+
     /**
      * @ORM\Column(name="Title", type="string")
      * @var string
@@ -271,6 +275,104 @@ class Summit extends SilverstripeBaseModel
      * @var string
      */
     private $api_feed_key;
+
+    // schedule app
+
+    /**
+     * @ORM\Column(name="ScheduleDefaultPageUrl", type="string", nullable=true)
+     * @var string
+     */
+    private $schedule_default_page_url;
+
+    /**
+     * @ORM\Column(name="ScheduleDefaultEventDetailUrl", type="string", nullable=true)
+     * @var string
+     */
+    private $schedule_default_event_detail_url;
+
+    /**
+     * @ORM\Column(name="ScheduleOGSiteName", type="string", nullable=true)
+     * @var string
+     */
+    private $schedule_og_site_name;
+
+    /**
+     * @ORM\Column(name="ScheduleOGImageUrl", type="string", nullable=true)
+     * @var string
+     */
+    private $schedule_og_image_url;
+
+    /**
+     * @ORM\Column(name="ScheduleOGImageSecureUrl", type="string", nullable=true)
+     * @var string
+     */
+    private $schedule_og_image_secure_url;
+
+    /**
+     * @ORM\Column(name="ScheduleOGImageWidth", type="integer", nullable=true)
+     * @var int
+     */
+    private $schedule_og_image_width;
+
+    /**
+     * @ORM\Column(name="ScheduleOGImageHeight", type="integer", nullable=true)
+     * @var int
+     */
+    private $schedule_og_image_height;
+
+    /**
+     * @ORM\Column(name="ScheduleFacebookAppId", type="string", nullable=true)
+     * @var string
+     */
+    private $schedule_facebook_app_id;
+
+    /**
+     * @ORM\Column(name="ScheduleIOSAppName", type="string", nullable=true)
+     * @var string
+     */
+    private $schedule_ios_app_name;
+
+    /**
+     * @ORM\Column(name="ScheduleIOSAppStoreId", type="string", nullable=true)
+     * @var string
+     */
+    private $schedule_ios_app_store_id;
+
+    /**
+     * @ORM\Column(name="ScheduleIOSAppCustomSchema", type="string", nullable=true)
+     * @var string
+     */
+    private $schedule_ios_app_custom_schema;
+
+    /**
+     * @ORM\Column(name="ScheduleAndroidAppName", type="string", nullable=true)
+     * @var string
+     */
+    private $schedule_android_app_name;
+
+    /**
+     * @ORM\Column(name="ScheduleAndroidAppPackage", type="string", nullable=true)
+     * @var string
+     */
+    private $schedule_android_app_package;
+
+    /**
+     * @ORM\Column(name="ScheduleAndroidAppCustomSchema", type="string", nullable=true)
+     * @var string
+     */
+    private $schedule_android_custom_schema;
+
+    /**
+     * @ORM\Column(name="ScheduleTwitterAppName", type="string", nullable=true)
+     * @var string
+     */
+    private $schedule_twitter_app_name;
+
+    /**
+     * @ORM\Column(name="ScheduleTwitterText", type="string", nullable=true)
+     * @var string
+     */
+    private $schedule_twitter_text;
 
     /**
      * @ORM\OneToMany(targetEntity="models\summit\SummitEventType", mappedBy="summit", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
@@ -2820,4 +2922,263 @@ SQL;
         }
         return $logoUrl;
     }
+
+    // schedule
+
+    /**
+     * @return string
+     */
+    public function getScheduleDefaultPageUrl(): ?string
+    {
+        return $this->schedule_default_page_url;
+    }
+
+    /**
+     * @param string $schedule_default_page_url
+     */
+    public function setScheduleDefaultPageUrl(string $schedule_default_page_url): void
+    {
+        $this->schedule_default_page_url = $schedule_default_page_url;
+    }
+
+    /**
+     * @return string
+     */
+    public function getScheduleDefaultEventDetailUrl(): ?string
+    {
+        return $this->schedule_default_event_detail_url;
+    }
+
+    /**
+     * @param string $schedule_default_event_detail_url
+     */
+    public function setScheduleDefaultEventDetailUrl(string $schedule_default_event_detail_url): void
+    {
+        $this->schedule_default_event_detail_url = $schedule_default_event_detail_url;
+    }
+
+    /**
+     * @return string
+     */
+    public function getScheduleOgSiteName(): ?string
+    {
+        return self::_get($this->schedule_og_site_name, "schedule.og_site_name");
+    }
+
+    /**
+     * @param string $schedule_og_site_name
+     */
+    public function setScheduleOgSiteName(string $schedule_og_site_name): void
+    {
+        $this->schedule_og_site_name = $schedule_og_site_name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getScheduleOgImageUrl(): ?string
+    {
+        return self::_get($this->schedule_og_image_url,"schedule.og_image_url");
+    }
+
+    /**
+     * @param string $schedule_og_image_url
+     */
+    public function setScheduleOgImageUrl(string $schedule_og_image_url): void
+    {
+        $this->schedule_og_image_url = $schedule_og_image_url;
+    }
+
+    /**
+     * @return string
+     */
+    public function getScheduleOgImageSecureUrl(): ?string
+    {
+        return self::_get($this->schedule_og_image_secure_url,"schedule.og_image_secure_url");
+    }
+
+    /**
+     * @param string $schedule_og_image_secure_url
+     */
+    public function setScheduleOgImageSecureUrl(string $schedule_og_image_secure_url): void
+    {
+        $this->schedule_og_image_secure_url = $schedule_og_image_secure_url;
+    }
+
+    /**
+     * @return int
+     */
+    public function getScheduleOgImageWidth(): int
+    {
+        return self::_get($this->schedule_og_image_width,"schedule.og_image_width");
+    }
+
+    /**
+     * @param int $schedule_og_image_width
+     */
+    public function setScheduleOgImageWidth(int $schedule_og_image_width): void
+    {
+        $this->schedule_og_image_width = $schedule_og_image_width;
+    }
+
+    /**
+     * @return int
+     */
+    public function getScheduleOgImageHeight(): int
+    {
+        return self::_get($this->schedule_og_image_height,"schedule.og_image_height");
+    }
+
+    /**
+     * @param int $schedule_og_image_height
+     */
+    public function setScheduleOgImageHeight(int $schedule_og_image_height): void
+    {
+        $this->schedule_og_image_height = $schedule_og_image_height;
+    }
+
+    /**
+     * @return string
+     */
+    public function getScheduleFacebookAppId(): ?string
+    {
+        return self::_get($this->schedule_facebook_app_id,"schedule.facebook_app_id");
+    }
+
+    /**
+     * @param string $schedule_facebook_app_id
+     */
+    public function setScheduleFacebookAppId(string $schedule_facebook_app_id): void
+    {
+        $this->schedule_facebook_app_id = $schedule_facebook_app_id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getScheduleIosAppName(): ?string
+    {
+        return self::_get($this->schedule_ios_app_name,"schedule.ios_app_name");
+    }
+
+    /**
+     * @param string $schedule_ios_app_name
+     */
+    public function setScheduleIosAppName(string $schedule_ios_app_name): void
+    {
+        $this->schedule_ios_app_name = $schedule_ios_app_name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getScheduleIosAppStoreId(): ?string
+    {
+        return self::_get($this->schedule_ios_app_store_id,"schedule.ios_app_store_id");
+    }
+
+    /**
+     * @param string $schedule_ios_app_store_id
+     */
+    public function setScheduleIosAppStoreId(string $schedule_ios_app_store_id): void
+    {
+        $this->schedule_ios_app_store_id = $schedule_ios_app_store_id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getScheduleIosAppCustomSchema(): ?string
+    {
+        return self::_get($this->schedule_ios_app_custom_schema,"schedule.ios_app_custom_schema");
+    }
+
+    /**
+     * @param string $schedule_ios_app_custom_schema
+     */
+    public function setScheduleIosAppCustomSchema(string $schedule_ios_app_custom_schema): void
+    {
+        $this->schedule_ios_app_custom_schema = $schedule_ios_app_custom_schema;
+    }
+
+    /**
+     * @return string
+     */
+    public function getScheduleAndroidAppName(): ?string
+    {
+        return self::_get($this->schedule_android_app_name,"schedule.android_app_name");
+    }
+
+    /**
+     * @param string $schedule_android_app_name
+     */
+    public function setScheduleAndroidAppName(string $schedule_android_app_name): void
+    {
+        $this->schedule_android_app_name = $schedule_android_app_name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getScheduleAndroidAppPackage(): ?string
+    {
+        return self::_get($this->schedule_android_app_package,"schedule.android_app_package");
+    }
+
+    /**
+     * @param string $schedule_android_app_package
+     */
+    public function setScheduleAndroidAppPackage(string $schedule_android_app_package): void
+    {
+        $this->schedule_android_app_package = $schedule_android_app_package;
+    }
+
+    /**
+     * @return string
+     */
+    public function getScheduleAndroidCustomSchema(): ?string
+    {
+        return self::_get($this->schedule_android_custom_schema,"schedule.android_custom_schema");
+    }
+
+    /**
+     * @param string $schedule_android_custom_schema
+     */
+    public function setScheduleAndroidCustomSchema(string $schedule_android_custom_schema): void
+    {
+        $this->schedule_android_custom_schema = $schedule_android_custom_schema;
+    }
+
+    /**
+     * @return string
+     */
+    public function getScheduleTwitterAppName(): ?string
+    {
+        return self::_get($this->schedule_twitter_app_name,"schedule.twitter_app_name");
+    }
+
+    /**
+     * @param string $schedule_twitter_app_name
+     */
+    public function setScheduleTwitterAppName(string $schedule_twitter_app_name): void
+    {
+        $this->schedule_twitter_app_name = $schedule_twitter_app_name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getScheduleTwitterText(): ?string
+    {
+        return self::_get($this->schedule_twitter_text,"schedule.twitter_text");
+    }
+
+    /**
+     * @param string $schedule_twitter_text
+     */
+    public function setScheduleTwitterText(string $schedule_twitter_text): void
+    {
+        $this->schedule_twitter_text = $schedule_twitter_text;
+    }
+
 }

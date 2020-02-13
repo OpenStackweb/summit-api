@@ -47,7 +47,8 @@ abstract class BrowserKitTestCase extends BaseTestCase
      */
     protected function prepareForTests()
     {
-        Artisan::call('migrate');
+        Artisan::call('doctrine:migrations:migrate', ["--connection" => 'config']);
+        Artisan::call('doctrine:migrations:migrate', ["--connection" => 'model']);
         //Mail::pretend(true);
         $this->seed('TestSeeder');
     }

@@ -49,8 +49,25 @@ final class SummitValidationRulesFactory
                 'api_feed_type'                    => sprintf('nullable|in:%s',implode(',', Summit::$valid_feed_types)),
                 'api_feed_url'                     => 'nullable|string|url|required_with:api_feed_type',
                 'api_feed_key'                     => 'nullable|string|required_with:api_feed_type',
-                'begin_allow_booking_date'  => 'nullable|date_format:U',
-                'end_allow_booking_date'    => 'nullable|required_with:begin_allow_booking_date|date_format:U|after_or_equal:begin_allow_booking_date',
+                'begin_allow_booking_date'         => 'nullable|date_format:U',
+                'end_allow_booking_date'           => 'nullable|required_with:begin_allow_booking_date|date_format:U|after_or_equal:begin_allow_booking_date',
+                // schedule
+                'schedule_default_page_url'          => 'nullable|string',
+                'schedule_default_event_detail_url'  => 'nullable|string',
+                'schedule_og_site_name'              => 'nullable|string',
+                'schedule_og_image_url'              => 'nullable|string',
+                'schedule_og_image_secure_url'       => 'nullable|string',
+                'schedule_og_image_width'            => 'nullable|integer',
+                'schedule_og_image_height'           => 'nullable|integer',
+                'schedule_facebook_app_id'           => 'nullable|string',
+                'schedule_ios_app_name'              => 'nullable|string',
+                'schedule_ios_app_store_id'          => 'nullable|string',
+                'schedule_ios_app_custom_schema'     => 'nullable|string',
+                'schedule_android_app_name'          => 'nullable|string',
+                'schedule_android_app_package'       => 'nullable|string',
+                'schedule_android_custom_schema'     => 'nullable|string',
+                'schedule_twitter_app_name'          => 'nullable|string',
+                'schedule_twitter_text'              => 'nullable|string',
             ];
         }
 
@@ -84,6 +101,23 @@ final class SummitValidationRulesFactory
             'api_feed_key'                     => 'nullable|string|required_with:api_feed_type',
             'begin_allow_booking_date'  => 'nullable|date_format:U',
             'end_allow_booking_date'    => 'nullable|required_with:begin_allow_booking_date|date_format:U|after_or_equal:begin_allow_booking_date',
+            // schedule
+            'schedule_default_page_url'          => 'nullable|string',
+            'schedule_default_event_detail_url'  => 'nullable|string',
+            'schedule_og_site_name'              => 'nullable|string',
+            'schedule_og_image_url'              => 'nullable|string',
+            'schedule_og_image_secure_url'       => 'nullable|string',
+            'schedule_og_image_width'            => 'nullable|integer',
+            'schedule_og_image_height'           => 'nullable|integer',
+            'schedule_facebook_app_id'           => 'nullable|string',
+            'schedule_ios_app_name'              => 'nullable|string',
+            'schedule_ios_app_store_id'          => 'nullable|string',
+            'schedule_ios_app_custom_schema'     => 'nullable|string',
+            'schedule_android_app_name'          => 'nullable|string',
+            'schedule_android_app_package'       => 'nullable|string',
+            'schedule_android_custom_schema'     => 'nullable|string',
+            'schedule_twitter_app_name'          => 'nullable|string',
+            'schedule_twitter_text'              => 'nullable|string',
         ];
     }
 }

@@ -59,7 +59,24 @@ class SummitSerializer extends SilverStripeSerializer
         'MeetingRoomBookingMaxAllowed'                   => 'meeting_room_booking_max_allowed:json_int',
         'BeginAllowBookingDate'                          => 'begin_allow_booking_date:datetime_epoch',
         'EndAllowBookingDate'                            => 'end_allow_booking_date:datetime_epoch',
-        'LogoUrl'                                        => 'logo:json_url'
+        'LogoUrl'                                        => 'logo:json_url',
+        // schedule app
+        'ScheduleDefaultPageUrl'                         => 'schedule_default_page_url:json_url',
+        'ScheduleDefaultEventDetailUrl'                  => 'schedule_default_event_detail_url:json_url',
+        'ScheduleOgSiteName'                             => 'schedule_og_site_name:json_string',
+        'ScheduleOgImageUrl'                             => 'schedule_og_image_url:json_string',
+        'ScheduleOgImageSecureUrl'                       => 'schedule_og_image_secure_url:json_string',
+        'ScheduleOgImageWidth'                           => 'schedule_og_image_width:json_int',
+        'ScheduleOgImageHeight'                          => 'schedule_og_image_height:json_int',
+        'ScheduleFacebookAppId'                          => 'schedule_facebook_app_id:json_string',
+        'ScheduleIosAppName'                             => 'schedule_ios_app_name:json_string',
+        'ScheduleIosAppStoreId'                          => 'schedule_ios_app_store_id:json_string',
+        'ScheduleIosAppCustomSchema'                     => 'schedule_ios_app_custom_schema:json_string',
+        'ScheduleAndroidAppName'                         => 'schedule_android_app_name:json_string',
+        'ScheduleAndroidAppPackage'                      => 'schedule_android_app_package:json_string',
+        'ScheduleAndroidCustomSchema'                    => 'schedule_android_custom_schema:json_string',
+        'ScheduleTwitterAppName'                         => 'schedule_twitter_app_name:json_string',
+        'ScheduleTwitterText'                            => 'schedule_twitter_text:json_string',
     ];
 
     protected static $allowed_relations = [

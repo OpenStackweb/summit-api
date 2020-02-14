@@ -3936,6 +3936,22 @@ class ApiEndpointsSeeder extends Seeder
             ],
             //members
             [
+                'name' => 'create-schedule-shareable-link',
+                'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/shareable-link',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'delete-schedule-shareable-link',
+                'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/shareable-link',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+            ],
+            [
                 'name' => 'get-own-member',
                 'route' => '/api/v1/summits/{id}/members/{member_id}',
                 'http_method' => 'GET',

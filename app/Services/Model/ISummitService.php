@@ -16,6 +16,7 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\File;
 use models\main\Member;
+use models\main\PersonalCalendarShareInfo;
 use models\summit\ConfirmationExternalOrderRequest;
 use models\summit\RSVP;
 use models\summit\Summit;
@@ -377,4 +378,31 @@ interface ISummitService
      * @throws EntityNotFoundException
      */
     public function unRSVPEvent(Summit $summit, Member $member, int $event_id);
+
+    /**
+     * @param Summit $summit
+     * @param Member $member
+     * @return PersonalCalendarShareInfo|null
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function createScheduleShareableLink(Summit $summit, Member $member):?PersonalCalendarShareInfo;
+
+    /**
+     * @param Summit $summit
+     * @param Member $member
+     * @return PersonalCalendarShareInfo|null
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function revokeScheduleShareableLink(Summit $summit, Member $member):?PersonalCalendarShareInfo;
+
+    /**
+     * @param Summit $summit
+     * @param string $cid
+     * @return string
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function buildICSFeed(Summit $summit, string $cid): string;
 }

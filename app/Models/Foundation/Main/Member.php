@@ -231,24 +231,31 @@ class Member extends SilverstripeBaseModel
     private $speaker;
 
     /**
+     * @ORM\OneToMany(targetEntity="models\main\PersonalCalendarShareInfo", mappedBy="owner", cascade={"persist"}, orphanRemoval=true)
+     * @var PersonalCalendarShareInfo[]
+     */
+    private $schedule_shareable_links;
+
+    /**
      * Member constructor.
      */
     public function __construct()
     {
         parent::__construct();
-        $this->active             = false;
-        $this->email_verified     = false;
-        $this->feedback           = new ArrayCollection();
-        $this->groups             = new ArrayCollection();
-        $this->ccla_teams         = new ArrayCollection();
-        $this->affiliations       = new ArrayCollection();
-        $this->team_memberships   = new ArrayCollection();
-        $this->favorites          = new ArrayCollection();
-        $this->schedule           = new ArrayCollection();
-        $this->rsvp               = new ArrayCollection();
-        $this->calendars_sync     = new ArrayCollection();
-        $this->schedule_sync_info = new ArrayCollection();
-        $this->reservations       = new ArrayCollection();
+        $this->active                   = false;
+        $this->email_verified           = false;
+        $this->feedback                 = new ArrayCollection();
+        $this->groups                   = new ArrayCollection();
+        $this->ccla_teams               = new ArrayCollection();
+        $this->affiliations             = new ArrayCollection();
+        $this->team_memberships         = new ArrayCollection();
+        $this->favorites                = new ArrayCollection();
+        $this->schedule                 = new ArrayCollection();
+        $this->rsvp                     = new ArrayCollection();
+        $this->calendars_sync           = new ArrayCollection();
+        $this->schedule_sync_info       = new ArrayCollection();
+        $this->reservations             = new ArrayCollection();
+        $this->schedule_shareable_links = new ArrayCollection();
     }
 
     /**
@@ -1330,6 +1337,55 @@ SQL;
         if($this->groups->contains($group)) return;
         $this->groups->add($group);
         $group->addMember($this);
+    }
+
+    /**
+     * @param PersonalCalendarShareInfo $link
+     */
+    public function addScheduleShareableLink(PersonalCalendarShareInfo $link){
+        if($this->schedule_shareable_links->contains($link)) return;
+        $this->schedule_shareable_links->add($link);
+        $link->setOwner($this);
+    }
+
+    /**
+     * @param PersonalCalendarShareInfo $link
+     */
+    public function removeScheduleShareableLink(PersonalCalendarShareInfo $link){
+        if(!$this->schedule_shareable_links->contains($link)) return;
+        $this->schedule_shareable_links->removeElement($link);
+        $link->clearOwner();
+    }
+
+    /**
+     * @param Summit $summit
+     * @return PersonalCalendarShareInfo|null
+     */
+    public function getScheduleShareableLinkBy(Summit $summit):?PersonalCalendarShareInfo{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('summit', $summit));
+        $criteria->andWhere(Criteria::expr()->eq('revoked', false));
+        $link = $this->schedule_shareable_links->matching($criteria)->first();
+        return $link === false ? null : $link;
+    }
+
+    /**
+     * @param Summit $summit
+     * @return PersonalCalendarShareInfo|null
+     * @throws \Exception
+     */
+    public function createScheduleShareableLink(Summit $summit):?PersonalCalendarShareInfo{
+        $former_link = $this->getScheduleShareableLinkBy($summit);
+
+        if(!is_null($former_link)){
+            return $former_link;
+        }
+
+        $link = new PersonalCalendarShareInfo();
+        $summit->addScheduleShareableLink($link);
+        $this->addScheduleShareableLink($link);
+        $link->generateCid();
+        return $link;
     }
 
 }

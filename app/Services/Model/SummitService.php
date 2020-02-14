@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Events\MyFavoritesAdd;
 use App\Events\MyFavoritesRemove;
 use App\Events\MyScheduleAdd;
@@ -27,6 +28,7 @@ use App\Models\Utils\IntervalParser;
 use App\Permissions\IPermissionsManager;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IFolderService;
+use CalDAVClient\Facade\Utils\ICalTimeZoneBuilder;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Http\UploadedFile;
@@ -41,6 +43,7 @@ use models\main\ITagRepository;
 use Models\foundation\summit\EntityEvents\EntityEventTypeFactory;
 use Models\foundation\summit\EntityEvents\SummitEntityEventProcessContext;
 use models\main\Member;
+use models\main\PersonalCalendarShareInfo;
 use models\main\Tag;
 use models\summit\CalendarSync\WorkQueue\AbstractCalendarSyncWorkRequest;
 use models\summit\CalendarSync\WorkQueue\MemberEventScheduleSummitActionSyncWorkRequest;
@@ -66,6 +69,7 @@ use models\summit\SummitEventFactory;
 use models\summit\SummitEventFeedback;
 use models\summit\SummitEventType;
 use models\summit\SummitEventWithFile;
+use models\summit\SummitGeoLocatedLocation;
 use models\summit\SummitGroupEvent;
 use models\summit\SummitScheduleEmptySpot;
 use services\apis\IEventbriteAPI;
@@ -80,6 +84,7 @@ use utils\Order;
 use utils\OrderElement;
 use utils\PagingInfo;
 use DateInterval;
+
 /**
  * Class SummitService
  * @package services\model
@@ -200,44 +205,44 @@ final class SummitService extends AbstractService implements ISummitService
      */
     public function __construct
     (
-        ISummitRepository               $summit_repository,
-        ISummitEventRepository          $event_repository,
-        ISpeakerRepository              $speaker_repository,
-        ISummitEntityEventRepository    $entity_events_repository,
+        ISummitRepository $summit_repository,
+        ISummitEventRepository $event_repository,
+        ISpeakerRepository $speaker_repository,
+        ISummitEntityEventRepository $entity_events_repository,
         ISummitAttendeeTicketRepository $ticket_repository,
-        ISummitAttendeeRepository       $attendee_repository,
-        IMemberRepository               $member_repository,
-        ITagRepository                  $tag_repository,
-        IRSVPRepository                 $rsvp_repository,
+        ISummitAttendeeRepository $attendee_repository,
+        IMemberRepository $member_repository,
+        ITagRepository $tag_repository,
+        IRSVPRepository $rsvp_repository,
         IAbstractCalendarSyncWorkRequestRepository $calendar_sync_work_request_repository,
-        IEventbriteAPI                    $eventbrite_api,
-        IFolderService                    $folder_service,
-        ICompanyRepository                $company_repository,
-        IGroupRepository                  $group_repository,
+        IEventbriteAPI $eventbrite_api,
+        IFolderService $folder_service,
+        ICompanyRepository $company_repository,
+        IGroupRepository $group_repository,
         IDefaultSummitEventTypeRepository $default_event_types_repository,
-        IPermissionsManager               $permissions_manager,
-        IFileUploader                     $file_uploader,
-        ITransactionService               $tx_service
+        IPermissionsManager $permissions_manager,
+        IFileUploader $file_uploader,
+        ITransactionService $tx_service
     )
     {
         parent::__construct($tx_service);
-        $this->summit_repository                     = $summit_repository;
-        $this->event_repository                      = $event_repository;
-        $this->speaker_repository                    = $speaker_repository;
-        $this->entity_events_repository              = $entity_events_repository;
-        $this->ticket_repository                     = $ticket_repository;
-        $this->member_repository                     = $member_repository;
-        $this->attendee_repository                   = $attendee_repository;
-        $this->tag_repository                        = $tag_repository;
-        $this->rsvp_repository                       = $rsvp_repository;
+        $this->summit_repository = $summit_repository;
+        $this->event_repository = $event_repository;
+        $this->speaker_repository = $speaker_repository;
+        $this->entity_events_repository = $entity_events_repository;
+        $this->ticket_repository = $ticket_repository;
+        $this->member_repository = $member_repository;
+        $this->attendee_repository = $attendee_repository;
+        $this->tag_repository = $tag_repository;
+        $this->rsvp_repository = $rsvp_repository;
         $this->calendar_sync_work_request_repository = $calendar_sync_work_request_repository;
-        $this->eventbrite_api                        = $eventbrite_api;
-        $this->folder_service                        = $folder_service;
-        $this->company_repository                    = $company_repository;
-        $this->group_repository                      = $group_repository;
-        $this->default_event_types_repository        = $default_event_types_repository;
-        $this->permissions_manager                   = $permissions_manager;
-        $this->file_uploader                         = $file_uploader;
+        $this->eventbrite_api = $eventbrite_api;
+        $this->folder_service = $folder_service;
+        $this->company_repository = $company_repository;
+        $this->group_repository = $group_repository;
+        $this->default_event_types_repository = $default_event_types_repository;
+        $this->permissions_manager = $permissions_manager;
+        $this->file_uploader = $file_uploader;
     }
 
     /**
@@ -260,18 +265,18 @@ final class SummitService extends AbstractService implements ISummitService
                     throw new EntityNotFoundException('event not found on summit!');
                 }
 
-                if(!Summit::allowToSee($event, $member))
+                if (!Summit::allowToSee($event, $member))
                     throw new EntityNotFoundException('event not found on summit!');
 
-                if($check_rsvp && $event->hasRSVP() && !$event->isExternalRSVP())
+                if ($check_rsvp && $event->hasRSVP() && !$event->isExternalRSVP())
                     throw new ValidationException("event has rsvp set on it!");
 
                 $member->add2Schedule($event);
 
-                if($member->hasSyncInfoFor($summit)) {
+                if ($member->hasSyncInfoFor($summit)) {
                     Log::info(sprintf("synching externally event id %s", $event_id));
                     $sync_info = $member->getSyncInfoBy($summit);
-                    $request   = new MemberEventScheduleSummitActionSyncWorkRequest();
+                    $request = new MemberEventScheduleSummitActionSyncWorkRequest();
                     $request->setType(AbstractCalendarSyncWorkRequest::TypeAdd);
                     $request->setSummitEvent($event);
                     $request->setOwner($member);
@@ -280,9 +285,8 @@ final class SummitService extends AbstractService implements ISummitService
                 }
 
             });
-            Event::fire(new MyScheduleAdd($member ,$summit, $event_id));
-        }
-        catch (UniqueConstraintViolationException $ex){
+            Event::fire(new MyScheduleAdd($member, $summit, $event_id));
+        } catch (UniqueConstraintViolationException $ex) {
             throw new ValidationException
             (
                 sprintf('Event %s already belongs to member %s schedule.', $event_id, $member->getId())
@@ -305,15 +309,15 @@ final class SummitService extends AbstractService implements ISummitService
             if (is_null($event))
                 throw new EntityNotFoundException('event not found on summit!');
 
-            if($check_rsvp && $event->hasRSVP() && !$event->isExternalRSVP())
+            if ($check_rsvp && $event->hasRSVP() && !$event->isExternalRSVP())
                 throw new ValidationException("event has rsvp set on it!");
 
             $member->removeFromSchedule($event);
 
-            if($member->hasSyncInfoFor($summit)) {
+            if ($member->hasSyncInfoFor($summit)) {
                 Log::info(sprintf("unsynching externally event id %s", $event_id));
                 $sync_info = $member->getSyncInfoBy($summit);
-                $request   = new MemberEventScheduleSummitActionSyncWorkRequest();
+                $request = new MemberEventScheduleSummitActionSyncWorkRequest();
                 $request->setType(AbstractCalendarSyncWorkRequest::TypeRemove);
                 $request->setSummitEvent($event);
                 $request->setOwner($member);
@@ -322,7 +326,7 @@ final class SummitService extends AbstractService implements ISummitService
             }
         });
 
-        Event::fire(new MyScheduleRemove($member,$summit, $event_id));
+        Event::fire(new MyScheduleRemove($member, $summit, $event_id));
     }
 
     /**
@@ -332,21 +336,21 @@ final class SummitService extends AbstractService implements ISummitService
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function addEventToMemberFavorites(Summit $summit, Member $member, $event_id){
+    public function addEventToMemberFavorites(Summit $summit, Member $member, $event_id)
+    {
         try {
             $this->tx_service->transaction(function () use ($summit, $member, $event_id) {
                 $event = $summit->getScheduleEvent($event_id);
                 if (is_null($event)) {
                     throw new EntityNotFoundException('event not found on summit!');
                 }
-                if(!Summit::allowToSee($event, $member))
+                if (!Summit::allowToSee($event, $member))
                     throw new EntityNotFoundException('event not found on summit!');
                 $member->addFavoriteSummitEvent($event);
             });
 
             Event::fire(new MyFavoritesAdd($member, $summit, $event_id));
-        }
-        catch (UniqueConstraintViolationException $ex){
+        } catch (UniqueConstraintViolationException $ex) {
             throw new ValidationException
             (
                 sprintf('Event %s already belongs to member %s favorites.', $event_id, $member->getId())
@@ -360,7 +364,8 @@ final class SummitService extends AbstractService implements ISummitService
      * @param int $event_id
      * @throws EntityNotFoundException
      */
-    public function removeEventFromMemberFavorites(Summit $summit, Member $member, $event_id){
+    public function removeEventFromMemberFavorites(Summit $summit, Member $member, $event_id)
+    {
         $this->tx_service->transaction(function () use ($summit, $member, $event_id) {
             $event = $summit->getScheduleEvent($event_id);
             if (is_null($event))
@@ -385,37 +390,37 @@ final class SummitService extends AbstractService implements ISummitService
             if (!$event->isAllowFeedback())
                 throw new ValidationException(sprintf("event id %s does not allow feedback", $event->getIdentifier()));
 
-            $member      = null;
+            $member = null;
 
             // check for attendee
             $attendee_id = isset($data['attendee_id']) ? intval($data['attendee_id']) : null;
-            $member_id   = isset($data['member_id'])   ? intval($data['member_id']) : null;
-            if(!is_null($attendee_id)) {
+            $member_id = isset($data['member_id']) ? intval($data['member_id']) : null;
+            if (!is_null($attendee_id)) {
                 $attendee = $summit->getAttendeeById($attendee_id);
                 if (!$attendee) throw new EntityNotFoundException();
                 $member = $attendee->getMember();
             }
 
             // check by member
-            if(!is_null($member_id)) {
+            if (!is_null($member_id)) {
                 $member = $this->member_repository->getById($member_id);
             }
 
             if (is_null($member))
                 throw new EntityNotFoundException('member not found!.');
 
-            if(!Summit::allowToSee($event, $member))
+            if (!Summit::allowToSee($event, $member))
                 throw new EntityNotFoundException('event not found on summit!.');
 
             // check older feedback
             $older_feedback = $member->getFeedbackByEvent($event);
 
-            if(count($older_feedback) > 0 )
+            if (count($older_feedback) > 0)
                 throw new ValidationException(sprintf("you already sent feedback for event id %s!.", $event->getIdentifier()));
 
             $newFeedback = new SummitEventFeedback();
             $newFeedback->setRate(intval($data['rate']));
-            $note        = isset($data['note']) ? trim($data['note']) : "";
+            $note = isset($data['note']) ? trim($data['note']) : "";
             $newFeedback->setNote($note);
             $newFeedback->setOwner($member);
             $event->addFeedBack($newFeedback);
@@ -438,36 +443,36 @@ final class SummitService extends AbstractService implements ISummitService
             if (!$event->isAllowFeedback())
                 throw new ValidationException(sprintf("event id %s does not allow feedback", $event->getIdentifier()));
 
-            $member      = null;
+            $member = null;
 
             // check for attendee
             $attendee_id = isset($data['attendee_id']) ? intval($data['attendee_id']) : null;
-            $member_id   = isset($data['member_id'])   ? intval($data['member_id']) : null;
-            if(!is_null($attendee_id)) {
+            $member_id = isset($data['member_id']) ? intval($data['member_id']) : null;
+            if (!is_null($attendee_id)) {
                 $attendee = $summit->getAttendeeById($attendee_id);
                 if (!$attendee) throw new EntityNotFoundException();
                 $member = $attendee->getMember();
             }
 
             // check by member
-            if(!is_null($member_id)) {
+            if (!is_null($member_id)) {
                 $member = $this->member_repository->getById($member_id);
             }
 
             if (is_null($member))
                 throw new EntityNotFoundException('member not found!.');
 
-            if(!Summit::allowToSee($event, $member))
+            if (!Summit::allowToSee($event, $member))
                 throw new EntityNotFoundException('event not found on summit!.');
 
             // check older feedback
             $feedback = $member->getFeedbackByEvent($event);
 
-            if(count($feedback) == 0 )
+            if (count($feedback) == 0)
                 throw new ValidationException(sprintf("you dont have feedback for event id %s!.", $event->getIdentifier()));
             $feedback = $feedback[0];
             $feedback->setRate(intval($data['rate']));
-            $note    = isset($data['note']) ? trim($data['note']) : "";
+            $note = isset($data['note']) ? trim($data['note']) : "";
             $feedback->setNote($note);
 
             return $feedback;
@@ -487,13 +492,13 @@ final class SummitService extends AbstractService implements ISummitService
         return $this->tx_service->transaction(function () use ($summit, $member_id, $from_date, $from_id, $limit) {
 
             $global_last_id = $this->entity_events_repository->getLastEntityEventId($summit);
-            $from_id        = !is_null($from_id) ? intval($from_id) : null;
-            $member         = !is_null($member_id) && $member_id > 0 ? $this->member_repository->getById($member_id): null;
-            $ctx            = new SummitEntityEventProcessContext($member);
+            $from_id = !is_null($from_id) ? intval($from_id) : null;
+            $member = !is_null($member_id) && $member_id > 0 ? $this->member_repository->getById($member_id) : null;
+            $ctx = new SummitEntityEventProcessContext($member);
 
             do {
 
-                $last_event_id   = 0;
+                $last_event_id = 0;
                 $last_event_date = 0;
                 // if we got a from id and its greater than the last one, then break
                 if (!is_null($from_id) && $global_last_id <= $from_id) break;
@@ -511,16 +516,14 @@ final class SummitService extends AbstractService implements ISummitService
 
                     if ($ctx->getListSize() === $limit) break;
 
-                    $last_event_id               = $e->getId();
-                    $last_event_date             = $e->getCreated();
+                    $last_event_id = $e->getId();
+                    $last_event_date = $e->getCreated();
                     try {
                         $entity_event_type_processor = EntityEventTypeFactory::getInstance()->build($e, $ctx);
                         $entity_event_type_processor->process();
-                    }
-                    catch(\InvalidArgumentException $ex1){
+                    } catch (\InvalidArgumentException $ex1) {
                         Log::info($ex1);
-                    }
-                    catch(\Exception $ex){
+                    } catch (\Exception $ex) {
                         Log::error($ex);
                     }
                 }
@@ -566,18 +569,19 @@ final class SummitService extends AbstractService implements ISummitService
      * @return SummitEvent
      * @throws ValidationException
      */
-    private function updateEventDates(array $data, Summit $summit, SummitEvent $event){
+    private function updateEventDates(array $data, Summit $summit, SummitEvent $event)
+    {
 
         if (isset($data['start_date']) && isset($data['end_date'])) {
             $event->setSummit($summit);
-            $start_datetime   = intval($data['start_date']);
-            $start_datetime   = new \DateTime("@$start_datetime");
+            $start_datetime = intval($data['start_date']);
+            $start_datetime = new \DateTime("@$start_datetime");
             $start_datetime->setTimezone($summit->getTimeZone());
-            $end_datetime     = intval($data['end_date']);
-            $end_datetime     = new \DateTime("@$end_datetime");
+            $end_datetime = intval($data['end_date']);
+            $end_datetime = new \DateTime("@$end_datetime");
             $end_datetime->setTimezone($summit->getTimeZone());
             $interval_seconds = $end_datetime->getTimestamp() - $start_datetime->getTimestamp();
-            $minutes          = $interval_seconds / 60;
+            $minutes = $interval_seconds / 60;
             if ($minutes < self::MIN_EVENT_MINUTES)
                 throw new ValidationException
                 (
@@ -616,24 +620,25 @@ final class SummitService extends AbstractService implements ISummitService
      * @param SummitEventType $event_type
      * @return bool
      */
-    private function canPerformEventTypeTransition(SummitEventType $old_event_type, SummitEventType $event_type){
+    private function canPerformEventTypeTransition(SummitEventType $old_event_type, SummitEventType $event_type)
+    {
 
-        if($old_event_type->getId() == $event_type->getId()) return true;
+        if ($old_event_type->getId() == $event_type->getId()) return true;
         // cant upgrade from raw event to presentation and vice versa
-        if($old_event_type->getClassName() != $event_type->getClassName()) {
+        if ($old_event_type->getClassName() != $event_type->getClassName()) {
             return false;
         }
 
         $old_is_private = $old_event_type->isPrivate();
         $new_is_private = $event_type->isPrivate();
 
-        if((!$old_is_private && $new_is_private) || ($old_is_private && !$new_is_private))
+        if ((!$old_is_private && $new_is_private) || ($old_is_private && !$new_is_private))
             return false;
 
         $old_allow_attach = $old_event_type->isAllowsAttachment();
         $new_allow_attach = $event_type->isAllowsAttachment();
 
-         if((!$old_allow_attach && $new_allow_attach) || ($old_allow_attach && !$new_allow_attach))
+        if ((!$old_allow_attach && $new_allow_attach) || ($old_allow_attach && !$new_allow_attach))
             return false;
 
         return true;
@@ -655,7 +660,7 @@ final class SummitService extends AbstractService implements ISummitService
 
         return $this->tx_service->transaction(function () use ($summit, $data, $event_id, $current_member) {
 
-            if(!is_null($current_member) && !$this->permissions_manager->canEditFields($current_member, 'SummitEvent', $data)){
+            if (!is_null($current_member) && !$this->permissions_manager->canEditFields($current_member, 'SummitEvent', $data)) {
                 throw new ValidationException(sprintf("user %s cant set requested summit event fields", $current_member->getId()));
             }
 
@@ -670,9 +675,9 @@ final class SummitService extends AbstractService implements ISummitService
 
             $track = null;
 
-            if(isset($data['track_id'])){
+            if (isset($data['track_id'])) {
                 $track = $summit->getPresentationCategory(intval($data['track_id']));
-                if(is_null($track)){
+                if (is_null($track)) {
                     throw new EntityNotFoundException(sprintf("track id %s does not exists!", $data['track_id']));
                 }
             }
@@ -688,7 +693,7 @@ final class SummitService extends AbstractService implements ISummitService
             $event = null;
             // existing event
 
-            if (!is_null($event_id) && intval($event_id) > 0 ) {
+            if (!is_null($event_id) && intval($event_id) > 0) {
                 $event = $this->event_repository->getById($event_id);
                 if (is_null($event))
                     throw new ValidationException(sprintf("event id %s does not exists!", $event_id));
@@ -696,19 +701,19 @@ final class SummitService extends AbstractService implements ISummitService
 
                 // check event type transition ...
 
-                if(!is_null($event_type) && !$this->canPerformEventTypeTransition($old_event_type, $event_type)){
-                        throw new ValidationException
+                if (!is_null($event_type) && !$this->canPerformEventTypeTransition($old_event_type, $event_type)) {
+                    throw new ValidationException
+                    (
+                        sprintf
                         (
-                            sprintf
-                            (
-                                "invalid event type transition for event id %s ( from %s to %s)",
-                                $event_id,
-                                $old_event_type->getType(),
-                                $event_type->getType()
-                            )
-                        );
+                            "invalid event type transition for event id %s ( from %s to %s)",
+                            $event_id,
+                            $old_event_type->getType(),
+                            $event_type->getType()
+                        )
+                    );
                 }
-                if(is_null($event_type)) $event_type = $old_event_type;
+                if (is_null($event_type)) $event_type = $old_event_type;
             }
 
             // new event
@@ -723,7 +728,7 @@ final class SummitService extends AbstractService implements ISummitService
             if (isset($data['description']))
                 $event->setAbstract(html_entity_decode(trim($data['description'])));
 
-            if(isset($data['rsvp_link']) && isset($data['rsvp_template_id'])){
+            if (isset($data['rsvp_link']) && isset($data['rsvp_template_id'])) {
                 throw new ValidationException("rsvp_link and rsvp_template_id are both set, you need to especify only one");
             }
 
@@ -735,10 +740,10 @@ final class SummitService extends AbstractService implements ISummitService
 
                 $rsvp_template = $summit->getRSVPTemplateById(intval($data['rsvp_template_id']));
 
-                if(is_null($rsvp_template))
+                if (is_null($rsvp_template))
                     throw new EntityNotFoundException(sprintf('rsvp template id %s does not belongs to summit id %s', $data['rsvp_template_id'], $summit->getId()));
 
-                if(!$rsvp_template->isEnabled())
+                if (!$rsvp_template->isEnabled())
                     throw new ValidationException(sprintf('rsvp template id %s is not enabled', $data['rsvp_template_id']));
 
                 $event->setRSVPTemplate($rsvp_template);
@@ -756,28 +761,27 @@ final class SummitService extends AbstractService implements ISummitService
             if (isset($data['occupancy']))
                 $event->setOccupancy($data['occupancy']);
 
-            $event->setAllowFeedBack(isset($data['allow_feedback'])?
+            $event->setAllowFeedBack(isset($data['allow_feedback']) ?
                 filter_var($data['allow_feedback'], FILTER_VALIDATE_BOOLEAN) :
                 false);
 
             if (!is_null($event_type))
                 $event->setType($event_type);
 
-            if(is_null($event_id) && is_null($event_type)){
+            if (is_null($event_id) && is_null($event_type)) {
                 // is event is new one and we dont provide an event type ...
                 throw new ValidationException('type_id is mandatory!');
             }
 
-            if(!is_null($track))
-            {
+            if (!is_null($track)) {
                 $event->setCategory($track);
             }
 
             $event->setSummit($summit);
-            if(!is_null($location))
+            if (!is_null($location))
                 $event->setLocation($location);
 
-            if(is_null($location) && isset($data['location_id'])){
+            if (is_null($location) && isset($data['location_id'])) {
                 // clear location
                 $event->clearLocation();
             }
@@ -788,7 +792,7 @@ final class SummitService extends AbstractService implements ISummitService
                 $event->clearTags();
                 foreach ($data['tags'] as $str_tag) {
                     $tag = $this->tag_repository->getByTag($str_tag);
-                    if($tag == null) $tag = new Tag($str_tag);
+                    if ($tag == null) $tag = new Tag($str_tag);
                     $event->addTag($tag);
                 }
             }
@@ -798,7 +802,7 @@ final class SummitService extends AbstractService implements ISummitService
             $sponsors = ($event_type->isUseSponsors() && isset($data['sponsors'])) ?
                 $data['sponsors'] : [];
 
-            if($event_type->isAreSponsorsMandatory() && count($sponsors) == 0){
+            if ($event_type->isAreSponsorsMandatory() && count($sponsors) == 0) {
                 throw new ValidationException('sponsors are mandatory!');
             }
 
@@ -806,7 +810,7 @@ final class SummitService extends AbstractService implements ISummitService
                 $event->clearSponsors();
                 foreach ($sponsors as $sponsor_id) {
                     $sponsor = $this->company_repository->getById(intval($sponsor_id));
-                    if(is_null($sponsor)) throw new EntityNotFoundException(sprintf('sponsor id %s', $sponsor_id));
+                    if (is_null($sponsor)) throw new EntityNotFoundException(sprintf('sponsor id %s', $sponsor_id));
                     $event->addSponsor($sponsor);
                 }
             }
@@ -814,8 +818,7 @@ final class SummitService extends AbstractService implements ISummitService
             $this->saveOrUpdatePresentationData($event, $event_type, $data);
             $this->saveOrUpdateSummitGroupEventData($event, $event_type, $data);
 
-            if($event->isPublished())
-            {
+            if ($event->isPublished()) {
                 $this->validateBlackOutTimesAndTimes($event);
                 $event->unPublish();
                 $event->publish();
@@ -827,16 +830,17 @@ final class SummitService extends AbstractService implements ISummitService
         });
     }
 
-    private function saveOrUpdateSummitGroupEventData(SummitEvent $event, SummitEventType $event_type, array $data ){
-        if(!$event instanceof SummitGroupEvent) return;
+    private function saveOrUpdateSummitGroupEventData(SummitEvent $event, SummitEventType $event_type, array $data)
+    {
+        if (!$event instanceof SummitGroupEvent) return;
 
-        if(!isset($data['groups']) || count($data['groups']) == 0)
+        if (!isset($data['groups']) || count($data['groups']) == 0)
             throw new ValidationException('groups is required');
         $event->clearGroups();
 
         foreach ($data['groups'] as $group_id) {
             $group = $this->group_repository->getById(intval($group_id));
-            if(is_null($group)) throw new EntityNotFoundException(sprintf('group id %s', $group_id));
+            if (is_null($group)) throw new EntityNotFoundException(sprintf('group id %s', $group_id));
             $event->addGroup($group);
         }
     }
@@ -848,17 +852,18 @@ final class SummitService extends AbstractService implements ISummitService
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    private function saveOrUpdatePresentationData(SummitEvent $event, SummitEventType $event_type, array $data ){
-        if(!$event instanceof Presentation) return;
+    private function saveOrUpdatePresentationData(SummitEvent $event, SummitEventType $event_type, array $data)
+    {
+        if (!$event instanceof Presentation) return;
 
         // main data
-        if(isset($data['attendees_expected_learnt']))
+        if (isset($data['attendees_expected_learnt']))
             $event->setAttendeesExpectedLearnt(html_entity_decode($data['attendees_expected_learnt']));
 
-        if(isset($data['level']))
+        if (isset($data['level']))
             $event->setLevel($data['level']);
 
-        $event->setAttendingMedia(isset($data['attending_media'])?
+        $event->setAttendingMedia(isset($data['attending_media']) ?
             filter_var($data['attending_media'], FILTER_VALIDATE_BOOLEAN) : 0);
 
         // if we are creating the presentation from admin, then
@@ -866,14 +871,14 @@ final class SummitService extends AbstractService implements ISummitService
         $event->setStatus(Presentation::STATUS_RECEIVED);
         $event->setProgress(Presentation::PHASE_COMPLETE);
 
-        $event->setToRecord(isset($data['to_record'])?
-            filter_var($data['to_record'], FILTER_VALIDATE_BOOLEAN): 0);
+        $event->setToRecord(isset($data['to_record']) ?
+            filter_var($data['to_record'], FILTER_VALIDATE_BOOLEAN) : 0);
 
         // speakers
 
-        if($event_type instanceof PresentationType && $event_type->isUseSpeakers()) {
+        if ($event_type instanceof PresentationType && $event_type->isUseSpeakers()) {
             $speakers = isset($data['speakers']) ?
-                        $data['speakers'] : [];
+                $data['speakers'] : [];
 
             if ($event_type->isAreSpeakersMandatory() && count($speakers) == 0) {
                 throw new ValidationException('speakers are mandatory!');
@@ -891,7 +896,7 @@ final class SummitService extends AbstractService implements ISummitService
 
         // moderator
 
-        if($event_type instanceof PresentationType && $event_type->isUseModerator()) {
+        if ($event_type instanceof PresentationType && $event_type->isUseModerator()) {
             $moderator_id = isset($data['moderator_speaker_id']) ? intval($data['moderator_speaker_id']) : 0;
 
             if ($event_type->isModeratorMandatory() && $moderator_id == 0) {
@@ -939,7 +944,7 @@ final class SummitService extends AbstractService implements ISummitService
             $this->updateEventDates($data, $summit, $event);
 
             $start_datetime = $event->getStartDate();
-            $end_datetime   = $event->getEndDate();
+            $end_datetime = $event->getEndDate();
 
             if (is_null($start_datetime))
                 throw new ValidationException(sprintf("start_date its not assigned to event id %s!", $event_id));
@@ -950,8 +955,8 @@ final class SummitService extends AbstractService implements ISummitService
             if (isset($data['location_id'])) {
                 $location_id = intval($data['location_id']);
                 $event->clearLocation();
-                if($location_id > 0){
-                    $location    = $summit->getLocation($location_id);
+                if ($location_id > 0) {
+                    $location = $summit->getLocation($location_id);
                     if (is_null($location))
                         throw new EntityNotFoundException(sprintf("location id %s does not exists!", $data['location_id']));
                     $event->setLocation($location);
@@ -966,7 +971,8 @@ final class SummitService extends AbstractService implements ISummitService
         });
     }
 
-    private function validateBlackOutTimesAndTimes(SummitEvent $event){
+    private function validateBlackOutTimesAndTimes(SummitEvent $event)
+    {
         $current_event_location = $event->getLocation();
 
         // validate blackout times
@@ -974,7 +980,7 @@ final class SummitService extends AbstractService implements ISummitService
         if (!is_null($conflict_events)) {
             foreach ($conflict_events as $c_event) {
                 // if the published event is BlackoutTime or if there is a BlackoutTime event in this timeframe
-                if ((!is_null($current_event_location) && !$current_event_location->isOverrideBlackouts()) &&  ($event->getType()->isBlackoutTimes() || $c_event->getType()->isBlackoutTimes()) && $event->getId() != $c_event->getId()) {
+                if ((!is_null($current_event_location) && !$current_event_location->isOverrideBlackouts()) && ($event->getType()->isBlackoutTimes() || $c_event->getType()->isBlackoutTimes()) && $event->getId() != $c_event->getId()) {
                     throw new ValidationException
                     (
                         sprintf
@@ -985,7 +991,7 @@ final class SummitService extends AbstractService implements ISummitService
                     );
                 }
                 // if trying to publish an event on a slot occupied by another event
-                if (!is_null($current_event_location) &&  !is_null($c_event->getLocation()) && $current_event_location->getId() == $c_event->getLocation()->getId() && $event->getId() != $c_event->getId()) {
+                if (!is_null($current_event_location) && !is_null($c_event->getLocation()) && $current_event_location->getId() == $c_event->getLocation()->getId() && $event->getId() != $c_event->getId()) {
                     throw new ValidationException
                     (
                         sprintf
@@ -1020,6 +1026,7 @@ final class SummitService extends AbstractService implements ISummitService
             }
         }
     }
+
     /**
      * @param Summit $summit
      * @param int $event_id
@@ -1109,15 +1116,15 @@ final class SummitService extends AbstractService implements ISummitService
 
                     $attendees[] = [
                         'external_id' => intval($a['id']),
-                        'first_name'  => $a['profile']['first_name'],
-                        'last_name'   => $a['profile']['last_name'],
-                        'email'       => $a['profile']['email'],
-                        'company'     => isset($a['profile']['company']) ? $a['profile']['company'] : null,
-                        'job_title'   => isset($a['profile']['job_title']) ? $a['profile']['job_title'] : null,
-                        'status'      => $a['status'],
+                        'first_name' => $a['profile']['first_name'],
+                        'last_name' => $a['profile']['last_name'],
+                        'email' => $a['profile']['email'],
+                        'company' => isset($a['profile']['company']) ? $a['profile']['company'] : null,
+                        'job_title' => isset($a['profile']['job_title']) ? $a['profile']['job_title'] : null,
+                        'status' => $a['status'],
                         'ticket_type' => [
-                            'id'          => intval($ticket_type->getId()),
-                            'name'        => $ticket_type->getName(),
+                            'id' => intval($ticket_type->getId()),
+                            'name' => $ticket_type->getName(),
                             'external_id' => $ticket_external_id,
                         ]
                     ];
@@ -1203,7 +1210,7 @@ final class SummitService extends AbstractService implements ISummitService
                         );
 
                     $ticket = new SummitAttendeeTicket;
-                    $ticket->setExternalOrderId( $request->getExternalOrderId());
+                    $ticket->setExternalOrderId($request->getExternalOrderId());
                     $ticket->setExternalAttendeeId($request->getExternalAttendeeId());
                     $ticket->setBoughtDate(new DateTime($external_attendee['created']));
                     $ticket->setChangedDate(new DateTime($external_attendee['changed']));
@@ -1236,15 +1243,15 @@ final class SummitService extends AbstractService implements ISummitService
      * @param int $event_id
      * @param UploadedFile $file
      * @param int $max_file_size
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return File
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
-    public function addEventAttachment(Summit $summit, $event_id, UploadedFile $file,  $max_file_size = 10485760)
+    public function addEventAttachment(Summit $summit, $event_id, UploadedFile $file, $max_file_size = 10485760)
     {
         return $this->tx_service->transaction(function () use ($summit, $event_id, $file, $max_file_size) {
 
-            $allowed_extensions = ['png','jpg','jpeg','gif','pdf'];
+            $allowed_extensions = ['png', 'jpg', 'jpeg', 'gif', 'pdf'];
 
             $event = $summit->getEvent($event_id);
 
@@ -1252,17 +1259,16 @@ final class SummitService extends AbstractService implements ISummitService
                 throw new EntityNotFoundException('event not found on summit!');
             }
 
-            if(!$event instanceof SummitEventWithFile){
+            if (!$event instanceof SummitEventWithFile) {
                 throw new ValidationException(sprintf("event id %s does not allow attachments!", $event_id));
             }
 
-            if(!in_array($file->extension(), $allowed_extensions)){
+            if (!in_array($file->extension(), $allowed_extensions)) {
                 throw new ValidationException("file does not has a valid extension ('png','jpg','jpeg','gif','pdf').");
             }
 
-            if($file->getSize() > $max_file_size)
-            {
-                throw new ValidationException(sprintf( "file exceeds max_file_size (%s MB).", ($max_file_size/1024)/1024));
+            if ($file->getSize() > $max_file_size) {
+                throw new ValidationException(sprintf("file exceeds max_file_size (%s MB).", ($max_file_size / 1024) / 1024));
             }
 
             $attachment = $this->file_uploader->build($file, 'summit-event-attachments', true);
@@ -1283,11 +1289,10 @@ final class SummitService extends AbstractService implements ISummitService
         Filter $filter
     )
     {
-        return $this->tx_service->transaction(function () use
-        (
+        return $this->tx_service->transaction(function () use (
             $summit,
             $filter
-        ){
+        ) {
             $gaps = [];
             $order = new Order([
                 OrderElement::buildAscFor("location_id"),
@@ -1296,40 +1301,40 @@ final class SummitService extends AbstractService implements ISummitService
 
             // parse locations ids
 
-            if(!$filter->hasFilter('location_id'))
+            if (!$filter->hasFilter('location_id'))
                 throw new ValidationException("missing required filter location_id");
 
             $location_ids = $filter->getFilterCollectionByField('location_id');
 
             // parse start_date filter
             $start_datetime_filter = $filter->getFilter('start_date');
-            if(is_null($start_datetime_filter))
+            if (is_null($start_datetime_filter))
                 throw new ValidationException("missing required filter start_date");
             $start_datetime_unix = intval($start_datetime_filter[0]->getValue());
             $start_datetime = new \DateTime("@$start_datetime_unix");
             // parse end_date filter
             $end_datetime_filter = $filter->getFilter('end_date');
-            if(is_null($end_datetime_filter))
+            if (is_null($end_datetime_filter))
                 throw new ValidationException("missing required filter end_date");
             $end_datetime_unix = intval($end_datetime_filter[0]->getValue());
-            $end_datetime      = new \DateTime("@$end_datetime_unix");
+            $end_datetime = new \DateTime("@$end_datetime_unix");
             // gap size filter
 
             $gap_size_filter = $filter->getFilter('gap');
-            if(is_null($end_datetime_filter))
+            if (is_null($end_datetime_filter))
                 throw new ValidationException("missing required filter gap");
 
-            $gap_size       = $gap_size_filter[0];
+            $gap_size = $gap_size_filter[0];
 
             $summit_time_zone = $summit->getTimeZone();
             $start_datetime->setTimezone($summit_time_zone);
             $end_datetime->setTimezone($summit_time_zone);
 
-            $intervals  = IntervalParser::getInterval($start_datetime, $end_datetime);
+            $intervals = IntervalParser::getInterval($start_datetime, $end_datetime);
 
-            foreach($location_ids as $location_id) {
+            foreach ($location_ids as $location_id) {
 
-                foreach($intervals as $interval) {
+                foreach ($intervals as $interval) {
 
                     $events_filter = new Filter();
                     $events_filter->addFilterCondition(FilterParser::buildFilter('published', '==', '1'));
@@ -1347,7 +1352,7 @@ final class SummitService extends AbstractService implements ISummitService
                     );
 
                     $gap_start_date = $interval[0];
-                    $gap_end_date   = clone $gap_start_date;
+                    $gap_end_date = clone $gap_start_date;
                     // check published items
                     foreach ($paging_response->getItems() as $event) {
 
@@ -1372,17 +1377,17 @@ final class SummitService extends AbstractService implements ISummitService
                         }
 
                         // check min gap ...
-                        if(self::checkGapCriteria($gap_size, $gap_end_date->diff($gap_start_date)))
+                        if (self::checkGapCriteria($gap_size, $gap_end_date->diff($gap_start_date)))
                             $gaps[] = new SummitScheduleEmptySpot($location_id, $gap_start_date, $gap_end_date);
                         $gap_start_date = $event->getLocalEndDate();
-                        $gap_end_date   = clone $gap_start_date;
+                        $gap_end_date = clone $gap_start_date;
                     }
 
                     // check last possible gap ( from last $gap_start_date till $interval[1]
 
-                    if($gap_start_date < $interval[1]){
+                    if ($gap_start_date < $interval[1]) {
                         // last possible gap
-                        if(self::checkGapCriteria($gap_size, $interval[1]->diff($gap_start_date)))
+                        if (self::checkGapCriteria($gap_size, $interval[1]->diff($gap_start_date)))
                             $gaps[] = new SummitScheduleEmptySpot($location_id, $gap_start_date, $interval[1]);
                     }
                 }
@@ -1405,36 +1410,36 @@ final class SummitService extends AbstractService implements ISummitService
         DateInterval $interval
     )
     {
-        $total_minutes  = $interval->days * 24 * 60;
+        $total_minutes = $interval->days * 24 * 60;
         $total_minutes += $interval->h * 60;
         $total_minutes += $interval->i;
 
-        switch($gap_size_criteria->getOperator()){
+        switch ($gap_size_criteria->getOperator()) {
             case '=':
-            {
-                return intval($gap_size_criteria->getValue()) == $total_minutes;
-            }
-            break;
+                {
+                    return intval($gap_size_criteria->getValue()) == $total_minutes;
+                }
+                break;
             case '<':
-            {
-                return $total_minutes < intval($gap_size_criteria->getValue());
-            }
-            break;
+                {
+                    return $total_minutes < intval($gap_size_criteria->getValue());
+                }
+                break;
             case '>':
-            {
-                return $total_minutes > intval($gap_size_criteria->getValue());
-            }
-            break;
+                {
+                    return $total_minutes > intval($gap_size_criteria->getValue());
+                }
+                break;
             case '<=':
-            {
-                return $total_minutes <= intval($gap_size_criteria->getValue());
-            }
-            break;
+                {
+                    return $total_minutes <= intval($gap_size_criteria->getValue());
+                }
+                break;
             case '>=':
-            {
-                return $total_minutes >= intval($gap_size_criteria->getValue());
-            }
-            break;
+                {
+                    return $total_minutes >= intval($gap_size_criteria->getValue());
+                }
+                break;
         }
         return false;
     }
@@ -1442,19 +1447,17 @@ final class SummitService extends AbstractService implements ISummitService
     /**
      * @param Summit $summit
      * @param array $data
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return bool
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function unPublishEvents(Summit $summit, array $data)
     {
-        return $this->tx_service->transaction(function () use
-        (
+        return $this->tx_service->transaction(function () use (
             $summit,
             $data
-        )
-        {
-            foreach ($data['events'] as $event_id){
+        ) {
+            foreach ($data['events'] as $event_id) {
                 $this->unPublishEvent($summit, intval($event_id));
             }
 
@@ -1465,19 +1468,17 @@ final class SummitService extends AbstractService implements ISummitService
     /**
      * @param Summit $summit
      * @param array $data
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return bool
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function updateAndPublishEvents(Summit $summit, array $data)
     {
-        return $this->tx_service->transaction(function () use
-        (
+        return $this->tx_service->transaction(function () use (
             $summit,
             $data
-        )
-        {
-            foreach ($data['events'] as $event_data){
+        ) {
+            foreach ($data['events'] as $event_data) {
                 $this->updateEvent($summit, intval($event_data['id']), $event_data);
                 $this->publishEvent($summit, intval($event_data['id']), $event_data);
             }
@@ -1489,19 +1490,17 @@ final class SummitService extends AbstractService implements ISummitService
     /**
      * @param Summit $summit
      * @param array $data
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return bool
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function updateEvents(Summit $summit, array $data)
     {
-        return $this->tx_service->transaction(function () use
-        (
+        return $this->tx_service->transaction(function () use (
             $summit,
             $data
-        )
-        {
-            foreach ($data['events'] as $event_data){
+        ) {
+            foreach ($data['events'] as $event_data) {
                 $this->updateEvent($summit, intval($event_data['id']), $event_data);
             }
 
@@ -1511,9 +1510,9 @@ final class SummitService extends AbstractService implements ISummitService
 
     /**
      * @param array $data
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return Summit
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function addSummit(array $data)
     {
@@ -1521,7 +1520,7 @@ final class SummitService extends AbstractService implements ISummitService
 
             $name = trim($data['name']);
             $former_summit = $this->summit_repository->getByName($name);
-            if(!is_null($former_summit)){
+            if (!is_null($former_summit)) {
                 throw new ValidationException
                 (
                     trans
@@ -1533,18 +1532,18 @@ final class SummitService extends AbstractService implements ISummitService
             }
 
             $slug = $data['slug'] ?? null;
-            if(!empty($slug)){
+            if (!empty($slug)) {
                 // check if exist another summit with that slug
 
                 $old_summit = $this->summit_repository->getBySlug(trim($slug));
-                if(!is_null($old_summit)){
+                if (!is_null($old_summit)) {
                     throw new ValidationException(sprintf("slug %s already belongs to another summit", $slug));
                 }
             }
 
             $summit = SummitFactory::build($data);
             // seed default event types
-            foreach($this->default_event_types_repository->getAll() as $default_event_type){
+            foreach ($this->default_event_types_repository->getAll() as $default_event_type) {
                 $summit->addEventType($default_event_type->buildType($summit));
             }
 
@@ -1558,15 +1557,15 @@ final class SummitService extends AbstractService implements ISummitService
     /**
      * @param int $summit_id
      * @param array $data
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return Summit
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function updateSummit($summit_id, array $data)
     {
         return $this->tx_service->transaction(function () use ($summit_id, $data) {
 
-            if(isset($data['name'])) {
+            if (isset($data['name'])) {
 
                 $former_summit = $this->summit_repository->getByName(trim($data['name']));
                 if (!is_null($former_summit) && $former_summit->getId() != $summit_id) {
@@ -1581,7 +1580,7 @@ final class SummitService extends AbstractService implements ISummitService
                 }
             }
 
-            if(isset($data['active'])) {
+            if (isset($data['active'])) {
                 $active = boolval($data['active']);
                 $active_summit = $this->summit_repository->getActive();
                 if ($active && !is_null($active_summit) && $active_summit->getId() != $summit_id) {
@@ -1597,18 +1596,18 @@ final class SummitService extends AbstractService implements ISummitService
             }
 
             $slug = $data['slug'] ?? null;
-            if(!empty($slug)){
+            if (!empty($slug)) {
                 // check if exist another summit with that slug
 
                 $old_summit = $this->summit_repository->getBySlug(trim($slug));
-                if(!is_null($old_summit) && $summit_id != $old_summit->getId()){
+                if (!is_null($old_summit) && $summit_id != $old_summit->getId()) {
                     throw new ValidationException(sprintf("slug %s already belongs to another summit", $slug));
                 }
             }
 
             $summit = $this->summit_repository->getById($summit_id);
 
-            if(is_null($summit)){
+            if (is_null($summit)) {
                 throw new EntityNotFoundException
                 (
                     trans
@@ -1619,7 +1618,7 @@ final class SummitService extends AbstractService implements ISummitService
                 );
             }
 
-            $summit =  SummitFactory::populate($summit, $data);
+            $summit = SummitFactory::populate($summit, $data);
 
             Event::fire(new SummitUpdated($summit_id));
 
@@ -1629,9 +1628,9 @@ final class SummitService extends AbstractService implements ISummitService
 
     /**
      * @param int $summit_id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return void
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function deleteSummit($summit_id)
     {
@@ -1639,7 +1638,7 @@ final class SummitService extends AbstractService implements ISummitService
 
             $summit = $this->summit_repository->getById($summit_id);
 
-            if(is_null($summit)){
+            if (is_null($summit)) {
                 throw new EntityNotFoundException
                 (
                     trans
@@ -1662,39 +1661,39 @@ final class SummitService extends AbstractService implements ISummitService
      * @param int $current_member_id
      * @param int $speaker_id
      * @param int $presentation_id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return void
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function addSpeaker2Presentation($current_member_id, $speaker_id, $presentation_id)
     {
         return $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id) {
             $current_member = $this->member_repository->getById($current_member_id);
-            if(is_null($current_member))
+            if (is_null($current_member))
                 throw new EntityNotFoundException(sprintf("member %s not found", $current_member_id));
 
             $current_speaker = $this->speaker_repository->getByMember($current_member);
-            if(is_null($current_speaker))
+            if (is_null($current_speaker))
                 throw new EntityNotFoundException(sprintf("member %s does not has a speaker profile", $current_member_id));
 
             $presentation = $this->event_repository->getById($presentation_id);
-            if(is_null($presentation))
+            if (is_null($presentation))
                 throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
 
-            if(!$presentation instanceof Presentation)
+            if (!$presentation instanceof Presentation)
                 throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
 
-            if(!$presentation->canEdit($current_speaker))
+            if (!$presentation->canEdit($current_speaker))
                 throw new ValidationException(sprintf("member %s can not edit presentation %s",
                     $current_member_id,
                     $presentation_id
-                    ));
+                ));
 
             $speaker = $this->speaker_repository->getById(intval($speaker_id));
             if (is_null($speaker))
                 throw new EntityNotFoundException(sprintf('speaker %s not found', $speaker_id));
-            if(!$presentation->isCompleted())
-                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
+            if (!$presentation->isCompleted())
+                $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
             $presentation->addSpeaker($speaker);
         });
@@ -1704,72 +1703,30 @@ final class SummitService extends AbstractService implements ISummitService
      * @param int $current_member_id
      * @param int $speaker_id
      * @param int $presentation_id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return void
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function removeSpeakerFromPresentation($current_member_id, $speaker_id, $presentation_id)
     {
         return $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id) {
 
-                $current_member = $this->member_repository->getById($current_member_id);
-                if(is_null($current_member))
-                    throw new EntityNotFoundException(sprintf("member %s not found", $current_member_id));
-
-                $current_speaker = $this->speaker_repository->getByMember($current_member);
-                if(is_null($current_speaker))
-                    throw new EntityNotFoundException(sprintf("member %s does not has a speaker profile", $current_member_id));
-
-                $presentation = $this->event_repository->getById($presentation_id);
-                if(is_null($presentation))
-                    throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
-
-                if(!$presentation instanceof Presentation)
-                    throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
-
-            if(!$presentation->canEdit($current_speaker))
-                throw new ValidationException(sprintf("member %s can not edit presentation %s",
-                    $current_member_id,
-                    $presentation_id
-                ));
-
-                $speaker = $this->speaker_repository->getById(intval($speaker_id));
-                if (is_null($speaker))
-                    throw new EntityNotFoundException(sprintf('speaker %s not found', $speaker_id));
-                if(!$presentation->isCompleted())
-                    $presentation->setProgress(Presentation::PHASE_SPEAKERS);
-
-                $presentation->removeSpeaker($speaker);
-        });
-    }
-
-    /**
-     * @param int $current_member_id
-     * @param int $speaker_id
-     * @param int $presentation_id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     * @return void
-     */
-    public function addModerator2Presentation($current_member_id, $speaker_id, $presentation_id)
-    {
-        return $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id) {
             $current_member = $this->member_repository->getById($current_member_id);
-            if(is_null($current_member))
+            if (is_null($current_member))
                 throw new EntityNotFoundException(sprintf("member %s not found", $current_member_id));
 
             $current_speaker = $this->speaker_repository->getByMember($current_member);
-            if(is_null($current_speaker))
+            if (is_null($current_speaker))
                 throw new EntityNotFoundException(sprintf("member %s does not has a speaker profile", $current_member_id));
 
             $presentation = $this->event_repository->getById($presentation_id);
-            if(is_null($presentation))
+            if (is_null($presentation))
                 throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
 
-            if(!$presentation instanceof Presentation)
+            if (!$presentation instanceof Presentation)
                 throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
 
-            if(!$presentation->canEdit($current_speaker))
+            if (!$presentation->canEdit($current_speaker))
                 throw new ValidationException(sprintf("member %s can not edit presentation %s",
                     $current_member_id,
                     $presentation_id
@@ -1778,7 +1735,49 @@ final class SummitService extends AbstractService implements ISummitService
             $speaker = $this->speaker_repository->getById(intval($speaker_id));
             if (is_null($speaker))
                 throw new EntityNotFoundException(sprintf('speaker %s not found', $speaker_id));
-            if(!$presentation->isCompleted())
+            if (!$presentation->isCompleted())
+                $presentation->setProgress(Presentation::PHASE_SPEAKERS);
+
+            $presentation->removeSpeaker($speaker);
+        });
+    }
+
+    /**
+     * @param int $current_member_id
+     * @param int $speaker_id
+     * @param int $presentation_id
+     * @return void
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addModerator2Presentation($current_member_id, $speaker_id, $presentation_id)
+    {
+        return $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id) {
+            $current_member = $this->member_repository->getById($current_member_id);
+            if (is_null($current_member))
+                throw new EntityNotFoundException(sprintf("member %s not found", $current_member_id));
+
+            $current_speaker = $this->speaker_repository->getByMember($current_member);
+            if (is_null($current_speaker))
+                throw new EntityNotFoundException(sprintf("member %s does not has a speaker profile", $current_member_id));
+
+            $presentation = $this->event_repository->getById($presentation_id);
+            if (is_null($presentation))
+                throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
+
+            if (!$presentation instanceof Presentation)
+                throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
+
+            if (!$presentation->canEdit($current_speaker))
+                throw new ValidationException(sprintf("member %s can not edit presentation %s",
+                    $current_member_id,
+                    $presentation_id
+                ));
+
+            $speaker = $this->speaker_repository->getById(intval($speaker_id));
+            if (is_null($speaker))
+                throw new EntityNotFoundException(sprintf('speaker %s not found', $speaker_id));
+            if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
             $presentation->setModerator($speaker);
@@ -1789,30 +1788,30 @@ final class SummitService extends AbstractService implements ISummitService
      * @param int $current_member_id
      * @param int $speaker_id
      * @param int $presentation_id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return void
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function removeModeratorFromPresentation($current_member_id, $speaker_id, $presentation_id)
     {
         return $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id) {
 
             $current_member = $this->member_repository->getById($current_member_id);
-            if(is_null($current_member))
+            if (is_null($current_member))
                 throw new EntityNotFoundException(sprintf("member %s not found", $current_member_id));
 
             $current_speaker = $this->speaker_repository->getByMember($current_member);
-            if(is_null($current_speaker))
+            if (is_null($current_speaker))
                 throw new EntityNotFoundException(sprintf("member %s does not has a speaker profile", $current_member_id));
 
             $presentation = $this->event_repository->getById($presentation_id);
-            if(is_null($presentation))
+            if (is_null($presentation))
                 throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
 
-            if(!$presentation instanceof Presentation)
+            if (!$presentation instanceof Presentation)
                 throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
 
-            if(!$presentation->canEdit($current_speaker))
+            if (!$presentation->canEdit($current_speaker))
                 throw new ValidationException(sprintf("member %s can not edit presentation %s",
                     $current_member_id,
                     $presentation_id
@@ -1821,7 +1820,7 @@ final class SummitService extends AbstractService implements ISummitService
             $speaker = $this->speaker_repository->getById(intval($speaker_id));
             if (is_null($speaker))
                 throw new EntityNotFoundException(sprintf('speaker %s not found', $speaker_id));
-            if(!$presentation->isCompleted())
+            if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
             $presentation->unsetModerator();
@@ -1840,10 +1839,10 @@ final class SummitService extends AbstractService implements ISummitService
         return $this->tx_service->transaction(function () use ($summit, $event_id) {
 
             $event = $this->event_repository->getById($event_id);
-            if(is_null($event))
+            if (is_null($event))
                 throw new EntityNotFoundException(sprintf("event %s not found!", $event_id));
 
-            if($event instanceof Presentation)
+            if ($event instanceof Presentation)
                 throw new ValidationException(sprintf("event %s is not allowed to be cloned!", $event_id));
 
             $eventClone = SummitEventFactory::build($event->getType(), $summit);
@@ -1857,27 +1856,25 @@ final class SummitService extends AbstractService implements ISummitService
             $eventClone->setEndDate($event->getLocalEndDate());
             $eventClone->setCategory($event->getCategory());
 
-            if($event->hasRSVPTemplate())
-            {
+            if ($event->hasRSVPTemplate()) {
                 $eventClone->setRSVPTemplate($event->getRSVPTemplate());
             }
 
-            if($event->isExternalRSVP())
-            {
+            if ($event->isExternalRSVP()) {
                 $eventClone->setRSVPLink($event->getRSVPLink());
             }
 
-            foreach($event->getSponsors() as $sponsor){
+            foreach ($event->getSponsors() as $sponsor) {
                 $eventClone->addSponsor($sponsor);
             }
 
-            foreach($event->getTags() as $tag){
+            foreach ($event->getTags() as $tag) {
                 $eventClone->addTag($tag);
             }
 
             // check if SummitEventWithFile
 
-            if($event instanceof SummitEventWithFile && $event->hasAttachment()){
+            if ($event instanceof SummitEventWithFile && $event->hasAttachment()) {
                 $eventClone->setAttachment($event->getAttachment());
             }
 
@@ -1901,7 +1898,7 @@ final class SummitService extends AbstractService implements ISummitService
 
             $type_name = trim($payload['type']);
             $former_type = $summit->getBookableAttributeTypeByTypeName($type_name);
-            if(!is_null($former_type))
+            if (!is_null($former_type))
                 throw new ValidationException(sprintf("bookable room attr type %s already exists on summit %s", $type_name, $summit->getId()));
 
             $type = new SummitBookableVenueRoomAttributeType();
@@ -1926,12 +1923,12 @@ final class SummitService extends AbstractService implements ISummitService
     {
         return $this->tx_service->transaction(function () use ($summit, $type_id, $payload) {
             $type = $summit->getBookableAttributeTypeById($type_id);
-            if(is_null($type))
+            if (is_null($type))
                 throw new EntityNotFoundException();
 
             $type_name = trim($payload['type']);
             $former_type = $summit->getBookableAttributeTypeByTypeName($type_name);
-            if(!is_null($former_type) && $type_id != $former_type->getId())
+            if (!is_null($former_type) && $type_id != $former_type->getId())
                 throw new ValidationException(sprintf("bookable room attr type %s already exists on summit %s", $type_name, $summit->getId()));
 
             $type->setType($type_name);
@@ -1952,7 +1949,7 @@ final class SummitService extends AbstractService implements ISummitService
     {
         $this->tx_service->transaction(function () use ($summit, $type_id) {
             $type = $summit->getBookableAttributeTypeById($type_id);
-            if(is_null($type))
+            if (is_null($type))
                 throw new EntityNotFoundException();
 
             $summit->removeMeetingBookingRoomAllowedAttribute($type);
@@ -2032,7 +2029,7 @@ final class SummitService extends AbstractService implements ISummitService
      */
     public function deleteBookableRoomAttributeValue(Summit $summit, int $type_id, int $value_id): void
     {
-         $this->tx_service->transaction(function () use ($summit, $type_id, $value_id) {
+        $this->tx_service->transaction(function () use ($summit, $type_id, $value_id) {
 
             $type = $summit->getBookableAttributeTypeById($type_id);
             if (is_null($type))
@@ -2052,9 +2049,9 @@ final class SummitService extends AbstractService implements ISummitService
      * @param int $summit_id
      * @param UploadedFile $file
      * @param int $max_file_size
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return File
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function addSummitLogo(int $summit_id, UploadedFile $file, $max_file_size = 10485760)
     {
@@ -2124,7 +2121,7 @@ final class SummitService extends AbstractService implements ISummitService
                 throw new EntityNotFoundException('Event not found on summit.');
             }
 
-            if(!Summit::allowToSee($event, $member))
+            if (!Summit::allowToSee($event, $member))
                 throw new EntityNotFoundException('Event not found on summit.');
 
             if (!$event->hasRSVPTemplate()) {
@@ -2133,7 +2130,7 @@ final class SummitService extends AbstractService implements ISummitService
 
             // add to schedule the RSVP event
             if (!$member->isOnSchedule($event)) {
-               $this->addEventToMemberSchedule($summit, $member, $event_id, false);
+                $this->addEventToMemberSchedule($summit, $member, $event_id, false);
             }
 
             $old_rsvp = $member->getRsvpByEvent($event_id);
@@ -2239,20 +2236,112 @@ final class SummitService extends AbstractService implements ISummitService
                 throw new EntityNotFoundException('Event not found on summit.');
             }
 
-            if(!Summit::allowToSee($event, $member))
+            if (!Summit::allowToSee($event, $member))
                 throw new EntityNotFoundException('Event not found on summit.');
 
             $rsvp = $member->getRsvpByEvent($event_id);
 
-            if(is_null($rsvp))
+            if (is_null($rsvp))
                 throw new ValidationException(sprintf("RSVP for event id %s does not exist for your member.", $event_id));
 
             $this->rsvp_repository->delete($rsvp);
 
-            $this->removeEventFromMemberSchedule($summit, $member, $event_id ,false);
+            $this->removeEventFromMemberSchedule($summit, $member, $event_id, false);
 
             return true;
         });
     }
 
+    /**
+     * @param Summit $summit
+     * @param Member $member
+     * @return PersonalCalendarShareInfo|null
+     * @throws Exception
+     */
+    public function createScheduleShareableLink(Summit $summit, Member $member):?PersonalCalendarShareInfo
+    {
+        return $this->tx_service->transaction(function () use ($summit, $member) {
+            return $member->createScheduleShareableLink($summit);
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param Member $member
+     * @return PersonalCalendarShareInfo|null
+     * @throws Exception
+     */
+    public function revokeScheduleShareableLink(Summit $summit, Member $member):?PersonalCalendarShareInfo
+    {
+        return $this->tx_service->transaction(function () use ($summit, $member) {
+            $link = $member->getScheduleShareableLinkBy($summit);
+            if(is_null($link)){
+                throw new EntityNotFoundException("Schedule shareable link not found for member.");
+            }
+            $link->revoke();
+            return $link;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param string $cid
+     * @return string
+     * @throws Exception
+     */
+    public function buildICSFeed(Summit $summit, string $cid): string
+    {
+
+        return $this->tx_service->transaction(function () use ($summit, $cid) {
+            $link = $summit->getScheduleShareableLinkById($cid);
+            if(is_null($link)){
+                throw new EntityNotFoundException("Schedule shareable link not found for member.");
+            }
+            $owner    = $link->getOwner();
+            $timeZone = $summit->getTimeZone();
+
+            $vCalendar = ICalTimeZoneBuilder::build($timeZone, $summit->getName(), true);
+            foreach($owner->getScheduleBySummit($summit) as $scheduled){
+                $summitEvent = $scheduled->getEvent();
+                $local_start_time = new DateTime($summitEvent->getStartDateNice(), $timeZone);
+                $local_end_time   = new DateTime($summitEvent->getEndDateNice(), $timeZone);
+                $vEvent            = new \Eluceo\iCal\Component\Event($summitEvent->getId());
+
+                $vEvent
+                    ->setCreated(new DateTime())
+                    ->setDtStart($local_start_time)
+                    ->setDtEnd($local_end_time)
+                    ->setNoTime(false)
+                    ->setSummary($summitEvent->getTitle())
+                    ->setDescription(strip_tags($summitEvent->getAbstract()))
+                    ->setDescriptionHTML($summitEvent->getAbstract());
+
+                if($timeZone->getName() == 'UTC'){
+                    $vEvent->setUseUtc(true)
+                        ->setUseTimezone(false);
+                }
+                else{
+                    $vEvent->setUseUtc(false)
+                        ->setUseTimezone(true);
+                }
+
+                if($summitEvent->hasLocation()){
+                    $location = $summitEvent;
+                    $geo = null;
+                    if($location instanceof SummitGeoLocatedLocation) {
+                        $geo = sprintf("%s;%s", $location->getLat(), $location->getLng());
+                    }
+                    $vEvent->setLocation($location->getTitle(), $location->getTitle(), $geo);
+                }
+
+                $vCalendar->addComponent($vEvent);
+            }
+
+            return $vCalendar->render();
+
+        });
+
+
+
+    }
 }

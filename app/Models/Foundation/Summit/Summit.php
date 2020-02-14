@@ -29,6 +29,7 @@ use models\exceptions\ValidationException;
 use models\main\Company;
 use models\main\File;
 use models\main\Member;
+use models\main\PersonalCalendarShareInfo;
 use models\main\Tag;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
@@ -449,6 +450,12 @@ class Summit extends SilverstripeBaseModel
     private $excluded_categories_for_upload_slide_decks;
 
     /**
+     * @ORM\OneToMany(targetEntity="models\main\PersonalCalendarShareInfo", mappedBy="summit", cascade={"persist"}, orphanRemoval=true)
+     * @var PersonalCalendarShareInfo[]
+     */
+    private $schedule_shareable_links;
+
+    /**
      * @return string
      */
     public function getDatesLabel()
@@ -716,6 +723,7 @@ class Summit extends SilverstripeBaseModel
         $this->selection_plans = new ArrayCollection;
         $this->meeting_booking_room_allowed_attributes = new ArrayCollection();
         $this->mark_as_deleted = false;
+        $this->schedule_shareable_links = new ArrayCollection();
     }
 
     /**
@@ -3181,4 +3189,33 @@ SQL;
         $this->schedule_twitter_text = $schedule_twitter_text;
     }
 
+    /**
+     * @param string $sid
+     * @return PersonalCalendarShareInfo|null
+     */
+    public function getScheduleShareableLinkById(string $sid):?PersonalCalendarShareInfo{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('cid', trim($sid)));
+        $criteria->andWhere(Criteria::expr()->eq('revoked', 0));
+        $link = $this->schedule_shareable_links->matching($criteria)->first();
+        return $link === false ? null : $link;
+    }
+
+    /**
+     * @param PersonalCalendarShareInfo $link
+     */
+    public function addScheduleShareableLink(PersonalCalendarShareInfo $link){
+        if($this->schedule_shareable_links->contains($link)) return;
+        $this->schedule_shareable_links->add($link);
+        $link->setSummit($this);
+    }
+
+    /**
+     * @param PersonalCalendarShareInfo $link
+     */
+    public function removeScheduleShareableLink(PersonalCalendarShareInfo $link){
+        if(!$this->schedule_shareable_links->contains($link)) return;
+        $this->schedule_shareable_links->removeElement($link);
+        $link->clearSummit();
+    }
 }

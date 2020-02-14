@@ -586,6 +586,11 @@ Route::group([
                     {
                         Route::get('', 'OAuth2SummitMembersApiController@getMemberScheduleSummitEvents')->where('member_id', 'me');
 
+                        Route::group(['prefix' => 'shareable-link'], function(){
+                            Route::post('', 'OAuth2SummitMembersApiController@createScheduleShareableLink')->where('member_id', 'me');
+                            Route::delete('', 'OAuth2SummitMembersApiController@revokeScheduleShareableLink')->where('member_id', 'me');
+                        });
+
                         Route::group(array('prefix' => '{event_id}'), function (){
 
                             Route::group(array('prefix' => 'rsvp'), function (){

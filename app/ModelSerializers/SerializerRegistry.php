@@ -45,6 +45,7 @@ use App\ModelSerializers\PushNotificationMessageSerializer;
 use App\ModelSerializers\Software\OpenStackComponentSerializer;
 use App\ModelSerializers\Software\OpenStackReleaseSerializer;
 use App\ModelSerializers\Summit\AdminSummitSerializer;
+use App\ModelSerializers\Summit\PersonalCalendarShareInfoSerializer;
 use App\ModelSerializers\Summit\Presentation\SummitPresentationCommentSerializer;
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackAnswerSerializer;
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackDropDownQuestionTemplateSerializer;
@@ -224,6 +225,7 @@ final class SerializerRegistry
         $this->registry['TrackTagGroup'] = TrackTagGroupSerializer::class;
         $this->registry['TrackTagGroupAllowedTag'] = TrackTagGroupAllowedTagSerializer::class;
 
+        $this->registry['PersonalCalendarShareInfo'] = PersonalCalendarShareInfoSerializer::class;
 
         // member
         $this->registry['Member']                          = [

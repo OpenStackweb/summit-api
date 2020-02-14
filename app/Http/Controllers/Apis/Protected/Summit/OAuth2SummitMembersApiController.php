@@ -882,4 +882,126 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
 
     }
 
+    /**
+     * @param $summit_id
+     * @param $member_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function createScheduleShareableLink($summit_id, $member_id){
+        try {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $link = $this->summit_service->createScheduleShareableLink($summit, $current_member);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($link)->serialize
+            (
+                Request::input('expand', '')
+            ));
+
+        }
+        catch (ValidationException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error412(array( $ex1->getMessage()));
+        }
+        catch (EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message' => $ex2->getMessage()));
+        }
+        catch(\HTTP401UnauthorizedException $ex3)
+        {
+            Log::warning($ex3);
+            return $this->error401();
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+
+    }
+
+    /**
+     * @param $summit_id
+     * @param $member_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function revokeScheduleShareableLink($summit_id, $member_id){
+        try {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $link = $this->summit_service->revokeScheduleShareableLink($summit, $current_member);
+
+            return $this->deleted();
+
+        }
+        catch (ValidationException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error412(array( $ex1->getMessage()));
+        }
+        catch (EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message' => $ex2->getMessage()));
+        }
+        catch(\HTTP401UnauthorizedException $ex3)
+        {
+            Log::warning($ex3);
+            return $this->error401();
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+
+    }
+
+    /**
+     * @param $summit_id
+     * @param $cid
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response|mixed
+     */
+    public function getCalendarFeedICS($summit_id, $cid){
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $feedBody = $this->summit_service->buildICSFeed($summit, $cid);
+
+            return $this->rawContent($feedBody, [
+                'Content-type' => 'text/calendar',
+            ]);
+        }
+        catch (ValidationException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error412(array( $ex1->getMessage()));
+        }
+        catch (EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message' => $ex2->getMessage()));
+        }
+        catch(\HTTP401UnauthorizedException $ex3)
+        {
+            Log::warning($ex3);
+            return $this->error401();
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
 }

@@ -155,6 +155,24 @@ abstract class JsonController extends Controller
             'Pragma'                    => 'public',
         ];
 
-        return Response::make(CSVExporter::getInstance()->export($items, $field_separator, $columns, $formatters), 200, $headers);
+        return $this->rawContent
+        (
+            CSVExporter::getInstance()->export($items, $field_separator, $columns, $formatters),
+            $headers
+        );
+    }
+
+    /**
+     * @param string $body
+     * @param array $headers
+     * @return \Illuminate\Http\Response
+     */
+    public function rawContent(string $body, array $headers = []){
+        return Response::make
+        (
+            $body,
+            200,
+            $headers
+        );
     }
 }

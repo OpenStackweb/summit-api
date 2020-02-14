@@ -64,10 +64,19 @@ Route::group([
 
         Route::group(['prefix' => '{id}'], function () {
             Route::get('', [ 'middleware' => 'cache:'.Config::get('cache_api_response.get_summit_response_lifetime', 1200), 'uses' => 'OAuth2SummitApiController@getSummit'])->where('id', 'current|[0-9]+');
-
+            // members
+            Route::group(['prefix' => 'members'], function () {
+                Route::group(['prefix' => 'all'], function () {
+                    Route::group(['prefix' => 'schedule'], function () {
+                        Route::group(['prefix' => 'ics'], function () {
+                            Route::get('{cid}', 'OAuth2SummitMembersApiController@getCalendarFeedICS');
+                        });
+                    });
+                });
+            });
+            // events
             Route::group(['prefix' => 'events'], function () {
                 Route::group(['prefix' => 'published'], function () {
-
                     Route::get('', 'OAuth2SummitEventsApiController@getScheduledEvents');
                 });
 

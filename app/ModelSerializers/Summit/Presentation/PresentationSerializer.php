@@ -125,7 +125,7 @@ class PresentationSerializer extends SummitEventSerializer
         {
             $answers = [];
             foreach ($presentation->getAnswers() as $answer) {
-                $answers[]= SerializerRegistry::getInstance()->getSerializer($answer)->serialize();
+                $answers[]= SerializerRegistry::getInstance()->getSerializer($answer)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'extra_questions'));
             }
             $values['extra_questions'] = $answers;
         }

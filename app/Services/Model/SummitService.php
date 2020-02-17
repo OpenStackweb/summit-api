@@ -21,6 +21,8 @@ use App\Events\RSVPUpdated;
 use App\Events\SummitDeleted;
 use App\Events\SummitUpdated;
 use App\Http\Utils\IFileUploader;
+use App\Mail\BookableRoomReservationCanceledEmail;
+use App\Mail\Schedule\ShareEventEmail;
 use App\Models\Foundation\Summit\Factories\SummitFactory;
 use App\Models\Foundation\Summit\Factories\SummitRSVPFactory;
 use App\Models\Foundation\Summit\Repositories\IDefaultSummitEventTypeRepository;
@@ -33,6 +35,7 @@ use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Mail;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\File;
@@ -2340,8 +2343,46 @@ final class SummitService extends AbstractService implements ISummitService
             return $vCalendar->render();
 
         });
+    }
 
+    /**
+     * @param Summit $summit
+     * @param int $event_id
+     * @param array $data
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     * @return void`
+     */
+    public function shareEventByEmail(Summit $summit, int $event_id, array $data):void{
 
+        $this->tx_service->transaction(function () use ($summit, $event_id, $data) {
 
+            $event = $summit->getScheduleEvent($event_id);
+            if(is_null($event)){
+                throw new EntityNotFoundException(sprintf("Event %s not found.", $event_id));
+            }
+
+            $event_uri = $data['event_uri'] ?? null;
+
+            if(empty($event_uri)){
+                Log::debug("event_uri not set on payload. trying to get from default one (summit)");
+                $default_event_uri = $summit->getScheduleDefaultEventDetailUrl();
+                if(!empty($default_event_uri)){
+                    Log::debug("default_event_uri set at summit level using it.");
+                    $event_uri = str_replace(":event_id", $event_id, $default_event_uri);
+                }
+            }
+
+            if(empty($event_uri)){
+                throw new ValidationException(sprintf("Property event_url is empty."));
+            }
+
+            Mail::send(new ShareEventEmail(
+                trim($data['from']),
+                trim($data['to']),
+                $event_uri,
+                $event
+            ));
+        });
     }
 }

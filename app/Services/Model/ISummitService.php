@@ -405,4 +405,14 @@ interface ISummitService
      * @throws EntityNotFoundException
      */
     public function buildICSFeed(Summit $summit, string $cid): string;
+
+    /**
+     * @param Summit $summit
+     * @param int $event_id
+     * @param array $data
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     * @return void`
+     */
+    public function shareEventByEmail(Summit $summit, int $event_id, array $data):void;
 }

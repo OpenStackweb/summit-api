@@ -32,6 +32,7 @@ class RSVPRegularSeatMail extends RSVPMail
         if(empty($from)){
             throw new \InvalidArgumentException("mail.from is not set");
         }
+
         return $this->from($from)
             ->to($this->owner_email)
             ->subject($subject)

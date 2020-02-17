@@ -21,6 +21,20 @@ final class SummitScopes
     const ReadSummitData                      = '%s/summits/read';
     const ReadAllSummitData                   = '%s/summits/read/all';
 
+    // me
+    const MeRead                              = '%s/me/read';
+    const AddMyFavorites                      = '%s/me/summits/events/favorites/add';
+    const DeleteMyFavorites                   = '%s/me/summits/events/favorites/delete';
+    const AddMyRSVP                           = '%s/me/summits/events/rsvp/add';
+    const DeleteMyRSVP                        = '%s/me/summits/events/rsvp/delete';
+    const AddMySchedule                       = '%s/me/summits/events/schedule/add';
+    const DeleteMySchedule                    = '%s/me/summits/events/schedule/delete';
+    const AddMyEventFeedback                  = '%s/me/summits/events/feedback/add';
+    const DeleteMyEventFeedback               = '%s/me/summits/events/feedback/delete';
+    const AddMyScheduleShareable              = '%s/me/summits/events/schedule/shareable/add';
+    const DeleteMyScheduleShareable           = '%s/me/summits/events/schedule/shareable/delete';
+    const SendMyScheduleMail                  = '%s/me/summits/events/schedule/mail';
+
     // registration
     const CreateRegistrationOrders            = '%s/summits/registration-orders/create';
     const CreateOfflineRegistrationOrders     = '%s/summits/registration-orders/create/offline';

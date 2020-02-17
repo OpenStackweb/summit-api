@@ -253,11 +253,16 @@ Route::group([
                 });
 
                 Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@addEvent']);
-                Route::group(array('prefix' => '{event_id}'), function () {
+                Route::group(['prefix' => '{event_id}'], function () {
 
                     Route::post('/clone',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@cloneEvent']);
                     Route::get('', 'OAuth2SummitEventsApiController@getEvent');
-                    Route::get('/published', [ 'middleware' => 'cache:'.Config::get('cache_api_response.get_published_event_response_lifetime', 300), 'uses' => 'OAuth2SummitEventsApiController@getScheduledEvent']);
+
+                    Route::group(['prefix' => 'published'], function () {
+                        Route::get('', ['middleware' => 'cache:' . Config::get('cache_api_response.get_published_event_response_lifetime', 300), 'uses' => 'OAuth2SummitEventsApiController@getScheduledEvent']);
+                        Route::post('mail', 'OAuth2SummitEventsApiController@shareScheduledEventByEmail');
+                    });
+
                     Route::put('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@updateEvent' ]);
                     Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@deleteEvent' ]);
                     Route::put('/publish', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@publishEvent']);

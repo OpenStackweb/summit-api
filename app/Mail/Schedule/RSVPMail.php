@@ -59,24 +59,35 @@ class RSVPMail extends Mailable
     public $summit_name;
 
     /**
+     * @var string
+     */
+    public $summit_schedule_default_event_detail_url;
+
+    /**
      * RSVPMail constructor.
      * @param RSVP $rsvp
      */
     public function __construct(RSVP $rsvp)
     {
-        $event  = $rsvp->getEvent();
-        $summit = $event->getSummit();
-        $owner  = $rsvp->getOwner();
-        $this->owner_fullname      = $owner->getFullName();
-        $this->owner_email         = $owner->getEmail();
-        $this->event_title         = $event->getTitle();
-        $this->event_date          = $event->getDateNice();
-        $this->confirmation_number = $rsvp->getConfirmationNumber();
-        $this->summit_name         = $summit->getName();
-        $event_uri                 = $rsvp->getEventUri();
+        $event                                          = $rsvp->getEvent();
+        $summit                                         = $event->getSummit();
+        $owner                                          = $rsvp->getOwner();
+        $this->owner_fullname                           = $owner->getFullName();
+        $this->owner_email                              = $owner->getEmail();
+        $this->event_title                              = $event->getTitle();
+        $this->event_date                               = $event->getDateNice();
+        $this->confirmation_number                      = $rsvp->getConfirmationNumber();
+        $this->summit_name                              = $summit->getName();
+        $this->summit_schedule_default_event_detail_url = $summit->getScheduleDefaultEventDetailUrl();
+        $event_uri                                      = $rsvp->getEventUri();
+
         if(!empty($event_uri)){
             // we got a valid origin
             $this->event_uri = $event_uri;
+        }
+        // if we dont have a custom event uri, try to get default one
+        if(empty($this->event_uri) && !empty($this->summit_schedule_default_event_detail_url)){
+            $this->event_uri  = str_replace(":event_id", $event->getId(), $this->summit_schedule_default_event_detail_url);
         }
     }
 }

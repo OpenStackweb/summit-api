@@ -57,19 +57,64 @@ final class ApiScopesSeeder extends Seeder
                 'description' => 'Grants read only access for All Summits Data',
             ],
             [
-                'name' => sprintf('%s/me/read', $current_realm),
+                'name' => sprintf(SummitScopes::MeRead, $current_realm),
                 'short_description' => 'Get own summit member data',
                 'description' => 'Grants read only access for our own summit member data',
             ],
             [
-                'name' => sprintf('%s/me/summits/events/favorites/add', $current_realm),
+                'name' => sprintf(SummitScopes::AddMyFavorites, $current_realm),
                 'short_description' => 'Allows to add Summit events as favorite',
                 'description' => 'Allows to add Summit events as favorite',
             ],
             [
-                'name' => sprintf('%s/me/summits/events/favorites/delete', $current_realm),
+                'name' => sprintf(SummitScopes::DeleteMyFavorites, $current_realm),
                 'short_description' => 'Allows to remove Summit events as favorite',
                 'description' => 'Allows to remove Summit events as favorite',
+            ],
+            [
+                'name' => sprintf(SummitScopes::AddMyRSVP, $current_realm),
+                'short_description' => 'Allows to add Summit events as RSVP',
+                'description' => 'Allows to add Summit events as RSVP',
+            ],
+            [
+                'name' => sprintf(SummitScopes::DeleteMyRSVP, $current_realm),
+                'short_description' => 'Allows to remove Summit events from RSVP',
+                'description' => 'Allows to remove Summit events from RSVP',
+            ],
+            [
+                'name' => sprintf(SummitScopes::AddMySchedule, $current_realm),
+                'short_description' => 'Allows to add Summit events to my schedule',
+                'description' => 'Allows to add Summit events to my schedule',
+            ],
+            [
+                'name' => sprintf(SummitScopes::DeleteMySchedule, $current_realm),
+                'short_description' => 'Allows to remove Summit events from my schedule',
+                'description' => 'Allows to remove Summit events from my schedule',
+            ],
+            [
+                'name' => sprintf(SummitScopes::AddMyScheduleShareable, $current_realm),
+                'short_description' => 'Allows create a shareable link from my schedule',
+                'description' => 'Allows create a shareable link from my schedule',
+            ],
+            [
+                'name' => sprintf(SummitScopes::DeleteMyScheduleShareable, $current_realm),
+                'short_description' => 'Allows to delete shareable links from my schedule',
+                'description' => 'Allows to delete shareable links from my schedule',
+            ],
+            [
+                'name' => sprintf(SummitScopes::AddMyEventFeedback, $current_realm),
+                'short_description' => 'Allows to create event feedback',
+                'description' =>  'Allows to create event feedback',
+            ],
+            [
+                'name' => sprintf(SummitScopes::DeleteMyEventFeedback, $current_realm),
+                'short_description' =>  'Allows to delete event feedback',
+                'description' =>  'Allows to delete event feedback',
+            ],
+            [
+                'name' => sprintf(SummitScopes::SendMyScheduleMail, $current_realm),
+                'short_description' => 'Allows to send my schedule share email',
+                'description' => 'Allows to send my schedule share email',
             ],
             [
                 'name' => sprintf(SummitScopes::WriteSummitData, $current_realm),

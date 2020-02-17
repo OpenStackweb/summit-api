@@ -69,6 +69,7 @@ class AccessTokenServiceStub implements IAccessTokenService
             sprintf(SummitScopes::WritePresentationMaterialsData, $url),
             sprintf(SummitScopes::ReadMyBookableRoomsReservationData, $url),
             sprintf(SummitScopes::WriteMyBookableRoomsReservationData, $url),
+            sprintf(SummitScopes::SendMyScheduleMail, $url),
         );
 
         return AccessToken::createFromParams(

@@ -43,6 +43,8 @@ use utils\PagingResponse;
  */
 final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 {
+    use GetAndValidateJsonPayload;
+
     /**
      * @var ISummitService
      */
@@ -368,6 +370,43 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    use ValidateEventUri;
+
+    /**
+     * @param $summit_id
+     * @param $event_id
+     * @return mixed
+     */
+    public function shareScheduledEventByEmail($summit_id, $event_id)
+    {
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonPayload( [
+                'from'      => 'required|email',
+                'to'        => 'required|email',
+                'event_uri' => 'sometimes|url',
+            ]);
+
+            $this->service->shareEventByEmail($summit, $event_id, $this->validateEventUri($payload));
+
+            return $this->ok();
+        }
+        catch (EntityNotFoundException $ex) {
+            Log::warning($ex);
+            return $this->error404();
+        }
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412(array($ex->getMessage()));
         }
         catch (Exception $ex) {
             Log::error($ex);

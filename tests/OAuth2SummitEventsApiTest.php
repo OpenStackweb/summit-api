@@ -1569,4 +1569,38 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
     }
 
 
+    /**
+     * @param int $summit_id
+     * @param int $event_id
+     */
+    public function testShareEvent($summit_id = 27, $event_id = 24344){
+         $params = [
+             'id' => $summit_id,
+             'event_id' => $event_id,
+         ];
+
+        $headers = [
+
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $payload = [
+            'from' => 'smarcet@gmail.com',
+            'to'   => 'smarcet@gmail.com',
+        ];
+
+        $response = $this->action
+        (
+            "POST",
+            "OAuth2SummitEventsApiController@shareScheduledEventByEmail",
+            $params,
+            [], [], [],
+            $headers,
+            json_encode($payload)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+    }
 }

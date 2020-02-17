@@ -2077,6 +2077,17 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'share-email-published-event',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/published/mail',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::SendMyScheduleMail, $current_realm)
+                ],
+                // 5 request per day
+                'rate_limit'       => 5,
+                'rate_limit_decay' => 1440
+            ],
+            [
                 'name' => 'add-event',
                 'route' => '/api/v1/summits/{id}/events',
                 'http_method' => 'POST',
@@ -2206,13 +2217,19 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'add-event-feedback-v2',
                 'route' => '/api/v2/summits/{id}/events/{event_id}/feedback',
                 'http_method' => 'POST',
-                'scopes' => [sprintf(SummitScopes::WriteSummitData, $current_realm)],
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::AddMyEventFeedback, $current_realm),
+                ],
             ],
             [
                 'name' => 'update-event-feedback-v2',
                 'route' => '/api/v2/summits/{id}/events/{event_id}/feedback',
                 'http_method' => 'PUT',
-                'scopes' => [sprintf(SummitScopes::WriteSummitData, $current_realm)],
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::AddMyEventFeedback, $current_realm),
+                ],
             ],
             [
                 'name' => 'get-event-feedback',
@@ -2227,7 +2244,11 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'delete-rsvp',
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/schedule/{event_id}/rsvp',
                 'http_method' => 'DELETE',
-                'scopes' => [sprintf(SummitScopes::WriteSummitData, $current_realm)],
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::DeleteMyRSVP, $current_realm),
+                ],
+
             ],
             // locations
             [
@@ -3940,7 +3961,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/shareable-link',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::AddMyScheduleShareable, $current_realm)
                 ],
             ],
             [
@@ -3948,33 +3970,35 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/shareable-link',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::DeleteMyScheduleShareable, $current_realm)
                 ],
             ],
             [
                 'name' => 'get-own-member',
                 'route' => '/api/v1/summits/{id}/members/{member_id}',
                 'http_method' => 'GET',
-                'scopes' => [sprintf('%s/me/read', $current_realm)],
+                'scopes' => [sprintf(SummitScopes::MeRead, $current_realm)],
             ],
             [
                 'name' => 'get-own-member-favorites',
                 'route' => '/api/v1/summits/{id}/members/{member_id}/favorites',
                 'http_method' => 'GET',
-                'scopes' => [sprintf('%s/me/read', $current_realm)],
+                'scopes' => [sprintf(SummitScopes::MeRead, $current_realm)],
             ],
             [
                 'name' => 'add-2-own-member-favorites',
                 'route' => '/api/v1/summits/{id}/members/{member_id}/favorites/{event_id}',
                 'http_method' => 'POST',
-                'scopes' => [sprintf('%s/me/summits/events/favorites/add', $current_realm)],
+                'scopes' => [sprintf(SummitScopes::AddMyFavorites, $current_realm)],
             ],
             [
                 'name' => 'add-rsvp-member',
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/rsvp',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::AddMyRSVP, $current_realm)
                 ],
             ],
             [
@@ -3982,7 +4006,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/rsvp',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::AddMyRSVP, $current_realm)
                 ],
             ],
             [
@@ -3990,32 +4015,39 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/rsvp',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::DeleteMyRSVP, $current_realm)
                 ],
             ],
             [
                 'name' => 'remove-from-own-member-favorites',
                 'route' => '/api/v1/summits/{id}/members/{member_id}/favorites/{event_id}',
                 'http_method' => 'DELETE',
-                'scopes' => [sprintf('%s/me/summits/events/favorites/delete', $current_realm)],
+                'scopes' => [sprintf(SummitScopes::DeleteMyFavorites, $current_realm)],
             ],
             [
                 'name' => 'get-own-member-schedule',
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule',
                 'http_method' => 'GET',
-                'scopes' => [sprintf('%s/me/read', $current_realm)],
+                'scopes' => [sprintf(SummitScopes::MeRead, $current_realm)]
             ],
             [
                 'name' => 'add-2-own-member-schedule',
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}',
                 'http_method' => 'POST',
-                'scopes' => [sprintf(SummitScopes::WriteSummitData, $current_realm)],
+                'scopes' => [
+                      sprintf(SummitScopes::WriteSummitData, $current_realm),
+                      sprintf(SummitScopes::AddMySchedule, $current_realm),
+                ],
             ],
             [
                 'name' => 'remove-from-own-member-schedule',
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}',
                 'http_method' => 'DELETE',
-                'scopes' => [sprintf(SummitScopes::WriteSummitData, $current_realm)],
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::DeleteMySchedule, $current_realm),
+                ],
             ],
             [
                 'name' => 'get-member-from-summit',
@@ -4633,6 +4665,12 @@ class ApiEndpointsSeeder extends Seeder
             $endpoint->setAllowCors(true);
             $endpoint->setAllowCredentials(true);
             $endpoint->setApi($api);
+
+            if(isset($endpoint_info['rate_limit']))
+                $endpoint->setRateLimit(intval($endpoint_info['rate_limit']));
+
+            if(isset($endpoint_info['rate_limit_decay']))
+                $endpoint->setRateLimitDecay(intval($endpoint_info['rate_limit_decay']));
 
             foreach($endpoint_info['scopes'] as $scope_name){
                 $scope = EntityManager::getRepository(\App\Models\ResourceServer\ApiScope::class)->findOneBy(['name' => $scope_name]);

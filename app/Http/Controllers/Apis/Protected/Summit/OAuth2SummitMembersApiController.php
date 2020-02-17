@@ -664,39 +664,9 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
         }
     }
 
-    /**
-     * @param array $payload
-     * @return array
-     */
-    private function validateRSVPEventUri(array $payload){
-        if(!isset($payload['event_uri']) || empty($payload['event_uri'])){
-            Log::debug("validateRSVPEventUri: event uri not set , trying to get from Referer");
-            $payload['event_uri'] = Request::instance()->header('Referer', null);
-        }
+    use ValidateEventUri;
 
-        if(isset($payload['event_uri']) && !empty($payload['event_uri'])){
-            $allowed_return_uris = $this->resource_server_context->getAllowedReturnUris();
-            if(!empty($allowed_return_uris)){
-                Log::debug(sprintf("validateRSVPEventUri: event_uri %s allowed_return_uris %s", $payload['event_uri'], $allowed_return_uris));
-                // validate the event_uri against the allowed returned uris of the current client
-                // check using host name
-                $test_host         = parse_url($payload['event_uri'], PHP_URL_HOST);
-                $valid_event_uri  = false;
-                foreach(explode(",", $allowed_return_uris) as $allowed_uri){
-                    if($test_host == parse_url($allowed_uri, PHP_URL_HOST)){
-                        $valid_event_uri = true;
-                        Log::debug(sprintf("validateRSVPEventUri: valid host %s", $test_host));
-                        break;
-                    }
-                }
-                if(!$valid_event_uri){
-                    unset($payload['event_uri'] );
-                }
-            }
-        }
-
-        return $payload;
-    }
+    use GetAndValidateJsonPayload;
 
     /**
      * @param $summit_id
@@ -706,26 +676,13 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      */
     public function addEventRSVP($summit_id, $member_id, $event_id){
         try {
-            if(!Request::isJson()) return $this->error400();
-
-            $data = Input::json();
-            $payload = $data->all();
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, [
+
+            $payload = $this->getJsonPayload([
                 'answers' => 'sometimes|rsvp_answer_dto_array',
                 'event_uri' => 'sometimes|url',
             ]);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
 
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
@@ -736,7 +693,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
                 return $this->error404();
             }
 
-            $rsvp = $this->summit_service->addRSVP($summit, $current_member, $event_id, $this->validateRSVPEventUri($payload));
+            $rsvp = $this->summit_service->addRSVP($summit, $current_member, $event_id, $this->validateEventUri($payload));
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($rsvp)->serialize
             (
@@ -774,28 +731,15 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      */
     public function updateEventRSVP($summit_id, $member_id, $event_id){
         try {
-            if(!Request::isJson()) return $this->error400();
-            $origin              = Request::instance()->headers->get('Origin', null);
-            $data = Input::json();
-            $payload = $data->all();
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, [
+
+            $payload = $this->getJsonPayload([
                 'answers' => 'sometimes|rsvp_answer_dto_array',
                 'event_uri' => 'sometimes|url',
             ]);
 
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
-
-            $current_member = $this->resource_server_context->getCurrentUser();
+             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
             $event = $summit->getScheduleEvent(intval($event_id));
@@ -804,7 +748,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
                 return $this->error404();
             }
 
-            $rsvp = $this->summit_service->updateRSVP($summit, $current_member, $event_id, $this->validateRSVPEventUri($payload));
+            $rsvp = $this->summit_service->updateRSVP($summit, $current_member, $event_id, $this->validateEventUri($payload));
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($rsvp)->serialize
             (
@@ -902,7 +846,6 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             (
                 Request::input('expand', '')
             ));
-
         }
         catch (ValidationException $ex1)
         {

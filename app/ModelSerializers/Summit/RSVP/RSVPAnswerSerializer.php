@@ -45,12 +45,12 @@ class RSVPAnswerSerializer extends SilverStripeSerializer
                 switch ($relation) {
                     case 'rsvp': {
                         unset($values['rsvp_id']);
-                        $values['rsvp_id'] = SerializerRegistry::getInstance()->getSerializer($answer->getRsvp())->serialize(AbstractSerializer::filterExpandByPrefix($relation, $expand));
+                        $values['rsvp_id'] = SerializerRegistry::getInstance()->getSerializer($answer->getRsvp())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                     break;
                     case 'question': {
                         unset($values['question_id']);
-                        $values['question'] = SerializerRegistry::getInstance()->getSerializer($answer->getQuestion())->serialize(AbstractSerializer::filterExpandByPrefix($relation, $expand));
+                        $values['question'] = SerializerRegistry::getInstance()->getSerializer($answer->getQuestion())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                     break;
                 }

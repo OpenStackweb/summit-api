@@ -65,20 +65,20 @@ final class SummitPushNotificationSerializer extends PushNotificationMessageSeri
                     case 'event': {
                         if($notification->getChannel() != SummitPushNotificationChannel::Event) continue;
                             unset($values['event_id']);
-                            $values['event'] = SerializerRegistry::getInstance()->getSerializer($notification->getSummitEvent())->serialize(AbstractSerializer::filterExpandByPrefix($relation, $expand));
+                            $values['event'] = SerializerRegistry::getInstance()->getSerializer($notification->getSummitEvent())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                         break;
                     case 'group': {
                         if($notification->getChannel() != SummitPushNotificationChannel::Group) continue;
                         unset($values['group_id']);
-                        $values['group'] = SerializerRegistry::getInstance()->getSerializer($notification->getGroup())->serialize(AbstractSerializer::filterExpandByPrefix($relation, $expand));
+                        $values['group'] = SerializerRegistry::getInstance()->getSerializer($notification->getGroup())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                         break;
                     case 'recipients': {
                         if($notification->getChannel() != SummitPushNotificationChannel::Members) continue;
                         $values['recipients'] = [];
                         foreach ($notification->getRecipients() as $recipient)
-                            $values['recipients'][] = SerializerRegistry::getInstance()->getSerializer($recipient)->serialize(AbstractSerializer::filterExpandByPrefix($relation, $expand));
+                            $values['recipients'][] = SerializerRegistry::getInstance()->getSerializer($recipient)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                     break;
                 }

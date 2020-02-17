@@ -120,16 +120,17 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
         }
 
         if (!empty($expand)) {
-
             foreach (explode(',', $expand) as $relation) {
                 $relation = trim($relation);
                 switch ($relation) {
-
                     case 'attendee': {
                         if (!is_null($attendee))
                         {
                             unset($values['attendee_id']);
-                            $values['attendee'] = SerializerRegistry::getInstance()->getSerializer($attendee)->serialize($expand,[],['none']);
+                            $values['attendee'] = SerializerRegistry::getInstance()->getSerializer($attendee)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),[],['none']
+                            );
                         }
                     }
                     break;
@@ -137,7 +138,10 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         if (!is_null($speaker))
                         {
                             unset($values['speaker_id']);
-                            $values['speaker'] = SerializerRegistry::getInstance()->getSerializer($speaker)->serialize($expand,[],['none']);
+                            $values['speaker'] = SerializerRegistry::getInstance()->getSerializer($speaker)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),[],['none']
+                            );
                         }
                     }
                     break;
@@ -146,7 +150,9 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         if(is_null($summit)) break;
                         $feedback = array();
                         foreach ($member->getFeedbackBySummit($summit) as $f) {
-                            $feedback[] = SerializerRegistry::getInstance()->getSerializer($f)->serialize();
+                            $feedback[] = SerializerRegistry::getInstance()->getSerializer($f)->serialize(
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation)
+                            );
                         }
                         $values['feedback'] = $feedback;
                     }
@@ -158,7 +164,7 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         foreach ($member->getFavoritesSummitEventsBySummit($summit) as $events){
                             $favorites[] = SerializerRegistry::getInstance()
                                 ->getSerializer($events)
-                                ->serialize($expand);
+                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['favorite_summit_events'] = $favorites;
                     }
@@ -169,7 +175,7 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         foreach ($member->getScheduleBySummit($summit) as $events){
                             $schedule[] = SerializerRegistry::getInstance()
                                 ->getSerializer($events)
-                                ->serialize($expand);
+                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['schedule_summit_events'] = $schedule;
                     }
@@ -181,7 +187,7 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         foreach ($member->getRsvpBySummit($summit) as $rsvp){
                             $rsvps[] = SerializerRegistry::getInstance()
                                 ->getSerializer($rsvp)
-                                ->serialize(AbstractSerializer::filterExpandByPrefix($relation, $expand));
+                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['rsvp'] = $rsvps;
                     }

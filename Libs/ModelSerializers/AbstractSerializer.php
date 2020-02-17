@@ -211,7 +211,7 @@ abstract class AbstractSerializer implements IModelSerializer
      * @param string $prefix
      * @return string
      */
-    protected static function filterExpandByPrefix($expand_str, $prefix ){
+    protected static function filterExpandByPrefix($expand_str, $prefix){
 
         $expand_to    = explode(',', $expand_str);
         $filtered_expand  = array_filter($expand_to, function($element) use($prefix){

@@ -45,30 +45,29 @@ final class RSVPSerializer extends SilverStripeSerializer
         foreach ($rsvp->getAnswers() as $answer){
             $answers[] = $answer->getId();
         }
+
         $values['answers'] = $answers;
 
         if (!empty($expand)) {
             foreach (explode(',', $expand) as $relation) {
                 $relation = trim($relation);
                 switch ($relation) {
-
                     case 'owner': {
                         if(!$rsvp->hasOwner()) continue;
                         unset($values['owner_id']);
-                        $values['owner'] = SerializerRegistry::getInstance()->getSerializer($rsvp->getOwner())->serialize(AbstractSerializer::filterExpandByPrefix($relation, $expand));
+                        $values['owner'] = SerializerRegistry::getInstance()->getSerializer($rsvp->getOwner())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                         break;
                     case 'event': {
                         if(!$rsvp->hasEvent()) continue;
                         unset($values['event_id']);
-                        $values['event'] = SerializerRegistry::getInstance()->getSerializer($rsvp->getEvent())->serialize(AbstractSerializer::filterExpandByPrefix($relation, $expand));
+                        $values['event'] = SerializerRegistry::getInstance()->getSerializer($rsvp->getEvent())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                     break;
-
                     case 'answers':{
                         $answers = [];
                         foreach ($rsvp->getAnswers() as $answer){
-                            $answers[] = SerializerRegistry::getInstance()->getSerializer($answer)->serialize(AbstractSerializer::filterExpandByPrefix($relation, $expand));
+                            $answers[] = SerializerRegistry::getInstance()->getSerializer($answer)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['answers'] = $answers;
                     }

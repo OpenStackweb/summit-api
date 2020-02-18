@@ -605,20 +605,32 @@ class Member extends SilverstripeBaseModel
 
     /**
      * @param SummitEvent $event
-     * @return SummitEventFeedback[]
+     * @return SummitEventFeedback|null
      */
-    public function getFeedbackByEvent(SummitEvent $event)
+    public function getFeedbackByEvent(SummitEvent $event):?SummitEventFeedback
     {
-        return $this->createQueryBuilder()
-            ->select('distinct f')
-            ->from('models\summit\SummitEventFeedback', 'f')
-            ->join('f.event', 'e')
-            ->join('f.owner', 'o')
-            ->join('e.summit', 's')
-            ->where('e.id = :event_id and o.id = :owner_id')
-            ->setParameter('event_id', $event->getId())
-            ->setParameter('owner_id', $this->getId())
-            ->getQuery()->getResult();
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('event', $event));
+        $feedback = $this->feedback->matching($criteria)->first();
+        return $feedback === false ? null : $feedback;
+    }
+
+    /**
+     * @param SummitEventFeedback $feedback
+     */
+    public function addFeedback(SummitEventFeedback $feedback){
+        if($this->feedback->contains($feedback)) return;
+        $this->feedback->add($feedback);
+        $feedback->setOwner($this);
+    }
+
+    /**
+     * @param SummitEventFeedback $feedback
+     */
+    public function removeFeedback(SummitEventFeedback $feedback){
+        if(!$this->feedback->contains($feedback)) return;
+        $this->feedback->removeElement($feedback);
+        $feedback->clearOwner();
     }
 
     /**

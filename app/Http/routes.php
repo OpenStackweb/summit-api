@@ -267,9 +267,12 @@ Route::group([
                     Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@deleteEvent' ]);
                     Route::put('/publish', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@publishEvent']);
                     Route::delete('/publish', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@unPublishEvent']);
-                    Route::post('/feedback', 'OAuth2SummitEventsApiController@addEventFeedback');
+
                     Route::post('/attachment', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@addEventAttachment']);
-                    Route::get('/feedback/{attendee_id?}',  ['middleware' => 'cache:'.Config::get('cache_api_response.get_event_feedback_response_lifetime', 300), 'uses' => 'OAuth2SummitEventsApiController@getEventFeedback'] )->where('attendee_id', 'me|[0-9]+');
+
+                    Route::group(['prefix' => 'feedback'], function () {
+                        Route::get('',  ['middleware' => 'cache:'.Config::get('cache_api_response.get_event_feedback_response_lifetime', 300), 'uses' => 'OAuth2SummitEventsApiController@getEventFeedback']);
+                    });
                 });
 
                 Route::group(['prefix' => 'all'], function () {
@@ -574,9 +577,12 @@ Route::group([
                 Route::get("",  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitMembersApiController@getAllBySummit']);
                 Route::get("csv",  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitMembersApiController@getAllBySummitCSV']);
                 Route::group(array('prefix' => '{member_id}'), function () {
+
                     Route::get('', 'OAuth2SummitMembersApiController@getMyMember')->where('member_id', 'me');
+
+
                     // favorites
-                    Route::group(array('prefix' => 'favorites'), function ()
+                    Route::group(['prefix' => 'favorites'], function ()
                     {
                         Route::get('', 'OAuth2SummitMembersApiController@getMemberFavoritesSummitEvents')->where('member_id', 'me');
 
@@ -598,10 +604,17 @@ Route::group([
 
                         Route::group(array('prefix' => '{event_id}'), function (){
 
-                            Route::group(array('prefix' => 'rsvp'), function (){
+                            Route::group(['prefix' => 'rsvp'], function (){
                                 Route::post('', 'OAuth2SummitMembersApiController@addEventRSVP')->where('member_id', 'me');
                                 Route::put('', 'OAuth2SummitMembersApiController@updateEventRSVP')->where('member_id', 'me');
                                 Route::delete('', 'OAuth2SummitMembersApiController@deleteEventRSVP')->where('member_id', 'me');
+                            });
+
+                            Route::group(['prefix' => 'feedback'], function (){
+                                Route::get('','OAuth2SummitMembersApiController@getMyEventFeedback')->where('member_id', 'me');
+                                Route::post('', 'OAuth2SummitMembersApiController@addMyEventFeedback')->where('member_id', 'me');
+                                Route::put('', 'OAuth2SummitMembersApiController@updateMyEventFeedback')->where('member_id', 'me');
+                                Route::delete('', 'OAuth2SummitMembersApiController@deleteMyEventFeedback')->where('member_id', 'me');
                             });
 
                             Route::post('', 'OAuth2SummitMembersApiController@addEventToMemberSchedule')->where('member_id', 'me');
@@ -859,8 +872,10 @@ Route::group([
             Route::group(['prefix' => 'events'], function () {
 
                 Route::group(['prefix' => '{event_id}'], function () {
-                   Route::post('/feedback', 'OAuth2SummitEventsApiController@addEventFeedbackByMember');
-                   Route::put('/feedback', 'OAuth2SummitEventsApiController@updateEventFeedbackByMember');
+                    Route::group(['prefix' => 'feedback'], function () {
+                        Route::post('', 'OAuth2SummitEventsApiController@addMyEventFeedbackReturnId');
+                        Route::put('', 'OAuth2SummitEventsApiController@updateMyEventFeedbackReturnId');
+                    });
                 });
             });
         });

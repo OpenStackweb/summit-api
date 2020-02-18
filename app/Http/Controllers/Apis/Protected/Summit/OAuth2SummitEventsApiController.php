@@ -698,10 +698,9 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     /**
      * @param $summit_id
      * @param $event_id
-     * @param $attendee_id
      * @return mixed
      */
-    public function getEventFeedback($summit_id, $event_id, $attendee_id = null)
+    public function getEventFeedback($summit_id, $event_id)
     {
 
         try {
@@ -732,18 +731,6 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             }
 
             $filter  = null;
-            if (!is_null($attendee_id)) // add filter by attendee, this case me
-            {
-                if($attendee_id !== 'me') return $this->error403();
-                $current_member = $this->resource_server_context->getCurrentUser();
-                if (is_null($current_member)) return $this->error403();
-
-                $filter = FilterParser::parse('owner_id=='.$current_member->getId(), array
-                (
-                    'owner_id'   => array('=='),
-                ));
-            }
-
             // default values
             $page     = 1;
             $per_page = 5;
@@ -782,88 +769,212 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     }
 
     /**
-     * @param LaravelRequest $request
      * @param $summit_id
      * @param $event_id
-     * @return mixed
+     * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function addEventFeedback(LaravelRequest $request, $summit_id, $event_id)
-    {
-        try {
-            if (!$request->isJson()) {
-                return $this->error412(array('invalid content type!'));
-            }
+    public function addMyEventFeedbackReturnId($summit_id, $event_id){
+        return $this->_addMyEventFeedback($summit_id, $event_id, true);
+    }
 
+    /**
+     * @param $summit_id
+     * @param $event_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function addMyEventFeedback($summit_id, $event_id){
+        return $this->_addMyEventFeedback($summit_id, $event_id, false);
+    }
+    /**
+     * @param $summit_id
+     * @param $event_id
+     * @param bool $returnId
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    private function _addMyEventFeedback($summit_id, $event_id, $returnId = false){
+        try {
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
-            if(!Request::isJson()) return $this->error400();
 
-            $data = Input::json();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-            $rules = array
+            $payload = $this->getJsonPayload([
+                'rate'        => 'required|integer|digits_between:0,5',
+                'note'        => 'max:500',
+            ]);
+
+            $feedback  = $this->service->addMyEventFeedback
             (
-                'rate'        => 'required|integer|digits_between:0,10',
-                'note'        => 'required|max:500',
-                'attendee_id' => 'required'
-            );
-
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data->all(), $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
-
-            $event = $summit->getScheduleEvent(intval($event_id));
-
-            if (is_null($event)) {
-                return $this->error404();
-            }
-
-            $data         = $data->all();
-            $attendee_id  = $data['attendee_id'];
-
-            $attendee = CheckAttendeeStrategyFactory::build
-            (
-                CheckAttendeeStrategyFactory::Own,
-                $this->resource_server_context
-            )->check($attendee_id, $summit);
-
-            if (is_null($attendee)) return $this->error404();
-
-            $data['attendee_id'] = intval($attendee->getId());
-
-            $res  = $this->service->addEventFeedback
-            (
+                $current_member,
                 $summit,
-                $event,
-                $data
+                $event_id,
+                $payload
             );
 
-            return !is_null($res) ? $this->created($res->getId()) : $this->error400();
+            if($returnId){
+                return $this->updated($feedback->getId());
+            }
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($feedback)->serialize
+            (
+                Request::input('expand', '')
+            ));
         }
-        catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
+        catch (EntityNotFoundException $ex) {
+            Log::warning($ex);
             return $this->error404();
         }
-        catch(ValidationException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412(array($ex->getMessage()));
         }
         catch (Exception $ex) {
             Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
 
+    /**
+     * @param $summit_id
+     * @param $event_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function updateMyEventFeedbackReturnId($summit_id, $event_id){
+        return $this->_updateMyEventFeedback($summit_id, $event_id, true);
+    }
+
+    /**
+     * @param $summit_id
+     * @param $event_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function updateMyEventFeedback($summit_id, $event_id){
+        return $this->_updateMyEventFeedback($summit_id, $event_id, false);
+    }
+
+    /**
+     * @param $summit_id
+     * @param $event_id
+     * @param bool $returnId
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    private function _updateMyEventFeedback($summit_id, $event_id, $returnId = false)
+    {
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $payload = $this->getJsonPayload([
+                'rate'        => 'required|integer|digits_between:0,5',
+                'note'        => 'max:500',
+            ]);
+
+            $feedback  = $this->service->updateMyEventFeedback
+            (
+                $current_member,
+                $summit,
+                $event_id,
+                $payload
+            );
+
+            if($returnId){
+                return $this->updated($feedback->getId());
+            }
+
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($feedback)->serialize
+            (
+                Request::input('expand', '')
+            ));
+        }
+        catch (EntityNotFoundException $ex) {
+            Log::warning($ex);
+            return $this->error404();
+        }
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412(array($ex->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $event_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getMyEventFeedback($summit_id, $event_id){
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $feedback = $this->service->getMyEventFeedback
+            (
+                $current_member,
+                $summit,
+                $event_id
+            );
+
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($feedback)->serialize
+            (
+                Request::input('expand', '')
+            ));
+        }
+        catch (EntityNotFoundException $ex) {
+            Log::warning($ex);
+            return $this->error404();
+        }
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412(array($ex->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $event_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function deleteMyEventFeedback($summit_id, $event_id){
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $this->service->deleteMyEventFeedback
+            (
+                $current_member,
+                $summit,
+                $event_id
+            );
+
+            return $this->deleted();
+        }
+        catch (EntityNotFoundException $ex) {
+            Log::warning($ex);
+            return $this->error404();
+        }
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412(array($ex->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
             return $this->error500($ex);
         }
     }
@@ -872,129 +983,8 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
      * @param LaravelRequest $request
      * @param $summit_id
      * @param $event_id
-     * @return mixed
+     * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function addEventFeedbackByMember(LaravelRequest $request, $summit_id, $event_id)
-    {
-        try {
-
-            list($summit, $event, $data) = $this->validateAndGetFeedbackData($request, $summit_id, $event_id);
-
-            $res  = $this->service->addEventFeedback
-            (
-                $summit,
-                $event,
-                $data
-            );
-
-            return !is_null($res) ? $this->created($res->getId()) : $this->error400();
-        }
-        catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        }
-        catch(ValidationException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-
-            return $this->error500($ex);
-        }
-    }
-
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $event_id
-     * @return mixed
-     */
-    public function updateEventFeedbackByMember(LaravelRequest $request, $summit_id, $event_id)
-    {
-        try {
-
-            list($summit, $event, $data) = $this->validateAndGetFeedbackData($request, $summit_id, $event_id);
-            $res  = $this->service->updateEventFeedback
-            (
-                $summit,
-                $event,
-                $data
-            );
-
-            return !is_null($res) ? $this->updated($res->getId()) : $this->error400();
-        }
-        catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        }
-        catch(ValidationException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-
-            return $this->error500($ex);
-        }
-    }
-
-    private function validateAndGetFeedbackData(LaravelRequest $request, $summit_id, $event_id){
-        if (!$request->isJson()) {
-            return $this->error412(array('invalid content type!'));
-        }
-
-        $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-        if (is_null($summit)) return $this->error404();
-        if(!Request::isJson()) return $this->error400();
-
-        $data = Input::json();
-
-        $rules = array
-        (
-            'rate'        => 'required|integer|digits_between:0,5',
-            'note'        => 'max:500',
-        );
-
-        // Creates a Validator instance and validates the data.
-        $validation = Validator::make($data->all(), $rules);
-
-        if ($validation->fails()) {
-            $messages = $validation->messages()->toArray();
-
-            return $this->error412
-            (
-                $messages
-            );
-        }
-
-        $event = $summit->getScheduleEvent(intval($event_id));
-
-        if (is_null($event)) {
-            return $this->error404();
-        }
-
-        $data      = $data->all();
-        $current_member = $this->resource_server_context->getCurrentUser();
-        if (is_null($current_member)) return $this->error403();
-
-        $data['member_id'] = $current_member->getId();
-
-        return [$summit, $event, $data];
-    }
-
     public function addEventAttachment(LaravelRequest $request, $summit_id, $event_id){
 
         try {
@@ -1031,6 +1021,10 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         }
     }
 
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
     public function getUnpublishedEvents($summit_id){
 
         try
@@ -1062,6 +1056,10 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         }
     }
 
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
     public function getScheduleEmptySpots($summit_id){
         try
         {
@@ -1118,6 +1116,10 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         }
     }
 
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
     public function unPublishEvents($summit_id){
         try {
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
@@ -1163,6 +1165,10 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         }
     }
 
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
     public function updateAndPublishEvents($summit_id){
         try {
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
@@ -1208,6 +1214,10 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         }
     }
 
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
     public function updateEvents($summit_id){
         try {
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
@@ -1256,7 +1266,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     /**
      * @param $summit_id
      * @param $event_id
-     * @return mixed
+     * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function cloneEvent($summit_id, $event_id)
     {
@@ -1284,6 +1294,5 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             return $this->error500($ex);
         }
     }
-
 
 }

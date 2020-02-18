@@ -34,6 +34,26 @@ class SummitEventFeedback extends SilverstripeBaseModel
     private $rate;
 
     /**
+     * @ORM\Column(name="note", type="string")
+     * @var string
+     */
+    private $note;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="feedback")
+     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", onDelete="CASCADE")
+     * @var Member
+     */
+    private $owner;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent", inversedBy="feedback", fetch="LAZY")
+     * @ORM\JoinColumn(name="EventID", referencedColumnName="ID", onDelete="CASCADE")
+     * @var SummitEvent
+     */
+    private $event;
+
+    /**
      * @return int
      */
     public function getRate()
@@ -66,19 +86,6 @@ class SummitEventFeedback extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\Column(name="note", type="string")
-     * @var string
-     */
-    private $note;
-
-    /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="feedback")
-     * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var Member
-     */
-    private $owner;
-
-    /**
      * @return Member
      */
     public function getOwner()
@@ -92,13 +99,6 @@ class SummitEventFeedback extends SilverstripeBaseModel
     public function setOwner(Member $owner){
         $this->owner = $owner;
     }
-
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent", inversedBy="feedback", fetch="LAZY")
-     * @ORM\JoinColumn(name="EventID", referencedColumnName="ID", onDelete="CASCADE")
-     * @var SummitEvent
-     */
-    private $event;
 
     /**
      * @return SummitEvent
@@ -137,6 +137,10 @@ class SummitEventFeedback extends SilverstripeBaseModel
         catch(\Exception $ex){
             return 0;
         }
+    }
+
+    public function clearOwner(){
+        $this->owner = null;
     }
 
     /**

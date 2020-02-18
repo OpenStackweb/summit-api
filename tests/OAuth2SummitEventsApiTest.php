@@ -1426,7 +1426,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($feedback));
     }
 
-    public function testUpdateFeedback2EventByMember($summit_id = 22, $event_id = 17683)
+    public function testUpdateFeedback2EventByMember($summit_id = 27, $event_id = 24340)
     {
         //$this->testAddFeedback2EventByMember($summit_id, $event_id);
         $params = array
@@ -1450,7 +1450,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $response = $this->action
         (
             "PUT",
-            "OAuth2SummitEventsApiController@updateEventFeedbackByMember",
+            "OAuth2SummitEventsApiController@updateMyEventFeedbackReturnId",
             $params,
             array(),
             array(),
@@ -1502,7 +1502,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
     }
 
-    public function testAddFeedback2EventByMember($summit_id = 22, $event_id = 17683)
+    public function testAddFeedback2EventByMember($summit_id = 27, $event_id = 24340)
     {
         $params = array
         (
@@ -1524,7 +1524,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $response = $this->action
         (
             "POST",
-            "OAuth2SummitEventsApiController@addEventFeedbackByMember",
+            "OAuth2SummitEventsApiController@addMyEventFeedbackReturnId",
             $params,
             array(),
             array(),
@@ -1535,7 +1535,6 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
         $content = $response->getContent();
         $this->assertResponseStatus(204);
-
     }
 
     public function testCloneEvent($summit_id = 25, $event_id= 22943)

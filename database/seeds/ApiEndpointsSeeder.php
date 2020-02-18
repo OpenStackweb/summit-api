@@ -2196,12 +2196,6 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
-                'name' => 'add-event-feedback',
-                'route' => '/api/v1/summits/{id}/events/{event_id}/feedback',
-                'http_method' => 'POST',
-                'scopes' => [sprintf(SummitScopes::WriteSummitData, $current_realm)],
-            ],
-            [
                 'name' => 'add-event-attachment',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/attachment',
                 'http_method' => 'POST',
@@ -2212,6 +2206,38 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                     IGroup::SummitRegistrationAdmins,
                 ]
+            ],
+            [
+                'name' => 'add-event-feedback',
+                'route' => ' api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/feedback',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::AddMyEventFeedback, $current_realm),
+                ],
+            ],
+            [
+                'name' => 'update-event-feedback',
+                'route' => ' api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/feedback',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::AddMyEventFeedback, $current_realm),
+                ],
+            ],
+            [
+                'name' => 'delete-event-feedback',
+                'route' => ' api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/feedback',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::DeleteMyEventFeedback, $current_realm),
+                ],
+            ],
+            [
+                'name' => 'get-event-feedback-by-member',
+                'route' => ' api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/feedback',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::MeRead, $current_realm),
+                ],
             ],
             [
                 'name' => 'add-event-feedback-v2',
@@ -2233,11 +2259,11 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'get-event-feedback',
-                'route' => '/api/v1/summits/{id}/events/{event_id}/feedback/{attendee_id?}',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/feedback',
                 'http_method' => 'GET',
                 'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
                     sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
                 ],
             ],
             [

@@ -23,6 +23,7 @@ use App\Events\SummitUpdated;
 use App\Http\Utils\IFileUploader;
 use App\Mail\BookableRoomReservationCanceledEmail;
 use App\Mail\Schedule\ShareEventEmail;
+use App\Models\Foundation\Summit\Factories\SummitEventFeedbackFactory;
 use App\Models\Foundation\Summit\Factories\SummitFactory;
 use App\Models\Foundation\Summit\Factories\SummitRSVPFactory;
 use App\Models\Foundation\Summit\Repositories\IDefaultSummitEventTypeRepository;
@@ -380,105 +381,130 @@ final class SummitService extends AbstractService implements ISummitService
     }
 
     /**
+     * @param Member $member
      * @param Summit $summit
-     * @param SummitEvent $event
-     * @param array $data
+     * @param int $event_id
+     * @param array $payload
      * @return SummitEventFeedback
+     * @throws Exception
      */
-    public function addEventFeedback(Summit $summit, SummitEvent $event, array $data)
+    public function addMyEventFeedback(Member $member, Summit $summit, int $event_id, array $payload):SummitEventFeedback
     {
+        return $this->tx_service->transaction(function () use ($member, $summit, $event_id, $payload) {
 
-        return $this->tx_service->transaction(function () use ($summit, $event, $data) {
-
-            if (!$event->isAllowFeedback())
-                throw new ValidationException(sprintf("event id %s does not allow feedback", $event->getIdentifier()));
-
-            $member = null;
-
-            // check for attendee
-            $attendee_id = isset($data['attendee_id']) ? intval($data['attendee_id']) : null;
-            $member_id = isset($data['member_id']) ? intval($data['member_id']) : null;
-            if (!is_null($attendee_id)) {
-                $attendee = $summit->getAttendeeById($attendee_id);
-                if (!$attendee) throw new EntityNotFoundException();
-                $member = $attendee->getMember();
-            }
-
-            // check by member
-            if (!is_null($member_id)) {
-                $member = $this->member_repository->getById($member_id);
-            }
-
-            if (is_null($member))
-                throw new EntityNotFoundException('member not found!.');
+            $event = $summit->getScheduleEvent($event_id);
+            if(is_null($event))
+                throw new EntityNotFoundException("Event not found.");
 
             if (!Summit::allowToSee($event, $member))
-                throw new EntityNotFoundException('event not found on summit!.');
+                throw new EntityNotFoundException("Event not found.");
+
+            if (!$event->isAllowFeedback())
+                throw new ValidationException(sprintf("Event id %s does not allow feedback.", $event->getIdentifier()));
 
             // check older feedback
-            $older_feedback = $member->getFeedbackByEvent($event);
+            $former_feedback = $member->getFeedbackByEvent($event);
 
-            if (count($older_feedback) > 0)
-                throw new ValidationException(sprintf("you already sent feedback for event id %s!.", $event->getIdentifier()));
+            if (!is_null($former_feedback))
+                throw new ValidationException(sprintf("You already sent feedback for event id %s!.", $event->getIdentifier()));
 
-            $newFeedback = new SummitEventFeedback();
-            $newFeedback->setRate(intval($data['rate']));
-            $note = isset($data['note']) ? trim($data['note']) : "";
-            $newFeedback->setNote($note);
+            $newFeedback = SummitEventFeedbackFactory::build($payload);
             $newFeedback->setOwner($member);
             $event->addFeedBack($newFeedback);
-
             return $newFeedback;
         });
     }
 
     /**
+     * @param Member $member
      * @param Summit $summit
-     * @param SummitEvent $event
-     * @param array $data
+     * @param int $event_id
+     * @param array $payload
      * @return SummitEventFeedback
-     * @internal param array $feedback
+     * @throws Exception
      */
-    public function updateEventFeedback(Summit $summit, SummitEvent $event, array $data)
+    public function updateMyEventFeedback(Member $member, Summit $summit, int $event_id, array $payload):SummitEventFeedback
     {
-        return $this->tx_service->transaction(function () use ($summit, $event, $data) {
+        return $this->tx_service->transaction(function () use ($member, $summit, $event_id, $payload) {
 
-            if (!$event->isAllowFeedback())
-                throw new ValidationException(sprintf("event id %s does not allow feedback", $event->getIdentifier()));
+            $event = $summit->getScheduleEvent($event_id);
 
-            $member = null;
-
-            // check for attendee
-            $attendee_id = isset($data['attendee_id']) ? intval($data['attendee_id']) : null;
-            $member_id = isset($data['member_id']) ? intval($data['member_id']) : null;
-            if (!is_null($attendee_id)) {
-                $attendee = $summit->getAttendeeById($attendee_id);
-                if (!$attendee) throw new EntityNotFoundException();
-                $member = $attendee->getMember();
-            }
-
-            // check by member
-            if (!is_null($member_id)) {
-                $member = $this->member_repository->getById($member_id);
-            }
-
-            if (is_null($member))
-                throw new EntityNotFoundException('member not found!.');
+            if(is_null($event))
+                throw new EntityNotFoundException("Event not found.");
 
             if (!Summit::allowToSee($event, $member))
-                throw new EntityNotFoundException('event not found on summit!.');
+                throw new EntityNotFoundException("Event not found.");
+
+            if (!$event->isAllowFeedback())
+                throw new ValidationException(sprintf("Event id %s does not allow feedback.", $event->getIdentifier()));
 
             // check older feedback
             $feedback = $member->getFeedbackByEvent($event);
 
-            if (count($feedback) == 0)
+            if (is_null($feedback))
                 throw new ValidationException(sprintf("you dont have feedback for event id %s!.", $event->getIdentifier()));
-            $feedback = $feedback[0];
-            $feedback->setRate(intval($data['rate']));
-            $note = isset($data['note']) ? trim($data['note']) : "";
-            $feedback->setNote($note);
+
+            return SummitEventFeedbackFactory::populate($feedback, $payload);
+        });
+    }
+
+    /**
+     * @param Member $member
+     * @param Summit $summit
+     * @param int $event_id
+     * @return SummitEventFeedback
+     * @throws Exception
+     */
+    public function getMyEventFeedback(Member $member, Summit $summit, int $event_id):SummitEventFeedback
+    {
+        return $this->tx_service->transaction(function () use ($member, $summit, $event_id) {
+
+            $event = $summit->getScheduleEvent($event_id);
+
+            if(is_null($event))
+                throw new EntityNotFoundException("Event not found.");
+
+            if (!Summit::allowToSee($event, $member))
+                throw new EntityNotFoundException("Event not found.");
+
+            if (!$event->isAllowFeedback())
+                throw new ValidationException(sprintf("Event id %s does not allow feedback.", $event->getIdentifier()));
+
+            // check older feedback
+            $feedback = $member->getFeedbackByEvent($event);
+
+            if (is_null($feedback))
+                throw new ValidationException(sprintf("you dont have feedback for event id %s!.", $event->getIdentifier()));
 
             return $feedback;
+        });
+    }
+
+    /**
+     * @param Member $member
+     * @param Summit $summit
+     * @param int $event_id
+     * @throws Exception
+     */
+    public function deleteMyEventFeedback(Member $member, Summit $summit, int $event_id):void
+    {
+        $this->tx_service->transaction(function () use ($member, $summit, $event_id) {
+
+            $event = $summit->getScheduleEvent($event_id);
+            if(is_null($event))
+                throw new EntityNotFoundException("Event not found.");
+
+            if (!Summit::allowToSee($event, $member))
+                throw new EntityNotFoundException("Event not found.");
+
+            if (!$event->isAllowFeedback())
+                throw new ValidationException(sprintf("Event id %s does not allow feedback.", $event->getIdentifier()));
+
+            // check older feedback
+            $feedback = $member->getFeedbackByEvent($event);
+
+            $member->removeFeedback($feedback);
+
         });
     }
 

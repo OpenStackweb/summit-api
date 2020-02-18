@@ -90,20 +90,46 @@ interface ISummitService
     public function removeEventFromMemberSchedule(Summit $summit, Member $member, $event_id, $check_rsvp = true);
 
     /**
+     * @param Member $member
      * @param Summit $summit
-     * @param SummitEvent $event
-     * @param array $feedback
+     * @param int $event_id
+     * @param array $payload
      * @return SummitEventFeedback
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
-    public function addEventFeedback(Summit $summit, SummitEvent $event, array $feedback);
+    public function addMyEventFeedback(Member $member, Summit $summit, int $event_id, array $payload):SummitEventFeedback;
 
     /**
+     * @param Member $member
      * @param Summit $summit
-     * @param SummitEvent $event
-     * @param array $feedback
+     * @param int $event_id
+     * @param array $payload
      * @return SummitEventFeedback
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
-    public function updateEventFeedback(Summit $summit, SummitEvent $event, array $feedback);
+    public function updateMyEventFeedback(Member $member, Summit $summit, int $event_id, array $payload):SummitEventFeedback;
+
+    /**
+     * @param Member $member
+     * @param Summit $summit
+     * @param int $event_id
+     * @return SummitEventFeedback
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function getMyEventFeedback(Member $member, Summit $summit, int $event_id):SummitEventFeedback;
+
+    /**
+     * @param Member $member
+     * @param Summit $summit
+     * @param int $event_id
+     * @return void
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function deleteMyEventFeedback(Member $member, Summit $summit, int $event_id):void;
 
     /**
      * @param Summit $summit

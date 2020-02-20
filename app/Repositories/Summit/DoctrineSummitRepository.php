@@ -181,4 +181,20 @@ final class DoctrineSummitRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * @return array
+     */
+    public function getOnGoing(): array
+    {
+        return $this->getEntityManager()->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->where("e.begin_date <= :now")
+            ->andWhere("e.end_date >= :now")
+            ->orderBy('e.id', 'DESC')
+            ->setParameter("now", new \DateTime('now', new \DateTimeZone('UTC')))
+            ->getQuery()
+            ->getResult();
+    }
 }

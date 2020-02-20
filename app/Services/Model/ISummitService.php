@@ -441,4 +441,7 @@ interface ISummitService
      * @return void`
      */
     public function shareEventByEmail(Summit $summit, int $event_id, array $data):void;
+
+
+    public function calculateFeedbackAverageForOngoingSummits():void;
 }

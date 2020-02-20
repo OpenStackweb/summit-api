@@ -2023,6 +2023,25 @@ SQL;
     }
 
     /**
+     * @return int[]
+     */
+    public function getScheduleEventsIds():array{
+        $query = <<<SQL
+SELECT e.id  
+FROM  models\summit\SummitEvent e
+WHERE 
+e.published = 1
+AND e.summit = :summit
+SQL;
+
+        $native_query = $this->getEM()->createQuery($query);
+
+        $native_query->setParameter("summit", $this);
+
+        return $native_query->getResult();
+    }
+
+    /**
      * @param SummitAbstractLocation $location
      * @return int[]
      */

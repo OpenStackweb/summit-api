@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Console\Commands\SummitEventSetAvgRateProcessor;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use models\summit\CalendarSync\CalendarSyncInfo;
@@ -34,6 +36,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\PromoCodesRedeemProcessor::class,
         \App\Console\Commands\SummitRoomReservationRevocationCommand::class,
         \App\Console\Commands\ExternalScheduleFeedIngestionCommand::class,
+        \App\Console\Commands\SummitEventSetAvgRateProcessor::class,
     ];
 
     /**
@@ -88,5 +91,8 @@ class Kernel extends ConsoleKernel
         // external schedule ingestion task
 
         $schedule->command("summit:external-schedule-feed-ingestion-process")->everyFifteenMinutes()->withoutOverlapping();
+
+        // AVG schedule feedback rate
+        $schedule->command("summit:feedback-avg-rate-processor")->everyFifteenMinutes()->withoutOverlapping();
     }
 }

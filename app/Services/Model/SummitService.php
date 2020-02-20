@@ -388,12 +388,12 @@ final class SummitService extends AbstractService implements ISummitService
      * @return SummitEventFeedback
      * @throws Exception
      */
-    public function addMyEventFeedback(Member $member, Summit $summit, int $event_id, array $payload):SummitEventFeedback
+    public function addMyEventFeedback(Member $member, Summit $summit, int $event_id, array $payload): SummitEventFeedback
     {
         return $this->tx_service->transaction(function () use ($member, $summit, $event_id, $payload) {
 
             $event = $summit->getScheduleEvent($event_id);
-            if(is_null($event))
+            if (is_null($event))
                 throw new EntityNotFoundException("Event not found.");
 
             if (!Summit::allowToSee($event, $member))
@@ -423,13 +423,13 @@ final class SummitService extends AbstractService implements ISummitService
      * @return SummitEventFeedback
      * @throws Exception
      */
-    public function updateMyEventFeedback(Member $member, Summit $summit, int $event_id, array $payload):SummitEventFeedback
+    public function updateMyEventFeedback(Member $member, Summit $summit, int $event_id, array $payload): SummitEventFeedback
     {
         return $this->tx_service->transaction(function () use ($member, $summit, $event_id, $payload) {
 
             $event = $summit->getScheduleEvent($event_id);
 
-            if(is_null($event))
+            if (is_null($event))
                 throw new EntityNotFoundException("Event not found.");
 
             if (!Summit::allowToSee($event, $member))
@@ -455,13 +455,13 @@ final class SummitService extends AbstractService implements ISummitService
      * @return SummitEventFeedback
      * @throws Exception
      */
-    public function getMyEventFeedback(Member $member, Summit $summit, int $event_id):SummitEventFeedback
+    public function getMyEventFeedback(Member $member, Summit $summit, int $event_id): SummitEventFeedback
     {
         return $this->tx_service->transaction(function () use ($member, $summit, $event_id) {
 
             $event = $summit->getScheduleEvent($event_id);
 
-            if(is_null($event))
+            if (is_null($event))
                 throw new EntityNotFoundException("Event not found.");
 
             if (!Summit::allowToSee($event, $member))
@@ -486,12 +486,12 @@ final class SummitService extends AbstractService implements ISummitService
      * @param int $event_id
      * @throws Exception
      */
-    public function deleteMyEventFeedback(Member $member, Summit $summit, int $event_id):void
+    public function deleteMyEventFeedback(Member $member, Summit $summit, int $event_id): void
     {
         $this->tx_service->transaction(function () use ($member, $summit, $event_id) {
 
             $event = $summit->getScheduleEvent($event_id);
-            if(is_null($event))
+            if (is_null($event))
                 throw new EntityNotFoundException("Event not found.");
 
             if (!Summit::allowToSee($event, $member))
@@ -2287,7 +2287,7 @@ final class SummitService extends AbstractService implements ISummitService
      * @return PersonalCalendarShareInfo|null
      * @throws Exception
      */
-    public function createScheduleShareableLink(Summit $summit, Member $member):?PersonalCalendarShareInfo
+    public function createScheduleShareableLink(Summit $summit, Member $member): ?PersonalCalendarShareInfo
     {
         return $this->tx_service->transaction(function () use ($summit, $member) {
             return $member->createScheduleShareableLink($summit);
@@ -2300,11 +2300,11 @@ final class SummitService extends AbstractService implements ISummitService
      * @return PersonalCalendarShareInfo|null
      * @throws Exception
      */
-    public function revokeScheduleShareableLink(Summit $summit, Member $member):?PersonalCalendarShareInfo
+    public function revokeScheduleShareableLink(Summit $summit, Member $member): ?PersonalCalendarShareInfo
     {
         return $this->tx_service->transaction(function () use ($summit, $member) {
             $link = $member->getScheduleShareableLinkBy($summit);
-            if(is_null($link)){
+            if (is_null($link)) {
                 throw new EntityNotFoundException("Schedule shareable link not found for member.");
             }
             $link->revoke();
@@ -2323,18 +2323,18 @@ final class SummitService extends AbstractService implements ISummitService
 
         return $this->tx_service->transaction(function () use ($summit, $cid) {
             $link = $summit->getScheduleShareableLinkById($cid);
-            if(is_null($link)){
+            if (is_null($link)) {
                 throw new EntityNotFoundException("Schedule shareable link not found for member.");
             }
-            $owner    = $link->getOwner();
+            $owner = $link->getOwner();
             $timeZone = $summit->getTimeZone();
 
             $vCalendar = ICalTimeZoneBuilder::build($timeZone, $summit->getName(), true);
-            foreach($owner->getScheduleBySummit($summit) as $scheduled){
+            foreach ($owner->getScheduleBySummit($summit) as $scheduled) {
                 $summitEvent = $scheduled->getEvent();
                 $local_start_time = new DateTime($summitEvent->getStartDateNice(), $timeZone);
-                $local_end_time   = new DateTime($summitEvent->getEndDateNice(), $timeZone);
-                $vEvent            = new \Eluceo\iCal\Component\Event($summitEvent->getId());
+                $local_end_time = new DateTime($summitEvent->getEndDateNice(), $timeZone);
+                $vEvent = new \Eluceo\iCal\Component\Event($summitEvent->getId());
 
                 $vEvent
                     ->setCreated(new DateTime())
@@ -2345,19 +2345,18 @@ final class SummitService extends AbstractService implements ISummitService
                     ->setDescription(strip_tags($summitEvent->getAbstract()))
                     ->setDescriptionHTML($summitEvent->getAbstract());
 
-                if($timeZone->getName() == 'UTC'){
+                if ($timeZone->getName() == 'UTC') {
                     $vEvent->setUseUtc(true)
                         ->setUseTimezone(false);
-                }
-                else{
+                } else {
                     $vEvent->setUseUtc(false)
                         ->setUseTimezone(true);
                 }
 
-                if($summitEvent->hasLocation()){
+                if ($summitEvent->hasLocation()) {
                     $location = $summitEvent;
                     $geo = null;
-                    if($location instanceof SummitGeoLocatedLocation) {
+                    if ($location instanceof SummitGeoLocatedLocation) {
                         $geo = sprintf("%s;%s", $location->getLat(), $location->getLng());
                     }
                     $vEvent->setLocation($location->getTitle(), $location->getTitle(), $geo);
@@ -2375,31 +2374,32 @@ final class SummitService extends AbstractService implements ISummitService
      * @param Summit $summit
      * @param int $event_id
      * @param array $data
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return void`
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
-    public function shareEventByEmail(Summit $summit, int $event_id, array $data):void{
+    public function shareEventByEmail(Summit $summit, int $event_id, array $data): void
+    {
 
         $this->tx_service->transaction(function () use ($summit, $event_id, $data) {
 
             $event = $summit->getScheduleEvent($event_id);
-            if(is_null($event)){
+            if (is_null($event)) {
                 throw new EntityNotFoundException(sprintf("Event %s not found.", $event_id));
             }
 
             $event_uri = $data['event_uri'] ?? null;
 
-            if(empty($event_uri)){
+            if (empty($event_uri)) {
                 Log::debug("event_uri not set on payload. trying to get from default one (summit)");
                 $default_event_uri = $summit->getScheduleDefaultEventDetailUrl();
-                if(!empty($default_event_uri)){
+                if (!empty($default_event_uri)) {
                     Log::debug("default_event_uri set at summit level using it.");
                     $event_uri = str_replace(":event_id", $event_id, $default_event_uri);
                 }
             }
 
-            if(empty($event_uri)){
+            if (empty($event_uri)) {
                 throw new ValidationException(sprintf("Property event_url is empty."));
             }
 
@@ -2410,5 +2410,52 @@ final class SummitService extends AbstractService implements ISummitService
                 $event
             ));
         });
+    }
+
+
+    public function calculateFeedbackAverageForOngoingSummits(): void
+    {
+        $ongoing_summits = $this->tx_service->transaction(function () {
+            return $this->summit_repository->getOnGoing();
+        });
+
+        foreach ($ongoing_summits as $summit) {
+
+            Log::debug(sprintf("SummitService::calculateFeedbackAverageForOngoingSummits processing summit %s", $summit->getId()));
+
+            $event_ids = $this->tx_service->transaction(function () use ($summit) {
+                return $summit->getScheduleEventsIds();
+            });
+
+            foreach ($event_ids as $event_id) {
+                $event_id = $event_id['id'];
+                $this->tx_service->transaction(function () use ($event_id) {
+                    try {
+                        Log::debug(sprintf("SummitService::calculateFeedbackAverageForOngoingSummits processing event %s", $event_id));
+                        $event = $this->event_repository->getById($event_id);
+                        if (is_null($event) || !$event instanceof SummitEvent){
+                            Log::debug(sprintf("SummitService::calculateFeedbackAverageForOngoingSummits event %s not found", $event_id));
+                            return;
+                        }
+
+                        $rate_sum = 0;
+                        $rate_count = 0;
+                        foreach ($event->getFeedback() as $feedback) {
+                            $rate_count++;
+                            $rate_sum = $rate_sum + $feedback->getRate();
+                        }
+
+                        $avg_rate = ($rate_count > 0) ? ($rate_sum / $rate_count) : 0;
+                        $avg_rate = round($avg_rate, 2);
+                        $old_avg_rate = $event->getAvgFeedbackRate();
+                        Log::debug(sprintf("SummitService::calculateFeedbackAverageForOngoingSummits new avg rate %s - old avg rate %s - for event id %s", $avg_rate, $old_avg_rate, $event->getId()));
+                        $event->setAvgFeedbackRate($avg_rate);
+                    }
+                    catch (Exception $ex){
+                        Log::error($ex);
+                    }
+                });
+            }
+        }
     }
 }

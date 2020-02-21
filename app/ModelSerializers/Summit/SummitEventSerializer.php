@@ -96,11 +96,20 @@ class SummitEventSerializer extends SilverStripeSerializer
 
         if(in_array('tags', $relations))
         {
-            $tags = array();
+            $tags = [];
             foreach ($event->getTags() as $tag) {
                 $tags[] = SerializerRegistry::getInstance()->getSerializer($tag)->serialize();
             }
             $values['tags'] = $tags;
+        }
+
+        if(in_array('feedback', $relations))
+        {
+            $feedback = [];
+            foreach ($event->getFeedback() as $f) {
+                $feedback[] = $f->getId();
+            }
+            $values['feedback'] = $feedback;
         }
 
         if (!empty($expand)) {

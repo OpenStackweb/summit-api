@@ -826,9 +826,7 @@ class Presentation extends SummitEvent
      * @return SummitPresentationComment[]
      */
     public function getPublicComments(){
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('is_public', true));
-        return $this->comments->matching($criteria)->toArray();
+        return $this->comments->filter(function( $element) { return $element instanceof SummitPresentationComment && $element->isPublic(); });
     }
 
     /**

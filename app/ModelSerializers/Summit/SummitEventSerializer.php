@@ -73,6 +73,7 @@ class SummitEventSerializer extends SilverStripeSerializer
     protected static $allowed_relations = [
         'sponsors',
         'tags',
+        'feedback',
     ];
 
     /**

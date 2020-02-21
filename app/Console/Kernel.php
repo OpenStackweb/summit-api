@@ -47,24 +47,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        //Current
-        $schedule->command('summit:json-generator')->everyFiveMinutes()->withoutOverlapping();
-        /**
-         * REMARK : remember to add new summit ids before they start officially
-         */
-        $summit_ids = [
-            6,  //Austin
-            7,  //BCN
-            22, //Boston
-            23, //Sydney
-            24, //Vancouver BC
-            25, //Berlin
-            26, //Denver,
-            27, //Shanghai
-        ];
+        // regenerate available summits cache
 
-        foreach ($summit_ids as $summit_id)
-            $schedule->command('summit:json-generator',[$summit_id])->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('summit:json-generator')->everyFiveMinutes()->withoutOverlapping();
 
         // list of available summits
         $schedule->command('summit-list:json-generator')->everyFiveMinutes()->withoutOverlapping();

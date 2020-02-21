@@ -68,7 +68,7 @@ final class SummitJsonGenerator extends Command {
      *
      * @var string
      */
-    protected $signature = 'summit:json-generator {summit_id?}';
+    protected $signature = 'summit:json-generator';
 
 
 	/**
@@ -76,7 +76,7 @@ final class SummitJsonGenerator extends Command {
 	 *
 	 * @var string
 	 */
-	protected $description = 'Regenerates Summit Initial Json';
+	protected $description = 'Regenerates All Summits Initial Json';
 
 	/**
 	 * Execute the console command.
@@ -85,42 +85,36 @@ final class SummitJsonGenerator extends Command {
 	 */
 	public function handle()
 	{
-        $summit_id = $this->argument('summit_id');
 
-        if(is_null($summit_id))// if we dont provide a summit id, then get current
-            $summit = $this->repository->getCurrentAndAvailable();
-        else
-            $summit = $this->repository->getById(intval($summit_id));
+        $summits = $this->repository->getAvailables();
 
-        if(is_null($summit)) return;
+        foreach($summits as $summit) {
 
-        if(!$summit->isAvailableOnApi()) return;
+            $this->info(sprintf("processing summit %s (%s)",  $summit->getName(), $summit->getId()));
+            $start  = time();
+            $expand = 'schedule';
 
-		$this->info(sprintf("processing summit id %s", $summit->getIdentifier()));
-        $start  = time();
-        $expand = 'schedule';
+            $data = SerializerRegistry::getInstance()->getSerializer($summit)->serialize($expand);
+            if (is_null($data)) return;
+            $end = time();
+            $delta = $end - $start;
+            $this->info(sprintf("execution call %s seconds", $delta));
+            $current_time = time();
+            $key_current = sprintf('/api/v1/summits/%s.expand=%s', 'current', urlencode($expand));
+            $key_id = sprintf('/api/v1/summits/%s.expand=%s', $summit->getIdentifier(), urlencode($expand));
 
-        $data  = SerializerRegistry::getInstance()->getSerializer($summit)->serialize($expand);
-        if(is_null($data)) return;
-        $end   = time();
-        $delta = $end - $start;
-        $this->info(sprintf("execution call %s seconds", $delta));
-        $current_time = time();
-        $key_current  = sprintf('/api/v1/summits/%s.expand=%s','current', urlencode($expand));
-        $key_id       = sprintf('/api/v1/summits/%s.expand=%s', $summit->getIdentifier(), urlencode($expand));
+            $cache_lifetime = intval(Config::get('cache_api_response.get_summit_response_lifetime', 600));
 
-        $cache_lifetime = intval(Config::get('cache_api_response.get_summit_response_lifetime', 600));
+            if ($summit->isActive()) {
+                $this->cache_service->setSingleValue($key_current, gzdeflate(json_encode($data), 9), $cache_lifetime);
+                $this->cache_service->setSingleValue($key_current . ".generated", $current_time, $cache_lifetime);
+            }
 
-        if($summit->isActive())
-        {
-            $this->cache_service->setSingleValue($key_current, gzdeflate(json_encode($data), 9), $cache_lifetime);
-            $this->cache_service->setSingleValue($key_current . ".generated", $current_time, $cache_lifetime);
+            $this->cache_service->setSingleValue($key_id, gzdeflate(json_encode($data), 9), $cache_lifetime);
+            $this->cache_service->setSingleValue($key_id . ".generated", $current_time, $cache_lifetime);
+
+            $this->info(sprintf("regenerated cache for summit id %s", $summit->getIdentifier()));
         }
-
-        $this->cache_service->setSingleValue($key_id, gzdeflate(json_encode($data), 9), $cache_lifetime);
-        $this->cache_service->setSingleValue($key_id.".generated", $current_time, $cache_lifetime);
-
-        $this->info(sprintf("regenerated cache for summit id %s", $summit->getIdentifier()));
 	}
 
 }

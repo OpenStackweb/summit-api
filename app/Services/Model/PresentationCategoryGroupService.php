@@ -66,11 +66,13 @@ final class PresentationCategoryGroupService
             if (!is_null($former_track_group)) {
                 throw new ValidationException
                 (
-                    trans('validation_errors.PresentationCategoryGroupService.addTrackGroup.NameAlreadyExists'),
-                    [
-                        'name' => trim($data['name']),
-                        'summit_id' => $summit->getId(),
-                    ]
+                    trans
+                    ('validation_errors.PresentationCategoryGroupService.addTrackGroup.NameAlreadyExists',
+                        [
+                            'name' => trim($data['name']),
+                            'summit_id' => $summit->getId(),
+                        ]
+                    )
                 );
             }
 
@@ -112,11 +114,11 @@ final class PresentationCategoryGroupService
                 if (!is_null($former_track_group) && $former_track_group->getId() != $track_group_id) {
                     throw new ValidationException
                     (
-                        trans('validation_errors.PresentationCategoryGroupService.updateTrackGroup.NameAlreadyExists'),
+                        trans('validation_errors.PresentationCategoryGroupService.updateTrackGroup.NameAlreadyExists',
                         [
                             'name'      => trim($data['name']),
                             'summit_id' => $summit->getId(),
-                        ]
+                        ])
                     );
                 }
             }
@@ -126,11 +128,11 @@ final class PresentationCategoryGroupService
             if (is_null($track_group)) {
                 throw new EntityNotFoundException
                 (
-                    trans('not_found_errors.PresentationCategoryGroupService.updateTrackGroup.TrackGroupNotFound'),
+                    trans('not_found_errors.PresentationCategoryGroupService.updateTrackGroup.TrackGroupNotFound',
                     [
                         'track_group_id' => $track_group_id,
                         'summit_id'      => $summit->getId(),
-                    ]
+                    ])
                 );
             }
 

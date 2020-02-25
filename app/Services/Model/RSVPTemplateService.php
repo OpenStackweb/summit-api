@@ -65,12 +65,12 @@ final class RSVPTemplateService
             if(!is_null($former_template)){
                 throw new ValidationException
                 (
-                    trans('validation_errors.RSVPTemplateService.addTemplate.TitleAlreadyExists'),
+                    trans('validation_errors.RSVPTemplateService.addTemplate.TitleAlreadyExists',
                     [
                         'title'     => $payload['title'],
                         'summit_id' => $summit->getId()
                     ]
-                );
+                ));
             }
 
             $template = SummitRSVPTemplateFactory::build($payload);

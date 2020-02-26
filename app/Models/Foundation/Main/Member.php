@@ -638,8 +638,31 @@ class Member extends SilverstripeBaseModel
      */
     public function isAdmin()
     {
-        $admin_group = $this->getGroupByCode(IGroup::Administrators);
-        return $admin_group != false && !is_null($admin_group);
+        // admin or super admin
+        $admin_group       = $this->getGroupByCode(IGroup::Administrators);
+        $super_admin_group = $this->getGroupByCode(IGroup::SuperAdmins);
+        $res = ( $admin_group != false && !is_null($admin_group))
+            ||
+            ( $super_admin_group != false && !is_null($super_admin_group));
+
+        if(!$res){
+            $resource_server_ctx = App::make(IResourceServerContext::class);
+            if($resource_server_ctx instanceof IResourceServerContext){
+                foreach($resource_server_ctx->getCurrentUserGroups() as $group)
+                {
+                    if
+                    (
+                        isset($group['slug']) &&
+                        (
+                            trim($group['slug']) == IGroup::Administrators ||
+                            trim($group['slug']) == IGroup::SuperAdmins
+                        )
+                    )
+                        return true;
+                }
+            }
+        }
+        return $res;
     }
 
     /**

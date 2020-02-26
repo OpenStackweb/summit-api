@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Main\IGroup;
 use App\Services\Model\IMemberService;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
@@ -263,6 +265,22 @@ final class ResourceServerContext implements IResourceServerContext
                     $this->group_repository->add($group, true);
                 }
                 $member->add2Group($group);
+            }
+            // map from super admin to admin
+            if($code === IGroup::SuperAdmins){
+                // try to add to admin too
+                if(!$member->isOnGroup(IGroup::Administrators, true)){
+                    // add it
+                    $group = $this->group_repository->getBySlug(IGroup::Administrators);
+                    if(is_null($group)){
+                        $group = new Group();
+                        $group->setCode(IGroup::Administrators);
+                        $group->setDescription(IGroup::Administrators);
+                        $group->setTitle(IGroup::Administrators);
+                        $this->group_repository->add($group, true);
+                    }
+                    $member->add2Group($group);
+                }
             }
         }
         return $member;

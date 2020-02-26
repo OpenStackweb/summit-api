@@ -2982,7 +2982,7 @@ SQL;
      */
     public function setScheduleDefaultEventDetailUrl(string $schedule_default_event_detail_url): void
     {
-        if(!str_contains($schedule_default_event_detail_url,':event_id')){
+        if(!empty($schedule_default_event_detail_url) && !str_contains($schedule_default_event_detail_url,':event_id')){
             throw new ValidationException("Property schedule_default_event_detail_url must contains at least replacement variable :event_id.");
         }
 

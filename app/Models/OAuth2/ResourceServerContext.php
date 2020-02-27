@@ -248,14 +248,18 @@ final class ResourceServerContext implements IResourceServerContext
         });
     }
 
+    /**
+     * @param Member $member
+     * @return Member
+     */
     private function checkGroups(Member $member):Member{
         // check groups
-        $idp_groups = $this->getCurrentUserGroups();
-        foreach ($idp_groups as $idp_group){
+        $idpGroups = $this->getCurrentUserGroups();
+        foreach ($idpGroups as $idpGroup){
             if(!isset($idp_group['slug'])) continue;
-            $code = trim($idp_group['slug']);
+            $code = trim($idpGroup['slug']);
             if(!$member->isOnGroup($code, true)){
-                // add it
+                // add 2 group
                 $group = $this->group_repository->getBySlug($code);
                 if(is_null($group)){
                     $group = new Group();

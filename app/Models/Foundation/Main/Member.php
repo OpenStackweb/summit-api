@@ -636,33 +636,43 @@ class Member extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function isAdmin()
+    public function isAdmin():bool
     {
         // admin or super admin
-        $admin_group       = $this->getGroupByCode(IGroup::Administrators);
-        $super_admin_group = $this->getGroupByCode(IGroup::SuperAdmins);
-        $res = ( $admin_group != false && !is_null($admin_group))
-            ||
-            ( $super_admin_group != false && !is_null($super_admin_group));
+        $superAdminGroup  = $this->getGroupByCode(IGroup::SuperAdmins);
+        if(!is_null($superAdminGroup))
+            return true;
+        $adminGroup = $this->getGroupByCode(IGroup::Administrators);
+        if(!is_null($adminGroup))
+            return true;
 
-        if(!$res){
-            $resource_server_ctx = App::make(IResourceServerContext::class);
-            if($resource_server_ctx instanceof IResourceServerContext){
-                foreach($resource_server_ctx->getCurrentUserGroups() as $group)
-                {
-                    if
-                    (
-                        isset($group['slug']) &&
-                        (
-                            trim($group['slug']) == IGroup::Administrators ||
-                            trim($group['slug']) == IGroup::SuperAdmins
-                        )
-                    )
-                        return true;
-                }
+        if($this->isOnExternalGroup(IGroup::SuperAdmins))
+            return true;
+
+        if($this->isOnExternalGroup(IGroup::Administrators))
+            return true;
+
+        return false;
+    }
+
+    /**
+     * @param string $code
+     * @return bool
+     */
+    public function isOnExternalGroup(string $code):bool{
+        $resource_server_ctx = App::make(IResourceServerContext::class);
+        if($resource_server_ctx instanceof IResourceServerContext){
+            foreach($resource_server_ctx->getCurrentUserGroups() as $group)
+            {
+                if
+                (
+                    isset($group['slug']) &&
+                    trim($group['slug']) == trim($code)
+                )
+                    return true;
             }
         }
-        return $res;
+        return false;
     }
 
     /**
@@ -670,21 +680,14 @@ class Member extends SilverstripeBaseModel
      * @param bool $skip_external
      * @return bool
      */
-    public function isOnGroup($code, $skip_external = false){
+    public function isOnGroup(string $code, $skip_external = false){
         if($this->isAdmin()) return true;
         $group = $this->getGroupByCode($code);
-        $res   = $group != false && !is_null($group);
-        if(!$res && !$skip_external){
-            $resource_server_ctx = App::make(IResourceServerContext::class);
-            if($resource_server_ctx instanceof IResourceServerContext){
-                foreach($resource_server_ctx->getCurrentUserGroups() as $group)
-                {
-                    if(isset($group['slug']) && trim($group['slug']) == $code)
-                        return true;
-                }
-            }
+        if(!is_null($group)) return true;
+        if(!$skip_external){
+           return $this->isOnExternalGroup($code);
         }
-        return $res;
+        return false;
     }
 
 
@@ -692,24 +695,11 @@ class Member extends SilverstripeBaseModel
      * @param string $code
      * @return Group|null
      */
-    public function getGroupByCode($code){
-        /**
-         *
-         * this is the rite way to do it but due a bug that will
-         * be fixed on doctrine 2.6 (https://github.com/doctrine/doctrine2/pull/1399)this
-         * should be carried on on following
-         * way
-         * $criteria = Criteria::create();
-         * $criteria->where(Criteria::expr()->eq('code', $code));
-         * $res = $this->groups->matching($criteria)->first();
-         * return $res === false ? null : $res;
-         */
-
-        $groups = $this->groups->filter(function ($entity) use($code){
-            return strtolower(trim($entity->getCode())) == strtolower(trim($code));
-        });
-
-        return !is_null($groups) && $groups != false && $groups->count() > 0 ? $groups->first(): null;
+    public function getGroupByCode(string $code):?Group {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('code', trim($code)));
+        $res = $this->groups->matching($criteria)->first();
+        return $res === false ? null : $res;
     }
 
     /**

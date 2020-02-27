@@ -66,11 +66,13 @@ final class DoctrineTest extends TestCase
     }
 
     public function testGetMember(){
-        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $em = Registry::getManager(\models\utils\SilverstripeBaseModel::EntityManager);
         $repo   =  $em->getRepository(\models\main\Member::class);
         $me = $repo->find(11624);
         $this->assertTrue(!is_null($me));
         $photo = $me->getPhoto();
+        $group = $me->getGroupByCode(\App\Models\Foundation\Main\IGroup::Administrators);
+        $res = $me->isOnGroup(\App\Models\Foundation\Main\IGroup::Administrators);
         $filename = $photo->getFilename();
         $this->assertTrue(!is_null($photo));
     }

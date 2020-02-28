@@ -123,6 +123,35 @@ abstract class AbstractSerializer implements IModelSerializer
         return array_merge(array($class_name), $parents);
     }
 
+    const BoolType           = 'json_boolean';
+    const EpochType           = 'datetime_epoch';
+    const StringType          = 'json_string';
+    const IntType             = 'json_int';
+    const FloatType           = 'json_float';
+    const ObfuscatedEmailType = 'json_obfuscated_email';
+    const UrlType             = 'json_url';
+
+    const ValidTypes = [
+        self::BoolType,
+        self::EpochType,
+        self::StringType,
+        self::IntType,
+        self::FloatType,
+        self::ObfuscatedEmailType,
+        self::UrlType,
+    ];
+
+    /**
+     * @param string $field
+     * @param string $type
+     * @return string
+     */
+    public static function buildMapping(string $field, string $type):string {
+        if(!in_array($type, self::ValidTypes))
+            throw new \InvalidArgumentException();
+        return sprintf("%s:%s", $field, $type);
+    }
+
     /**
      * @param null $expand
      * @param array $fields

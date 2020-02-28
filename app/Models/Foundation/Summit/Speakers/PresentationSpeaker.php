@@ -909,9 +909,11 @@ class PresentationSpeaker extends SilverstripeBaseModel
      */
     public function getPresentationIds($summit_id, $published_ones = true)
     {
-        return $this->presentations($summit_id, $published_ones)->map(function($entity)  {
-            return $entity->getId();
-        })->toArray();
+        $ids = [];
+        foreach ($this->presentations($summit_id, $published_ones) as $p) {
+            $ids[] = intval($p->getId());
+        }
+        return $ids;
     }
 
     /**
@@ -920,9 +922,11 @@ class PresentationSpeaker extends SilverstripeBaseModel
      */
     public function getAllPresentationIds($published_ones = true)
     {
-        return $this->presentations(null, $published_ones)->map(function($entity)  {
-            return $entity->getId();
-        })->toArray();
+        $ids = [];
+        foreach ($this->presentations(null, $published_ones) as $p) {
+            $ids[] = intval($p->getId());
+        }
+        return $ids;
     }
 
     /**
@@ -956,9 +960,11 @@ class PresentationSpeaker extends SilverstripeBaseModel
      */
     public function getModeratedPresentationIds($summit_id, $published_ones = true)
     {
-        return $this->moderated_presentations($summit_id, $published_ones)->map(function($entity)  {
-            return $entity->getId();
-        })->toArray();
+        $ids = [];
+        foreach ($this->moderated_presentations($summit_id, $published_ones) as $p) {
+            $ids[] = intval($p->getId());
+        }
+        return $ids;
     }
 
     /**
@@ -967,9 +973,11 @@ class PresentationSpeaker extends SilverstripeBaseModel
      */
     public function getAllModeratedPresentationIds($published_ones = true)
     {
-        return $this->moderated_presentations(null, $published_ones)->map(function($entity)  {
-            return $entity->getId();
-        })->toArray();
+        $ids = [];
+        foreach ($this->moderated_presentations(null, $published_ones) as $p) {
+            $ids[] = intval($p->getId());
+        }
+        return $ids;
     }
 
     /**

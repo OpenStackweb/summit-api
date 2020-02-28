@@ -42,6 +42,10 @@ use App\ModelSerializers\Marketplace\ServiceOfferedTypeSerializer;
 use App\ModelSerializers\Marketplace\SpokenLanguageSerializer;
 use App\ModelSerializers\Marketplace\SupportChannelTypeSerializer;
 use App\ModelSerializers\PushNotificationMessageSerializer;
+use App\ModelSerializers\ResourceServer\ApiEndpointAuthzGroupSerializer;
+use App\ModelSerializers\ResourceServer\ApiEndpointSerializer;
+use App\ModelSerializers\ResourceServer\ApiScopeSerializer;
+use App\ModelSerializers\ResourceServer\ApiSerializer;
 use App\ModelSerializers\Software\OpenStackComponentSerializer;
 use App\ModelSerializers\Software\OpenStackReleaseSerializer;
 use App\ModelSerializers\Summit\AdminSummitSerializer;
@@ -115,6 +119,12 @@ final class SerializerRegistry
     private function __construct()
     {
         $this->resource_server_context = App::make(IResourceServerContext::class);
+        // resource server config
+        $this->registry['Api']                   = ApiSerializer::class;
+        $this->registry['ApiEndpoint']           = ApiEndpointSerializer::class;
+        $this->registry['ApiScope']              = ApiScopeSerializer::class;
+        $this->registry['ApiEndpointAuthzGroup'] = ApiEndpointAuthzGroupSerializer::class;
+        //
         $this->registry['Summit']      =
             [
                 self::SerializerType_Public  =>  SummitSerializer::class,

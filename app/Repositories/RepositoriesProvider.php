@@ -39,6 +39,7 @@ use App\Models\Foundation\Summit\Repositories\ITrackTagGroupAllowedTagsRepositor
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
 use App\Models\Foundation\Summit\TrackTagGroupAllowedTag;
+use App\Models\ResourceServer\IApiRepository;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
 use LaravelDoctrine\ORM\Facades\EntityManager;
@@ -81,6 +82,12 @@ final class RepositoriesProvider extends ServiceProvider
     {
 
         App::singleton(
+            IApiRepository::class,
+            function(){
+                return  EntityManager::getRepository(\App\Models\ResourceServer\Api::class);
+            });
+
+        App::singleton(
             'App\Models\ResourceServer\IApiEndpointRepository',
             function(){
                 return  EntityManager::getRepository(\App\Models\ResourceServer\ApiEndpoint::class);
@@ -91,6 +98,8 @@ final class RepositoriesProvider extends ServiceProvider
             function(){
                 return  EntityManager::getRepository(\App\Models\ResourceServer\EndPointRateLimitByIP::class);
             });
+
+
 
         App::singleton(
             'models\summit\ISummitRepository',

@@ -715,7 +715,7 @@ class Member extends SilverstripeBaseModel
     }
 
     public function getCCLATeamsIds(){
-          $ids = [];
+        $ids = [];
         foreach ($this->getCCLATeams() as $t) {
             $ids[] = intval($t->getId());
         }

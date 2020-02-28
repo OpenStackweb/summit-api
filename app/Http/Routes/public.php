@@ -109,6 +109,16 @@ Route::group([
                 Route::get('sent', 'OAuth2SummitNotificationsApiController@getAllApprovedByUser');
             });
 
+            // speakers
+
+            // speakers
+            Route::group(['prefix' => 'speakers'], function () {
+                Route::get('', 'OAuth2SummitSpeakersApiController@getSpeakers');
+                Route::group(['prefix' => '{speaker_id}'], function () {
+                    Route::get('', 'OAuth2SummitSpeakersApiController@getSummitSpeaker')->where('speaker_id', '[0-9]+');
+                });
+            });
+
         });
     });
 
@@ -150,4 +160,18 @@ Route::group([
         Route::get('', 'LanguagesApiController@getAll');
     });
 
+});
+
+
+Route::group([
+    'namespace' => 'App\Http\Controllers',
+    'prefix'     => '.well-known',
+    'before'     => [],
+    'after'      => [],
+    'middleware' => [
+        'ssl',
+        'rate.limit:1000,1', // 1000 request per minute
+    ]
+], function(){
+    Route::get('endpoints', 'ConfigurationsController@getEndpointsDefinitions');
 });

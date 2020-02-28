@@ -31,6 +31,8 @@ use ModelSerializers\ISerializerTypeSelector;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISpeakerService;
 use services\model\ISummitService;
+use utils\Filter;
+use utils\FilterElement;
 use utils\FilterParser;
 use utils\OrderParser;
 use utils\PagingInfo;
@@ -125,81 +127,68 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      *  Speakers endpoints
      */
 
+    use ParametrizedGetAll;
+
     /**
      * @param $summit_id
      * @return mixed
      */
     public function getSpeakers($summit_id)
     {
-        try {
-            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+        $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
+        if (is_null($summit)) return $this->error404();
 
-            $values = Input::all();
-
-            $rules = array
-            (
-                'page' => 'integer|min:1',
-                'per_page' => 'required_with:page|integer|min:10|max:100',
-            );
-
-            $validation = Validator::make($values, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412($messages);
-            }
-
-            // default values
-            $page = 1;
-            $per_page = 10;
-
-            if (Input::has('page')) {
-                $page = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
-            }
-
-            $filter = null;
-
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
-
+        return $this->_getAll(
+            function(){
+                return [
                     'first_name' => ['=@', '=='],
-                    'last_name' => ['=@', '=='],
-                    'email' => ['=@', '=='],
-                    'id' => ['=='],
-                    'full_name' => ['=@', '=='],
-                ]);
-            }
-
-            $order = null;
-            if (Input::has('order')) {
-                $order = OrderParser::parse(Input::get('order'), [
+                    'last_name'  => ['=@', '=='],
+                    'email'      => ['=@', '=='],
+                    'id'         => ['=='],
+                    'full_name'  => ['=@', '=='],
+                ];
+            },
+            function(){
+                return [
+                    'first_name' => 'sometimes|string',
+                    'last_name'  => 'sometimes|string',
+                    'email'      => 'sometimes|string',
+                    'id'         => 'sometimes|integer',
+                    'full_name'  => 'sometimes|string',
+                ];
+            },
+            function()
+            {
+                return [
                     'first_name',
                     'last_name',
                     'id',
                     'email',
-                ]);
-            }
-
-            $serializer_type = $this->serializer_type_selector->getSerializerType();
-            $result = $this->speaker_repository->getSpeakersBySummit($summit, new PagingInfo($page, $per_page), $filter, $order);
-
-            return $this->ok
-            (
-                $result->toArray(Request::input('expand', ''), [], [], ['summit_id' => $summit_id, 'published' => true, 'summit' => $summit], $serializer_type)
-            );
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412($ex1->getMessages());
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+                ];
+            },
+            function($filter) use($summit){
+                return $filter;
+            },
+            function(){
+                return $this->serializer_type_selector->getSerializerType();
+            },
+            null,
+            null,
+            function ($page,  $per_page,  $filter,  $order, $applyExtraFilters) use($summit) {
+                return $this->speaker_repository->getSpeakersBySummit
+                (
+                    $summit,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            },
+            [
+                'summit_id' => $summit_id,
+                'published' => true,
+                'summit' => $summit
+            ]
+        );
     }
 
     /**
@@ -208,71 +197,51 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      */
     public function getAll()
     {
-        try {
-
-            $values = Input::all();
-            $serializer_type = $this->serializer_type_selector->getSerializerType();
-            $rules = [
-                'page' => 'integer|min:1',
-                'per_page' => 'required_with:page|integer|min:10|max:100',
-            ];
-
-            $validation = Validator::make($values, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412($messages);
-            }
-
-            // default values
-            $page = 1;
-            $per_page = 10;
-
-            if (Input::has('page')) {
-                $page = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
-            }
-
-            $filter = null;
-
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
-
+        return $this->_getAll(
+            function(){
+                return [
                     'first_name' => ['=@', '=='],
-                    'last_name' => ['=@', '=='],
-                    'full_name' => ['=@', '=='],
-                    'email' => ['=@', '=='],
-                    'id' => ['=='],
-                ]);
-            }
-
-            $order = null;
-            if (Input::has('order')) {
-                $order = OrderParser::parse(Input::get('order'), [
-                    'id',
-                    'email',
+                    'last_name'  => ['=@', '=='],
+                    'email'      => ['=@', '=='],
+                    'id'         => ['=='],
+                    'full_name'  => ['=@', '=='],
+                ];
+            },
+            function(){
+                return [
+                    'first_name' => 'sometimes|string',
+                    'last_name'  => 'sometimes|string',
+                    'email'      => 'sometimes|string',
+                    'id'         => 'sometimes|integer',
+                    'full_name'  => 'sometimes|string',
+                ];
+            },
+            function()
+            {
+                return [
                     'first_name',
                     'last_name',
-                ]);
+                    'id',
+                    'email',
+                ];
+            },
+            function($filter){
+                return $filter;
+            },
+            function(){
+                return $this->serializer_type_selector->getSerializerType();
+            },
+            null,
+            null,
+            function ($page,  $per_page,  $filter,  $order, $applyExtraFilters) {
+                return $this->speaker_repository->getAllByPage
+                (
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
             }
-
-            $result = $this->speaker_repository->getAllByPage(new PagingInfo($page, $per_page), $filter, $order);
-
-            return $this->ok
-            (
-                $result->toArray(Request::input('expand', ''), [], [], [], $serializer_type)
-            );
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412($ex1->getMessages());
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        );
     }
 
     /**

@@ -11,12 +11,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 **/
-
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
-
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="repositories\resource_server\DoctrineApiRepository")
  * @ORM\Table(name="apis")
  * @ORM\Cache(usage="NONSTRICT_READ_WRITE", region="resource_server_region")
  * Class Api
@@ -161,4 +159,25 @@ class Api extends ResourceServerEntity implements IApi
 		return $scope;
 	}
 
+    /**
+     * @return int[]
+     */
+	public function getScopeIds():array {
+        $ids = [];
+        foreach ($this->getScopes() as $e) {
+            $ids[] = intval($e->getId());
+        }
+        return $ids;
+    }
+
+    /**
+     * @return int[]
+     */
+    public function getEndpointsIds():array {
+        $ids = [];
+        foreach ($this->getEndpoints() as $e) {
+            $ids[] = intval($e->getId());
+        }
+        return $ids;
+    }
 }

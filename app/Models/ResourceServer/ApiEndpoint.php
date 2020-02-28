@@ -343,4 +343,25 @@ class ApiEndpoint extends ResourceServerEntity implements IApiEndpoint
     }
 
 
+    /**
+     * @return int[]
+     */
+    public function getScopeIds():array {
+        $ids = [];
+        foreach ($this->getScopes() as $e) {
+            $ids[] = intval($e->getId());
+        }
+        return $ids;
+    }
+
+    /**
+     * @return int[]
+     */
+    public function getAuthGroupIds():array {
+        $ids = [];
+        foreach ($this->getAuthzGroups() as $e) {
+            $ids[] = intval($e->getId());
+        }
+        return $ids;
+    }
 }

@@ -22,11 +22,11 @@ use ModelSerializers\SilverStripeSerializer;
 final class TrackTagGroupSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
-        'Name'         => 'name:json_string',
-        'Label'         => 'label:json_string',
-        'Order'         => 'order:json_int',
-        'isMandatory'  => 'is_mandatory:json_boolean',
-        'SummitId'     => 'summit_id:json_int',
+        'Name'       => 'name:json_string',
+        'Label'      => 'label:json_string',
+        'Order'      => 'order:json_int',
+        'Mandatory'  => 'is_mandatory:json_boolean',
+        'SummitId'   => 'summit_id:json_int',
     ];
 
     /**

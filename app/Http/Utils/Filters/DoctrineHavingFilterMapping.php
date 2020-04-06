@@ -54,7 +54,7 @@ class DoctrineHavingFilterMapping extends DoctrineFilterMapping
 
         $value = $filter->getValue();
 
-        if(empty($value)) return $query;
+        if(trim($value) == '' || is_null($value) ) return $query;
 
         if(is_array($value) && count($value) == 0) return $query;
 
@@ -89,7 +89,7 @@ class DoctrineHavingFilterMapping extends DoctrineFilterMapping
                 $this->having = str_replace(":value_count", 1, $this->having);
             }
 
-            if (strstr($this->having, ":value_")) {
+            if (strstr($this->having, ":value")) {
                 ++$param_count;
                 $this->having = str_replace(":value", ":value_" . $param_count, $this->having);
                 $has_param = true;

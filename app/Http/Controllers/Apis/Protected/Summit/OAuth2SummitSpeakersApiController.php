@@ -336,7 +336,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             $speaker = $this->speaker_repository->getByMember($current_member);
             if (is_null($speaker)) return $this->error404();
 
-            $serializer_type = $this->serializer_type_selector->getSerializerType();
+            $serializer_type = SerializerRegistry::SerializerType_Private;
 
             return $this->ok
             (
@@ -440,9 +440,15 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         try {
 
             $speaker = $this->speaker_repository->getById($speaker_id);
-            if (is_null($speaker)) return $this->error404();
+            if (is_null($speaker) || !$speaker instanceof PresentationSpeaker) return $this->error404();
 
-            $serializer_type = $this->serializer_type_selector->getSerializerType();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            $serializer_type = SerializerRegistry::SerializerType_Public;
+            // if speaker profile belongs to current member
+            if (!is_null($current_member)){
+                if($speaker->getMemberId() == $current_member->getId())
+                    $serializer_type = SerializerRegistry::SerializerType_Private;
+            }
 
             return $this->ok
             (

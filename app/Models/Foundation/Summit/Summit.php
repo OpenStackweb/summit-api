@@ -724,6 +724,8 @@ class Summit extends SilverstripeBaseModel
         $this->meeting_booking_room_allowed_attributes = new ArrayCollection();
         $this->mark_as_deleted = false;
         $this->schedule_shareable_links = new ArrayCollection();
+        $this->schedule_og_image_width = 0;
+        $this->schedule_og_image_height = 0;
     }
 
     /**

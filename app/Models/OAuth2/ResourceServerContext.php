@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Models\Foundation\Main\IGroup;
 use App\Services\Model\IMemberService;
 use Illuminate\Support\Facades\Log;
@@ -169,7 +168,7 @@ final class ResourceServerContext implements IResourceServerContext
             // legacy test, for new IDP version this value came on null
             $id = $this->getCurrentUserExternalId();
             Log::debug(sprintf("ResourceServerContext::getCurrentUser trying to get user by ExternalId %s", $id));
-            if(!is_null($id)){
+            if(!is_null($id) && !empty($id)){
                 $member = $this->member_repository->getById(intval($id));
                 if(!is_null($member)) return $this->checkGroups($member);
             }

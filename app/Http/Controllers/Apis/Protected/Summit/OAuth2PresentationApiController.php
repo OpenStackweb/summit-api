@@ -318,7 +318,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $rules =
             [
-                'title'                     => 'required|string|max:100',
+                'title'                     => 'required|string|max:255',
                 'description'               => 'required|string|max:1000',
                 'social_description'        => 'required|string|max:100',
                 'level'                     => 'required|in:Beginner,Intermediate,Advanced,N/A',
@@ -389,7 +389,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $rules =
                 [
-                    'title'                     => 'required|string|max:100',
+                    'title'                     => 'required|string|max:255',
                     'description'               => 'required|string|max:1000',
                     'social_description'        => 'required|string|max:100',
                     'level'                     => 'required|in:Beginner,Intermediate,Advanced,N/A',

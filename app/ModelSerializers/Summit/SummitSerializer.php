@@ -108,7 +108,7 @@ class SummitSerializer extends SilverStripeSerializer
         if (!is_null($timezone)) {
             $time_zone_info = $timezone->getLocation();
             $time_zone_info['name']   = $timezone->getName();
-            $now                      = new DateTime($summit->getLocalBeginDate()->format('Y-m-d H:i:s'), $timezone);
+            $now                      = new DateTime("now", $timezone);
             $time_zone_info['offset'] = $timezone->getOffset($now);
             $values['time_zone']      = $time_zone_info;
         }

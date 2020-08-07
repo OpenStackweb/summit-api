@@ -232,7 +232,7 @@ final class SummitTrackService
                 if(!is_null($former_track)) continue;
 
                 $data      = [
-                    'title'                     => $track_2_copy->getTitle(),
+                    'name'                      => $track_2_copy->getTitle(),
                     'code'                      => $track_2_copy->getCode(),
                     'description'               => $track_2_copy->getDescription(),
                     'session_count'             => $track_2_copy->getSessionCount(),

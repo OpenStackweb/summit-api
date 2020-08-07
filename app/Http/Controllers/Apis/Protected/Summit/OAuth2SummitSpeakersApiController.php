@@ -452,7 +452,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             $serializer_type = SerializerRegistry::SerializerType_Public;
             // if speaker profile belongs to current member
             if (!is_null($current_member)){
-                if($speaker->getMemberId() == $current_member->getId())
+                if($speaker->getMemberId() == $current_member->getId() || $speaker->canBeEditedBy($current_member))
                     $serializer_type = SerializerRegistry::SerializerType_Private;
             }
 
@@ -500,7 +500,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'irc' => 'sometimes|string|max:50',
                 'twitter' => 'sometimes|string|max:50',
                 'member_id' => 'sometimes|integer',
-                'email' => 'sometimes|string|max:50',
+                'email' => 'sometimes|email:rfc,dns|max:50',
                 'on_site_phone' => 'sometimes|string|max:50',
                 'registered' => 'sometimes|boolean',
                 'is_confirmed' => 'sometimes|boolean',
@@ -579,7 +579,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'irc' => 'sometimes|string|max:50',
                 'twitter' => 'sometimes|string|max:50',
                 'member_id' => 'sometimes|integer',
-                'email' => 'sometimes|string|max:50',
+                'email' => 'sometimes|email:rfc,dns|max:50',
                 'on_site_phone' => 'sometimes|string|max:50',
                 'registered' => 'sometimes|boolean',
                 'is_confirmed' => 'sometimes|boolean',
@@ -752,7 +752,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'irc' => 'sometimes|string|max:50',
                 'twitter' => 'sometimes|string|max:50',
                 'member_id' => 'sometimes|integer',
-                'email' => 'sometimes|string|max:50',
+                'email' => 'sometimes|email:rfc,dns|max:50',
                 'funded_travel' => 'sometimes|boolean',
                 'willing_to_travel' => 'sometimes|boolean',
                 'willing_to_present_video' => 'sometimes|boolean',
@@ -831,7 +831,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'irc' => 'sometimes|string|max:50',
                 'twitter' => 'sometimes|string|max:50',
                 'member_id' => 'sometimes|integer',
-                'email' => 'sometimes|string|max:50',
+                'email' => 'sometimes|email:rfc,dns|max:50',
                 'available_for_bureau' => 'sometimes|boolean',
                 'funded_travel' => 'sometimes|boolean',
                 'willing_to_travel' => 'sometimes|boolean',

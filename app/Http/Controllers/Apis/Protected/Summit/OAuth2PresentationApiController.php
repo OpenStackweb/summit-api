@@ -319,10 +319,10 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $rules =
             [
                 'title'                     => 'required|string|max:255',
-                'description'               => 'required|string|max:1000',
-                'social_description'        => 'required|string|max:100',
+                'description'               => 'required|string|max:1100',
+                'social_description'        => 'required|string|max:110',
                 'level'                     => 'required|in:Beginner,Intermediate,Advanced,N/A',
-                'attendees_expected_learnt' => 'required|string|max:1000',
+                'attendees_expected_learnt' => 'required|string|max:1100',
                 'type_id'                   => 'required|integer',
                 'track_id'                  => 'required|integer',
                 'attending_media'           => 'required|boolean',
@@ -390,10 +390,10 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $rules =
                 [
                     'title'                     => 'required|string|max:255',
-                    'description'               => 'required|string|max:1000',
-                    'social_description'        => 'required|string|max:100',
+                    'description'               => 'required|string|max:1100',
+                    'social_description'        => 'required|string|max:110',
                     'level'                     => 'required|in:Beginner,Intermediate,Advanced,N/A',
-                    'attendees_expected_learnt' => 'required|string|max:1000',
+                    'attendees_expected_learnt' => 'required|string|max:1100',
                     'type_id'                   => 'required|integer',
                     'track_id'                  => 'required|integer',
                     'attending_media'           => 'required|boolean',

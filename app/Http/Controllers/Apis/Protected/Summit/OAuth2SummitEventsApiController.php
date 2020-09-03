@@ -1030,12 +1030,13 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         try
         {
             $strategy = new RetrieveAllUnPublishedSummitEventsStrategy($this->repository, $this->event_repository, $this->resource_server_context);
-            $order  = Request::input('order', '');
-            $filter = Request::input('filter', '');
+
             $serializer_type = SerializerRegistry::SerializerType_Public;
-            if(strstr($order, "trackchairsel") !== false){
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if(!is_null($current_member) && $current_member->isAdmin()){
                 $serializer_type = SerializerRegistry::SerializerType_Private;
             }
+
             $response = $strategy->getEvents(['summit_id' => $summit_id]);
             return $this->ok($response->toArray(Request::input('expand', ''),[],[],[], $serializer_type));
         }

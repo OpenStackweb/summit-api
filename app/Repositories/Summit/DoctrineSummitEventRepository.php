@@ -134,7 +134,7 @@ final class DoctrineSummitEventRepository
             ),
             'speaker_email' => new DoctrineFilterMapping
             (
-                "(sprr.email :operator :value OR spmm.email :operator :value)"
+                "(sprr.email :operator :value OR spmm.email :operator :value OR spmm2.email :operator :value OR sprr2.email :operator :value)"
             ),
             'speaker_id' => new DoctrineFilterMapping
             (
@@ -202,8 +202,10 @@ final class DoctrineSummitEventRepository
             ->leftJoin('p.selected_presentations', "ssp", Join::LEFT_JOIN)
             ->leftJoin('ssp.list', "sspl", Join::LEFT_JOIN)
             ->leftJoin('p.moderator', "spm", Join::LEFT_JOIN)
+            ->leftJoin('spm.member', "spmm2", Join::LEFT_JOIN)
             ->leftJoin('sp.member', "spmm", Join::LEFT_JOIN)
-            ->leftJoin('sp.registration_request', "sprr", Join::LEFT_JOIN);
+            ->leftJoin('sp.registration_request', "sprr", Join::LEFT_JOIN)
+            ->leftJoin('spm.registration_request', "sprr2", Join::LEFT_JOIN);
 
         if(!is_null($filter)){
             $filter->apply2Query($query, $this->getFilterMappings());

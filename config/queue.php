@@ -1,4 +1,9 @@
 <?php
+$rabbit_port = intval( env('RABBITMQ_PORT', 5671) );
+$rabbit_connection = PhpAmqpLib\Connection\AMQPLazyConnection::class;
+if($rabbit_port === 5671)
+    $rabbit_connection = PhpAmqpLib\Connection\AMQPSSLConnection::class;
+
 
 return [
 
@@ -51,14 +56,11 @@ return [
         'message_broker' => [
             'driver' => 'rabbitmq',
             'queue' => env('RABBITMQ_QUEUE', ''),
-            'connection' => env('RABBITMQ_PORT', 5671) === 5671 ? // SSL
-                PhpAmqpLib\Connection\AMQPSSLConnection::class:
-                PhpAmqpLib\Connection\AMQPLazyConnection::class
-                ,
+            'connection' => $rabbit_connection,
             'hosts' => [
                 [
                     'host' => env('RABBITMQ_HOST', '127.0.0.1'),
-                    'port' => env('RABBITMQ_PORT', 5671),
+                    'port' => $rabbit_port,
                     'user' => env('RABBITMQ_LOGIN', 'guest'),
                     'password' => env('RABBITMQ_PASSWORD', 'guest'),
                     'vhost' => env('RABBITMQ_VHOST', '/'),

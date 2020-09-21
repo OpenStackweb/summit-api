@@ -42,6 +42,11 @@ class PublishUserUpdated implements ShouldQueue
     {
         Log::debug(sprintf("PublishUserUpdated::handle user updated %s %s", $this->user_id, $this->user_email));
 
-        $service->registerExternalUserById($this->user_id);
+        try {
+            $service->registerExternalUserById($this->user_id);
+        }
+        catch (\Exception $ex){
+            Log::error($ex);
+        }
     }
 }

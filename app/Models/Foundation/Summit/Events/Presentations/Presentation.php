@@ -718,7 +718,7 @@ class Presentation extends SummitEvent
 
         // Error out if a talk has more than one selection
         if (count($session_sel) > 1) {
-            throw new ValidationException('presentation has more than 1 (one) selection.');
+            throw new ValidationException(sprintf('presentation %s has more than 1 (one) selection.', $this->id));
         }
 
         $selection = null;
@@ -751,7 +751,7 @@ class Presentation extends SummitEvent
 
         // Error out if a talk has more than one selection
         if (count($session_sel) > 1) {
-            throw new ValidationException('presentation has more than 1 (one) selection.');
+            throw new ValidationException(sprintf('presentation %s has more than 1 (one) selection.', $this->id));
         }
 
         $selection = null;

@@ -176,9 +176,14 @@ abstract class AbstractSerializer implements IModelSerializer
                 $method_found = false;
                 foreach($method_prefix as $prefix){
                     if(method_exists($this->object, $prefix.$attribute)){
-                        $value = call_user_func([$this->object, $prefix.$attribute ]);
-                        $method_found = true;
-                        break;
+                        try {
+                            $value = call_user_func([$this->object, $prefix . $attribute]);
+                            $method_found = true;
+                            break;
+                        }
+                        catch (\Exception $ex){
+                            Log::warning($ex);
+                        }
                     }
                 }
 

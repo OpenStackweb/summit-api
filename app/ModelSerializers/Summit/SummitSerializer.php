@@ -333,7 +333,7 @@ class SummitSerializer extends SilverStripeSerializer
                     case 'sponsors':
                         {
                             $sponsors = [];
-                            foreach ($summit->getSponsors() as $company) {
+                            foreach ($summit->getEventSponsors() as $company) {
                                 $sponsors[] = SerializerRegistry::getInstance()->getSerializer($company)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
                             $values['sponsors'] = $sponsors;

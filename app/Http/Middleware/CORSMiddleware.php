@@ -13,6 +13,7 @@
  **/
 
 use Closure;
+use Illuminate\Support\Facades\Log;
 use libs\utils\ICacheService;
 use App\Models\ResourceServer\IApiEndpoint;
 use App\Models\ResourceServer\IApiEndpointRepository;
@@ -135,12 +136,15 @@ class CORSMiddleware
     public function preProcess(Request $request)
     {
         $actual_request = false;
-
+        Log::debug(sprintf("CORSMiddleware::preProcess ip %s uri %s method %s", $request->getClientIp(), $request->getRequestUri(), $request->getMethod()));
         if ($this->isValidCORSRequest($request))
         {
+            Log::debug(sprintf("CORSMiddleware::preProcess isValidCORSRequest true"));
+
             /* Step 01 : Determine the type of the incoming request */
             $type = $this->getRequestType($request);
             /* Step 02 : Process request according to is type */
+            Log::debug(sprintf("CORSMiddleware::preProcess getRequestType %s", $type));
             switch($type)
             {
                 case CORSRequestPreflightType::REQUEST_FOR_PREFLIGHT:
@@ -154,12 +158,13 @@ class CORSMiddleware
                         $route_path = RequestUtils::getCurrentRoutePath($request);
                         if (!$route_path || !$this->checkEndPoint($route_path, $real_method))
                         {
+                            Log::debug(sprintf("CORSMiddleware::preProcess checkEndPoint path %s real method %s returning 403", $route_path, $real_method));
                             $response = new Response();
                             $response->setStatusCode(403);
                             return $response;
                         }
                         // ----Step 2b: Store pre-flight request data in the Cache to keep (mark) the request as correctly followed the request pre-flight process
-                        $data     = new CORSRequestPreflightData($request, $this->current_endpoint->isAllowCredentials());
+                        $data     = new CORSRequestPreflightData($request, is_null($this->current_endpoint)? false : $this->current_endpoint->isAllowCredentials());
                         $cache_id = $this->generatePreflightCacheKey($request);
                         $this->cache_service->storeHash($cache_id, $data->toArray(), CORSRequestPreflightData::$cache_lifetime);
                         // ----Step 2c: Return corresponding response - This part should be customized with application specific constraints.....
@@ -197,6 +202,7 @@ class CORSMiddleware
                         }
                         if (!$match)
                         {
+                            Log::debug(sprintf("CORSMiddleware::preProcess checkEndPoint match false returning 403"));
                             $response = new Response();
                             $response->setStatusCode(403);
                             return $response;
@@ -208,9 +214,9 @@ class CORSMiddleware
                     {
                         // origins, do not set any additional headers and terminate this set of steps.
                         if (!$this->isAllowedOrigin($request)) {
+                            Log::debug(sprintf("CORSMiddleware::preProcess isAllowedOrigin false returning 403"));
                             $response = new Response();
                             $response->setStatusCode(403);
-
                             return $response;
                         }
                         $actual_request = true;
@@ -225,6 +231,7 @@ class CORSMiddleware
         }
         if ($actual_request)
         {
+            Log::debug(sprintf("CORSMiddleware::preProcess actual_request is true"));
             // Save response headers
             $cache_id  = $this->generatePreflightCacheKey($request);
             // ----Step 2a: Check if the current request has an entry into the preflighted requests Cache
@@ -275,6 +282,7 @@ class CORSMiddleware
         $response = new Response();
         if (!$this->isAllowedOrigin($request))
         {
+            Log::debug(sprintf("CORSMiddleware::makePreflightResponse isAllowedOrigin is false returning 403"));
             $response->headers->set('Access-Control-Allow-Origin', 'null');
             $response->setStatusCode(403);
             return $response;
@@ -283,15 +291,16 @@ class CORSMiddleware
         // The Access-Control-Request-Method header indicates which method will be used in the actual
         // request as part of the preflight request
         // check request method
-        if ($request->headers->get('Access-Control-Request-Method') != $this->current_endpoint->getHttpMethod())
+        if (!is_null($this->current_endpoint) && $request->headers->get('Access-Control-Request-Method') != $this->current_endpoint->getHttpMethod())
         {
+            Log::debug(sprintf("CORSMiddleware::makePreflightResponse returning 405"));
             $response->setStatusCode(405);
             return $response;
         }
         // The Access-Control-Allow-Credentials header indicates whether the response to request
         // can be exposed when the omit credentials flag is unset. When part of the response to a preflight request
         // it indicates that the actual request can include user credentials.
-        if ( $this->current_endpoint->isAllowCredentials())
+        if (!is_null($this->current_endpoint) && $this->current_endpoint->isAllowCredentials())
         {
             $response->headers->set('Access-Control-Allow-Credentials', 'true');
         }
@@ -325,6 +334,7 @@ class CORSMiddleware
                 //check is the requested header is on the list of allowed headers
                 if (!in_array($header, $allow_headers, true))
                 {
+                    Log::debug(sprintf("CORSMiddleware::makePreflightResponse header %s is not on allowed headers returning 400", $header));
                     $response->setStatusCode(400);
                     $response->setContent('Unauthorized header '.$header);
                     break;
@@ -375,6 +385,7 @@ class CORSMiddleware
         $client_ip = $request->getClientIp();
         if (Cache::has(self::CORS_IP_BLACKLIST_PREFIX . $client_ip))
         {
+            Log::debug(sprintf("CORSMiddleware::testOriginHeaderScrutiny ip %s is blacklisted", $client_ip));
             return false;
         }
         /* Step 1 : Check that we have only one and non empty instance of the "Origin" header */
@@ -385,6 +396,7 @@ class CORSMiddleware
             // Add client IP address to black listed client
             $expiresAt = Carbon::now()->addMinutes(60);
             Cache::put(self::CORS_IP_BLACKLIST_PREFIX . $client_ip, self::CORS_IP_BLACKLIST_PREFIX . $client_ip, $expiresAt);
+            Log::debug(sprintf("CORSMiddleware::testOriginHeaderScrutiny ip %s is blacklisted", $client_ip));
             return false;
         }
         /* Step 2 : Check that we have only one and non empty instance of the "Host" header */
@@ -395,6 +407,7 @@ class CORSMiddleware
             // If we reach this point it means that we have multiple instance of the "Host" header
             $expiresAt = Carbon::now()->addMinutes(60);
             Cache::put(self::CORS_IP_BLACKLIST_PREFIX . $client_ip, self::CORS_IP_BLACKLIST_PREFIX . $client_ip, $expiresAt);
+            Log::debug(sprintf("CORSMiddleware::testOriginHeaderScrutiny ip %s is blacklisted", $client_ip));
             return false;
         }
         /* Step 3 : Perform analysis - Origin header is required */
@@ -404,13 +417,13 @@ class CORSMiddleware
         $server_name = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : null;
         $origin_host = @parse_url($origin, PHP_URL_HOST);
 
-
         // check origin not empty and allowed
 
         if (!$this->isAllowedOrigin($origin))
         {
             $expiresAt = Carbon::now()->addMinutes(60);
             Cache::put(self::CORS_IP_BLACKLIST_PREFIX . $client_ip, self::CORS_IP_BLACKLIST_PREFIX . $client_ip, $expiresAt);
+            Log::debug(sprintf("CORSMiddleware::testOriginHeaderScrutiny ip %s is blacklisted", $client_ip));
             return false;
         }
 
@@ -418,6 +431,7 @@ class CORSMiddleware
         {
             $expiresAt = Carbon::now()->addMinutes(60);
             Cache::put(self::CORS_IP_BLACKLIST_PREFIX . $client_ip, self::CORS_IP_BLACKLIST_PREFIX . $client_ip, $expiresAt);
+            Log::debug(sprintf("CORSMiddleware::testOriginHeaderScrutiny ip %s is blacklisted", $client_ip));
             return false;
         }
 
@@ -425,12 +439,17 @@ class CORSMiddleware
         return true;
     }
 
+    /**
+     * @param $endpoint_path
+     * @param $http_method
+     * @return bool
+     */
     private function checkEndPoint($endpoint_path, $http_method)
     {
         $this->current_endpoint = $this->endpoint_repository->getApiEndpointByUrlAndMethod($endpoint_path, $http_method);
         if (is_null($this->current_endpoint))
         {
-            return false;
+            return true;
         }
         if (!$this->current_endpoint->isAllowCors() || !$this->current_endpoint->isActive())
         {

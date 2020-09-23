@@ -63,9 +63,6 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
      */
     public function getAll(){
 
-        $current_member = $this->resource_server_context->getCurrentUser();
-        if (is_null($current_member)) return $this->error404();
-
         $values = Input::all();
 
         $rules = [
@@ -148,7 +145,11 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             $fields    = !empty($fields) ? explode(',', $fields) : [];
             $relations = Request::input('relations', '');
             $relations = !empty($relations) ? explode(',', $relations) : [];
-
+            $current_member = $this->resource_server_context->getCurrentUser();
+            $serializer_type = SerializerRegistry::SerializerType_Public;
+            if(!is_null($current_member) && $current_member->isAdmin()){
+                $serializer_type = SerializerRegistry::SerializerType_Admin;
+            }
             return $this->ok
             (
                 $data->toArray
@@ -157,7 +158,7 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                     $fields,
                     $relations,
                     [],
-                    $current_member->isAdmin() ? SerializerRegistry::SerializerType_Admin : SerializerRegistry::SerializerType_Public
+                    $serializer_type
                 )
             );
         }

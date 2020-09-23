@@ -45,6 +45,11 @@ final class StripeApi implements IPaymentGatewayAPI
     private $webhook_secret_key;
 
     /**
+     * @var bool
+     */
+    private $send_email_receipt;
+
+    /**
      * StripeApi constructor.
      * @param array $config
      */
@@ -52,6 +57,9 @@ final class StripeApi implements IPaymentGatewayAPI
     {
         $this->secret_key = $config['secret_key'] ?? null;
         $this->webhook_secret_key = $config['webhook_secret_key'] ?? null;
+        $this->send_email_receipt = false;
+        if(isset($config['send_email_receipt']))
+            $this->send_email_receipt = boolval($config['send_email_receipt']);
 
         Log::debug
         (
@@ -102,7 +110,10 @@ final class StripeApi implements IPaymentGatewayAPI
             'payment_method_types' => ['card'],
         ];
 
-        if (isset($payload['receipt_email'])) {
+        // check setting to send stripe invoice
+        // @see https://stripe.com/docs/receipts
+        if (isset($payload['receipt_email']) && $this->send_email_receipt) {
+            Log::debug(sprintf("StripeApi::generatePayment setting receipt_email to %s", $payload['receipt_email']));
             $request['receipt_email'] = trim($payload['receipt_email']);
         }
 
@@ -110,8 +121,10 @@ final class StripeApi implements IPaymentGatewayAPI
             $request['metadata'] = $payload['metadata'];
         }
 
-        $intent = PaymentIntent::create($request);
+        Log::debug(sprintf("StripeApi::generatePayment creating payment intent %s", json_encode($request)));
 
+        $intent = PaymentIntent::create($request);
+        Log::debug(sprintf("StripeApi::generatePayment intent id %s", $intent->id));
         return [
             'client_token' => $intent->client_secret,
             'cart_id' => $intent->id,

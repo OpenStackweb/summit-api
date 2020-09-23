@@ -78,6 +78,9 @@ final class PaymentGatewayProfileFactory
         if (isset($params['active']))
             boolval(['active']) == true ? $profile->activate() : $profile->disable();
 
+        if (isset($params['send_email_receipt']))
+            $profile->setSendEmailReceipt(boolval($params['send_email_receipt']));
+
         return $profile;
     }
 }

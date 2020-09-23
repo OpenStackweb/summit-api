@@ -4429,6 +4429,7 @@ SQL;
         return $payment_profile->buildPaymentGatewayApi();
     }
 
+
     /**
      * @return ArrayCollection|\Doctrine\Common\Collections\Collection
      */
@@ -4451,6 +4452,7 @@ SQL;
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('active', true));
         $criteria->andWhere(Criteria::expr()->eq('application_type', trim($application_type)));
+
         $payment_profile = $this->payment_profiles->matching($criteria)->first();
         return (!$payment_profile) ? null : $payment_profile;
     }

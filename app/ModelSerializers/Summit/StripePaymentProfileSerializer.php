@@ -20,6 +20,7 @@ class StripePaymentProfileSerializer extends PaymentGatewayProfileSerializer
 {
     protected static $array_mappings = [
         'TestModeEnabled'     => 'test_mode_enabled:json_boolean',
+        'SendEmailReceipt'    => 'send_email_receipt:json_boolean',
         'LivePublishableKey'  => 'live_publishable_key:json_string',
         'TestPublishableKey'  => 'test_publishable_key:json_string',
     ];

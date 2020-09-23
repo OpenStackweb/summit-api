@@ -13,22 +13,25 @@
  **/
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
-
+use LaravelDoctrine\Migrations\Schema\Builder;
+use LaravelDoctrine\Migrations\Schema\Table;
 /**
- * Class Version20200910184756
+ * Class Version20200924123949
  * @package Database\Migrations\Model
  */
-class Version20200910184756 extends AbstractMigration
+class Version20200924123949 extends AbstractMigration
 {
     /**
      * @param Schema $schema
      */
     public function up(Schema $schema)
     {
-        $sql = <<<SQL
-ALTER TABLE `PresentationMaterial` CHANGE `ClassName` `ClassName` ENUM('PresentationMaterial','PresentationLink','PresentationSlide','PresentationVideo', 'PresentationMediaUpload') CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT 'PresentationMaterial';
-SQL;
-        $this->addSql($sql);
+        $builder = new Builder($schema);
+        if($schema->hasTable("StripePaymentProfile") && !$builder->hasColumn("StripePaymentProfile","SendEmailReceipt") ) {
+            $builder->table('StripePaymentProfile', function (Table $table) {
+                $table->boolean('SendEmailReceipt')->setNotnull(true)->setDefault(false);
+            });
+        }
     }
 
     /**
@@ -36,10 +39,11 @@ SQL;
      */
     public function down(Schema $schema)
     {
-        $sql = <<<SQL
-ALTER TABLE `PresentationMaterial` CHANGE `ClassName` `ClassName` ENUM('PresentationMaterial','PresentationLink','PresentationSlide','PresentationVideo') CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT 'PresentationMaterial';
-SQL;
-        $this->addSql($sql);
-
+        $builder = new Builder($schema);
+        if($schema->hasTable("StripePaymentProfile") && $builder->hasColumn("StripePaymentProfile","SendEmailReceipt") ) {
+            $builder->table('StripePaymentProfile', function (Table $table) {
+                $table->dropColumn('SendEmailReceipt');
+            });
+        }
     }
 }

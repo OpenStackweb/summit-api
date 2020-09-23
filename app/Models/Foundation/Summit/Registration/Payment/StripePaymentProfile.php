@@ -81,12 +81,19 @@ class StripePaymentProfile extends PaymentGatewayProfile
     protected $test_webhook_secret_key;
 
     /**
+     * @ORM\Column(name="SendEmailReceipt", type="boolean")
+     * @var bool
+     */
+    protected $send_email_receipt;
+
+    /**
      * StripePaymentProfile constructor.
      */
     public function __construct()
     {
         parent::__construct();
         $this->test_mode_enabled = true;
+        $this->send_email_receipt = false;
         $this->provider = IPaymentConstants::ProviderStripe;
         $this->live_webhook_id = '';
         $this->live_webhook_secret_key = '';
@@ -267,11 +274,14 @@ class StripePaymentProfile extends PaymentGatewayProfile
     private function createTestConfiguration(): array
     {
         $params = [
-            'secret_key' => $this->test_secret_key
+            'secret_key' => $this->test_secret_key,
+            'send_email_receipt' => $this->send_email_receipt
         ];
+
         if (!empty($this->test_webhook_secret_key)) {
             $params['webhook_secret_key'] = $this->test_webhook_secret_key;
         }
+
         return $params;
     }
 
@@ -281,8 +291,10 @@ class StripePaymentProfile extends PaymentGatewayProfile
     private function createLiveConfiguration(): array
     {
         $params = [
-            'secret_key' => $this->live_secret_key
+            'secret_key' => $this->live_secret_key,
+            'send_email_receipt' => $this->send_email_receipt
         ];
+
         if (!empty($this->live_webhook_secret_key)) {
             $params['webhook_secret_key'] = $this->live_webhook_secret_key;
         }
@@ -497,4 +509,21 @@ class StripePaymentProfile extends PaymentGatewayProfile
         Log::debug(sprintf("StripePaymentProfile::setTestWebhookSecretKey %s", $test_webhook_secret_key));
         $this->test_webhook_secret_key = $test_webhook_secret_key;
     }
+
+    /**
+     * @return bool
+     */
+    public function isSendEmailReceipt(): bool
+    {
+        return $this->send_email_receipt;
+    }
+
+    /**
+     * @param bool $send_email_receipt
+     */
+    public function setSendEmailReceipt(bool $send_email_receipt): void
+    {
+        $this->send_email_receipt = $send_email_receipt;
+    }
+
 }

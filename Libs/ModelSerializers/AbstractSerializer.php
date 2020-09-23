@@ -183,13 +183,20 @@ abstract class AbstractSerializer implements IModelSerializer
                         }
                         catch (\Exception $ex){
                             Log::warning($ex);
+                            $value = null;
                         }
                     }
                 }
 
                 if(!$method_found){
-                    //try dynamic one
-                    $value = call_user_func([$this->object, 'get'.$attribute ]);
+                    try {
+                        //try dynamic one
+                        $value = call_user_func([$this->object, 'get'.$attribute ]);
+                    }
+                    catch (\Exception $ex){
+                        Log::warning($ex);
+                        $value = null;
+                    }
                 }
 
                 if(count($mapping) > 1)

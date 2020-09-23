@@ -55,6 +55,8 @@ final class EventTypeValidationRulesFactory
             'use_sponsors'           => 'sometimes|boolean',
             'are_sponsors_mandatory' => 'sometimes|boolean|required_with:use_sponsors',
             'allows_attachment'      => 'sometimes|boolean',
+            'is_private'             => 'sometimes|boolean',
+            'is_default'             => 'sometimes|boolean',
         ];
 
         $specific_rules = [];

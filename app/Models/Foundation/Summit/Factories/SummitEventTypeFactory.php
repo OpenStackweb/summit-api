@@ -117,6 +117,12 @@ final class SummitEventTypeFactory
         if(isset($data['allows_attachment']))
             $event_type->setAllowsAttachment(boolval($data['allows_attachment']));
 
+        if(isset($data['is_private']))
+            $event_type->setIsPrivate(boolval($data['is_private']));
+
+        if(isset($data['is_default']))
+            $event_type->setIsDefault(boolval($data['is_default']));
+
         $summit->addEventType($event_type);
         return $event_type;
     }

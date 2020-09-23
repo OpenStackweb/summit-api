@@ -75,6 +75,12 @@ class SummitEventType extends SilverstripeBaseModel
     protected $is_default;
 
     /**
+     * @ORM\Column(name="IsPrivate", type="boolean")
+     * @var bool
+     */
+    protected $is_private;
+
+    /**
      * @ORM\ManyToMany(targetEntity="SummitDocument", mappedBy="event_types")
      */
     private $summit_documents;
@@ -174,12 +180,6 @@ class SummitEventType extends SilverstripeBaseModel
     const ClassName = 'EVENT_TYPE';
 
     /**
-     * @ORM\Column(name="IsPrivate", type="boolean")
-     * @var bool
-     */
-    protected $is_private;
-
-    /**
      * @return boolean
      */
     public function isDefault()
@@ -195,6 +195,10 @@ class SummitEventType extends SilverstripeBaseModel
     public function setAsNonDefault()
     {
         $this->is_default = false;
+    }
+
+    public function setIsDefault(bool $is_default){
+        $this->is_default = $is_default;
     }
 
     /**

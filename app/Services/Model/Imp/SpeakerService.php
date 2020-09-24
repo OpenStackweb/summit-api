@@ -163,13 +163,14 @@ final class SpeakerService
     /**
      * @param array $data
      * @param null|Member $creator
+     * @param bool $send_email
      * @return PresentationSpeaker
      * @throws ValidationException
      */
-    public function addSpeaker(array $data, ?Member $creator = null)
+    public function addSpeaker(array $data, ?Member $creator = null, $send_email = true)
     {
 
-        return $this->tx_service->transaction(function () use ($data, $creator) {
+        return $this->tx_service->transaction(function () use ($data, $creator, $send_email) {
 
 
             $member_id = intval($data['member_id'] ?? 0);
@@ -251,7 +252,7 @@ final class SpeakerService
             $this->speaker_repository->add($this->updateSpeakerRelations($speaker, $data));
 
             // only send the email if we dont have a former registration request
-            if(is_null($formerRegistrationRequest))
+            if(is_null($formerRegistrationRequest) && $send_email)
                 SpeakerCreationEmail::dispatch($speaker);
 
             if(!is_null($formerRegistrationRequest)){

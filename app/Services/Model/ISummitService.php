@@ -498,4 +498,20 @@ interface ISummitService
      * @throws EntityNotFoundException
      */
     public function advanceSummit(int $summit_id, int $days, bool $negative = false, $check_summit_ends = true):void;
+
+    /**
+     * @param Summit $summit
+     * @param UploadedFile $csv_file
+     * @param array $payload
+     */
+    public function importEventData(Summit $summit, UploadedFile $csv_file, array $payload):void;
+
+    /**
+     * @param int $summit_id
+     * @param string $filename
+     * @param bool $send_speaker_email
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function processEventData(int $summit_id, string $filename, bool $send_speaker_email):void;
 }

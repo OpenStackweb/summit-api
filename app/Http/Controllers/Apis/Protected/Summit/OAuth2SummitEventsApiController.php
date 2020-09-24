@@ -13,6 +13,7 @@
  **/
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
+use App\Http\Utils\MultipartFormDataCleaner;
 use Exception;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Input;
@@ -1353,6 +1354,58 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             return $this->error404(array('message'=> $ex2->getMessage()));
         }
         catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param LaravelRequest $request
+     * @param $summit_id
+     */
+    public function importEventData(LaravelRequest $request, $summit_id){
+        try {
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $payload = $request->all();
+
+            $rules = [
+                'file'               => 'required',
+                'send_speaker_email' => 'required|boolean',
+            ];
+
+            $payload = MultipartFormDataCleaner::cleanBool('send_speaker_email', $payload);
+
+            // Creates a Validator instance and validates the data.
+            $validation = Validator::make($payload, $rules);
+
+            if ($validation->fails()) {
+                $ex = new ValidationException;
+                $ex->setMessages($validation->messages()->toArray());
+                throw $ex;
+            }
+
+            $file = $request->file('file');
+
+            $this->service->importEventData($summit, $file, $payload);
+
+            return $this->ok();
+
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412(array($ex2->getMessage()));
+        } catch (\HTTP401UnauthorizedException $ex3) {
+            Log::warning($ex3);
+            return $this->error401();
+        } catch (\Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }

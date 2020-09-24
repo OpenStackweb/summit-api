@@ -147,7 +147,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
     private $promo_codes;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\Presentation", mappedBy="speakers")
+     * @ORM\ManyToMany(targetEntity="models\summit\Presentation", mappedBy="speakers", cascade={"persist"})
      * @var Presentation[]
      */
     private $presentations;
@@ -1092,12 +1092,13 @@ class PresentationSpeaker extends SilverstripeBaseModel
     }
 
     /**
+     * @param string $separator
      * @return string
      */
-    public function getFullName(){
+    public function getFullName(string $separator=', '){
         $fullname = $this->first_name;
         if(!empty($this->last_name)){
-            if(!empty($fullname)) $fullname .= ', ';
+            if(!empty($fullname)) $fullname .= $separator;
             $fullname .= $this->last_name;
         }
         return $fullname;

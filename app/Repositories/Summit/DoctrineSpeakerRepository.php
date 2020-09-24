@@ -760,6 +760,27 @@ SQL;
     }
 
     /**
+     * @param string $email
+     * @return PresentationSpeaker|null
+     */
+    public function getByEmail(string $email):?PresentationSpeaker
+    {
+        return $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("s")
+            ->from(PresentationSpeaker::class, "s")
+            ->leftJoin("s.member", "m")
+            ->leftJoin("s.registration_request", "r")
+            ->where("m.email = :email1 or r.email = :email2")
+            ->setParameter("email1", trim($email))
+            ->setParameter("email2", trim($email))
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+
+    /**
      * @param string $fullname
      * @return PresentationSpeaker|null
      */

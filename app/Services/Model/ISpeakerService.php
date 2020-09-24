@@ -38,10 +38,11 @@ interface ISpeakerService
     /**
      * @param array $data
      * @param null|Member $creator
+     * @param bool $send_email
      * @return PresentationSpeaker
      * @throws ValidationException
      */
-    public function addSpeaker(array $data, ?Member $creator = null);
+    public function addSpeaker(array $data, ?Member $creator = null, $send_email = true);
 
     /**
      * @param Summit $summit

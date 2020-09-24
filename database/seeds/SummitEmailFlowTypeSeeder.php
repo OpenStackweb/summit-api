@@ -56,6 +56,7 @@ use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeaker
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateOnlyEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedEmail;
+use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
 /**
  * Class SummitEmailFlowTypeSeeder
  */
@@ -277,6 +278,11 @@ final class SummitEmailFlowTypeSeeder extends Seeder
                 'slug' => PresentationSpeakerSelectionProcessRejectedEmail::EVENT_SLUG,
                 'default_email_template' => PresentationSpeakerSelectionProcessRejectedEmail::DEFAULT_TEMPLATE
             ],
+            [
+                'name' => ImportEventSpeakerEmail::EVENT_NAME,
+                'slug' => ImportEventSpeakerEmail::EVENT_SLUG,
+                'default_email_template' => ImportEventSpeakerEmail::DEFAULT_TEMPLATE
+            ],
 
         ], $flow);
 
@@ -288,7 +294,7 @@ final class SummitEmailFlowTypeSeeder extends Seeder
      * @param array $payload
      * @param SummitEmailFlowType $flow
      */
-    static private function createEventsTypes(array $payload , SummitEmailFlowType $flow){
+    static public function createEventsTypes(array $payload , SummitEmailFlowType $flow){
         foreach($payload as $definition){
             $event_type = new SummitEmailEventFlowType();
             $event_type->setName($definition['name']);

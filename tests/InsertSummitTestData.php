@@ -86,6 +86,16 @@ trait InsertSummitTestData
 
         $presentation_type = new PresentationType();
         $presentation_type->setType('TEST PRESENTATION TYPE');
+        $presentation_type->setMinSpeakers(1);
+        $presentation_type->setMaxSpeakers(3);
+        $presentation_type->setMinModerators(0);
+        $presentation_type->setMaxModerators(0);
+        $presentation_type->setUseSpeakers(true);
+        $presentation_type->setShouldBeAvailableOnCfp(true);
+        $presentation_type->setAreSpeakersMandatory(false);
+        $presentation_type->setUseModerator(false);
+        $presentation_type->setIsModeratorMandatory(false);
+
         self::$summit->addEventType($presentation_type);
 
         self::$summit2 = new Summit();
@@ -103,6 +113,7 @@ trait InsertSummitTestData
         self::$summit2->setName("TEST SUMMIT2");
 
         self::$mainVenue = new SummitVenue();
+        self::$mainVenue->setName("TEST VENUE");
         self::$mainVenue->setIsMain(true);
         self::$summit->addLocation(self::$mainVenue);
 

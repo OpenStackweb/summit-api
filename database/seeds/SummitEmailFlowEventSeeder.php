@@ -22,6 +22,10 @@ final class SummitEmailFlowEventSeeder extends Seeder
 {
     public function run()
     {
+       self::seed();
+    }
+
+    public static function seed(){
         $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
         $summit_repository = $em->getRepository(Summit::class);
         foreach ($summit_repository->findAll() as $summit) {

@@ -39,6 +39,8 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\RegistrationSummitOrderRevocationCommand::class,
         \App\Console\Commands\RegistrationSummitOrderReminderEmailCommand::class,
         \App\Console\Commands\SummitForwardXDays::class,
+        \App\Console\Commands\SummitEmailFlowEventSeederCommand::class,
+        \App\Console\Commands\SummitEmailFlowTypeSeederCommand::class,
     ];
 
     /**

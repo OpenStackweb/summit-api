@@ -63,13 +63,19 @@ final class SummitEmailFlowTypeSeeder extends Seeder
 {
     public function run()
     {
-        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+
 
         DB::setDefaultConnection("model");
         DB::table("SummitEmailFlowType")->delete();
         DB::table("SummitEmailEventFlowType")->delete();
         DB::table("SummitEmailEventFlow")->delete();
 
+        self::seed();
+    }
+
+
+    public static function seed(){
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
         $flow = new SummitEmailFlowType();
         $flow->setName("Registration");
 
@@ -283,7 +289,6 @@ final class SummitEmailFlowTypeSeeder extends Seeder
         $em->persist($flow);
         $em->flush();
     }
-
     /**
      * @param array $payload
      * @param SummitEmailFlowType $flow

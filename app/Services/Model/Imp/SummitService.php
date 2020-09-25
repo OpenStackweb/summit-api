@@ -2980,6 +2980,20 @@ final class SummitService extends AbstractService implements ISummitService
                                 $row['speakers_names'] : '';
                             $speakers_names = explode('|', $speakers_names);
                         }
+                        $speakers_companies = [];
+                        if(isset($row["speakers_companies"])){
+                            $speakers_companies = isset($row['speakers_companies']) ?
+                                $row['speakers_companies'] : '';
+                            $speakers_companies = explode('|', $speakers_companies);
+                        }
+
+                        $speakers_titles = [];
+                        if(isset($row["speakers_titles"])){
+                            $speakers_titles = isset($row['speakers_titles']) ?
+                                $row['speakers_titles'] : '';
+                            $speakers_titles = explode('|', $speakers_titles);
+                        }
+
                         if(count($speakers_names) == 0 ){
                             $speakers_names = $speakers;
                         }
@@ -3001,17 +3015,28 @@ final class SummitService extends AbstractService implements ISummitService
                                 if(count($speaker_full_name_comps) > 1){
                                     $speaker_last_name = trim($speaker_full_name_comps[1]);
                                 }
+
                                 if(empty($speaker_last_name))
                                     $speaker_last_name = $speaker_first_name;
                                 Log::debug(sprintf("SummitService::processEventData processing speaker email %s speaker fullname %s", $speaker_email, $speaker_full_name));
                                 $speaker = $this->speaker_repository->getByEmail(trim($speaker_email));
                                 if (is_null($speaker)) {
                                     Log::debug(sprintf("SummitService::processEventData speaker %s fname %s lname %s does not exists", $speaker_email, $speaker_first_name, $speaker_last_name));
-                                    $speaker = $this->speaker_service->addSpeaker([
+
+                                    $payload = [
                                         'first_name' => $speaker_first_name,
                                         'last_name' => $speaker_last_name,
                                         'email' => $speaker_email
-                                    ], null, false);
+                                    ];
+
+                                    if(array_key_exists($idx, $speakers_companies)){
+                                        $payload['company'] = trim($speakers_companies[$idx]);
+                                    }
+                                    if(array_key_exists($idx, $speakers_titles)){
+                                        $payload['title'] = trim($speakers_titles[$idx]);
+                                    }
+
+                                    $speaker = $this->speaker_service->addSpeaker($payload, null, false);
                                 }
 
                                 $event->addSpeaker($speaker);

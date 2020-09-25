@@ -2256,7 +2256,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ),
-            array(
+           [
                 'name' => 'get-events-csv',
                 'route' => '/api/v1/summits/{id}/events/csv',
                 'http_method' => 'GET',
@@ -2269,8 +2269,22 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                 ]
-            ),
-            array(
+            ],
+            [
+                'name' => 'import-events-csv',
+                'route' => '/api/v1/summits/{id}/events/csv',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteEventData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
                 'name' => 'get-published-events',
                 'route' => '/api/v1/summits/{id}/events/published',
                 'http_method' => 'GET',
@@ -2278,8 +2292,8 @@ class ApiEndpointsSeeder extends Seeder
                     sprintf(SummitScopes::ReadSummitData, $current_realm),
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm)
                 ],
-            ),
-            array(
+            ],
+            [
                 'name' => 'get-published-events-tags',
                 'route' => '/api/v1/summits/{id}/events/all/published/tags',
                 'http_method' => 'GET',
@@ -2287,8 +2301,8 @@ class ApiEndpointsSeeder extends Seeder
                     sprintf(SummitScopes::ReadSummitData, $current_realm),
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm)
                 ],
-            ),
-            array(
+            ],
+            [
                 'name' => 'get-schedule-empty-spots',
                 'route' => '/api/v1/summits/{id}/events/published/empty-spots',
                 'http_method' => 'GET',
@@ -2296,8 +2310,8 @@ class ApiEndpointsSeeder extends Seeder
                     sprintf(SummitScopes::ReadSummitData, $current_realm),
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm)
                 ],
-            ),
-            array(
+            ],
+           [
                 'name' => 'get-unpublished-events',
                 'route' => '/api/v1/summits/{id}/events/unpublished',
                 'http_method' => 'GET',
@@ -2305,8 +2319,8 @@ class ApiEndpointsSeeder extends Seeder
                     sprintf(SummitScopes::ReadSummitData, $current_realm),
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm)
                 ],
-            ),
-            array(
+            ],
+            [
                 'name' => 'get-all-events',
                 'route' => '/api/v1/summits/events',
                 'http_method' => 'GET',
@@ -2314,8 +2328,8 @@ class ApiEndpointsSeeder extends Seeder
                     sprintf(SummitScopes::ReadSummitData, $current_realm),
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm)
                 ],
-            ),
-            array(
+            ],
+            [
                 'name' => 'get-all-published-events',
                 'route' => '/api/v1/summits/events/published',
                 'http_method' => 'GET',
@@ -2323,7 +2337,7 @@ class ApiEndpointsSeeder extends Seeder
                     sprintf(SummitScopes::ReadSummitData, $current_realm),
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm)
                 ],
-            ),
+            ],
             [
                 'name' => 'get-event',
                 'route' => '/api/v1/summits/{id}/events/{event_id}',

@@ -1126,6 +1126,18 @@ class Summit extends SilverstripeBaseModel
     }
 
     /**
+     * @param int $id
+     * @return SummitEvent|null
+     */
+    public function getEventById(int $id):?SummitEvent{
+
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $id));
+        $event = $this->events->matching($criteria)->first();
+        return $event === false ? null : $event;
+    }
+
+    /**
      * @param SummitEvent $event
      */
     public function addEvent(SummitEvent $event)

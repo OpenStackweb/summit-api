@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use League\Csv\Reader;
 use App\Events\MyFavoritesAdd;
 use App\Events\MyFavoritesRemove;
 use App\Events\MyScheduleAdd;
@@ -21,7 +21,9 @@ use App\Events\RSVPUpdated;
 use App\Events\SummitDeleted;
 use App\Events\SummitUpdated;
 use App\Http\Utils\IFileUploader;
+use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
 use App\Jobs\Emails\Schedule\ShareEventEmail;
+use App\Jobs\ProcessEventDataImport;
 use App\Models\Foundation\Summit\Factories\SummitEventFeedbackFactory;
 use App\Models\Foundation\Summit\Factories\SummitFactory;
 use App\Models\Foundation\Summit\Factories\SummitRSVPFactory;
@@ -30,11 +32,15 @@ use App\Models\Utils\IntervalParser;
 use App\Permissions\IPermissionsManager;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IFolderService;
+use App\Services\Model\IMemberService;
+use App\Services\Utils\CSVReader;
 use CalDAVClient\Facade\Utils\ICalTimeZoneBuilder;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Storage;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\File;
@@ -60,6 +66,7 @@ use models\summit\ISummitEntityEventRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
 use models\summit\Presentation;
+use models\summit\PresentationSpeaker;
 use models\summit\PresentationType;
 use models\summit\RSVP;
 use models\summit\Summit;
@@ -191,6 +198,16 @@ final class SummitService extends AbstractService implements ISummitService
     private $resource_server_context;
 
     /**
+     * @var ISpeakerService ISpeakerService
+     */
+    private $speaker_service;
+
+    /**
+     * @var IMemberService
+     */
+    private $member_service;
+
+    /**
      * SummitService constructor.
      * @param ISummitRepository $summit_repository
      * @param ISummitEventRepository $event_repository
@@ -210,6 +227,8 @@ final class SummitService extends AbstractService implements ISummitService
      * @param IPermissionsManager $permissions_manager
      * @param IFileUploader $file_uploader
      * @param IResourceServerContext $resource_server_context
+     * @param ISpeakerService $speaker_service
+     * @param IMemberService $member_service
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -232,6 +251,8 @@ final class SummitService extends AbstractService implements ISummitService
         IPermissionsManager $permissions_manager,
         IFileUploader $file_uploader,
         IResourceServerContext $resource_server_context,
+        ISpeakerService $speaker_service,
+        IMemberService $member_service,
         ITransactionService $tx_service
     )
     {
@@ -254,6 +275,8 @@ final class SummitService extends AbstractService implements ISummitService
         $this->permissions_manager = $permissions_manager;
         $this->file_uploader = $file_uploader;
         $this->resource_server_context = $resource_server_context;
+        $this->speaker_service = $speaker_service;
+        $this->member_service = $member_service;
     }
 
     /**
@@ -632,19 +655,6 @@ final class SummitService extends AbstractService implements ISummitService
             // set local time from UTC
             $event->setStartDate($start_datetime);
             $event->setEndDate($end_datetime);
-
-            if (!$summit->isEventInsideSummitDuration($event))
-                throw new ValidationException
-                (
-                    sprintf
-                    (
-                        "event start/end (%s - %s) does not match with summit start/end (%s - %s)",
-                        $event->getLocalStartDate()->format('Y-m-d H:i:s'),
-                        $event->getLocalEndDate()->format('Y-m-d H:i:s'),
-                        $summit->getLocalBeginDate()->format('Y-m-d H:i:s'),
-                        $summit->getLocalEndDate()->format('Y-m-d H:i:s')
-                    )
-                );
         }
 
         return $event;
@@ -2121,7 +2131,7 @@ final class SummitService extends AbstractService implements ISummitService
     {
         return $this->tx_service->transaction(function () use ($summit_id, $file, $max_file_size) {
 
-            $allowed_extensions = ['png', 'jpg', 'jpeg', 'gif', 'svg','jfif'];
+            $allowed_extensions = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'jfif'];
 
             $summit = $this->summit_repository->getById($summit_id);
 
@@ -2591,19 +2601,19 @@ final class SummitService extends AbstractService implements ISummitService
      * @param bool $check_summit_ends
      * @throws Exception
      */
-    public function advanceSummit(int $summit_id, int $days, bool $negative = false, $check_summit_ends = true):void
+    public function advanceSummit(int $summit_id, int $days, bool $negative = false, $check_summit_ends = true): void
     {
         $interval = new DateInterval(sprintf("P%sD", $days));
 
         Log::debug(sprintf("SummitService::advanceSummit summit_id %s days %s negative %s check_summit_ends %s", $summit_id, $days, $negative, $check_summit_ends));
 
-        $events_ids =  $this->tx_service->transaction(function () use ($summit_id, $interval, $negative, $check_summit_ends) {
+        $events_ids = $this->tx_service->transaction(function () use ($summit_id, $interval, $negative, $check_summit_ends) {
 
             $summit = $this->summit_repository->getByIdExclusiveLock($summit_id);
 
-            if(is_null($summit) || !$summit instanceof Summit)
+            if (is_null($summit) || !$summit instanceof Summit)
                 throw new EntityNotFoundException("Summit not found");
-            if($check_summit_ends && !$summit->isEnded()) {
+            if ($check_summit_ends && !$summit->isEnded()) {
                 Log::debug(sprintf("SummitService::advanceSummit summit %s  has not ended !.", $summit_id));
                 return [];
             }
@@ -2614,10 +2624,9 @@ final class SummitService extends AbstractService implements ISummitService
 
             if (!is_null($summitBeginDate)) {
                 Log::debug(sprintf("SummitService::advanceSummit Current Summit begin date for summit %s is %s", $summit_id, $summitBeginDate->format("Ymd His")));
-                if($negative){
+                if ($negative) {
                     $summit->setRawBeginDate(clone $summitBeginDate->sub($interval));
-                }
-                else {
+                } else {
                     $summit->setRawBeginDate(clone $summitBeginDate->add($interval));
                 }
                 Log::debug(sprintf("SummitService::advanceSummit New Summit begin date for summit %s is %s", $summit_id, $summit->getBeginDate()->format("Ymd His")));
@@ -2625,10 +2634,9 @@ final class SummitService extends AbstractService implements ISummitService
 
             if (!is_null($summitEndDate)) {
                 Log::debug(sprintf("SummitService::advanceSummit Current Summit end date for summit %s is %s", $summit_id, $summitEndDate->format("Ymd His")));
-                if($negative) {
+                if ($negative) {
                     $summit->setRawEndDate(clone $summitEndDate->sub($interval));
-                }
-                else{
+                } else {
                     $summit->setRawEndDate(clone $summitEndDate->add($interval));
                 }
                 Log::debug(sprintf("SummitService::advanceSummit New Summit end date for summit %s is %s", $summit_id, $summit->getEndDate()->format("Ymd His")));
@@ -2639,18 +2647,17 @@ final class SummitService extends AbstractService implements ISummitService
             $summitRegistrationBeginDate = $summit->getRegistrationBeginDate();
             $summitRegistrationEndDate = $summit->getRegistrationEndDate();
 
-            if(!is_null($summitRegistrationBeginDate)){
+            if (!is_null($summitRegistrationBeginDate)) {
                 Log::debug(sprintf("SummitService::advanceSummit Current Summit registration begin date for summit %s is %s", $summit_id, $summitRegistrationBeginDate->format("Ymd His")));
-                if($negative) {
+                if ($negative) {
                     $summit->setRawRegistrationBeginDate(clone $summitRegistrationBeginDate->add($interval));
-                }
-                else {
+                } else {
                     $summit->setRawRegistrationBeginDate(clone $summitRegistrationBeginDate->sub($interval));
                 }
                 Log::debug(sprintf("SummitService::advanceSummit New Summit registration begin date for summit %s is %s", $summit_id, $summit->getRegistrationBeginDate()->format("Ymd His")));
             }
 
-            if(!is_null($summitRegistrationEndDate)){
+            if (!is_null($summitRegistrationEndDate)) {
                 Log::debug(sprintf("SummitService::advanceSummit Current Summit registration end date for summit %s is %s", $summit_id, $summitRegistrationEndDate->format("Ymd His")));
                 $summit->setRawRegistrationEndDate(clone $summitRegistrationEndDate->add($interval));
                 Log::debug(sprintf("SummitService::advanceSummit New Summit registration end date for summit %s is %s", $summit_id, $summit->getRegistrationEndDate()->format("Ymd His")));
@@ -2659,51 +2666,46 @@ final class SummitService extends AbstractService implements ISummitService
             // random dates
 
             $summitReassignTicketTillDate = $summit->getReassignTicketTillDate();
-            if(!is_null($summitReassignTicketTillDate)){
-                if($negative){
+            if (!is_null($summitReassignTicketTillDate)) {
+                if ($negative) {
                     $summit->setRawReassignTicketTillDate(clone $summitReassignTicketTillDate->sub($interval));
-                }
-                else {
+                } else {
                     $summit->setRawReassignTicketTillDate(clone $summitReassignTicketTillDate->add($interval));
                 }
             }
 
             $summitStartShowingVenuesDate = $summit->getStartShowingVenuesDate();
-            if(!is_null($summitStartShowingVenuesDate)){
-                if($negative){
+            if (!is_null($summitStartShowingVenuesDate)) {
+                if ($negative) {
                     $summit->setRawStartShowingVenuesDate(clone $summitStartShowingVenuesDate->sub($interval));
-                }
-                else {
+                } else {
                     $summit->setRawStartShowingVenuesDate(clone $summitStartShowingVenuesDate->add($interval));
                 }
             }
 
             $summitScheduleDefaultStartDate = $summit->getScheduleDefaultStartDate();
-            if(!is_null($summitScheduleDefaultStartDate)){
-                if($negative){
+            if (!is_null($summitScheduleDefaultStartDate)) {
+                if ($negative) {
                     $summit->setRawScheduleDefaultStartDate(clone $summitScheduleDefaultStartDate->sub($interval));
-                }
-                else {
+                } else {
                     $summit->setRawScheduleDefaultStartDate(clone $summitScheduleDefaultStartDate->add($interval));
                 }
             }
 
             $summitBeginAllowBookingDate = $summit->getBeginAllowBookingDate();
-            if(!is_null($summitBeginAllowBookingDate)){
-                if($negative) {
+            if (!is_null($summitBeginAllowBookingDate)) {
+                if ($negative) {
                     $summit->setRawBeginAllowBookingDate(clone $summitBeginAllowBookingDate->sub($interval));
-                }
-                else{
+                } else {
                     $summit->setRawBeginAllowBookingDate(clone $summitBeginAllowBookingDate->add($interval));
                 }
             }
 
             $summitEndAllowBookingDate = $summit->getEndAllowBookingDate();
-            if(!is_null($summitEndAllowBookingDate)){
-                if($negative) {
+            if (!is_null($summitEndAllowBookingDate)) {
+                if ($negative) {
                     $summit->setRawEndAllowBookingDate(clone $summitEndAllowBookingDate->sub($interval));
-                }
-                else{
+                } else {
                     $summit->setRawEndAllowBookingDate(clone $summitEndAllowBookingDate->add($interval));
                 }
 
@@ -2711,42 +2713,398 @@ final class SummitService extends AbstractService implements ISummitService
 
             // schedule
             $event_ids = [];
-            foreach($summit->getPublishedEvents() as $event){
-                if(!$event instanceof SummitEvent) continue;
+            foreach ($summit->getPublishedEvents() as $event) {
+                if (!$event instanceof SummitEvent) continue;
                 $event_ids[] = $event->getId();
             }
 
             return $event_ids;
         });
 
-        foreach ($events_ids as $event_id){
-            $this->tx_service->transaction(function() use($summit_id, $event_id, $interval, $negative){
+        foreach ($events_ids as $event_id) {
+            $this->tx_service->transaction(function () use ($summit_id, $event_id, $interval, $negative) {
                 $event = $this->event_repository->getByIdExclusiveLock($event_id);
                 $eventBeginDate = $event->getStartDate();
                 $eventEndDate = $event->getEndDate();
-                if(is_null($eventBeginDate) || is_null($eventEndDate)){
+                if (is_null($eventBeginDate) || is_null($eventEndDate)) {
                     Log::debug(sprintf("SummitService::advanceSummit summit id %s event id %s ( has not set dates but is published!), skipping it", $summit_id, $event->getId()));
                     return;
                 }
                 Log::debug(sprintf("SummitService::advanceSummit summit id %s event id %s current start date %s", $summit_id, $event->getId(), $eventBeginDate->format("Ymd His")));
-                if($negative){
+                if ($negative) {
                     $event->setRawStartDate(clone $eventBeginDate->sub($interval));
-                }
-                else {
+                } else {
                     $event->setRawStartDate(clone $eventBeginDate->add($interval));
                 }
                 Log::debug(sprintf("SummitService::advanceSummit summit id %s event id %s new start date %s", $summit_id, $event->getId(), $event->getStartDate()->format("Ymd His")));
 
                 Log::debug(sprintf("SummitService::advanceSummit summit id %s event id %s current end date %s", $summit_id, $event->getId(), $eventEndDate->format("Ymd His")));
-                if($negative) {
+                if ($negative) {
                     $event->setRawEndDate(clone $eventEndDate->sub($interval));
-                }
-                else{
+                } else {
                     $event->setRawEndDate(clone $eventEndDate->add($interval));
                 }
                 Log::debug(sprintf("SummitService::advanceSummit summit id %s event id %s new end date %s", $summit_id, $event->getId(), $event->getEndDate()->format("Ymd His")));
 
             });
+        }
+    }
+
+    /**
+     * @param Summit $summit
+     * @param UploadedFile $csv_file
+     * @param array $payload
+     * @throws ValidationException
+     */
+    public function importEventData(Summit $summit, UploadedFile $csv_file, array $payload): void
+    {
+
+        Log::debug(sprintf("SummitService::importEventData - summit %s", $summit->getId()));
+
+        $allowed_extensions = ['txt'];
+
+        if (!in_array($csv_file->extension(), $allowed_extensions)) {
+            throw new ValidationException("file does not has a valid extension ('csv').");
+        }
+
+        $real_path = $csv_file->getRealPath();
+        $filename = pathinfo($real_path);
+        $filename = $filename['filename'] ?? sprintf("file%s", time());
+        $basename = sprintf("%s_%s.csv", $filename, time());
+        $filename = $csv_file->storeAs(sprintf("%s/events_imports", sys_get_temp_dir()), $basename);
+        $csv_data = \Illuminate\Support\Facades\File::get($real_path);
+        if (empty($csv_data))
+            throw new ValidationException("file content is empty!");
+
+        $csv = Reader::createFromString($csv_data);
+        $csv->setHeaderOffset(0);
+
+        $header = $csv->getHeader(); //returns the CSV header record
+
+        // check needed columns (headers names)
+        /*
+            columns ( min)
+            * title
+            * abstract
+            * type_id (int) or type (string type name)
+            * track_id (int) or track ( string track name)
+         */
+
+        // validate format with col names
+        if (!in_array("title", $header))
+            throw new ValidationException('title column missing');
+
+        if (!in_array("abstract", $header))
+            throw new ValidationException('abstract column missing');
+
+        $type_data_present = in_array("type_id", $header)||
+            in_array("type", $header);
+
+        if (!$type_data_present) {
+            throw new ValidationException('type_id / type column missing');
+        }
+
+        $track_present = in_array("track_id", $header)||
+            in_array("track", $header);
+
+        if (!$track_present) {
+            throw new ValidationException('track_id / track column missing');
+        }
+
+        ProcessEventDataImport::dispatch($summit->getId(), $filename, $payload);
+    }
+
+    /**
+     * @param int $summit_id
+     * @param string $filename
+     * @param bool $send_speaker_email
+     * @throws ValidationException
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function processEventData(int $summit_id, string $filename, bool $send_speaker_email): void
+    {
+        Log::debug(sprintf("SummitService::processEventData summit %s filename %s", $summit_id, $filename));
+
+        if (!Storage::disk('local')->exists($filename)) {
+            throw new ValidationException(sprintf("file %s does not exists.", $filename));
+        }
+
+        $csv_data = Storage::disk('local')->get($filename);
+
+        $summit = $this->tx_service->transaction(function () use ($summit_id) {
+            $summit = $this->summit_repository->getById($summit_id);
+            if (is_null($summit) || !$summit instanceof Summit)
+                throw new EntityNotFoundException(sprintf("summit %s does not exists.", $summit_id));
+            return $summit;
+        });
+
+        $csv = Reader::createFromString($csv_data);
+        $csv->setHeaderOffset(0);
+
+        $header = $csv->getHeader(); //returns the CSV header record
+        $records = $csv->getRecords();
+
+        foreach ($records as $idx => $row) {
+            $event = $this->tx_service->transaction(function () use ($summit, $row) {
+
+                Log::debug(sprintf("SummitService::processEventData processing row %s", json_encode($row)));
+
+                $title = trim($row['title']);
+                $abstract = trim($row['abstract']);
+                // event type
+                $event_type = null;
+                if (isset($row['type_id']))
+                    $event_type = $summit->getEventType(intval($row['type_id']));
+                if (isset($row['type']))
+                    $event_type = $summit->getEventTypeByType($row['type']);
+
+                if (is_null($event_type))
+                    throw new EntityNotFoundException("event type not found.");
+
+                // track
+                $track = null;
+                if (isset($row['track_id']))
+                    $track = $summit->getPresentationCategory(intval($row['track_id']));
+                if (isset($row['track']))
+                    $track = $summit->getPresentationCategoryByTitle($row['track']);
+
+                if (is_null($track))
+                    throw new EntityNotFoundException("track not found.");
+
+                $event = null;
+                if(isset($row['id']) && !empty($row['id'])){
+                    Log::debug(sprintf("SummitService::processEventData trying to get event %s", $row['id']));
+                    $event = $summit->getEventById(intval($row['id']));
+                }
+                if(is_null($event))
+                    $event = SummitEventFactory::build($event_type, $summit);
+
+                // main data
+
+                $event->setTitle(html_entity_decode($title));
+                $event->setAbstract(html_entity_decode($abstract));
+                if (isset($row['social_summary']))
+                    $event->setSocialSummary($row['social_summary']);
+
+                if (isset($row['allow_feedback']))
+                    $event->setAllowFeedBack(boolval($row['allow_feedback']));
+
+                $event->setType($event_type);
+                $event->setCategory($track);
+
+                if(isset($row['location']) && !empty($row['location'])){
+                    $location = $summit->getLocation(intval($row['location']));
+                    if(is_null($location))
+                        $location = $summit->getLocationByName(trim($row['location']));
+                    if(is_null($location))
+                        throw new EntityNotFoundException("location not found.");
+
+                    $event->setLocation($location);
+                }
+                if (isset($row['start_date']) && !empty($row['start_date']) && isset($row['end_date']) && !empty($row['end_date'])){
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitService::processEventData publishing event start_date %s end_date %s",
+                            $row['start_date'],
+                            $row['end_date']
+                        )
+                    );
+                    $start_date = DateTime::createFromFormat('Y-m-d H:i:s', $row['start_date'], $summit->getTimeZone());
+                    $end_date = DateTime::createFromFormat('Y-m-d H:i:s', $row['end_date'], $summit->getTimeZone());
+
+                    // set local time from UTC
+                    $event->setStartDate($start_date);
+                    $event->setEndDate($end_date);
+                }
+
+                // tags
+
+                if (isset($row['tags'])) {
+                    $tags = explode('|', $row['tags']);
+                    $event->clearTags();
+                    foreach ($tags as $val) {
+                        $tag = $this->tag_repository->getByTag($val);
+                        if ($tag == null) {
+                            Log::debug(sprintf("SummitService::processEventData creating tag %s", $val));
+                            $tag = new Tag($val);
+                        }
+                        $event->addTag($tag);
+                    }
+                }
+
+                // sponsors
+
+                $sponsors = ($event_type->isUseSponsors() && isset($row['sponsors'])) ?
+                    $row['sponsors'] : '';
+                $sponsors = explode('|', $sponsors);
+                if ($event_type->isAreSponsorsMandatory() && count($sponsors) == 0) {
+                    throw new ValidationException('sponsors are mandatory!');
+                }
+
+                if (isset($row['sponsors'])) {
+                    $event->clearSponsors();
+                    foreach ($sponsors as $sponsor_name) {
+                        $sponsor = $this->company_repository->getByName(trim($sponsor_name));
+                        if (is_null($sponsor)) throw new EntityNotFoundException(sprintf('sponsor %s', $sponsor_name));
+                        $event->addSponsor($sponsor);
+                    }
+                }
+
+                if ($event instanceof Presentation) {
+
+                    if (isset($row['to_record']))
+                        $event->setToRecord(boolval($row['to_record']));
+
+                    if (isset($row['attendees_expected_learnt']))
+                        $event->setAttendeesExpectedLearnt($row['attendees_expected_learnt']);
+
+                    if (isset($row['level']))
+                        $event->setLevel($row['level']);
+
+                    if (isset($row['problem_addressed']))
+                        $event->setProblemAddressed($row['problem_addressed']);
+
+                    // speakers
+
+                    if ($event_type instanceof PresentationType && $event_type->isUseSpeakers()) {
+
+                        $speakers = isset($row['speakers']) ?
+                            $row['speakers'] : '';
+                        $speakers = explode('|', $speakers);
+
+                        $speakers_names = [];
+                        if(isset($row["speakers_names"])){
+                            $speakers_names = isset($row['speakers_names']) ?
+                                $row['speakers_names'] : '';
+                            $speakers_names = explode('|', $speakers_names);
+                        }
+                        if(count($speakers_names) == 0 ){
+                            $speakers_names = $speakers;
+                        }
+
+                        if(count($speakers_names) != count($speakers))
+                            throw new ValidationException("count of speakers and speakers_name should match.");
+
+                        if ($event_type->isAreSpeakersMandatory() && count($speakers) == 0) {
+                            throw new ValidationException('speakers are mandatory!');
+                        }
+
+                        if (count($speakers) > 0) {
+                            $event->clearSpeakers();
+                            foreach ($speakers as $idx => $speaker_email) {
+                                $speaker_full_name = $speakers_names[$idx];
+                                $speaker_full_name_comps = explode(" ", $speaker_full_name, 2);
+                                $speaker_first_name = trim($speaker_full_name_comps[0]);
+                                $speaker_last_name = null;
+                                if(count($speaker_full_name_comps) > 1){
+                                    $speaker_last_name = trim($speaker_full_name_comps[1]);
+                                }
+                                if(empty($speaker_last_name))
+                                    $speaker_last_name = $speaker_first_name;
+                                Log::debug(sprintf("SummitService::processEventData processing speaker email %s speaker fullname %s", $speaker_email, $speaker_full_name));
+                                $speaker = $this->speaker_repository->getByEmail(trim($speaker_email));
+                                if (is_null($speaker)) {
+                                    Log::debug(sprintf("SummitService::processEventData speaker %s fname %s lname %s does not exists", $speaker_email, $speaker_first_name, $speaker_last_name));
+                                    $speaker = $this->speaker_service->addSpeaker([
+                                        'first_name' => $speaker_first_name,
+                                        'last_name' => $speaker_last_name,
+                                        'email' => $speaker_email
+                                    ], null, false);
+                                }
+
+                                $event->addSpeaker($speaker);
+                            }
+                        }
+                    }
+
+                    // moderator
+
+                    if ($event_type instanceof PresentationType && $event_type->isUseModerator()) {
+                        $moderator_email = isset($row['moderator']) ? trim($row['moderator']) : null;
+
+                        if ($event_type->isModeratorMandatory() && empty($moderator_email)) {
+                            throw new ValidationException('moderator is mandatory!');
+                        }
+                        Log::debug(sprintf("SummitService::processEventData processing moderator %s", $moderator_email));
+                        $moderator = $this->speaker_repository->getByEmail($moderator_email);
+                        if (is_null($moderator)) {
+                            Log::debug(sprintf("SummitService::processEventData moderator %s does not exists", $moderator_email));
+                            $moderator = $this->speaker_service->addSpeaker(['email' => $moderator_email], null, false);
+                        }
+
+                        $event->setModerator($moderator);
+                    }
+
+                    // selection plan
+
+                    if (isset($row['selection_plan'])) {
+                        $selection_plan = $summit->getSelectionPlanByName($row['selection_plan']);
+                        if (!is_null($selection_plan)) {
+                            Log::debug(sprintf("SummitService::processEventData processing selection plan %s", $row['selection_plan']));
+                            $track = $event->getCategory();
+                            if (!$selection_plan->hasTrack($track)) {
+                                throw new ValidationException(sprintf("Track %s (%s) does not belongs to Selection Plan %s (%s)", $track->getTitle(), $track->getId(), $selection_plan->getName(), $selection_plan->getId()));
+                            }
+                            $event->setSelectionPlan($selection_plan);
+                        }
+                    }
+                }
+
+                if (isset($row['is_published'])) {
+                    $is_published = boolval($row['is_published']);
+                    if ($is_published) {
+                        if (!isset($row['start_date'])) throw new ValidationException("start_date is required.");
+                        if (!isset($row['end_date'])) throw new ValidationException("end_date is required.");
+                        if(!$event->isPublished())
+                            $event->publish();
+                    }
+                    else{
+                        $event->unPublish();
+                    }
+                }
+
+                $summit->addEvent($event);
+
+                return $event;
+            });
+
+            if($send_speaker_email && $event instanceof Presentation){
+                foreach($event->getSpeakers() as $speaker)
+                    $this->tx_service->transaction(function () use ($speaker, $event) {
+                        $setPasswordLink = null;
+                        if($speaker instanceof PresentationSpeaker) {
+                            if(!$speaker->hasMember()) {
+                                Log::debug(sprintf("SummitService::processEventData speaker %s has not member set, checking at idp", $speaker->getEmail()));
+                                $user = $this->member_service->checkExternalUser($speaker->getEmail());
+                                if(is_null($user)){
+
+                                    // user does not exist at idp so we need to generate a registration request
+                                    // and create the magic links to complete the registration request
+                                    Log::debug(sprintf("SummitService::processEventData speaker %s user not found at idp, creating registration request", $speaker->getEmail()));
+                                    $userRegistrationRequest = $this->member_service->emitRegistrationRequest
+                                    (
+                                        $speaker->getEmail(),
+                                        $speaker->getFirstName(),
+                                        $speaker->getLastName()
+                                    );
+
+                                    $setPasswordLink = $userRegistrationRequest['set_password_link'];
+                                    $speaker_management_base_url = Config::get('cfp.base_url');
+
+                                    $setPasswordLink =  sprintf(
+                                        "%s?client_id=%s&redirect_uri=%s",
+                                        $setPasswordLink,
+                                        Config::get("cfp.client_id"),
+                                        sprintf("%s/app/profile", $speaker_management_base_url)
+                                    );
+                                }
+                            }
+                        }
+                        ImportEventSpeakerEmail::dispatch($event, $speaker, $setPasswordLink);
+                    });
+            }
         }
     }
 }

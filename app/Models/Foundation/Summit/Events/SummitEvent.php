@@ -648,17 +648,6 @@ class SummitEvent extends SilverstripeBaseModel
         if ($end_date < $start_date)
             throw new ValidationException('start datetime must be greather or equal than end datetime!');
 
-        if (!$summit->isEventInsideSummitDuration($this))
-            throw new ValidationException
-            (
-                sprintf
-                (
-                    'start/end datetime must be between summit start/end datetime! (%s - %s)',
-                    $summit->getLocalBeginDate()->format('Y-m-d H:i:s'),
-                    $summit->getLocalEndDate()->format('Y-m-d H:i:s')
-                )
-            );
-
         $this->published = true;
         $this->published_date = new DateTime();
     }

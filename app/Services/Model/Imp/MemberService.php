@@ -29,6 +29,7 @@ use models\main\IOrganizationRepository;
 use models\main\Member;
 use DateTime;
 use models\main\Organization;
+use models\summit\ISpeakerRegistrationRequestRepository;
 
 /**
  * Class MemberService
@@ -72,6 +73,11 @@ final class MemberService
     private $external_user_api;
 
     /**
+     * @var ISpeakerRegistrationRequestRepository
+     */
+    private $speaker_registration_request_repository;
+
+    /**
      * MemberService constructor.
      * @param IMemberRepository $member_repository
      * @param IOrganizationRepository $organization_repository
@@ -79,6 +85,7 @@ final class MemberService
      * @param IGroupRepository $group_repository
      * @param ICacheService $cache_service
      * @param IExternalUserApi $external_user_api
+     * @param ISpeakerRegistrationRequestRepository $speaker_registration_request_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -89,6 +96,7 @@ final class MemberService
         IGroupRepository $group_repository,
         ICacheService $cache_service,
         IExternalUserApi $external_user_api,
+        ISpeakerRegistrationRequestRepository $speaker_registration_request_repository,
         ITransactionService $tx_service
     )
     {
@@ -99,6 +107,7 @@ final class MemberService
         $this->group_repository = $group_repository;
         $this->cache_service = $cache_service;
         $this->external_user_api = $external_user_api;
+        $this->speaker_registration_request_repository = $speaker_registration_request_repository;
     }
 
     /**
@@ -319,6 +328,18 @@ final class MemberService
             }
 
             $this->synchronizeGroups($member, $user_data['groups']);
+            // check speaker registration request by email and no member set
+            Log::debug(sprintf("MemberService::registerExternalUserById trying to get former registration request by email %s", $email));
+            $request = $this->speaker_registration_request_repository->getByEmail($email);
+            if(!is_null($request)){
+                Log::debug(sprintf("MemberService::registerExternalUserById got former registration request by email %s", $email));
+                $speaker = $request->getSpeaker();
+                if(!is_null($speaker))
+                    if(!$speaker->hasMember()) {
+                        Log::debug(sprintf("MemberService::registerExternalUserById setting current member to speaker %s", $speaker->getId()));
+                        $speaker->setMember($member);
+                    }
+            }
             if($is_new)
                 Event::fire(new NewMember($member->getId()));
 

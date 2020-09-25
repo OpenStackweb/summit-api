@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Log;
 use Iterator;
 /**
  * Class CSVReader
@@ -45,12 +47,16 @@ final class CSVReader implements Iterator {
      */
     public static function buildFrom(string $content):CSVReader
     {
+        Log::debug(sprintf("CSVReader::buildFrom content %s", $content));
         $data    = str_getcsv($content,"\n"  );
+        Log::debug(sprintf("CSVReader::buildFrom data %s", json_encode($data)));
         $idx     = 0;
-        $header = [];
+        $header  = [];
+        $lines   = [];
         foreach($data as $row)
         {
             $row = str_getcsv($row, ",");
+            Log::debug(sprintf("CSVReader::buildFrom row %s", json_encode($row)));
             ++$idx;
             if($idx === 1) {
 

@@ -256,7 +256,12 @@ Route::group([
             Route::group(array('prefix' => 'events'), function () {
 
                 Route::get('',[ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@getEvents']);
-                Route::get('csv',[ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@getEventsCSV']);
+
+
+                Route::group(['prefix' => 'csv'], function () {
+                    Route::get('',[ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@getEventsCSV']);
+                    Route::post('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitEventsApiController@importEventData']);
+                });
                 // bulk actions
                 Route::delete('/publish', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@unPublishEvents']);
                 Route::put('/publish', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@updateAndPublishEvents']);

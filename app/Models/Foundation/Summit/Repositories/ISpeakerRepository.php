@@ -52,4 +52,10 @@ interface ISpeakerRepository extends IBaseRepository
      * @return PresentationSpeaker|null
      */
     public function getByFullName(string $fullname):?PresentationSpeaker;
+
+    /**
+     * @param string $email
+     * @return PresentationSpeaker|null
+     */
+    public function getByEmail(string $email):?PresentationSpeaker;
 }

@@ -375,7 +375,7 @@ final class MemberService
                     if($group->getCode() == IGroup::Administrators && in_array(IGroup::SuperAdmins, $groups))
                         continue;
                     // skipping this groups bc are managed by SS side
-                    if($group->getCode() == IGroup::FoundationMembers && in_array(IGroup::CommunityMembers, $groups))
+                    if($group->getCode() == IGroup::FoundationMembers || in_array(IGroup::CommunityMembers, $groups))
                         continue;
                     Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s marking group %s to remove (external) dues is not on member current groups", $member->getId(), $member->getEmail(), $group->getCode()));
                     $groups2Remove[] = $group;

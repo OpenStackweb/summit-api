@@ -2790,25 +2790,27 @@ final class SummitService extends AbstractService implements ISummitService
             * track_id (int) or track ( string track name)
          */
 
-        // validate format with col names
-        if (!in_array("title", $header))
-            throw new ValidationException('title column missing');
+        if(!in_array("id", $header)) {
+            // validate format with col names
+            if (!in_array("title", $header))
+                throw new ValidationException('title column missing');
 
-        if (!in_array("abstract", $header))
-            throw new ValidationException('abstract column missing');
+            if (!in_array("abstract", $header))
+                throw new ValidationException('abstract column missing');
 
-        $type_data_present = in_array("type_id", $header)||
-            in_array("type", $header);
+            $type_data_present = in_array("type_id", $header) ||
+                in_array("type", $header);
 
-        if (!$type_data_present) {
-            throw new ValidationException('type_id / type column missing');
-        }
+            if (!$type_data_present) {
+                throw new ValidationException('type_id / type column missing');
+            }
 
-        $track_present = in_array("track_id", $header)||
-            in_array("track", $header);
+            $track_present = in_array("track_id", $header) ||
+                in_array("track", $header);
 
-        if (!$track_present) {
-            throw new ValidationException('track_id / track column missing');
+            if (!$track_present) {
+                throw new ValidationException('track_id / track column missing');
+            }
         }
 
         ProcessEventDataImport::dispatch($summit->getId(), $filename, $payload);
@@ -2849,17 +2851,12 @@ final class SummitService extends AbstractService implements ISummitService
 
                 Log::debug(sprintf("SummitService::processEventData processing row %s", json_encode($row)));
 
-                $title = trim($row['title']);
-                $abstract = trim($row['abstract']);
                 // event type
                 $event_type = null;
                 if (isset($row['type_id']))
                     $event_type = $summit->getEventType(intval($row['type_id']));
                 if (isset($row['type']))
                     $event_type = $summit->getEventTypeByType($row['type']);
-
-                if (is_null($event_type))
-                    throw new EntityNotFoundException("event type not found.");
 
                 // track
                 $track = null;
@@ -2868,7 +2865,10 @@ final class SummitService extends AbstractService implements ISummitService
                 if (isset($row['track']))
                     $track = $summit->getPresentationCategoryByTitle($row['track']);
 
-                if (is_null($track))
+                if (is_null($event_type) && !isset($row['id']))
+                    throw new EntityNotFoundException("event type not found.");
+
+                if (is_null($track) && !isset($row['id']))
                     throw new EntityNotFoundException("track not found.");
 
                 $event = null;
@@ -2876,31 +2876,47 @@ final class SummitService extends AbstractService implements ISummitService
                     Log::debug(sprintf("SummitService::processEventData trying to get event %s", $row['id']));
                     $event = $summit->getEventById(intval($row['id']));
                 }
-                if(is_null($event))
+
+                if(is_null($event)) // new event
                     $event = SummitEventFactory::build($event_type, $summit);
 
                 // main data
 
-                $event->setTitle(html_entity_decode($title));
-                $event->setAbstract(html_entity_decode($abstract));
+                if(isset($row['title'])) {
+                    $title = trim($row['title']);
+                    Log::debug(sprintf("SummitService::processEventData setting title %s", $title));
+                    $event->setTitle(html_entity_decode($title));
+                }
+
+                if(isset($row['abstract'])) {
+                    $abstract = trim($row['abstract']);
+                    Log::debug(sprintf("SummitService::processEventData setting abstract %s", $abstract));
+                    $event->setAbstract(html_entity_decode($abstract));
+                }
+
                 if (isset($row['social_summary']))
                     $event->setSocialSummary($row['social_summary']);
 
                 if (isset($row['allow_feedback']))
                     $event->setAllowFeedBack(boolval($row['allow_feedback']));
 
-                $event->setType($event_type);
-                $event->setCategory($track);
+                if(!is_null($event_type))
+                    $event->setType($event_type);
+
+                if(!is_null($track))
+                    $event->setCategory($track);
 
                 if(isset($row['location']) && !empty($row['location'])){
                     $location = $summit->getLocation(intval($row['location']));
                     if(is_null($location))
                         $location = $summit->getLocationByName(trim($row['location']));
+
                     if(is_null($location))
                         throw new EntityNotFoundException("location not found.");
-
+                    Log::debug(sprintf("SummitService::processEventData setting location %s", $location));
                     $event->setLocation($location);
                 }
+
                 if (isset($row['start_date']) && !empty($row['start_date']) && isset($row['end_date']) && !empty($row['end_date'])){
                     Log::debug
                     (
@@ -2980,19 +2996,6 @@ final class SummitService extends AbstractService implements ISummitService
                                 $row['speakers_names'] : '';
                             $speakers_names = explode('|', $speakers_names);
                         }
-                        $speakers_companies = [];
-                        if(isset($row["speakers_companies"])){
-                            $speakers_companies = isset($row['speakers_companies']) ?
-                                $row['speakers_companies'] : '';
-                            $speakers_companies = explode('|', $speakers_companies);
-                        }
-
-                        $speakers_titles = [];
-                        if(isset($row["speakers_titles"])){
-                            $speakers_titles = isset($row['speakers_titles']) ?
-                                $row['speakers_titles'] : '';
-                            $speakers_titles = explode('|', $speakers_titles);
-                        }
 
                         if(count($speakers_names) == 0 ){
                             $speakers_names = $speakers;
@@ -3015,28 +3018,17 @@ final class SummitService extends AbstractService implements ISummitService
                                 if(count($speaker_full_name_comps) > 1){
                                     $speaker_last_name = trim($speaker_full_name_comps[1]);
                                 }
-
                                 if(empty($speaker_last_name))
                                     $speaker_last_name = $speaker_first_name;
                                 Log::debug(sprintf("SummitService::processEventData processing speaker email %s speaker fullname %s", $speaker_email, $speaker_full_name));
                                 $speaker = $this->speaker_repository->getByEmail(trim($speaker_email));
                                 if (is_null($speaker)) {
                                     Log::debug(sprintf("SummitService::processEventData speaker %s fname %s lname %s does not exists", $speaker_email, $speaker_first_name, $speaker_last_name));
-
-                                    $payload = [
+                                    $speaker = $this->speaker_service->addSpeaker([
                                         'first_name' => $speaker_first_name,
                                         'last_name' => $speaker_last_name,
                                         'email' => $speaker_email
-                                    ];
-
-                                    if(array_key_exists($idx, $speakers_companies)){
-                                        $payload['company'] = trim($speakers_companies[$idx]);
-                                    }
-                                    if(array_key_exists($idx, $speakers_titles)){
-                                        $payload['title'] = trim($speakers_titles[$idx]);
-                                    }
-
-                                    $speaker = $this->speaker_service->addSpeaker($payload, null, false);
+                                    ], null, false);
                                 }
 
                                 $event->addSpeaker($speaker);
@@ -3052,6 +3044,7 @@ final class SummitService extends AbstractService implements ISummitService
                         if ($event_type->isModeratorMandatory() && empty($moderator_email)) {
                             throw new ValidationException('moderator is mandatory!');
                         }
+
                         Log::debug(sprintf("SummitService::processEventData processing moderator %s", $moderator_email));
                         $moderator = $this->speaker_repository->getByEmail($moderator_email);
                         if (is_null($moderator)) {

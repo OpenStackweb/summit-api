@@ -391,7 +391,7 @@ final class MemberService
                         $member->removeFromGroup($group);
                     }
                 }
-                Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s removing from group %s", $member->getId(), $member->getEmail(), $externalGroup));
+                Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s removing from group %s", $member->getId(), $member->getEmail(), $externalGroup->getCode()));
                 $member->removeFromGroup($externalGroup);
             }
 

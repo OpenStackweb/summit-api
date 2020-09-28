@@ -3016,7 +3016,6 @@ final class SummitService extends AbstractService implements ISummitService
                         }
 
                         if (count($speakers) > 0) {
-                            $event->clearSpeakers();
                             foreach ($speakers as $idx => $speaker_email) {
                                 $speaker_full_name = $speakers_names[$idx];
                                 $speaker_full_name_comps = explode(" ", $speaker_full_name, 2);
@@ -3036,6 +3035,13 @@ final class SummitService extends AbstractService implements ISummitService
                                         'last_name' => $speaker_last_name,
                                         'email' => $speaker_email
                                     ], null, false);
+                                }
+                                else{
+                                    $this->speaker_service->updateSpeaker($speaker, [
+                                        'first_name' => $speaker_first_name,
+                                        'last_name' => $speaker_last_name,
+                                        'email' => $speaker_email
+                                    ]);
                                 }
 
                                 $event->addSpeaker($speaker);

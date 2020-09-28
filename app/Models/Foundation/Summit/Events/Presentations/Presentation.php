@@ -542,6 +542,10 @@ class Presentation extends SummitEvent
         }
     }
 
+    public function hasModerator():bool {
+        return $this->getModeratorId() > 0;
+    }
+
     /**
      * @return int
      */

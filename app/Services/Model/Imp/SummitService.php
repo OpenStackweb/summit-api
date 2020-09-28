@@ -2848,6 +2848,7 @@ final class SummitService extends AbstractService implements ISummitService
 
         foreach ($records as $idx => $row) {
             try {
+
                 $event = $this->tx_service->transaction(function () use ($summit, $row) {
 
                     Log::debug(sprintf("SummitService::processEventData processing row %s", json_encode($row)));
@@ -3051,21 +3052,24 @@ final class SummitService extends AbstractService implements ISummitService
 
                         // moderator
 
-                        if (!is_null($event_type) && $event_type instanceof PresentationType && $event_type->isUseModerator()) {
-                            $moderator_email = isset($row['moderator']) ? trim($row['moderator']) : null;
+                        if (!is_null($event_type) && $event_type instanceof PresentationType && $event_type->isUseModerator() && isset($row['moderator'])) {
+                            $moderator_email = trim($row['moderator']);
 
-                            if ($event_type->isModeratorMandatory() && empty($moderator_email)) {
+                            if ($event_type->isModeratorMandatory() && !$event->hasModerator() && empty($moderator_email)) {
                                 throw new ValidationException('moderator is mandatory!');
                             }
 
-                            Log::debug(sprintf("SummitService::processEventData processing moderator %s", $moderator_email));
-                            $moderator = $this->speaker_repository->getByEmail($moderator_email);
-                            if (is_null($moderator)) {
-                                Log::debug(sprintf("SummitService::processEventData moderator %s does not exists", $moderator_email));
-                                $moderator = $this->speaker_service->addSpeaker(['email' => $moderator_email], null, false);
-                            }
+                            if(!empty($moderator_email)) {
 
-                            $event->setModerator($moderator);
+                                Log::debug(sprintf("SummitService::processEventData processing moderator %s", $moderator_email));
+                                $moderator = $this->speaker_repository->getByEmail($moderator_email);
+                                if (is_null($moderator)) {
+                                    Log::debug(sprintf("SummitService::processEventData moderator %s does not exists", $moderator_email));
+                                    $moderator = $this->speaker_service->addSpeaker(['email' => $moderator_email], null, false);
+                                }
+
+                                $event->setModerator($moderator);
+                            }
                         }
 
                         // selection plan

@@ -2875,6 +2875,12 @@ final class SummitService extends AbstractService implements ISummitService
                 if(isset($row['id']) && !empty($row['id'])){
                     Log::debug(sprintf("SummitService::processEventData trying to get event %s", $row['id']));
                     $event = $summit->getEventById(intval($row['id']));
+                    if(is_null($event_type)){
+                        $event_type = $event->getType();
+                    }
+                    if(is_null($track)){
+                        $track = $event->getCategory();
+                    }
                 }
 
                 if(is_null($event)) // new event
@@ -2951,20 +2957,21 @@ final class SummitService extends AbstractService implements ISummitService
                 }
 
                 // sponsors
+                if(!is_null($event_type)) {
+                    $sponsors = ($event_type->isUseSponsors() && isset($row['sponsors'])) ?
+                        $row['sponsors'] : '';
+                    $sponsors = explode('|', $sponsors);
+                    if ($event_type->isAreSponsorsMandatory() && count($sponsors) == 0) {
+                        throw new ValidationException('sponsors are mandatory!');
+                    }
 
-                $sponsors = ($event_type->isUseSponsors() && isset($row['sponsors'])) ?
-                    $row['sponsors'] : '';
-                $sponsors = explode('|', $sponsors);
-                if ($event_type->isAreSponsorsMandatory() && count($sponsors) == 0) {
-                    throw new ValidationException('sponsors are mandatory!');
-                }
-
-                if (isset($row['sponsors'])) {
-                    $event->clearSponsors();
-                    foreach ($sponsors as $sponsor_name) {
-                        $sponsor = $this->company_repository->getByName(trim($sponsor_name));
-                        if (is_null($sponsor)) throw new EntityNotFoundException(sprintf('sponsor %s', $sponsor_name));
-                        $event->addSponsor($sponsor);
+                    if (isset($row['sponsors'])) {
+                        $event->clearSponsors();
+                        foreach ($sponsors as $sponsor_name) {
+                            $sponsor = $this->company_repository->getByName(trim($sponsor_name));
+                            if (is_null($sponsor)) throw new EntityNotFoundException(sprintf('sponsor %s', $sponsor_name));
+                            $event->addSponsor($sponsor);
+                        }
                     }
                 }
 
@@ -2984,7 +2991,7 @@ final class SummitService extends AbstractService implements ISummitService
 
                     // speakers
 
-                    if ($event_type instanceof PresentationType && $event_type->isUseSpeakers()) {
+                    if (!is_null($event_type) && $event_type instanceof PresentationType && $event_type->isUseSpeakers()) {
 
                         $speakers = isset($row['speakers']) ?
                             $row['speakers'] : '';
@@ -3038,7 +3045,7 @@ final class SummitService extends AbstractService implements ISummitService
 
                     // moderator
 
-                    if ($event_type instanceof PresentationType && $event_type->isUseModerator()) {
+                    if(!is_null($event_type) && $event_type instanceof PresentationType && $event_type->isUseModerator()) {
                         $moderator_email = isset($row['moderator']) ? trim($row['moderator']) : null;
 
                         if ($event_type->isModeratorMandatory() && empty($moderator_email)) {

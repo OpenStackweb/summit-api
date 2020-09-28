@@ -38,6 +38,12 @@ class PresentationMediaUpload extends PresentationMaterial
     private $filename;
 
     /**
+     * @ORM\Column(name="LegacyPathFormat", type="boolean")
+     * @var boolean
+     */
+    private $legacy_path_format;
+
+    /**
      * @ORM\ManyToOne(targetEntity="models\summit\SummitMediaUploadType")
      * @ORM\JoinColumn(name="SummitMediaUploadTypeID", referencedColumnName="ID")
      * @var SummitMediaUploadType
@@ -113,8 +119,19 @@ class PresentationMediaUpload extends PresentationMaterial
      */
     public function getPath(string $storageType = IStorageTypesConstants::PublicType): string {
         $mountingFolder = Config::get('mediaupload.mounting_folder');
-        $format = $storageType == IStorageTypesConstants::PublicType ? '%s/%s/%s': '%s/'.IStorageTypesConstants::PrivateType.'/%s/%s';
-        return sprintf($format, $mountingFolder, $this->getPresentation()->getSummit()->getId(), $this->getPresentation()->getId());
+        $summit = $this->getPresentation()->getSummit();
+        $presentation = $this->getPresentation();
+            $format = $storageType == IStorageTypesConstants::PublicType ? '%s/%s/%s': '%s/'.IStorageTypesConstants::PrivateType.'/%s/%s';
+        if($this->legacy_path_format)
+            return sprintf($format, $mountingFolder, $summit->getId(), $presentation->getId());
+        $presentation->generateSlug();
+        return sprintf($format, $mountingFolder, sprintf("%s-%s",$summit->getId(), filter_var($summit->getRawSlug(), FILTER_SANITIZE_ENCODED)), sprintf("%s-%s", $presentation->getId(), filter_var($presentation->getSlug(), FILTER_SANITIZE_ENCODED)));
+    }
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->legacy_path_format = false;
     }
 
 }

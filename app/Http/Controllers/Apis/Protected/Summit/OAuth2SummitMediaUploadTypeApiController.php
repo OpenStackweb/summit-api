@@ -110,6 +110,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
             'name' => 'required|string|max:255',
             'description' => 'sometimes|string|max:255',
             'is_mandatory' => 'required|boolean',
+            // in KB
             'max_size' => 'required|int|megabyte_aligned',
             'private_storage_type' => 'required|string|in:'.implode(",", IStorageTypesConstants::ValidTypes),
             'public_storage_type' => 'required|string|in:'.implode(",", IStorageTypesConstants::ValidTypes),

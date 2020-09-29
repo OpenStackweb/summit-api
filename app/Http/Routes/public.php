@@ -28,6 +28,11 @@ Route::group([
     ]
 ], function () {
 
+    // files
+    Route::group(['prefix' => 'files'], function () {
+        Route::post('upload','OAuth2ChunkedFilesApiController@uploadFile' );
+    });
+
     // members
     Route::group(['prefix' => 'members'], function () {
         Route::get('', 'OAuth2MembersApiController@getAll');

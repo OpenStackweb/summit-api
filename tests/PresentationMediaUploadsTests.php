@@ -81,11 +81,12 @@ class PresentationMediaUploadsTests
         $headers = [
 
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "multipart/form-data; boundary=----WebKitFormBoundaryBkSYnzBIiFtZu4pb"
+         //   "CONTENT_TYPE" => "multipart/form-data; boundary=----WebKitFormBoundaryBkSYnzBIiFtZu4pb"
         ];
 
         $payload = [
-            'media_upload_type_id' => self::$media_upload_type->getId()
+            'media_upload_type_id' => self::$media_upload_type->getId(),
+            'filepath' => 'upload/video-mp4/2020-10-41/OpenDev 2020- Hardware Automation_ab8dbdb02b52fea11b7e3e5e80c63086.mp4'
         ];
 
         $response = $this->action
@@ -96,7 +97,7 @@ class PresentationMediaUploadsTests
             $payload,
             [],
             [
-                'file' => UploadedFile::fake()->image('slide.png')
+                //'file' => UploadedFile::fake()->image('slide.png')
             ],
             $headers,
             json_encode($payload)

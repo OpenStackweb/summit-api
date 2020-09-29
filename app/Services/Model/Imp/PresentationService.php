@@ -13,6 +13,7 @@
  **/
 use App\Events\PresentationMaterialDeleted;
 use App\Events\PresentationMaterialUpdated;
+use App\Http\Utils\FileUploadInfo;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
@@ -29,6 +30,7 @@ use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackAnswer
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\IFolderRepository;
@@ -47,6 +49,8 @@ use libs\utils\ITransactionService;
 use models\summit\Summit;
 use Illuminate\Http\Request as LaravelRequest;
 use App\Services\Model\IFolderService;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+
 /**
  * Class PresentationService
  * @package services\model
@@ -997,78 +1001,67 @@ final class PresentationService
         ) {
 
             Log::debug(sprintf("PresentationService::addMediaUploadTo summit %s presentation %s", $summit->getId(), $presentation_id));
+
             $presentation = $this->presentation_repository->getById($presentation_id);
 
             if (is_null($presentation) || !$presentation instanceof Presentation)
                 throw new EntityNotFoundException('Presentation not found.');
 
-            $hasFile = $request->hasFile('file');
-
-            if(!$hasFile){
-                throw new ValidationException("You must provide a file.");
-            }
-
             $media_upload_type_id = intval($payload['media_upload_type_id']);
 
-            $media_upload_type = $summit->getMediaUploadTypeById($media_upload_type_id);
+            $mediaUploadType = $summit->getMediaUploadTypeById($media_upload_type_id);
 
-            if(is_null($media_upload_type))
+            if(is_null($mediaUploadType))
                 throw new EntityNotFoundException(sprintf("Media Upload Type %s not found.", $media_upload_type_id));
 
-            if(!$media_upload_type->isPresentationTypeAllowed($presentation->getType())){
+            if(!$mediaUploadType->isPresentationTypeAllowed($presentation->getType())){
                 throw new ValidationException(sprintf("Presentation Type %s is not allowed on Media Upload %s", $presentation->getTypeId(), $media_upload_type_id));
             }
 
-            $file = $request->file('file');
-            // get in bytes should be converted to KB
-            $size = $file->getSize();
-            if($size == 0)
-                throw new ValidationException("File size is zero.");
-            $size = $size/1024;
-            $fileName = $file->getClientOriginalName();
-            $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
-
-            // normalize fileName
-            $fileName = FileNameSanitizer::sanitize($fileName);
-
-            if($media_upload_type->getMaxSize() < $size){
-                throw new ValidationException(sprintf("Max Size is %s KB.", $media_upload_type->getMaxSize()));
-            }
-
-            if(!$media_upload_type->isValidExtension($fileExt)){
-                throw new ValidationException(sprintf("File Extension %s is not valid", $fileExt));
-            }
-
-            if($presentation->hasMediaUploadByType($media_upload_type)){
+            if($presentation->hasMediaUploadByType($mediaUploadType)){
                 throw new ValidationException
                 (
                     sprintf
                     (
                         "Presentation %s already has a media upload for that type %s.",
-                        $presentation_id, $media_upload_type->getName()
+                        $presentation_id, $mediaUploadType->getName()
                     )
                 );
+            }
+
+            $fileInfo = FileUploadInfo::build($request, $payload);
+
+            if(is_null($fileInfo)){
+                throw new ValidationException("You must provide a file.");
+            }
+
+            if($mediaUploadType->getMaxSize() < $fileInfo->getSize()){
+                throw new ValidationException(sprintf("Max Size is %s MB (%s).", $mediaUploadType->getMaxSizeMB(), $fileInfo->getSize()/1024));
+            }
+
+            if(!$mediaUploadType->isValidExtension($fileInfo->getFileExt())){
+                throw new ValidationException(sprintf("File Extension %s is not valid (%s).", $fileInfo->getFileExt(), $mediaUploadType->getValidExtensions()));
             }
 
             $mediaUpload = PresentationMediaUploadFactory::build(array_merge(
                 $payload,
                 [
-                    'media_upload_type' => $media_upload_type,
+                    'media_upload_type' => $mediaUploadType,
                     'presentation' => $presentation
                 ]
             ));
 
-            $strategy = FileUploadStrategyFactory::build($media_upload_type->getPrivateStorageType());
+            $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
             if(!is_null($strategy)){
-                $strategy->save($file, $mediaUpload->getPath(IStorageTypesConstants::PrivateType), $fileName);
+                $strategy->save($fileInfo->getFile(), $mediaUpload->getPath(IStorageTypesConstants::PrivateType), $fileInfo->getFileName());
             }
 
-            $strategy = FileUploadStrategyFactory::build($media_upload_type->getPublicStorageType());
+            $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
             if(!is_null($strategy)){
-                $strategy->save($file, $mediaUpload->getPath(IStorageTypesConstants::PublicType), $fileName);
+                $strategy->save($fileInfo->getFile(), $mediaUpload->getPath(IStorageTypesConstants::PublicType), $fileInfo->getFileName());
             }
 
-            $mediaUpload->setFilename($fileName);
+            $mediaUpload->setFilename($fileInfo->getFileName());
             $presentation->addMediaUpload($mediaUpload);
 
             if(!$presentation->isCompleted()){
@@ -1085,6 +1078,8 @@ final class PresentationService
                     $presentation->setProgress(Presentation::PHASE_UPLOADS);
                 }
             }
+            Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s  deleting original file %s", $presentation_id, $fileInfo->getFileName()));
+            $fileInfo->delete();
 
             return $mediaUpload;
         });
@@ -1116,6 +1111,8 @@ final class PresentationService
             $payload
         ) {
 
+            Log::debug(sprintf("PresentationService::updateMediaUploadFrom summit %s presentation %s", $summit->getId(), $presentation_id));
+
             $presentation = $this->presentation_repository->getById($presentation_id);
 
             if (is_null($presentation) || !$presentation instanceof Presentation)
@@ -1126,42 +1123,41 @@ final class PresentationService
             if (is_null($mediaUpload))
                 throw new EntityNotFoundException('Presentation Media Upload not found.');
 
-            $hasFile = $request->hasFile('file');
 
-            if($hasFile) {
-                $file = $request->file('file');
-                // get in bytes should be converted to KB
-                $size = $file->getSize();
-                if ($size == 0)
-                    throw new ValidationException("File size is zero.");
-                $size = $size / 1024;
-                $fileName = $file->getClientOriginalName();
-                $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
-                // normalize fileName
-                $fileName = FileNameSanitizer::sanitize($fileName);
+            $fileInfo = FileUploadInfo::build($request, $payload);
 
+            if(!is_null($fileInfo)) {
+                // process file
                 $mediaUploadType = $mediaUpload->getMediaUploadType();
                 if (is_null($mediaUploadType))
                     throw new ValidationException("Media Upload Type is not set.");
 
-                if ($mediaUploadType->getMaxSize() < $size) {
-                    throw new ValidationException(sprintf("Max Size is %s KB.", $mediaUploadType->getMaxSize()));
+                $fileInfo = FileUploadInfo::build($request, $payload);
+                if(is_null($fileInfo)){
+                    throw new ValidationException("You must provide a file.");
                 }
 
-                if (!$mediaUploadType->isValidExtension($fileExt)) {
-                    throw new ValidationException(sprintf("File Extension %s is not valid", $fileExt));
+                if($mediaUploadType->getMaxSize() < $fileInfo->getSize()){
+                    throw new ValidationException(sprintf("Max Size is %s MB (%s).", $mediaUploadType->getMaxSizeMB(), $fileInfo->getSize()/1024));
+                }
+
+                if(!$mediaUploadType->isValidExtension($fileInfo->getFileExt())){
+                    throw new ValidationException(sprintf("File Extension %s is not valid (%s).", $fileInfo->getFileExt(), $mediaUploadType->getValidExtensions()));
                 }
 
                 $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
                 if (!is_null($strategy)) {
-                    $strategy->save($file, $mediaUpload->getPath(IStorageTypesConstants::PrivateType), $fileName);
+                    $strategy->save($fileInfo->getFile(), $mediaUpload->getPath(IStorageTypesConstants::PrivateType), $fileInfo->getFileName());
                 }
 
                 $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
                 if (!is_null($strategy)) {
-                    $strategy->save($file, $mediaUpload->getPath(IStorageTypesConstants::PublicType), $fileName);
+                    $strategy->save($fileInfo->getFile(), $mediaUpload->getPath(IStorageTypesConstants::PublicType), $fileInfo->getFileName());
                 }
-                $payload['file_name'] = $fileName;
+
+                $payload['file_name'] = $fileInfo->getFileName();
+
+                $fileInfo->delete();
             }
 
             return PresentationMediaUploadFactory::populate($mediaUpload, $payload);
@@ -1179,6 +1175,8 @@ final class PresentationService
             $presentation_id,
             $media_upload_id
         ) {
+            Log::debug(sprintf("PresentationService::deleteMediaUpload summit %s presentation %s", $summit->getId(), $presentation_id));
+
             $presentation = $this->presentation_repository->getById($presentation_id);
 
             if (is_null($presentation) || !$presentation instanceof Presentation)

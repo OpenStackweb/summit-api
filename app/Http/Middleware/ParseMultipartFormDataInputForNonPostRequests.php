@@ -30,7 +30,7 @@ final class ParseMultipartFormDataInputForNonPostRequests
     */
     public function handle($request, Closure $next)
     {
-        if ($request->method() == 'POST' OR $request->method() == 'GET') {
+        if ($request->method() == 'POST' || $request->method() == 'GET') {
             return $next($request);
         }
 

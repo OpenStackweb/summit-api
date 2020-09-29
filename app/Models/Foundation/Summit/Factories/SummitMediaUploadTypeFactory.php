@@ -39,7 +39,7 @@ final class SummitMediaUploadTypeFactory
         if(isset($data['description']))
             $type->setDescription(trim($data['description']));
 
-        if(isset($data['max_size']))
+        if(isset($data['max_size'])) // in KB
             $type->setMaxSize(intval($data['max_size']));
 
         if(isset($data['private_storage_type']))

@@ -55,6 +55,7 @@ class SummitMediaUploadType extends SilverstripeBaseModel
     /**
      * @ORM\Column(name="MaxSize", type="integer")
      * @var int
+     * in KB
      */
     private $max_size;
 
@@ -174,6 +175,14 @@ class SummitMediaUploadType extends SilverstripeBaseModel
     }
 
     /**
+     * @return int
+     */
+    public function getMaxSizeMB(): int
+    {
+        return $this->max_size/1024;
+    }
+
+    /**
      * @param int $max_size
      */
     public function setMaxSize(int $max_size): void
@@ -266,6 +275,10 @@ class SummitMediaUploadType extends SilverstripeBaseModel
      */
     public function isValidExtension(string $ext):bool {
         return in_array(strtoupper($ext), explode('|', $this->type->getAllowedExtensions()));
+    }
+
+    public function getValidExtensions(){
+        return $this->type->getAllowedExtensions();
     }
 
     public function hasStorageSet():bool {

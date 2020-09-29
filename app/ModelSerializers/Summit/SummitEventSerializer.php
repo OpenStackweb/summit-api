@@ -43,8 +43,6 @@ class SummitEventSerializer extends SilverStripeSerializer
         'RSVPWaitCount'             => 'rsvp_wait_count:json_int',
         'ExternalRSVP'              => 'rsvp_external:json_boolean',
         'CategoryId'                => 'track_id:json_int',
-        'StreamingUrl'              => 'streaming_url:json_string',
-        'EtherpadLink'              => 'etherpad_link:json_string',
         'MeetingUrl'                => 'meeting_url:json_string',
         'TotalAttendanceCount'      => 'attendance_count:json_int',
         'CurrentAttendanceCount'    => 'current_attendance_count:json_int',
@@ -141,6 +139,11 @@ class SummitEventSerializer extends SilverStripeSerializer
                 $attendance[] = SerializerRegistry::getInstance()->getSerializer($a)->serialize();
             }
             $values['attendance'] = $attendance;
+        }
+
+        if($event->hasAccess($this->resource_server_context->getCurrentUser())){
+            $values['streaming_url'] = $event->getStreamingUrl();
+            $values['etherpad_link'] = $event->getEtherpadLink();
         }
 
         if (!empty($expand)) {

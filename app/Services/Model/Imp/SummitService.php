@@ -2877,6 +2877,9 @@ final class SummitService extends AbstractService implements ISummitService
                     if (isset($row['id']) && !empty($row['id'])) {
                         Log::debug(sprintf("SummitService::processEventData trying to get event %s", $row['id']));
                         $event = $summit->getEventById(intval($row['id']));
+                        if(is_null($event)){
+                            throw new EntityNotFoundException(sprintf("event %s not found.", $row['id']));
+                        }
                         if (is_null($event_type)) {
                             $event_type = $event->getType();
                         }
@@ -2915,6 +2918,7 @@ final class SummitService extends AbstractService implements ISummitService
                         $event->setCategory($track);
 
                     if (isset($row['location']) && !empty($row['location'])) {
+                        Log::debug(sprintf("SummitService::processEventData processing location %s", $row['location']));
                         $location = $summit->getLocation(intval($row['location']));
                         if (is_null($location))
                             $location = $summit->getLocationByName(trim($row['location']));
@@ -2946,6 +2950,7 @@ final class SummitService extends AbstractService implements ISummitService
                     // tags
 
                     if (isset($row['tags'])) {
+                        Log::debug(sprintf("SummitService::processEventData processing tags %s", $row['tags']));
                         $tags = explode('|', $row['tags']);
                         $event->clearTags();
                         foreach ($tags as $val) {
@@ -2978,7 +2983,7 @@ final class SummitService extends AbstractService implements ISummitService
                     }
 
                     if ($event instanceof Presentation) {
-
+                        Log::debug(sprintf("SummitService::processEventData event %s is a presentation", $event->getId()));
                         if (isset($row['to_record']))
                             $event->setToRecord(boolval($row['to_record']));
 
@@ -2997,13 +3002,31 @@ final class SummitService extends AbstractService implements ISummitService
 
                             $speakers = isset($row['speakers']) ?
                                 $row['speakers'] : '';
+                            Log::debug(sprintf("SummitService::processEventData event %s processing speakers %s", $event->getId(), $row['speakers']));
                             $speakers = explode('|', $speakers);
 
                             $speakers_names = [];
                             if (isset($row["speakers_names"])) {
                                 $speakers_names = isset($row['speakers_names']) ?
                                     $row['speakers_names'] : '';
+                                Log::debug(sprintf("SummitService::processEventData event %s processing speakers_names %s", $event->getId(), $row['speakers_names']));
                                 $speakers_names = explode('|', $speakers_names);
+                            }
+
+                            $speakers_companies = [];
+                            if (isset($row["speakers_companies"])) {
+                                $speakers_companies = isset($row['speakers_companies']) ?
+                                    $row['speakers_companies'] : '';
+                                Log::debug(sprintf("SummitService::processEventData event %s processing speakers_companies %s", $event->getId(), $row['speakers_companies']));
+                                $speakers_companies = explode('|', $speakers_companies);
+                            }
+
+                            $speakers_titles = [];
+                            if (isset($row["speakers_titles"])) {
+                                $speakers_titles = isset($row['speakers_titles']) ?
+                                    $row['speakers_titles'] : '';
+                                Log::debug(sprintf("SummitService::processEventData event %s processing speakers_titles %s", $event->getId(), $row['speakers_titles']));
+                                $speakers_titles = explode('|', $speakers_titles);
                             }
 
                             if (count($speakers_names) == 0) {
@@ -3032,19 +3055,42 @@ final class SummitService extends AbstractService implements ISummitService
                                     $speaker = $this->speaker_repository->getByEmail(trim($speaker_email));
                                     if (is_null($speaker)) {
                                         Log::debug(sprintf("SummitService::processEventData speaker %s fname %s lname %s does not exists", $speaker_email, $speaker_first_name, $speaker_last_name));
-                                        $speaker = $this->speaker_service->addSpeaker([
+                                        $payload = [
                                             'first_name' => $speaker_first_name,
                                             'last_name' => $speaker_last_name,
                                             'email' => $speaker_email
-                                        ], null, false);
-                                    } else {
-                                        $this->speaker_service->updateSpeaker($speaker, [
-                                            'first_name' => $speaker_first_name,
-                                            'last_name' => $speaker_last_name,
-                                            'email' => $speaker_email
-                                        ]);
-                                    }
+                                        ];
 
+                                        if(array_key_exists($idx ,$speakers_companies)){
+                                            $payload['company'] = $speakers_companies[$idx];
+                                        }
+
+                                        if(array_key_exists($idx, $speakers_titles)){
+                                            $payload['title'] = $speakers_titles[$idx];
+                                        }
+
+                                        Log::debug(sprintf("SummitService::processEventData adding speaker %s", json_encode($payload)));
+                                        $speaker = $this->speaker_service->addSpeaker($payload, null, false);
+                                    } else {
+                                        Log::debug(sprintf("SummitService::processEventData speaker %s already exists, updating ", $speaker_email));
+                                        $payload = [
+                                            'first_name' => $speaker_first_name,
+                                            'last_name' => $speaker_last_name,
+                                            'email' => $speaker_email
+                                        ];
+
+                                        if(array_key_exists($idx ,$speakers_companies)){
+                                            $payload['company'] = $speakers_companies[$idx];
+                                        }
+
+                                        if(array_key_exists($idx, $speakers_titles)){
+                                            $payload['title'] = $speakers_titles[$idx];
+                                        }
+
+                                        Log::debug(sprintf("SummitService::processEventData updating speaker %s", json_encode($payload)));
+                                        $this->speaker_service->updateSpeaker($speaker, $payload);
+                                    }
+                                    Log::debug(sprintf("SummitService::processEventData adding speaker %s to event %s", $speaker->getEmail(), $event->getTitle()));
                                     $event->addSpeaker($speaker);
                                 }
                             }

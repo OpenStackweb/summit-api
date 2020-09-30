@@ -12,7 +12,10 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\ICompanyMemberLevel;
 use Doctrine\Common\Collections\ArrayCollection;
+use Illuminate\Support\Facades\Log;
+use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 
@@ -27,38 +30,119 @@ class Company extends SilverstripeBaseModel
 {
     /**
      * @ORM\Column(name="Name", type="string")
+     * @var string
      */
     private $name;
 
     /**
-     * @ORM\Column(name="Description", type="string")
+     * @ORM\Column(name="URL", type="string")
+     * @var string
      */
-    private $description;
+    private $url;
 
     /**
-     * @ORM\Column(name="Industry", type="string")
+     * @ORM\Column(name="DisplayOnSite", type="boolean")
+     * @var bool
      */
-    private $industry;
+    private $display_on_site;
+
+    /**
+     * @ORM\Column(name="Featured", type="boolean")
+     * @var bool
+     */
+    private $featured;
 
     /**
      * @ORM\Column(name="City", type="string")
+     * @var string
      */
     private $city;
 
     /**
      * @ORM\Column(name="State", type="string")
+     * @var string
      */
     private $state;
 
     /**
      * @ORM\Column(name="Country", type="string")
+     * @var string
      */
     private $country;
 
     /**
-     * @ORM\Column(name="URL", type="string")
+     * @ORM\Column(name="Description", type="string")
+     * @var string
      */
-    private $url;
+    private $description;
+
+    /**
+     * @ORM\Column(name="Industry", type="string")
+     * @var string
+     */
+    private $industry;
+
+    /**
+     * @ORM\Column(name="Products", type="string")
+     * @var string
+     */
+    private $products;
+
+    /**
+     * @ORM\Column(name="Contributions", type="string")
+     * @var string
+     */
+    private $contributions;
+
+    /**
+     * @ORM\Column(name="ContactEmail", type="string")
+     * @var string
+     */
+    private $contact_email;
+
+    /**
+     * @ORM\Column(name="MemberLevel", type="string")
+     * @var string
+     */
+    private $member_level;
+
+    /**
+     * @ORM\Column(name="AdminEmail", type="string")
+     * @var string
+     */
+    private $admin_email;
+
+    /**
+     * @ORM\Column(name="Color", type="string")
+     * @var string
+     */
+    private $color;
+
+    /**
+     * @ORM\Column(name="Overview", type="string")
+     * @var string
+     */
+    private $overview;
+
+    /**
+     * @ORM\Column(name="Commitment", type="string")
+     * @var string
+     */
+    private $commitment;
+
+    /**
+     * @ORM\Column(name="CommitmentAuthor", type="string")
+     * @var string
+     */
+    private $commitment_author;
+
+    /**
+     * @ORM\Column(name="isDeleted", type="string")
+     * @var bool
+     */
+    private $is_deleted;
+
+    // relations
 
     /**
      * @ORM\ManyToMany(targetEntity="models\summit\SummitEvent", mappedBy="sponsors")
@@ -66,14 +150,14 @@ class Company extends SilverstripeBaseModel
     private $sponsorships;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File")
+     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist", "remove"})
      * @ORM\JoinColumn(name="LogoID", referencedColumnName="ID")
      * @var File
      */
     private $logo;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\File")
+     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist", "remove"})
      * @ORM\JoinColumn(name="BigLogoID", referencedColumnName="ID")
      * @var File
      */
@@ -86,6 +170,9 @@ class Company extends SilverstripeBaseModel
     {
         parent::__construct();
         $this->sponsorships = new ArrayCollection();
+        $this->featured = false;
+        $this->display_on_site = false;
+        $this->is_deleted = false;
     }
 
     /**
@@ -216,6 +303,10 @@ class Company extends SilverstripeBaseModel
         $this->logo = $logo;
     }
 
+    public function clearLogo():void{
+        $this->logo = null;
+    }
+
     /**
      * @return File
      */
@@ -230,6 +321,10 @@ class Company extends SilverstripeBaseModel
     public function setBigLogo(File $big_logo): void
     {
         $this->big_logo = $big_logo;
+    }
+
+    public function clearBigLogo():void{
+        $this->big_logo = null;
     }
 
     /**
@@ -279,9 +374,15 @@ class Company extends SilverstripeBaseModel
      */
     public function getLogoUrl(): ?string
     {
+
         $logoUrl = null;
-        if ($this->hasLogo() && $logo = $this->getLogo()) {
-            $logoUrl = $logo->getUrl();
+        try {
+            if ($this->hasLogo() && $logo = $this->getLogo()) {
+                $logoUrl = $logo->getUrl();
+            }
+        }
+        catch(\Exception $ex){
+            Log::warning($ex);
         }
         return $logoUrl;
     }
@@ -292,9 +393,212 @@ class Company extends SilverstripeBaseModel
     public function getBigLogoUrl(): ?string
     {
         $logoUrl = null;
-        if ($this->hasBigLogo() && $logo = $this->getBigLogo()) {
-            $logoUrl = $logo->getUrl();
+        try {
+            if ($this->hasBigLogo() && $logo = $this->getBigLogo()) {
+                $logoUrl = $logo->getUrl();
+            }
+        }
+        catch(\Exception $ex){
+            Log::warning($ex);
         }
         return $logoUrl;
     }
+
+    /**
+     * @return bool
+     */
+    public function isDisplayOnSite(): bool
+    {
+        return $this->display_on_site;
+    }
+
+    /**
+     * @param bool $display_on_site
+     */
+    public function setDisplayOnSite(bool $display_on_site): void
+    {
+        $this->display_on_site = $display_on_site;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFeatured(): bool
+    {
+        return $this->featured;
+    }
+
+    /**
+     * @param bool $featured
+     */
+    public function setFeatured(bool $featured): void
+    {
+        $this->featured = $featured;
+    }
+
+    /**
+     * @return string
+     */
+    public function getProducts(): ?string
+    {
+        return $this->products;
+    }
+
+    /**
+     * @param string $products
+     */
+    public function setProducts(string $products): void
+    {
+        $this->products = $products;
+    }
+
+    /**
+     * @return string
+     */
+    public function getContributions(): ?string
+    {
+        return $this->contributions;
+    }
+
+    /**
+     * @param string $contributions
+     */
+    public function setContributions(string $contributions): void
+    {
+        $this->contributions = $contributions;
+    }
+
+    /**
+     * @return string
+     */
+    public function getContactEmail(): ?string
+    {
+        return $this->contact_email;
+    }
+
+    /**
+     * @param string $contact_email
+     */
+    public function setContactEmail(string $contact_email): void
+    {
+        $this->contact_email = $contact_email;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMemberLevel(): ?string
+    {
+        return $this->member_level;
+    }
+
+    /**
+     * @param string $member_level
+     * @throws ValidationException
+     */
+    public function setMemberLevel(string $member_level): void
+    {
+        if(!in_array($member_level, ICompanyMemberLevel::ValidLevels))
+            throw new ValidationException(sprintf("level %s is not valid", $member_level));
+
+        $this->member_level = $member_level;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAdminEmail(): ?string
+    {
+        return $this->admin_email;
+    }
+
+    /**
+     * @param string $admin_email
+     */
+    public function setAdminEmail(string $admin_email): void
+    {
+        $this->admin_email = $admin_email;
+    }
+
+    /**
+     * @return string
+     */
+    public function getColor(): ?string
+    {
+        return $this->color;
+    }
+
+    /**
+     * @param string $color
+     */
+    public function setColor(string $color): void
+    {
+        $this->color = $color;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOverview(): ?string
+    {
+        return $this->overview;
+    }
+
+    /**
+     * @param string $overview
+     */
+    public function setOverview(string $overview): void
+    {
+        $this->overview = $overview;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCommitment(): ?string
+    {
+        return $this->commitment;
+    }
+
+    /**
+     * @param string $commitment
+     */
+    public function setCommitment(string $commitment): void
+    {
+        $this->commitment = $commitment;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCommitmentAuthor(): ?string
+    {
+        return $this->commitment_author;
+    }
+
+    /**
+     * @param string $commitment_author
+     */
+    public function setCommitmentAuthor(string $commitment_author): void
+    {
+        $this->commitment_author = $commitment_author;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isIsDeleted(): bool
+    {
+        return $this->is_deleted;
+    }
+
+    /**
+     * @param bool $is_deleted
+     */
+    public function setIsDeleted(bool $is_deleted): void
+    {
+        $this->is_deleted = $is_deleted;
+    }
+
+
 }

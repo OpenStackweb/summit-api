@@ -11,9 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use Illuminate\Http\UploadedFile;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Company;
+use models\main\File;
 /**
  * Interface ICompanyService
  * @package App\Services\Model
@@ -42,4 +44,36 @@ interface ICompanyService
      * @throws EntityNotFoundException
      */
     public function deleteCompany(int $company_id):void;
+
+    /**
+     * @param int $company_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     * @return File
+     */
+    public function addCompanyLogo(int $company_id,  UploadedFile $file,  $max_file_size = 10485760):File;
+
+    /**
+     * @throws EntityNotFoundException
+     * @param int $company_id
+     */
+    public function deleteCompanyLogo(int $company_id):void;
+
+    /**
+     * @param int $company_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     * @return File
+     */
+    public function addCompanyBigLogo(int $company_id,  UploadedFile $file,  $max_file_size = 10485760):File;
+
+    /**
+     * @throws EntityNotFoundException
+     * @param int $company_id
+     */
+    public function deleteCompanyBigLogo(int $company_id):void;
 }

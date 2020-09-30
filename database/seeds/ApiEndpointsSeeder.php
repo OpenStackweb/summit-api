@@ -19,6 +19,7 @@ use App\Security\SummitScopes;
 use App\Security\OrganizationScopes;
 use App\Security\MemberScopes;
 use App\Models\Foundation\Main\IGroup;
+use App\Security\CompanyScopes;
 /**
  * Class ApiEndpointsSeeder
  */
@@ -5493,7 +5494,6 @@ class ApiEndpointsSeeder extends Seeder
 
     private function seedCompaniesEndpoints(){
         $current_realm = Config::get('app.scope_base_realm');
-
         $this->seedApiEndpoints('companies', [
                 [
                     'name' => 'get-companies',
@@ -5502,23 +5502,102 @@ class ApiEndpointsSeeder extends Seeder
                     'scopes' => [
                         sprintf(SummitScopes::ReadAllSummitData, $current_realm),
                         sprintf(SummitScopes::ReadSummitData, $current_realm),
-                        sprintf('%s/companies/read', $current_realm)
+                        sprintf(CompanyScopes::Read, $current_realm)
                     ],
                 ],
                 [
-                    'name' => 'add-companies',
+                    'name' => 'add-company',
                     'route' => '/api/v1/companies',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
-                        sprintf('%s/companies/write', $current_realm)
+                        sprintf(CompanyScopes::Write, $current_realm)
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
                         IGroup::Administrators,
-                        IGroup::SummitAdministrators,
                     ]
-                ]
+                ],
+                [
+                    'name' => 'update-company',
+                    'route' => '/api/v1/companies/{id}',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        sprintf(CompanyScopes::Write, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'delete-company',
+                    'route' => '/api/v1/companies/{id}',
+                    'http_method' => 'DELETE',
+                    'scopes' => [
+                        sprintf(CompanyScopes::Write, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'get-company',
+                    'route' => '/api/v1/companies/{id}',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(CompanyScopes::Read, $current_realm)
+                    ]
+                ],
+                [
+                    'name' => 'add-company-logo',
+                    'route' => '/api/v1/companies/{id}/logo',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        sprintf(CompanyScopes::Write, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'delete-company-logo',
+                    'route' => '/api/v1/companies/{id}/logo',
+                    'http_method' => 'DELETE',
+                    'scopes' => [
+                        sprintf(CompanyScopes::Write, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'add-company-big-logo',
+                    'route' => '/api/v1/companies/{id}/logo/big',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        sprintf(CompanyScopes::Write, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'delete-company-big-logo',
+                    'route' => '/api/v1/companies/{id}/logo/big',
+                    'http_method' => 'DELETE',
+                    'scopes' => [
+                        sprintf(CompanyScopes::Write, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+
             ]
         );
     }

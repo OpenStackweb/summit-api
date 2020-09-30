@@ -42,6 +42,7 @@ class OAuth2CompaniesApiTest extends ProtectedApiTest
     }
 
     public function testAddCompany(){
+
         $data = [
             'name' => str_random(16).'_company',
             'description' => str_random(16).'_description',
@@ -68,6 +69,10 @@ class OAuth2CompaniesApiTest extends ProtectedApiTest
         $company = json_decode($content);
         $this->assertTrue(!is_null($company));
         return $company;
+    }
+
+    public function testAddCompanyBigLogo(){
+
     }
 
 }

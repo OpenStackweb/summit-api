@@ -68,9 +68,23 @@ Route::group([
     });
 
     // companies
+
     Route::group(['prefix'=>'companies'], function(){
         Route::get('', 'OAuth2CompaniesApiController@getAllCompanies');
-        Route::post('', 'OAuth2CompaniesApiController@add');
+        Route::post('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2CompaniesApiController@add']);
+        Route::group(['prefix'=>'{id}'], function(){
+            Route::get('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2CompaniesApiController@get']);
+            Route::put('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2CompaniesApiController@update']);
+            Route::delete('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2CompaniesApiController@delete']);
+            Route::group(['prefix'=>'logo'], function(){
+                Route::post('', [  'middleware' => 'auth.user', 'uses' => 'OAuth2CompaniesApiController@addCompanyLogo']);
+                Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2CompaniesApiController@deleteCompanyLogo']);
+                Route::group(['prefix'=>'big'], function(){
+                    Route::post('', [  'middleware' => 'auth.user', 'uses' => 'OAuth2CompaniesApiController@addCompanyBigLogo']);
+                    Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2CompaniesApiController@deleteCompanyBigLogo']);
+                });
+            });
+        });
     });
 
     // organizations

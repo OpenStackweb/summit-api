@@ -38,6 +38,7 @@ final class CompanySerializer extends SilverStripeSerializer
         'CommitmentAuthor' => 'commitment_author:json_string',
         'LogoUrl' => 'logo:json_url',
         'BigLogoUrl' => 'big_logo:json_url',
+        'Color' => 'color:json_string',
     ];
 
     /**
@@ -52,15 +53,6 @@ final class CompanySerializer extends SilverStripeSerializer
         $values = parent::serialize($expand, $fields, $relations, $params);
         $company = $this->object;
         if(!$company instanceof Company) return $values;
-
-        $color  = isset($values['color']) ? $values['color']:'';
-        if(empty($color))
-            $color = 'f0f0ee';
-        if (strpos($color,'#') === false) {
-            $color = '#'.$color;
-        }
-        $values['color'] = $color;
-
         return $values;
     }
 }

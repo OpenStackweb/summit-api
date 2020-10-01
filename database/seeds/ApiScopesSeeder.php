@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use App\Security\SummitScopes;
 use App\Security\OrganizationScopes;
 use App\Security\MemberScopes;
+use App\Security\CompanyScopes;
 /**
  * Class ApiScopesSeeder
  */
@@ -475,12 +476,12 @@ final class ApiScopesSeeder extends Seeder
 
         $scopes = [
             [
-                'name'              => sprintf('%s/companies/read', $current_realm),
+                'name'              => sprintf(CompanyScopes::Read, $current_realm),
                 'short_description' => 'Get Companies Data',
                 'description'       => 'Grants read only access for Companies Data',
             ],
             [
-                'name'              => sprintf('%s/companies/write', $current_realm),
+                'name'              => sprintf(CompanyScopes::Write, $current_realm),
                 'short_description' => 'Write Companies Data',
                 'description'       => 'Grants write only access for Companies Data',
             ],

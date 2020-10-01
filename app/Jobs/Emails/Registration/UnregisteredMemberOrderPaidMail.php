@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use models\summit\SummitOrder;
 /**
  * Class UnregisteredMemberOrderPaidMail
@@ -36,7 +37,9 @@ class UnregisteredMemberOrderPaidMail extends RegisteredMemberOrderPaidMail
      */
     public function __construct(SummitOrder $order, string $set_password_link)
     {
+        Log::debug("UnregisteredMemberOrderPaidMail::__construct");
         parent::__construct($order);
+        Log::debug(sprintf("UnregisteredMemberOrderPaidMail::__construct %s", $this->template_identifier));
         // need to add the dashboard client id and return url
         $base_url = Config::get("registration.dashboard_base_url", null);
         if(empty($base_url))

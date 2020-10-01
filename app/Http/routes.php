@@ -73,7 +73,7 @@ Route::group([
         Route::get('', 'OAuth2CompaniesApiController@getAllCompanies');
         Route::post('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2CompaniesApiController@add']);
         Route::group(['prefix'=>'{id}'], function(){
-            Route::get('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2CompaniesApiController@get']);
+            Route::get('',  [ 'uses' => 'OAuth2CompaniesApiController@get']);
             Route::put('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2CompaniesApiController@update']);
             Route::delete('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2CompaniesApiController@delete']);
             Route::group(['prefix'=>'logo'], function(){

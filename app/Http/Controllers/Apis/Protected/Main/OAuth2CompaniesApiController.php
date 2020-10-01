@@ -205,4 +205,62 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
         }
     }
 
+    /**
+     * @param LaravelRequest $request
+     * @param $speaker_id
+     * @return mixed
+     */
+    public function addCompanyBigLogo(LaravelRequest $request, $company_id)
+    {
+        try {
+
+            $file = $request->file('file');
+            if (is_null($file)) {
+                return $this->error412(array('file param not set!'));
+            }
+
+            $logo = $this->service->addCompanyLogo($company_id, $file);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($logo)->serialize());
+
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412(array($ex2->getMessage()));
+        } catch (\HTTP401UnauthorizedException $ex3) {
+            Log::warning($ex3);
+            return $this->error401();
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $company_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function deleteCompanyBigLogo($company_id){
+        try {
+
+            $this->service->deleteCompanyLogo($company_id);
+
+            return $this->deleted();
+
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412(array($ex2->getMessage()));
+        } catch (\HTTP401UnauthorizedException $ex3) {
+            Log::warning($ex3);
+            return $this->error401();
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
 }

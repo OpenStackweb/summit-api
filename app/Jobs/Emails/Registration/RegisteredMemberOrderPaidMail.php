@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use models\summit\SummitOrder;
 use models\summit\SummitRegistrationDiscountCode;
 /**
@@ -110,7 +111,7 @@ class RegisteredMemberOrderPaidMail extends AbstractEmailJob
         $payload['tickets'] = $tickets;
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
-
+        Log::debug(sprintf("RegisteredMemberOrderPaidMail::__construct template_identifier %s", $template_identifier));
         parent::__construct($payload, $template_identifier, $owner_email);
     }
 

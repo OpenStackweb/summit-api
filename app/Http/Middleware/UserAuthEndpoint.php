@@ -15,6 +15,7 @@
 use App\Models\ResourceServer\ApiEndpoint;
 use App\Models\ResourceServer\IApiEndpointRepository;
 use Closure;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use libs\utils\RequestUtils;
 use models\main\IMemberRepository;
@@ -77,6 +78,9 @@ final class UserAuthEndpoint
         $required_groups = $endpoint->getAuthzGroups();
 
         foreach ($required_groups as $required_group) {
+            Log::debug(sprintf("UserAuthEndpoint::handle route %s method %s member %s (%s) required group %s",
+                $route, $method, $current_member->getId(), $current_member->getEmail(), $required_group->getSlug()));
+
             if($current_member->isOnGroup($required_group->getSlug()))
                 return $next($request);
         }

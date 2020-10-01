@@ -132,6 +132,7 @@ abstract class AbstractSerializer implements IModelSerializer
     const FloatType           = 'json_float';
     const ObfuscatedEmailType = 'json_obfuscated_email';
     const UrlType             = 'json_url';
+    const ColorType           = 'json_color';
 
     const ValidTypes = [
         self::BoolType,
@@ -141,6 +142,7 @@ abstract class AbstractSerializer implements IModelSerializer
         self::FloatType,
         self::ObfuscatedEmailType,
         self::UrlType,
+        self::ColorType,
     ];
 
     /**
@@ -220,6 +222,11 @@ abstract class AbstractSerializer implements IModelSerializer
                         {
                             $value = JsonUtils::toJsonBoolean($value);
                         }
+                            break;
+                        case 'json_color':
+                            {
+                                $value = JsonUtils::toJsonColor($value);
+                            }
                             break;
                         case 'json_int':
                         {

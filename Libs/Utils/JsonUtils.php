@@ -71,6 +71,20 @@ abstract class JsonUtils
 
     /**
      * @param string $value
+     * @return bool
+     */
+    public static function toJsonColor($value)
+    {
+        if(empty($value))
+            $value = 'f0f0ee';
+        if (strpos($value,'#') === false) {
+            $value = '#'.$value;
+        }
+        return $value;
+    }
+
+    /**
+     * @param string $value
      * @return int|null
      */
     public static function toJsonInt($value)

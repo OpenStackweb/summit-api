@@ -58,4 +58,12 @@ interface ISpeakerRepository extends IBaseRepository
      * @return PresentationSpeaker|null
      */
     public function getByEmail(string $email):?PresentationSpeaker;
+
+
+    /**
+     * @param int $speaker_id
+     * @param int $summit_id
+     * @return bool
+     */
+    public function speakerBelongsToSummitSchedule(int $speaker_id, int $summit_id):bool;
 }

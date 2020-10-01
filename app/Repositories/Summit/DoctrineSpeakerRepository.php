@@ -13,6 +13,7 @@
  **/
 use Doctrine\ORM\Query\ResultSetMapping;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
+use Illuminate\Support\Facades\Log;
 use models\main\Member;
 use models\summit\ISpeakerRepository;
 use models\summit\PresentationSpeaker;
@@ -801,5 +802,51 @@ SQL;
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    /**
+     * @param int $speaker_id
+     * @param int $summit_id
+     * @return bool
+     */
+    public function speakerBelongsToSummitSchedule(int $speaker_id, int $summit_id):bool {
+
+        try {
+            $sql = <<<SQL
+	SELECT COUNT(E.ID) FROM SummitEvent E
+		INNER JOIN Presentation P ON E.ID = P.ID
+		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
+		WHERE E.SummitID = :summit_id AND PS.PresentationSpeakerID = :speaker_id AND E.Published = 1
+SQL;
+
+            $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
+            $stmt->execute([
+                'summit_id' => $summit_id,
+                'speaker_id' => $speaker_id
+            ]);
+
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            if (count($res) > 0 && intval($res[0]) > 0) return true;
+
+            $sql = <<<SQL
+	SELECT COUNT(E.ID) FROM SummitEvent E
+		INNER JOIN Presentation P ON E.ID = P.ID
+		WHERE E.SummitID = :summit_id AND P.ModeratorID = :speaker_id AND E.Published = 1
+SQL;
+
+            $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
+            $stmt->execute([
+                'summit_id' => $summit_id,
+                'speaker_id' => $speaker_id
+            ]);
+
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            if (count($res) > 0 && intval($res[0]) > 0) return true;
+        }
+        catch (\Exception $ex){
+            Log::warning($ex);
+        }
+
+        return false;
     }
 }

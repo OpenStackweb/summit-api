@@ -514,4 +514,20 @@ interface ISummitService
      * @throws EntityNotFoundException
      */
     public function processEventData(int $summit_id, string $filename, bool $send_speaker_email):void;
+
+    /**
+     * @param int $summit_id
+     * @param int $speaker_id
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function addFeaturedSpeaker(int $summit_id, int $speaker_id):void;
+
+    /**
+     * @param int $summit_id
+     * @param int $speaker_id
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function removeFeaturedSpeaker(int $summit_id, int $speaker_id):void;
 }

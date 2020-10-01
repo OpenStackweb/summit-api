@@ -5827,6 +5827,33 @@ class ApiEndpointsSeeder extends Seeder
                         sprintf(SummitScopes::ReadBadgeScan, $current_realm)
                     ],
                 ],
+                // featured speakers
+                [
+                    'name' => 'add-featured-speaker',
+                    'route' => '/api/v1/summits/{id}/featured-speakers/{speaker_id}',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
+                    'name' => 'delete-featured-speaker',
+                    'route' => '/api/v1/summits/{id}/featured-speakers/{speaker_id}',
+                    'http_method' => 'DELETE',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
             ]
         );
     }

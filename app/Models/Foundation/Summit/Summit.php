@@ -569,7 +569,7 @@ class Summit extends SilverstripeBaseModel
     private $summit_documents;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategory")
+     * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategory", cascade={"persist"})
      * @ORM\JoinTable(name="Summit_ExcludedCategoriesForAcceptedPresentations",
      *      joinColumns={@ORM\JoinColumn(name="SummitID", referencedColumnName="ID")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="PresentationCategoryID", referencedColumnName="ID")}
@@ -577,6 +577,17 @@ class Summit extends SilverstripeBaseModel
      * @var PresentationCategory[]
      */
     private $excluded_categories_for_accepted_presentations;
+
+
+    /**
+     * @ORM\ManyToMany(targetEntity="models\summit\PresentationSpeaker")
+     * @ORM\JoinTable(name="Summit_FeaturedSpeakers",
+     *      joinColumns={@ORM\JoinColumn(name="SummitID", referencedColumnName="ID")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="PresentationSpeakerID", referencedColumnName="ID")}
+     * )
+     * @var PresentationSpeaker[]
+     */
+    private $featured_speakers;
 
     /**
      * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategory")
@@ -951,6 +962,7 @@ class Summit extends SilverstripeBaseModel
         $this->registration_invitations = new ArrayCollection();
         $this->permission_groups = new ArrayCollection();
         $this->media_upload_types = new ArrayCollection();
+        $this->featured_speakers = new ArrayCollection();
     }
 
     /**
@@ -4912,6 +4924,33 @@ SQL;
     public function setSupportEmail(?string $support_email): void
     {
         $this->support_email = $support_email;
+    }
+
+    /**
+     * @return ArrayCollection|PresentationSpeaker[]
+     */
+    public function getFeaturesSpeakers(){
+        return $this->featured_speakers;
+    }
+
+    public function clearFeaturedSpeakers(){
+        $this->featured_speakers->clear();
+    }
+
+    /**
+     * @param PresentationSpeaker $speaker
+     */
+    public function addFeaturedSpeaker(PresentationSpeaker $speaker){
+        if($this->featured_speakers->contains($speaker)) return;
+        $this->featured_speakers->add($speaker);
+    }
+
+    /**
+     * @param PresentationSpeaker $speaker
+     */
+    public function removeFeaturedSpeaker(PresentationSpeaker $speaker){
+        if(!$this->featured_speakers->contains($speaker)) return;
+        $this->featured_speakers->removeElement($speaker);
     }
 
 }

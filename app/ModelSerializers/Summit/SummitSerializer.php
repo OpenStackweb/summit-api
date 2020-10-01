@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Security\SummitScopes;
 use Illuminate\Support\Facades\Config;
@@ -19,7 +18,6 @@ use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\IPaymentConstants;
 use models\summit\Summit;
 use DateTime;
-
 /**
  * Class SummitSerializer
  * @package ModelSerializers
@@ -114,6 +112,7 @@ class SummitSerializer extends SilverStripeSerializer
         'payment_profiles',
         'email_flows_events',
         'summit_documents',
+        'featured_speakers',
     ];
 
     /**
@@ -297,6 +296,15 @@ class SummitSerializer extends SilverStripeSerializer
             $values['email_flows_events'] = $email_flows_events;
         }
 
+        // featured_speakers
+        if (in_array('featured_speakers', $relations)) {
+            $featured_speakers = [];
+            foreach ($summit->getFeaturesSpeakers() as $speaker) {
+                $featured_speakers[] = $speaker->getId();
+            }
+            $values['featured_speakers'] = $featured_speakers;
+        }
+
         if (!empty($expand)) {
 
             foreach (explode(',', $expand) as $relation) {
@@ -309,6 +317,16 @@ class SummitSerializer extends SilverStripeSerializer
                                 $event_types[] = SerializerRegistry::getInstance()->getSerializer($event_type)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
                             $values['event_types'] = $event_types;
+                        }
+                        break;
+
+                    case 'featured_speakers':
+                        {
+                            $featured_speakers = [];
+                            foreach ($summit->getFeaturesSpeakers() as $speaker) {
+                                $featured_speakers[] = SerializerRegistry::getInstance()->getSerializer($speaker)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            }
+                            $values['featured_speakers'] = $featured_speakers;
                         }
                         break;
                     case 'tracks':

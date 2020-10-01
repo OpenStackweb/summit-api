@@ -1137,6 +1137,15 @@ Route::group([
                     Route::post('clone/{to_summit_id}', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitMediaUploadTypeApiController@cloneMediaUploadTypes']);
                 });
             });
+
+            // featured speakers
+
+            Route::group(['prefix' => 'featured-speakers'], function(){
+                Route::group(['prefix' => '{speaker_id}'], function() {
+                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@addFeatureSpeaker']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@removeFeatureSpeaker']);
+                });
+            });
         });
     });
 

@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
@@ -37,8 +36,6 @@ use utils\FilterElement;
 use utils\Order;
 use utils\OrderElement;
 use Illuminate\Http\Request as LaravelRequest;
-
-
 /**
  * Class OAuth2SummitApiController
  * @package App\Http\Controllers
@@ -697,6 +694,60 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
 
             $this->summit_service->deleteSummitLogo($summit_id);
+
+            return $this->deleted();
+
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412(array($ex2->getMessage()));
+        } catch (\HTTP401UnauthorizedException $ex3) {
+            Log::warning($ex3);
+            return $this->error401();
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $speaker_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function addFeatureSpeaker($summit_id, $speaker_id){
+        try {
+
+            $this->summit_service->addFeaturedSpeaker(intval($summit_id), intval($speaker_id));
+
+            return $this->updated();
+
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412(array($ex2->getMessage()));
+        } catch (\HTTP401UnauthorizedException $ex3) {
+            Log::warning($ex3);
+            return $this->error401();
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $speaker_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function removeFeatureSpeaker($summit_id, $speaker_id){
+        try {
+
+            $this->summit_service->removeFeaturedSpeaker(intval($summit_id), intval($speaker_id));
 
             return $this->deleted();
 

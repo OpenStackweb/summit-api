@@ -3191,4 +3191,45 @@ final class SummitService extends AbstractService implements ISummitService
             }
         }
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function addFeaturedSpeaker(int $summit_id, int $speaker_id): void
+    {
+        $this->tx_service->transaction(function() use($summit_id, $speaker_id){
+            $summit = $this->summit_repository->getById($summit_id);
+            if(is_null($summit) || !$summit instanceof Summit)
+                throw new EntityNotFoundException("summit not found");
+
+            $speaker = $this->speaker_repository->getById($speaker_id);
+            if(is_null($speaker) || !$speaker instanceof PresentationSpeaker)
+                throw new EntityNotFoundException("speaker not found");
+
+            // validate it
+            if(!$this->speaker_repository->speakerBelongsToSummitSchedule($speaker_id, $summit_id)){
+                throw new ValidationException(sprintf("Speaker %s does not belongs to Summit %s schedule.", $speaker_id, $summit_id));
+            }
+
+            $summit->addFeaturedSpeaker($speaker);
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function removeFeaturedSpeaker(int $summit_id, int $speaker_id): void
+    {
+        $this->tx_service->transaction(function() use($summit_id, $speaker_id){
+            $summit = $this->summit_repository->getById($summit_id);
+            if(is_null($summit) || !$summit instanceof Summit)
+                throw new EntityNotFoundException("summit not found");
+
+            $speaker = $this->speaker_repository->getById($speaker_id);
+            if(is_null($speaker) || !$speaker instanceof PresentationSpeaker)
+                throw new EntityNotFoundException("speaker not found");
+
+            $summit->removeFeaturedSpeaker($speaker);
+        });
+    }
 }

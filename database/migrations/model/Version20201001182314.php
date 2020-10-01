@@ -15,11 +15,12 @@ use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
 use LaravelDoctrine\Migrations\Schema\Builder;
 use LaravelDoctrine\Migrations\Schema\Table;
+
 /**
- * Class Version20200928132323
+ * Class Version20201001182314
  * @package Database\Migrations\Model
  */
-class Version20200928132323 extends AbstractMigration
+class Version20201001182314 extends AbstractMigration
 {
     /**
      * @param Schema $schema
@@ -27,11 +28,23 @@ class Version20200928132323 extends AbstractMigration
     public function up(Schema $schema)
     {
         $builder = new Builder($schema);
-        if($schema->hasTable("PresentationMediaUpload") && !$builder->hasColumn("PresentationMediaUpload","LegacyPathFormat") ) {
-            $builder->table('PresentationMediaUpload', function (Table $table) {
-                $table->boolean('LegacyPathFormat')->setDefault(true)->setNotnull(true);
+        if (!$builder->hasTable("Summit_FeaturedSpeakers")) {
+
+            $builder->create("Summit_FeaturedSpeakers", function (Table $table) {
+                $table->integer("ID", true, false);
+                $table->primary("ID");
+
+                $table->integer("SummitID", false, false)->setNotnull(false)->setDefault('NULL');
+                $table->index("SummitID", "SummitID");
+                //$table->foreign("Summit", "SummitID", "ID", ["onDelete" => "CASCADE"]);
+
+                $table->integer("PresentationSpeakerID", false, false)->setNotnull(false)->setDefault('NULL');
+                $table->index("PresentationSpeakerID", "PresentationSpeakerID");
+                //$table->foreign("PresentationSpeaker", "PresentationSpeakerID", "ID", ["onDelete" => "CASCADE"]);
+                $table->unique(['SummitID', 'PresentationSpeakerID']);
             });
         }
+
     }
 
     /**
@@ -39,6 +52,7 @@ class Version20200928132323 extends AbstractMigration
      */
     public function down(Schema $schema)
     {
-
+        $builder = new Builder($schema);
+        $builder->dropIfExists("Summit_FeaturedSpeakers");
     }
 }

@@ -1692,9 +1692,13 @@ SQL;
         return $stmt->fetchAll(\PDO::FETCH_COLUMN);
     }
 
-    public function hasAllowedSummits(): bool
+    /**
+     * @param Summit $summit
+     * @return bool
+     */
+    public function hasPaidTicketOnSummit(Summit $summit): bool
     {
-        return count($this->getAllAllowedSummitsIds()) > 0;
+        return count($this->getPaidSummitTicketsIds($summit)) > 0;
     }
 
     /**
@@ -1756,6 +1760,13 @@ SQL;
         return $stmt->fetchAll(\PDO::FETCH_COLUMN);
     }
 
+    /**
+     * @param Summit $summit
+     * @return bool
+     */
+    public function hasSummitAccess(Summit $summit):bool{
+        return count($this->getPaidSummitTicketsIds($summit)) > 0;
+    }
 
     /**
      * @param Summit $summit

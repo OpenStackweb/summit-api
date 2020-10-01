@@ -1248,4 +1248,15 @@ class SummitEvent extends SilverstripeBaseModel
     public function clearImage():void{
         $this->image = null;
     }
+
+    /**
+     * @param Member|null $member
+     * @return bool
+     */
+    public function hasAccess(?Member $member):bool{
+        if(is_null($member)) return false;
+        if($member->isAdmin()) return true;
+        if($member->hasPaidTicketOnSummit($this->summit)) return true;
+        return false;
+    }
 }

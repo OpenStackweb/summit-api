@@ -219,7 +219,7 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
                 return $this->error412(array('file param not set!'));
             }
 
-            $logo = $this->service->addCompanyLogo($company_id, $file);
+            $logo = $this->service->addCompanyBigLogo($company_id, $file);
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($logo)->serialize());
 
@@ -245,7 +245,7 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
     public function deleteCompanyBigLogo($company_id){
         try {
 
-            $this->service->deleteCompanyLogo($company_id);
+            $this->service->deleteCompanyBigLogo($company_id);
 
             return $this->deleted();
 

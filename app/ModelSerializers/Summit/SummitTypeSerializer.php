@@ -21,7 +21,7 @@ class SummitTypeSerializer extends SilverStripeSerializer
     protected static $array_mappings = array
     (
         'Title' => 'name:json_string',
-        'Color' => 'color:json_string',
+        'Color' => 'color:json_color',
         'Type'  => 'type:json_string',
     );
 
@@ -35,13 +35,6 @@ class SummitTypeSerializer extends SilverStripeSerializer
     public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
     {
         $values = parent::serialize($expand, $fields, $relations, $params);
-        $color  = isset($values['color']) ? $values['color']:'';
-        if(empty($color))
-            $color = 'f0f0ee';
-        if (strpos($color,'#') === false) {
-            $color = '#'.$color;
-        }
-        $values['color'] = $color;
         return $values;
     }
 }

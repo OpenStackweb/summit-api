@@ -25,7 +25,7 @@ class SummitEventTypeSerializer extends SilverStripeSerializer
     protected static $array_mappings = [
         'Type'                 => 'name:json_string',
         'ClassName'            => 'class_name:json_string',
-        'Color'                => 'color:json_string',
+        'Color'                => 'color:json_color',
         'BlackoutTimes'        => 'black_out_times:json_boolean',
         'UseSponsors'          => 'use_sponsors:json_boolean',
         'AreSponsorsMandatory' => 'are_sponsors_mandatory:json_boolean',
@@ -46,13 +46,6 @@ class SummitEventTypeSerializer extends SilverStripeSerializer
         $event_type = $this->object;
         if (!$event_type instanceof SummitEventType) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
-        $color  = isset($values['color']) ? $values['color']:'';
-        if(empty($color))
-            $color = 'f0f0ee';
-        if (strpos($color,'#') === false) {
-            $color = '#'.$color;
-        }
-        $values['color'] = $color;
 
         $summit_documents  = [];
         foreach ($event_type->getSummitDocuments() as $document) {

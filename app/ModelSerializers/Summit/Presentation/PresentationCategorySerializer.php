@@ -33,7 +33,7 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
             'VotingVisible' => 'voting_visible:json_boolean',
             'ChairVisible' => 'chair_visible:json_boolean',
             'SummitId' => 'summit_id:json_int',
-            'Color' => 'color:json_string',
+            'Color' => 'color:json_color',
         ];
 
     /**
@@ -52,15 +52,6 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
         $allowed_tag = [];
         $extra_questions = [];
         $summit = $category->getSummit();
-
-        $color  = isset($values['color']) ? $values['color']:'';
-        if(empty($color))
-            $color = 'f0f0ee';
-
-        if (strpos($color,'#') === false) {
-            $color = '#'.$color;
-        }
-        $values['color'] = $color;
 
         foreach ($category->getGroups() as $group) {
             $groups[] = intval($group->getId());

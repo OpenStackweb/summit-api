@@ -20,7 +20,7 @@ class PresentationCategoryGroupSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
         'Name'        => 'name:json_string',
-        'Color'       => 'color:json_string',
+        'Color'       => 'color:json_color',
         'Description' => 'description:json_string',
         'ClassName'   => 'class_name:json_string',
         'SummitId'    => 'summit_id:json_int',
@@ -38,14 +38,6 @@ class PresentationCategoryGroupSerializer extends SilverStripeSerializer
         $values = parent::serialize($expand, $fields, $relations, $params);
         $track_group = $this->object;
         if(!$track_group instanceof PresentationCategoryGroup) return $values;
-
-        $color  = isset($values['color']) ? $values['color']:'';
-        if(empty($color))
-            $color = 'f0f0ee';
-        if (strpos($color,'#') === false) {
-            $color = '#'.$color;
-        }
-        $values['color'] = $color;
 
         $categories = [];
 

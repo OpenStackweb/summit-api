@@ -38,7 +38,7 @@ final class CompanySerializer extends SilverStripeSerializer
         'CommitmentAuthor' => 'commitment_author:json_string',
         'LogoUrl' => 'logo:json_url',
         'BigLogoUrl' => 'big_logo:json_url',
-        'Color' => 'color:json_string',
+        'Color' => 'color:json_color',
     ];
 
     /**

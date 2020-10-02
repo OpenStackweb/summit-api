@@ -216,4 +216,25 @@ final class DoctrineTest extends TestCase
 
         $con2->rollBack();
     }
+
+    public function testRegistrationSpeaker(){
+        $speaker_repo = EntityManager::getRepository(\models\summit\PresentationSpeaker::class);
+        $speaker = new \models\summit\PresentationSpeaker();
+        $registration_request = new \models\summit\SpeakerRegistrationRequest();
+        $speaker->setTitle("test title");
+        $speaker->setBio("this is the bio");
+        $speaker->setFirstName("this is the name");
+        $speaker->setLastName("this is the last name");
+        $registration_request->setEmail("test2@test.com");
+
+        $speaker->setRegistrationRequest($registration_request);
+
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $em->persist($speaker);
+        $em->flush();
+
+        $speaker_repo->delete($speaker);
+
+        $em->flush();
+    }
 }

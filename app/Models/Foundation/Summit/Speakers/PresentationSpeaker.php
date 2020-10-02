@@ -128,7 +128,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
     private $phone_number;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SpeakerRegistrationRequest", cascade={"persist"}), orphanRemoval=true
+     * @ORM\ManyToOne(targetEntity="SpeakerRegistrationRequest", cascade={"persist","remove"}), orphanRemoval=true
      * @ORM\JoinColumn(name="RegistrationRequestID", referencedColumnName="ID")
      * @var SpeakerRegistrationRequest
      */

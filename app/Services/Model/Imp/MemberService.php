@@ -331,7 +331,7 @@ final class MemberService
             // check speaker registration request by email and no member set
             Log::debug(sprintf("MemberService::registerExternalUserById trying to get former registration request by email %s", $email));
             $request = $this->speaker_registration_request_repository->getByEmail($email);
-            if(!is_null($request)){
+            if(!is_null($request) && $request->hasSpeaker()){
                 Log::debug(sprintf("MemberService::registerExternalUserById got former registration request by email %s", $email));
                 $speaker = $request->getSpeaker();
                 if(!is_null($speaker))
@@ -340,6 +340,7 @@ final class MemberService
                         $speaker->setMember($member);
                     }
             }
+
             if($is_new)
                 Event::fire(new NewMember($member->getId()));
 

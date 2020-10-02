@@ -16,6 +16,8 @@ use models\utils\RandomGenerator;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\ArrayCollection;
+use phpDocumentor\Reflection\Types\Parent_;
+
 /**
  * Class SpeakerRegistrationRequest
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSpeakerRegistrationRequestRepository")
@@ -125,6 +127,29 @@ class SpeakerRegistrationRequest extends SilverstripeBaseModel
     }
 
     /**
+     * @return int
+     */
+    public function getSpeakerId(){
+        try {
+            return is_null($this->speaker) ? 0 : $this->speaker->getId();
+        }
+        catch(\Exception $ex){
+            return 0;
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasSpeaker():bool{
+        return $this->getSpeakerId() > 0;
+    }
+
+    public function clearSpeaker(){
+        $this->speaker = null;
+    }
+
+    /**
      * @param PresentationSpeaker $speaker
      */
     public function setSpeaker($speaker)
@@ -183,5 +208,11 @@ class SpeakerRegistrationRequest extends SilverstripeBaseModel
     public function confirm():void{
         $this->confirmation_date = new \DateTime('now', new \DateTimeZone('UTC'));
         $this->is_confirmed = true;
+    }
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->is_confirmed = false;
     }
 }

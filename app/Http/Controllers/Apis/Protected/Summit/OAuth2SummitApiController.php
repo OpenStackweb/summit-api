@@ -36,6 +36,8 @@ use utils\FilterElement;
 use utils\Order;
 use utils\OrderElement;
 use Illuminate\Http\Request as LaravelRequest;
+use utils\PagingInfo;
+
 /**
  * Class OAuth2SummitApiController
  * @package App\Http\Controllers
@@ -751,6 +753,81 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
 
             return $this->deleted();
 
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412(array($ex2->getMessage()));
+        } catch (\HTTP401UnauthorizedException $ex3) {
+            Log::warning($ex3);
+            return $this->error401();
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getAllFeatureSpeaker($summit_id){
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            return $this->_getAll(
+                function(){
+                    return [
+                        'first_name' => ['=@', '=='],
+                        'last_name'  => ['=@', '=='],
+                        'email'      => ['=@', '=='],
+                        'id'         => ['=='],
+                        'full_name'  => ['=@', '=='],
+                    ];
+                },
+                function(){
+                    return [
+                        'first_name' => 'sometimes|string',
+                        'last_name'  => 'sometimes|string',
+                        'email'      => 'sometimes|string',
+                        'id'         => 'sometimes|integer',
+                        'full_name'  => 'sometimes|string',
+                    ];
+                },
+                function()
+                {
+                    return [
+                        'first_name',
+                        'last_name',
+                        'id',
+                        'email',
+                    ];
+                },
+                function($filter) use($summit){
+                    return $filter;
+                },
+                function(){
+                    return $this->serializer_type_selector->getSerializerType();
+                },
+                null,
+                null,
+                function ($page,  $per_page,  $filter,  $order, $applyExtraFilters) use($summit) {
+                    return $this->speaker_repository->getFeaturedSpeakers
+                    (
+                        $summit,
+                        new PagingInfo($page, $per_page),
+                        call_user_func($applyExtraFilters, $filter),
+                        $order
+                    );
+                },
+                [
+                    'summit_id' => $summit_id,
+                    'published' => true,
+                    'summit' => $summit
+                ]
+            );
         } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();

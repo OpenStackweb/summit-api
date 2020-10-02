@@ -5828,6 +5828,21 @@ class ApiEndpointsSeeder extends Seeder
                     ],
                 ],
                 // featured speakers
+
+                [
+                    'name' => 'get-featured-speakers',
+                    'route' => '/api/v1/summits/{id}/featured-speakers',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                        sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
                 [
                     'name' => 'add-featured-speaker',
                     'route' => '/api/v1/summits/{id}/featured-speakers/{speaker_id}',

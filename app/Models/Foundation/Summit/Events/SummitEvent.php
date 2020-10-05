@@ -1259,4 +1259,26 @@ class SummitEvent extends SilverstripeBaseModel
         if($member->hasPaidTicketOnSummit($this->summit)) return true;
         return false;
     }
+
+    /**
+     * @return bool
+     */
+    public function isMuxStream():bool{
+        if(empty($this->streaming_url)) return false;
+        if (preg_match("/(.*\.mux\.com)/i", $this->streaming_url)) return true;
+        return false;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getStreamThumbnailUrl():?string{
+        if($this->isMuxStream()){
+            $matches = [];
+            if(preg_match("/^(.*\.mux\.com)\/(.*)(\.m3u8)$/",$this->streaming_url, $matches)){
+                return sprintf("https://image.mux.com/%s/thumbnail.jpg", $matches[2]);
+            }
+        }
+        return null;
+    }
 }

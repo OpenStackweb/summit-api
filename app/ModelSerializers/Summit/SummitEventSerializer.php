@@ -47,6 +47,7 @@ class SummitEventSerializer extends SilverStripeSerializer
         'TotalAttendanceCount'      => 'attendance_count:json_int',
         'CurrentAttendanceCount'    => 'current_attendance_count:json_int',
         'ImageUrl'                  => 'image:json_url',
+        "StreamThumbnailUrl"        => "stream_thumbnail:json_url"
     ];
 
     protected static $allowed_fields = [

@@ -25,7 +25,6 @@ final class FilterParser
     {
         $res                 = [];
         $matches             = [];
-        $and_fields          = [];
 
         if (!is_array($filters))
             $filters = array($filters);
@@ -118,10 +117,6 @@ final class FilterParser
                     throw new FilterParserException(sprintf("%s op is not allowed for filter by field %s",$op, $field));
 
                 }
-                if(in_array($field, $and_fields))
-                    throw new FilterParserException(sprintf("filter by field %s is already on an and expression", $field));
-
-                $and_fields[] = $field;
 
                 $f = self::buildFilter($field, $op, $value, $same_field_op);
             }

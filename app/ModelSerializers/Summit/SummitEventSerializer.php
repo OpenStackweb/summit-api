@@ -79,6 +79,7 @@ class SummitEventSerializer extends SilverStripeSerializer
         'attendance_count',
         'current_attendance_count',
         'image',
+        'stream_thumbnail',
     ];
 
     protected static $allowed_relations = [

@@ -1097,6 +1097,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $rules = [
                 'media_upload_type_id' => 'required|integer',
+                'display_on_site' => 'sometimes|boolean',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -1177,13 +1178,28 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                     return $this->error403();
             }
 
+            $data = $request->all();
+
+            $rules = [
+                'display_on_site' => 'sometimes|boolean',
+            ];
+
+            // Creates a Validator instance and validates the data.
+            $validation = Validator::make($data, $rules);
+
+            if ($validation->fails()) {
+                $ex = new ValidationException;
+                $ex->setMessages($validation->messages()->toArray());
+                throw $ex;
+            }
 
             $mediaUpload = $this->presentation_service->updateMediaUploadFrom
             (
                 $request,
                 $summit,
                 intval($presentation_id),
-                intval($media_upload_id)
+                intval($media_upload_id),
+                $data
             );
 
             $fields = Request::input('fields', '');

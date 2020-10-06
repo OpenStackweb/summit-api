@@ -41,6 +41,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
 
         // add video column
         $values['video'] = '';
+        $values['public_video'] = '';
         foreach ($presentation->getMediaUploads() as $mediaUpload) {
             if(str_contains(strtolower($mediaUpload->getMediaUploadType()->getType()->getName()), "video")) {
                 $media_upload_csv = SerializerRegistry::getInstance()->getSerializer($mediaUpload, $serializerType)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'media_uploads'));;
@@ -49,6 +50,12 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
                     continue;
                 }
                 $values['video'] = sprintf('=HYPERLINK("%s";"%s")', $media_upload_csv['private_url'], $media_upload_csv['filename']);
+
+                if(!isset($media_upload_csv['public_video']) || !isset($media_upload_csv['filename'])){
+                    Log::warning(sprintf("AdminPresentationCSVSerializer::serialize can not process media upload %s", json_encode($media_upload_csv)));
+                    continue;
+                }
+                $values['public_video'] = sprintf('=HYPERLINK("%s";"%s")', $media_upload_csv['public_url'], $media_upload_csv['filename']);
             }
         }
 

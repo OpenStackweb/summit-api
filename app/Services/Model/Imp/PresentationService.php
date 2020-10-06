@@ -1031,6 +1031,17 @@ final class PresentationService
                 throw new ValidationException(sprintf("File Extension %s is not valid", $fileExt));
             }
 
+            if($presentation->hasMediaUploadByType($media_upload_type)){
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Presentation %s already has a media upload for that type %s.",
+                        $presentation_id, $media_upload_type->getName()
+                    )
+                );
+            }
+
             $mediaUpload = new PresentationMediaUpload();
             $mediaUpload->setMediaUploadType($media_upload_type);
             $mediaUpload->setPresentation($presentation);

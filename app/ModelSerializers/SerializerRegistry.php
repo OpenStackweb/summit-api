@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 
-use App\Models\Foundation\Summit\Events\SummitEventAttendanceMetric;
 use App\ModelSerializers\CCLA\TeamSerializer;
 use App\ModelSerializers\FileSerializer;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
@@ -178,15 +177,19 @@ final class SerializerRegistry
         $this->registry['TrackRadioButtonListQuestionTemplate'] = TrackMultiValueQuestionTemplateSerializer::class;
         $this->registry['TrackLiteralContentQuestionTemplate'] = TrackLiteralContentQuestionTemplateSerializer::class;
         // events
-        $this->registry['SummitEvent']                = SummitEventSerializer::class;
+
+        $this->registry['SummitEvent']                = [
+          self::SerializerType_Public => SummitEventSerializer::class,
+        ];
+
         $this->registry['SummitGroupEvent']           = SummitGroupEventSerializer::class;
         $this->registry['TrackTagGroup']              = TrackTagGroupSerializer::class;
         $this->registry['Presentation']               =
             [
                 self::SerializerType_Public  =>  PresentationSerializer::class,
-                self::SerializerType_Private =>  AdminPresentationSerializer::class
+                self::SerializerType_Private =>  AdminPresentationSerializer::class,
+                self::SerializerType_CSV =>  AdminPresentationCSVSerializer::class
             ];
-
 
         $this->registry['SummitPresentationComment']  = SummitPresentationCommentSerializer::class;
         $this->registry['SummitMediaFileType']        = SummitMediaFileTypeSerializer::class;
@@ -258,6 +261,7 @@ final class SerializerRegistry
             self::SerializerType_Public  => SummitRegistrationInvitationSerializer::class,
             self::SerializerType_CSV     => SummitRegistrationInvitationCSVSerializer::class,
         ];
+
         $this->registry['SummitAccessLevelType']  = SummitAccessLevelTypeSerializer::class;
         $this->registry['SummitTaxType']          = SummitTaxTypeSerializer::class;
         $this->registry['SummitBadgeType']        = SummitBadgeTypeSerializer::class;

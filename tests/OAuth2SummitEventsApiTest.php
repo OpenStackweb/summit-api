@@ -476,13 +476,11 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
     {
         $params = array
         (
-            'id' => 6,
-            'expand' => 'feedback',
-            'filter' => array
-            (
-                'tags=@design',
-                'start_date>1445895000'
-            )
+            'id' => 31,
+            //'expand' => 'feedback',
+            'filter' => [
+                'published==1'
+            ]
         );
 
         $headers = array

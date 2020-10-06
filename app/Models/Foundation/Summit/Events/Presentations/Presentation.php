@@ -478,6 +478,16 @@ class Presentation extends SummitEvent
     }
 
     /**
+     * @param SummitMediaUploadType $media_upload_type
+     * @return bool
+     */
+    public function hasMediaUploadByType(SummitMediaUploadType $media_upload_type):bool{
+        $res = $this->materials->filter(function( $element) use($media_upload_type) {
+            return $element instanceof PresentationMediaUpload && $element->getMediaUploadTypeId() == $media_upload_type->getId(); });
+        return $res->count() > 0;
+    }
+
+    /**
      * @param PresentationMediaUpload $mediaUpload
      * @return $this
      */

@@ -51,7 +51,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
                 }
                 $values['video'] = sprintf('=HYPERLINK("%s";"%s")', $media_upload_csv['private_url'], $media_upload_csv['filename']);
 
-                if(!isset($media_upload_csv['public_video']) || !isset($media_upload_csv['filename'])){
+                if(!isset($media_upload_csv['public_url']) || !isset($media_upload_csv['filename'])){
                     Log::warning(sprintf("AdminPresentationCSVSerializer::serialize can not process media upload %s", json_encode($media_upload_csv)));
                     continue;
                 }

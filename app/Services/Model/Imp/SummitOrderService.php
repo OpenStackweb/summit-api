@@ -1700,14 +1700,17 @@ final class SummitOrderService
             $owner = null;
             $ticket_type = $this->ticket_type_repository->getByIdExclusiveLock(intval($payload['ticket_type_id']));
 
-            if (is_null($ticket_type) || !$ticket_type instanceof SummitTicketType || $ticket_type->getSummitId() != $summit->getId())
+            if (is_null($ticket_type) || !$ticket_type instanceof SummitTicketType || $ticket_type->getSummitId() != $summit->getId()) {
+                Log::warning("SummitOrderService::createOrderSingleTicket ticket type not found");
                 throw new EntityNotFoundException("ticket type not found");
+            }
 
             // check owner
             if (isset($payload['owner_id'])) {
                 Log::debug(sprintf("SummitOrderService::createOrderSingleTicket trying to get member by id %s", $payload['owner_id']));
                 $owner = $this->member_repository->getById(intval($payload['owner_id']));
                 if (is_null($owner)) {
+                    Log::warning("SummitOrderService::createOrderSingleTicket owner not found");
                     throw new EntityNotFoundException("owner not found");
                 }
             }
@@ -1723,7 +1726,11 @@ final class SummitOrderService
 
             if (is_null($attendee) && isset($payload['owner_email'])) {
                 Log::debug(sprintf("SummitOrderService::createOrderSingleTicket trying to get attendee by email %s", $payload['owner_email']));
-                $attendee = $summit->getAttendeeByEmail(trim($payload['owner_email']));
+                $attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($payload['owner_email']));
+            }
+
+            if(is_null($attendee) && isset($payload['attendee'])){
+                $attendee = $payload['attendee'];
             }
 
             if (is_null($attendee)) {
@@ -1732,21 +1739,27 @@ final class SummitOrderService
                 //first name
                 $first_name = isset($payload['owner_first_name']) ? trim($payload['owner_first_name']) : null;
                 if (empty($first_name) && !is_null($owner)) $first_name = $owner->getFirstName();
-                if (empty($first_name))
+                if (empty($first_name)) {
+                    Log::warning("SummitOrderService::createOrderSingleTicket owner firstname is null");
                     throw new ValidationException("you must provide an owner_first_name or a valid owner_id");
+                }
                 // surname
                 $surname = isset($payload['owner_last_name']) ? trim($payload['owner_last_name']) : null;
                 if (empty($surname) && !is_null($owner)) $surname = $owner->getLastName();
-                if (empty($surname))
+                if (empty($surname)) {
+                    Log::warning("SummitOrderService::createOrderSingleTicket owner surname is null");
                     throw new ValidationException("you must provide an owner_last_name or a valid owner_id");
+                }
                 // mail
                 $email = isset($payload['owner_email']) ? trim($payload['owner_email']) : null;
 
                 $company = isset($payload['owner_company']) ? trim($payload['owner_company']) : null;
 
                 if (empty($email) && !is_null($owner)) $email = $owner->getEmail();
-                if (empty($email))
+                if (empty($email)) {
+                    Log::warning("SummitOrderService::createOrderSingleTicket owner email is null");
                     throw new ValidationException("you must provide an owner_email or a valid owner_id");
+                }
 
                 $attendee = SummitAttendeeFactory::build($summit, [
                     'first_name' => $first_name,
@@ -1769,8 +1782,10 @@ final class SummitOrderService
             Log::debug(sprintf("SummitOrderService::createOrderSingleTicket order number %s", $order->getNumber()));
             $default_badge_type = $summit->getDefaultBadgeType();
 
-            if (is_null($default_badge_type))
+            if (is_null($default_badge_type)) {
+                Log::warning("SummitOrderService::createOrderSingleTicket default_badge_type is null");
                 throw new ValidationException(sprintf("summit %s does not has a default badge type", $summit->getId()));
+            }
 
             $order->setPaymentMethodOffline();
 
@@ -2719,6 +2734,7 @@ final class SummitOrderService
 
                 Log::debug(sprintf("SummitOrderService::processTicketData processing row %s", json_encode($row)));
                 $ticket = null;
+                $attendee = null;
 
                 if ($ticket_data_present) {
                     Log::debug("SummitOrderService::processTicketData - has ticket data present ... trying to get ticket");
@@ -2764,9 +2780,12 @@ final class SummitOrderService
 
                         $attendee = SummitAttendeeFactory::build($summit, $payload, $member);
 
-                        $this->attendee_repository->add($attendee, true);
+                        //$this->attendee_repository->add($attendee, true);
+                        $this->attendee_repository->add($attendee);
                     }
+                }
 
+                if(!is_null($attendee)) {
                     if (is_null($ticket)) {
                         Log::debug(sprintf("SummitOrderService::processTicketData ticket is null, trying to create a new one"));
 
@@ -2795,13 +2814,16 @@ final class SummitOrderService
                             return;
                         }
 
-                        $order = $this->createOrderSingleTicket($summit, [
-                            'ticket_type_id' => $ticket_type->getId(),
-                            'owner_email' => $attendee->getEmail(),
-                            'owner_first_name' => $attendee->getFirstName(),
-                            'owner_last_name' => $attendee->getSurname(),
-                            'owner_company' => $attendee->getCompanyName(),
-                        ]);
+                        $order = $this->createOrderSingleTicket($summit,
+                            [
+                                'ticket_type_id' => $ticket_type->getId(),
+                                'attendee' => $attendee,
+                                'owner_email' => $attendee->getEmail(),
+                                'owner_first_name' => $attendee->getFirstName(),
+                                'owner_last_name' => $attendee->getSurname(),
+                                'owner_company' => $attendee->getCompanyName(),
+                            ]
+                        );
 
                         $ticket = $order->getFirstTicket();
 
@@ -2827,6 +2849,7 @@ final class SummitOrderService
                         $attendee->sendInvitationEmail($ticket);
                     }
                 }
+
 
                 if (is_null($ticket)) {
                     Log::warning("SummitOrderService::processTicketData ticket is null stop current row processing.");
@@ -2932,7 +2955,8 @@ final class SummitOrderService
             throw new ValidationException("need to set a value for external_registration_feed_api_key");
         }
 
-        IngestSummitExternalRegistrationData::dispatch(
+        IngestSummitExternalRegistrationData::dispatch
+        (
             $summit->getId(),
             $email_to
         );

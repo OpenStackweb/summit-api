@@ -1,4 +1,4 @@
-<?php
+<?php namespace libs\utils;
 /**
  * Copyright 2015 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,11 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-namespace libs\utils;
-
 use Closure;
-
 /**
  * Interface ITransactionService
  * @package libs\utils
@@ -25,10 +21,11 @@ interface ITransactionService
     /**
      * Execute a Closure within a transaction.
      *
-     * @param  Closure  $callback
+     * @param Closure  $callback
+     * @param int $isolationLevel
      * @return mixed
      *
      * @throws \Exception
      */
-    public function transaction(Closure $callback);
+    public function transaction(Closure $callback, int $isolationLevel);
 }

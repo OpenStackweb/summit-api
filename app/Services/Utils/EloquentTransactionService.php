@@ -32,7 +32,7 @@ final class EloquentTransactionService implements ITransactionService {
      *
      * @throws \Exception
      */
-    public function transaction(Closure $callback)
+    public function transaction(Closure $callback, int $isolationLevel)
     {
         return DB::transaction($callback);
     }

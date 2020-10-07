@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\TransactionIsolationLevel;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use Closure;
@@ -43,11 +46,12 @@ final class DoctrineTransactionService implements ITransactionService
      * Execute a Closure within a transaction.
      *
      * @param  Closure $callback
+     * @param int $isolationLevel
      * @return mixed
      *
      * @throws \Exception
      */
-    public function transaction(Closure $callback)
+    public function transaction(Closure $callback, int $isolationLevel = TransactionIsolationLevel::READ_COMMITTED)
     {
         $retry  = 0;
         $done   = false;
@@ -75,15 +79,18 @@ final class DoctrineTransactionService implements ITransactionService
                     // new entity manager
                     $con = $em->getConnection();
                 }
-
+                $con->setTransactionIsolation($isolationLevel);
+                Log::debug("DoctrineTransactionService::transaction con->beginTransaction");
                 $con->beginTransaction(); // suspend auto-commit
                 $result = $callback($this);
                 $em->flush();
                 $con->commit();
+                Log::debug("DoctrineTransactionService::transaction con->commit");
                 $done = true;
             } catch (RetryableException $ex) {
                 Log::warning("retrying ...");
                 Registry::resetManager($this->manager_name);
+                Log::warning("DoctrineTransactionService::transaction con->rollBack");
                 $con->rollBack();
                 Log::warning($ex);
                 $retry++;
@@ -94,6 +101,7 @@ final class DoctrineTransactionService implements ITransactionService
                 Log::warning("rolling back transaction");
                 Log::warning($ex);
                 $em->close();
+                Log::warning("DoctrineTransactionService::transaction con->rollBack");
                 $con->rollBack();
                 throw $ex;
             }

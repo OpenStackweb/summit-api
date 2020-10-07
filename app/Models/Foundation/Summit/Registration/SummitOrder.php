@@ -302,6 +302,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     }
 
     public function setPaid(){
+        Log::debug(sprintf("SummitOrder::setPaid order %s", $this->id));
         if($this->isPaid()){
             Log::warning(sprintf("SummitOrder %s is already Paid.", $this->getId()));
             return;

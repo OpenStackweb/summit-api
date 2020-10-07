@@ -462,7 +462,7 @@ final class EventServiceProvider extends ServiceProvider
             if(!$event instanceof PaymentSummitRegistrationOrderConfirmed) return;
             $order_id = $event->getOrderId();
             Log::debug(sprintf("EventServiceProvider::PaymentSummitRegistrationOrderConfirmed: firing ProcessSummitOrderPaymentConfirmation for order id %s", $order_id));
-            ProcessSummitOrderPaymentConfirmation::dispatch($order_id)->delay(now()->addMinutes(1));
+            ProcessSummitOrderPaymentConfirmation::dispatch($order_id)->delay(now()->addSecond(10));
         });
 
         Event::listen(NewMember::class, function($event){

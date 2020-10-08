@@ -181,6 +181,7 @@ interface IPresentationService
      * @param Summit $summit
      * @param int $presentation_id
      * @param int $media_upload_id
+     * @param array $payload
      * @return PresentationMediaUpload
      * @throws \Exception
      */
@@ -189,7 +190,8 @@ interface IPresentationService
         LaravelRequest $request,
         Summit $summit,
         int $presentation_id,
-        int $media_upload_id
+        int $media_upload_id,
+        array $payload
     ): PresentationMediaUpload;
 
     /**

@@ -39,11 +39,10 @@ class PresentationMediaUploadSerializer extends PresentationMaterialSerializer
         $values = parent::serialize($expand, $fields, $relations, $params);
         $mediaUpload  = $this->object;
         if(!$mediaUpload instanceof PresentationMediaUpload) return [];
+        // these values are calculated
         unset($values['name']);
         unset($values['description']);
-        unset($values['display_on_site']);
         unset($values['featured']);
-        $values['display_on_site'] = false;
 
         $mediaUploadType =  $mediaUpload->getMediaUploadType();
         if(!is_null($mediaUploadType)){
@@ -53,7 +52,6 @@ class PresentationMediaUploadSerializer extends PresentationMaterialSerializer
                 $strategy = FileDownloadStrategyFactory::build($mediaUploadType->getPublicStorageType());
                 if (!is_null($strategy)) {
                     $values['public_url'] = $strategy->getUrl($mediaUpload->getRelativePath());
-                    $values['display_on_site'] = true;
                 }
             }
             catch (\Exception $ex){

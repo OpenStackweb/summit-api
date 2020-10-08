@@ -17,6 +17,7 @@ use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
 use App\Models\Foundation\Summit\Factories\PresentationLinkFactory;
+use App\Models\Foundation\Summit\Factories\PresentationMediaUploadFactory;
 use App\Models\Foundation\Summit\Factories\PresentationSlideFactory;
 use App\Models\Foundation\Summit\Factories\PresentationVideoFactory;
 use App\Models\Foundation\Summit\SelectionPlan;
@@ -1042,9 +1043,13 @@ final class PresentationService
                 );
             }
 
-            $mediaUpload = new PresentationMediaUpload();
-            $mediaUpload->setMediaUploadType($media_upload_type);
-            $mediaUpload->setPresentation($presentation);
+            $mediaUpload = PresentationMediaUploadFactory::build(array_merge(
+                $payload,
+                [
+                    'media_upload_type' => $media_upload_type,
+                    'presentation' => $presentation
+                ]
+            ));
 
             $strategy = FileUploadStrategyFactory::build($media_upload_type->getPrivateStorageType());
             if(!is_null($strategy)){
@@ -1068,6 +1073,7 @@ final class PresentationService
      * @param Summit $summit
      * @param int $presentation_id
      * @param int $media_upload_id
+     * @param array $payload
      * @return PresentationMediaUpload
      * @throws \Exception
      */
@@ -1076,14 +1082,16 @@ final class PresentationService
         LaravelRequest $request,
         Summit $summit,
         int $presentation_id,
-        int $media_upload_id
+        int $media_upload_id,
+        array $payload
     ): PresentationMediaUpload
     {
         return $this->tx_service->transaction(function () use (
             $request,
             $summit,
             $presentation_id,
-            $media_upload_id
+            $media_upload_id,
+            $payload
         ) {
 
             $presentation = $this->presentation_repository->getById($presentation_id);
@@ -1098,46 +1106,43 @@ final class PresentationService
 
             $hasFile = $request->hasFile('file');
 
-            if(!$hasFile){
-                throw new ValidationException("You must provide a file.");
+            if($hasFile) {
+                $file = $request->file('file');
+                // get in bytes should be converted to KB
+                $size = $file->getSize();
+                if ($size == 0)
+                    throw new ValidationException("File size is zero.");
+                $size = $size / 1024;
+                $fileName = $file->getClientOriginalName();
+                $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
+                // normalize fileName
+                $fileName = FileNameSanitizer::sanitize($fileName);
+
+                $mediaUploadType = $mediaUpload->getMediaUploadType();
+                if (is_null($mediaUploadType))
+                    throw new ValidationException("Media Upload Type is not set.");
+
+                if ($mediaUploadType->getMaxSize() < $size) {
+                    throw new ValidationException(sprintf("Max Size is %s KB.", $mediaUploadType->getMaxSize()));
+                }
+
+                if (!$mediaUploadType->isValidExtension($fileExt)) {
+                    throw new ValidationException(sprintf("File Extension %s is not valid", $fileExt));
+                }
+
+                $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
+                if (!is_null($strategy)) {
+                    $strategy->save($file, $mediaUpload->getPath(IStorageTypesConstants::PrivateType), $fileName);
+                }
+
+                $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
+                if (!is_null($strategy)) {
+                    $strategy->save($file, $mediaUpload->getPath(IStorageTypesConstants::PublicType), $fileName);
+                }
+                $payload['file_name'] = $fileName;
             }
 
-            $file = $request->file('file');
-            // get in bytes should be converted to KB
-            $size = $file->getSize();
-            if($size == 0)
-                throw new ValidationException("File size is zero.");
-            $size = $size/1024;
-            $fileName = $file->getClientOriginalName();
-            $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
-            // normalize fileName
-            $fileName = FileNameSanitizer::sanitize($fileName);
-
-            $mediaUploadType = $mediaUpload->getMediaUploadType();
-            if(is_null($mediaUploadType))
-                throw new ValidationException("Media Upload Type is not set.");
-
-            if($mediaUploadType->getMaxSize() < $size){
-                throw new ValidationException(sprintf("Max Size is %s KB.", $mediaUploadType->getMaxSize()));
-            }
-
-            if(!$mediaUploadType->isValidExtension($fileExt)){
-                throw new ValidationException(sprintf("File Extension %s is not valid", $fileExt));
-            }
-
-            $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
-            if(!is_null($strategy)){
-                $strategy->save($file, $mediaUpload->getPath(IStorageTypesConstants::PrivateType), $fileName);
-            }
-
-            $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
-            if(!is_null($strategy)){
-                $strategy->save($file, $mediaUpload->getPath(IStorageTypesConstants::PublicType), $fileName);
-            }
-
-            $mediaUpload->setFilename($fileName);
-
-            return $mediaUpload;
+            return PresentationMediaUploadFactory::populate($mediaUpload, $payload);
         });
     }
 

@@ -15,6 +15,7 @@
 use App\Models\Utils\IStorageTypesConstants;
 use Doctrine\ORM\Mapping AS ORM;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 
 /**
  * @ORM\Entity
@@ -107,18 +108,24 @@ class PresentationMediaUpload extends PresentationMaterial
 
     /**
      * @param string $storageType
+     * @param string|null $mountingFolder
      * @return string
      */
-    public function getRelativePath(string $storageType = IStorageTypesConstants::PublicType):string {
-        return sprintf('%s/%s', $this->getPath($storageType), $this->getFilename());
+    public function getRelativePath(string $storageType = IStorageTypesConstants::PublicType, ?string $mountingFolder = null):string {
+        return sprintf('%s/%s', $this->getPath($storageType, $mountingFolder), $this->getFilename());
     }
 
     /**
      * @param string $storageType
+     * @param string|null $mountingFolder
      * @return string
      */
-    public function getPath(string $storageType = IStorageTypesConstants::PublicType): string {
-        $mountingFolder = Config::get('mediaupload.mounting_folder');
+    public function getPath(string $storageType = IStorageTypesConstants::PublicType, ?string $mountingFolder = null): string {
+        if(empty($mountingFolder))
+            $mountingFolder = Config::get('mediaupload.mounting_folder');
+
+        Log::debug(sprintf("PresentationMediaUpload::getPath storageType %s mountingFolder %s", $storageType, $mountingFolder));
+
         $summit = $this->getPresentation()->getSummit();
         $presentation = $this->getPresentation();
             $format = $storageType == IStorageTypesConstants::PublicType ? '%s/%s/%s': '%s/'.IStorageTypesConstants::PrivateType.'/%s/%s';

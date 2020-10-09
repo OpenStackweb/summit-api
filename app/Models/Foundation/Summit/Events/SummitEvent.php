@@ -218,6 +218,18 @@ class SummitEvent extends SilverstripeBaseModel
     protected $streaming_url;
 
     /**
+     * @ORM\Column(name="MuxAssetID", type="string")
+     * @var string
+     */
+    protected $mux_asset_id;
+
+    /**
+     * @ORM\Column(name="MuxPlaybackID", type="string")
+     * @var string
+     */
+    protected $mux_playback_id;
+
+    /**
      * @ORM\Column(name="EtherpadLink", type="string")
      * @var string
      */
@@ -1281,4 +1293,37 @@ class SummitEvent extends SilverstripeBaseModel
         }
         return null;
     }
+
+    /**
+     * @return string
+     */
+    public function getMuxAssetId(): ?string
+    {
+        return $this->mux_asset_id;
+    }
+
+    /**
+     * @param string $mux_asset_id
+     */
+    public function setMuxAssetId(string $mux_asset_id): void
+    {
+        $this->mux_asset_id = $mux_asset_id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMuxPlaybackId(): ?string
+    {
+        return $this->mux_playback_id;
+    }
+
+    /**
+     * @param string $mux_playback_id
+     */
+    public function setMuxPlaybackId(string $mux_playback_id): void
+    {
+        $this->mux_playback_id = $mux_playback_id;
+    }
+
 }

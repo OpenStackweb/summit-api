@@ -16,10 +16,10 @@ use Doctrine\DBAL\Schema\Schema as Schema;
 use LaravelDoctrine\Migrations\Schema\Builder;
 use LaravelDoctrine\Migrations\Schema\Table;
 /**
- * Class Version20200928132323
+ * Class Version20201008203936
  * @package Database\Migrations\Model
  */
-class Version20200928132323 extends AbstractMigration
+final class Version20201008203936 extends AbstractMigration
 {
     /**
      * @param Schema $schema
@@ -27,9 +27,10 @@ class Version20200928132323 extends AbstractMigration
     public function up(Schema $schema)
     {
         $builder = new Builder($schema);
-        if($schema->hasTable("PresentationMediaUpload") && !$builder->hasColumn("PresentationMediaUpload","LegacyPathFormat") ) {
-            $builder->table('PresentationMediaUpload', function (Table $table) {
-                $table->boolean('LegacyPathFormat')->setDefault(true)->setNotnull(true);
+        if($schema->hasTable("SummitEvent") && !$builder->hasColumn("SummitEvent","MuxPlaybackID") ) {
+            $builder->table('SummitEvent', function (Table $table) {
+                $table->text('MuxPlaybackID')->setDefault(null)->setNotnull(false);
+                $table->text('MuxAssetID')->setDefault(null)->setNotnull(false);
             });
         }
     }
@@ -40,9 +41,10 @@ class Version20200928132323 extends AbstractMigration
     public function down(Schema $schema)
     {
         $builder = new Builder($schema);
-        if($schema->hasTable("PresentationMediaUpload") && $builder->hasColumn("PresentationMediaUpload","LegacyPathFormat") ) {
-            $builder->table('PresentationMediaUpload', function (Table $table) {
-                $table->dropColumn('LegacyPathFormat');
+        if($schema->hasTable("SummitEvent") && $builder->hasColumn("SummitEvent","MuxPlaybackID") ) {
+            $builder->table('SummitEvent', function (Table $table) {
+                $table->dropColumn('MuxPlaybackID');
+                $table->dropColumn('MuxAssetID');
             });
         }
     }

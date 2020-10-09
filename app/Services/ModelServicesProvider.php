@@ -111,6 +111,8 @@ use App\Services\Model\ICalendarSyncWorkRequestPreProcessor;
 use App\Services\Model\IMemberActionsCalendarSyncProcessingService;
 use App\Services\Model\AdminActionsCalendarSyncProcessingService;
 use App\Services\Model\IAdminActionsCalendarSyncProcessingService;
+use App\Services\Model\IPresentationVideoMediaUploadProcessor;
+use App\Services\Model\Imp\PresentationVideoMediaUploadProcessor;
 /***
  * Class ModelServicesProvider
  * @package services
@@ -377,6 +379,12 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitMediaUploadTypeService::class,
             SummitMediaUploadTypeService::class
         );
+
+        App::singleton
+        (
+            IPresentationVideoMediaUploadProcessor::class,
+            PresentationVideoMediaUploadProcessor::class
+        );
     }
 
     /**
@@ -436,6 +444,7 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitAdministratorPermissionGroupService::class,
             ISummitMediaFileTypeService::class,
             ISummitMediaUploadTypeService::class,
+            IPresentationVideoMediaUploadProcessor::class
         ];
     }
 }

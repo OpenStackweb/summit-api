@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Console\Commands\PresentationMaterialsCreateMUXAssetsCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Facades\App;
@@ -41,6 +43,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\SummitForwardXDays::class,
         \App\Console\Commands\SummitEmailFlowEventSeederCommand::class,
         \App\Console\Commands\SummitEmailFlowTypeSeederCommand::class,
+        \App\Console\Commands\PresentationMaterialsCreateMUXAssetsCommand::class,
     ];
 
     /**

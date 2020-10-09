@@ -370,6 +370,24 @@ final class DoctrineSummitEventRepository
     }
 
     /**
+     * @param int $summit_id,
+     * @return array
+     */
+    public function getPublishedEventsIdsBySummit(int $summit_id):array
+    {
+        $query  = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e.id")
+            ->from($this->getBaseEntity(), "e")
+            ->join('e.summit', 's', Join::WITH, " s.id = :summit_id")
+            ->where('e.published = 1')
+            ->setParameter('summit_id', $summit_id);
+
+        $res = $query->getQuery()->getArrayResult();
+        return array_column($res, 'id');
+    }
+
+    /**
      * @param PagingInfo $paging_info
      * @param Filter|null $filter
      * @param Order|null $order

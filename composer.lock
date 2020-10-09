@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "a441f3fcf95ec732067dc7b61c451a5b",
+    "content-hash": "2d35492694cc690aadba8344d827c267",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -2875,6 +2875,60 @@
                 "psr-3"
             ],
             "time": "2020-05-22T07:31:27+00:00"
+        },
+        {
+            "name": "muxinc/mux-php",
+            "version": "0.5.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/muxinc/mux-php.git",
+                "reference": "b9894ee7003f2caf2e74366c4dfb19736832077f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/muxinc/mux-php/zipball/b9894ee7003f2caf2e74366c4dfb19736832077f",
+                "reference": "b9894ee7003f2caf2e74366c4dfb19736832077f",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "guzzlehttp/guzzle": "^6.2",
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "~2.12",
+                "squizlabs/php_codesniffer": "~2.6"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "MuxPhp\\": "MuxPhp/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mux SDK team",
+                    "email": "sdks@mux.com",
+                    "homepage": "https://mux.com"
+                }
+            ],
+            "description": "Official Mux API wrapper for PHP projects, supporting both Mux Data and Mux Video. Not familiar with Mux? Check out https://mux.com/ for more information.",
+            "homepage": "https://mux.com",
+            "keywords": [
+                "api",
+                "php",
+                "rest",
+                "sdk",
+                "streaming",
+                "video"
+            ],
+            "time": "2020-09-10T18:53:57+00:00"
         },
         {
             "name": "nesbot/carbon",
@@ -7320,6 +7374,7 @@
             "keywords": [
                 "tokenizer"
             ],
+            "abandoned": true,
             "time": "2019-09-17T06:23:10+00:00"
         },
         {

@@ -65,4 +65,10 @@ interface ISummitEventRepository extends IBaseRepository
      * @return mixed
      */
     public function getPublishedEventsBySummitNotInExternalIds(Summit $summit, array $external_ids);
+
+    /**
+     * @param int $summit_id,
+     * @return array
+     */
+    public function getPublishedEventsIdsBySummit(int $summit_id):array;
 }

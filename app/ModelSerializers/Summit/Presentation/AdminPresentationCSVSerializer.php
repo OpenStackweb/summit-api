@@ -43,7 +43,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
         $values['video'] = '';
         $values['public_video'] = '';
         foreach ($presentation->getMediaUploads() as $mediaUpload) {
-            if(str_contains(strtolower($mediaUpload->getMediaUploadType()->getType()->getName()), "video")) {
+            if($mediaUpload->getMediaUploadType()->isVideo()) {
                 $media_upload_csv = SerializerRegistry::getInstance()->getSerializer($mediaUpload, $serializerType)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'media_uploads'));;
                 if(!isset($media_upload_csv['private_url']) || !isset($media_upload_csv['filename'])){
                     Log::warning(sprintf("AdminPresentationCSVSerializer::serialize can not process media upload %s", json_encode($media_upload_csv)));

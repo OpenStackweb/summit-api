@@ -272,4 +272,8 @@ class SummitMediaUploadType extends SilverstripeBaseModel
         return  ($this->private_storage_type != IStorageTypesConstants::None ||  $this->public_storage_type != IStorageTypesConstants::None);
     }
 
+    public function isVideo():bool{
+        return str_contains(strtolower($this->getType()->getName()), "video");
+    }
+
 }

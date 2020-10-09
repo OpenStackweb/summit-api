@@ -51,8 +51,6 @@ class SummitSerializer extends SilverStripeSerializer
         'SpeakerAnnouncementEmailAcceptedRejectedCount' => 'speaker_announcement_email_accepted_rejected_count:json_int',
         'SpeakerAnnouncementEmailAlternateRejectedCount' => 'speaker_announcement_email_alternate_rejected_count:json_int',
         'TimeZoneId' => 'time_zone_id:json_string',
-        'SecondaryRegistrationLink' => 'secondary_registration_link:json_string',
-        'SecondaryRegistrationLabel' => 'secondary_registration_label:json_string',
         'RawSlug' => 'slug:json_string',
         // Bookable rooms attributes
         'MeetingRoomBookingStartTime' => 'meeting_room_booking_start_time:datetime_epoch',
@@ -75,6 +73,9 @@ class SummitSerializer extends SilverStripeSerializer
         'RegistrationDisclaimerContent' => 'registration_disclaimer_content:json_string',
         'RegistrationDisclaimerMandatory' => 'registration_disclaimer_mandatory:json_boolean',
         'RegistrationReminderEmailDaysInterval' => 'registration_reminder_email_days_interval:json_int',
+        'RegistrationLink' => 'registration_link:json_url',
+        'SecondaryRegistrationLink' => 'secondary_registration_link:json_url',
+        'SecondaryRegistrationLabel' => 'secondary_registration_label:json_string',
         // schedule app
         'ScheduleDefaultPageUrl' => 'schedule_default_page_url:json_url',
         'ScheduleDefaultEventDetailUrl' => 'schedule_default_event_detail_url:json_url',

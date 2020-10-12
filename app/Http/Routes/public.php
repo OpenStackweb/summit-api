@@ -108,7 +108,7 @@ Route::group([
             // events
             Route::group(['prefix' => 'events'], function () {
                 Route::group(['prefix' => 'published'], function () {
-                    Route::get('', 'OAuth2SummitEventsApiController@getScheduledEvents');
+                    Route::get('', [ 'middleware' => 'cache:1200', 'uses' => 'OAuth2SummitEventsApiController@getScheduledEvents']);
                 });
 
                 Route::group(array('prefix' => '{event_id}'), function () {

@@ -33,8 +33,10 @@ final class DropboxAdapter extends BaseDropboxAdapter
             if($ex->dropboxCode === 'shared_link_already_exists')
             {
                 try {
+                    Log::debug(sprintf("DropboxAdapter::getUrl getting list of shared links for %s", $path));
                     $res = $client->listSharedLinks($path);
                     foreach ($res as $entry) {
+                        Log::debug(sprintf("DropboxAdapter::getUrl getting list of shared links for %s entry %s", $path, json_encode($entry)));
                         if($entry['.tag'] === 'file' )
                             return $entry['url'];
                     }

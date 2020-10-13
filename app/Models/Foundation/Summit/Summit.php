@@ -1981,9 +1981,7 @@ SQL;
      */
     public function getPresentationVotesCount()
     {
-
-
-        try {
+      try {
             $sql = <<<SQL
             SELECT COUNT(DISTINCT(Vote.ID)) AS vote_count
             FROM PresentationVote AS Vote
@@ -4951,6 +4949,62 @@ SQL;
     public function removeFeaturedSpeaker(PresentationSpeaker $speaker){
         if(!$this->featured_speakers->contains($speaker)) return;
         $this->featured_speakers->removeElement($speaker);
+    }
+
+    /**
+     * @return array|DateTime[]
+     */
+    public function getSummitDays():array {
+        if(is_null($this->begin_date)) return [];
+        if(is_null($this->end_date)) return [];
+        $beginDate = $this->getLocalBeginDate()->setTime(0,0,0);
+        $endDate = $this->getLocalEndDate()->setTime(0,0,0);
+        $res = [];
+        $res[] = clone $beginDate;
+        while($beginDate < $endDate){
+            $res[] = clone($beginDate->modify('+1 day'));
+        }
+        return $res;
+    }
+
+    /**
+     * @return array|DateTime[]
+     */
+    public function getSummitDaysWithEvents():array {
+        $days = $this->getSummitDays();
+        $list = [];
+        foreach ($days as $day){
+            $begin = clone($day);
+            $begin = $begin->setTime(0,0,0);
+            $end   = clone($day);
+            $end = $end->setTime(23,59,59);
+            $count = 0;
+            try {
+                $sql = <<<SQL
+            SELECT COUNT(SummitEvent.ID) AS QTY
+            FROM SummitEvent
+            WHERE 
+            SummitEvent.SummitID = :summit_id 
+            AND SummitEvent.Published = 1
+            AND (SummitEvent.StartDate >= :begin and SummitEvent.EndDate <= :end)
+SQL;
+                $stmt = $this->prepareRawSQL($sql);
+                $stmt->execute([
+                    'summit_id' => $this->id,
+                    'begin' => $begin->format("Y-m-d H:i:s"),
+                    'end' => $end->format('Y-m-d H:i:s'),
+                ]);
+                $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+                $count = count($res) > 0 ? $res[0] : 0;
+            } catch (\Exception $ex) {
+                $count = 0;
+            }
+            if($count > 0){
+                $list[] = $day;
+            }
+        }
+
+        return $list;
     }
 
 }

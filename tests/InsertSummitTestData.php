@@ -68,7 +68,7 @@ trait InsertSummitTestData
 
     protected static function insertTestData(){
         DB::setDefaultConnection("model");
-        DB::table("Summit")->delete();
+        //DB::table("Summit")->delete();
         self::$summit_repository = EntityManager::getRepository(Summit::class);
         self::$summit = new Summit();
         self::$summit->setActive(true);

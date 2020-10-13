@@ -114,6 +114,7 @@ class SummitSerializer extends SilverStripeSerializer
         'email_flows_events',
         'summit_documents',
         'featured_speakers',
+        'dates_with_events',
     ];
 
     /**
@@ -130,6 +131,11 @@ class SummitSerializer extends SilverStripeSerializer
         if (!$summit instanceof Summit) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
         if (!count($relations)) $relations = $this->getAllowedRelations();
+
+        $values['dates_with_events'] = [];
+        foreach($summit->getSummitDaysWithEvents() as $day){
+            $values['dates_with_events'][] = $day->format('Y-m-d');
+        }
 
         $timezone = $summit->getTimeZone();
         $values['time_zone'] = null;

@@ -354,7 +354,7 @@ final class SwiftAdapter extends AbstractAdapter
         if(is_null($obj))
             return null;
         $url = $obj->getPublicUri();
-        Log::debug(sprintf("SwiftAdapter get Url for path %s got %s", $path, $url));
+        //Log::debug(sprintf("SwiftAdapter get Url for path %s got %s", $path, $url));
         return $url;
     }
 }

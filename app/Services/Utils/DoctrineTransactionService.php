@@ -80,12 +80,10 @@ final class DoctrineTransactionService implements ITransactionService
                     $con = $em->getConnection();
                 }
                 $con->setTransactionIsolation($isolationLevel);
-                Log::debug("DoctrineTransactionService::transaction con->beginTransaction");
                 $con->beginTransaction(); // suspend auto-commit
                 $result = $callback($this);
                 $em->flush();
                 $con->commit();
-                Log::debug("DoctrineTransactionService::transaction con->commit");
                 $done = true;
             } catch (RetryableException $ex) {
                 Log::warning("retrying ...");

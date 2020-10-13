@@ -35,7 +35,7 @@ final class DropboxAdapter extends BaseDropboxAdapter
                 try {
                     $res = $client->listSharedLinks($path);
                     foreach ($res as $entry) {
-                        if($entry['path_lower'] === strtolower($path) )
+                        if($entry['.tag'] === 'file' )
                             return $entry['url'];
                     }
                 }

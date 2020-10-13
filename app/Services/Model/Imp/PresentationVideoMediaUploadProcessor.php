@@ -145,7 +145,14 @@ final class PresentationVideoMediaUploadProcessor
 
                             $strategy = FileDownloadStrategyFactory::build($mediaUpload->getMediaUploadType()->getPrivateStorageType());
                             if (!is_null($strategy)) {
-                                $assetUrl =  $strategy->getUrl($mediaUpload->getRelativePath(IStorageTypesConstants::PrivateType, $mountingFolder));
+                                $relativePath = $mediaUpload->getRelativePath(IStorageTypesConstants::PrivateType, $mountingFolder);
+                                Log::debug(sprintf("PresentationVideoMediaUploadProcessor::processEvent event %s processing media upload %s relativePath %s", $event_id, $mediaUpload->getId(), $relativePath));
+                                $assetUrl =  $strategy->getUrl($relativePath);
+                                if($assetUrl == '#')
+                                {
+                                    Log::debug(sprintf("PresentationVideoMediaUploadProcessor::processEvent event %s processing media upload %s got asset url %s is not valid", $event_id, $mediaUpload->getId(), $assetUrl));
+                                    return false;
+                                }
                                 Log::debug(sprintf("PresentationVideoMediaUploadProcessor::processEvent event %s processing media upload %s got asset url %s", $event_id, $mediaUpload->getId(), $assetUrl));
 
                                 // Create Asset Request

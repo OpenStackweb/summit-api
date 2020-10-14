@@ -96,7 +96,7 @@ final class DoctrineSummitEventRepository
                 't',
                 "t.tag :operator :value"
             ),
-            'summit_id'=> new DoctrineJoinFilterMapping
+            'summit_id' => new DoctrineJoinFilterMapping
             (
                 'e.summit',
                 's',
@@ -143,6 +143,14 @@ final class DoctrineSummitEventRepository
             'speaker_id' => new DoctrineFilterMapping
             (
                 "(sp.id :operator :value OR spm.id :operator :value)"
+            ),
+            'sponsor_id' => new DoctrineFilterMapping
+            (
+                "(sprs.id :operator :value)"
+            ),
+            'sponsor' => new DoctrineFilterMapping
+            (
+                "(sprs.name :operator :value)"
             ),
             'selection_status' => new DoctrineSwitchFilterMapping([
                  'selected' => new DoctrineCaseFilterMapping(
@@ -202,6 +210,7 @@ final class DoctrineSummitEventRepository
             ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')
             ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
             ->leftJoin("e.category", 'cc', Join::LEFT_JOIN)
+            ->leftJoin("e.sponsors", "sprs", Join::LEFT_JOIN)
             ->leftJoin("p.speakers", "sp", Join::LEFT_JOIN)
             ->leftJoin('p.selected_presentations', "ssp", Join::LEFT_JOIN)
             ->leftJoin('p.selection_plan', "selp", Join::LEFT_JOIN)

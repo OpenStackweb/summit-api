@@ -136,6 +136,8 @@ abstract class RetrieveSummitEventsStrategy
             'event_type_id'    => ['=='],
             'track_id'         => ['=='],
             'speaker_id'       => ['=='],
+            'sponsor_id'       => ['=='],
+            'sponsor'          => ['=@', '=='],
             'location_id'      => ['=='],
             'speaker'          => ['=@', '=='],
             'speaker_email'    => ['=@', '=='],

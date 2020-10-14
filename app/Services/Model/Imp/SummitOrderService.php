@@ -3097,24 +3097,24 @@ final class SummitOrderService
         $this->tx_service->transaction(function () use ($ticket) {
 
             if (!$ticket->hasOwner()) {
-                Log::warning(sprintf("ticket %s no need email reminder ( no owner )", $ticket->getId()));
+                Log::warning(sprintf("SummitOrderService::processTicketReminder ticket %s no need email reminder ( no owner )", $ticket->getId()));
                 return;
             }
 
             if (!$ticket->isPaid()) {
-                Log::warning(sprintf("ticket %s no need email reminder (not paid )", $ticket->getId()));
+                Log::warning(sprintf("SummitOrderService::processTicketReminder ticket %s no need email reminder (not paid )", $ticket->getId()));
                 return;
             }
 
             if (!$ticket->hasTicketType()) {
-                Log::warning(sprintf("ticket %s no need email reminder ( no type )", $ticket->getId()));
+                Log::warning(sprintf("SummitOrderService::processTicketReminder  ticket %s no need email reminder ( no type )", $ticket->getId()));
                 return;
             }
 
             $attendee = $ticket->getOwner();
 
             if ($attendee->isComplete()) {
-                Log::warning(sprintf("ticket %s no need email reminder", $ticket->getId()));
+                Log::warning(sprintf("SummitOrderService::processTicketReminder  ticket %s no need email reminder", $ticket->getId()));
                 return;
             }
 
@@ -3128,22 +3128,21 @@ final class SummitOrderService
             }
 
             $days_interval = $summit->getRegistrationReminderEmailDaysInterval();
-
+            Log::debug(sprintf("SummitOrderService::processTicketReminder days_interval is %s for summit %s", $days_interval, $summit->getId()));
             if ($days_interval <= 0) return;
             $utc_now = new \DateTime('now', new \DateTimeZone('UTC'));
             $last_action_date->add(new \DateInterval("P" . $days_interval . 'D'));
-
+            Log::debug(sprintf("SummitOrderService::processTicketReminder last_action_date %s now %s", $last_action_date->format("Y-m-d H:i:s"), $utc_now->format("Y-m-d H:i:s")));
             if ($last_action_date <= $utc_now) {
 
                 $attendee->setLastReminderEmailSentDate($utc_now);
-                Log::debug(sprintf("sending reminder email for ticket %s", $ticket->getId()));
+                Log::debug(sprintf("SummitOrderService::processTicketReminder sending reminder email for ticket %s", $ticket->getId()));
                 // regenerate hash
                 $ticket->generateHash();
                 SummitTicketReminderEmail::dispatch($ticket);
             }
         });
     }
-
     /**
      * @param Summit $summit
      * @param string $order_hash

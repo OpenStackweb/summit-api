@@ -50,60 +50,62 @@ final class CacheMiddleware
      */
     public function handle($request, Closure $next, $cache_lifetime)
     {
-        Log::debug('cache middleware invoked ...');
+        Log::debug('CacheMiddleware::handle');
         $cache_lifetime = intval($cache_lifetime);
-        if ($request->getMethod() !== 'GET')
-        {
+        if ($request->getMethod() !== 'GET') {
             // short circuit
+            Log::debug('CacheMiddleware::handle method is not GET');
             return $next($request);
         }
 
-        $key          = $request->getPathInfo();
-        $query        = $request->getQueryString();
+        $key = $request->getPathInfo();
+        $query = $request->getQueryString();
         $current_time = time();
-
-        if(!empty($query))
-        {
+        $evict_cache = false;
+        if (!empty($query)) {
+            Log::debug(sprintf('CacheMiddleware::handle query %s', $query));
             $query = explode('&', $query);
-            foreach($query as $q)
-            {
-                $q = explode('=',$q);
-                if(strtolower($q[0]) === 'q'|| strtolower($q[0]) === 'access_token'|| strtolower($q[0]) === 'token_type' ) continue;
-                $key .= ".".implode("=",$q);
+            foreach ($query as $q) {
+                $q = explode('=', $q);
+                if(strtolower($q[0]) === "evict_cache"){
+                    if(strtolower($q[1]) === '1') {
+                        Log::debug('CacheMiddleware::handle cache will be evicted');
+                        $evict_cache = true;
+                    }
+                    continue;
+                }
+
+                if (strtolower($q[0]) === 'q' || strtolower($q[0]) === 'access_token' || strtolower($q[0]) === 'token_type') continue;
+                $key .= "." . implode("=", $q);
             }
         }
 
-        if (str_contains($request->getPathInfo(), '/me'))
-        {
+        if (str_contains($request->getPathInfo(), '/me')) {
             $current_member = $this->context->getCurrentUser();
-            if(!is_null($current_member))
-                $key .= ':' .$current_member->getId();
+            if (!is_null($current_member))
+                $key .= ':' . $current_member->getId();
         }
 
-        $data         = $this->cache_service->getSingleValue($key);
-        $time         = $this->cache_service->getSingleValue($key.".generated");
+        $data = $this->cache_service->getSingleValue($key);
+        $time = $this->cache_service->getSingleValue($key . ".generated");
 
-        if (empty($data) || empty($time))
-        {
+        if (empty($data) || empty($time) || $evict_cache) {
             $time = $current_time;
-            Log::debug(sprintf("cache value not found for key %s , getting from api...", $key));
+            Log::debug(sprintf("CacheMiddleware::handle cache value not found for key %s , getting from api...", $key));
             // normal flow ...
             $response = $next($request);
-            if ($response instanceof JsonResponse && $response->getStatusCode() === 200)
-            {
+            if ($response instanceof JsonResponse && $response->getStatusCode() === 200) {
                 // and if its json, store it on cache ...
                 $data = $response->getData(true);
                 $this->cache_service->setSingleValue($key, gzdeflate(json_encode($data), 9), $cache_lifetime);
-                $this->cache_service->setSingleValue($key.".generated", $time, $cache_lifetime);
+                $this->cache_service->setSingleValue($key . ".generated", $time, $cache_lifetime);
             }
-        }
-        else
-        {
+        } else {
             $ttl = $this->cache_service->ttl($key);
             // cache hit ...
-            Log::debug(sprintf("cache hit for %s - ttl %s ...", $key, $ttl));
+            Log::debug(sprintf("CacheMiddleware::handle cache hit for %s - ttl %s ...", $key, $ttl));
             $response = new JsonResponse(json_decode(gzinflate($data), true), 200, [
-                    'content-type'       => 'application/json',
+                    'content-type' => 'application/json',
                 ]
             );
         }

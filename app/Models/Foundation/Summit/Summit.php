@@ -4955,10 +4955,12 @@ SQL;
      * @return array|DateTime[]
      */
     public function getSummitDays():array {
-        if(is_null($this->begin_date)) return [];
-        if(is_null($this->end_date)) return [];
-        $beginDate = $this->getLocalBeginDate()->setTime(0,0,0);
-        $endDate = $this->getLocalEndDate()->setTime(0,0,0);
+        $beginDate = $this->getLocalBeginDate();
+        $endDate = $this->getLocalEndDate();
+        if(is_null($beginDate)) return [];
+        if(is_null($endDate)) return [];
+        $beginDate = $beginDate->setTime(0,0,0);
+        $endDate = $endDate->setTime(0,0,0);
         $res = [];
         $res[] = clone $beginDate;
         while($beginDate < $endDate){

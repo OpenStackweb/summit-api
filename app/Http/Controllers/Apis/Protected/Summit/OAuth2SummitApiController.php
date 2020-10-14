@@ -198,7 +198,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
 
         $current_member = $this->resource_server_context->getCurrentUser();
 
-        if (!is_null($current_member) && !$current_member->isAdmin() && $current_member->isSummitAdmin() && !$current_member->sum()) {
+        if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->isSummitAdmin()) {
             return $this->error403(['message' => sprintf("Member %s has not permission for any Summit", $current_member->getId())]);
         }
 

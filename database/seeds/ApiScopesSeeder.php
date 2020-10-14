@@ -86,6 +86,16 @@ final class ApiScopesSeeder extends Seeder
                 'description' => '',
             ],
             [
+                'name' => sprintf(SummitScopes::WriteMetrics, $current_realm),
+                'short_description' => '',
+                'description' => '',
+            ],
+            [
+                'name' => sprintf(SummitScopes::ReadMetrics, $current_realm),
+                'short_description' => '',
+                'description' => '',
+            ],
+            [
                 'name' => sprintf(SummitScopes::AddMyRSVP, $current_realm),
                 'short_description' => 'Allows to add Summit events as RSVP',
                 'description' => 'Allows to add Summit events as RSVP',

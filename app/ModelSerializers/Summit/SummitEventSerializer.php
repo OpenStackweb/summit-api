@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 
-use App\Models\Foundation\Summit\Events\SummitEventAttendanceMetric;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SummitEvent;
 /**

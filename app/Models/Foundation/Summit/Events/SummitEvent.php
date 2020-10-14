@@ -16,7 +16,6 @@ use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 use App\Events\SummitEventCreated;
 use App\Events\SummitEventDeleted;
 use App\Events\SummitEventUpdated;
-use App\Models\Foundation\Summit\Events\SummitEventAttendanceMetric;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use models\exceptions\ValidationException;
@@ -206,7 +205,7 @@ class SummitEvent extends SilverstripeBaseModel
     protected $tags;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Events\SummitEventAttendanceMetric", mappedBy="event", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\summit\SummitEventAttendanceMetric", mappedBy="event", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitEventAttendanceMetric[]
      */
     protected $attendance_metrics;
@@ -1141,50 +1140,6 @@ class SummitEvent extends SilverstripeBaseModel
     public function setMeetingUrl(string $meeting_url): void
     {
         $this->meeting_url = $meeting_url;
-    }
-
-    /**
-     * @param Member $member
-     * @return SummitEventAttendanceMetric
-     * @throws \Exception
-     */
-    public function enter(Member $member){
-        // check if we have one
-        $criteria = Criteria::create();
-        $criteria = $criteria
-            ->where(Criteria::expr()->eq('member', $member))
-            ->andWhere(Criteria::expr()->isNull("outgress_date"));
-
-        $formerMetric = $this->attendance_metrics->matching($criteria)->first();
-
-        if($formerMetric and $formerMetric instanceof SummitEventAttendanceMetric){
-            // mark as leave
-            $formerMetric->abandon();
-        }
-
-        $metric = SummitEventAttendanceMetric::build($member, $this);
-        $this->attendance_metrics->add($metric);
-        return $metric;
-    }
-
-    /**
-     * @param Member $member
-     * @return mixed
-     * @throws ValidationException
-     */
-    public function leave(Member $member){
-        $criteria = Criteria::create();
-        $criteria = $criteria
-            ->where(Criteria::expr()->eq('member', $member))
-            ->andWhere(Criteria::expr()->isNull("outgress_date"))
-            ->orderBy(['ingress_date' => Criteria::DESC]);
-
-        $metric = $this->attendance_metrics->matching($criteria)->first();
-        if(!$metric)
-            throw new ValidationException(sprintf("User %s did not enter to event yet.", $member->getId()));
-        $metric->abandon();
-
-        return $metric;
     }
 
     /**

@@ -47,6 +47,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitLocationBannerRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitLocationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitMediaFileTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitMediaUploadTypeRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitMetricRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderExtraQuestionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRefundPolicyTypeRepository;
@@ -96,6 +97,7 @@ use models\summit\SummitDocument;
 use models\summit\SummitEventType;
 use models\summit\SummitMediaFileType;
 use models\summit\SummitMediaUploadType;
+use models\summit\SummitMetric;
 use models\summit\SummitOrder;
 use models\summit\SummitOrderExtraQuestionType;
 use models\summit\SummitRefundPolicyType;
@@ -601,5 +603,11 @@ final class RepositoriesProvider extends ServiceProvider
             }
         );
 
+        App::singleton(
+            ISummitMetricRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitMetric::class);
+            }
+        );
     }
 }

@@ -30,6 +30,7 @@ use App\Services\Model\Imp\SummitDocumentService;
 use App\Services\Model\Imp\SummitEmailEventFlowService;
 use App\Services\Model\Imp\SummitMediaFileTypeService;
 use App\Services\Model\Imp\SummitMediaUploadTypeService;
+use App\Services\Model\Imp\SummitMetricService;
 use App\Services\Model\Imp\SummitRegistrationInvitationService;
 use App\Services\Model\IOrganizationService;
 use App\Services\Model\IPaymentGatewayProfileService;
@@ -48,6 +49,7 @@ use App\Services\Model\ISummitEmailEventFlowService;
 use App\Services\Model\ISummitEventTypeService;
 use App\Services\Model\ISummitMediaFileTypeService;
 use App\Services\Model\ISummitMediaUploadTypeService;
+use App\Services\Model\ISummitMetricService;
 use App\Services\Model\ISummitOrderExtraQuestionTypeService;
 use App\Services\Model\ISummitPushNotificationService;
 use App\Services\Model\ISummitRefundPolicyTypeService;
@@ -385,6 +387,12 @@ final class ModelServicesProvider extends ServiceProvider
             IPresentationVideoMediaUploadProcessor::class,
             PresentationVideoMediaUploadProcessor::class
         );
+
+        App::singleton
+        (
+            ISummitMetricService::class,
+            SummitMetricService::class
+        );
     }
 
     /**
@@ -444,7 +452,8 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitAdministratorPermissionGroupService::class,
             ISummitMediaFileTypeService::class,
             ISummitMediaUploadTypeService::class,
-            IPresentationVideoMediaUploadProcessor::class
+            IPresentationVideoMediaUploadProcessor::class,
+            ISummitMetricService::class,
         ];
     }
 }

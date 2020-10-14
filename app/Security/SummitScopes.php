@@ -36,7 +36,8 @@ final class SummitScopes
     const SendMyScheduleMail                  = '%s/me/summits/events/schedule/mail';
     const EnterEvent                          = '%s/me/summits/events/enter';
     const LeaveEvent                          = '%s/me/summits/events/leave';
-
+    const WriteMetrics                        = '%s/me/summits/metrics/write';
+    const ReadMetrics                         = '%s/me/summits/metrics/read';
 
     // registration
     const CreateRegistrationOrders            = '%s/summits/registration-orders/create';

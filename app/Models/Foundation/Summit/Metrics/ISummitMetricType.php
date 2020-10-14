@@ -1,4 +1,4 @@
-<?php namespace ModelSerializers;
+<?php namespace models\summit;
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,17 +11,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Libs\ModelSerializers\AbstractSerializer;
 
 /**
- * Class SummitEventAttendanceMetricSerializer
- * @package ModelSerializers
+ * Interface ISummitMetricType
+ * @package models\summit
  */
-class SummitEventAttendanceMetricSerializer extends AbstractSerializer
+interface ISummitMetricType
 {
-    protected static $array_mappings = [
-        'MemberFirstName'       => 'member_first_name:json_string',
-        'MemberLastName'        => 'member_last_name:json_string',
-        'MemberProfilePhotoUrl' => 'member_pic:json_url',
+    const General = 'GENERAL';
+    const Lobby = 'LOBBY';
+    const Event = 'EVENT';
+    const Sponsor = 'SPONSOR';
+
+    const ValidTypes = [
+        self::General,
+        self::Lobby,
+        self::Event,
+        self::Sponsor,
     ];
 }

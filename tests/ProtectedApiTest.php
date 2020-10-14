@@ -109,6 +109,8 @@ class AccessTokenServiceStub implements IAccessTokenService
             sprintf(SummitScopes::WriteSummitMediaFileTypes, $url),
             sprintf(CompanyScopes::Write, $url),
             sprintf(CompanyScopes::Read, $url),
+            sprintf(SummitScopes::WriteMetrics, $url),
+            sprintf(SummitScopes::ReadMetrics, $url),
         );
 
         return AccessToken::createFromParams(
@@ -202,6 +204,8 @@ class AccessTokenServiceStub2 implements IAccessTokenService
             sprintf(SummitScopes::LeaveEvent, $url),
             sprintf(SummitScopes::ReadSummitMediaFileTypes, $url),
             sprintf(SummitScopes::WriteSummitMediaFileTypes, $url),
+            sprintf(SummitScopes::WriteMetrics, $url),
+            sprintf(SummitScopes::ReadMetrics, $url),
             sprintf(CompanyScopes::Write, $url),
             sprintf(CompanyScopes::Read, $url),
         );

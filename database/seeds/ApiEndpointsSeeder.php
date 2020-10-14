@@ -6044,6 +6044,24 @@ class ApiEndpointsSeeder extends Seeder
                         IGroup::Administrators,
                     ]
                 ],
+                [
+                    'name' => 'metric-enter',
+                    'route' => '/api/v1/summits/{id}/metrics/enter',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        sprintf(SummitScopes::EnterEvent, $current_realm),
+                        sprintf(SummitScopes::WriteMetrics, $current_realm)
+                    ],
+                ],
+                [
+                    'name' => 'metric-leave',
+                    'route' => '/api/v1/summits/{id}/metrics/leave',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        sprintf(SummitScopes::LeaveEvent, $current_realm),
+                        sprintf(SummitScopes::WriteMetrics, $current_realm)
+                    ],
+                ],
             ]
         );
     }

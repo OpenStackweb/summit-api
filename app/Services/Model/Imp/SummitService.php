@@ -33,7 +33,6 @@ use App\Permissions\IPermissionsManager;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IFolderService;
 use App\Services\Model\IMemberService;
-use App\Services\Utils\CSVReader;
 use CalDAVClient\Facade\Utils\ICalTimeZoneBuilder;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use GuzzleHttp\Exception\ClientException;
@@ -2501,50 +2500,6 @@ final class SummitService extends AbstractService implements ISummitService
                 });
             }
         }
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function enterTo(Summit $summit, Member $current_member, int $event_id): SummitEvent
-    {
-        return $this->tx_service->transaction(function () use ($summit, $current_member, $event_id) {
-
-            $event = $summit->getEvent($event_id);
-            if (is_null($event)) {
-                throw new EntityNotFoundException(sprintf("Event %s does not belongs to summit %s.", $event_id, $summit->getId()));
-            }
-
-            if (!$event->isPublished()) {
-                throw new ValidationException(sprintf("Event %s is not published.", $event->getId()));
-            }
-
-            $event->enter($current_member);
-
-            return $event;
-
-        });
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function leaveFrom(Summit $summit, Member $current_member, int $event_id): SummitEvent
-    {
-        return $this->tx_service->transaction(function () use ($summit, $current_member, $event_id) {
-            $event = $summit->getEvent($event_id);
-            if (is_null($event)) {
-                throw new EntityNotFoundException(sprintf("Event %s does not belongs to summit %s.", $event_id, $summit->getId()));
-            }
-
-            if (!$event->isPublished()) {
-                throw new ValidationException(sprintf("Event %s is not published.", $event->getId()));
-            }
-
-            $event->leave($current_member);
-
-            return $event;
-        });
     }
 
     /**

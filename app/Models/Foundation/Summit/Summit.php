@@ -634,7 +634,6 @@ class Summit extends SilverstripeBaseModel
     /**
      * @ORM\OneToMany(targetEntity="models\summit\SummitRegistrationInvitation", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
      * @var SummitRegistrationInvitation[]
-
      */
     private $registration_invitations;
 
@@ -643,6 +642,12 @@ class Summit extends SilverstripeBaseModel
      * @var SummitAdministratorPermissionGroup[]
      */
     private $permission_groups;
+
+    /**
+     * @ORM\OneToMany(targetEntity="models\summit\SummitMetric", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SummitMetric[]
+     */
+    private $metrics;
 
     /**
      * @return string
@@ -963,6 +968,7 @@ class Summit extends SilverstripeBaseModel
         $this->permission_groups = new ArrayCollection();
         $this->media_upload_types = new ArrayCollection();
         $this->featured_speakers = new ArrayCollection();
+        $this->metrics = new ArrayCollection();
     }
 
     /**
@@ -5007,6 +5013,23 @@ SQL;
         }
 
         return $list;
+    }
+
+    /**
+     * @return SummitMetric[]
+     */
+    public function getMetrics(): array
+    {
+        return $this->metrics;
+    }
+
+    /**
+     * @param SummitMetric $metric
+     */
+    public function addMetric(SummitMetric $metric){
+        if($this->metrics->contains($metric)) return;
+        $this->metrics->add($metric);
+        $metric->setSummit($this);
     }
 
 }

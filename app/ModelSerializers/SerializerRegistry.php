@@ -138,9 +138,13 @@ final class SerializerRegistry
         $this->registry['ApiEndpoint']           = ApiEndpointSerializer::class;
         $this->registry['ApiScope']              = ApiScopeSerializer::class;
         $this->registry['ApiEndpointAuthzGroup'] = ApiEndpointAuthzGroupSerializer::class;
-        //
+        // metrics
 
+        $this->registry['SummitMetric'] = SummitMetricSerializer::class;
+        $this->registry['SummitSponsorMetric'] = SummitSponsorMetricSerializer::class;
         $this->registry['SummitEventAttendanceMetric'] = SummitEventAttendanceMetricSerializer::class;
+
+        // stripe
         $this->registry['StripePaymentProfile'] = [
             self::SerializerType_Public => StripePaymentProfileSerializer::class,
             self::SerializerType_Private  => AdminStripePaymentProfileSerializer::class,

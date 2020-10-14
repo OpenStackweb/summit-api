@@ -447,27 +447,6 @@ interface ISummitService
 
     /**
      * @param Summit $summit
-     * @param Member $current_member
-     * @param int $event_id
-     * @return SummitEvent
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function enterTo(Summit $summit, Member $current_member, int $event_id):SummitEvent;
-
-    /**
-     * @param Summit $summit
-     * @param Member $current_member
-     * @param int $event_id
-     * @return SummitEvent
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function leaveFrom(Summit $summit, Member $current_member, int $event_id):SummitEvent;
-
-
-    /**
-     * @param Summit $summit
      * @param int $event_id
      * @param UploadedFile $file
      * @param int $max_file_size

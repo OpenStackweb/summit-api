@@ -170,6 +170,11 @@ Route::group([
 
         Route::group(['prefix' => '{id}'], function () {
 
+            Route::group(['prefix' => 'metrics'], function () {
+                Route::put('enter', 'OAuth2SummitMetricsApiController@enter');
+                Route::post('leave', 'OAuth2SummitMetricsApiController@leave');
+            });
+
             Route::put('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@updateSummit']);
             Route::post('logo', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@addSummitLogo']);
             Route::delete('logo', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@deleteSummitLogo']);
@@ -964,8 +969,8 @@ Route::group([
                             Route::delete('', 'OAuth2SummitMembersApiController@removeEventFromMemberSchedule')->where('member_id', 'me');
 
 
-                            Route::put('enter', 'OAuth2SummitMembersApiController@enterToEvent')->where('member_id', 'me');
-                            Route::post('leave', 'OAuth2SummitMembersApiController@leaveFromEvent')->where('member_id', 'me');
+                            Route::put('enter', 'OAuth2SummitMetricsApiController@enterToEvent')->where('member_id', 'me');
+                            Route::post('leave', 'OAuth2SummitMetricsApiController@leaveFromEvent')->where('member_id', 'me');
                         });
                     });
                 });

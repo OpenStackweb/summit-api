@@ -13,7 +13,7 @@
  **/
 
 use App\Models\Foundation\Main\IGroup;
-use App\Models\Foundation\Summit\Events\SummitEventAttendanceMetric;
+use models\summit\SummitMetric;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use Models\Foundation\Main\CCLA\Team;
@@ -282,8 +282,8 @@ class Member extends SilverstripeBaseModel
     private $summit_permission_groups;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Events\SummitEventAttendanceMetric", mappedBy="member", cascade={"persist","remove"}, orphanRemoval=true)
-     * @var SummitEventAttendanceMetric[]
+     * @ORM\OneToMany(targetEntity="models\summit\SummitMetric", mappedBy="member", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SummitMetric[]
      */
     protected $summit_attendance_metrics;
 

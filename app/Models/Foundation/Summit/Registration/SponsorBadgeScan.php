@@ -13,28 +13,26 @@
  **/
 use models\main\Member;
 use models\utils\One2ManyPropertyTrait;
-use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSponsorBadgeScanRepository")
+ * @ORM\Entity
  * @ORM\Table(name="SponsorBadgeScan")
  * Class SponsorBadgeScan
  * @package models\summit
  */
-class SponsorBadgeScan extends SilverstripeBaseModel
+class SponsorBadgeScan extends SponsorUserInfoGrant
 {
 
+    const ClassName = 'SponsorBadgeScan';
 
     use One2ManyPropertyTrait;
 
     protected $getIdMappings = [
-        'getSponsorId' => 'sponsor',
         'getUserId'    => 'user',
         'getBadgeId'   => 'badge',
     ];
 
     protected $hasPropertyMappings = [
-        'hasSponsor' => 'sponsor',
         'hasUser'    => 'user',
         'hasBadge'   => 'badge',
     ];
@@ -44,13 +42,6 @@ class SponsorBadgeScan extends SilverstripeBaseModel
      * @var string
      */
     private $qr_code;
-
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Sponsor", inversedBy="badge_scans")
-     * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID")
-     * @var Sponsor
-     */
-    private $sponsor;
 
     /**
      * @var \DateTime
@@ -150,6 +141,26 @@ class SponsorBadgeScan extends SilverstripeBaseModel
     public function setScanDate(\DateTime $scan_date): void
     {
         $this->scan_date = $scan_date;
+    }
+
+    public function getAttendeeFirstName():?string{
+        $attendee = $this->getBadge()->getTicket()->getOwner();
+        return $attendee->hasMember() ? $attendee->getMember()->getFirstName() : $attendee->getFirstName();
+    }
+
+    public function getAttendeeLastName():?string{
+        $attendee = $this->getBadge()->getTicket()->getOwner();
+        return  $attendee->hasMember() ? $attendee->getMember()->getLastName() :$attendee->getSurname();
+    }
+
+    public function getAttendeeEmail():?string{
+        $attendee = $this->getBadge()->getTicket()->getOwner();
+        return $attendee->getEmail();
+    }
+
+    public function getAttendeeCompany():?string{
+        $attendee = $this->getBadge()->getTicket()->getOwner();
+        $attendee->getCompanyName();
     }
 
 }

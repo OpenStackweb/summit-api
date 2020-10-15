@@ -1451,6 +1451,14 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
+            [
+                'name' => 'share-my-user-info-with-sponsor',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/user-info-grants/me',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteMyBadgeScan, $current_realm),
+                ]
+            ],
             // sponsorship-types
             [
                 'name' => 'get-sponsorship-types',

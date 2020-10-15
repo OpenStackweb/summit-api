@@ -13,6 +13,7 @@
  **/
 use App\Models\Foundation\Main\IOrderable;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 use models\main\Company;
 use models\main\Member;
@@ -54,10 +55,10 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     protected $sponsorship;
 
     /**
-     * @ORM\OneToMany(targetEntity="SponsorBadgeScan", mappedBy="sponsor", cascade={"persist"}, orphanRemoval=true)
-     * @var SponsorBadgeScan[]
+     * @ORM\OneToMany(targetEntity="SponsorUserInfoGrant", mappedBy="sponsor", cascade={"persist"}, orphanRemoval=true)
+     * @var SponsorUserInfoGrant[]
      */
-    protected $badge_scans;
+    protected $user_info_grants;
 
     /**
      * @ORM\ManyToMany(targetEntity="models\main\Member", inversedBy="sponsor_memberships")
@@ -76,7 +77,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     {
         parent::__construct();
         $this->members = new ArrayCollection();
-        $this->badge_scans = new ArrayCollection();
+        $this->user_info_grants = new ArrayCollection();
     }
 
     /**
@@ -164,16 +165,27 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     }
 
     /**
-     * @param SponsorBadgeScan $scan
+     * @param SponsorUserInfoGrant $grant
      */
-    public function addBadgeScan(SponsorBadgeScan $scan){
-        if($this->badge_scans->contains($scan)) return;
-        $this->badge_scans->add($scan);
-        $scan->setSponsor($this);
+    public function addUserInfoGrant(SponsorUserInfoGrant $grant){
+        if($this->user_info_grants->contains($grant)) return;
+        $this->user_info_grants->add($grant);
+        $grant->setSponsor($this);
     }
 
-    public function getScans(){
-        return $this->badge_scans;
+    public function getUserInfoGrants(){
+        return $this->user_info_grants;
+    }
+
+    /**
+     * @param Member $member
+     * @return bool
+     */
+    public function hasGrant(Member $member):bool {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('allowed_user', $member));
+        $grant = $this->user_info_grants->matching($criteria)->first();
+        return $grant !== false;
     }
 
     public function hasCompany():bool{

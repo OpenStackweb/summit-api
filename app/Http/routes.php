@@ -692,6 +692,9 @@ Route::group([
                 Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getAllBySummit']);
                 Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@add']);
                 Route::group(['prefix' => '{sponsor_id}'], function () {
+                    Route::group(['prefix' => 'user-info-grants'], function () {
+                        Route::post('me', ['uses' => 'OAuth2SummitBadgeScanApiController@addGrant']);
+                    });
                     Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@get']);
                     Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@update']);
                     Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@delete']);
@@ -745,9 +748,8 @@ Route::group([
                 });
             });
 
-            // badge-feature-types
+            // badge-scans
             Route::group(['prefix' => 'badge-scans'], function () {
-
                 Route::get('me','OAuth2SummitBadgeScanApiController@getAllMyBadgeScans' );
                 Route::get('', 'OAuth2SummitBadgeScanApiController@getAllBySummit');
                 Route::get('csv','OAuth2SummitBadgeScanApiController@getAllBySummitCSV');

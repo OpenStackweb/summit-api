@@ -13,10 +13,10 @@
  **/
 use models\utils\IBaseRepository;
 /**
- * Interface ISponsorBadgeScanRepository
+ * Interface ISponsorUserInfoGrantRepository
  * @package models\summit
  */
-interface ISponsorBadgeScanRepository extends IBaseRepository
+interface ISponsorUserInfoGrantRepository extends IBaseRepository
 {
 
 }

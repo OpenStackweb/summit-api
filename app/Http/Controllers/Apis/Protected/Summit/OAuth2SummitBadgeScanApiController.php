@@ -13,11 +13,14 @@
  **/
 use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Http\Utils\EpochCellFormatter;
-use App\Services\Model\ISponsorBadgeScanService;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Request;
+use models\exceptions\EntityNotFoundException;
+use models\summit\ISponsorUserInfoGrantRepository;
 use Illuminate\Support\Facades\Input;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
-use models\summit\ISponsorBadgeScanRepository;
+use App\Services\Model\ISponsorUserInfoGrantService;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
 use models\utils\IEntity;
@@ -32,7 +35,7 @@ final class OAuth2SummitBadgeScanApiController
     extends OAuth2ProtectedController
 {
     /**
-     * @var ISponsorBadgeScanService
+     * @var ISponsorUserInfoGrantService
      */
     private $service;
 
@@ -43,17 +46,17 @@ final class OAuth2SummitBadgeScanApiController
 
     /**
      * OAuth2SummitBadgeScanApiController constructor.
-     * @param ISponsorBadgeScanRepository $repository
+     * @param ISponsorUserInfoGrantRepository $repository
      * @param ISummitRepository $summit_repository
      * @param IResourceServerContext $resource_server_context
-     * @param ISponsorBadgeScanService $service
+     * @param ISponsorUserInfoGrantService $service
      */
     public function __construct
     (
-        ISponsorBadgeScanRepository $repository,
+        ISponsorUserInfoGrantRepository $repository,
         ISummitRepository $summit_repository,
         IResourceServerContext $resource_server_context,
-        ISponsorBadgeScanService $service
+        ISponsorUserInfoGrantService $service
     )
     {
         parent::__construct($resource_server_context);
@@ -87,6 +90,49 @@ final class OAuth2SummitBadgeScanApiController
         if (is_null($current_member)) throw new HTTP403ForbiddenException();
 
         return $this->service->addBadgeScan($summit, $current_member, $payload);
+    }
+
+    /**
+     * @param $summit_id
+     * @param $sponsor_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function addGrant($summit_id, $sponsor_id){
+        try{
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) throw new HTTP403ForbiddenException();
+
+            $grant = $this->service->addGrant($summit, intval($sponsor_id), $current_member);
+            return $this->created(SerializerRegistry::getInstance()->getSerializer
+            (
+                $grant,
+                $this->addSerializerType()
+            )->serialize(Request::input('expand', '')));
+        }
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412(array($ex->getMessage()));
+        }
+        catch(EntityNotFoundException $ex)
+        {
+            Log::warning($ex);
+            return $this->error404(array('message'=> $ex->getMessage()));
+        }
+        catch (\HTTP401UnauthorizedException $ex) {
+            Log::warning($ex);
+            return $this->error401();
+        }
+        catch (HTTP403ForbiddenException $ex) {
+            Log::warning($ex);
+            return $this->error403();
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
     }
 
     /**

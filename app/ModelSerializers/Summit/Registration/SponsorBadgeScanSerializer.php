@@ -22,11 +22,12 @@ use ModelSerializers\SilverStripeSerializer;
 final class SponsorBadgeScanSerializer extends SilverStripeSerializer
 {
 
+
     protected static $array_mappings = [
         'ScanDate'     => 'scan_date:datetime_epoch',
         'QRCode'       => 'qr_code:json_string',
         'SponsorId'    => 'sponsor_id:json_int',
-        'UserId'       => 'user_id:json_int',
+        'UserId'       => 'scanned_by_id:json_int',
         'BadgeId'      => 'badge_id:json_int',
     ];
 
@@ -53,10 +54,10 @@ final class SponsorBadgeScanSerializer extends SilverStripeSerializer
                         $values['sponsor'] = SerializerRegistry::getInstance()->getSerializer($scan->getSponsor())->serialize(AbstractSerializer::filterExpandByPrefix($expand, "sponsor"));
                     }
                     break;
-                    case 'user': {
+                    case 'scanned_by_id': {
                         if(!$scan->hasUser()) continue;
-                        unset($values['user_id']);
-                        $values['user'] = SerializerRegistry::getInstance()->getSerializer($scan->getUser())->serialize(AbstractSerializer::filterExpandByPrefix($expand, "user"));
+                        unset($values['scanned_by_id']);
+                        $values['scanned_by'] = SerializerRegistry::getInstance()->getSerializer($scan->getUser())->serialize(AbstractSerializer::filterExpandByPrefix($expand, "user"));
                     }
                         break;
                     case 'badge': {

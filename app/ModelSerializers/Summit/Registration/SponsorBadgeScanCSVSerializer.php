@@ -25,8 +25,12 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
         'ScanDate'     => 'scan_date:datetime_epoch',
         'QRCode'       => 'qr_code:json_string',
         'SponsorId'    => 'sponsor_id:json_int',
-        'UserId'       => 'user_id:json_int',
+        'UserId'       => 'scanned_by_id:json_int',
         'BadgeId'      => 'badge_id:json_int',
+        'AttendeeFirstName' => 'attendee_first_name:json_string',
+        'AttendeeLastName' => 'attendee_last_name:json_string',
+        'AttendeeEmail' => 'attendee_email:json_string',
+        'AttendeeCompany' => 'attendee_company:json_string',
     ];
 
     /**
@@ -41,13 +45,6 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
         $scan = $this->object;
         if (!$scan instanceof SponsorBadgeScan) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
-
-        $attendee = $scan->getBadge()->getTicket()->getOwner();
-
-        $values['attendee_first_name'] = $attendee->hasMember() ? $attendee->getMember()->getFirstName() : $attendee->getFirstName();
-        $values['attendee_last_name']  = $attendee->hasMember() ? $attendee->getMember()->getLastName() :$attendee->getSurname();
-        $values['attendee_email']      = $attendee->getEmail();
-        $values['attendee_company']    = $attendee->getCompanyName();
         return $values;
     }
 }

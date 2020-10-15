@@ -24,7 +24,7 @@ use App\Services\Model\IMemberService;
 use App\Services\Model\Imp\CompanyService;
 use App\Services\Model\Imp\PaymentGatewayProfileService;
 use App\Services\Model\Imp\RegistrationIngestionService;
-use App\Services\Model\Imp\SponsorBadgeScanService;
+use App\Services\Model\Imp\SponsorUserInfoGrantService;
 use App\Services\Model\Imp\SummitAdministratorPermissionGroupService;
 use App\Services\Model\Imp\SummitDocumentService;
 use App\Services\Model\Imp\SummitEmailEventFlowService;
@@ -38,7 +38,7 @@ use App\Services\Model\IPresentationCategoryGroupService;
 use App\Services\Model\IRegistrationIngestionService;
 use App\Services\Model\IRSVPTemplateService;
 use App\Services\Model\IScheduleIngestionService;
-use App\Services\Model\ISponsorBadgeScanService;
+use App\Services\Model\ISponsorUserInfoGrantService;
 use App\Services\Model\ISponsorshipTypeService;
 use App\Services\Model\ISummitAccessLevelTypeService;
 use App\Services\Model\ISummitAdministratorPermissionGroupService;
@@ -326,7 +326,8 @@ final class ModelServicesProvider extends ServiceProvider
 
         App::singleton(ISummitOrderService::class, SummitOrderService::class);
 
-        App::singleton(ISponsorBadgeScanService::class, SponsorBadgeScanService::class);
+        App::singleton(ISponsorUserInfoGrantService::class,
+            SponsorUserInfoGrantService::class);
 
         App::singleton(
             IRegistrationIngestionService::class,

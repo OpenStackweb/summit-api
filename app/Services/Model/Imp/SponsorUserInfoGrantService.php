@@ -11,28 +11,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Models\Foundation\Summit\Factories\SponsorUserInfoGrantFactory;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Services\Model\AbstractService;
-use App\Services\Model\ISponsorBadgeScanService;
+use App\Services\Model\ISponsorUserInfoGrantService;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Member;
-use models\summit\ISponsorBadgeScanRepository;
+use models\summit\ISponsorUserInfoGrantRepository;
 use models\summit\SponsorBadgeScan;
+use models\summit\SponsorUserInfoGrant;
 use models\summit\Summit;
 use models\summit\SummitAttendeeBadge;
 /**
- * Class SponsorBadgeScanService
+ * Class SponsorUserInfoGrantService
  * @package App\Services\Model\Imp
  */
-final class SponsorBadgeScanService
+final class SponsorUserInfoGrantService
     extends AbstractService
-    implements ISponsorBadgeScanService
+    implements ISponsorUserInfoGrantService
 {
 
     /**
-     * @var ISponsorBadgeScanRepository
+     * @var ISponsorUserInfoGrantRepository
      */
     private $repository;
 
@@ -43,13 +45,13 @@ final class SponsorBadgeScanService
 
     /**
      * SponsorBadgeScanService constructor.
-     * @param ISponsorBadgeScanRepository $repository
+     * @param ISponsorUserInfoGrantRepository $repository
      * @param ISummitAttendeeBadgeRepository $badge_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
     (
-        ISponsorBadgeScanRepository $repository,
+        ISponsorUserInfoGrantRepository $repository,
         ISummitAttendeeBadgeRepository $badge_repository,
         ITransactionService $tx_service
     )
@@ -57,6 +59,29 @@ final class SponsorBadgeScanService
         parent::__construct($tx_service);
         $this->repository = $repository;
         $this->badge_repository = $badge_repository;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param Member $current_member
+     * @return SponsorUserInfoGrant
+     * @throws \Exception
+     */
+    public function addGrant(Summit $summit, int $sponsor_id, Member $current_member):SponsorUserInfoGrant {
+        return $this->tx_service->transaction(function() use($summit, $sponsor_id, $current_member){
+            $grant = SponsorUserInfoGrantFactory::build(['class_name' => SponsorUserInfoGrant::ClassName]);
+            $sponsor = $summit->getSummitSponsorById($sponsor_id);
+            if(is_null($sponsor)){
+                throw new EntityNotFoundException(sprintf("Sponsor not found."));
+            }
+            if($sponsor->hasGrant($current_member)){
+                throw new ValidationException(sprintf("User %s already gave grant to sponsor %s", $current_member->getEmail(), $sponsor_id));
+            }
+            $grant->setAllowedUser($current_member);
+            $sponsor->addUserInfoGrant($grant);
+            return $grant;
+        });
     }
 
     /**
@@ -79,7 +104,7 @@ final class SponsorBadgeScanService
             $end_date        = $summit->getEndDate();
 
             if(!($scan_date >= $begin_date && $scan_date <= $end_date))
-                throw new ValidationException("scan_date is does not belong to summit period");
+                throw new ValidationException("scan_date is does not belong to summit period.");
 
             if($summit->getBadgeQRPrefix() != $prefix)
                 throw new ValidationException
@@ -102,15 +127,15 @@ final class SponsorBadgeScanService
             $sponsor = $current_member->getSponsorBySummit($summit);
 
             if(is_null($sponsor))
-                throw new ValidationException("current member does not belongs to any summit sponsor");
+                throw new ValidationException("Current member does not belongs to any summit sponsor.");
 
-            $scan = new SponsorBadgeScan();
-
+            $scan = SponsorUserInfoGrantFactory::build(['class_name' => SponsorBadgeScan::ClassName]);
             $scan->setScanDate($scan_date);
             $scan->setQRCode($qr_code);
             $scan->setUser($current_member);
             $scan->setBadge($badge);
-            $sponsor->addBadgeScan($scan);
+
+            $sponsor->addUserInfoGrant($scan);
 
             return $scan;
         });

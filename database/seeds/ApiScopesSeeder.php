@@ -326,6 +326,11 @@ final class ApiScopesSeeder extends Seeder
                 'description' => 'read my badge scans',
             ],
             [
+                'name' => sprintf(SummitScopes::WriteMyBadgeScan, $current_realm),
+                'short_description' => 'allow to share my badge with sponsors',
+                'description' => 'allow to share my badge with sponsors',
+            ],
+            [
                 'name' => sprintf(SummitScopes::ReadBadgeScan, $current_realm),
                 'short_description' => 'read badge scans',
                 'description' => 'read badge scans',

@@ -15,13 +15,25 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\SponsorBadgeScan;
+use models\summit\SponsorUserInfoGrant;
 use models\summit\Summit;
 /**
  * Interface ISponsorBadgeScanService
  * @package App\Services\Model
  */
-interface ISponsorBadgeScanService
+interface ISponsorUserInfoGrantService
 {
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param Member $current_member
+     * @return SponsorUserInfoGrant
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addGrant(Summit $summit, int $sponsor_id, Member $current_member):SponsorUserInfoGrant;
+
     /**
      * @param Summit $summit
      * @param Member $current_member

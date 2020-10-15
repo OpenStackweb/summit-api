@@ -71,7 +71,7 @@ use models\main\Group;
 use models\main\IOrganizationRepository;
 use models\main\Organization;
 use models\main\SummitAdministratorPermissionGroup;
-use models\summit\ISponsorBadgeScanRepository;
+use models\summit\ISponsorUserInfoGrantRepository;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitTicketTypeRepository;
 use models\summit\PaymentGatewayProfile;
@@ -85,6 +85,7 @@ use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\Sponsor;
 use models\summit\SponsorBadgeScan;
 use models\summit\SponsorshipType;
+use models\summit\SponsorUserInfoGrant;
 use models\summit\SummitAbstractLocation;
 use models\summit\SummitAccessLevelType;
 use models\summit\SummitAttendeeBadge;
@@ -541,9 +542,9 @@ final class RepositoriesProvider extends ServiceProvider
         );
 
         App::singleton(
-            ISponsorBadgeScanRepository::class,
+            ISponsorUserInfoGrantRepository::class,
             function(){
-                return EntityManager::getRepository(SponsorBadgeScan::class);
+                return EntityManager::getRepository(SponsorUserInfoGrant::class);
             }
         );
 

@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\ModelSerializers\CCLA\TeamSerializer;
 use App\ModelSerializers\FileSerializer;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
@@ -65,6 +64,7 @@ use App\ModelSerializers\Summit\Registration\SummitAttendeeCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitAttendeeTicketCSVSerializer;
 use App\ModelSerializers\Summit\SponsorBadgeScanCSVSerializer;
 use App\ModelSerializers\Summit\SponsorBadgeScanSerializer;
+use App\ModelSerializers\Summit\SponsorUserInfoGrantSerializer;
 use App\ModelSerializers\Summit\StripePaymentProfileSerializer;
 use App\ModelSerializers\Summit\SummitAttendeeBadgeSerializer;
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPDropDownQuestionTemplateSerializer;
@@ -298,9 +298,15 @@ final class SerializerRegistry
         ];
 
         $this->registry['SummitAttendeeBadge']            = SummitAttendeeBadgeSerializer::class;
+
         $this->registry['SponsorBadgeScan']               = [
             self::SerializerType_Public  => SponsorBadgeScanSerializer::class,
             self::SerializerType_CSV     => SponsorBadgeScanCSVSerializer::class,
+        ];
+
+        $this->registry['SponsorUserInfoGrant']               = [
+            self::SerializerType_Public  => SponsorUserInfoGrantSerializer::class,
+            self::SerializerType_CSV     => SponsorUserInfoGrantSerializer::class,
         ];
 
         $this->registry['SummitAttendeeTicketTax']        = SummitAttendeeTicketTaxSerializer::class;

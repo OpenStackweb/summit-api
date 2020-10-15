@@ -13,17 +13,17 @@
  **/
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
-use models\summit\ISponsorBadgeScanRepository;
+use models\summit\ISponsorUserInfoGrantRepository;
 use models\summit\SponsorBadgeScan;
+use models\summit\SponsorUserInfoGrant;
 use utils\DoctrineFilterMapping;
-
 /**
- * Class DoctrineSponsorBadgeScanRepository
+ * Class DoctrineSponsorUserInfoGrantRepository
  * @package App\Repositories\Summit
  */
-final class DoctrineSponsorBadgeScanRepository
+final class DoctrineSponsorUserInfoGrantRepository
     extends SilverStripeDoctrineRepository
-    implements ISponsorBadgeScanRepository
+    implements ISponsorUserInfoGrantRepository
 {
 
     /**
@@ -65,16 +65,16 @@ final class DoctrineSponsorBadgeScanRepository
     {
         return [
             'id'                    => 'e.id',
-            'scan_date'             => 'e.scan_date',
+            'scan_date'             => 'sbs.scan_date',
             'created'               => 'e.created',
             'ticket_number'         => "t.number",
             'order_number'          => "ord.order_number",
             'sponsor_id'            => "sp.id",
             'attendee_company'      => 'o.company_name',
-            "attendee_full_name"    => "LOWER(CONCAT(o.first_name, ' ', o.surname))",
-            'attendee_first_name'   => 'o.first_name',
-            'attendee_last_name'    => 'o.surname',
-            'attendee_email'        => 'o.email',
+            "attendee_full_name"    => "(LOWER(CONCAT(o.first_name, ' ', o.surname)) OR LOWER(CONCAT(au.first_name, ' ', au.last_name)))",
+            'attendee_first_name'   => 'o.first_name OR au.first_name',
+            'attendee_last_name'    => 'o.surname OR au.last_name',
+            'attendee_email'        => 'o.email OR au.email',
         ];
     }
 
@@ -86,8 +86,10 @@ final class DoctrineSponsorBadgeScanRepository
         $query = $query->join('e.sponsor', 'sp')
             ->join('sp.summit', 's')
             ->join('sp.company', 'c')
-            ->join('e.user', 'u')
-            ->join('e.badge', 'b')
+            ->leftJoin('e.allowed_user', 'au')
+            ->leftJoin(SponsorBadgeScan::class, 'sbs', 'WITH', 'e.id = sbs.id')
+            ->join('sbs.user', 'u')
+            ->join('sbs.badge', 'b')
             ->join('b.ticket', 't')
             ->join('t.order', 'ord')
             ->leftJoin('t.owner', 'o')
@@ -100,6 +102,6 @@ final class DoctrineSponsorBadgeScanRepository
      */
     protected function getBaseEntity()
     {
-        return SponsorBadgeScan::class;
+        return SponsorUserInfoGrant::class;
     }
 }

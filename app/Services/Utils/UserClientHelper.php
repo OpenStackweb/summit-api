@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Illuminate\Support\Facades\Request;
 /**
  * Class UserClientHelper
  * @package App\Services\Utils
@@ -30,7 +29,7 @@ final class UserClientHelper
 
     public static function getUserOrigin()
     {
-        return $_SERVER['HTTP_REFERER']?? '';
+        return $_SERVER['HTTP_REFERER']?? ($_SERVER['HTTP_ORIGIN'] ?? '');
     }
 
     public static function getUserBrowser()

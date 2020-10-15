@@ -46,7 +46,7 @@ implements ISponsorRepository
      * @return QueryBuilder
      */
     protected function applyExtraJoins(QueryBuilder $query){
-        $query = $query->leftJoin("e.badge_scans", "bs");
+        $query = $query->leftJoin("e.user_info_grants", "bs");
         return $query;
     }
 

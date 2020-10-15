@@ -33,7 +33,7 @@ class SponsorUserInfoGrant extends SilverstripeBaseModel
 
     const ClassName = 'SponsorUserInfoGrant';
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Sponsor", inversedBy="badge_scans")
+     * @ORM\ManyToOne(targetEntity="models\summit\Sponsor", inversedBy="user_info_grants")
      * @ORM\JoinColumn(name="SponsorID", referencedColumnName="ID")
      * @var Sponsor
      */

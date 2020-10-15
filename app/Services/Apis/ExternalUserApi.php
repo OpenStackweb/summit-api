@@ -67,7 +67,7 @@ final class ExternalUserApi extends AbstractOAuth2Api
             ];
 
             $params = [
-                'filter' => 'email==' . $email
+                'filter' => 'primary_email==' . $email
             ];
 
             foreach ($params as $param => $value) {

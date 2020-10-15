@@ -12,7 +12,10 @@
  * limitations under the License.
  **/
 use App\Services\Model\ISummitMetricService;
+use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Validator;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\IMemberRepository;
@@ -73,10 +76,23 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
-            $payload = $this->getJsonPayload([
-                'type' => 'required|string',
-                'source_id' => 'sometimes|integer',
+            $payload = Input::all();
+            if(Request::isJson()){
+                $payload = Input::json()->all();
+            }
+
+            $validation = Validator::make($payload,
+            [
+                    'type' => 'required|string|in:'.implode(",", ISummitMetricType::ValidTypes),
+                    'source_id' => 'sometimes|integer',
             ]);
+
+            if ($validation->fails()) {
+                $messages = $validation->messages()->toArray();
+                $ex = new ValidationException();
+                $ex->setMessages($messages);
+                throw $ex;
+            }
 
             $metric = $this->service->enter($summit, $current_member, $payload);
 
@@ -117,10 +133,24 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
-            $payload = $this->getJsonPayload([
-                'type' => 'required|string|in:'.implode(",", ISummitMetricType::ValidTypes),
-                'source_id' => 'sometimes|integer',
+            $payload = Input::all();
+            if(Request::isJson()){
+                $payload = Input::json()->all();
+            }
+
+            $validation = Validator::make($payload,
+            [
+                    'type' => 'required|string|in:'.implode(",", ISummitMetricType::ValidTypes),
+                    'source_id' => 'sometimes|integer',
+
             ]);
+
+            if ($validation->fails()) {
+                $messages = $validation->messages()->toArray();
+                $ex = new ValidationException();
+                $ex->setMessages($messages);
+                throw $ex;
+            }
 
             $metric = $this->service->leave($summit, $current_member, $payload);
 

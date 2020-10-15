@@ -162,7 +162,7 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
             if (is_null($current_member)) return $this->error403();
 
             $metric = $this->service->enter($summit, $current_member, [
-                'type' => 'required|string|in:'.implode(",", ISummitMetricType::ValidTypes),
+                'type' => ISummitMetricType::Event,
                 'source_id' => intval($event_id)
             ]);
 

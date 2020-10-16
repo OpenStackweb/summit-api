@@ -183,7 +183,8 @@ final class SerializerRegistry
         // events
 
         $this->registry['SummitEvent']                = [
-          self::SerializerType_Public => SummitEventSerializer::class,
+            self::SerializerType_Public => SummitEventSerializer::class,
+            self::SerializerType_Private =>  SummitEventSerializer::class,
         ];
 
         $this->registry['SummitGroupEvent']           = SummitGroupEventSerializer::class;

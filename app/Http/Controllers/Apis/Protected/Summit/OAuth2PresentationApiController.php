@@ -13,6 +13,7 @@
  **/
 use App\Http\Utils\FileTypes;
 use App\Http\Utils\MultipartFormDataCleaner;
+use App\Models\Foundation\Main\IGroup;
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -1083,7 +1084,9 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
             $serializeType = SerializerRegistry::SerializerType_Private;
-            if(!$current_member->isAdmin()){
+
+            $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+            if(!$isAdmin){
                 $serializeType = SerializerRegistry::SerializerType_Public;
                 // check if we could edit presentation
                 $presentation = $summit->getEvent($presentation_id);
@@ -1167,8 +1170,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
             $serializeType = SerializerRegistry::SerializerType_Private;
-
-            if(!$current_member->isAdmin()){
+            $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+            if(!$isAdmin){
                 $serializeType = SerializerRegistry::SerializerType_Public;
                 // check if we could edit presentation
                 $presentation = $summit->getEvent($presentation_id);
@@ -1247,6 +1250,18 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+            $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+            if(!$isAdmin){
+                // check if we could edit presentation
+                $presentation = $summit->getEvent($presentation_id);
+                if(is_null($presentation) || !$presentation instanceof Presentation)
+                    return $this->error404();
+                if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
+                    return $this->error403();
+            }
 
             $this->presentation_service->deleteMediaUpload($summit, intval($presentation_id), intval($media_upload_id));
 

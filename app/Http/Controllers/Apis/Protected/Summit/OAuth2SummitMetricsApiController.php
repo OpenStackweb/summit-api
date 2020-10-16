@@ -85,6 +85,7 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
             [
                     'type' => 'required|string|in:'.implode(",", ISummitMetricType::ValidTypes),
                     'source_id' => 'sometimes|integer',
+                    'location' => 'sometimes|string',
             ]);
 
             if ($validation->fails()) {
@@ -142,7 +143,7 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
             [
                     'type' => 'required|string|in:'.implode(",", ISummitMetricType::ValidTypes),
                     'source_id' => 'sometimes|integer',
-
+                    'location' => 'sometimes|string',
             ]);
 
             if ($validation->fails()) {

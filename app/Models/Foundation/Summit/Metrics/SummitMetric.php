@@ -70,6 +70,12 @@ class SummitMetric extends SilverstripeBaseModel
     protected $origin;
 
     /**
+     * @ORM\Column(name="Location", type="string")
+     * @var string|null
+     */
+    protected $location;
+
+    /**
      * @ORM\Column(name="Browser", type="string")
      * @var string|null
      */
@@ -231,4 +237,21 @@ class SummitMetric extends SilverstripeBaseModel
     {
         return $this->browser;
     }
+
+    /**
+     * @return string|null
+     */
+    public function getLocation(): ?string
+    {
+        return $this->location;
+    }
+
+    /**
+     * @param string|null $location
+     */
+    public function setLocation(?string $location): void
+    {
+        $this->location = $location;
+    }
+
 }

@@ -58,6 +58,8 @@ final class SummitMetricFactory
     public static function populate(SummitMetric $metric, array $data):SummitMetric{
         if(isset($data['type']))
             $metric->setType($data['type']);
+        if(isset($data['location']))
+            $metric->setLocation(urldecode($data['location']));
         return $metric;
     }
 }

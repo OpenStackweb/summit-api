@@ -126,6 +126,10 @@ class CORSMiddleware
     private function generatePreflightCacheKey($request)
     {
         $cache_id  = 'pre-flight-'. $request->getClientIp(). '-' . $request->getRequestUri(). '-' . $request->getMethod();
+        if($request->headers->has('Origin')){
+            $origin = $request->headers->get('Origin');
+            $cache_id .= "-".$origin;
+        }
         return $cache_id;
     }
 

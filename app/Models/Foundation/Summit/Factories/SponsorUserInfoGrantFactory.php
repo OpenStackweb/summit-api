@@ -27,10 +27,10 @@ final class SponsorUserInfoGrantFactory
         $grant = null;
         $class_name = $payload['class_name'];
         switch($class_name){
-            case SponsorUserInfoGrant::class:
+            case SponsorUserInfoGrant::ClassName:
                 $grant = self::populate(new SponsorUserInfoGrant, $payload);
                 break;
-            case SponsorBadgeScan::class:
+            case SponsorBadgeScan::ClassName:
                 $grant = self::populate(new SponsorBadgeScan, $payload);
                 break;
         }
@@ -45,9 +45,9 @@ final class SponsorUserInfoGrantFactory
     public static function populate(SponsorUserInfoGrant $grant, array $payload):SponsorUserInfoGrant{
         $class_name = $payload['class_name'];
         switch($class_name){
-            case SponsorUserInfoGrant::class:
+            case SponsorUserInfoGrant::ClassName:
                 break;
-            case SponsorBadgeScan::class:
+            case SponsorBadgeScan::ClassName:
 
                 break;
         }

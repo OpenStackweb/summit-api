@@ -597,14 +597,14 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
-
-            if(!$current_member->isAdmin()){
+            $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+            if(!$isAdmin){
                 // check if we could edit presentation
                 $presentation = $summit->getEvent($presentation_id);
                 if(is_null($presentation) || !$presentation instanceof Presentation)
                     return $this->error404();
                 if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
-                   return $this->error403();
+                    return $this->error403();
             }
 
             $data = $request->all();
@@ -676,8 +676,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
-
-            if(!$current_member->isAdmin()){
+            $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+            if(!$isAdmin){
                 // check if we could edit presentation
                 $presentation = $summit->getEvent($presentation_id);
                 if(is_null($presentation) || !$presentation instanceof Presentation)
@@ -753,6 +753,18 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+            $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+            if(!$isAdmin){
+                // check if we could edit presentation
+                $presentation = $summit->getEvent($presentation_id);
+                if(is_null($presentation) || !$presentation instanceof Presentation)
+                    return $this->error404();
+                if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
+                    return $this->error403();
+            }
 
             $this->presentation_service->deleteSlide($presentation_id, $slide_id);
 
@@ -857,6 +869,18 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+            $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+            if(!$isAdmin){
+                // check if we could edit presentation
+                $presentation = $summit->getEvent($presentation_id);
+                if(is_null($presentation) || !$presentation instanceof Presentation)
+                    return $this->error404();
+                if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
+                    return $this->error403();
+            }
+
             $data = $request->all();
             $data = MultipartFormDataCleaner::cleanBool('display_on_site', $data);
             $data = MultipartFormDataCleaner::cleanBool('featured', $data);
@@ -916,6 +940,18 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+            $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+            if(!$isAdmin){
+                // check if we could edit presentation
+                $presentation = $summit->getEvent($presentation_id);
+                if(is_null($presentation) || !$presentation instanceof Presentation)
+                    return $this->error404();
+                if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
+                    return $this->error403();
+            }
 
             $data = $request->all();
             $data = MultipartFormDataCleaner::cleanBool('display_on_site', $data);
@@ -977,6 +1013,18 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+            $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+            if(!$isAdmin){
+                // check if we could edit presentation
+                $presentation = $summit->getEvent($presentation_id);
+                if(is_null($presentation) || !$presentation instanceof Presentation)
+                    return $this->error404();
+                if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
+                    return $this->error403();
+            }
 
             $this->presentation_service->deleteLink($presentation_id, $link_id);
 

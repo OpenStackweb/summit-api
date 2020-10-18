@@ -71,10 +71,10 @@ final class DoctrineSponsorUserInfoGrantRepository
             'order_number'          => "ord.order_number",
             'sponsor_id'            => "sp.id",
             'attendee_company'      => 'o.company_name',
-            "attendee_full_name"    => "(LOWER(CONCAT(o.first_name, ' ', o.surname)) OR LOWER(CONCAT(au.first_name, ' ', au.last_name)))",
-            'attendee_first_name'   => 'o.first_name OR au.first_name',
-            'attendee_last_name'    => 'o.surname OR au.last_name',
-            'attendee_email'        => 'o.email OR au.email',
+            "attendee_full_name"    => "LOWER(CONCAT(o.first_name, ' ', o.surname))",
+            'attendee_first_name'   => 'o.first_name',
+            'attendee_last_name'    => 'o.surname',
+            'attendee_email'        => 'o.email',
         ];
     }
 
@@ -88,10 +88,10 @@ final class DoctrineSponsorUserInfoGrantRepository
             ->join('sp.company', 'c')
             ->leftJoin('e.allowed_user', 'au')
             ->leftJoin(SponsorBadgeScan::class, 'sbs', 'WITH', 'e.id = sbs.id')
-            ->join('sbs.user', 'u')
-            ->join('sbs.badge', 'b')
-            ->join('b.ticket', 't')
-            ->join('t.order', 'ord')
+            ->leftJoin('sbs.user', 'u')
+            ->leftJoin('sbs.badge', 'b')
+            ->leftJoin('b.ticket', 't')
+            ->leftJoin('t.order', 'ord')
             ->leftJoin('t.owner', 'o')
             ->leftJoin('o.member', 'm');
         return $query;

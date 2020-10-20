@@ -38,6 +38,9 @@ class FilterElement extends AbstractFilterElement
     {
         parent::__construct($operator);
         $this->field    = $field;
+        if($this->field == 'start_date'){
+            $value = intval($value);
+        }
         $this->value    = $value;
         $this->same_field_op = $same_field_op;
     }

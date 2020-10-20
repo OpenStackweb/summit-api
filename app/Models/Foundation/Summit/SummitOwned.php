@@ -21,7 +21,7 @@ use Doctrine\ORM\Mapping AS ORM;
 trait SummitOwned
 {
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Summit")
+     * @ORM\ManyToOne(targetEntity="models\summit\Summit", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="SummitID", referencedColumnName="ID")
      * @var Summit
      */

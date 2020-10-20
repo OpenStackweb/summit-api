@@ -131,7 +131,7 @@ class Presentation extends SummitEvent
     protected $attending_media;
 
     /**
-     * @ORM\ManyToOne(targetEntity="PresentationSpeaker", inversedBy="moderated_presentations")
+     * @ORM\ManyToOne(targetEntity="PresentationSpeaker", inversedBy="moderated_presentations", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="ModeratorID", referencedColumnName="ID", onDelete="SET NULL")
      * @var PresentationSpeaker
      */
@@ -139,33 +139,33 @@ class Presentation extends SummitEvent
 
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
+     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="CreatorID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */
     protected $creator;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="presentations")
+     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="presentations", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
      * @var SelectionPlan
      */
     protected $selection_plan;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\PresentationMaterial", mappedBy="presentation", cascade={"persist", "remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\summit\PresentationMaterial", mappedBy="presentation", cascade={"persist", "remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationMaterial[]
      */
     protected $materials;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitPresentationComment", mappedBy="presentation", cascade={"persist", "remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\summit\SummitPresentationComment", mappedBy="presentation", cascade={"persist", "remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitPresentationComment[]
      */
     protected $comments;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationSpeaker", inversedBy="presentations")
+     * @ORM\ManyToMany(targetEntity="models\summit\PresentationSpeaker", inversedBy="presentations" , fetch="EXTRA_LAZY")
      * @ORM\JoinTable(name="Presentation_Speakers",
      *  joinColumns={
      *     @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="CASCADE")
@@ -179,7 +179,7 @@ class Presentation extends SummitEvent
     protected $speakers;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitSelectedPresentation", mappedBy="presentation", cascade={"persist", "remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\summit\SummitSelectedPresentation", mappedBy="presentation", cascade={"persist", "remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitSelectedPresentation[]
      */
     protected $selected_presentations;

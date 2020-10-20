@@ -22,6 +22,7 @@ use models\utils\IEntity;
  */
 abstract class AbstractSerializer implements IModelSerializer
 {
+    const MaxCollectionPage = 10;
     /**
      * @var IEntity
      */

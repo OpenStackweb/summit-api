@@ -20,6 +20,7 @@ use models\summit\SummitEvent;
  */
 class SummitEventSerializer extends SilverStripeSerializer
 {
+
     protected static $array_mappings = [
         'Title'                     => 'title:json_string',
         'Abstract'                  => 'description:json_string',
@@ -85,7 +86,6 @@ class SummitEventSerializer extends SilverStripeSerializer
         'sponsors',
         'tags',
         'feedback',
-        'attendance',
         'current_attendance',
     ];
 
@@ -120,26 +120,24 @@ class SummitEventSerializer extends SilverStripeSerializer
         if(in_array('feedback', $relations))
         {
             $feedback = [];
+            $count = 0;
             foreach ($event->getFeedback() as $f) {
                 $feedback[] = $f->getId();
+                $count++;
+                if(AbstractSerializer::MaxCollectionPage < $count) break;
             }
             $values['feedback'] = $feedback;
         }
 
         if(in_array('current_attendance', $relations)){
             $attendance = [];
+            $count = 0;
             foreach ($event->getCurrentAttendance() as $a){
-                $attendance[] = SerializerRegistry::getInstance()->getSerializer($a)->serialize();
+                $attendance[] = $a->getId();
+                $count++;
+                if(AbstractSerializer::MaxCollectionPage < $count) break;
             }
             $values['current_attendance'] = $attendance;
-        }
-
-        if(in_array('attendance', $relations)){
-            $attendance = [];
-            foreach ($event->getAttendance() as $a){
-                $attendance[] = SerializerRegistry::getInstance()->getSerializer($a)->serialize();
-            }
-            $values['attendance'] = $attendance;
         }
 
         //if($event->hasAccess($this->resource_server_context->getCurrentUser())){
@@ -151,6 +149,17 @@ class SummitEventSerializer extends SilverStripeSerializer
             foreach (explode(',', $expand) as $relation) {
                 $relation = trim($relation);
                 switch ($relation) {
+                    case 'current_attendance':
+                    {
+                        $attendance = [];
+                        $count = 0;
+                        foreach ($event->getCurrentAttendance() as $a){
+                            $attendance[] =  SerializerRegistry::getInstance()->getSerializer($a)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $count++;
+                            if(AbstractSerializer::MaxCollectionPage < $count) break;
+                        }
+                        $values['current_attendance'] = $attendance;
+                    }
                     case 'feedback': {
                         $feedback = [];
                         foreach ($event->getFeedback() as $f) {

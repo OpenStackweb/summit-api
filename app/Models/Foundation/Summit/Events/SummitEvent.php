@@ -141,7 +141,7 @@ class SummitEvent extends SilverstripeBaseModel
     protected $rsvp_template;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\RSVP", mappedBy="event", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="models\summit\RSVP", mappedBy="event", cascade={"persist"}, fetch="EXTRA_LAZY")
      * @var RSVP[]
      */
     protected $rsvp;
@@ -189,14 +189,14 @@ class SummitEvent extends SilverstripeBaseModel
     protected $sponsors;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitEventFeedback", mappedBy="event", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="models\summit\SummitEventFeedback", mappedBy="event", cascade={"persist"}, fetch="EXTRA_LAZY")
      * @ORM\Cache("NONSTRICT_READ_WRITE")
      * @var SummitEventFeedback[]
      */
     protected $feedback;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\main\Tag", cascade={"persist"}, inversedBy="events")
+     * @ORM\ManyToMany(targetEntity="models\main\Tag", cascade={"persist"}, inversedBy="events", fetch="EXTRA_LAZY")
      * @ORM\JoinTable(name="SummitEvent_Tags",
      *      joinColumns={@ORM\JoinColumn(name="SummitEventID", referencedColumnName="ID")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="TagID", referencedColumnName="ID")}
@@ -205,7 +205,7 @@ class SummitEvent extends SilverstripeBaseModel
     protected $tags;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitEventAttendanceMetric", mappedBy="event", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\summit\SummitEventAttendanceMetric", mappedBy="event", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitEventAttendanceMetric[]
      */
     protected $attendance_metrics;
@@ -1165,6 +1165,7 @@ class SummitEvent extends SilverstripeBaseModel
     public function getCurrentAttendance(){
         $criteria = Criteria::create();
         $criteria = $criteria->where(Criteria::expr()->isNull('outgress_date'));
+        $criteria = $criteria->orderBy(['created' => Criteria::DESC]);
         return $this->attendance_metrics->matching($criteria)->toArray();
     }
 

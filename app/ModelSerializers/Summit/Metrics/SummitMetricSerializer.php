@@ -26,5 +26,7 @@ class SummitMetricSerializer extends SilverStripeSerializer
         'Ip' => 'ip:json_string',
         'Origin' => 'origin:json_string',
         'Browser' => 'browser:json_string',
+        'OutgressDate' => 'outgress_date:datetime_epoch',
+        'IngressDate' => 'ingress_date:datetime_epoch'
     ];
 }

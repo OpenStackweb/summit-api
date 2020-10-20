@@ -20,12 +20,12 @@ use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Member;
+use models\summit\ISummitEventRepository;
 use models\summit\Summit;
+use models\summit\SummitEvent;
 use models\summit\SummitEventAttendanceMetric;
 use models\summit\SummitMetric;
 use models\summit\SummitSponsorMetric;
-use function Psy\debug;
-
 /**
  * Class SummitMetricService
  * @package App\Services\Model\Imp
@@ -40,14 +40,27 @@ final class SummitMetricService
      */
     private $repository;
 
+    /**
+     * @var ISummitEventRepository
+     */
+    private $event_repository;
+
+    /**
+     * SummitMetricService constructor.
+     * @param ISummitMetricRepository $repository
+     * @param ISummitEventRepository $event_repository
+     * @param ITransactionService $tx_service
+     */
     public function __construct
     (
         ISummitMetricRepository $repository,
+        ISummitEventRepository $event_repository,
         ITransactionService $tx_service
     )
     {
         parent::__construct($tx_service);
         $this->repository = $repository;
+        $this->event_repository = $event_repository;
     }
 
     /**
@@ -81,9 +94,9 @@ final class SummitMetricService
                     throw new ValidationException("source_id param is missing.");
                 }
                 $event_id = intval($payload['source_id']);
-                $event = $summit->getEvent($event_id);
+                $event = $this->event_repository->getById($event_id);
 
-                if (is_null($event)) {
+                if (is_null($event) || !$event instanceof SummitEvent) {
                     throw new EntityNotFoundException(sprintf("Event %s does not belongs to summit %s.", $event_id, $summit->getId()));
                 }
 

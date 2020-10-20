@@ -45,6 +45,7 @@
         "smarcet/outlook-rest-client": "dev-master",
         "sokil/php-isocodes": "^3.0",
         "spatie/flysystem-dropbox": "^1.2",
+        "spatie/laravel-cors": "^1.6",
         "stripe/stripe-php": "^6.37",
         "symfony/yaml": "4.2.2",
         "tecnickcom/tcpdf": "^6.2"

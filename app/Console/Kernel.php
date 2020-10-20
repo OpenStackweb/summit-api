@@ -66,14 +66,14 @@ class Kernel extends ConsoleKernel
         // Calendar Sync Jobs
 
         // Admin Actions
-        $schedule->command('summit:admin-schedule-action-process')->withoutOverlapping();
+        //$schedule->command('summit:admin-schedule-action-process')->withoutOverlapping();
         // Member Actions
         // Google Calendar
-        $schedule->command('summit:member-schedule-action-process', [CalendarSyncInfo::ProviderGoogle, 1000])->withoutOverlapping();
+        //$schedule->command('summit:member-schedule-action-process', [CalendarSyncInfo::ProviderGoogle, 1000])->withoutOverlapping();
         // Outlook
-        $schedule->command('summit:member-schedule-action-process', [CalendarSyncInfo::ProviderOutlook, 1000])->withoutOverlapping();
+        //$schedule->command('summit:member-schedule-action-process', [CalendarSyncInfo::ProviderOutlook, 1000])->withoutOverlapping();
         // iCloud
-        $schedule->command('summit:member-schedule-action-process', [CalendarSyncInfo::ProvideriCloud, 1000])->withoutOverlapping();
+        //$schedule->command('summit:member-schedule-action-process', [CalendarSyncInfo::ProvideriCloud, 1000])->withoutOverlapping();
 
         // redeem code processor
 
@@ -98,8 +98,10 @@ class Kernel extends ConsoleKernel
 
         // production YOCO (13) advance AT 0700 AM ( 12:00 AM PST)
 
+
         if ($env == 'production') {
             $schedule->command("summit:forward-x-days", [13, 2, '--check-ended'])->dailyAt("07:00")->timezone('UTC')->withoutOverlapping();
         }
+
     }
 }

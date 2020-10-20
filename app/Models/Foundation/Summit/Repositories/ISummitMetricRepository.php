@@ -13,11 +13,12 @@
  **/
 use models\main\Member;
 use models\summit\SummitMetric;
+use models\utils\IBaseRepository;
 /**
  * Interface ISummitMetricRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitMetricRepository
+interface ISummitMetricRepository extends IBaseRepository
 {
     /**
      * @param Member $member

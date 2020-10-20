@@ -169,7 +169,7 @@ final class ResourceServerContext implements IResourceServerContext
             // legacy test, for new IDP version this value came on null
             $id = $this->getCurrentUserExternalId();
             if(!is_null($id) && !empty($id)){
-                $member = $this->member_repository->getByExternalIdExclusiveLock(intval($id));
+                $member = $this->member_repository->getByExternalId(intval($id));
                 if(!is_null($member)) return $this->checkGroups($member);
             }
 
@@ -181,7 +181,7 @@ final class ResourceServerContext implements IResourceServerContext
                 if(is_null($id)) {
                     return null;
                 }
-                $member = $this->member_repository->getByExternalIdExclusiveLock(intval($id));
+                $member = $this->member_repository->getByExternalId(intval($id));
 
                 if(!is_null($member)){
                     $user_first_name  = $this->getAuthContextVar('user_first_name');
@@ -207,7 +207,7 @@ final class ResourceServerContext implements IResourceServerContext
                 $user_email       = $this->getAuthContextVar('user_email');
                 // at last resort try to get by email
                 Log::debug(sprintf("ResourceServerContext::getCurrentUser getting user by email %s", $user_email));
-                $member = $this->member_repository->getByEmailExclusiveLock($user_email);
+                $member = $this->member_repository->getByEmail($user_email);
 
                 if (is_null($member))  {// user exist on IDP but not in our local DB, proceed to create it
                     Log::debug

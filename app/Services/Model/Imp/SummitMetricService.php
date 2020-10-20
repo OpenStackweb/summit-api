@@ -73,7 +73,7 @@ final class SummitMetricService
     public function enter(Summit $summit, Member $current_member, array $payload): SummitMetric
     {
         Log::debug(sprintf("SummitMetricService::enter summit %s member %s payload %s", $summit->getId(), $current_member->getId(), json_encode($payload)));
-        return $this->tx_service->transaction(function () use ($summit, $current_member, $payload) {
+        $metric = $this->tx_service->transaction(function () use ($summit, $current_member, $payload) {
             $metric = SummitMetricFactory::build($current_member, $payload);
             $metric->setMember($current_member);
 
@@ -89,7 +89,9 @@ final class SummitMetricService
                 $formerMetric->abandon();
             }
 
+            Log::debug(sprintf("SummitMetricService::enter continuing"));
             if($metric instanceof SummitEventAttendanceMetric){
+                Log::debug(sprintf("SummitMetricService::enter SummitEventAttendanceMetric"));
                 if(!isset($payload['source_id'])){
                     throw new ValidationException("source_id param is missing.");
                 }
@@ -108,6 +110,7 @@ final class SummitMetricService
             }
 
             if($metric instanceof SummitSponsorMetric){
+                Log::debug(sprintf("SummitMetricService::enter SummitSponsorMetric"));
                 if(!isset($payload['source_id'])){
                     throw new ValidationException("source_id param is missing.");
                 }
@@ -121,9 +124,15 @@ final class SummitMetricService
                 $metric->setSponsor($sponsor);
             }
 
-            $summit->addMetric($metric);
+            Log::debug(sprintf("SummitMetricService::enter adding"));
+            $metric->setSummit($summit);
+            $this->repository->add($metric);
             return $metric;
         });
+
+        Log::debug(sprintf("SummitMetricService::enter summit %s member %s payload %s created metric %s", $summit->getId(), $current_member->getId(), json_encode($payload), $metric->getId()));
+
+        return $metric;
     }
 
     /**

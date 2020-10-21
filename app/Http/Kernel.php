@@ -22,6 +22,7 @@ class Kernel extends HttpKernel
         \Spatie\Cors\Cors::class,
         \App\Http\Middleware\SecurityHTTPHeadersWriterMiddleware::class,
         \App\Http\Middleware\ParseMultipartFormDataInputForNonPostRequests::class,
+        \App\Http\Middleware\DoctrineMiddleware::class,
     ];
 
     /**

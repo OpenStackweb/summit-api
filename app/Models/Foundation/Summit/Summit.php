@@ -558,7 +558,7 @@ class Summit extends SilverstripeBaseModel
     private $category_groups;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitTicketType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\summit\SummitTicketType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * var SummitTicketType[]
      */
     private $ticket_types;
@@ -5032,4 +5032,7 @@ SQL;
         $metric->setSummit($this);
     }
 
+    public function isPubliclyOpen():bool{
+        return $this->ticket_types->count() == 0;
+    }
 }

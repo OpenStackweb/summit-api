@@ -13,32 +13,25 @@
  **/
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
-
+use LaravelDoctrine\Migrations\Schema\Builder;
+use LaravelDoctrine\Migrations\Schema\Table;
 /**
- * Class Version20201018045210
+ * Class Version20201021125624
  * @package Database\Migrations\Model
  */
-class Version20201018045210 extends AbstractMigration
+class Version20201021125624 extends AbstractMigration
 {
     /**
      * @param Schema $schema
      */
     public function up(Schema $schema)
     {
-        $sql = <<<SQL
-        alter table SponsorBadgeScan drop foreign key FK_SponsorBadgeScan_SponsorUserInfoGrant;
-SQL;
-        $this->addSql($sql);
-
-        $sql = <<<SQL
-        alter table SponsorBadgeScan modify ID int not null auto_increment;
-SQL;
-        $this->addSql($sql);
-
-        $sql = <<<SQL
-        ALTER TABLE SponsorBadgeScan ADD CONSTRAINT FK_SponsorBadgeScan_SponsorUserInfoGrant FOREIGN KEY (ID) REFERENCES SponsorUserInfoGrant (ID) ON DELETE CASCADE;
-SQL;
-        $this->addSql($sql);
+        $builder = new Builder($schema);
+        if($schema->hasTable("SelectionPlan") && !$builder->hasColumn("SelectionPlan","AllowNewPresentations") ) {
+            $builder->table('SelectionPlan', function (Table $table) {
+                $table->boolean('AllowNewPresentations')->setNotnull(true)->setDefault(true);
+            });
+        }
     }
 
     /**
@@ -46,6 +39,11 @@ SQL;
      */
     public function down(Schema $schema)
     {
-
+        $builder = new Builder($schema);
+        if($schema->hasTable("SelectionPlan") && $builder->hasColumn("SelectionPlan","AllowNewPresentations") ) {
+            $builder->table('SelectionPlan', function (Table $table) {
+                $table->dropColumn('AllowNewPresentations');
+            });
+        }
     }
 }

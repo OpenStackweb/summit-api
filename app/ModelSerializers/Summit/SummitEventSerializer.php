@@ -140,10 +140,10 @@ class SummitEventSerializer extends SilverStripeSerializer
             $values['current_attendance'] = $attendance;
         }
 
-        //if($event->hasAccess($this->resource_server_context->getCurrentUser())){
+        if($event->hasAccess($this->resource_server_context->getCurrentUser())){
             $values['streaming_url'] = $event->getStreamingUrl();
             $values['etherpad_link'] = $event->getEtherpadLink();
-        //}
+        }
 
         if (!empty($expand)) {
             foreach (explode(',', $expand) as $relation) {

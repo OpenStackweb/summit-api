@@ -62,6 +62,12 @@ class SelectionPlan extends SilverstripeBaseModel
     private $is_enabled;
 
     /**
+     * @ORM\Column(name="AllowNewPresentations", type="boolean")
+     * @var bool
+     */
+    private $allow_new_presentations;
+
+    /**
      * @ORM\Column(name="SubmissionBeginDate", type="datetime")
      * @var \DateTime
      */
@@ -274,6 +280,7 @@ class SelectionPlan extends SilverstripeBaseModel
     {
         parent::__construct();
         $this->is_enabled                      = false;
+        $this->allow_new_presentations         = true;
         $this->category_groups                 = new ArrayCollection;
         $this->presentations                   = new ArrayCollection;
         $this->max_submission_allowed_per_user = Summit::DefaultMaxSubmissionAllowedPerUser;
@@ -395,4 +402,21 @@ class SelectionPlan extends SilverstripeBaseModel
     {
         return $this->getStageStatus('Selection') === Summit::STAGE_OPEN;
     }
+
+    /**
+     * @return bool
+     */
+    public function isAllowNewPresentations(): bool
+    {
+        return $this->allow_new_presentations;
+    }
+
+    /**
+     * @param bool $allow_new_presentations
+     */
+    public function setAllowNewPresentations(bool $allow_new_presentations): void
+    {
+        $this->allow_new_presentations = $allow_new_presentations;
+    }
+
 }

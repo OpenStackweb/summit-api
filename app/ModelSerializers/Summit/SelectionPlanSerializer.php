@@ -32,6 +32,7 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
         'SelectionBeginDate'          => 'selection_begin_date:datetime_epoch',
         'SelectionEndDate'            => 'selection_end_date:datetime_epoch',
         'SummitId'                    => 'summit_id:json_int',
+        'AllowNewPresentations'       => 'allow_new_presentations:json_boolean',
     ];
 
     /**

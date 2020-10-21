@@ -248,16 +248,21 @@ final class PresentationService
         return $this->tx_service->transaction(function () use ($summit, $member, $data) {
 
             $current_selection_plan = $summit->getCurrentSelectionPlanByStatus(SelectionPlan::STATUS_SUBMISSION);
+
+            if (is_null($current_selection_plan))
+                throw new ValidationException(trans(
+                    'validation_errors.PresentationService.submitPresentation.NotValidSelectionPlan'
+                ));
+
+            if(!$current_selection_plan->isAllowNewPresentations()){
+                throw new ValidationException(sprintf("Selection Plan %s does not allow new submissions", $current_selection_plan->getId()));
+            }
+
             $current_speaker = $this->speaker_repository->getByMember($member);
 
             if (is_null($current_speaker))
                 throw new ValidationException(trans(
                     'validation_errors.PresentationService.submitPresentation.NotValidSpeaker'
-                ));
-
-            if (is_null($current_selection_plan))
-                throw new ValidationException(trans(
-                    'validation_errors.PresentationService.submitPresentation.NotValidSelectionPlan'
                 ));
 
             if(!$current_selection_plan->IsEnabled()){

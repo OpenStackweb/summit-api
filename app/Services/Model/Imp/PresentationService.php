@@ -28,6 +28,7 @@ use App\Services\Model\AbstractService;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackAnswer;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\IFolderRepository;
@@ -995,6 +996,7 @@ final class PresentationService
             $payload
         ) {
 
+            Log::debug(sprintf("PresentationService::addMediaUploadTo summit %s presentation %s", $summit->getId(), $presentation_id));
             $presentation = $this->presentation_repository->getById($presentation_id);
 
             if (is_null($presentation) || !$presentation instanceof Presentation)
@@ -1068,6 +1070,21 @@ final class PresentationService
 
             $mediaUpload->setFilename($fileName);
             $presentation->addMediaUpload($mediaUpload);
+
+            if(!$presentation->isCompleted()){
+                Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s is not complete", $presentation_id));
+                $summitMediaUploadCount = $summit->getMediaUploadsMandatoryCount();
+                Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s got summitMediaUploadCount %s", $presentation_id, $summitMediaUploadCount));
+                if($summitMediaUploadCount == 0) {
+                    Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s marking as PHASE_UPLOADS ( no mandatories uploads)", $presentation_id));
+                    $presentation->setProgress(Presentation::PHASE_UPLOADS);
+                }
+
+                if($summitMediaUploadCount > 0 && $summitMediaUploadCount == $presentation->getMediaUploadsMandatoryCount()){
+                    Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s marking as PHASE_UPLOADS ( mandatories completed)", $presentation_id));
+                    $presentation->setProgress(Presentation::PHASE_UPLOADS);
+                }
+            }
 
             return $mediaUpload;
         });

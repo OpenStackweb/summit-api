@@ -4839,6 +4839,29 @@ SQL;
         return $type === false ? null : $type;
     }
 
+
+    public function getMediaUploadsMandatoryCount():int {
+        try {
+            $sql = <<<SQL
+            SELECT COUNT(SummitMediaUploadType.ID) AS QTY
+            FROM SummitMediaUploadType
+            WHERE 
+            SummitMediaUploadType.SummitID = :summit_id 
+            AND SummitMediaUploadType.IsMandatory = 1
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute([
+                'summit_id' => $this->id,
+            ]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $count = count($res) > 0 ? $res[0] : 0;
+        } catch (\Exception $ex) {
+            $count = 0;
+        }
+
+        return $count;
+    }
+
     /**
      * @param string $name
      * @return SummitMediaUploadType|null

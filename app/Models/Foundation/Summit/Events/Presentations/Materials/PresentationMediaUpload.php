@@ -84,6 +84,13 @@ class PresentationMediaUpload extends PresentationMaterial
     }
 
     /**
+     * @return bool
+     */
+    public function isMandatory():bool{
+        return $this->media_upload_type->isMandatory();
+    }
+
+    /**
      * @return int
      */
     public function getMediaUploadTypeId(){

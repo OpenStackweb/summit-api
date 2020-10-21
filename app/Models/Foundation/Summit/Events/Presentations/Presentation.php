@@ -58,20 +58,24 @@ class Presentation extends SummitEvent
     const PHASE_SUMMARY = 1;
 
     /**
+     * defines a phase where a presentation has a UPLOADS
+     */
+    const PHASE_UPLOADS = 2;
+
+    /**
      * defines a phase where a presentation has a tags
      */
-    const PHASE_TAGS = 2;
+    const PHASE_TAGS = 3;
 
     /**
      * defines a phase where a presentation has a summary and speakers
      */
-    const PHASE_SPEAKERS = 3;
-
+    const PHASE_SPEAKERS = 4;
 
     /**
      * Defines a phase where a presentation has been submitted successfully
      */
-    const PHASE_COMPLETE = 4;
+    const PHASE_COMPLETE = 5;
 
     /**
      *
@@ -625,6 +629,9 @@ class Presentation extends SummitEvent
             case self::PHASE_SUMMARY:
                 return 'SUMMARY';
                 break;
+            case self::PHASE_UPLOADS:
+                return 'UPLOADS';
+                break;
             case self::PHASE_TAGS:
                 return 'TAGS';
                 break;
@@ -658,9 +665,10 @@ class Presentation extends SummitEvent
     /**
      * @param int $progress
      */
-    public function setProgress($progress)
+    public function setProgress(int $progress)
     {
-        $this->progress = $progress;
+        if($this->progress < $progress)
+            $this->progress = $progress;
     }
 
     /**
@@ -1002,6 +1010,15 @@ class Presentation extends SummitEvent
             $this->summit->getRawSlug(),
             $this->id
         );
+    }
+
+    /**
+     * @return int
+     */
+    public function getMediaUploadsMandatoryCount():int{
+        return $this->materials->filter(function( $element) {
+            return $element instanceof PresentationMediaUpload && $element->isMandatory();
+        })->count();
     }
 
 }

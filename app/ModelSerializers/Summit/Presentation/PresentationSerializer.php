@@ -85,9 +85,7 @@ class PresentationSerializer extends SummitEventSerializer
         {
             $slides = [];
             foreach ($presentation->getSlides() as $slide) {
-                $slide_values  = SerializerRegistry::getInstance()->getSerializer($slide)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'slides'));
-                if(empty($slide_values['link'])) continue;
-                $slides[] = $slide_values;
+                $slides[] = $slide->getId();
             }
             $values['slides'] = $slides;
         }
@@ -96,7 +94,7 @@ class PresentationSerializer extends SummitEventSerializer
         {
             $public_comments = [];
             foreach ($presentation->getPublicComments() as $comment) {
-                $public_comments[] = SerializerRegistry::getInstance()->getSerializer($comment)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'public_comments'));
+                $public_comments[] = $comment->getId();
             }
             $values['public_comments'] = $public_comments;
         }
@@ -105,9 +103,7 @@ class PresentationSerializer extends SummitEventSerializer
         {
             $links = [];
             foreach ($presentation->getLinks() as $link) {
-                $link_values  = SerializerRegistry::getInstance()->getSerializer($link)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'links'));
-                if(empty($link_values['link'])) continue;
-                $links[] = $link_values;
+                $links[] = $link->getId();
             }
             $values['links'] = $links;
         }
@@ -116,9 +112,7 @@ class PresentationSerializer extends SummitEventSerializer
         {
             $videos = [];
             foreach ($presentation->getVideos() as $video) {
-                $video_values   = SerializerRegistry::getInstance()->getSerializer($video)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'videos'));
-                if(empty($video_values['youtube_id'])) continue;
-                $videos[] = $video_values;
+                $videos[] = $video->getId();
             }
             $values['videos'] = $videos;
         }
@@ -126,15 +120,10 @@ class PresentationSerializer extends SummitEventSerializer
         if(in_array('media_uploads', $relations))
         {
             $media_uploads = [];
-            $serializerType = SerializerRegistry::SerializerType_Public;
-            $currentUser = $this->resource_server_context->getCurrentUser();
-            if(!is_null($currentUser) && $currentUser->isAdmin()){
-                $serializerType = SerializerRegistry::SerializerType_Private;
+            foreach ($presentation->getMediaUploads() as $mediaUpload) {
+                $media_uploads[] = $mediaUpload->getId();
             }
 
-            foreach ($presentation->getMediaUploads() as $mediaUpload) {
-                $media_uploads[] = SerializerRegistry::getInstance()->getSerializer($mediaUpload, $serializerType)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'media_uploads'));;
-            }
             $values['media_uploads'] = $media_uploads;
         }
 
@@ -142,7 +131,7 @@ class PresentationSerializer extends SummitEventSerializer
         {
             $answers = [];
             foreach ($presentation->getAnswers() as $answer) {
-                $answers[]= SerializerRegistry::getInstance()->getSerializer($answer)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'extra_questions'));
+                $answers[] = $answer->getId();
             }
             $values['extra_questions'] = $answers;
         }
@@ -161,6 +150,7 @@ class PresentationSerializer extends SummitEventSerializer
                             $values['moderator'] = SerializerRegistry::getInstance()->getSerializer($presentation->getModerator())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                     }
+                    break;
                     case 'creator':{
                         if($presentation->getCreatorId() > 0) {
                             $member = $this->resource_server_context->getCurrentUser();
@@ -178,6 +168,67 @@ class PresentationSerializer extends SummitEventSerializer
                             unset($values['selection_plan_id']);
                             $values['selection_plan'] = SerializerRegistry::getInstance()->getSerializer($presentation->getSelectionPlan())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
+                    }
+                    break;
+                    case 'slides':{
+                        $slides = [];
+                        foreach ($presentation->getSlides() as $slide) {
+                            $slide_values  = SerializerRegistry::getInstance()->getSerializer($slide)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            if(empty($slide_values['link'])) continue;
+                            $slides[] = $slide_values;
+                        }
+                        $values['slides'] = $slides;
+                    }
+                    break;
+                    case 'public_comments':{
+                        $public_comments = [];
+                        foreach ($presentation->getPublicComments() as $comment) {
+                            $public_comments[] = SerializerRegistry::getInstance()->getSerializer($comment)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $values['public_comments'] = $public_comments;
+                    }
+                    break;
+                    case 'links':{
+                        $links = [];
+                        foreach ($presentation->getLinks() as $link) {
+                            $link_values  = SerializerRegistry::getInstance()->getSerializer($link)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            if(empty($link_values['link'])) continue;
+                            $links[] = $link_values;
+                        }
+                        $values['links'] = $links;
+                    }
+                    break;
+                    case 'videos':{
+                        $videos = [];
+                        foreach ($presentation->getVideos() as $video) {
+                            $video_values   = SerializerRegistry::getInstance()->getSerializer($video)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            if(empty($video_values['youtube_id'])) continue;
+                            $videos[] = $video_values;
+                        }
+                        $values['videos'] = $videos;
+                    }
+                    break;
+                    case 'media_uploads':{
+                        $media_uploads = [];
+                        $serializerType = SerializerRegistry::SerializerType_Public;
+                        $currentUser = $this->resource_server_context->getCurrentUser();
+                        if(!is_null($currentUser) && $currentUser->isAdmin()){
+                            $serializerType = SerializerRegistry::SerializerType_Private;
+                        }
+
+                        foreach ($presentation->getMediaUploads() as $mediaUpload) {
+                            $media_uploads[] = SerializerRegistry::getInstance()->getSerializer($mediaUpload, $serializerType)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+
+                        $values['media_uploads'] = $media_uploads;
+                    }
+                    break;
+                    case 'extra_questions':{
+                        $answers = [];
+                        foreach ($presentation->getAnswers() as $answer) {
+                            $answers[]= SerializerRegistry::getInstance()->getSerializer($answer)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $values['extra_questions'] = $answers;
                     }
                     break;
                 }

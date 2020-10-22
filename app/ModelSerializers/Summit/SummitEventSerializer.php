@@ -112,7 +112,7 @@ class SummitEventSerializer extends SilverStripeSerializer
         {
             $tags = [];
             foreach ($event->getTags() as $tag) {
-                $tags[] = SerializerRegistry::getInstance()->getSerializer($tag)->serialize();
+                $tags[] = $tag->getId();
             }
             $values['tags'] = $tags;
         }
@@ -197,6 +197,14 @@ class SummitEventSerializer extends SilverStripeSerializer
                     case 'type': {
                         unset($values['type_id']);
                         $values['type'] = SerializerRegistry::getInstance()->getSerializer($event->getType())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                    }
+                    break;
+                    case 'tags':{
+                        $tags = [];
+                        foreach ($event->getTags() as $tag) {
+                            $tags[] = SerializerRegistry::getInstance()->getSerializer($tag)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $values['tags'] = $tags;
                     }
                     break;
                 }

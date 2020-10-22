@@ -11,10 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Http\UploadedFile;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\summit\PresentationCategory;
 use models\summit\Summit;
+use models\summit\SummitEvent;
+
 /**
  * Interface ISummitTrackService
  * @package App\Services\Model
@@ -76,5 +80,25 @@ interface ISummitTrackService
      * @throws ValidationException
      */
     public function removeTrackExtraQuestion($track_id, $question_id);
+
+    /**
+     * @param Summit $summit
+     * @param int $track_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     * @return SummitEvent
+     */
+    public function addTrackIcon(Summit $summit, $track_id, UploadedFile $file,  $max_file_size = 10485760);
+
+    /**
+     * @param Summit $summit
+     * @param int $track_id
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     * @return void
+     */
+    public function removeTrackIcon(Summit $summit, $track_id):void;
 
 }

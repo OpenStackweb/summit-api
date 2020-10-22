@@ -16,6 +16,7 @@ use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplate;
 use Doctrine\Common\Collections\Criteria;
+use models\main\File;
 use models\main\Tag;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -177,6 +178,12 @@ class PresentationCategory extends SilverstripeBaseModel
      */
     protected $extra_questions;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist","remove"})
+     * @ORM\JoinColumn(name="IconID", referencedColumnName="ID")
+     * @var File
+     */
+    protected $icon;
 
     /**
      * @return TrackQuestionTemplate[]|ArrayCollection
@@ -504,4 +511,57 @@ SQL;
     {
         $this->color = $color;
     }
+
+    /**
+     * @return File|null
+     */
+    public function getIcon(): ?File
+    {
+        return $this->icon;
+    }
+
+    /**
+     * @param File $icon
+     */
+    public function setIcon(File $icon): void
+    {
+        $this->icon = $icon;
+    }
+
+    public function clearIcon():void{
+        $this->icon = null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasIcon(){
+        return $this->getIconId() > 0;
+    }
+
+    /**
+     * @return int
+     */
+    public function getIconId()
+    {
+        try{
+            if(is_null($this->icon)) return 0;
+            return $this->icon->getId();
+        }
+        catch(\Exception $ex){
+            return 0;
+        }
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getIconUrl():?string{
+        $photoUrl = null;
+        if($this->hasIcon() && $photo = $this->getIcon()){
+            $photoUrl =  $photo->getUrl();
+        }
+        return $photoUrl;
+    }
+
 }

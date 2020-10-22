@@ -34,6 +34,7 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
             'ChairVisible' => 'chair_visible:json_boolean',
             'SummitId' => 'summit_id:json_int',
             'Color' => 'color:json_color',
+            'IconUrl' => 'icon_url:json_url',
         ];
 
     /**

@@ -15,9 +15,11 @@
 use App\Events\TrackDeleted;
 use App\Events\TrackInserted;
 use App\Events\TrackUpdated;
+use App\Http\Utils\IFileUploader;
 use App\Models\Foundation\Summit\Factories\PresentationCategoryFactory;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
 use App\Models\Foundation\Summit\Repositories\ITrackQuestionTemplateRepository;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -25,6 +27,8 @@ use models\exceptions\ValidationException;
 use models\main\ITagRepository;
 use models\summit\PresentationCategory;
 use models\summit\Summit;
+use models\summit\SummitEvent;
+
 /**
  * Class SummitTrackService
  * @package App\Services\Model
@@ -49,10 +53,16 @@ final class SummitTrackService
     private $track_question_template_repository;
 
     /**
+     * @var IFileUploader
+     */
+    private $file_uploader;
+
+    /**
      * SummitTrackService constructor.
      * @param ISummitTrackRepository $track_repository
      * @param ITagRepository $tag_repository
      * @param ITrackQuestionTemplateRepository $track_question_template_repository
+     * @param IFileUploader $file_uploader
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -60,6 +70,7 @@ final class SummitTrackService
         ISummitTrackRepository $track_repository,
         ITagRepository $tag_repository,
         ITrackQuestionTemplateRepository $track_question_template_repository,
+        IFileUploader $file_uploader,
         ITransactionService $tx_service
     )
     {
@@ -67,6 +78,7 @@ final class SummitTrackService
         $this->tag_repository = $tag_repository;
         $this->track_repository = $track_repository;
         $this->track_question_template_repository = $track_question_template_repository;
+        $this->file_uploader = $file_uploader;
     }
 
     /**
@@ -327,6 +339,52 @@ final class SummitTrackService
                 );
 
             $track->removeExtraQuestion($track_question_template);
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function addTrackIcon(Summit $summit, $track_id, UploadedFile $file, $max_file_size = 10485760)
+    {
+        return $this->tx_service->transaction(function () use ($summit, $track_id, $file, $max_file_size) {
+
+            $allowed_extensions = ['png', 'jpg', 'jpeg', 'gif'];
+
+            $track = $summit->getPresentationCategory($track_id);
+
+            if (is_null($track) || !$track instanceof PresentationCategory) {
+                throw new EntityNotFoundException('track not found on summit!');
+            }
+
+            if (!in_array($file->extension(), $allowed_extensions)) {
+                throw new ValidationException("file does not has a valid extension ('png','jpg','jpeg','gif').");
+            }
+
+            if ($file->getSize() > $max_file_size) {
+                throw new ValidationException(sprintf("file exceeds max_file_size (%s MB).", ($max_file_size / 1024) / 1024));
+            }
+
+            $file = $this->file_uploader->build($file, 'summit-track-icon', true);
+            $track->setIcon($file);
+
+            return $file;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function removeTrackIcon(Summit $summit, $track_id): void
+    {
+        $this->tx_service->transaction(function () use ($summit, $track_id) {
+
+            $track = $summit->getPresentationCategory($track_id);
+
+            if (is_null($track) || !$track instanceof PresentationCategory) {
+                throw new EntityNotFoundException('track not found on summit!');
+            }
+            $track->clearIcon();
         });
     }
 }

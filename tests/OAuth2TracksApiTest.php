@@ -11,7 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use LaravelDoctrine\ORM\Facades\EntityManager;
+use Illuminate\Http\UploadedFile;
 /**
  * Class OAuth2TracksApiTest
  */
@@ -359,5 +360,83 @@ final class OAuth2TracksApiTest extends ProtectedApiTest
         $this->assertResponseStatus(201);
         $added_tracks = json_decode($content);
         $this->assertTrue(!is_null($added_tracks));
+    }
+
+    public function testAddTrackIcon($summit_id=25){
+
+        $repo   =  EntityManager::getRepository(\models\summit\Summit::class);
+        $summit = $repo->getById($summit_id);
+        if(!$summit instanceof \models\summit\Summit)
+            throw new Exception();
+        $track = $summit->getPresentationCategories()[0];
+        $params = array
+        (
+            'id' => $summit_id,
+            'track_id' => $track->getId(),
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+         //   "CONTENT_TYPE" => "multipart/form-data; boundary=----WebKitFormBoundaryBkSYnzBIiFtZu4pb"
+        );
+
+
+        $response = $this->action
+        (
+            "POST",
+            "OAuth2SummitTracksApiController@addTrackIcon",
+            $params,
+            array(),
+            array(),
+            [
+                'file' => UploadedFile::fake()->image('icon.jpg')
+            ],
+            $headers,
+           []
+        );
+
+        $video_id = $response->getContent();
+        $this->assertResponseStatus(201);
+        return intval($video_id);
+    }
+
+    public function testRemoveTrackIcon($summit_id=25){
+
+        $repo   =  EntityManager::getRepository(\models\summit\Summit::class);
+        $summit = $repo->getById($summit_id);
+        if(!$summit instanceof \models\summit\Summit)
+            throw new Exception();
+        $track = $summit->getPresentationCategories()[0];
+        $params = array
+        (
+            'id' => $summit_id,
+            'track_id' => $track->getId(),
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            //   "CONTENT_TYPE" => "multipart/form-data; boundary=----WebKitFormBoundaryBkSYnzBIiFtZu4pb"
+        );
+
+
+        $response = $this->action
+        (
+            "DELETE",
+            "OAuth2SummitTracksApiController@deleteTrackIcon",
+            $params,
+            array(),
+            array(),
+            [
+
+            ],
+            $headers,
+            []
+        );
+
+        $video_id = $response->getContent();
+        $this->assertResponseStatus(204);
+        return intval($video_id);
     }
 }

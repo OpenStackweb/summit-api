@@ -16,6 +16,7 @@ use App\Http\Utils\EpochCellFormatter;
 use App\Http\Utils\PagingConstants;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
 use App\Services\Model\ISummitTrackService;
+use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
@@ -608,4 +609,59 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
             return $this->error500($ex);
         }
     }
+
+    public function addTrackIcon(LaravelRequest $request, $summit_id, $track_id){
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $file = $request->file('file');
+            if (is_null($file)) {
+                return $this->error412(array('file param not set!'));
+            }
+
+            $image = $this->track_service->addTrackIcon($summit, $track_id, $file);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($image)->serialize());
+
+        }
+        catch (ValidationException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message'=> $ex2->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    public function deleteTrackIcon($summit_id, $track_id) {
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+            $this->track_service->removeTrackIcon($summit, $track_id);
+            return $this->deleted();
+        }
+        catch (ValidationException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message'=> $ex2->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
 }

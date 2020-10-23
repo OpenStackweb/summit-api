@@ -439,7 +439,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         if (is_null($summit))
             throw new EntityNotFoundException;
 
-        if(strtolower($location_id) != "tbd") {
+        if(strtolower($location_id) !== "tbd") {
             $location = $summit->getLocation(intval($location_id));
             if (is_null($location))
                 throw new EntityNotFoundException;
@@ -510,7 +510,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             $filter->addFilterCondition(FilterParser::buildFilter('published','==', 1));
         }
 
-        return strtolower($location_id) == "tbd" ?
+        return strtolower($location_id) === "tbd" ?
             $this->event_repository->getAllByPageLocationTBD(new PagingInfo($page, $per_page), $filter, $order):
             $this->event_repository->getAllByPage(new PagingInfo($page, $per_page), $filter, $order);
     }

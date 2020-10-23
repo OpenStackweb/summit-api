@@ -308,11 +308,10 @@ final class DoctrineSummitEventRepository
             ->leftJoin("e.category", 'cc', Join::LEFT_JOIN)
             ->leftJoin("p.speakers", "sp", Join::LEFT_JOIN)
             ->leftJoin('p.selection_plan', "selp", Join::LEFT_JOIN)
-            ->leftJoin('ssp.list', "sspl", Join::LEFT_JOIN)
             ->leftJoin('p.moderator', "spm", Join::LEFT_JOIN)
             ->leftJoin('sp.member', "spmm", Join::LEFT_JOIN)
             ->leftJoin('sp.registration_request', "sprr", Join::LEFT_JOIN)
-            ->where("l.id is null");
+            ->where("l.id is null or l.id = 0");
 
         if(!is_null($filter)){
             $filter->apply2Query($query, $this->getFilterMappings());

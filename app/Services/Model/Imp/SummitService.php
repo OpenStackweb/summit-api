@@ -934,18 +934,22 @@ final class SummitService extends AbstractService implements ISummitService
         // speakers
 
         if ($event_type instanceof PresentationType && $event_type->isUseSpeakers()) {
-            $speakers = isset($data['speakers']) ?
-                $data['speakers'] : [];
+            $shouldClearSpeakers =  isset($data['speakers']) && count($data['speakers']) == 0;
+            $speakers = $data['speakers'] ?? [];
 
             if ($event_type->isAreSpeakersMandatory() && count($speakers) == 0) {
                 throw new ValidationException('speakers are mandatory!');
+            }
+
+            if($shouldClearSpeakers){
+                $event->clearSpeakers();
             }
 
             if (count($speakers) > 0 && $event instanceof Presentation) {
                 $event->clearSpeakers();
                 foreach ($speakers as $speaker_id) {
                     $speaker = $this->speaker_repository->getById(intval($speaker_id));
-                    if (is_null($speaker)) throw new EntityNotFoundException(sprintf('speaker id %s', $speaker_id));
+                    if (is_null($speaker) || !$speaker instanceof PresentationSpeaker) throw new EntityNotFoundException(sprintf('speaker id %s', $speaker_id));
                     $event->addSpeaker($speaker);
                 }
             }
@@ -965,7 +969,8 @@ final class SummitService extends AbstractService implements ISummitService
                 if ($speaker_id === 0) $event->unsetModerator();
                 else {
                     $moderator = $this->speaker_repository->getById($speaker_id);
-                    if (is_null($moderator)) throw new EntityNotFoundException(sprintf('speaker id %s', $speaker_id));
+                    if (is_null($moderator) || !$moderator instanceof PresentationSpeaker)
+                        throw new EntityNotFoundException(sprintf('speaker id %s', $speaker_id));
                     $event->setModerator($moderator);
                 }
             }

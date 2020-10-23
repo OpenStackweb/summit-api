@@ -940,15 +940,19 @@ final class SummitOrderService
             $order = $this->order_repository->getByHashLockExclusive($order_hash);
 
             if (is_null($order) || !$order instanceof SummitOrder || $summit->getId() != $order->getSummitId())
-                throw new EntityNotFoundException("order not found");
+                throw new EntityNotFoundException("order not found.");
 
             SummitOrderFactory::populate($summit, $order, $payload);
             if ($order->isFree()) {
                 // free order
                 $order->setPaid();
-            } else {
-                $order->setConfirmed();
+                return $order;
             }
+
+            if(empty($order->getBillingAddressZipCode()))
+                throw new ValidationException(sprintf("zip code is mandatory."));
+            $order->setConfirmed();
+
             return $order;
 
         });

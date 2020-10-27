@@ -16,7 +16,7 @@ use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use models\exceptions\ValidationException;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Illuminate\Http\UploadedFile;
 /**
  * Class FileUploadInfo
  * @package App\Http\Utils

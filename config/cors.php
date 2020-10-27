@@ -17,7 +17,7 @@ return [
      */
     'default_profile' => [
 
-        'allow_credentials' => true,
+        'allow_credentials' => false,
 
         'allow_origins' => [
             '*',
@@ -39,6 +39,7 @@ return [
             'Origin',
             'Authorization',
             'X-Requested-With',
+            'Cache-Control',
         ],
 
         'expose_headers' => [

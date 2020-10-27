@@ -16,10 +16,10 @@ use Doctrine\DBAL\Schema\Schema as Schema;
 use LaravelDoctrine\Migrations\Schema\Builder;
 use LaravelDoctrine\Migrations\Schema\Table;
 /**
- * Class Version20201022181641
+ * Class Version20201027024056
  * @package Database\Migrations\Model
  */
-class Version20201022181641 extends AbstractMigration
+class Version20201027024056 extends AbstractMigration
 {
     /**
      * @param Schema $schema
@@ -28,13 +28,9 @@ class Version20201022181641 extends AbstractMigration
     {
         $builder = new Builder($schema);
 
-        if($schema->hasTable("PresentationCategory") && !$builder->hasColumn("PresentationCategory", "IconID")) {
-            $builder->table('PresentationCategory', function (Table $table) {
-
-                $table->integer("IconID", false, false)->setNotnull(false)->setDefault('NULL');
-                $table->index("IconID", "IconID");
-                $table->foreign("File", "IconID", "ID", ["onDelete" => "CASCADE"]);
-
+        if($schema->hasTable("SummitAttendee") && !$builder->hasColumn("SummitAttendee", "AdminNotes")) {
+            $builder->table('SummitAttendee', function (Table $table) {
+                $table->string("AdminNotes", 1024)->setNotnull(false)->setDefault(null);
             });
         }
     }
@@ -46,9 +42,9 @@ class Version20201022181641 extends AbstractMigration
     {
         $builder = new Builder($schema);
 
-        if($schema->hasTable("PresentationCategory") && $builder->hasColumn("PresentationCategory", "IconID")) {
-            $builder->table('PresentationCategory', function (Table $table) {
-                $table->dropColumn("IconID");
+        if($schema->hasTable("SummitAttendee") && $builder->hasColumn("SummitAttendee", "AdminNotes")) {
+            $builder->table('SummitAttendee', function (Table $table) {
+                $table->dropColumn("AdminNotes");
             });
         }
     }

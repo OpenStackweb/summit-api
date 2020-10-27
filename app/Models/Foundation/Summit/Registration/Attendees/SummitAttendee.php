@@ -128,6 +128,12 @@ class SummitAttendee extends SilverstripeBaseModel
     private $status;
 
     /**
+     * @ORM\Column(name="AdminNotes", type="string")
+     * @var string
+     */
+    private $admin_notes;
+
+    /**
      * @return \DateTime
      */
     public function getSummitHallCheckedInDate(){
@@ -677,6 +683,22 @@ class SummitAttendee extends SilverstripeBaseModel
     public function setExternalId(string $external_id): void
     {
         $this->external_id = $external_id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAdminNotes(): ?string
+    {
+        return $this->admin_notes;
+    }
+
+    /**
+     * @param string $admin_notes
+     */
+    public function setAdminNotes(string $admin_notes): void
+    {
+        $this->admin_notes = $admin_notes;
     }
 
 }

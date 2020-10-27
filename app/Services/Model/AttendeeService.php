@@ -11,7 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use GuzzleHttp\Exception\ClientException;
+
+use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
+use App\Jobs\Emails\ProcessAttendeesEmailRequestJob;
+use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -19,17 +22,18 @@ use models\exceptions\ValidationException;
 use models\main\IMemberRepository;
 use models\main\Member;
 use models\summit\factories\SummitAttendeeFactory;
-use models\summit\factories\SummitAttendeeTicketFactory;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitTicketTypeRepository;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
-use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
-use models\summit\SummitTicketType;
 use services\apis\IEventbriteAPI;
+use utils\Filter;
+use utils\FilterElement;
+use utils\PagingInfo;
+
 /**
  * Class AttendeeService
  * @package App\Services\Model
@@ -358,4 +362,64 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
     }
 
+    /**
+     * @inheritDoc
+     */
+    public function triggerSend(Summit $summit, array $payload, $filter = null): void
+    {
+        ProcessAttendeesEmailRequestJob::dispatch($summit, $payload, $filter);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function send(int $summit_id, array $payload, Filter $filter = null): void
+    {
+        $flow_event = trim($payload['email_flow_event']);
+
+        Log::debug(sprintf("AttendeeService::send summit id %s flow_event %s", $summit_id, $flow_event));
+
+        $ids = $this->tx_service->transaction(function() use($summit_id, $payload, $filter){
+            if(isset($payload['attendees_ids'])) {
+                Log::debug(sprintf("AttendeeService::send summit id %s attendees_ids %s", $summit_id, json_encode($payload['attendees_ids'])));
+                return $payload['attendees_ids'];
+            }
+            Log::debug(sprintf("AttendeeService::send summit id %s getting by filter", $summit_id));
+            if(is_null($filter)){
+                $filter = new Filter();
+            }
+            $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
+            return $this->attendee_repository->getAllIdsByPage(new PagingInfo(1, PHP_INT_MAX), $filter);
+        });
+
+        foreach ($ids as $attendee_id)
+            try {
+                $this->tx_service->transaction(function () use ($flow_event, $attendee_id) {
+
+                    Log::debug(sprintf("AttendeeService::send processing attendee id  %s", $attendee_id));
+
+                    $attendee = $this->attendee_repository->getByIdExclusiveLock(intval($attendee_id));
+                    if (is_null($attendee) || !$attendee instanceof SummitAttendee) return;
+
+                    foreach ($attendee->getTickets() as $ticket) {
+                        try {
+                            Log::debug(sprintf("AttendeeService::send processing attendee %s - ticket %s", $attendee->getEmail(), $ticket->getId()));
+                            // send email
+                            if ($flow_event == SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG) {
+                                $ticket->sendPublicEditEmail();
+                            }
+
+                            if ($flow_event == InviteAttendeeTicketEditionMail::EVENT_SLUG) {
+                                $attendee->sendInvitationEmail($ticket);
+                            }
+                        } catch (\Exception $ex) {
+                            Log::warning($ex);
+                        }
+                    }
+                });
+            }
+            catch (\Exception $ex) {
+                Log::warning($ex);
+            }
+    }
 }

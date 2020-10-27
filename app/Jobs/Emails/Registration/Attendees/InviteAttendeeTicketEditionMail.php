@@ -41,7 +41,7 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
         $payload['owner_email']  = $owner->getEmail();
         $payload['owner_first_name'] = $owner->getFirstName();
         $payload['owner_last_name'] = $owner->getSurname();
-
+        $payload['summit_reassign_ticket_till_date'] = '';
         $summit_reassign_ticket_till_date = $summit->getReassignTicketTillDateLocal();
         if(!is_null($summit_reassign_ticket_till_date)) {
             $payload['summit_reassign_ticket_till_date'] = $summit_reassign_ticket_till_date->format("l j F Y h:i A T");

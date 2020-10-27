@@ -17,7 +17,7 @@ use models\summit\SummitAttendee;
  * Class SummitAttendeeSerializer
  * @package ModelSerializers
  */
-final class SummitAttendeeSerializer extends SilverStripeSerializer
+class SummitAttendeeSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
         'SummitHallCheckedIn'     => 'summit_hall_checked_in:json_boolean',
@@ -30,7 +30,7 @@ final class SummitAttendeeSerializer extends SilverStripeSerializer
         'Email'                   => 'email:json_string',
         'CompanyName'             => 'company:json_string',
         'DisclaimerAcceptedDate'  => 'disclaimer_accepted_date:datetime_epoch',
-        'Status'                  => 'status:json_string'
+        'Status'                  => 'status:json_string',
     ];
 
     protected static $allowed_relations = [

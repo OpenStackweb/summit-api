@@ -37,7 +37,10 @@ final class DoctrineSummitAttendeeRepository
     protected function applyExtraJoins(QueryBuilder $query){
         $query =  $query->join('e.summit', 's')
             ->leftJoin('e.member', 'm')
-            ->leftJoin('e.tickets', 't');
+            ->leftJoin('e.tickets', 't')
+            ->leftJoin('t.badge', 'b')
+            ->leftJoin('b.type', 'bt')
+            ->leftJoin('t.ticket_type', 'tt');
         return $query;
     }
 
@@ -48,10 +51,14 @@ final class DoctrineSummitAttendeeRepository
     {
         return [
             'summit_id'            => new DoctrineFilterMapping("s.id :operator :value"),
+            'member_id'            => new DoctrineFilterMapping("m.id :operator :value"),
             'first_name'           => [
                 "m.first_name :operator :value",
                 "e.first_name :operator :value"
             ],
+            'ticket_type' => new DoctrineFilterMapping("tt.name :operator :value"),
+            'badge_type' => new DoctrineFilterMapping("bt.name :operator :value"),
+            'status' =>  new DoctrineFilterMapping("e.status :operator :value"),
             'last_name'            => [
                 "m.last_name :operator :value",
                 "e.surname :operator :value"
@@ -77,10 +84,14 @@ final class DoctrineSummitAttendeeRepository
     {
         return [
             'id'                => 'e.id',
-            'first_name'        => 'm.first_name',
-            'last_name'         => 'm.last_name',
+            'first_name'        => 'e.first_name',
+            'last_name'         => 'e.surname',
+            "full_name"         => "LOWER(CONCAT(e.first_name, ' ', e.surname))",
             'external_order_id' => 't.external_order_id',
-            'company'           => 'e.company_name'
+            'company'           => 'e.company_name',
+            'member_id'         => 'm.id',
+            'status'            => 'e.status',
+
         ];
     }
 

@@ -14,6 +14,7 @@
 use App\Models\ResourceServer\IApiRepository;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
@@ -47,7 +48,7 @@ final class ConfigurationsController extends JsonController
             $items = [];
             foreach ($this->repository->getAll() as $i) {
                 if ($i instanceof IEntity) {
-                    $i = SerializerRegistry::getInstance()->getSerializer($i, SerializerRegistry::SerializerType_Public)->serialize(Input::get('expand', ''));
+                    $i = SerializerRegistry::getInstance()->getSerializer($i, SerializerRegistry::SerializerType_Public)->serialize(Request::input('expand', ''));
                 }
                 $items[] = $i;
             }

@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\IAttendeeService;
 use App\Services\Model\ISummitOrderService;
 use Exception;
@@ -31,11 +32,10 @@ use ModelSerializers\SerializerRegistry;
 use services\model\ISummitService;
 use utils\Filter;
 use utils\FilterElement;
-use utils\FilterParser;
-use utils\OrderParser;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Validator;
-use utils\PagingInfo;
+use utils\FilterParser;
+
 /**
  * Class OAuth2SummitAttendeesApiController
  * @package App\Http\Controllers
@@ -134,8 +134,6 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      * @return mixed
      */
     public function getOwnAttendee($summit_id){
-        $expand = Request::input('expand', '');
-
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -144,7 +142,11 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             $type     = CheckAttendeeStrategyFactory::Me;
             $attendee = CheckAttendeeStrategyFactory::build($type, $this->resource_server_context)->check('me', $summit);
             if(is_null($attendee)) return $this->error404();
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($attendee)->serialize($expand));
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($attendee)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
         }
         catch (\HTTP401UnauthorizedException $ex1) {
             Log::warning($ex1);
@@ -163,8 +165,6 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      */
     public function getAttendee($summit_id, $attendee_id)
     {
-        $expand = Request::input('expand', '');
-
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -181,9 +181,9 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     SerializerRegistry::SerializerType_Private
                 )->serialize
                 (
-                    $expand,
-                    [],
-                    [],
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
                     [ 'serializer_type' => SerializerRegistry::SerializerType_Private ]
                 ));
         }
@@ -383,6 +383,10 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'email'                => ['=@', '=='],
                     'external_order_id'    => ['=@', '=='],
                     'external_attendee_id' => ['=@', '=='],
+                    'member_id'            => ['==', '>'],
+                    'ticket_type'          => ['=@', '=='],
+                    'badge_type'           => ['=@', '=='],
+                    'status'               => ['=@', '=='],
                 ];
             },
             function(){
@@ -394,6 +398,10 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'email'                => 'sometimes|string',
                     'external_order_id'    => 'sometimes|string',
                     'external_attendee_id' => 'sometimes|string',
+                    'member_id'            => 'sometimes|integer',
+                    'ticket_type'          => 'sometimes|string',
+                    'badge_type'           => 'sometimes|string',
+                    'status'               => 'sometimes|string',
                 ];
             },
             function()
@@ -404,6 +412,9 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'company',
                     'id',
                     'external_order_id',
+                    'member_id',
+                    'status',
+                    'full_name',
                 ];
             },
             function($filter) use($summit){
@@ -437,6 +448,10 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'external_order_id'    => ['=@', '=='],
                     'company'              => ['=@', '=='],
                     'external_attendee_id' => ['=@', '=='],
+                    'member_id'            => ['==','<=','>='],
+                    'ticket_type'          => ['=@', '=='],
+                    'badge_type'           => ['=@', '=='],
+                    'status'               => ['=@', '=='],
                 ];
             },
             function(){
@@ -448,17 +463,23 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'external_order_id'    => 'sometimes|string',
                     'external_attendee_id' => 'sometimes|string',
                     'company'              => 'sometimes|string',
+                    'member_id'            => 'sometimes|integer',
+                    'ticket_type'          => 'sometimes|string',
+                    'badge_type'           => 'sometimes|string',
+                    'status'               => 'sometimes|string',
                 ];
             },
             function()
             {
                 return [
-
                     'first_name',
                     'last_name',
                     'id',
                     'external_order_id',
                     'company',
+                    'member_id',
+                    'status',
+                    'full_name',
                 ];
             },
             function($filter) use($summit){
@@ -498,6 +519,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'summit_hall_checked_in_date' => 'sometimes|date_format:U',
                 'first_name'                  => 'required_without:member_id|string|max:255',
                 'surname'                     => 'required_without:member_id|string|max:255',
+                'admin_notes'                 => 'sometimes|string|max:1024',
                 'company'                     => 'sometimes|string|max:255',
                 'email'                       => 'required_without:member_id|string|max:255|email',
                 'member_id'                   => 'required_without_all:email|integer',
@@ -518,7 +540,11 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
             $attendee = $this->attendee_service->addAttendee($summit, $data->all());
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($attendee)->serialize());
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($attendee)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);
@@ -592,6 +618,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'email'                       => 'required_without:member_id|string|max:255|email',
                 'member_id'                   => 'required_without_all:first_name,surname,email|integer',
                 'extra_questions'             => 'sometimes|order_extra_question_dto_array',
+                'admin_notes'                 => 'sometimes|string|max:1024',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -671,7 +698,12 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
             $ticket = $this->summit_order_service->createOrderSingleTicket($summit, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize());
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);
@@ -742,7 +774,11 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
             $ticket = $this->attendee_service->reassignAttendeeTicketByMember($summit, $attendee, $other_member, intval($ticket_id));
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize());
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);
@@ -784,7 +820,11 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
             $ticket = $this->attendee_service->reassignAttendeeTicket($summit, $attendee, intval($ticket_id), $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize());
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);
@@ -806,5 +846,91 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     protected function getSummitRepository(): ISummitRepository
     {
         return $this->summit_repository;
+    }
+
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function send($summit_id){
+        try {
+
+            if(!Request::isJson()) return $this->error400();
+            $data = Input::json();
+
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $payload = $data->all();
+
+            // Creates a Validator instance and validates the data.
+            $validation = Validator::make($payload, [
+                'email_flow_event' => 'required|string|in:'.join(',', [
+                        'ATTENDEE_INVITATION'
+                    ]),
+                'attendees_ids' => 'sometimes|int_array',
+            ]);
+
+            if ($validation->fails()) {
+                $messages = $validation->messages()->toArray();
+
+                return $this->error412
+                (
+                    $messages
+                );
+            }
+
+            $filter = null;
+
+            if (Input::has('filter')) {
+                $filter = FilterParser::parse(Input::get('filter'), [
+                    'first_name'           => ['=@', '=='],
+                    'last_name'            => ['=@', '=='],
+                    'full_name'            => ['=@', '=='],
+                    'email'                => ['=@', '=='],
+                    'external_order_id'    => ['=@', '=='],
+                    'company'              => ['=@', '=='],
+                    'external_attendee_id' => ['=@', '=='],
+                    'member_id'            => ['==','<=','>='],
+                    'ticket_type'          => ['=@', '=='],
+                    'badge_type'           => ['=@', '=='],
+                    'status'               => ['=@', '=='],
+                ]);
+            }
+
+            if (is_null($filter))
+                $filter = new Filter();
+
+            $filter->validate([
+                'first_name'           => 'sometimes|string',
+                'last_name'            => 'sometimes|string',
+                'full_name'            => 'sometimes|string',
+                'company'              => 'sometimes|string',
+                'email'                => 'sometimes|string',
+                'external_order_id'    => 'sometimes|string',
+                'external_attendee_id' => 'sometimes|string',
+                'member_id'            => 'sometimes|integer',
+                'ticket_type'          => 'sometimes|string',
+                'badge_type'           => 'sometimes|string',
+                'status'               => 'sometimes|string',
+            ]);
+
+            $this->attendee_service->triggerSend($summit, $payload, Input::get('filter'));
+
+            return $this->ok();
+
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412(array($ex2->getMessage()));
+        } catch (\HTTP401UnauthorizedException $ex3) {
+            Log::warning($ex3);
+            return $this->error401();
+        } catch (\Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
     }
 }

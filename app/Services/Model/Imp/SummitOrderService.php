@@ -26,7 +26,6 @@ use App\Models\Foundation\Summit\Factories\SummitOrderFactory;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRuleRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
-use App\Services\Apis\IExternalUserApi;
 use App\Services\Utils\CSVReader;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
@@ -1643,16 +1642,7 @@ final class SummitOrderService
             if (is_null($ticket))
                 throw new EntityNotFoundException("ticket not found");
 
-            if (!$ticket->isPaid())
-                throw new ValidationException("ticket is not paid");
-
-            if (!$ticket->hasOwner())
-                throw new ValidationException("ticket must have an assigned owner");
-
-            $ticket->generateQRCode();
-            $ticket->generateHash();
-
-            SummitAttendeeTicketRegenerateHashEmail::dispatch($ticket);
+            $ticket->sendPublicEditEmail();
         });
     }
 

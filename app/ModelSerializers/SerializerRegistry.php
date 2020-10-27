@@ -285,11 +285,13 @@ final class SerializerRegistry
         ];
 
         $this->registry['SummitOrderExtraQuestionAnswer'] = SummitOrderExtraQuestionAnswerSerializer::class;
+
         $this->registry['SummitAttendee']                 = [
             self::SerializerType_Public  => SummitAttendeeSerializer::class,
-            self::SerializerType_Private => SummitAttendeeSerializer::class,
+            self::SerializerType_Private => SummitAttendeeAdminSerializer::class,
             self::SerializerType_CSV     => SummitAttendeeCSVSerializer::class,
         ];
+
         $this->registry['SummitAttendeeTicket']           = [
             self::SerializerType_Public                          => BaseSummitAttendeeTicketSerializer::class,
             ISummitAttendeeTicketSerializerTypes::AdminType      => SummitAttendeeTicketSerializer::class,

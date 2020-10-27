@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
 use Illuminate\Support\Facades\Event;
 use App\Events\RequestedSummitAttendeeTicketRefund;
 use App\Events\SummitAttendeeTicketRefundAccepted;
@@ -289,6 +291,22 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         }
         $this->hash               = hash('sha256', $token.$salt.time());
         $this->hash_creation_date = new \DateTime('now', new \DateTimeZone('UTC'));
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    public function sendPublicEditEmail(){
+        if (!$this->isPaid())
+            throw new ValidationException("ticket is not paid");
+
+        if (!$this->hasOwner())
+            throw new ValidationException("ticket must have an assigned owner");
+
+        $this->generateQRCode();
+        $this->generateHash();
+
+        SummitAttendeeTicketRegenerateHashEmail::dispatch($this);
     }
 
     /**

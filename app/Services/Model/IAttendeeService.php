@@ -17,6 +17,8 @@ use models\main\Member;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
+use utils\Filter;
+
 /**
  * Interface IAttendeeService
  * @package App\Services\Model
@@ -86,4 +88,18 @@ interface IAttendeeService
      * @throws \Exception
      */
     public function reassignAttendeeTicket(Summit $summit, SummitAttendee $attendee, int $ticket_id, array $payload):SummitAttendeeTicket;
+
+    /**
+     * @param Summit $summit
+     * @param array $payload
+     * @param mixed $filter
+     */
+    public function triggerSend(Summit $summit, array $payload, $filter = null):void;
+
+    /**
+     * @param int $summit_id
+     * @param array $payload
+     * @param Filter|null $filter
+     */
+    public function send(int $summit_id, array $payload, Filter $filter = null):void;
 }

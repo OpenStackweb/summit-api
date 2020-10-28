@@ -58,7 +58,7 @@ final class DoctrineSummitAttendeeRepository
                 "m.first_name :operator :value",
                 "e.first_name :operator :value"
             ],
-            'is_accepted' => new DoctrineSwitchFilterMapping([
+            'has_member' => new DoctrineSwitchFilterMapping([
                     'true' => new DoctrineCaseFilterMapping(
                         'true',
                         "m.id is not null and m.id > 0"

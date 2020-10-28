@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
+use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\IAttendeeService;
 use App\Services\Model\ISummitOrderService;
@@ -873,7 +876,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             // Creates a Validator instance and validates the data.
             $validation = Validator::make($payload, [
                 'email_flow_event' => 'required|string|in:'.join(',', [
-                        'ATTENDEE_INVITATION'
+                        SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG,
+                        InviteAttendeeTicketEditionMail::EVENT_SLUG
                     ]),
                 'attendees_ids' => 'sometimes|int_array',
             ]);

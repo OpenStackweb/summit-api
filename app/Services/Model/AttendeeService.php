@@ -410,7 +410,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                             }
 
                             if ($flow_event == InviteAttendeeTicketEditionMail::EVENT_SLUG) {
-                                $attendee->sendInvitationEmail($ticket);
+                                $attendee->sendInvitationEmail($ticket, true);
                             }
                         } catch (\Exception $ex) {
                             Log::warning($ex);

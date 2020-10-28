@@ -355,8 +355,9 @@ class SummitAttendee extends SilverstripeBaseModel
 
     /**
      * @param SummitAttendeeTicket $ticket
+     * @param bool $overrideTicketOwnerIsSameAsOrderOwnerRule
      */
-    public function sendInvitationEmail(SummitAttendeeTicket $ticket){
+    public function sendInvitationEmail(SummitAttendeeTicket $ticket, bool $overrideTicketOwnerIsSameAsOrderOwnerRule = false){
         Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s", $this->getEmail()));
         if($ticket->getOwnerEmail() != $this->getEmail()) return;
         $this->updateStatus();
@@ -371,7 +372,7 @@ class SummitAttendee extends SilverstripeBaseModel
         // buyer is presented the option to fill in the details during the checkout process. Second, buyer will
         // receive daily reminder emails. So, I think that makes this email not really needed as the buyer already knows
         // they bought a ticket for themselves.
-        if($order->getOwnerEmail() !== $ticket->getOwnerEmail()) {
+        if($order->getOwnerEmail() !== $ticket->getOwnerEmail() || $overrideTicketOwnerIsSameAsOrderOwnerRule) {
             // no delay
             InviteAttendeeTicketEditionMail::dispatch($ticket);
         }

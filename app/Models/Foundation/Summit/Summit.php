@@ -4986,6 +4986,7 @@ SQL;
     public function getSummitDays():array {
         $beginDate = $this->getLocalBeginDate();
         $endDate = $this->getLocalEndDate();
+        Log::debug(sprintf("Summit::getSummitDays local begin date %s local end date %s", $beginDate->format('Y-m-d H:i:s'), $endDate->format('Y-m-d H:i:s')));
         if(is_null($beginDate)) return [];
         if(is_null($endDate)) return [];
         $beginDate = $beginDate->setTime(0,0,0);
@@ -5005,10 +5006,13 @@ SQL;
         $days = $this->getSummitDays();
         $list = [];
         foreach ($days as $day){
+            Log::debug(sprintf("Summit::getSummitDaysWithEvents day %s", $day->format('Y-m-d H:i:s')));
             $begin = clone($day);
-            $begin = $begin->setTime(0,0,0);
+            $begin = $begin->setTime(0,0,0)->setTimezone(new \DateTimeZone('UTC'));
             $end   = clone($day);
-            $end = $end->setTime(23,59,59);
+            $end = $end->setTime(23,59,59)->setTimezone(new \DateTimeZone('UTC'));
+
+            Log::debug(sprintf("Summit::getSummitDaysWithEvents UTC begin date %s UTC end date %s", $begin->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s')));
             $count = 0;
             try {
                 $sql = <<<SQL
@@ -5031,6 +5035,7 @@ SQL;
                 $count = 0;
             }
             if($count > 0){
+                Log::debug(sprintf("Summit::getSummitDaysWithEvents UTC begin date %s UTC end date %s count %s", $begin->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'), $count));
                 $list[] = $day;
             }
         }

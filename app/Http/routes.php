@@ -851,7 +851,7 @@ Route::group([
             Route::group(array('prefix' => 'attendees'), function () {
 
                 Route::group(['prefix' => 'all'], function (){
-                    Route::post('send', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@send']);
+                    Route::put('send', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@send']);
                 });
 
                 Route::get('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@getAttendeesBySummit']);

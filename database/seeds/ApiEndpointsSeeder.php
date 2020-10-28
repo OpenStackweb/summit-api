@@ -1795,6 +1795,21 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'attendees-send-email',
+                'route' => '/api/v1/summits/{id}/attendees/all/send',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteAttendeesData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
+                ]
+            ],
+            [
                 'name' => 'get-own-attendee',
                 'route' => '/api/v1/summits/{id}/attendees/me',
                 'http_method' => 'GET',

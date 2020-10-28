@@ -17,9 +17,11 @@ use models\summit\ISummitAttendeeRepository;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use App\Repositories\SilverStripeDoctrineRepository;
+use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineJoinFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
+use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
@@ -56,6 +58,17 @@ final class DoctrineSummitAttendeeRepository
                 "m.first_name :operator :value",
                 "e.first_name :operator :value"
             ],
+            'is_accepted' => new DoctrineSwitchFilterMapping([
+                    'true' => new DoctrineCaseFilterMapping(
+                        'true',
+                        "m.id is not null and m.id > 0"
+                    ),
+                    'false' => new DoctrineCaseFilterMapping(
+                        'false',
+                        "m.id is null"
+                    ),
+                ]
+            ),
             'ticket_type' => new DoctrineFilterMapping("tt.name :operator :value"),
             'badge_type' => new DoctrineFilterMapping("bt.name :operator :value"),
             'status' =>  new DoctrineFilterMapping("e.status :operator :value"),

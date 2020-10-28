@@ -387,6 +387,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'ticket_type'          => ['=@', '=='],
                     'badge_type'           => ['=@', '=='],
                     'status'               => ['=@', '=='],
+                    'has_member'           => ['=='],
                 ];
             },
             function(){
@@ -402,6 +403,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'ticket_type'          => 'sometimes|string',
                     'badge_type'           => 'sometimes|string',
                     'status'               => 'sometimes|string',
+                    'has_member'           => 'sometimes|required|string|in:true,false',
                 ];
             },
             function()
@@ -409,6 +411,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 return [
                     'first_name',
                     'last_name',
+                    'email',
+                    'full_name',
                     'company',
                     'id',
                     'external_order_id',
@@ -452,6 +456,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'ticket_type'          => ['=@', '=='],
                     'badge_type'           => ['=@', '=='],
                     'status'               => ['=@', '=='],
+                    'has_member'           => ['=='],
                 ];
             },
             function(){
@@ -467,6 +472,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'ticket_type'          => 'sometimes|string',
                     'badge_type'           => 'sometimes|string',
                     'status'               => 'sometimes|string',
+                    'has_member'           => 'sometimes|required|string|in:true,false',
                 ];
             },
             function()
@@ -479,6 +485,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'company',
                     'member_id',
                     'status',
+                    'email',
                     'full_name',
                 ];
             },

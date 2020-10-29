@@ -28,6 +28,8 @@ use GuzzleHttp\Client as GuzzleHttpClient;
 use MuxPhp\Models\InputSettings as MuxInputSettings;
 use MuxPhp\Models\CreateAssetRequest as MuxCreateAssetRequest;
 use MuxPhp\Models\PlaybackPolicy as MuxPlaybackPolicy;
+use MuxPhp\Models\UpdateAssetMP4SupportRequest as MuxUpdateAssetMP4SupportRequest;
+
 /**
  * Class PresentationVideoMediaUploadProcessor
  * @package App\Services\Model\Imp
@@ -65,10 +67,10 @@ final class PresentationVideoMediaUploadProcessor
         $mux_user = Config::get("mux.user", null);
         $mux_password = Config::get("mux.password", null);
 
-        if(empty($mux_user)){
+        if (empty($mux_user)) {
             throw new \InvalidArgumentException("missing setting mux.user");
         }
-        if(empty($mux_password)){
+        if (empty($mux_password)) {
             throw new \InvalidArgumentException("missing setting mux.password");
         }
 
@@ -93,11 +95,11 @@ final class PresentationVideoMediaUploadProcessor
     public function processPublishedPresentationFor(int $summit_id, ?string $mountingFolder = null): int
     {
         Log::debug(sprintf("PresentationVideoMediaUploadProcessor::processPublishedPresentationFor summit id %s mountingFolder %s", $summit_id, $mountingFolder));
-        $event_ids = $this->tx_service->transaction(function() use($summit_id){
+        $event_ids = $this->tx_service->transaction(function () use ($summit_id) {
             return $this->event_repository->getPublishedEventsIdsBySummit($summit_id);
         });
 
-        foreach($event_ids as $event_id){
+        foreach ($event_ids as $event_id) {
             Log::warning(sprintf("PresentationVideoMediaUploadProcessor::processPublishedPresentationFor processing event %s", $event_id));
             $this->processEvent(intval($event_id), $mountingFolder);
         }
@@ -110,7 +112,8 @@ final class PresentationVideoMediaUploadProcessor
      * @param string|null $mountingFolder
      * @return bool
      */
-    public function processEvent(int $event_id, ?string $mountingFolder):bool{
+    public function processEvent(int $event_id, ?string $mountingFolder): bool
+    {
         try {
             return $this->tx_service->transaction(function () use ($event_id, $mountingFolder) {
                 try {
@@ -120,23 +123,23 @@ final class PresentationVideoMediaUploadProcessor
                         return false;
                     }
 
-                    if(!$event->isPublished()){
+                    if (!$event->isPublished()) {
                         Log::warning(sprintf("PresentationVideoMediaUploadProcessor::processEvent event %s not published", $event_id));
                         return false;
                     }
 
                     Log::debug(sprintf("PresentationVideoMediaUploadProcessor::processEvent processing event %s (%s)", $event->getTitle(), $event_id));
 
-                    if(!empty($event->getMuxAssetId())){
+                    if (!empty($event->getMuxAssetId())) {
                         Log::warning(sprintf("PresentationVideoMediaUploadProcessor::processEvent event %s already has assigned an asset id %s", $event_id, $event->getMuxAssetId()));
                         return false;
                     }
 
                     $has_video = false;
-                    foreach($event->getMediaUploads() as $mediaUpload){
+                    foreach ($event->getMediaUploads() as $mediaUpload) {
 
-                        if($mediaUpload->getMediaUploadType()->isVideo()){
-                            if($has_video){
+                        if ($mediaUpload->getMediaUploadType()->isVideo()) {
+                            if ($has_video) {
                                 Log::warning(sprintf("PresentationVideoMediaUploadProcessor::processEvent event %s processing media upload %s (%s) already has a video processed!.", $event_id, $mediaUpload->getId(), $mediaUpload->getFilename()));
                                 continue;
                             }
@@ -147,9 +150,8 @@ final class PresentationVideoMediaUploadProcessor
                             if (!is_null($strategy)) {
                                 $relativePath = $mediaUpload->getRelativePath(IStorageTypesConstants::PrivateType, $mountingFolder);
                                 Log::debug(sprintf("PresentationVideoMediaUploadProcessor::processEvent event %s processing media upload %s relativePath %s", $event_id, $mediaUpload->getId(), $relativePath));
-                                $assetUrl =  $strategy->getUrl($relativePath);
-                                if($assetUrl == '#')
-                                {
+                                $assetUrl = $strategy->getUrl($relativePath);
+                                if ($assetUrl == '#') {
                                     Log::debug(sprintf("PresentationVideoMediaUploadProcessor::processEvent event %s processing media upload %s got asset url %s is not valid", $event_id, $mediaUpload->getId(), $assetUrl));
                                     return false;
                                 }
@@ -157,7 +159,7 @@ final class PresentationVideoMediaUploadProcessor
 
                                 // Create Asset Request
                                 $input = new MuxInputSettings(["url" => $assetUrl]);
-                                $createAssetRequest = new MuxCreateAssetRequest(["input" => $input, "playback_policy" => [MuxPlaybackPolicy::PUBLIC_PLAYBACK_POLICY] ]);
+                                $createAssetRequest = new MuxCreateAssetRequest(["input" => $input, "playback_policy" => [MuxPlaybackPolicy::PUBLIC_PLAYBACK_POLICY]]);
                                 // Ingest
                                 $result = $this->assets_api->createAsset($createAssetRequest);
 
@@ -179,10 +181,49 @@ final class PresentationVideoMediaUploadProcessor
                 }
                 return true;
             });
-        }
-        catch (\Exception $ex) {
+        } catch (\Exception $ex) {
             Log::error($ex);
             return false;
         }
+    }
+
+    /**
+     * @param int $event_id
+     * @throws \Exception
+     */
+    public function enableMP4Support(int $event_id): void
+    {
+        $this->tx_service->transaction(function () use ($event_id) {
+            $event = $this->event_repository->getByIdExclusiveLock($event_id);
+            if (is_null($event) || !$event instanceof Presentation) {
+                Log::warning(sprintf("PresentationVideoMediaUploadProcessor::enableMP4Support event %s not found", $event_id));
+                return;
+            }
+            if (!$event->isPublished()) {
+                Log::warning(sprintf("PresentationVideoMediaUploadProcessor::enableMP4Support event %s not published", $event_id));
+                return;
+            }
+
+            Log::debug(sprintf("PresentationVideoMediaUploadProcessor::enableMP4Support processing event %s (%s)", $event->getTitle(), $event_id));
+
+            $assetId = $event->getMuxAssetId();
+            if (empty($assetId)) {
+                // try to get from stream url
+                $streamUrl = $event->getStreamingUrl();
+                if(preg_match('/https\:\/\/stream\.mux\.com\/(.*)\.m3u8/', $streamUrl, $re)){
+                    $playbackId = $re[1];
+                    $this->assets_api->getAssetPlaybackId()
+                }
+                if(empty($assetId)){
+                    Log::warning(sprintf("PresentationVideoMediaUploadProcessor::enableMP4Support event %s asset id is empty", $event_id));
+                    return;
+                }
+            }
+
+            $request = new MuxUpdateAssetMP4SupportRequest(['mp4_support' => MuxUpdateAssetMP4SupportRequest::MP4_SUPPORT_STANDARD]);
+            $result = $this->assets_api->updateAssetMp4Support($assetId, $request);
+
+            Log::debug(sprintf("PresentationVideoMediaUploadProcessor::enableMP4Support event %s enable mp4 support response %s", $event_id, json_encode($result)));
+        });
     }
 }

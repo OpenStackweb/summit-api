@@ -32,4 +32,9 @@ interface IPresentationVideoMediaUploadProcessor
      * @return bool
      */
     public function processEvent(int $event_id, ?string $mountingFolder):bool;
+
+    /**
+     * @param int $event_id
+     */
+    public function enableMP4Support(int $event_id):void;
 }

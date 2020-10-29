@@ -42,14 +42,14 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
 
     /**
      * @ORM\ManyToOne(targetEntity="models\main\Company")
-     * @ORM\JoinColumn(name="CompanyID", referencedColumnName="ID")
+     * @ORM\JoinColumn(name="CompanyID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Company
      */
     protected $company;
 
     /**
      * @ORM\ManyToOne(targetEntity="SponsorshipType")
-     * @ORM\JoinColumn(name="SponsorshipTypeID", referencedColumnName="ID")
+     * @ORM\JoinColumn(name="SponsorshipTypeID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SponsorshipType
      */
     protected $sponsorship;

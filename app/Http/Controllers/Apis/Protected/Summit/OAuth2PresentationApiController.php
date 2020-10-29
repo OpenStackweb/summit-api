@@ -1150,7 +1150,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 'media_upload_type_id' => 'required|integer',
                 'display_on_site' => 'sometimes|boolean',
             ];
-
+            $data = MultipartFormDataCleaner::cleanBool('display_on_site', $data);
             // Creates a Validator instance and validates the data.
             $validation = Validator::make($data, $rules);
 
@@ -1235,6 +1235,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 'display_on_site' => 'sometimes|boolean',
             ];
 
+            $data = MultipartFormDataCleaner::cleanBool('display_on_site', $data);
             // Creates a Validator instance and validates the data.
             $validation = Validator::make($data, $rules);
 

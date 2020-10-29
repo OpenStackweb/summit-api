@@ -906,6 +906,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'ticket_type'          => ['=@', '=='],
                     'badge_type'           => ['=@', '=='],
                     'status'               => ['=@', '=='],
+                    'has_member'           => ['=='],
                 ]);
             }
 
@@ -924,6 +925,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'ticket_type'          => 'sometimes|string',
                 'badge_type'           => 'sometimes|string',
                 'status'               => 'sometimes|string',
+                'has_member'           => 'sometimes|required|string|in:true,false',
             ]);
 
             $this->attendee_service->triggerSend($summit, $payload, Input::get('filter'));

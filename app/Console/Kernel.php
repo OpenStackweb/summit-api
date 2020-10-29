@@ -44,6 +44,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\SummitEmailFlowEventSeederCommand::class,
         \App\Console\Commands\SummitEmailFlowTypeSeederCommand::class,
         \App\Console\Commands\PresentationMaterialsCreateMUXAssetsCommand::class,
+        \App\Console\Commands\RecalculateAttendeesStatusCommand::class,
     ];
 
     /**

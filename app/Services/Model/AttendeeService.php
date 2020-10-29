@@ -25,6 +25,7 @@ use models\summit\factories\SummitAttendeeFactory;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\ISummitRegistrationPromoCodeRepository;
+use models\summit\ISummitRepository;
 use models\summit\ISummitTicketTypeRepository;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
@@ -71,6 +72,11 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      */
     private $promo_code_repository;
 
+    /**
+     * @var ISummitRepository
+     */
+    private $summit_repository;
+
 
     public function __construct
     (
@@ -79,6 +85,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         ISummitAttendeeTicketRepository $ticket_repository,
         ISummitTicketTypeRepository $ticket_type_repository,
         ISummitRegistrationPromoCodeRepository $promo_code_repository,
+        ISummitRepository $summit_repository,
         IEventbriteAPI $eventbrite_api,
         ITransactionService $tx_service
     )
@@ -90,6 +97,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         $this->ticket_type_repository = $ticket_type_repository;
         $this->promo_code_repository  = $promo_code_repository;
         $this->eventbrite_api         = $eventbrite_api;
+        $this->summit_repository      = $summit_repository;
     }
 
     /**
@@ -421,5 +429,16 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             catch (\Exception $ex) {
                 Log::warning($ex);
             }
+    }
+
+    public function recalculateAttendeeStatus(int $summit_id):void{
+        $this->tx_service->transaction(function() use($summit_id){
+            $summit = $this->summit_repository->getById($summit_id);
+            if(is_null($summit) || !$summit instanceof Summit) return;
+
+            foreach($summit->getAttendees() as $attendee){
+                $attendee->updateStatus();
+            }
+        });
     }
 }

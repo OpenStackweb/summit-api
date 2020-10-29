@@ -102,4 +102,9 @@ interface IAttendeeService
      * @param Filter|null $filter
      */
     public function send(int $summit_id, array $payload, Filter $filter = null):void;
+
+    /**
+     * @param int $summit_id
+     */
+    public function recalculateAttendeeStatus(int $summit_id):void;
 }

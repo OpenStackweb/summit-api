@@ -2034,6 +2034,9 @@ SQL;
         return $this->attendees->count();
     }
 
+    public function getAttendees(){
+        return $this->attendees;
+    }
 
     /**
      * @return int

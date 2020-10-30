@@ -496,14 +496,14 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($speakers));
     }
 
-    public function testGetSpeakersOnSchedule($summit_id = 23)
+    public function testGetSpeakersOnSchedule($summit_id = 31)
     {
         $params = [
 
             'id' => $summit_id,
             'page' => 1,
             'per_page' => 10,
-            'filter' => ['start_date>=1509753600','end_date<=1509839999']
+            'filter' => ['featured==true']
         ];
 
         $headers = [

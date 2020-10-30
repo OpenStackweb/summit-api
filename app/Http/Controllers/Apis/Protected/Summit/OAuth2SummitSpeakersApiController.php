@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use Exception;
 use Illuminate\Support\Facades\Input;
@@ -34,6 +35,7 @@ use services\model\ISummitService;
 use utils\PagingInfo;
 use Illuminate\Http\Request as LaravelRequest;
 use utils\PagingResponse;
+
 /**
  * Class OAuth2SummitSpeakersApiController
  * @package App\Http\Controllers
@@ -135,26 +137,25 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         if (is_null($summit)) return $this->error404();
 
         return $this->_getAll(
-            function(){
+            function () {
                 return [
                     'first_name' => ['=@', '=='],
-                    'last_name'  => ['=@', '=='],
-                    'email'      => ['=@', '=='],
-                    'id'         => ['=='],
-                    'full_name'  => ['=@', '=='],
+                    'last_name' => ['=@', '=='],
+                    'email' => ['=@', '=='],
+                    'id' => ['=='],
+                    'full_name' => ['=@', '=='],
                 ];
             },
-            function(){
+            function () {
                 return [
                     'first_name' => 'sometimes|string',
-                    'last_name'  => 'sometimes|string',
-                    'email'      => 'sometimes|string',
-                    'id'         => 'sometimes|integer',
-                    'full_name'  => 'sometimes|string',
+                    'last_name' => 'sometimes|string',
+                    'email' => 'sometimes|string',
+                    'id' => 'sometimes|integer',
+                    'full_name' => 'sometimes|string',
                 ];
             },
-            function()
-            {
+            function () {
                 return [
                     'first_name',
                     'last_name',
@@ -162,15 +163,15 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'email',
                 ];
             },
-            function($filter) use($summit){
+            function ($filter) use ($summit) {
                 return $filter;
             },
-            function(){
+            function () {
                 return $this->serializer_type_selector->getSerializerType();
             },
             null,
             null,
-            function ($page,  $per_page,  $filter,  $order, $applyExtraFilters) use($summit) {
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
                 return $this->speaker_repository->getSpeakersBySummit
                 (
                     $summit,
@@ -197,30 +198,31 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         if (is_null($summit)) return $this->error404();
 
         return $this->_getAll(
-            function(){
+            function () {
                 return [
                     'first_name' => ['=@', '=='],
-                    'last_name'  => ['=@', '=='],
-                    'email'      => ['=@', '=='],
-                    'id'         => ['=='],
-                    'full_name'  => ['=@', '=='],
+                    'last_name' => ['=@', '=='],
+                    'email' => ['=@', '=='],
+                    'id' => ['=='],
+                    'full_name' => ['=@', '=='],
                     'event_start_date' => ['>', '<', '<=', '>=', '=='],
-                    'event_end_date'   => ['>', '<', '<=', '>=', '=='],
+                    'event_end_date' => ['>', '<', '<=', '>=', '=='],
+                    'featured' => ['=='],
                 ];
             },
-            function(){
+            function () {
                 return [
                     'first_name' => 'sometimes|string',
-                    'last_name'  => 'sometimes|string',
-                    'email'      => 'sometimes|string',
-                    'id'         => 'sometimes|integer',
-                    'full_name'  => 'sometimes|string',
+                    'last_name' => 'sometimes|string',
+                    'email' => 'sometimes|string',
+                    'id' => 'sometimes|integer',
+                    'full_name' => 'sometimes|string',
                     'event_start_date' => 'sometimes|date_format:U',
                     'event_end_date' => 'sometimes|date_format:U',
+                    'featured' => 'sometimes|required|string|in:true,false',
                 ];
             },
-            function()
-            {
+            function () {
                 return [
                     'first_name',
                     'last_name',
@@ -228,15 +230,15 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'email',
                 ];
             },
-            function($filter) use($summit){
+            function ($filter) use ($summit) {
                 return $filter;
             },
-            function(){
+            function () {
                 return $this->serializer_type_selector->getSerializerType();
             },
             null,
             null,
-            function ($page,  $per_page,  $filter,  $order, $applyExtraFilters) use($summit) {
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
                 return $this->speaker_repository->getSpeakersBySummitAndOnSchedule
                 (
                     $summit,
@@ -260,26 +262,25 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     public function getAll()
     {
         return $this->_getAll(
-            function(){
+            function () {
                 return [
                     'first_name' => ['=@', '=='],
-                    'last_name'  => ['=@', '=='],
-                    'email'      => ['=@', '=='],
-                    'id'         => ['=='],
-                    'full_name'  => ['=@', '=='],
+                    'last_name' => ['=@', '=='],
+                    'email' => ['=@', '=='],
+                    'id' => ['=='],
+                    'full_name' => ['=@', '=='],
                 ];
             },
-            function(){
+            function () {
                 return [
                     'first_name' => 'sometimes|string',
-                    'last_name'  => 'sometimes|string',
-                    'email'      => 'sometimes|string',
-                    'id'         => 'sometimes|integer',
-                    'full_name'  => 'sometimes|string',
+                    'last_name' => 'sometimes|string',
+                    'email' => 'sometimes|string',
+                    'id' => 'sometimes|integer',
+                    'full_name' => 'sometimes|string',
                 ];
             },
-            function()
-            {
+            function () {
                 return [
                     'first_name',
                     'last_name',
@@ -287,15 +288,15 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'email',
                 ];
             },
-            function($filter){
+            function ($filter) {
                 return $filter;
             },
-            function(){
+            function () {
                 return $this->serializer_type_selector->getSerializerType();
             },
             null,
             null,
-            function ($page,  $per_page,  $filter,  $order, $applyExtraFilters) {
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) {
                 return $this->speaker_repository->getAllByPage
                 (
                     new PagingInfo($page, $per_page),
@@ -323,8 +324,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             $serializer_type = SerializerRegistry::SerializerType_Public;
             // if speaker profile belongs to current member
-            if (!is_null($current_member)){
-                if($speaker->getMemberId() == $current_member->getId())
+            if (!is_null($current_member)) {
+                if ($speaker->getMemberId() == $current_member->getId())
                     $serializer_type = SerializerRegistry::SerializerType_Private;
             }
 
@@ -355,7 +356,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
-    public function getMySummitSpeaker($summit_id){
+    public function getMySummitSpeaker($summit_id)
+    {
         try {
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -375,7 +377,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     [
                         'summit_id' => $summit_id,
                         'published' => Request::input('published', false),
-                        'summit'    => $summit
+                        'summit' => $summit
                     ]
                 )
             );
@@ -513,8 +515,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             $serializer_type = SerializerRegistry::SerializerType_Public;
             // if speaker profile belongs to current member
-            if (!is_null($current_member)){
-                if($speaker->getMemberId() == $current_member->getId() || $speaker->canBeEditedBy($current_member))
+            if (!is_null($current_member)) {
+                if ($speaker->getMemberId() == $current_member->getId() || $speaker->canBeEditedBy($current_member))
                     $serializer_type = SerializerRegistry::SerializerType_Private;
             }
 
@@ -695,7 +697,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         }
     }
 
-    public function addMySpeakerPhoto(LaravelRequest $request){
+    public function addMySpeakerPhoto(LaravelRequest $request)
+    {
         try {
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
@@ -703,7 +706,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             $speaker = $this->speaker_repository->getByMember($current_member);
             if (is_null($speaker)) return $this->error404();
 
-           return $this->addSpeakerPhoto($request, $speaker->getId());
+            return $this->addSpeakerPhoto($request, $speaker->getId());
 
         } catch (ValidationException $ex1) {
             Log::warning($ex1);
@@ -838,7 +841,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             $speaker = $this->speaker_repository->getById($speaker_id);
             if (is_null($speaker)) return $this->error404();
 
-            if(!$speaker->canBeEditedBy($current_member)){
+            if (!$speaker->canBeEditedBy($current_member)) {
                 return $this->error403();
             }
 
@@ -1040,7 +1043,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return mixed
      */
-    public function addSpeakerToMyPresentation($presentation_id, $speaker_id){
+    public function addSpeakerToMyPresentation($presentation_id, $speaker_id)
+    {
         try {
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
@@ -1066,7 +1070,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return mixed
      */
-    public function addModeratorToMyPresentation($presentation_id, $speaker_id){
+    public function addModeratorToMyPresentation($presentation_id, $speaker_id)
+    {
         try {
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
@@ -1092,7 +1097,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return mixed
      */
-    public function removeSpeakerFromMyPresentation($presentation_id, $speaker_id){
+    public function removeSpeakerFromMyPresentation($presentation_id, $speaker_id)
+    {
         try {
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
@@ -1118,7 +1124,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return mixed
      */
-    public function removeModeratorFromMyPresentation($presentation_id, $speaker_id){
+    public function removeModeratorFromMyPresentation($presentation_id, $speaker_id)
+    {
         try {
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
@@ -1143,7 +1150,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function requestSpeakerEditPermission($speaker_id){
+    public function requestSpeakerEditPermission($speaker_id)
+    {
         try {
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
@@ -1170,7 +1178,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function getSpeakerEditPermission($speaker_id){
+    public function getSpeakerEditPermission($speaker_id)
+    {
         try {
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
@@ -1198,7 +1207,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $hash
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function approveSpeakerEditPermission($speaker_id, $hash){
+    public function approveSpeakerEditPermission($speaker_id, $hash)
+    {
         try {
             $request = $this->service->approveSpeakerEditPermission($hash, $speaker_id);
             return response()->view('speakers.edit_permissions.approved', [], 200);
@@ -1219,7 +1229,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $hash
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function declineSpeakerEditPermission($speaker_id, $hash){
+    public function declineSpeakerEditPermission($speaker_id, $hash)
+    {
         try {
 
             $request = $this->service->rejectSpeakerEditPermission($hash, $speaker_id);
@@ -1251,7 +1262,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             $speaker = $this->speaker_repository->getById($speaker_id);
             if (is_null($speaker)) return $this->error404();
 
-            if(!$speaker->canBeEditedBy($current_member)){
+            if (!$speaker->canBeEditedBy($current_member)) {
                 return $this->error403();
             }
 
@@ -1279,7 +1290,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         }
     }
 
-    public function deleteSpeakerPhoto($speaker_id){
+    public function deleteSpeakerPhoto($speaker_id)
+    {
         try {
 
             $current_member = $this->resource_server_context->getCurrentUser();
@@ -1288,7 +1300,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             $speaker = $this->speaker_repository->getById($speaker_id);
             if (is_null($speaker)) return $this->error404();
 
-            if(!$speaker->canBeEditedBy($current_member)){
+            if (!$speaker->canBeEditedBy($current_member)) {
                 return $this->error403();
             }
 
@@ -1311,7 +1323,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         }
     }
 
-    public function addSpeakerBigPhoto(LaravelRequest $request, $speaker_id){
+    public function addSpeakerBigPhoto(LaravelRequest $request, $speaker_id)
+    {
         try {
 
             $current_member = $this->resource_server_context->getCurrentUser();
@@ -1320,7 +1333,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             $speaker = $this->speaker_repository->getById($speaker_id);
             if (is_null($speaker)) return $this->error404();
 
-            if(!$speaker->canBeEditedBy($current_member)){
+            if (!$speaker->canBeEditedBy($current_member)) {
                 return $this->error403();
             }
 
@@ -1348,7 +1361,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         }
     }
 
-    public function deleteSpeakerBigPhoto($speaker_id){
+    public function deleteSpeakerBigPhoto($speaker_id)
+    {
         try {
 
             $current_member = $this->resource_server_context->getCurrentUser();
@@ -1357,7 +1371,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             $speaker = $this->speaker_repository->getById($speaker_id);
             if (is_null($speaker)) return $this->error404();
 
-            if(!$speaker->canBeEditedBy($current_member)){
+            if (!$speaker->canBeEditedBy($current_member)) {
                 return $this->error403();
             }
 

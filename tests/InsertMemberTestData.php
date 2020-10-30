@@ -91,11 +91,11 @@ trait InsertMemberTestData
      */
     protected static function insertMemberTestData(string  $current_group_slug){
 
-        DB::setDefaultConnection("model");
-        DB::table("Group_Members")->delete();
-        DB::table("Group")->delete();
-        DB::table("Member")->delete();
-        DB::table("PresentationSpeaker")->delete();
+       // DB::setDefaultConnection("model");
+        //DB::table("Group_Members")->delete();
+        //DB::table("Group")->delete();
+        //DB::table("Member")->delete();
+        //DB::table("PresentationSpeaker")->delete();
 
         self::$em = Registry::getManager(SilverstripeBaseModel::EntityManager);
         if (!self::$em ->isOpen()) {
@@ -122,7 +122,7 @@ trait InsertMemberTestData
         self::$member->setFirstName("Sebastian");
         self::$member->setLastName("Marcet");
         self::$member->setEmailVerified(true);
-        self::$member->setUserExternalId("1");
+        self::$member->setUserExternalId(mt_rand());
         self::$member->add2Group(self::$group);
 
         self::$member2 = new Member();
@@ -131,7 +131,7 @@ trait InsertMemberTestData
         self::$member2->setFirstName("Sebastian");
         self::$member2->setLastName("Marcet Summit Admin");
         self::$member2->setEmailVerified(true);
-        self::$member2->setUserExternalId("2");
+        self::$member2->setUserExternalId(mt_rand());
         self::$member2->add2Group(self::$group2);
 
 

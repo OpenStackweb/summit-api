@@ -357,6 +357,7 @@ SQL;
                 'last_name'  => 'LastName',
                 'email'      => 'Email',
                 'id'         => 'ID',
+                'featured'   => 'Featured'
             ]);
 
             if(!empty($where_conditions)) {
@@ -373,6 +374,13 @@ SQL;
                 $extra_events_filters = " AND {$where_event_conditions}";
                 $bindings = array_merge($bindings, $filter->getSQLBindings());
             }
+        }
+
+        foreach ($bindings as $key => $value){
+            if($value == 'true')
+                $bindings[$key] =  1;
+            if($value == 'false')
+                $bindings[$key] =  0;
         }
 
         if(!is_null($order))
@@ -394,7 +402,8 @@ FROM (
 	IFNULL(S.FirstName, M.FirstName) AS FirstName,
 	IFNULL(S.LastName, M.Surname) AS LastName,
 	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-	IFNULL(M.Email, R.Email) AS Email
+	IFNULL(M.Email, R.Email) AS Email,
+	EXISTS(SELECT 1 FROM Summit_FeaturedSpeakers WHERE Summit_FeaturedSpeakers.PresentationSpeakerID = S.ID AND Summit_FeaturedSpeakers.SummitID = {$summit->getId()}) AS Featured
 	FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
 	LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
@@ -411,7 +420,8 @@ FROM (
 	IFNULL(S.FirstName, M.FirstName) AS FirstName,
 	IFNULL(S.LastName, M.Surname) AS LastName,
 	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-	IFNULL(M.Email, R.Email) AS Email
+	IFNULL(M.Email, R.Email) AS Email,
+	EXISTS(SELECT 1 FROM Summit_FeaturedSpeakers WHERE Summit_FeaturedSpeakers.PresentationSpeakerID = S.ID AND Summit_FeaturedSpeakers.SummitID = {$summit->getId()}) AS Featured
 	FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
 	LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
@@ -428,7 +438,8 @@ FROM (
 	IFNULL(S.FirstName, M.FirstName) AS FirstName,
 	IFNULL(S.LastName, M.Surname) AS LastName,
 	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-	IFNULL(M.Email, R.Email) AS Email
+	IFNULL(M.Email, R.Email) AS Email,
+	EXISTS(SELECT 1 FROM Summit_FeaturedSpeakers WHERE Summit_FeaturedSpeakers.PresentationSpeakerID = S.ID AND Summit_FeaturedSpeakers.SummitID = {$summit->getId()}) AS Featured
 	FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
 	LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID 
@@ -446,9 +457,11 @@ SUMMIT_SPEAKERS
 SQL;
 
 
-        $stm   = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings);
+        $stm = $this->getEntityManager()->getConnection()->prepare($query_count);
+        $stm->execute($bindings);
+        $res = $stm->fetchAll(\PDO::FETCH_COLUMN);
 
-        $total = intval($stm->fetchColumn(0));
+        $total = count($res) > 0 ? $res[0] : 0;
 
         $bindings = array_merge( $bindings, array
         (
@@ -481,7 +494,8 @@ FROM (
     IFNULL(M.Email,R.Email) AS Email,
     S.PhotoID,
     S.BigPhotoID,
-    R.ID AS RegistrationRequestID
+    R.ID AS RegistrationRequestID,
+    EXISTS(SELECT 1 FROM Summit_FeaturedSpeakers WHERE Summit_FeaturedSpeakers.PresentationSpeakerID = S.ID AND Summit_FeaturedSpeakers.SummitID = {$summit->getId()}) AS Featured
     FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
 	LEFT JOIN File F ON F.ID = S.PhotoID
@@ -517,7 +531,8 @@ FROM (
     IFNULL(M.Email,R.Email) AS Email,
     S.PhotoID,
     S.BigPhotoID,
-    R.ID AS RegistrationRequestID
+    R.ID AS RegistrationRequestID,
+    EXISTS(SELECT 1 FROM Summit_FeaturedSpeakers WHERE Summit_FeaturedSpeakers.PresentationSpeakerID = S.ID AND Summit_FeaturedSpeakers.SummitID = {$summit->getId()}) AS Featured
     FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
     LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
@@ -552,7 +567,8 @@ FROM (
     IFNULL(M.Email,R.Email) AS Email,
     S.PhotoID,
     S.BigPhotoID,
-    R.ID AS RegistrationRequestID
+    R.ID AS RegistrationRequestID,
+    EXISTS(SELECT 1 FROM Summit_FeaturedSpeakers WHERE Summit_FeaturedSpeakers.PresentationSpeakerID = S.ID AND Summit_FeaturedSpeakers.SummitID = {$summit->getId()}) AS Featured
     FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
     LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID

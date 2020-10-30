@@ -503,7 +503,10 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
             'id' => $summit_id,
             'page' => 1,
             'per_page' => 10,
-            'filter' => ['featured==true']
+            'filter' => [
+                'event_start_date>=1604304000',
+                'event_end_date<=1604390399'
+            ]
         ];
 
         $headers = [

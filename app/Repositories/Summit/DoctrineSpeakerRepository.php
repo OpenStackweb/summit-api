@@ -368,7 +368,7 @@ SQL;
             $where_event_conditions = $filter->toRawSQL([
                 'event_start_date' => 'E.StartDate:datetime_epoch',
                 'event_end_date' => 'E.EndDate:datetime_epoch',
-            ]);
+            ], count($bindings) + 1);
 
             if(!empty($where_event_conditions)) {
                 $extra_events_filters = " AND {$where_event_conditions}";

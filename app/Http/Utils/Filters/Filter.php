@@ -476,12 +476,11 @@ final class Filter
      * @param array $mappings
      * @return string
      */
-    public function toRawSQL(array $mappings)
+    public function toRawSQL(array $mappings, int $param_idx = 1)
     {
         $sql            = '';
         $this->bindings = [];
         $param_prefix   = "param_%s";
-        $param_idx      = 1;
 
         foreach ($this->filters as $filter) {
             if ($filter instanceof FilterElement) {

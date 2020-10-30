@@ -364,6 +364,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'badge_type' => ['=@', '=='],
                     'status' => ['=@', '=='],
                     'has_member' => ['=='],
+                    'has_tickets' => ['=='],
                     'tickets_count' => ['==', '>=', '<=', '>', '<'],
                 ];
             },
@@ -381,6 +382,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'badge_type' => 'sometimes|string',
                     'status' => 'sometimes|string',
                     'has_member' => 'sometimes|required|string|in:true,false',
+                    'has_tickets'=> 'sometimes|required|string|in:true,false',
                     'tickets_count' => 'sometimes|integer',
                 ];
             },
@@ -435,6 +437,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'badge_type' => ['=@', '=='],
                     'status' => ['=@', '=='],
                     'has_member' => ['=='],
+                    'has_tickets' => ['=='],
                     'tickets_count' => ['==', '>=', '<=', '>', '<'],
                 ];
             },
@@ -452,6 +455,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'badge_type' => 'sometimes|string',
                     'status' => 'sometimes|string',
                     'has_member' => 'sometimes|required|string|in:true,false',
+                    'has_tickets'=> 'sometimes|required|string|in:true,false',
                     'tickets_count' => 'sometimes|integer',
                 ];
             },
@@ -866,6 +870,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'status' => ['=@', '=='],
                     'has_member' => ['=='],
                     'tickets_count' => ['==', '>=', '<=', '>', '<'],
+                    'has_tickets' => ['=='],
                 ]);
             }
 
@@ -886,6 +891,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'status' => 'sometimes|string',
                 'has_member' => 'sometimes|required|string|in:true,false',
                 'tickets_count' => 'sometimes|integer',
+                'has_tickets'=> 'sometimes|required|string|in:true,false',
             ]);
 
             $this->attendee_service->triggerSend($summit, $payload, Input::get('filter'));

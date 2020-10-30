@@ -22,7 +22,7 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
             'page'     => 1,
             'per_page' => 10,
             'order'    => '+id',
-            'filter'   => 'tickets_count>0',
+            'filter'   => 'has_tickets==true',
             'expand'   => 'member,schedule,rsvp,tickets, tickets.ticket_type'
         ];
 

@@ -17,6 +17,7 @@ use models\summit\ISummitAttendeeRepository;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use App\Repositories\SilverStripeDoctrineRepository;
+use models\summit\SummitAttendeeTicket;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineHavingFilterMapping;
@@ -67,6 +68,17 @@ final class DoctrineSummitAttendeeRepository
                     'false' => new DoctrineCaseFilterMapping(
                         'false',
                         "m.id is null"
+                    ),
+                ]
+            ),
+            'has_tickets' => new DoctrineSwitchFilterMapping([
+                    'true' => new DoctrineCaseFilterMapping(
+                        'true',
+                        sprintf("EXISTS (select t1 from %s t1 where t1.owner = e)", SummitAttendeeTicket::class)
+                    ),
+                    'false' => new DoctrineCaseFilterMapping(
+                        'false',
+                        sprintf("not EXISTS (select t1 from %s t1 where t1.owner = e)", SummitAttendeeTicket::class)
                     ),
                 ]
             ),

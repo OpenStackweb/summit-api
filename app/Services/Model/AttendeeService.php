@@ -180,25 +180,25 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
             $attendee = $summit->getAttendeeById($attendee_id);
             if(is_null($attendee))
-                throw new EntityNotFoundException(sprintf("attendee does not belongs to summit id %s", $summit->getId()));
+                throw new EntityNotFoundException(sprintf("Attendee does not belongs to summit id %s.", $summit->getId()));
 
             $member = null;
-            if(isset($data['member_id'])) {
+            if(isset($data['member_id']) && intval($data['member_id']) > 0) {
                 $member_id = intval($data['member_id']);
                 $member = $this->member_repository->getById($member_id);
 
-                if (is_null($member))
-                    throw new EntityNotFoundException("member not found");
+                if (is_null($member) || !$member instanceof Member)
+                    throw new EntityNotFoundException("Member not found.");
 
                 $old_attendee = $this->attendee_repository->getBySummitAndMember($summit, $member);
                 if(!is_null($old_attendee) && $old_attendee->getId() != $attendee->getId())
-                    throw new ValidationException(sprintf("another attendee (%s) already exist for summit id %s and member id %s", $old_attendee->getId(), $summit->getId(), $member->getIdentifier()));
+                    throw new ValidationException(sprintf("Another attendee (%s) already exist for summit id %s and member id %s.", $old_attendee->getId(), $summit->getId(), $member->getIdentifier()));
             }
 
             if(isset($data['email'])) {
                 $old_attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($data['email']));
                 if(!is_null($old_attendee) && $old_attendee->getId() != $attendee->getId())
-                    throw new ValidationException(sprintf("attendee already exist for summit id %s and email %s", $summit->getId(), trim($data['email'])));
+                    throw new ValidationException(sprintf("Attendee already exist for summit id %s and email %s.", $summit->getId(), trim($data['email'])));
             }
 
             // check if attendee already exist for this summit

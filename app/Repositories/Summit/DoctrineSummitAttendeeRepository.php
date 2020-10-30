@@ -19,6 +19,7 @@ use models\summit\SummitAttendee;
 use App\Repositories\SilverStripeDoctrineRepository;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
+use utils\DoctrineHavingFilterMapping;
 use utils\DoctrineJoinFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
@@ -69,6 +70,7 @@ final class DoctrineSummitAttendeeRepository
                     ),
                 ]
             ),
+            'tickets_count' => new DoctrineHavingFilterMapping("", "t.owner", "count(t.id) :operator :value"),
             'ticket_type' => new DoctrineFilterMapping("tt.name :operator :value"),
             'badge_type' => new DoctrineFilterMapping("bt.name :operator :value"),
             'status' =>  new DoctrineFilterMapping("e.status :operator :value"),
@@ -104,7 +106,6 @@ final class DoctrineSummitAttendeeRepository
             'company'           => 'e.company_name',
             'member_id'         => 'm.id',
             'status'            => 'e.status',
-
         ];
     }
 

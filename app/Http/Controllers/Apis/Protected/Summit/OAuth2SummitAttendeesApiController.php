@@ -115,17 +115,18 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         IAttendeeService $attendee_service,
         ISummitOrderService $summit_order_service,
         IResourceServerContext $resource_server_context
-    ) {
+    )
+    {
         parent::__construct($resource_server_context);
-        $this->summit_repository         = $summit_repository;
-        $this->repository                = $attendee_repository;
-        $this->speaker_repository        = $speaker_repository;
-        $this->event_repository          = $event_repository;
+        $this->summit_repository = $summit_repository;
+        $this->repository = $attendee_repository;
+        $this->speaker_repository = $speaker_repository;
+        $this->event_repository = $event_repository;
         $this->event_feedback_repository = $event_feedback_repository;
-        $this->member_repository         = $member_repository;
-        $this->summit_service            = $summit_service;
-        $this->attendee_service          = $attendee_service;
-        $this->summit_order_service      = $summit_order_service;
+        $this->member_repository = $member_repository;
+        $this->summit_service = $summit_service;
+        $this->attendee_service = $attendee_service;
+        $this->summit_order_service = $summit_order_service;
     }
 
     /**
@@ -136,26 +137,25 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
-    public function getOwnAttendee($summit_id){
+    public function getOwnAttendee($summit_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $type     = CheckAttendeeStrategyFactory::Me;
+            $type = CheckAttendeeStrategyFactory::Me;
             $attendee = CheckAttendeeStrategyFactory::build($type, $this->resource_server_context)->check('me', $summit);
-            if(is_null($attendee)) return $this->error404();
+            if (is_null($attendee)) return $this->error404();
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($attendee)->serialize(
                 SerializerUtils::getExpand(),
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations()
             ));
-        }
-        catch (\HTTP401UnauthorizedException $ex1) {
+        } catch (\HTTP401UnauthorizedException $ex1) {
             Log::warning($ex1);
             return $this->error401();
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -174,7 +174,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             if (is_null($summit)) return $this->error404();
 
             $attendee = $this->repository->getById($attendee_id);
-            if(is_null($attendee)) return $this->error404();
+            if (is_null($attendee)) return $this->error404();
 
             return $this->ok
             (
@@ -187,14 +187,12 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     SerializerUtils::getExpand(),
                     SerializerUtils::getFields(),
                     SerializerUtils::getRelations(),
-                    [ 'serializer_type' => SerializerRegistry::SerializerType_Private ]
+                    ['serializer_type' => SerializerRegistry::SerializerType_Private]
                 ));
-        }
-        catch (\HTTP401UnauthorizedException $ex1) {
+        } catch (\HTTP401UnauthorizedException $ex1) {
             Log::warning($ex1);
             return $this->error401();
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -212,24 +210,20 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $attendee =  CheckAttendeeStrategyFactory::build(CheckAttendeeStrategyFactory::Own, $this->resource_server_context)->check($attendee_id, $summit);
-            if(is_null($attendee)) return $this->error404();
+            $attendee = CheckAttendeeStrategyFactory::build(CheckAttendeeStrategyFactory::Own, $this->resource_server_context)->check($attendee_id, $summit);
+            if (is_null($attendee)) return $this->error404();
 
             $schedule = [];
-            foreach ($attendee->getSchedule() as $attendee_schedule)
-            {
-                if(!$summit->isEventOnSchedule($attendee_schedule->getEvent()->getId())) continue;
+            foreach ($attendee->getSchedule() as $attendee_schedule) {
+                if (!$summit->isEventOnSchedule($attendee_schedule->getEvent()->getId())) continue;
                 $schedule[] = SerializerRegistry::getInstance()->getSerializer($attendee_schedule)->serialize();
             }
 
             return $this->ok($schedule);
-        }
-        catch (\HTTP401UnauthorizedException $ex1)
-        {
+        } catch (\HTTP401UnauthorizedException $ex1) {
             Log::warning($ex1);
             return $this->error401();
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -254,24 +248,16 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             $this->summit_service->addEventToMemberSchedule($summit, $attendee->getMember(), intval($event_id));
 
             return $this->created();
-        }
-        catch (ValidationException $ex1)
-        {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412($ex1->getMessages());
-        }
-        catch (EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
             return $this->error404(array('message' => $ex2->getMessage()));
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
+        } catch (\HTTP401UnauthorizedException $ex3) {
             Log::warning($ex3);
             return $this->error401();
-        }
-        catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -297,24 +283,16 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
             return $this->deleted();
 
-        }
-        catch (ValidationException $ex1)
-        {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412($ex1->getMessages());
-        }
-        catch (EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
             return $this->error404(array('message' => $ex2->getMessage()));
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
+        } catch (\HTTP401UnauthorizedException $ex3) {
             Log::warning($ex3);
             return $this->error401();
-        }
-        catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -326,7 +304,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      * @param $event_id
      * @return mixed
      */
-    public function deleteEventRSVP($summit_id, $attendee_id, $event_id){
+    public function deleteEventRSVP($summit_id, $attendee_id, $event_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -345,23 +324,16 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
             return $this->deleted();
 
-        }
-        catch (ValidationException $ex1)
-        {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412($ex1->getMessages());
-        }
-        catch (EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
             return $this->error404(array('message' => $ex2->getMessage()));
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
+        } catch (\HTTP401UnauthorizedException $ex3) {
             Log::warning($ex3);
             return $this->error401();
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -371,46 +343,48 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
-    public function getAttendeesBySummit($summit_id){
+    public function getAttendeesBySummit($summit_id)
+    {
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
         if (is_null($summit)) return $this->error404();
 
         return $this->_getAll(
-            function(){
+            function () {
                 return [
-                    'first_name'           => ['=@', '=='],
-                    'last_name'            => ['=@', '=='],
-                    'full_name'            => ['=@', '=='],
-                    'company'              => ['=@', '=='],
-                    'email'                => ['=@', '=='],
-                    'external_order_id'    => ['=@', '=='],
+                    'first_name' => ['=@', '=='],
+                    'last_name' => ['=@', '=='],
+                    'full_name' => ['=@', '=='],
+                    'company' => ['=@', '=='],
+                    'email' => ['=@', '=='],
+                    'external_order_id' => ['=@', '=='],
                     'external_attendee_id' => ['=@', '=='],
-                    'member_id'            => ['==', '>'],
-                    'ticket_type'          => ['=@', '=='],
-                    'badge_type'           => ['=@', '=='],
-                    'status'               => ['=@', '=='],
-                    'has_member'           => ['=='],
+                    'member_id' => ['==', '>'],
+                    'ticket_type' => ['=@', '=='],
+                    'badge_type' => ['=@', '=='],
+                    'status' => ['=@', '=='],
+                    'has_member' => ['=='],
+                    'tickets_count' => ['==', '>=', '<=', '>', '<'],
                 ];
             },
-            function(){
+            function () {
                 return [
-                    'first_name'           => 'sometimes|string',
-                    'last_name'            => 'sometimes|string',
-                    'full_name'            => 'sometimes|string',
-                    'company'              => 'sometimes|string',
-                    'email'                => 'sometimes|string',
-                    'external_order_id'    => 'sometimes|string',
+                    'first_name' => 'sometimes|string',
+                    'last_name' => 'sometimes|string',
+                    'full_name' => 'sometimes|string',
+                    'company' => 'sometimes|string',
+                    'email' => 'sometimes|string',
+                    'external_order_id' => 'sometimes|string',
                     'external_attendee_id' => 'sometimes|string',
-                    'member_id'            => 'sometimes|integer',
-                    'ticket_type'          => 'sometimes|string',
-                    'badge_type'           => 'sometimes|string',
-                    'status'               => 'sometimes|string',
-                    'has_member'           => 'sometimes|required|string|in:true,false',
+                    'member_id' => 'sometimes|integer',
+                    'ticket_type' => 'sometimes|string',
+                    'badge_type' => 'sometimes|string',
+                    'status' => 'sometimes|string',
+                    'has_member' => 'sometimes|required|string|in:true,false',
+                    'tickets_count' => 'sometimes|integer',
                 ];
             },
-            function()
-            {
+            function () {
                 return [
                     'first_name',
                     'last_name',
@@ -424,13 +398,13 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'full_name',
                 ];
             },
-            function($filter) use($summit){
-                if($filter instanceof Filter){
+            function ($filter) use ($summit) {
+                if ($filter instanceof Filter) {
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
                 }
                 return $filter;
             },
-            function(){
+            function () {
                 return SerializerRegistry::SerializerType_Private;
             }
         );
@@ -440,46 +414,48 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
-    public function getAttendeesBySummitCSV($summit_id){
+    public function getAttendeesBySummitCSV($summit_id)
+    {
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
         if (is_null($summit)) return $this->error404();
 
         return $this->_getAllCSV(
-            function(){
+            function () {
                 return [
-                    'first_name'           => ['=@', '=='],
-                    'last_name'            => ['=@', '=='],
-                    'full_name'            => ['=@', '=='],
-                    'email'                => ['=@', '=='],
-                    'external_order_id'    => ['=@', '=='],
-                    'company'              => ['=@', '=='],
+                    'first_name' => ['=@', '=='],
+                    'last_name' => ['=@', '=='],
+                    'full_name' => ['=@', '=='],
+                    'email' => ['=@', '=='],
+                    'external_order_id' => ['=@', '=='],
+                    'company' => ['=@', '=='],
                     'external_attendee_id' => ['=@', '=='],
-                    'member_id'            => ['==','<=','>='],
-                    'ticket_type'          => ['=@', '=='],
-                    'badge_type'           => ['=@', '=='],
-                    'status'               => ['=@', '=='],
-                    'has_member'           => ['=='],
+                    'member_id' => ['==', '<=', '>='],
+                    'ticket_type' => ['=@', '=='],
+                    'badge_type' => ['=@', '=='],
+                    'status' => ['=@', '=='],
+                    'has_member' => ['=='],
+                    'tickets_count' => ['==', '>=', '<=', '>', '<'],
                 ];
             },
-            function(){
+            function () {
                 return [
-                    'first_name'           => 'sometimes|string',
-                    'last_name'            => 'sometimes|string',
-                    'full_name'            => 'sometimes|string',
-                    'email'                => 'sometimes|string',
-                    'external_order_id'    => 'sometimes|string',
+                    'first_name' => 'sometimes|string',
+                    'last_name' => 'sometimes|string',
+                    'full_name' => 'sometimes|string',
+                    'email' => 'sometimes|string',
+                    'external_order_id' => 'sometimes|string',
                     'external_attendee_id' => 'sometimes|string',
-                    'company'              => 'sometimes|string',
-                    'member_id'            => 'sometimes|integer',
-                    'ticket_type'          => 'sometimes|string',
-                    'badge_type'           => 'sometimes|string',
-                    'status'               => 'sometimes|string',
-                    'has_member'           => 'sometimes|required|string|in:true,false',
+                    'company' => 'sometimes|string',
+                    'member_id' => 'sometimes|integer',
+                    'ticket_type' => 'sometimes|string',
+                    'badge_type' => 'sometimes|string',
+                    'status' => 'sometimes|string',
+                    'has_member' => 'sometimes|required|string|in:true,false',
+                    'tickets_count' => 'sometimes|integer',
                 ];
             },
-            function()
-            {
+            function () {
                 return [
                     'first_name',
                     'last_name',
@@ -492,19 +468,19 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'full_name',
                 ];
             },
-            function($filter) use($summit){
-                if($filter instanceof Filter){
+            function ($filter) use ($summit) {
+                if ($filter instanceof Filter) {
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
                 }
                 return $filter;
             },
-            function(){
+            function () {
                 return SerializerRegistry::SerializerType_CSV;
             },
-            function(){
+            function () {
                 return [];
             },
-            function(){
+            function () {
                 return [];
             },
             'attendees-'
@@ -515,25 +491,26 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      * @param int $summit_id
      * @return mixed
      */
-    public function addAttendee($summit_id){
+    public function addAttendee($summit_id)
+    {
         try {
-            if(!Request::isJson()) return $this->error400();
+            if (!Request::isJson()) return $this->error400();
             $data = Input::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $rules = [
-                'shared_contact_info'         => 'sometimes|boolean',
-                'summit_hall_checked_in'      => 'sometimes|boolean',
+                'shared_contact_info' => 'sometimes|boolean',
+                'summit_hall_checked_in' => 'sometimes|boolean',
                 'summit_hall_checked_in_date' => 'sometimes|date_format:U',
-                'first_name'                  => 'required_without:member_id|string|max:255',
-                'surname'                     => 'required_without:member_id|string|max:255',
-                'admin_notes'                 => 'sometimes|string|max:1024',
-                'company'                     => 'sometimes|string|max:255',
-                'email'                       => 'required_without:member_id|string|max:255|email',
-                'member_id'                   => 'required_without_all:email|integer',
-                'extra_questions'             => 'sometimes|order_extra_question_dto_array',
+                'first_name' => 'required_without:member_id|string|max:255',
+                'surname' => 'required_without:member_id|string|max:255',
+                'admin_notes' => 'sometimes|string|max:1024',
+                'company' => 'sometimes|string|max:255',
+                'email' => 'required_without:member_id|string|max:255|email',
+                'member_id' => 'required_without_all:email|integer',
+                'extra_questions' => 'sometimes|order_extra_question_dto_array',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -555,17 +532,13 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations()
             ));
-        }
-        catch (ValidationException $ex1) {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412($ex1->getMessages());
-        }
-        catch(EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
+            return $this->error404(array('message' => $ex2->getMessage()));
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -584,18 +557,16 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             if (is_null($summit)) return $this->error404();
 
             $attendee = $this->repository->getById($attendee_id);
-            if(is_null($attendee)) return $this->error404();
+            if (is_null($attendee)) return $this->error404();
 
             $this->attendee_service->deleteAttendee($summit, $attendee->getIdentifier());
 
             return $this->deleted();
 
-        }
-        catch (\HTTP401UnauthorizedException $ex1) {
+        } catch (\HTTP401UnauthorizedException $ex1) {
             Log::warning($ex1);
             return $this->error401();
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -606,29 +577,30 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      * @param int $attendee_id
      * @return mixed
      */
-    public function updateAttendee($summit_id, $attendee_id){
+    public function updateAttendee($summit_id, $attendee_id)
+    {
         try {
-            if(!Request::isJson()) return $this->error400();
+            if (!Request::isJson()) return $this->error400();
             $data = Input::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $attendee = $this->repository->getById($attendee_id);
-            if(is_null($attendee)) return $this->error404();
+            if (is_null($attendee)) return $this->error404();
 
             $rules = [
-                'shared_contact_info'         => 'sometimes|boolean',
-                'summit_hall_checked_in'      => 'sometimes|boolean',
+                'shared_contact_info' => 'sometimes|boolean',
+                'summit_hall_checked_in' => 'sometimes|boolean',
                 'summit_hall_checked_in_date' => 'sometimes|date_format:U',
-                'disclaimer_accepted_date'    => 'sometimes|date_format:U',
-                'first_name'                  => 'required_without:member_id|string|max:255',
-                'surname'                     => 'required_without:member_id|string|max:255',
-                'company'                     => 'sometimes|string|max:255',
-                'email'                       => 'required_without:member_id|string|max:255|email',
-                'member_id'                   => 'required_without_all:first_name,surname,email|integer',
-                'extra_questions'             => 'sometimes|order_extra_question_dto_array',
-                'admin_notes'                 => 'sometimes|string|max:1024',
+                'disclaimer_accepted_date' => 'sometimes|date_format:U',
+                'first_name' => 'required_without:member_id|string|max:255',
+                'surname' => 'required_without:member_id|string|max:255',
+                'company' => 'sometimes|string|max:255',
+                'email' => 'required_without:member_id|string|max:255|email',
+                'member_id' => 'required_without_all:first_name,surname,email|integer',
+                'extra_questions' => 'sometimes|order_extra_question_dto_array',
+                'admin_notes' => 'sometimes|string|max:1024',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -646,17 +618,13 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             $attendee = $this->attendee_service->updateAttendee($summit, $attendee_id, $data->all());
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($attendee)->serialize());
-        }
-        catch (ValidationException $ex1) {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412($ex1->getMessages());
-        }
-        catch(EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
+            return $this->error404(array('message' => $ex2->getMessage()));
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -667,21 +635,22 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      * @param $attendee_id
      * @return mixed
      */
-    public function addAttendeeTicket($summit_id, $attendee_id){
+    public function addAttendeeTicket($summit_id, $attendee_id)
+    {
         try {
-            if(!Request::isJson()) return $this->error400();
+            if (!Request::isJson()) return $this->error400();
             $data = Input::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $attendee = $this->repository->getById($attendee_id);
-            if(is_null($attendee) || !$attendee instanceof SummitAttendee) return $this->error404();
+            if (is_null($attendee) || !$attendee instanceof SummitAttendee) return $this->error404();
 
             $rules = [
-                'ticket_type_id'       => 'required|integer',
-                'promo_code'           => 'nullable|string',
-                'external_order_id'    => 'nullable|string',
+                'ticket_type_id' => 'required|integer',
+                'promo_code' => 'nullable|string',
+                'external_order_id' => 'nullable|string',
                 'external_attendee_id' => 'nullable|string',
             ];
 
@@ -698,12 +667,12 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 );
             }
 
-            $payload['owner_email']      = $attendee->getEmail();
+            $payload['owner_email'] = $attendee->getEmail();
             $payload['owner_first_name'] = $attendee->getFirstName();
-            $payload['owner_last_name']  = $attendee->getSurname();
-            $payload['owner_company']    = $attendee->getCompanyName();
+            $payload['owner_last_name'] = $attendee->getSurname();
+            $payload['owner_company'] = $attendee->getCompanyName();
 
-            if($attendee->hasMember())
+            if ($attendee->hasMember())
                 $payload['owner_id'] = $attendee->getMemberId();
 
             $ticket = $this->summit_order_service->createOrderSingleTicket($summit, $payload);
@@ -714,17 +683,13 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations()
             ));
-        }
-        catch (ValidationException $ex1) {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412($ex1->getMessages());
-        }
-        catch(EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
+            return $this->error404(array('message' => $ex2->getMessage()));
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -736,28 +701,25 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      * @param $ticket_id
      * @return mixed
      */
-    public function deleteAttendeeTicket($summit_id, $attendee_id, $ticket_id){
+    public function deleteAttendeeTicket($summit_id, $attendee_id, $ticket_id)
+    {
         try {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $attendee = $this->repository->getById($attendee_id);
-            if(is_null($attendee)) return $this->error404();
+            if (is_null($attendee)) return $this->error404();
 
             $ticket = $this->attendee_service->deleteAttendeeTicket($attendee, $ticket_id);
 
             return $this->deleted();
-        }
-        catch (ValidationException $ex1) {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412($ex1->getMessages());
-        }
-        catch(EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
+            return $this->error404(array('message' => $ex2->getMessage()));
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -770,17 +732,18 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      * @param $other_member_id
      * @return mixed
      */
-    public function reassignAttendeeTicketByMember($summit_id, $attendee_id, $ticket_id, $other_member_id){
+    public function reassignAttendeeTicketByMember($summit_id, $attendee_id, $ticket_id, $other_member_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $attendee = $this->repository->getById($attendee_id);
-            if(is_null($attendee) || !$attendee instanceof SummitAttendee) return $this->error404();
+            if (is_null($attendee) || !$attendee instanceof SummitAttendee) return $this->error404();
 
             $other_member = $this->member_repository->getById($other_member_id);
-            if(is_null($other_member) || !$other_member instanceof Member) return $this->error404();
+            if (is_null($other_member) || !$other_member instanceof Member) return $this->error404();
 
             $ticket = $this->attendee_service->reassignAttendeeTicketByMember($summit, $attendee, $other_member, intval($ticket_id));
 
@@ -789,17 +752,13 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations()
             ));
-        }
-        catch (ValidationException $ex1) {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412($ex1->getMessages());
-        }
-        catch(EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
+            return $this->error404(array('message' => $ex2->getMessage()));
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -811,21 +770,22 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      * @param $ticket_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function reassignAttendeeTicket($summit_id, $attendee_id, $ticket_id){
+    public function reassignAttendeeTicket($summit_id, $attendee_id, $ticket_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $attendee = $this->repository->getById($attendee_id);
-            if(is_null($attendee) || !$attendee instanceof SummitAttendee) return $this->error404();
+            if (is_null($attendee) || !$attendee instanceof SummitAttendee) return $this->error404();
 
             $payload = $this->getJsonPayload([
                 'attendee_first_name' => 'nullable|string|max:255',
-                'attendee_last_name'  => 'nullable|string|max:255',
-                'attendee_email'      => 'required|string|max:255|email',
-                'attendee_company'    => 'nullable|string|max:255',
-                'extra_questions'     => 'sometimes|order_extra_question_dto_array'
+                'attendee_last_name' => 'nullable|string|max:255',
+                'attendee_email' => 'required|string|max:255|email',
+                'attendee_company' => 'nullable|string|max:255',
+                'extra_questions' => 'sometimes|order_extra_question_dto_array'
             ]);
 
             $ticket = $this->attendee_service->reassignAttendeeTicket($summit, $attendee, intval($ticket_id), $payload);
@@ -835,21 +795,18 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations()
             ));
-        }
-        catch (ValidationException $ex1) {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412($ex1->getMessages());
-        }
-        catch(EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
+            return $this->error404(array('message' => $ex2->getMessage()));
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
     }
+
     /**
      * @return ISummitRepository
      */
@@ -862,10 +819,11 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function send($summit_id){
+    public function send($summit_id)
+    {
         try {
 
-            if(!Request::isJson()) return $this->error400();
+            if (!Request::isJson()) return $this->error400();
             $data = Input::json();
 
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
@@ -875,7 +833,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
             // Creates a Validator instance and validates the data.
             $validation = Validator::make($payload, [
-                'email_flow_event' => 'required|string|in:'.join(',', [
+                'email_flow_event' => 'required|string|in:' . join(',', [
                         SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG,
                         InviteAttendeeTicketEditionMail::EVENT_SLUG
                     ]),
@@ -895,18 +853,19 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
             if (Input::has('filter')) {
                 $filter = FilterParser::parse(Input::get('filter'), [
-                    'first_name'           => ['=@', '=='],
-                    'last_name'            => ['=@', '=='],
-                    'full_name'            => ['=@', '=='],
-                    'email'                => ['=@', '=='],
-                    'external_order_id'    => ['=@', '=='],
-                    'company'              => ['=@', '=='],
+                    'first_name' => ['=@', '=='],
+                    'last_name' => ['=@', '=='],
+                    'full_name' => ['=@', '=='],
+                    'email' => ['=@', '=='],
+                    'external_order_id' => ['=@', '=='],
+                    'company' => ['=@', '=='],
                     'external_attendee_id' => ['=@', '=='],
-                    'member_id'            => ['==','<=','>='],
-                    'ticket_type'          => ['=@', '=='],
-                    'badge_type'           => ['=@', '=='],
-                    'status'               => ['=@', '=='],
-                    'has_member'           => ['=='],
+                    'member_id' => ['==', '<=', '>='],
+                    'ticket_type' => ['=@', '=='],
+                    'badge_type' => ['=@', '=='],
+                    'status' => ['=@', '=='],
+                    'has_member' => ['=='],
+                    'tickets_count' => ['==', '>=', '<=', '>', '<'],
                 ]);
             }
 
@@ -914,18 +873,19 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 $filter = new Filter();
 
             $filter->validate([
-                'first_name'           => 'sometimes|string',
-                'last_name'            => 'sometimes|string',
-                'full_name'            => 'sometimes|string',
-                'company'              => 'sometimes|string',
-                'email'                => 'sometimes|string',
-                'external_order_id'    => 'sometimes|string',
+                'first_name' => 'sometimes|string',
+                'last_name' => 'sometimes|string',
+                'full_name' => 'sometimes|string',
+                'company' => 'sometimes|string',
+                'email' => 'sometimes|string',
+                'external_order_id' => 'sometimes|string',
                 'external_attendee_id' => 'sometimes|string',
-                'member_id'            => 'sometimes|integer',
-                'ticket_type'          => 'sometimes|string',
-                'badge_type'           => 'sometimes|string',
-                'status'               => 'sometimes|string',
-                'has_member'           => 'sometimes|required|string|in:true,false',
+                'member_id' => 'sometimes|integer',
+                'ticket_type' => 'sometimes|string',
+                'badge_type' => 'sometimes|string',
+                'status' => 'sometimes|string',
+                'has_member' => 'sometimes|required|string|in:true,false',
+                'tickets_count' => 'sometimes|integer',
             ]);
 
             $this->attendee_service->triggerSend($summit, $payload, Input::get('filter'));

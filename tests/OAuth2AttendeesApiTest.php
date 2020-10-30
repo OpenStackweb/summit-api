@@ -14,7 +14,7 @@
 
 class OAuth2AttendeesApiTest extends ProtectedApiTest
 {
-    public function testGetAttendees($summit_id=23){
+    public function testGetAttendees($summit_id=31){
 
         $params = [
 
@@ -22,7 +22,7 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
             'page'     => 1,
             'per_page' => 10,
             'order'    => '+id',
-            'filter'   => 'email=@jimmy',
+            'filter'   => 'tickets_count>0',
             'expand'   => 'member,schedule,rsvp,tickets, tickets.ticket_type'
         ];
 

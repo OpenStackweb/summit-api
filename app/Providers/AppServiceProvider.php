@@ -21,6 +21,7 @@ use libs\utils\ICacheService;
 use models\main\ChatTeamPermission;
 use models\main\PushNotificationMessagePriority;
 use Sokil\IsoCodes\IsoCodesFactory;
+use Illuminate\Support\Facades\URL;
 /**
  * Class AppServiceProvider
  * @package App\Providers
@@ -147,6 +148,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        URL::forceScheme('https');
+
         $logger = Log::getLogger();
         foreach($logger->getHandlers() as $handler) {
             $handler->setLevel(Config::get('log.level', 'debug'));

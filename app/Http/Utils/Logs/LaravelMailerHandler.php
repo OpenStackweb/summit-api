@@ -26,7 +26,8 @@ use Illuminate\Support\Facades\App;
 final class LaravelMailerHandler extends MailHandler
 {
     // in seconds
-    const TIME_BETWEEN_SAME_ERROR = 60 * 60;
+    const TIME_BETWEEN_ERRORS = 60 * 30;
+    const SENT_ERROR_EMAIL = 'SENT_ERROR_EMAIL';
     /**
      * The email addresses to which the message will be sent
      * @var array
@@ -144,13 +145,12 @@ final class LaravelMailerHandler extends MailHandler
 
         // to avoid bloating inboxes/quotas
         if($this->cacheService){
-            $footPrint = md5($subject.$content);
-            if($this->cacheService->exists($footPrint)){
+            if($this->cacheService->exists(self::SENT_ERROR_EMAIL)){
                 // short circuit
                 Log::debug(sprintf("LaravelMailerHandler::send skipping exception %s %s", $subject, $content));
                 return;
             }
-            $this->cacheService->setSingleValue($footPrint, $footPrint, LaravelMailerHandler::TIME_BETWEEN_SAME_ERROR);
+            $this->cacheService->setSingleValue(self::SENT_ERROR_EMAIL, self::SENT_ERROR_EMAIL, self::TIME_BETWEEN_ERRORS);
         }
 
         foreach ($this->to as $to) {

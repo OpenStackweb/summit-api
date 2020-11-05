@@ -208,16 +208,8 @@ final class PresentationVideoMediaUploadProcessor
 
             $assetId = $event->getMuxAssetId();
             if (empty($assetId)) {
-                // try to get from stream url
-                $streamUrl = $event->getStreamingUrl();
-                if(preg_match('/https\:\/\/stream\.mux\.com\/(.*)\.m3u8/', $streamUrl, $re)){
-                    $playbackId = $re[1];
-                    $this->assets_api->getAssetPlaybackId()
-                }
-                if(empty($assetId)){
-                    Log::warning(sprintf("PresentationVideoMediaUploadProcessor::enableMP4Support event %s asset id is empty", $event_id));
-                    return;
-                }
+                Log::warning(sprintf("PresentationVideoMediaUploadProcessor::enableMP4Support event %s asset id is empty", $event_id));
+                return;
             }
 
             $request = new MuxUpdateAssetMP4SupportRequest(['mp4_support' => MuxUpdateAssetMP4SupportRequest::MP4_SUPPORT_STANDARD]);

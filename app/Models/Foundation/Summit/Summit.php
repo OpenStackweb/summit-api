@@ -5024,7 +5024,7 @@ SQL;
             WHERE 
             SummitEvent.SummitID = :summit_id 
             AND SummitEvent.Published = 1
-            AND (SummitEvent.StartDate >= :begin and SummitEvent.EndDate <= :end)
+            AND (SummitEvent.StartDate <= :end and SummitEvent.EndDate >= :begin)
 SQL;
                 $stmt = $this->prepareRawSQL($sql);
                 $stmt->execute([

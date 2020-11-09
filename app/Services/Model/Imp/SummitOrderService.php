@@ -1371,15 +1371,22 @@ final class SummitOrderService
     }
 
     /**
+     * @param int $order_id
      * @param int $ticket_id
      * @return SummitAttendeeTicket
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function cancelRequestRefundTicket(int $ticket_id): SummitAttendeeTicket
+    public function cancelRequestRefundTicket(int $order_id,int $ticket_id): SummitAttendeeTicket
     {
-        return $this->tx_service->transaction(function () use ($ticket_id) {
-            $ticket = $this->ticket_repository->getById($ticket_id);
+        return $this->tx_service->transaction(function () use ($order_id, $ticket_id) {
+
+            $order = $this->order_repository->getById($order_id);
+            if (is_null($order) || !$order instanceof SummitOrder)
+                throw new EntityNotFoundException('order not found');
+
+            $ticket = $order->getTicketById($ticket_id);
+
             if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
                 throw new EntityNotFoundException('ticket not found');
 

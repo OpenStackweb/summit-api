@@ -528,10 +528,10 @@ final class OAuth2SummitOrdersApiController
      * @param $order_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function cancelRefundRequestTicket($ticket_id){
+    public function cancelRefundRequestTicket($order_id , $ticket_id){
         try {
 
-            $ticket = $this->service->cancelRequestRefundTicket(intval($ticket_id));
+            $ticket = $this->service->cancelRequestRefundTicket(intval($order_id), intval($ticket_id));
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize( Request::input('expand', '')));
 

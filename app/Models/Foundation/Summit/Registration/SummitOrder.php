@@ -385,7 +385,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
 
         foreach ($this->tickets as $ticket){
             if($ticket->isBadgePrinted()){
-                throw new ValidationException(sprintf( "you can not request a refund for this ticket %s ( badge already printed)", $ticket->getNumber()));
+                throw new ValidationException(sprintf( "You can not request a refund for this ticket %s (badge already printed).", $ticket->getNumber()));
             }
         }
 
@@ -393,7 +393,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
 
         if($now > $begin_date){
             Log::debug("SummitOrder::requestRefund: now is greater than Summit.BeginDate");
-            throw new ValidationException("you can not request a refund after summit started");
+            throw new ValidationException("You can not request a refund after summit started.");
         }
 
         $interval = $begin_date->diff($now);
@@ -403,12 +403,27 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         Log::debug(sprintf("SummitOrder::requestRefund: days_before_event_starts %s", $days_before_event_starts));
 
         if($this->status != IOrderConstants::PaidStatus){
-            throw new ValidationException("you can not request a refund on this order");
+            throw new ValidationException("You can not request a refund on this order.");
         }
 
         $this->status = IOrderConstants::RefundRequestedStatus;
 
+        foreach ($this->tickets as $ticket){
+            $ticket->setRefundRequests();
+        }
+
         Event::fire(new RequestedSummitOrderRefund($this->getId(), $days_before_event_starts));
+    }
+
+    function cancelRefundRequest():void {
+        if(!$this->isRefundRequested())
+            throw new ValidationException(sprintf("You can not cancel any refund on this order"));
+
+        $this->status = IOrderConstants::PaidStatus;
+
+        foreach ($this->tickets as $ticket){
+            $ticket->setPaid(false);
+        }
     }
     /**
      * @return string

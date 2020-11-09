@@ -497,6 +497,21 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name'        => 'cancel-order-refund',
+                'route'       => '/api/v1/summits/all/orders/{order_id}/refund/cancel',
+                'http_method' => 'DELETE',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
                 'name'        => 'resend-order',
                 'route'       => '/api/v1/summits/all/orders/{order_id}/resend',
                 'http_method' => 'PUT',
@@ -544,6 +559,21 @@ class ApiEndpointsSeeder extends Seeder
                 'scopes'      => [
                     sprintf(SummitScopes::UpdateMyRegistrationOrders, $current_realm),
                 ],
+            ],
+            [
+                'name'        => 'cancel-refund-ticket-request',
+                'route'       => '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}/refund/cancel',
+                'http_method' => 'DELETE',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
             ],
             [
                 'name'        => 'get-ticket-pdf',

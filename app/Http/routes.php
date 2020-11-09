@@ -147,13 +147,21 @@ Route::group([
                 });
 
                 Route::group(['prefix' => '{order_id}'], function () {
-                    Route::delete('refund',  'OAuth2SummitOrdersApiController@requestRefundMyOrder');
+                    Route::group(['prefix' => 'refund'], function () {
+                        Route::delete('',  'OAuth2SummitOrdersApiController@requestRefundMyOrder');
+                        Route::delete('cancel',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrdersApiController@cancelRefundRequestOrder']);
+                    });
+
                     Route::put('resend',   [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrdersApiController@reSendOrderEmail']);
                     Route::put('', 'OAuth2SummitOrdersApiController@updateMyOrder');
                     Route::group(['prefix' => 'tickets'], function () {
                         Route::group(['prefix' => '{ticket_id}'], function () {
                             Route::get('pdf',  'OAuth2SummitOrdersApiController@getTicketPDFByOrderId');
-                            Route::delete('refund',  'OAuth2SummitOrdersApiController@requestRefundMyTicket');
+                            Route::group(['prefix' => 'refund'], function () {
+                                Route::delete('',  'OAuth2SummitOrdersApiController@requestRefundMyTicket');
+                                Route::delete('cancel',    [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrdersApiController@cancelRefundRequestTicket']);
+                            });
+
                             Route::group(['prefix' => 'attendee'], function () {
                                 Route::put('',  'OAuth2SummitOrdersApiController@assignAttendee');
                                 Route::put('reinvite',  'OAuth2SummitOrdersApiController@reInviteAttendee');

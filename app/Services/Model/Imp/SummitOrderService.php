@@ -1352,6 +1352,44 @@ final class SummitOrderService
     }
 
     /**
+     * @param int $order_id
+     * @return SummitOrder
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function cancelRequestRefundOrder(int $order_id): SummitOrder
+    {
+        return $this->tx_service->transaction(function () use ($order_id) {
+            $order = $this->order_repository->getById($order_id);
+            if (is_null($order) || !$order instanceof SummitOrder)
+                throw new EntityNotFoundException('order not found');
+
+            $order->cancelRefundRequest();
+
+            return $order;
+        });
+    }
+
+    /**
+     * @param int $ticket_id
+     * @return SummitAttendeeTicket
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function cancelRequestRefundTicket(int $ticket_id): SummitAttendeeTicket
+    {
+        return $this->tx_service->transaction(function () use ($ticket_id) {
+            $ticket = $this->ticket_repository->getById($ticket_id);
+            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
+                throw new EntityNotFoundException('ticket not found');
+
+            $ticket->cancelRefundRequest();
+
+            return $ticket;
+        });
+    }
+
+    /**
      * @param Member $current_user ,
      * @param int $order_id
      * @param int $ticket_id

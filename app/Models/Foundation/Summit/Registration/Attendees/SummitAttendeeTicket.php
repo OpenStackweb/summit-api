@@ -580,11 +580,13 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         }
     }
 
-    public function setPaid()
+    public function setPaid($set_bought_date = true)
     {
         $this->status = IOrderConstants::PaidStatus;
-        $this->bought_date = new \DateTime('now', new \DateTimeZone('UTC'));
+        if($set_bought_date)
+            $this->bought_date = new \DateTime('now', new \DateTimeZone('UTC'));
     }
+
 
     public function setCancelled()
     {
@@ -592,9 +594,20 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         $this->status = IOrderConstants::CancelledStatus;
     }
 
+    function cancelRefundRequest():void {
+        if(!$this->isRefundRequested())
+            throw new ValidationException(sprintf("You can not cancel any refund on this ticket"));
+        $this->status = IOrderConstants::PaidStatus;
+    }
+
     public function setRefunded()
     {
         $this->status = IOrderConstants::RefundedStatus;
+    }
+
+    public function setRefundRequests()
+    {
+        $this->status = IOrderConstants::RefundRequestedStatus;
     }
 
     /**

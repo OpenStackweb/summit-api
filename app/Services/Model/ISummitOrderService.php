@@ -370,4 +370,20 @@ interface ISummitOrderService extends IProcessPaymentService
      */
     public function reSendOrderEmail(int $order_id):SummitOrder;
 
+    /**
+     * @param int $order_id
+     * @return SummitOrder
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function cancelRequestRefundOrder(int $order_id): SummitOrder;
+
+    /**
+     * @param int $ticket_id
+     * @return SummitAttendeeTicket
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function cancelRequestRefundTicket(int $ticket_id): SummitAttendeeTicket;
+
 }

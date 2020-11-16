@@ -239,7 +239,7 @@ class SummitMediaUploadType extends SilverstripeBaseModel
      */
     public function setPublicStorageType(string $public_storage_type): void
     {
-        if(!in_array($public_storage_type, IStorageTypesConstants::ValidPublicTypesTypes))
+        if(!in_array($public_storage_type, IStorageTypesConstants::ValidPublicTypes))
             throw new ValidationException(sprintf("invalid public storage type %s", $public_storage_type));
 
         $this->public_storage_type = $public_storage_type;

@@ -112,8 +112,8 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
             'is_mandatory' => 'required|boolean',
             // in KB
             'max_size' => 'required|int|megabyte_aligned',
-            'private_storage_type' => 'required|string|in:'.implode(",", IStorageTypesConstants::ValidTypes),
-            'public_storage_type' => 'required|string|in:'.implode(",", IStorageTypesConstants::ValidTypes),
+            'private_storage_type' => 'required|string|in:'.implode(",", IStorageTypesConstants::ValidPrivateTypes),
+            'public_storage_type' => 'required|string|in:'.implode(",", IStorageTypesConstants::ValidPublicTypes),
             'type_id' => 'required|int',
             'presentation_types' => 'sometimes|int_array',
         ];
@@ -154,8 +154,8 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
             'is_mandatory' => 'sometimes|boolean',
             // KB
             'max_size' => 'sometimes|int|megabyte_aligned',
-            'private_storage_type' => 'sometimes|string|in:'.implode(",", IStorageTypesConstants::ValidTypes),
-            'public_storage_type' => 'sometimes|string|in:'.implode(",", IStorageTypesConstants::ValidTypes),
+            'private_storage_type' => 'sometimes|string|in:'.implode(",", IStorageTypesConstants::ValidPrivateTypes),
+            'public_storage_type' => 'sometimes|string|in:'.implode(",", IStorageTypesConstants::ValidPublicTypes),
             'type_id' => 'sometimes|int',
             'presentation_types' => 'sometimes|int_array',
         ];

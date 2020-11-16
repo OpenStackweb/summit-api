@@ -14,6 +14,7 @@
 use App\Models\Utils\IStorageTypesConstants;
 use App\Services\FileSystem\Dropbox\DropboxStorageFileDownloadStrategy;
 use App\Services\FileSystem\Local\LocalStorageFileDownloadStrategy;
+use App\Services\FileSystem\S3\S3StorageFileDownloadStrategy;
 use App\Services\FileSystem\Swift\SwiftStorageFileDownloadStrategy;
 /**
  * Class FileDownloadStrategyFactory
@@ -35,6 +36,9 @@ final class FileDownloadStrategyFactory
                 break;
             case IStorageTypesConstants::Swift;
                 return new SwiftStorageFileDownloadStrategy();
+                break;
+            case IStorageTypesConstants::S3;
+                return new S3StorageFileDownloadStrategy();
                 break;
         }
         return null;

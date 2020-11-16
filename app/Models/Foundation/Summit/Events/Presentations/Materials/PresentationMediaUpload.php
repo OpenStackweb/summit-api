@@ -128,6 +128,7 @@ class PresentationMediaUpload extends PresentationMaterial
      * @return string
      */
     public function getPath(string $storageType = IStorageTypesConstants::PublicType, ?string $mountingFolder = null): string {
+
         if(empty($mountingFolder))
             $mountingFolder = Config::get('mediaupload.mounting_folder');
 
@@ -135,9 +136,11 @@ class PresentationMediaUpload extends PresentationMaterial
 
         $summit = $this->getPresentation()->getSummit();
         $presentation = $this->getPresentation();
-            $format = $storageType == IStorageTypesConstants::PublicType ? '%s/%s/%s': '%s/'.IStorageTypesConstants::PrivateType.'/%s/%s';
+        $format = $storageType == IStorageTypesConstants::PublicType ? '%s/%s/%s': '%s/'.IStorageTypesConstants::PrivateType.'/%s/%s';
+
         if($this->legacy_path_format)
             return sprintf($format, $mountingFolder, $summit->getId(), $presentation->getId());
+
         $presentation->generateSlug();
         return sprintf($format, $mountingFolder, sprintf("%s-%s",$summit->getId(), filter_var($summit->getRawSlug(), FILTER_SANITIZE_ENCODED)), sprintf("%s-%s", $presentation->getId(), filter_var($presentation->getSlug(), FILTER_SANITIZE_ENCODED)));
     }
@@ -145,7 +148,7 @@ class PresentationMediaUpload extends PresentationMaterial
     public function __construct()
     {
         parent::__construct();
-        $this->legacy_path_format = false;
+        $this->legacy_path_format = true;
     }
 
 }

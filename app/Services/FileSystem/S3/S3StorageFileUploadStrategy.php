@@ -1,4 +1,4 @@
-<?php namespace App\Models\Utils;
+<?php namespace App\Services\FileSystem\S3;
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,23 +11,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Services\FileSystem\IFileUploadStrategy;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 /**
- * Interface IStorageTypesConstants
- * @package App\Models\Utils
+ * Class S3StorageFileUploadStrategy
+ * @package App\Services\FileSystem\S3
  */
-interface IStorageTypesConstants
+final class S3StorageFileUploadStrategy  implements IFileUploadStrategy
 {
-    public const PublicType = 'Public';
-    public const PrivateType = 'Private';
 
-    public const DropBox = 'DropBox';
-    public const Swift = 'Swift';
-    public const S3 = 'S3';
-    public const Local = 'Local';
-    public const None = 'None';
-
-    const ValidPrivateTypes = [self::None, self::DropBox, self::Local];
-
-    const ValidPublicTypes = [self::None, self::Swift, self::S3, self::Local];
+    /**
+     * @inheritDoc
+     */
+    public function save(UploadedFile $file, string $path, string $filename)
+    {
+        return Storage::disk('s3')->putFileAs($path, $file, $filename);
+    }
 }

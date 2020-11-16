@@ -15,6 +15,7 @@
 use App\Models\Utils\IStorageTypesConstants;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
+use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
@@ -210,7 +211,7 @@ class SummitMediaUploadType extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getPrivateStorageType(): string
+    public function getPrivateStorageType(): ?string
     {
         return $this->private_storage_type;
     }
@@ -220,13 +221,15 @@ class SummitMediaUploadType extends SilverstripeBaseModel
      */
     public function setPrivateStorageType(string $private_storage_type): void
     {
+        if(!in_array($private_storage_type, IStorageTypesConstants::ValidPrivateTypes))
+            throw new ValidationException(sprintf("invalid private storage type %s", $private_storage_type));
         $this->private_storage_type = $private_storage_type;
     }
 
     /**
      * @return string
      */
-    public function getPublicStorageType(): string
+    public function getPublicStorageType(): ?string
     {
         return $this->public_storage_type;
     }
@@ -236,6 +239,9 @@ class SummitMediaUploadType extends SilverstripeBaseModel
      */
     public function setPublicStorageType(string $public_storage_type): void
     {
+        if(!in_array($public_storage_type, IStorageTypesConstants::ValidPublicTypesTypes))
+            throw new ValidationException(sprintf("invalid public storage type %s", $public_storage_type));
+
         $this->public_storage_type = $public_storage_type;
     }
 

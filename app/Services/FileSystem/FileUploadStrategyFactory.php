@@ -14,6 +14,7 @@
 use App\Models\Utils\IStorageTypesConstants;
 use App\Services\FileSystem\Dropbox\DropboxStorageFileUploadStrategy;
 use App\Services\FileSystem\Local\LocalStorageFileUploadStrategy;
+use App\Services\FileSystem\S3\S3StorageFileUploadStrategy;
 use App\Services\FileSystem\Swift\SwiftStorageFileUploadStrategy;
 /**
  * Class FileUploadStrategyFactory
@@ -35,6 +36,9 @@ final class FileUploadStrategyFactory
                 break;
             case IStorageTypesConstants::Swift;
                 return new SwiftStorageFileUploadStrategy();
+                break;
+            case IStorageTypesConstants::S3;
+                return new S3StorageFileUploadStrategy();
                 break;
         }
         return null;

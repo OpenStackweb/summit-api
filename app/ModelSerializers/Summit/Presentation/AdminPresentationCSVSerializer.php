@@ -39,6 +39,13 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
             $serializerType = SerializerRegistry::SerializerType_Private;
         }
 
+        if(isset($values['description'])){
+            $values['description'] = strip_tags($values['description']);
+        }
+        if(isset($values['attendees_expected_learnt'])){
+            $values['attendees_expected_learnt'] = strip_tags($values['attendees_expected_learnt']);
+        }
+
         // add video column
         $values['video'] = '';
         $values['public_video'] = '';

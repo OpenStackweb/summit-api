@@ -20,6 +20,7 @@ use App\Security\OrganizationScopes;
 use App\Security\MemberScopes;
 use App\Models\Foundation\Main\IGroup;
 use App\Security\CompanyScopes;
+use App\Security\SponsoredProjectScope;
 /**
  * Class AccessTokenServiceStub
  */
@@ -109,6 +110,8 @@ class AccessTokenServiceStub implements IAccessTokenService
             sprintf(SummitScopes::WriteSummitMediaFileTypes, $url),
             sprintf(CompanyScopes::Write, $url),
             sprintf(CompanyScopes::Read, $url),
+            sprintf(SponsoredProjectScope::Write, $url),
+            sprintf(SponsoredProjectScope::Read, $url),
             sprintf(SummitScopes::WriteMetrics, $url),
             sprintf(SummitScopes::ReadMetrics, $url),
         );
@@ -208,6 +211,8 @@ class AccessTokenServiceStub2 implements IAccessTokenService
             sprintf(SummitScopes::ReadMetrics, $url),
             sprintf(CompanyScopes::Write, $url),
             sprintf(CompanyScopes::Read, $url),
+            sprintf(SponsoredProjectScope::Write, $url),
+            sprintf(SponsoredProjectScope::Read, $url),
         );
 
         return AccessToken::createFromParams(

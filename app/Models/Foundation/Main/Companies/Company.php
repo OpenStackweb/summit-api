@@ -11,14 +11,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Models\Foundation\Main\ICompanyMemberLevel;
 use Doctrine\Common\Collections\ArrayCollection;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
-
 /**
  * @ORM\Entity(repositoryClass="repositories\main\DoctrineCompanyRepository")
  * @ORM\Table(name="Company")

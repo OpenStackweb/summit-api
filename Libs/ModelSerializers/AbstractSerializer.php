@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Log;
 use libs\utils\JsonUtils;
 use models\oauth2\IResourceServerContext;
 use models\utils\IEntity;
+use ModelSerializers\SerializerRegistry;
+
 /**
  * Class AbstractSerializer
  * @package Libs\ModelSerializers
@@ -157,6 +159,8 @@ abstract class AbstractSerializer implements IModelSerializer
         return sprintf("%s:%s", $field, $type);
     }
 
+    protected $expand_mappings = [];
+
     /**
      * @param null $expand
      * @param array $fields
@@ -254,6 +258,17 @@ abstract class AbstractSerializer implements IModelSerializer
             $values = $new_values;
         }
 
+        // expand logic
+        if (!empty($expand)) {
+            $exp_expand = explode(',', $expand);
+            foreach ($exp_expand as $relation) {
+                $relation = trim($relation);
+                if(isset($this->expand_mappings[$relation])){
+                    $values = $this->expand_mappings[$relation]->serialize($values, $expand);
+                }
+            }
+        }
+
         return $values;
     }
 
@@ -262,7 +277,7 @@ abstract class AbstractSerializer implements IModelSerializer
      * @param string $prefix
      * @return string
      */
-    protected static function filterExpandByPrefix($expand_str, $prefix){
+    public static function filterExpandByPrefix($expand_str, $prefix){
 
         $expand_to    = explode(',', $expand_str);
         $filtered_expand  = array_filter($expand_to, function($element) use($prefix){

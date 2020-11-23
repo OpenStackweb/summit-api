@@ -20,6 +20,7 @@ use App\Security\OrganizationScopes;
 use App\Security\MemberScopes;
 use App\Models\Foundation\Main\IGroup;
 use App\Security\CompanyScopes;
+use App\Security\SponsoredProjectScope;
 /**
  * Class ApiEndpointsSeeder
  */
@@ -36,6 +37,7 @@ class ApiEndpointsSeeder extends Seeder
         $this->seedMemberEndpoints();
         $this->seedTagsEndpoints();
         $this->seedCompaniesEndpoints();
+        $this->seedSponsoredProjectsEndpoints();
         $this->seedGroupsEndpoints();
         $this->seedOrganizationsEndpoints();
         $this->seedTrackQuestionTemplateEndpoints();
@@ -5679,6 +5681,152 @@ class ApiEndpointsSeeder extends Seeder
                     ]
                 ],
 
+            ]
+        );
+    }
+
+    private function seedSponsoredProjectsEndpoints(){
+        $current_realm = Config::get('app.scope_base_realm');
+        $this->seedApiEndpoints('sponsored-projects', [
+                [
+                    'name' => 'get-sponsored-projects',
+                    'route' => '/api/v1/sponsored-projects',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SponsoredProjectScope::Read, $current_realm)
+                    ],
+                ],
+                [
+                    'name' => 'add-sponsored-projects',
+                    'route' => '/api/v1/sponsored-projects',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'update-sponsored-projects',
+                    'route' => '/api/v1/sponsored-projects/{id}',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'delete-sponsored-projects',
+                    'route' => '/api/v1/sponsored-projects/{id}',
+                    'http_method' => 'DELETE',
+                    'scopes' => [
+                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'get-sponsored-project',
+                    'route' => '/api/v1/sponsored-projects/{id}',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SponsoredProjectScope::Read, $current_realm)
+                    ]
+                ],
+                // sponsorship types
+                [
+                    'name' => 'get-sponsored-project-sponsorship-types',
+                    'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SponsoredProjectScope::Read, $current_realm)
+                    ],
+                ],
+                [
+                    'name' => 'add-sponsored-project-sponsorship-types',
+                    'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'update-sponsored-project-sponsorship-types',
+                    'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+
+                [
+                    'name' => 'delete-sponsored-project-sponsorship-types',
+                    'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}',
+                    'http_method' => 'DELETE',
+                    'scopes' => [
+                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+
+                [
+                    'name' => 'get-sponsored-project-sponsorship-type',
+                    'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SponsoredProjectScope::Read, $current_realm)
+                    ],
+                ],
+                [
+                    'name' => 'get-sponsored-project-supporting-companies',
+                    'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SponsoredProjectScope::Read, $current_realm)
+                    ],
+                ],
+                [
+                    'name' => 'add-sponsored-project-supporting-companies',
+                    'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies/{company_id}',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'delete-sponsored-project-supporting-companies',
+                    'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies/{company_id}',
+                    'http_method' => 'DELETE',
+                    'scopes' => [
+                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
             ]
         );
     }

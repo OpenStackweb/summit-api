@@ -28,6 +28,12 @@ Route::group([
     ]
 ], function () {
 
+    Route::group(['prefix' => 'sponsored-projects'], function(){
+        Route::group(['prefix'=>'{id}'], function(){
+            Route::get('',  [ 'uses' => 'OAuth2SponsoredProjectApiController@get']);
+        });
+    });
+
     // files
     Route::group(['prefix' => 'files'], function () {
         Route::post('upload','OAuth2ChunkedFilesApiController@uploadFile' );

@@ -1,0 +1,221 @@
+<?php
+/**
+ * Copyright 2020 OpenStack Foundation
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ **/
+
+/**
+ * Class OAuth2SponsoredProjectsApiTest
+ */
+class OAuth2SponsoredProjectsApiTest extends ProtectedApiTest
+{
+    public function testAddSponsoredProject(){
+        $data = [
+            'name' => str_random(16).'_sponsored project',
+            'description' => str_random(16).'_sponsored project description',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SponsoredProjectApiController@add",
+            [],
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $sponsored_projects = json_decode($content);
+        $this->assertTrue(!is_null($sponsored_projects));
+        return $sponsored_projects;
+    }
+
+    public function testGelAll()
+    {
+
+        $params = [
+            //AND FILTER
+            'filter' => ['name=@sponsored project'],
+            'order'  => '-id'
+        ];
+
+        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
+        $response = $this->action(
+            "GET",
+            "OAuth2SponsoredProjectApiController@getAll",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $content = $response->getContent();
+        $companies = json_decode($content);
+        $this->assertTrue(!is_null($companies));
+        $this->assertResponseStatus(200);
+    }
+
+    public function testAddSponsorshipType(){
+
+        $params = [
+            'id' => 1,
+        ];
+
+        $data = [
+            'name' => str_random(16).' sponsorship type',
+            'description' => str_random(16).' sponsorship type description',
+            'is_active' => true,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SponsoredProjectApiController@addSponsorshipType",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $sponsorship_type = json_decode($content);
+        $this->assertTrue(!is_null($sponsorship_type));
+        return $sponsorship_type;
+    }
+
+    public function testUpdateSponsorshipType(){
+
+        $params = [
+            'id' => 1,
+            'sponsorship_type_id' => 6
+        ];
+
+        $data = [
+            'order' => 1
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SponsoredProjectApiController@updateSponsorshipType",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(204);
+        $sponsorship_type = json_decode($content);
+        $this->assertTrue(!is_null($sponsorship_type));
+        return $sponsorship_type;
+    }
+
+    public function testGetAllSponsorshipTypes(){
+        $params = [
+           'id' => 'kata-containers',
+            'expand' => 'supporting_companies, supporting_companies.company'
+        ];
+
+        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
+        $response = $this->action(
+            "GET",
+            "OAuth2SponsoredProjectApiController@getAllSponsorshipTypes",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $content = $response->getContent();
+        $page = json_decode($content);
+        $this->assertTrue(!is_null($page));
+        $this->assertResponseStatus(200);
+    }
+
+    public function testAddSupportingCompany(){
+
+        $params = [
+            'id' => 1,
+            'sponsorship_type_id' => 1,
+            'company_id' => 12,
+        ];
+
+        $data = [
+            'order' => 2
+        ];
+
+        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
+        $response = $this->action(
+            "PUT",
+            "OAuth2SponsoredProjectApiController@addSupportingCompanies",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $company = json_decode($content);
+        $this->assertTrue(!is_null($company));
+        $this->assertResponseStatus(200);
+    }
+
+    public function testGetAllSupportingCompanies(){
+
+        $params = [
+            'id' => 'kata-containers',
+            'sponsorship_type_id' => 'platinum-members',
+            'expand' => 'company'
+        ];
+
+        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
+        $response = $this->action(
+            "GET",
+            "OAuth2SponsoredProjectApiController@getSupportingCompanies",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $content = $response->getContent();
+        $page = json_decode($content);
+        $this->assertTrue(!is_null($page));
+        $this->assertResponseStatus(200);
+    }
+}

@@ -76,6 +76,16 @@ final class ApiSeeder extends Seeder
 
         EntityManager::flush();
 
+        // sponsored projects
+        $api = new Api();
+        $api->setName('sponsored-projects');
+        $api->setActive(true);
+        $api->setDescription('Sponsored Projects API');
+
+        EntityManager::persist($api);
+
+        EntityManager::flush();
+
         //groups
 
         $api = new Api();

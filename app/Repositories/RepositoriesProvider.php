@@ -14,7 +14,10 @@
 
 use App\Models\Foundation\Main\Language;
 use App\Models\Foundation\Main\Repositories\ILanguageRepository;
+use App\Models\Foundation\Main\Repositories\IProjectSponsorshipTypeRepository;
+use App\Models\Foundation\Main\Repositories\ISponsoredProjectRepository;
 use App\Models\Foundation\Main\Repositories\ISummitAdministratorPermissionGroupRepository;
+use App\Models\Foundation\Main\Repositories\ISupportingCompanyRepository;
 use App\Models\Foundation\Summit\Defaults\DefaultSummitEventType;
 use App\Models\Foundation\Summit\DefaultTrackTagGroup;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlow;
@@ -70,7 +73,10 @@ use models\main\File;
 use models\main\Group;
 use models\main\IOrganizationRepository;
 use models\main\Organization;
+use models\main\ProjectSponsorshipType;
+use models\main\SponsoredProject;
 use models\main\SummitAdministratorPermissionGroup;
+use models\main\SupportingCompany;
 use models\summit\ISponsorUserInfoGrantRepository;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitTicketTypeRepository;
@@ -83,7 +89,6 @@ use models\summit\SpeakerOrganizationalRole;
 use models\summit\SpeakerRegistrationRequest;
 use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\Sponsor;
-use models\summit\SponsorBadgeScan;
 use models\summit\SponsorshipType;
 use models\summit\SponsorUserInfoGrant;
 use models\summit\SummitAbstractLocation;
@@ -608,6 +613,27 @@ final class RepositoriesProvider extends ServiceProvider
             ISummitMetricRepository::class,
             function(){
                 return EntityManager::getRepository(SummitMetric::class);
+            }
+        );
+
+        App::singleton(
+            ISponsoredProjectRepository::class,
+            function(){
+                return EntityManager::getRepository(SponsoredProject::class);
+            }
+        );
+
+        App::singleton(
+            IProjectSponsorshipTypeRepository::class,
+            function(){
+                return EntityManager::getRepository(ProjectSponsorshipType::class);
+            }
+        );
+
+        App::singleton(
+            ISupportingCompanyRepository::class,
+            function(){
+                return EntityManager::getRepository(SupportingCompany::class);
             }
         );
     }

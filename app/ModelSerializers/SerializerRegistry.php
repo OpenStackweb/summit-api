@@ -206,7 +206,12 @@ final class SerializerRegistry
             self::SerializerType_Public  =>  PresentationMediaUploadSerializer::class,
             self::SerializerType_Private =>  AdminPresentationMediaUploadSerializer::class
         ];
-        $this->registry['Company']                    = CompanySerializer::class;
+        // Company
+
+        $this->registry['Company']                = CompanySerializer::class;
+        $this->registry['SponsoredProject']       = SponsoredProjectSerializer::class;
+        $this->registry['ProjectSponsorshipType'] = ProjectSponsorshipTypeSerializer::class;
+        $this->registry['SupportingCompany']      = SupportingCompanySerializer::class;
 
         $this->registry['PresentationSpeaker']        =
             [

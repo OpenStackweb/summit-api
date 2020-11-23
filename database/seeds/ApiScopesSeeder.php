@@ -20,6 +20,7 @@ use App\Security\SummitScopes;
 use App\Security\OrganizationScopes;
 use App\Security\MemberScopes;
 use App\Security\CompanyScopes;
+use App\Security\SponsoredProjectScope;
 /**
  * Class ApiScopesSeeder
  */
@@ -36,6 +37,7 @@ final class ApiScopesSeeder extends Seeder
         $this->seedTeamsScopes();
         $this->seedTagsScopes();
         $this->seedCompaniesScopes();
+        $this->seedSponsoredProjectsScopes();
         $this->seedGroupsScopes();
         $this->seedOrganizationScopes();
         $this->seedSummitAdminGroupScopes();
@@ -499,6 +501,37 @@ final class ApiScopesSeeder extends Seeder
                 'name'              => sprintf(CompanyScopes::Write, $current_realm),
                 'short_description' => 'Write Companies Data',
                 'description'       => 'Grants write only access for Companies Data',
+            ],
+        ];
+
+        foreach ($scopes as $scope_info) {
+            $scope = new ApiScope();
+            $scope->setName($scope_info['name']);
+            $scope->setShortDescription($scope_info['short_description']);
+            $scope->setDescription($scope_info['description']);
+            $scope->setActive(true);
+            $scope->setDefault(false);
+            $scope->setApi($api);
+            EntityManager::persist($scope);
+        }
+
+        EntityManager::flush();
+    }
+
+    private function seedSponsoredProjectsScopes(){
+        $current_realm = Config::get('app.scope_base_realm');
+        $api           = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'sponsored-projects']);
+
+        $scopes = [
+            [
+                'name'              => sprintf(SponsoredProjectScope::Read, $current_realm),
+                'short_description' => 'Get Sponsored Projects Data',
+                'description'       => 'Grants read only access for Sponsored Projects Data',
+            ],
+            [
+                'name'              => sprintf(SponsoredProjectScope::Write, $current_realm),
+                'short_description' => 'Write Sponsored Projects Data',
+                'description'       => 'Grants write only access for Sponsored Projects Data',
             ],
         ];
 

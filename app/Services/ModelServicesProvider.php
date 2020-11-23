@@ -24,6 +24,7 @@ use App\Services\Model\IMemberService;
 use App\Services\Model\Imp\CompanyService;
 use App\Services\Model\Imp\PaymentGatewayProfileService;
 use App\Services\Model\Imp\RegistrationIngestionService;
+use App\Services\Model\Imp\SponsoredProjectService;
 use App\Services\Model\Imp\SponsorUserInfoGrantService;
 use App\Services\Model\Imp\SummitAdministratorPermissionGroupService;
 use App\Services\Model\Imp\SummitDocumentService;
@@ -38,6 +39,7 @@ use App\Services\Model\IPresentationCategoryGroupService;
 use App\Services\Model\IRegistrationIngestionService;
 use App\Services\Model\IRSVPTemplateService;
 use App\Services\Model\IScheduleIngestionService;
+use App\Services\Model\ISponsoredProjectService;
 use App\Services\Model\ISponsorUserInfoGrantService;
 use App\Services\Model\ISponsorshipTypeService;
 use App\Services\Model\ISummitAccessLevelTypeService;
@@ -393,6 +395,12 @@ final class ModelServicesProvider extends ServiceProvider
         (
             ISummitMetricService::class,
             SummitMetricService::class
+        );
+
+        App::singleton
+        (
+            ISponsoredProjectService::class,
+            SponsoredProjectService::class
         );
     }
 

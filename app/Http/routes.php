@@ -87,6 +87,39 @@ Route::group([
         });
     });
 
+    // sponsored projects
+
+    Route::group(['prefix'=>'sponsored-projects'], function(){
+        Route::get('', 'OAuth2SponsoredProjectApiController@getAll');
+        Route::post('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SponsoredProjectApiController@add']);
+
+        Route::group(['prefix'=>'{id}'], function(){
+
+            Route::get('',  [ 'uses' => 'OAuth2SponsoredProjectApiController@get']);
+            Route::put('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SponsoredProjectApiController@update']);
+            Route::delete('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SponsoredProjectApiController@delete']);
+
+            Route::group(['prefix'=>'sponsorship-types'], function(){
+                Route::get('', 'OAuth2SponsoredProjectApiController@getAllSponsorshipTypes');
+                Route::post('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SponsoredProjectApiController@addSponsorshipType']);
+                Route::group(['prefix'=>'{sponsorship_type_id}'], function(){
+
+                    Route::get('',  [ 'uses' => 'OAuth2SponsoredProjectApiController@getSponsorshipType']);
+                    Route::put('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SponsoredProjectApiController@updateSponsorshipType']);
+                    Route::delete('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SponsoredProjectApiController@deleteSponsorshipType']);
+
+                    Route::group(['prefix'=>'supporting-companies'], function(){
+                        Route::get('',  [ 'uses' => 'OAuth2SponsoredProjectApiController@getSupportingCompanies']);
+                        Route::group(['prefix'=>'{company_id}'], function(){
+                            Route::put('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SponsoredProjectApiController@addSupportingCompanies']);
+                            Route::delete('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SponsoredProjectApiController@deleteSupportingCompanies']);
+                        });
+                    });
+                });
+            });
+        });
+    });
+
     // organizations
     Route::group(['prefix'=>'organizations'], function(){
         Route::get('', 'OAuth2OrganizationsApiController@getAll');

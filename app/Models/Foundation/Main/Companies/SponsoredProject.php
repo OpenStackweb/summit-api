@@ -111,7 +111,8 @@ class SponsoredProject extends SilverstripeBaseModel
 
     /**
      * @ORM\OneToMany(targetEntity="ProjectSponsorshipType", mappedBy="sponsored_project", cascade={"persist"}, orphanRemoval=true)
-     * @var ProjectSponsorshipType[]
+     * @ORM\OrderBy({"order" = "ASC"})
+     * @var ArrayCollection
      */
     private $sponsorship_types;
 

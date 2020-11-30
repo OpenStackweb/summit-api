@@ -43,7 +43,7 @@ class SupportingCompany extends BaseEntity implements IOrderable
     private $company;
 
     /**
-     * @ORM\ManyToOne(targetEntity="ProjectSponsorshipType", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="ProjectSponsorshipType", fetch="EXTRA_LAZY", inversedBy="supporting_companies")
      * @ORM\JoinColumn(name="ProjectSponsorshipTypeID", referencedColumnName="ID", onDelete="SET NULL")
      * @var ProjectSponsorshipType
      */

@@ -54,7 +54,7 @@ class ProjectSponsorshipType extends SilverstripeBaseModel implements IOrderable
     private $order;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SponsoredProject", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="SponsoredProject", fetch="EXTRA_LAZY", inversedBy="sponsorship_types")
      * @ORM\JoinColumn(name="SponsoredProjectID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SponsoredProject
      */
@@ -62,6 +62,7 @@ class ProjectSponsorshipType extends SilverstripeBaseModel implements IOrderable
 
     /**
      * @ORM\OneToMany(targetEntity="SupportingCompany", mappedBy="sponsorship_type", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OrderBy({"order" = "ASC"})
      * @var SupportingCompany[]
      */
     private $supporting_companies;

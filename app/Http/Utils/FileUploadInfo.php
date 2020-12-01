@@ -23,8 +23,9 @@ use Illuminate\Http\UploadedFile;
  */
 final class FileUploadInfo
 {
+
     /**
-     * @var int
+     * @var int // in bytes
      */
     private $size;
     /**
@@ -80,7 +81,6 @@ final class FileUploadInfo
             $size = $file->getSize();
             if($size == 0)
                 throw new ValidationException("File size is zero.");
-            $size = $size/1024; // convert bytes to KB
             $fileName = $file->getClientOriginalName();
             $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
         }
@@ -97,7 +97,6 @@ final class FileUploadInfo
             if($size == 0)
                 throw new ValidationException("File size is zero.");
 
-            $size = $size/1024; // convert bytes to KB
             $fileName =  pathinfo($payload['filepath'],PATHINFO_BASENAME);
             $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
             $file = new UploadedFile($disk->path($payload['filepath']), $fileName);
@@ -111,12 +110,18 @@ final class FileUploadInfo
     }
 
     /**
-     * @return int
+     * @param string $unit
+     * @return int|null
      */
-    public function getSize(): ?int
+    public function getSize(string $unit = FileSizeUtil::Kb): ?int
     {
+        if($unit === FileSizeUtil::Kb){
+            return $this->size / 1024;
+        }
+
         return $this->size;
     }
+
 
     /**
      * @return UploadedFile

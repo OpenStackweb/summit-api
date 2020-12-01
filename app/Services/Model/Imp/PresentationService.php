@@ -13,6 +13,7 @@
  **/
 use App\Events\PresentationMaterialDeleted;
 use App\Events\PresentationMaterialUpdated;
+use App\Http\Utils\FileSizeUtil;
 use App\Http\Utils\FileUploadInfo;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
@@ -690,7 +691,7 @@ final class PresentationService
         $presentation_id,
         array $slide_data,
         array $allowed_extensions =  [],
-        $max_file_size = 10485760
+        $max_file_size = 10485760 // bytes
     )
     {
         $slide = $this->tx_service->transaction(function () use (
@@ -710,30 +711,33 @@ final class PresentationService
                 throw new EntityNotFoundException('presentation not found!');
 
             $hasLink = isset($slide_data['link']) && !empty($slide_data['link']);
-            $hasFile = $request->hasFile('file');
+            $fileInfo = FileUploadInfo::build($request, $slide_data);
+            $hasFile = !is_null($fileInfo);
 
             if($hasFile && $hasLink){
                 throw new ValidationException("you must provide a file or a link, not both.");
             }
 
             $slide = PresentationSlideFactory::build($slide_data);
-
             // check if there is any file sent
             if($hasFile){
-                $file = $request->file('file');
-                if (!in_array($file->extension(), $allowed_extensions)) {
+
+                if (!in_array($fileInfo->getFileExt(), $allowed_extensions)) {
                     throw new ValidationException(
                         sprintf("file does not has a valid extension '(%s)'.", implode("','", $allowed_extensions)));
                 }
 
-                if ($file->getSize() > $max_file_size) {
+                if ($fileInfo->getSize(FileSizeUtil::B) > $max_file_size) {
                     throw new ValidationException(sprintf("file exceeds max_file_size (%s MB).", ($max_file_size / 1024) / 1024));
                 }
 
-                $slideFile = $this->file_uploader->build(
-                    $file,
+                $slideFile = $this->file_uploader->build
+                (
+                    $fileInfo->getFile(),
                     sprintf('summits/%s/presentations/%s/slides', $presentation->getSummitId(), $presentation_id),
-                    false);
+                    false
+                );
+
                 $slide->setSlide($slideFile);
             }
 
@@ -762,7 +766,7 @@ final class PresentationService
         $slide_id,
         array $slide_data,
         array $allowed_extensions = [],
-        $max_file_size = 10485760
+        $max_file_size = 10485760 // bytes
     ){
 
         $slide = $this->tx_service->transaction(function () use
@@ -793,7 +797,8 @@ final class PresentationService
 
 
             $hasLink = isset($slide_data['link']) && !empty($slide_data['link']);
-            $hasFile = $request->hasFile('file');
+            $fileInfo = FileUploadInfo::build($request, $slide_data);
+            $hasFile = !is_null($fileInfo);
 
             if($hasFile && $hasLink){
                 throw new ValidationException("you must provide a file or a link, not both.");
@@ -814,17 +819,22 @@ final class PresentationService
 
             // check if there is any file sent
             if($hasFile){
-                $file = $request->file('file');
-                if (!in_array($file->extension(), $allowed_extensions)) {
+                if (!in_array($fileInfo->getFileExt(), $allowed_extensions)) {
                     throw new ValidationException(
                         sprintf("file does not has a valid extension '(%s)'.", implode("','", $allowed_extensions)));
                 }
 
-                if ($file->getSize() > $max_file_size) {
+                if ($fileInfo->getSize(FileSizeUtil::B) > $max_file_size){
                     throw new ValidationException(sprintf("file exceeds max_file_size (%s MB).", ($max_file_size / 1024) / 1024));
                 }
 
-                $slideFile = $this->file_uploader->build($file, sprintf('summits/%s/presentations/%s/slides', $presentation->getSummitId(), $presentation_id), false);
+                $slideFile = $this->file_uploader->build
+                (
+                    $fileInfo->getFile(),
+                    sprintf('summits/%s/presentations/%s/slides', $presentation->getSummitId(), $presentation_id),
+                    false
+                );
+
                 $slide->setSlide($slideFile);
                 $slide->clearLink();
             }

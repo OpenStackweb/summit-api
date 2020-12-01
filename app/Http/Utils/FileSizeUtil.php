@@ -1,4 +1,4 @@
-<?php
+<?php namespace App\Http\Utils;
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +12,9 @@
  * limitations under the License.
  **/
 
-return  [
-    // in Bytes
-    'slides_max_file_size' => env('MEDIA_UPLOAD_SLIDES_MAX_FILE_SIZE', 524288000),
-    'mounting_folder' => env('MEDIA_UPLOAD_MOUNTING_FOLDER','PresentationMediaUploads')
-];
+final class FileSizeUtil
+{
+    public const Kb = 'KB';
+    public const MB = 'MB';
+    public const B = "Byte";
+}

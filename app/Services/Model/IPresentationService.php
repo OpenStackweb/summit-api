@@ -107,7 +107,7 @@ interface IPresentationService
         $presentation_id,
         array $slide_data,
         array $allowed_extensions = [],
-        $max_file_size = 62914560
+        $max_file_size = 1048576 // bytes
     );
 
     /**

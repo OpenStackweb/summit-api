@@ -14,6 +14,7 @@
 use App\Http\Utils\FileTypes;
 use App\Http\Utils\MultipartFormDataCleaner;
 use App\Models\Foundation\Main\IGroup;
+use Illuminate\Support\Facades\Config;
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -612,8 +613,9 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $data = MultipartFormDataCleaner::cleanBool('featured', $data);
 
             $rules = [
-                'file'            => 'required_without:link',
-                'link'            => 'required_without:file|url',
+                'file'            => 'required_without_all:link,filepath',
+                'link'            => 'required_without_all:file,filepath|url',
+                'filepath'        => 'required_without_all:link,file',
                 'name'            => 'required|string:512',
                 'description'     => 'nullable|string',
                 'display_on_site' => 'nullable|boolean',
@@ -639,7 +641,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 $request,
                 $presentation_id,
                 HTMLCleaner::cleanData($data, $fields),
-                array_merge(FileTypes::ImagesExntesions, FileTypes::SlidesExtensions)
+                array_merge(FileTypes::ImagesExntesions, FileTypes::SlidesExtensions),
+                intval(Config::get("mediaupload.slides_max_file_size"))
             );
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($slide)->serialize());
@@ -720,7 +723,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 $presentation_id,
                 $slide_id,
                 HTMLCleaner::cleanData($data, $fields),
-                array_merge(FileTypes::ImagesExntesions, FileTypes::SlidesExtensions)
+                array_merge(FileTypes::ImagesExntesions, FileTypes::SlidesExtensions),
+                intval(Config::get("mediaupload.slides_max_file_size"))
             );
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($slide)->serialize());

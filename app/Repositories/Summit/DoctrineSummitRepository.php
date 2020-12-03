@@ -54,7 +54,7 @@ final class DoctrineSummitRepository
         return [
             'id'                      => 'e.id',
             'name'                    => 'e.name',
-            'begin_date'              => 'e.begin_date',
+            'start_date'              => 'e.begin_date',
             'registration_begin_date' => 'e.registration_begin_date',
         ];
     }

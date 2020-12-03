@@ -148,7 +148,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 return [
                     'id',
                     'name',
-                    'begin_date',
+                    'start_date',
                     'registration_begin_date'
                 ];
             },
@@ -177,7 +177,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             },
             function () {
                 return new Order([
-                    OrderElement::buildAscFor("begin_date"),
+                    OrderElement::buildAscFor("start_date"),
                 ]);
             },
             function () {
@@ -262,7 +262,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             ,
             function () {
                 return new Order([
-                    OrderElement::buildAscFor("begin_date"),
+                    OrderElement::buildAscFor("start_date"),
                 ]);
             },
             function () {

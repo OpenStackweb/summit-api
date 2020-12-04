@@ -28,8 +28,6 @@ final class PresentationSpeakerDeletedEntityEventFactory
     public static function build(PresentationSpeakerDeleted $event){
         $list                    = [];
         $args                    = $event->getArgs();
-        $resource_server_context = App::make(IResourceServerContext::class);
-        $owner                   = $resource_server_context->getCurrentUser(false);
         $params                  = $args->getParams();
 
         foreach($params['summits'] as $summit) {
@@ -38,14 +36,8 @@ final class PresentationSpeakerDeletedEntityEventFactory
             $entity_event->setEntityClassName($params['class_name']);
             $entity_event->setEntityId($params['id']);
             $entity_event->setType('DELETE');
-
-            if (!is_null($owner)) {
-                $entity_event->setOwner($owner);
-            }
-
             $entity_event->setSummit($summit);
             $entity_event->setMetadata('');
-
             $list[] = $entity_event;
         }
 

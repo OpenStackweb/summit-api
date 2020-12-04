@@ -31,7 +31,7 @@ final class AdminSummitLocationActionSyncWorkRequestFactory
     public static function build(LocationAction $event, $type){
 
         $resource_server_context = App::make(IResourceServerContext::class);
-        $current_member          = $resource_server_context->getCurrentUser();
+        $current_member          = $resource_server_context->getCurrentUser(false);
         $request                 = new AdminSummitLocationActionSyncWorkRequest;
 
         $request->setLocationId($event->getLocationId());

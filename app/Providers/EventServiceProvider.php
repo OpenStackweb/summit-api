@@ -25,9 +25,6 @@ use App\Events\RSVPUpdated;
 use App\Events\SummitAttendeeTicketRefundAccepted;
 use App\Events\SummitOrderCanceled;
 use App\Events\SummitOrderRefundAccepted;
-use App\Factories\CalendarAdminActionSyncWorkRequest\AdminSummitLocationActionSyncWorkRequestFactory;
-use App\Factories\CalendarAdminActionSyncWorkRequest\SummitEventDeletedCalendarSyncWorkRequestFactory;
-use App\Factories\CalendarAdminActionSyncWorkRequest\SummitEventUpdatedCalendarSyncWorkRequestFactory;
 use App\Factories\EntityEvents\FloorActionEntityEventFactory;
 use App\Factories\EntityEvents\LocationActionEntityEventFactory;
 use App\Factories\EntityEvents\LocationImageActionEntityEventFactory;
@@ -142,16 +139,16 @@ final class EventServiceProvider extends ServiceProvider
         Event::listen(\App\Events\SummitEventUpdated::class, function($event)
         {
             EntityEventPersister::persist(SummitEventUpdatedEntityEventFactory::build($event));
-            AdminSummitEventActionSyncWorkRequestPersister::persist(SummitEventUpdatedCalendarSyncWorkRequestFactory::build($event));
+            //AdminSummitEventActionSyncWorkRequestPersister::persist(SummitEventUpdatedCalendarSyncWorkRequestFactory::build($event));
         });
 
         Event::listen(\App\Events\SummitEventDeleted::class, function($event)
         {
             EntityEventPersister::persist(SummitEventDeletedEntityEventFactory::build($event));
 
-            $request = SummitEventDeletedCalendarSyncWorkRequestFactory::build($event);
+            /*$request = SummitEventDeletedCalendarSyncWorkRequestFactory::build($event);
             if(!is_null($request))
-                AdminSummitEventActionSyncWorkRequestPersister::persist($request);
+                AdminSummitEventActionSyncWorkRequestPersister::persist($request);*/
         });
 
         Event::listen(\App\Events\PresentationMaterialCreated::class, function($event)
@@ -229,25 +226,25 @@ final class EventServiceProvider extends ServiceProvider
         Event::listen(\App\Events\SummitVenueRoomUpdated::class, function($event)
         {
             EntityEventPersister::persist(LocationActionEntityEventFactory::build($event, 'UPDATE'));
-            $published_events = $event->getRelatedEventIds();
+            /*$published_events = $event->getRelatedEventIds();
             if(count($published_events) > 0){
                 AdminSummitLocationActionSyncWorkRequestPersister::persist
                 (
                     AdminSummitLocationActionSyncWorkRequestFactory::build($event, 'UPDATE')
                 );
-            }
+            }*/
         });
 
         Event::listen(\App\Events\SummitVenueRoomDeleted::class, function($event)
         {
             EntityEventPersister::persist(LocationActionEntityEventFactory::build($event, 'DELETE'));
-            $published_events = $event->getRelatedEventIds();
+            /*$published_events = $event->getRelatedEventIds();
             if(count($published_events) > 0){
                 AdminSummitLocationActionSyncWorkRequestPersister::persist
                 (
                     AdminSummitLocationActionSyncWorkRequestFactory::build($event, 'REMOVE')
                 );
-            }
+            }*/
         });
 
         Event::listen(\App\Events\LocationInserted::class, function($event)
@@ -258,25 +255,25 @@ final class EventServiceProvider extends ServiceProvider
         Event::listen(\App\Events\LocationUpdated::class, function($event)
         {
             EntityEventPersister::persist(LocationActionEntityEventFactory::build($event, 'UPDATE'));
-            $published_events = $event->getRelatedEventIds();
+            /*$published_events = $event->getRelatedEventIds();
             if(count($published_events) > 0){
                 AdminSummitLocationActionSyncWorkRequestPersister::persist
                 (
                     AdminSummitLocationActionSyncWorkRequestFactory::build($event, 'UPDATE')
                 );
-            }
+            }*/
         });
 
         Event::listen(\App\Events\LocationDeleted::class, function($event)
         {
             EntityEventPersister::persist(LocationActionEntityEventFactory::build($event, 'DELETE'));
-            $published_events = $event->getRelatedEventIds();
+            /*$published_events = $event->getRelatedEventIds();
             if(count($published_events) > 0){
                 AdminSummitLocationActionSyncWorkRequestPersister::persist
                 (
                     AdminSummitLocationActionSyncWorkRequestFactory::build($event, 'REMOVE')
                 );
-            }
+            }*/
         });
 
         Event::listen(\App\Events\FloorInserted::class, function($event)

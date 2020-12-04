@@ -28,7 +28,7 @@ final class SummitEventUpdatedCalendarSyncWorkRequestFactory
     public static function build(SummitEventUpdated $event){
         $resource_server_context         = App::make(\models\oauth2\IResourceServerContext::class);
         $args                            = $event->getArgs();
-        $current_member                  = $resource_server_context->getCurrentUser();
+        $current_member                  = $resource_server_context->getCurrentUser(false);
         // sync request from admin
         $request = new AdminSummitEventActionSyncWorkRequest();
         $request->setSummitEvent($event->getSummitEvent()) ;

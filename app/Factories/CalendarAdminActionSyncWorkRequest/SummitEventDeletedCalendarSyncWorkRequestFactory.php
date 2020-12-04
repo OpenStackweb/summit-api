@@ -33,7 +33,7 @@ final class SummitEventDeletedCalendarSyncWorkRequestFactory
         $args                    = $event->getArgs();
         $params                  = $args->getParams();
         $resource_server_context = App::make(IResourceServerContext::class);
-        $current_member          = $resource_server_context->getCurrentUser();
+        $current_member          = $resource_server_context->getCurrentUser(false);
         $request                 = null;
         if(isset($params['published']) && $params['published']){
             // just record the published state at the moment of the update

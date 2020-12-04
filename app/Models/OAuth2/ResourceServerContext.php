@@ -158,19 +158,18 @@ final class ResourceServerContext implements IResourceServerContext
         return isset($this->auth_context[$varName]) ? $this->auth_context[$varName] : null;
     }
 
-    /**
-     * @return Member|null
-     * @throws \Exception
-     */
-    public function getCurrentUser(): ?Member
+
+    public function getCurrentUser(bool $synch_groups = true): ?Member
     {
-        return $this->tx_service->transaction(function() {
+        return $this->tx_service->transaction(function() use($synch_groups) {
             $member = null;
             // legacy test, for new IDP version this value came on null
             $id = $this->getCurrentUserExternalId();
             if(!is_null($id) && !empty($id)){
                 $member = $this->member_repository->getByExternalId(intval($id));
-                if(!is_null($member)) return $this->checkGroups($member);
+                if(!is_null($member)) {
+                    return $synch_groups ? $this->checkGroups($member) : $member;
+                }
             }
 
             // is null
@@ -195,7 +194,7 @@ final class ResourceServerContext implements IResourceServerContext
                     if(!empty($user_last_name))
                         $member->setLastName($user_last_name);
 
-                    return $this->checkGroups($member);
+                    return $synch_groups ? $this->checkGroups($member) : $member;
                 }
             }
 
@@ -242,7 +241,7 @@ final class ResourceServerContext implements IResourceServerContext
 
             }
 
-            return $this->checkGroups($member);
+            return $synch_groups ? $this->checkGroups($member) : $member;
         });
     }
 

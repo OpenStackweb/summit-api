@@ -27,7 +27,7 @@ final class PresentationSpeakerCreatedEntityEventFactory
     public static function build(PresentationSpeakerCreated $event){
         $list = [];
         $resource_server_context = App::make(\models\oauth2\IResourceServerContext::class);
-        $owner                   = $resource_server_context->getCurrentUser();
+        $owner                   = $resource_server_context->getCurrentUser(false);
 
         foreach($event->getPresentationSpeaker()->getRelatedSummits() as $summit) {
 

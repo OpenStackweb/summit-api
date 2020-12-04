@@ -26,7 +26,7 @@ final class PresentationMaterialCreatedEntityEventFactory
      */
     public static function build(PresentationMaterialCreated $event){
         $resource_server_context = App::make(\models\oauth2\IResourceServerContext::class);
-        $owner                   = $resource_server_context->getCurrentUser();
+        $owner                   = $resource_server_context->getCurrentUser(false);
 
         $entity_event            = new SummitEntityEvent();
         $entity_event->setEntityClassName($event->getMaterial()->getClassName());

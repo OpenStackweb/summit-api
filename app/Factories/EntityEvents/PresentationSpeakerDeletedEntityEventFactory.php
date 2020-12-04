@@ -14,6 +14,7 @@
 use App\Events\PresentationSpeakerDeleted;
 use Illuminate\Support\Facades\App;
 use models\summit\SummitEntityEvent;
+use models\oauth2\IResourceServerContext;
 /**
  * Class PresentationSpeakerDeletedEntityEventFactory
  * @package App\Factories\EntityEvents
@@ -27,8 +28,8 @@ final class PresentationSpeakerDeletedEntityEventFactory
     public static function build(PresentationSpeakerDeleted $event){
         $list                    = [];
         $args                    = $event->getArgs();
-        $resource_server_context = App::make(\models\oauth2\IResourceServerContext::class);
-        $owner                   = $resource_server_context->getCurrentUser();
+        $resource_server_context = App::make(IResourceServerContext::class);
+        $owner                   = $resource_server_context->getCurrentUser(false);
         $params                  = $args->getParams();
 
         foreach($params['summits'] as $summit) {

@@ -77,9 +77,10 @@ interface IResourceServerContext
     public function getAllowedReturnUris();
 
     /**
+     * @param bool $synch_groups
      * @return Member|null
      */
-    public function getCurrentUser():?Member;
+    public function getCurrentUser(bool $synch_groups = true):?Member;
 
     /**
      * @return array

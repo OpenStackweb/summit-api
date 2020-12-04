@@ -29,7 +29,7 @@ final class SummitEventDeletedEntityEventFactory
         $args = $event->getArgs();
 
         $resource_server_context = App::make(\models\oauth2\IResourceServerContext::class);
-        $owner                   = $resource_server_context->getCurrentUser();
+        $owner                   = $resource_server_context->getCurrentUser(false);
         $params = $args->getParams();
 
         $entity_event = new SummitEntityEvent();

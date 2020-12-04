@@ -27,7 +27,7 @@ final class PresentationMaterialDeletedEntityEventFactory
     public static function build(PresentationMaterialDeleted $event){
 
         $resource_server_context = App::make(\models\oauth2\IResourceServerContext::class);
-        $owner                   = $resource_server_context->getCurrentUser();
+        $owner                   = $resource_server_context->getCurrentUser(false);
 
         $entity_event = new SummitEntityEvent();
         $entity_event->setEntityClassName($event->getClassName());

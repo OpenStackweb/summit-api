@@ -33,7 +33,7 @@ final class SummitActionEntityEventFactory
         $resource_server_context = App::make(IResourceServerContext::class);
         $summit_repository       = App::make(ISummitRepository::class);
         $summit                  = $summit_repository->getById($event->getSummitId());
-        $owner                   = $resource_server_context->getCurrentUser();
+        $owner                   = $resource_server_context->getCurrentUser(false);
 
         $entity_event = new SummitEntityEvent;
         $entity_event->setEntityClassName('Summit');

@@ -643,7 +643,9 @@ final class SpeakerService
             try {
                 if (!isset($data['pic'])) throw new ValidationException("pic field is required");
                 $speaker_id = intval($data['pic']);
-                $speaker_to->setPhoto($speaker_id == $speaker_from->getId() ? $speaker_from->getPhoto() : $speaker_to->getPhoto());
+                $photo = $speaker_id == $speaker_from->getId() ? $speaker_from->getPhoto() : $speaker_to->getPhoto();
+                if(!is_null($photo))
+                    $speaker_to->setPhoto($photo);
             } catch (\Exception $ex) {
 
             }
@@ -651,7 +653,9 @@ final class SpeakerService
             try {
                 if (!isset($data['registration_request'])) throw new ValidationException("registration_request field is required");
                 $speaker_id = intval($data['registration_request']);
-                $speaker_to->setRegistrationRequest($speaker_id == $speaker_from->getId() ? $speaker_from->getRegistrationRequest() : $speaker_to->getRegistrationRequest());
+                $registration_request = $speaker_id == $speaker_from->getId() ? $speaker_from->getRegistrationRequest() : $speaker_to->getRegistrationRequest();
+                if(!is_null($registration_request))
+                    $speaker_to->setRegistrationRequest($registration_request);
             } catch (\Exception $ex) {
 
             }
@@ -659,7 +663,9 @@ final class SpeakerService
             try {
                 if (!isset($data['member'])) throw new ValidationException("member field is required");
                 $speaker_id = intval($data['member']);
-                $speaker_to->setMember($speaker_id == $speaker_from->getId() ? $speaker_from->getMember() : $speaker_to->getMember());
+                $member = $speaker_id == $speaker_from->getId() ? $speaker_from->getMember() : $speaker_to->getMember();
+                if(!is_null($member))
+                    $speaker_to->setMember($member);
             } catch (\Exception $ex) {
 
             }

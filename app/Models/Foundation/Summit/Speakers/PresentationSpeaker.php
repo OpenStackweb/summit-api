@@ -1316,7 +1316,7 @@ SQL;
      */
     public function deleted($args){
 
-        Event::fire(new PresentationSpeakerDeleted($this,  $this->pre_remove_events));
+        Event::fire(new PresentationSpeakerDeleted(null,  $this->pre_remove_events));
         $this->pre_remove_events = null;
     }
 

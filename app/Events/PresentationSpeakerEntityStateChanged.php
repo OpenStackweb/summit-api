@@ -35,17 +35,17 @@ class PresentationSpeakerEntityStateChanged extends Event
 
     /**
      * SummitEventEntityStateChanged constructor.
-     * @param PresentationSpeaker $speaker
+     * @param PresentationSpeaker|null $speaker
      * @param LifecycleEventArgs $args
      */
-    public function __construct(PresentationSpeaker $speaker, LifecycleEventArgs $args)
+    public function __construct(?PresentationSpeaker $speaker, LifecycleEventArgs $args)
     {
         $this->speaker = $speaker;
         $this->args    = $args;
     }
 
     /**
-     * @return PresentationSpeaker
+     * @return PresentationSpeaker|null
      */
     public function getPresentationSpeaker()
     {

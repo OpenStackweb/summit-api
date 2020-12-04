@@ -4989,7 +4989,6 @@ SQL;
     public function getSummitDays():array {
         $beginDate = $this->getLocalBeginDate();
         $endDate = $this->getLocalEndDate();
-        Log::debug(sprintf("Summit::getSummitDays local begin date %s local end date %s", $beginDate->format('Y-m-d H:i:s'), $endDate->format('Y-m-d H:i:s')));
         if(is_null($beginDate)) return [];
         if(is_null($endDate)) return [];
         $beginDate = $beginDate->setTime(0,0,0);

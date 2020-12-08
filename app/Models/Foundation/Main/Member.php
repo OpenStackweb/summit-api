@@ -41,7 +41,7 @@ use Doctrine\ORM\Mapping AS ORM;
 
 /**
  * @ORM\Entity
- * @ORM\Table(name="Member")
+ * @ORM\Table(name="`Member`")
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineMemberRepository")
  * Class Member
  * @package models\main

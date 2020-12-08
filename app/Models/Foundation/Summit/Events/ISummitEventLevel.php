@@ -1,6 +1,6 @@
 <?php namespace models\summit;
 /**
- * Copyright 2017 OpenStack Foundation
+ * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,19 +13,16 @@
  **/
 
 /**
- * Interface ISummitEventType
+ * Interface ISummitEventLevel
  * @package models\summit
  */
-interface ISummitEventType
+interface ISummitEventLevel
 {
-    // default types
 
-    const HandonLabs = 'Hand-on Labs';
-    const Lunch_Breaks = 'Lunch & Breaks';
-    const EveningEvents = 'Evening Events';
-    const GroupsEvents = 'Groups Events';
-    const Lunch = 'Lunch';
-    const Breaks = 'Breaks';
-    const Breakfast = 'Breakfast';
-    const MarketplaceHours = 'Marketplace Hours';
+    const BeginnerLevel     = 'Beginner';
+    const IntermediateLevel = 'Intermediate';
+    const AdvancedLevel     = 'Advanced';
+    const NALevel           = 'N/A';
+
+    const ValidLevels       = [self::BeginnerLevel, self::IntermediateLevel, self::AdvancedLevel, self::NALevel];
 }

@@ -458,7 +458,7 @@ final class PresentationService
             if (isset($data['social_description']))
                 $presentation->setSocialSummary(strip_tags(trim($data['social_description'])));
 
-            if (isset($data['level']))
+            if (isset($data['level']) && !is_null($event_type) && $event_type->isAllowsLevel())
                 $presentation->setLevel($data['level']);
 
             if (isset($data['attendees_expected_learnt']))

@@ -761,6 +761,7 @@ final class SummitService extends AbstractService implements ISummitService
                 if (is_null($event_type)) $event_type = $old_event_type;
             }
 
+
             // new event
             if (is_null($event))
                 $event = SummitEventFactory::build($event_type, $summit);
@@ -769,6 +770,9 @@ final class SummitService extends AbstractService implements ISummitService
 
             if (isset($data['title']))
                 $event->setTitle(html_entity_decode(trim($data['title'])));
+
+            if (isset($data['level']) && !is_null($event_type) && $event_type->isAllowsLevel())
+                $event->setLevel($data['level']);
 
             if (isset($data['description']))
                 $event->setAbstract(html_entity_decode(trim($data['description'])));
@@ -916,9 +920,6 @@ final class SummitService extends AbstractService implements ISummitService
         // main data
         if (isset($data['attendees_expected_learnt']))
             $event->setAttendeesExpectedLearnt(html_entity_decode($data['attendees_expected_learnt']));
-
-        if (isset($data['level']))
-            $event->setLevel($data['level']);
 
         $event->setAttendingMedia(isset($data['attending_media']) ?
             filter_var($data['attending_media'], FILTER_VALIDATE_BOOLEAN) : 0);
@@ -2865,6 +2866,9 @@ final class SummitService extends AbstractService implements ISummitService
                         $event->setAbstract(html_entity_decode($abstract));
                     }
 
+                    if (isset($row['level']))
+                        $event->setLevel($row['level']);
+
                     if (isset($row['social_summary']))
                         $event->setSocialSummary($row['social_summary']);
 
@@ -2949,9 +2953,6 @@ final class SummitService extends AbstractService implements ISummitService
 
                         if (isset($row['attendees_expected_learnt']))
                             $event->setAttendeesExpectedLearnt($row['attendees_expected_learnt']);
-
-                        if (isset($row['level']))
-                            $event->setLevel($row['level']);
 
                         if (isset($row['problem_addressed']))
                             $event->setProblemAddressed($row['problem_addressed']);

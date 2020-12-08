@@ -11,9 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use Doctrine\Common\Collections\ArrayCollection;
-use models\summit\SummitEventType;
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * Class PresentationType
@@ -94,9 +92,10 @@ class PresentationType extends SummitEventType
      * @param string $type
      * @return bool
      */
-    public static function IsPresentationEventType(Summit $summit, $type){
+    public static function IsPresentationEventType(Summit $summit, $type)
+    {
 
-        try{
+        try {
             $sql = <<<SQL
             SELECT COUNT(DISTINCT(PresentationType.ID))
             FROM PresentationType
@@ -107,9 +106,8 @@ SQL;
             $stmt = self::prepareRawSQLStatic($sql);
             $stmt->execute(['summit_id' => $summit->getId(), 'type' => $type]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-            return count($res) > 0 ;
-        }
-        catch (\Exception $ex){
+            return count($res) > 0;
+        } catch (\Exception $ex) {
 
         }
         return false;
@@ -118,7 +116,8 @@ SQL;
     /**
      * @return array()
      */
-    static public function presentationTypes(){
+    static public function presentationTypes()
+    {
         return [IPresentationType::Presentation, IPresentationType::Keynotes, IPresentationType::LightingTalks, IPresentationType::Panel];
     }
 
@@ -202,7 +201,8 @@ SQL;
         return $this->moderator_label;
     }
 
-    public function getClassName(){
+    public function getClassName()
+    {
         return 'PresentationType';
     }
 
@@ -291,11 +291,12 @@ SQL;
     public function __construct()
     {
         parent::__construct();
-        $this->are_speakers_mandatory     = false;
-        $this->use_speakers               = false;
-        $this->use_moderator              = false;
-        $this->is_moderator_mandatory     = false;
+        $this->are_speakers_mandatory = false;
+        $this->use_speakers = false;
+        $this->use_moderator = false;
+        $this->is_moderator_mandatory = false;
         $this->should_be_available_on_cfp = false;
+        $this->allows_level = true;
         $this->allowed_media_upload_types = new ArrayCollection();
         $this->max_moderators = 0;
         $this->max_speakers = 0;
@@ -303,21 +304,25 @@ SQL;
         $this->min_speakers = 0;
     }
 
-    public function addAllowedMediaUploadType(SummitMediaUploadType $type){
-        if($this->allowed_media_upload_types->contains($type)) return;
+    public function addAllowedMediaUploadType(SummitMediaUploadType $type)
+    {
+        if ($this->allowed_media_upload_types->contains($type)) return;
         $this->allowed_media_upload_types->add($type);
     }
 
-    public function removeAllowedMediaUploadType(SummitMediaUploadType $type){
-        if(!$this->allowed_media_upload_types->contains($type)) return;
+    public function removeAllowedMediaUploadType(SummitMediaUploadType $type)
+    {
+        if (!$this->allowed_media_upload_types->contains($type)) return;
         $this->allowed_media_upload_types->removeElement($type);
     }
 
-    public function clearAllowedMediaUploadType(){
+    public function clearAllowedMediaUploadType()
+    {
         $this->allowed_media_upload_types->clear();
     }
 
-    public function getAllowedMediaUploadTypes(){
+    public function getAllowedMediaUploadTypes()
+    {
         return $this->allowed_media_upload_types;
     }
 }

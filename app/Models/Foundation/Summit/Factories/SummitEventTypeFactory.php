@@ -123,6 +123,9 @@ final class SummitEventTypeFactory
         if(isset($data['is_default']))
             $event_type->setIsDefault(boolval($data['is_default']));
 
+        if(isset($data['allows_level']))
+            $event_type->setAllowsLevel(boolval($data['allows_level']));
+
         $summit->addEventType($event_type);
         return $event_type;
     }

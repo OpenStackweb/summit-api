@@ -69,6 +69,12 @@ class SummitEventType extends SilverstripeBaseModel
     protected $allows_attachment;
 
     /**
+     * @ORM\Column(name="AllowsLevel", type="boolean")
+     * @var bool
+     */
+    protected $allows_level;
+
+    /**
      * @ORM\Column(name="IsDefault", type="boolean")
      * @var bool
      */
@@ -234,6 +240,7 @@ class SummitEventType extends SilverstripeBaseModel
         $this->are_sponsors_mandatory = false;
         $this->allows_attachment      = false;
         $this->is_private             = false;
+        $this->allows_level           = false;
         $this->summit_documents       = new ArrayCollection();
     }
 
@@ -316,4 +323,21 @@ SQL;
     public function clearSummitDocuments(){
         $this->summit_documents->clear();
     }
+
+    /**
+     * @return bool
+     */
+    public function isAllowsLevel(): bool
+    {
+        return $this->allows_level;
+    }
+
+    /**
+     * @param bool $allows_level
+     */
+    public function setAllowsLevel(bool $allows_level): void
+    {
+        $this->allows_level = $allows_level;
+    }
+
 }

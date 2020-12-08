@@ -80,6 +80,12 @@ class SummitEvent extends SilverstripeBaseModel
     protected $occupancy;
 
     /**
+     * @ORM\Column(name="Level", type="string")
+     * @var string
+     */
+    protected $level;
+
+    /**
      * @ORM\Column(name="StartDate", type="datetime")
      * @var \DateTime
      */
@@ -1281,6 +1287,25 @@ class SummitEvent extends SilverstripeBaseModel
     public function setMuxPlaybackId(string $mux_playback_id): void
     {
         $this->mux_playback_id = $mux_playback_id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLevel()
+    {
+        return $this->level;
+    }
+
+    /**
+     * @param string $level
+     * @throws ValidationException
+     */
+    public function setLevel(string $level):void
+    {
+        if(!in_array($level, ISummitEventLevel::ValidLevels))
+            throw new ValidationException(sprintf("Level %s is invalid.", $level));
+        $this->level = $level;
     }
 
 }

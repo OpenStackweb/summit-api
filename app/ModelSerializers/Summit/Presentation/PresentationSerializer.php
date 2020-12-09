@@ -20,8 +20,6 @@ use models\summit\Presentation;
 class PresentationSerializer extends SummitEventSerializer
 {
     protected static $array_mappings = [
-
-        'Level'                   => 'level',
         'CreatorId'               => 'creator_id:json_int',
         'ModeratorId'             => 'moderator_speaker_id:json_int',
         'SelectionPlanId'         => 'selection_plan_id:json_int',
@@ -40,7 +38,6 @@ class PresentationSerializer extends SummitEventSerializer
         'creator_id',
         'moderator_speaker_id',
         'selection_plan_id',
-        'level',
         'problem_addressed',
         'attendees_expected_learnt',
         'to_record',

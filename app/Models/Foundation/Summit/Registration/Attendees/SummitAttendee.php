@@ -478,7 +478,7 @@ class SummitAttendee extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function hasDisclaimerAccepted():bool{
+    public function isDisclaimerAccepted():bool{
         return !is_null($this->disclaimer_accepted_date);
     }
 
@@ -592,7 +592,7 @@ class SummitAttendee extends SilverstripeBaseModel
         $is_disclaimer_mandatory = $this->summit->isRegistrationDisclaimerMandatory();
 
         // mandatory fields
-        if($is_disclaimer_mandatory && !$this->hasDisclaimerAccepted()){
+        if($is_disclaimer_mandatory && !$this->isDisclaimerAccepted()){
             $this->status = self::StatusIncomplete;
             Log::debug(sprintf("SummitAttendee::updateStatus StatusIncomplete for attendee %s (disclaimer mandatory)", $this->id));
             return $this->status;

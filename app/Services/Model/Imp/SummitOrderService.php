@@ -347,7 +347,7 @@ final class ReserveOrderTask extends AbstractTask
                         ],
                         $this->member_repository->getByEmail($attendee_email)
                     );
-
+                    $attendee->updateStatus();
                     $local_attendees[$attendee_email] = $attendee;
                     $ticket->setOwner($attendee);
                 }
@@ -1188,7 +1188,7 @@ final class SummitOrderService
 
             $ticket->generateQRCode();
             $ticket->generateHash();
-
+            $attendee->updateStatus();
             $attendee->sendInvitationEmail($ticket);
 
             return $ticket;
@@ -2505,7 +2505,7 @@ final class SummitOrderService
 
             // update it
             SummitAttendeeFactory::populate($summit, $attendee, $reduced_payload);
-
+            $attendee->updateStatus();
             $attendee->sendInvitationEmail($ticket);
 
             return $ticket;
@@ -2568,11 +2568,11 @@ final class SummitOrderService
                 }
             }
 
-            // update it
-            SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
-
-            if (is_null($attendee)) {
+            if(!is_null($attendee)) {
+                // update it
+                SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
                 $attendee->addTicket($ticket);
+                $attendee->updateStatus();
                 $attendee->sendInvitationEmail($ticket);
             }
 
@@ -2661,10 +2661,10 @@ final class SummitOrderService
                     }
                 }
 
-                // update it
-                SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
-
-                if (is_null($attendee)) {
+                if(!is_null($attendee)) {
+                    // update it
+                    SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
+                    $attendee->updateStatus();
                     $attendee->addTicket($ticket);
                     $attendee->sendInvitationEmail($ticket);
                 }

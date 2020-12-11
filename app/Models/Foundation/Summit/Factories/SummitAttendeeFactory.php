@@ -94,7 +94,7 @@ final class SummitAttendeeFactory
 
         if (isset($payload['disclaimer_accepted']) && !empty($payload['disclaimer_accepted'])) {
             $disclaimer_accepted = boolval($payload['disclaimer_accepted']);
-            if ($disclaimer_accepted && !$attendee->hasDisclaimerAccepted()) {
+            if ($disclaimer_accepted && !$attendee->isDisclaimerAccepted()) {
                 $attendee->setDisclaimerAcceptedDate
                 (
                     new \DateTime('now', new \DateTimeZone('UTC'))

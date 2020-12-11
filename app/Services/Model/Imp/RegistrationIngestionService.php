@@ -311,7 +311,7 @@ final class RegistrationIngestionService
                         if ($refunded) {
                             $ticket->setRefunded();
                         }
-
+                        $attendee->updateStatus();
                         $order->addTicket($ticket);
                         $ticket->generateQRCode();
                         $ticket->generateHash();

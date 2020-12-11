@@ -30,6 +30,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
         'Email'                   => 'email:json_string',
         'CompanyName'             => 'company:json_string',
         'DisclaimerAcceptedDate'  => 'disclaimer_accepted_date:datetime_epoch',
+        'DisclaimerAccepted'      => 'disclaimer_accepted:json_boolean',
         'Status'                  => 'status:json_string',
     ];
 

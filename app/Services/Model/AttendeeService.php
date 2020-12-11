@@ -359,12 +359,12 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             $attendee->sendRevocationTicketEmail($ticket);
 
             $attendee->removeTicket($ticket);
-
+            $attendee->updateStatus();
             $new_owner->addTicket($ticket);
 
             $ticket->generateQRCode();
             $ticket->generateHash();
-
+            $new_owner->updateStatus();
             $new_owner->sendInvitationEmail($ticket);
 
             return $ticket;

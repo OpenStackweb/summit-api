@@ -80,14 +80,17 @@ final class SummitAttendeeFactory
         if (isset($payload['shared_contact_info']))
             $attendee->setShareContactInfo(boolval($payload['shared_contact_info']));
 
-        if (isset($payload['summit_hall_checked_in']))
+        if (isset($payload['summit_hall_checked_in']) && !empty($payload['summit_hall_checked_in'])) {
+            $summit_hall_checked_in = boolval($payload['summit_hall_checked_in']);
             $attendee->setSummitHallCheckedIn(boolval($payload['summit_hall_checked_in']));
 
-        if (isset($payload['summit_hall_checked_in_date']) && !empty($payload['summit_hall_checked_in_date']))
-            $attendee->setSummitHallCheckedInDate
-            (
-                new \DateTime(intval($payload['summit_hall_checked_in_date']))
-            );
+            if ($summit_hall_checked_in && !$attendee->hasCheckedIn()) {
+                $attendee->setSummitHallCheckedIn
+                (
+                    $summit_hall_checked_in
+                );
+            }
+        }
 
         if (isset($payload['disclaimer_accepted']) && !empty($payload['disclaimer_accepted'])) {
             $disclaimer_accepted = boolval($payload['disclaimer_accepted']);

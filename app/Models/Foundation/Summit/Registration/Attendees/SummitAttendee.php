@@ -152,6 +152,11 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     public function setSummitHallCheckedIn($summit_hall_checked_in){
         $this->summit_hall_checked_in = $summit_hall_checked_in;
+        $this->summit_hall_checked_in_date =   new \DateTime('now', new \DateTimeZone('UTC'));
+    }
+
+    public function hasCheckedIn():bool{
+        return (bool)$this->summit_hall_checked_in;
     }
 
     /**

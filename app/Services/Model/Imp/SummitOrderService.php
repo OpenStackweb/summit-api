@@ -2284,9 +2284,8 @@ final class SummitOrderService
 
             // do checkin on print
             $attendee = $ticket->getOwner();
-            if (!$attendee->getSummitHallCheckedIn()) {
+            if (!$attendee->hasCheckedIn()) {
                 $attendee->setSummitHallCheckedIn(true);
-                $attendee->setSummitHallCheckedInDate(new \DateTime('now', new \DateTimeZone('UTC')));
             }
             return $badge;
         });

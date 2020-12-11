@@ -507,7 +507,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             $rules = [
                 'shared_contact_info' => 'sometimes|boolean',
                 'summit_hall_checked_in' => 'sometimes|boolean',
-                'summit_hall_checked_in_date' => 'sometimes|date_format:U',
+                'disclaimer_accepted' => 'sometimes|boolean',
                 'first_name' => 'required_without:member_id|string|max:255',
                 'surname' => 'required_without:member_id|string|max:255',
                 'admin_notes' => 'sometimes|string|max:1024',
@@ -596,8 +596,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             $rules = [
                 'shared_contact_info' => 'sometimes|boolean',
                 'summit_hall_checked_in' => 'sometimes|boolean',
-                'summit_hall_checked_in_date' => 'sometimes|date_format:U',
-                'disclaimer_accepted_date' => 'sometimes|date_format:U',
+                'disclaimer_accepted' => 'sometimes|boolean',
                 'first_name' => 'required_without:member_id|string|max:255',
                 'surname' => 'required_without:member_id|string|max:255',
                 'company' => 'sometimes|string|max:255',

@@ -1210,10 +1210,10 @@ Route::group([
 
     // sponsorship-types
     Route::group(['prefix' => 'sponsorship-types'], function () {
-        Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SponsorshipTypeApiController@getAll']);
+        Route::get('', ['uses' => 'OAuth2SponsorshipTypeApiController@getAll']);
         Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SponsorshipTypeApiController@add']);
         Route::group(['prefix' => '{id}'], function () {
-            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SponsorshipTypeApiController@get']);
+            Route::get('', ['uses' => 'OAuth2SponsorshipTypeApiController@get']);
             Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SponsorshipTypeApiController@update']);
             Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SponsorshipTypeApiController@delete']);
         });

@@ -155,4 +155,11 @@ class ApiScope extends ResourceServerEntity implements IApiScope
      * @var bool
      */
     private $default;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->active = false;
+        $this->default = false;
+    }
 }

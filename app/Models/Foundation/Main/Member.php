@@ -30,7 +30,6 @@ use models\summit\PresentationSpeaker;
 use models\summit\RSVP;
 use models\summit\Sponsor;
 use models\summit\Summit;
-use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitEvent;
 use models\summit\SummitEventFeedback;
@@ -40,7 +39,6 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 
 /**
- * @ORM\Entity
  * @ORM\Table(name="`Member`")
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineMemberRepository")
  * Class Member
@@ -96,6 +94,12 @@ class Member extends SilverstripeBaseModel
      * @var Affiliation[]
      */
     private $affiliations;
+
+    /**
+     * @ORM\OneToMany(targetEntity="LegalAgreement", mappedBy="owner", cascade={"persist"}, orphanRemoval=true)
+     * @var LegalAgreement[]
+     */
+    protected $legal_agreements;
 
     /**
      * @ORM\Column(name="Active", type="boolean")
@@ -169,6 +173,12 @@ class Member extends SilverstripeBaseModel
      * @var int|null
      */
     private $user_external_id;
+
+    /**
+     * @var \DateTime
+     * @ORM\Column(name="ResignDate", type="datetime")
+     */
+    protected $resign_date;
 
     /**
      * @ORM\ManyToOne(targetEntity="models\main\File")
@@ -313,6 +323,7 @@ class Member extends SilverstripeBaseModel
         $this->schedule_shareable_links = new ArrayCollection();
         $this->summit_permission_groups = new ArrayCollection();
         $this->summit_attendance_metrics = new ArrayCollection();
+        $this->legal_agreements = new ArrayCollection();
     }
 
     /**
@@ -321,6 +332,13 @@ class Member extends SilverstripeBaseModel
     public function getAffiliations()
     {
         return $this->affiliations;
+    }
+
+    /**
+     * @return ArrayCollection|LegalAgreement[]
+     */
+    public function getLegalAgreements(){
+        return $this->legal_agreements;
     }
 
     /**
@@ -1807,5 +1825,41 @@ SQL;
         $this->external_pic = $external_pic;
     }
 
+
+    public function resignFoundationMembership(){
+        // Remove member from Foundation group
+        foreach ($this->groups as $g) {
+            if ($g->getCode() === IGroup::FoundationMembers) {
+                $this->removeFromGroup($g);
+                break;
+            }
+        }
+
+        // Remove Member's Legal Agreements
+        $this->legal_agreements->clear();
+        $this->membership_type = self::MembershipTypeCommunity;
+        $this->resign_date     = new \DateTime('now', new \DateTimeZone(self::DefaultTimeZone));
+    }
+
+    public function signFoundationMembership()
+    {
+        if (!$this->isFoundationMember()) {
+            // Set up member with legal agreement for becoming an OpenStack Foundation Member
+            $legalAgreement = new LegalAgreement();
+            $legalAgreement->setOwner($this);
+            $documentId = LegalAgreement::getLegalAgreementIDBySlug(LegalAgreement::Slug);
+            if(is_null($documentId))
+                throw new ValidationException(sprintf("LegalAgreement %s does not exists.", LegalAgreement::Slug));
+            $legalAgreement->setDocumentId($documentId);
+            $this->legal_agreements->add($legalAgreement);
+            $this->membership_type = self::MembershipTypeFoundation;
+            $this->resign_date  = null;
+        }
+    }
+
+    public function isFoundationMember()
+    {
+        return $this->belongsToGroup(IGroup::FoundationMembers) && $this->legal_agreements->count() > 0;
+    }
 
 }

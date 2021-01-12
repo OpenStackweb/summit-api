@@ -5443,6 +5443,19 @@ class ApiEndpointsSeeder extends Seeder
                     'http_method' => 'GET',
                     'scopes'      => [sprintf('%s/members/read/me', $current_realm)],
                ],
+               // my membership
+                [
+                    'name'        => 'sign-foundation-membership',
+                    'route'       => '/api/v1/members/me/membership/foundation',
+                    'http_method' => 'PUT',
+                    'scopes' => [sprintf(MemberScopes::WriteMyMemberData, $current_realm)],
+                ],
+                [
+                    'name'        => 'resign-foundation-membership',
+                    'route'       => '/api/v1/members/me/membership/community',
+                    'http_method' => 'PUT',
+                    'scopes' => [sprintf(MemberScopes::WriteMyMemberData, $current_realm)],
+                ],
                // my member affiliations
                 [
                     'name'        => 'get-my-member-affiliations',

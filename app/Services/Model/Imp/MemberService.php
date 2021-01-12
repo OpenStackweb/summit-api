@@ -493,4 +493,44 @@ final class MemberService
         $last_name
       );
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function signFoundationMembership(Member $member): Member
+    {
+        return $this->tx_service->transaction(function() use($member){
+            if($member->isFoundationMember())
+                throw new ValidationException(sprintf("Member %s is already a foundation member", $member->getId()));
+            $group = $this->group_repository->getBySlug(IGroup::FoundationMembers);
+            if(is_null($group))
+                throw new EntityNotFoundException(sprintf("Group %s not found", IGroup::FoundationMembers));
+
+            $member->add2Group($group);
+            $member->signFoundationMembership();
+
+            return $member;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function resignFoundationMembership(Member $member): Member
+    {
+        return $this->tx_service->transaction(function() use($member){
+            if(!$member->isFoundationMember())
+                throw new ValidationException(sprintf("Member %s is not a foundation member", $member->getId()));
+
+            $member->resignFoundationMembership();
+
+            $group = $this->group_repository->getBySlug(IGroup::CommunityMembers);
+            if(is_null($group))
+                throw new EntityNotFoundException(sprintf("Group %s not found", IGroup::CommunityMembers));
+
+            $member->add2Group($group);
+
+            return $member;
+        });
+    }
 }

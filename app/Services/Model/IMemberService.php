@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use models\exceptions\EntityNotFoundException;
+use models\exceptions\ValidationException;
 use models\main\Affiliation;
 use models\main\Member;
 /**
@@ -86,4 +89,20 @@ interface IMemberService
      * @throws \Exception
      */
     public function emitRegistrationRequest(string $email, string $first_name, string $last_name):array;
+
+    /**
+     * @param Member $member
+     * @return Member
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function signFoundationMembership(Member $member):Member;
+
+    /**
+     * @param Member $member
+     * @return Member
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function resignFoundationMembership(Member $member):Member;
 }

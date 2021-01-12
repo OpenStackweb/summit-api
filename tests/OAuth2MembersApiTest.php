@@ -14,6 +14,19 @@
  **/
 final class OAuth2MembersApiTest extends ProtectedApiTest
 {
+    use InsertSummitTestData;
+
+    protected function setUp()
+    {
+        parent::setUp();
+        self::insertTestData();
+    }
+
+    public function tearDown()
+    {
+        self::clearTestData();
+        Mockery::close();
+    }
 
     public function testGetMembers()
     {
@@ -352,21 +365,6 @@ final class OAuth2MembersApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
     }
 
-
-    use InsertSummitTestData;
-
-    protected function setUp()
-    {
-        parent::setUp();
-        self::insertTestData();
-    }
-
-    public function tearDown()
-    {
-        self::clearTestData();
-        Mockery::close();
-    }
-
     public function testGetAllSummitPermissions(){
         self::$member2->addSummitEditPermission(self::$summit);
         self::$member2->addSummitEditPermission(self::$summit2);
@@ -390,5 +388,77 @@ final class OAuth2MembersApiTest extends ProtectedApiTest
         $pemissions = json_decode($content);
         $this->assertTrue(!is_null($pemissions));
         $this->assertResponseStatus(200);
+    }
+
+    public function testSignFoundationMembership(){
+        $params = [
+            'member_id'      => 'me',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2MembersApiController@signFoundationMembership",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $member = json_decode($content);
+        $this->assertTrue(!is_null($member));
+        return $member;
+    }
+
+    public function testSignResignFoundationMembership(){
+        $params = [
+            'member_id'      => 'me',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2MembersApiController@signFoundationMembership",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $member = json_decode($content);
+        $this->assertTrue(!is_null($member));
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2MembersApiController@resignFoundationMembership",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $member = json_decode($content);
+        $this->assertTrue(!is_null($member));
+        return $member;
     }
 }

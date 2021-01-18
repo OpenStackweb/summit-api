@@ -5451,9 +5451,15 @@ class ApiEndpointsSeeder extends Seeder
                     'scopes' => [sprintf(MemberScopes::WriteMyMemberData, $current_realm)],
                 ],
                 [
-                    'name'        => 'resign-foundation-membership',
+                    'name'        => 'sign-community-membership',
                     'route'       => '/api/v1/members/me/membership/community',
                     'http_method' => 'PUT',
+                    'scopes' => [sprintf(MemberScopes::WriteMyMemberData, $current_realm)],
+                ],
+                [
+                    'name'        => 'resign-membership',
+                    'route'       => '/api/v1/members/me/membership/resign',
+                    'http_method' => 'DELETE',
                     'scopes' => [sprintf(MemberScopes::WriteMyMemberData, $current_realm)],
                 ],
                // my member affiliations

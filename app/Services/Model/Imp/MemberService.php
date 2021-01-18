@@ -16,6 +16,8 @@ use App\Events\NewMember;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Main\Repositories\ILegalDocumentRepository;
 use App\Services\Apis\IExternalUserApi;
+use App\Services\Model\dto\ExternalUserDTO;
+use DateTime;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ICacheService;
@@ -29,7 +31,6 @@ use models\main\IMemberRepository;
 use models\main\IOrganizationRepository;
 use models\main\LegalAgreement;
 use models\main\Member;
-use DateTime;
 use models\main\Organization;
 use models\summit\ISpeakerRegistrationRequestRepository;
 
@@ -268,23 +269,32 @@ final class MemberService
     }
 
     /**
-     * @param $user_external_id
-     * @param string $email
-     * @param string $first_name
-     * @param string $last_name
+     * @param ExternalUserDTO $userDTO
      * @return Member
+     * @throws \Exception
      */
-    public function registerExternalUser($user_external_id, string $email, string $first_name, string $last_name): Member
+    public function registerExternalUser(ExternalUserDTO $userDTO): Member
     {
-        return $this->tx_service->transaction(function () use ($user_external_id, $email, $first_name, $last_name) {
-            Log::debug(sprintf("MemberService::registerExternalUser - user_external_id %s email %s first_name %s last_name %s", $user_external_id, $email, $first_name, $last_name));
+        return $this->tx_service->transaction(function () use ($userDTO) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "MemberService::registerExternalUser - user_external_id %s email %s first_name %s last_name %s",
+                    $userDTO->getId(),
+                    $userDTO->getEmail(),
+                    $userDTO->getFirstName(),
+                    $userDTO->getLastName()
+                )
+            );
+
             $member = new Member();
-            $member->setActive(true);
-            $member->setEmailVerified(true);
-            $member->setEmail($email);
-            $member->setFirstName($first_name);
-            $member->setLastName($last_name);
-            $member->setUserExternalId($user_external_id);
+            $member->setActive($userDTO->isActive());
+            $member->setEmailVerified( $userDTO->isEmailVerified());
+            $member->setEmail($userDTO->getEmail());
+            $member->setFirstName( $userDTO->getFirstName());
+            $member->setLastName($userDTO->getLastName());
+            $member->setUserExternalId($userDTO->getId());
             $this->member_repository->add($member, true);
             Event::fire(new NewMember($member->getId()));
             return $member;
@@ -299,6 +309,7 @@ final class MemberService
     public function registerExternalUserById($user_external_id): Member
     {
         return $this->tx_service->transaction(function () use ($user_external_id) {
+            // get external user from IDP
             $user_data = $this->user_ext_api->getUserById($user_external_id);
             $email = trim($user_data['email']);
             // first by external id due email could be updated
@@ -313,8 +324,8 @@ final class MemberService
             if(is_null($member)) {
                 Log::debug(sprintf("MemberService::registerExternalUserById %s does not exists , creating it ...", $email));
                 $member = new Member();
-                $member->setActive(true);
-                $member->setEmailVerified(true);
+                $member->setActive(boolval($user_data['active']));
+                $member->setEmailVerified(boolval($user_data['email_verified']));
                 $member->setEmail($email);
                 $member->setFirstName(trim($user_data['first_name']));
                 $member->setLastName(trim($user_data['last_name']));
@@ -327,7 +338,8 @@ final class MemberService
             }
             else {
                 Log::debug(sprintf("MemberService::registerExternalUserById %s already exists", $email));
-                $member->setEmailVerified(true);
+                $member->setActive(boolval($user_data['active']));
+                $member->setEmailVerified(boolval($user_data['email_verified']));
                 $member->setEmail($email);
                 $member->setFirstName(trim($user_data['first_name']));
                 $member->setLastName(trim($user_data['last_name']));
@@ -529,7 +541,7 @@ final class MemberService
     /**
      * @inheritDoc
      */
-    public function resignFoundationMembership(Member $member): Member
+    public function signCommunityMembership(Member $member): Member
     {
         return $this->tx_service->transaction(function() use($member){
             if(!$member->isFoundationMember())
@@ -544,6 +556,20 @@ final class MemberService
             $member->add2Group($group);
 
             return $member;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function resignMembership(Member $member)
+    {
+        return $this->tx_service->transaction(function() use($member){
+
+            $member->resignMembership();
+
+            $this->member_repository->delete($member);
+
         });
     }
 }

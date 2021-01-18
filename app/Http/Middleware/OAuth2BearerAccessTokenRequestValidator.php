@@ -1,5 +1,4 @@
 <?php namespace App\Http\Middleware;
-
 /**
  * Copyright 2015 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,9 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use App\Models\ResourceServer\IAccessTokenService;
+use App\Models\ResourceServer\IApiEndpointRepository;
 use Closure;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Response;
@@ -25,8 +24,6 @@ use libs\oauth2\OAuth2ResourceServerException;
 use libs\oauth2\OAuth2WWWAuthenticateErrorResponse;
 use libs\utils\RequestUtils;
 use models\oauth2\IResourceServerContext;
-use App\Models\ResourceServer\IAccessTokenService;
-use App\Models\ResourceServer\IApiEndpointRepository;
 use URL\Normalizer;
 
 /**
@@ -203,6 +200,7 @@ class OAuth2BearerAccessTokenRequestValidator
                 $context['user_external_id'] = $token_info->getUserExternalId();
                 $context['user_identifier']  = $token_info->getUserIdentifier();
                 $context['user_email']       = $token_info->getUserEmail();
+                $context['user_email_verified'] = $token_info->isUserEmailVerified();
                 $context['user_first_name']  = $token_info->getUserFirstName();
                 $context['user_last_name']   = $token_info->getUserLastName();
                 $context['user_groups']      = $token_info->getUserGroups();

@@ -11,16 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use libs\oauth2\InvalidGrantTypeException;
 use libs\oauth2\OAuth2InvalidIntrospectionResponse;
 use libs\oauth2\OAuth2Protocol;
 use libs\utils\ConfigurationException;
 use libs\utils\ICacheService;
 use models\oauth2\AccessToken;
-use Illuminate\Support\Facades\Log;
+
 /**
  * Class AccessTokenService
  * @package App\Models\ResourceServer
@@ -44,6 +46,7 @@ final class AccessTokenService implements IAccessTokenService
         'user_first_name',
         'user_last_name',
         'user_groups',
+        'user_email_verified',
     ];
 
     /**
@@ -147,6 +150,10 @@ final class AccessTokenService implements IAccessTokenService
 
         if(!array_key_exists("user_email" , $token_info)){
             $token_info['user_email'] = null;
+        }
+
+        if(!array_key_exists("user_email_verified" , $token_info)){
+            $token_info['user_email_verified'] = false;
         }
 
         if(!array_key_exists("user_first_name" , $token_info)){

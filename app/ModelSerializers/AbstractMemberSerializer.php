@@ -36,6 +36,7 @@ class AbstractMemberSerializer extends SilverStripeSerializer
         'Active'          => 'active:json_boolean',
         'EmailVerified'   => 'email_verified:json_boolean',
         'ProfilePhotoUrl' => 'pic:json_url',
+        'MembershipType' => 'membership_type:json_string',
     ];
 
     protected static $allowed_relations = [

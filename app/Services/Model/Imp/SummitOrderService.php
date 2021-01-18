@@ -26,6 +26,7 @@ use App\Models\Foundation\Summit\Factories\SummitOrderFactory;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRuleRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
+use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Utils\CSVReader;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
@@ -1310,10 +1311,15 @@ final class SummitOrderService
                 // we have an user on idp
                 $member = $this->member_service->registerExternalUser
                 (
-                    $user['id'],
-                    $user['email'],
-                    $user['first_name'],
-                    $user['last_name']
+                    new ExternalUserDTO
+                    (
+                        $user['id'],
+                        $user['email'],
+                        $user['first_name'],
+                        $user['last_name'],
+                        boolval($user['active']),
+                        boolval($user['email_verified'])
+                    )
                 );
 
                 // add the order to newly created member
@@ -3334,10 +3340,15 @@ final class SummitOrderService
                 // we have an user on idp
                 $member = $this->member_service->registerExternalUser
                 (
-                    $user['id'],
-                    $user['email'],
-                    $user['first_name'],
-                    $user['last_name']
+                     new ExternalUserDTO
+                     (
+                         $user['id'],
+                         $user['email'],
+                         $user['first_name'],
+                         $user['last_name'],
+                         boolval($user['active']),
+                         boolval($user['email_verified'])
+                     )
                 );
                 // add the order to newly created member
                 $member->addSummitRegistrationOrder($order);

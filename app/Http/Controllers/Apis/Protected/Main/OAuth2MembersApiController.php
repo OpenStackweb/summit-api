@@ -493,20 +493,50 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
      * @param $member_id
      * @return mixed
      */
-    public function resignFoundationMembership(){
+    public function signCommunityMembership(){
         try{
 
             $member = $this->resource_server_context->getCurrentUser();
 
             if(is_null($member)) return $this->error404();
 
-            $member = $this->member_service->resignFoundationMembership($member);
+            $member = $this->member_service->signCommunityMembership($member);
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer
             (
                 $member,
                 SerializerRegistry::SerializerType_Private
             )->serialize());
+        }
+        catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message'=> $ex2->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $member_id
+     * @return mixed
+     */
+    public function resignMembership(){
+        try{
+
+            $member = $this->resource_server_context->getCurrentUser();
+
+            if(is_null($member)) return $this->error404();
+
+            $this->member_service->resignMembership($member);
+
+            return $this->deleted();
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);

@@ -18,6 +18,7 @@ use App\Models\Foundation\Summit\Factories\SummitRegistrationInvitationFactory;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\Services\Apis\IExternalUserApi;
 use App\Services\Model\AbstractService;
+use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Model\IMemberService;
 use App\Services\Model\ISummitRegistrationInvitationService;
 use App\Services\Utils\CSVReader;
@@ -241,10 +242,15 @@ final class SummitRegistrationInvitationService
                     // we have an user on idp
                     $member = $this->member_service->registerExternalUser
                     (
-                        $user['id'],
-                        $user['email'],
-                        $user['first_name'],
-                        $user['last_name']
+                        new ExternalUserDTO
+                        (
+                            $user['id'],
+                            $user['email'],
+                            $user['first_name'],
+                            $user['last_name'],
+                            boolval($user['active']),
+                            boolval($user['email_verified'])
+                        )
                     );
                 }
             }

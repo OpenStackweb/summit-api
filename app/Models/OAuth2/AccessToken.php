@@ -65,6 +65,11 @@ final class AccessToken extends Token
     private $user_email;
 
     /**
+     * @var bool
+     */
+    private $user_email_verified;
+
+    /**
      * @var string|null
      */
     private $user_first_name;
@@ -95,6 +100,7 @@ final class AccessToken extends Token
         $instance->user_external_id    = self::getValueFromInfo('user_external_id', $token_info);
         $instance->user_identifier     = self::getValueFromInfo('user_identifier', $token_info);
         $instance->user_email          = self::getValueFromInfo('user_email', $token_info);
+        $instance->user_email_verified = boolval(self::getValueFromInfo('user_email_verified', $token_info));
         $instance->user_first_name     = self::getValueFromInfo('user_first_name', $token_info);
         $instance->user_last_name      = self::getValueFromInfo('user_last_name', $token_info);
         $instance->auth_code           = null;
@@ -198,4 +204,13 @@ final class AccessToken extends Token
     public function getUserGroups():array {
         return $this->user_groups;
     }
+
+    /**
+     * @return bool
+     */
+    public function isUserEmailVerified(): bool
+    {
+        return $this->user_email_verified;
+    }
+
 }

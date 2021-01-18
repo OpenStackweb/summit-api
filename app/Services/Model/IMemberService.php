@@ -12,10 +12,12 @@
  * limitations under the License.
  **/
 
+use App\Services\Model\dto\ExternalUserDTO;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Affiliation;
 use models\main\Member;
+
 /**
  * Interface IMemberService
  * @package App\Services\Model
@@ -53,13 +55,10 @@ interface IMemberService
     public function deleteRSVP(Member $member, $rsvp_id);
 
     /**
-     * @param $user_external_id
-     * @param string $email
-     * @param string $first_name
-     * @param string $last_name
+     * @param ExternalUserDTO $userDTO
      * @return Member
      */
-    public function registerExternalUser($user_external_id, string $email, string $first_name, string $last_name):Member;
+    public function registerExternalUser(ExternalUserDTO $userDTO):Member;
 
     /**
      * @param $user_external_id
@@ -104,5 +103,11 @@ interface IMemberService
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function resignFoundationMembership(Member $member):Member;
+    public function signCommunityMembership(Member $member):Member;
+
+    /**
+     * @param Member $member
+     * @return void
+     */
+    public function resignMembership(Member $member);
 }

@@ -1841,6 +1841,15 @@ SQL;
         $this->resign_date     = new \DateTime('now', new \DateTimeZone(self::DefaultTimeZone));
     }
 
+    public function resignMembership(){
+        // Remove Member's Legal Agreements
+        $this->legal_agreements->clear();
+        $this->affiliations->clear();
+        $this->groups->clear();
+        $this->membership_type = self::MembershipTypeNone;
+        $this->resign_date     = new \DateTime('now', new \DateTimeZone(self::DefaultTimeZone));
+    }
+
     public function signFoundationMembership(LegalDocument $document)
     {
         if (!$this->isFoundationMember()) {

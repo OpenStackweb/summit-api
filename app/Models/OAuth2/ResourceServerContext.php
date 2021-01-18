@@ -12,14 +12,14 @@
  * limitations under the License.
  **/
 
-use App\Models\Foundation\Main\IGroup;
+use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Model\IMemberService;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
-use models\main\Group;
 use models\main\IGroupRepository;
 use models\main\IMemberRepository;
 use models\main\Member;
+
 /**
  * Class ResourceServerContext
  * @package models\oauth2
@@ -186,6 +186,7 @@ final class ResourceServerContext implements IResourceServerContext
                     $user_first_name  = $this->getAuthContextVar('user_first_name');
                     $user_last_name   = $this->getAuthContextVar('user_last_name');
                     $user_email       = $this->getAuthContextVar('user_email');
+                    $user_email_verified = boolval($this->getAuthContextVar('user_email_verified'));
 
                     if(!empty($user_email))
                         $member->setEmail($user_email);
@@ -194,16 +195,18 @@ final class ResourceServerContext implements IResourceServerContext
                     if(!empty($user_last_name))
                         $member->setLastName($user_last_name);
 
+                    $member->setEmailVerified($user_email_verified);
                     return $synch_groups ? $this->checkGroups($member) : $member;
                 }
             }
 
             if(is_null($member)) {
                 // we assume that is new idp version and claims already exists on context
-                $user_external_id = $this->getAuthContextVar('user_id');
-                $user_first_name  = $this->getAuthContextVar('user_first_name');
-                $user_last_name   = $this->getAuthContextVar('user_last_name');
-                $user_email       = $this->getAuthContextVar('user_email');
+                $user_external_id    = $this->getAuthContextVar('user_id');
+                $user_first_name     = $this->getAuthContextVar('user_first_name');
+                $user_last_name      = $this->getAuthContextVar('user_last_name');
+                $user_email          = $this->getAuthContextVar('user_email');
+                $user_email_verified = boolval($this->getAuthContextVar('user_email_verified'));
                 // at last resort try to get by email
                 Log::debug(sprintf("ResourceServerContext::getCurrentUser getting user by email %s", $user_email));
                 $member = $this->member_repository->getByEmail($user_email);
@@ -223,10 +226,15 @@ final class ResourceServerContext implements IResourceServerContext
 
                     $member = $this->member_service->registerExternalUser
                     (
-                        $user_external_id,
-                        $user_email,
-                        $user_first_name,
-                        $user_last_name
+                        new ExternalUserDTO
+                        (
+                            $user_external_id,
+                            $user_email,
+                            $user_first_name,
+                            $user_last_name,
+                            true,
+                            $user_email_verified
+                        )
                     );
                 }
 
@@ -237,6 +245,7 @@ final class ResourceServerContext implements IResourceServerContext
                 if(!empty($user_last_name))
                     $member->setLastName($user_last_name);
 
+                $member->setEmailVerified(boolval($user_email_verified));
                 $member->setUserExternalId($user_external_id);
 
             }

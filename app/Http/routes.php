@@ -43,7 +43,8 @@ Route::group([
 
             Route::group(['prefix' => 'membership'], function(){
                 Route::put('foundation',  ['uses' => 'OAuth2MembersApiController@signFoundationMembership']);
-                Route::put('community',  ['uses' => 'OAuth2MembersApiController@resignFoundationMembership']);
+                Route::put('community',  ['uses' => 'OAuth2MembersApiController@signCommunityMembership']);
+                Route::delete('resign',  ['uses' => 'OAuth2MembersApiController@resignMembership']);
             });
         });
 

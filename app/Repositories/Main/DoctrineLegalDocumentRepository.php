@@ -40,7 +40,7 @@ SQL;
             ]);
             $res = $stmt->fetchAll();
             if(count($res) == 0 ) return null;
-            new LegalDocument(
+            return new LegalDocument(
                 $res[0]['ID'],
                 trim($res[0]['Title']),
                 trim($res[0]['URLSegment']),
@@ -70,7 +70,7 @@ SQL;
             ]);
             $res = $stmt->fetchAll();
             if(count($res) == 0 ) return null;
-            new LegalDocument(
+            return new LegalDocument(
                 $res[0]['ID'],
                 trim($res[0]['Title']),
                 trim($res[0]['URLSegment']),

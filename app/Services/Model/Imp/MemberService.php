@@ -14,6 +14,7 @@
 
 use App\Events\NewMember;
 use App\Models\Foundation\Main\IGroup;
+use App\Models\Foundation\Main\Repositories\ILegalDocumentRepository;
 use App\Services\Apis\IExternalUserApi;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
@@ -26,6 +27,7 @@ use models\main\Group;
 use models\main\IGroupRepository;
 use models\main\IMemberRepository;
 use models\main\IOrganizationRepository;
+use models\main\LegalAgreement;
 use models\main\Member;
 use DateTime;
 use models\main\Organization;
@@ -78,6 +80,11 @@ final class MemberService
     private $speaker_registration_request_repository;
 
     /**
+     * @var ILegalDocumentRepository
+     */
+    private $legal_document_repository;
+
+    /**
      * MemberService constructor.
      * @param IMemberRepository $member_repository
      * @param IOrganizationRepository $organization_repository
@@ -86,6 +93,7 @@ final class MemberService
      * @param ICacheService $cache_service
      * @param IExternalUserApi $external_user_api
      * @param ISpeakerRegistrationRequestRepository $speaker_registration_request_repository
+     * @param ILegalDocumentRepository $legal_document_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -97,6 +105,7 @@ final class MemberService
         ICacheService $cache_service,
         IExternalUserApi $external_user_api,
         ISpeakerRegistrationRequestRepository $speaker_registration_request_repository,
+        ILegalDocumentRepository $legal_document_repository,
         ITransactionService $tx_service
     )
     {
@@ -108,6 +117,7 @@ final class MemberService
         $this->cache_service = $cache_service;
         $this->external_user_api = $external_user_api;
         $this->speaker_registration_request_repository = $speaker_registration_request_repository;
+        $this->legal_document_repository = $legal_document_repository;
     }
 
     /**
@@ -507,7 +517,10 @@ final class MemberService
                 throw new EntityNotFoundException(sprintf("Group %s not found", IGroup::FoundationMembers));
 
             $member->add2Group($group);
-            $member->signFoundationMembership();
+            $document = $this->legal_document_repository->getBySlug(LegalAgreement::Slug);
+            if(is_null($document))
+                throw new EntityNotFoundException(sprintf("Legal Document %s not found.",LegalAgreement::Slug));
+            $member->signFoundationMembership($document);
 
             return $member;
         });

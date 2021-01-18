@@ -67,11 +67,23 @@ class LegalAgreement extends SilverstripeBaseModel
     }
 
     /**
-     * @param int $document_id
+     * @return int
      */
-    public function setDocumentId(int $document_id): void
+    public function getOwnerId(){
+        try {
+            return $this->owner->getId();
+        }
+        catch(\Exception $ex){
+            return 0;
+        }
+    }
+
+    /**
+     * @param LegalDocument $document
+     */
+    public function setDocument(LegalDocument $document): void
     {
-        $this->document_id = $document_id;
+        $this->document_id = $document->getId();
     }
 
     /**
@@ -90,31 +102,12 @@ class LegalAgreement extends SilverstripeBaseModel
         $this->owner = $owner;
     }
 
-    /**
-     * this is for legacy reasons
-     * @param string $slug
-     * @return int|null
-     */
-    public static function getLegalAgreementIDBySlug(string $slug):?int {
-        try {
-            $sql = <<<SQL
-select ID FROM SiteTree
-where SiteTree.URLSegment = :url_segment AND SiteTree.ClassName = :class_name
-SQL;
-            $stmt = self::prepareRawSQLStatic($sql);
-            $stmt->execute([
-                'url_segment' => trim($slug),
-                'class_name' => "LegalDocumentPage"
-            ]);
-            $res = $stmt->fetchAll();
-            if(count($res) == 0 ) return null;
-            $id = intval($res[0]['ID']);
-            return $id;
+    public function getContent():?String{
 
-        } catch (\Exception $ex) {
-            return null;
-        }
-        return null;
+    }
+
+    public function getTitle():?string{
+
     }
 
 }

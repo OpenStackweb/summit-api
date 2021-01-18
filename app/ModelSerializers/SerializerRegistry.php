@@ -80,6 +80,7 @@ use App\ModelSerializers\Summit\SummitLocationBannerSerializer;
 use App\ModelSerializers\Summit\TrackTagGroups\TrackTagGroupAllowedTagSerializer;
 use App\ModelSerializers\Summit\TrackTagGroups\TrackTagGroupSerializer;
 use Libs\ModelSerializers\IModelSerializer;
+use models\main\LegalDocument;
 use models\oauth2\IResourceServerContext;
 use ModelSerializers\ChatTeams\ChatTeamInvitationSerializer;
 use ModelSerializers\ChatTeams\ChatTeamMemberSerializer;
@@ -352,6 +353,9 @@ final class SerializerRegistry
             self::SerializerType_Private => OwnMemberSerializer::class,
             self::SerializerType_Admin   => AdminMemberSerializer::class
         ];
+
+        $this->registry['LegalAgreement'] = LegalAgreementSerializer::class;
+        $this->registry['LegalDocument'] = LegalDocumentSerializer::class;
 
         $this->registry['Group']                           = GroupSerializer::class;
         $this->registry['Affiliation']                     = AffiliationSerializer::class;

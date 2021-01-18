@@ -45,6 +45,7 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
         'summit_tickets',
         'rsvp',
         'sponsor_memberships',
+        'legal_agreements',
     ];
 
     private static $expand_group_events = [
@@ -138,6 +139,13 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
             $values['summit_tickets'] = $res;
         }
 
+        if(in_array('legal_agreements', $relations)){
+            $res = [];
+            foreach ($member->getLegalAgreements() as $agreement)
+                $res[] = intval($agreement->getId());
+            $values['legal_agreements'] = $res;
+        }
+
         if (!empty($expand)) {
             foreach (explode(',', $expand) as $relation) {
                 $relation = trim($relation);
@@ -223,6 +231,18 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         $values['rsvp'] = $rsvps;
                     }
                     break;
+                    case 'legal_agreements':{
+                        if(!in_array('legal_agreements', $relations)) break;
+                        if(is_null($summit)) break;
+                        $res = [];
+                        foreach ($member->getLegalAgreements() as $agreement){
+                            $rsvps[] = SerializerRegistry::getInstance()
+                                ->getSerializer($agreement)
+                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $values['legal_agreements'] = $res;
+                    }
+                        break;
                 }
             }
         }

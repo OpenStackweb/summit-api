@@ -1841,16 +1841,13 @@ SQL;
         $this->resign_date     = new \DateTime('now', new \DateTimeZone(self::DefaultTimeZone));
     }
 
-    public function signFoundationMembership()
+    public function signFoundationMembership(LegalDocument $document)
     {
         if (!$this->isFoundationMember()) {
             // Set up member with legal agreement for becoming an OpenStack Foundation Member
             $legalAgreement = new LegalAgreement();
             $legalAgreement->setOwner($this);
-            $documentId = LegalAgreement::getLegalAgreementIDBySlug(LegalAgreement::Slug);
-            if(is_null($documentId))
-                throw new ValidationException(sprintf("LegalAgreement %s does not exists.", LegalAgreement::Slug));
-            $legalAgreement->setDocumentId($documentId);
+            $legalAgreement->setDocument($document);
             $this->legal_agreements->add($legalAgreement);
             $this->membership_type = self::MembershipTypeFoundation;
             $this->resign_date  = null;

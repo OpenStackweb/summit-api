@@ -44,6 +44,11 @@ Route::group([
         Route::get('', 'OAuth2MembersApiController@getAll');
     });
 
+    // members
+    Route::group(['prefix' => 'legal-documents'], function () {
+        Route::get('{id}', 'OAuth2LegalDocumentsApiController@getById');
+    });
+
     // speakers
     Route::group(['prefix' => 'speakers'], function () {
         Route::group(['prefix' => '{speaker_id}'], function () {

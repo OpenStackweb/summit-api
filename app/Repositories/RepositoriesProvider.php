@@ -14,6 +14,7 @@
 
 use App\Models\Foundation\Main\Language;
 use App\Models\Foundation\Main\Repositories\ILanguageRepository;
+use App\Models\Foundation\Main\Repositories\ILegalDocumentRepository;
 use App\Models\Foundation\Main\Repositories\IProjectSponsorshipTypeRepository;
 use App\Models\Foundation\Main\Repositories\ISponsoredProjectRepository;
 use App\Models\Foundation\Main\Repositories\ISummitAdministratorPermissionGroupRepository;
@@ -112,6 +113,7 @@ use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitRoomReservation;
 use models\summit\SummitTaxType;
 use models\summit\SummitTicketType;
+use repositories\main\DoctrineLegalDocumentRepository;
 
 /**
  * Class RepositoriesProvider
@@ -635,6 +637,11 @@ final class RepositoriesProvider extends ServiceProvider
             function(){
                 return EntityManager::getRepository(SupportingCompany::class);
             }
+        );
+
+        App::singleton(
+            ILegalDocumentRepository::class,
+            DoctrineLegalDocumentRepository::class
         );
     }
 }

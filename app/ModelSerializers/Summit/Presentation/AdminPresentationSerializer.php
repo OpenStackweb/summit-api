@@ -19,8 +19,6 @@
 class AdminPresentationSerializer extends PresentationSerializer
 {
     protected static $array_mappings = [
-
-
         'Rank'              => 'rank:json_int',
         'SelectionStatus'   => 'selection_status:json_string',
     ];

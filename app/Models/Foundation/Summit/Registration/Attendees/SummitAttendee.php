@@ -237,6 +237,10 @@ class SummitAttendee extends SilverstripeBaseModel
         $this->member = $member;
     }
 
+    public function clearMember(){
+        $this->member = null;
+    }
+
     use SummitOwned;
 
     public function __construct()

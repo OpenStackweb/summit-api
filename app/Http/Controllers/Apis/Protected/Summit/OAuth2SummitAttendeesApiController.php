@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\EpochCellFormatter;
 use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
 use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
 use App\ModelSerializers\SerializerUtils;
@@ -482,7 +483,11 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 return SerializerRegistry::SerializerType_CSV;
             },
             function () {
-                return [];
+                return [
+                    'created' => new EpochCellFormatter(),
+                    'last_edited' => new EpochCellFormatter(),
+                    'disclaimer_accepted_date' => new EpochCellFormatter(),
+                ];
             },
             function () {
                 return [];
@@ -513,7 +518,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'admin_notes' => 'sometimes|string|max:1024',
                 'company' => 'sometimes|string|max:255',
                 'email' => 'required_without:member_id|string|max:255|email',
-                'member_id' => 'required_without_all:email|integer',
+                'member_id' => 'required_without:email|integer',
                 'extra_questions' => 'sometimes|order_extra_question_dto_array',
             ];
 
@@ -601,7 +606,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'surname' => 'required_without:member_id|string|max:255',
                 'company' => 'sometimes|string|max:255',
                 'email' => 'required_without:member_id|string|max:255|email',
-                'member_id' => 'required_without_all:first_name,surname,email|integer',
+                'member_id' => 'required_without:email|integer',
                 'extra_questions' => 'sometimes|order_extra_question_dto_array',
                 'admin_notes' => 'sometimes|string|max:1024',
             ];

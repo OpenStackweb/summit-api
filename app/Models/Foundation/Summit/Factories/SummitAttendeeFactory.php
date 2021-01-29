@@ -54,8 +54,16 @@ final class SummitAttendeeFactory
     )
     {
 
-        if (!is_null($member))
+        if (!is_null($member)) {
+            $attendee->setEmail($member->getEmail());
             $attendee->setMember($member);
+        }
+        else{
+            $attendee->clearMember();
+        }
+
+        if(isset($payload['email']) && !empty($payload['email']))
+            $attendee->setEmail(trim($payload['email']));
 
         $summit->addAttendee($attendee);
 
@@ -67,9 +75,6 @@ final class SummitAttendeeFactory
 
         if (isset($payload['last_name']))
             $attendee->setSurname(trim($payload['last_name']));
-
-        if (isset($payload['email']) && !empty($payload['email']))
-            $attendee->setEmail(trim($payload['email']));
 
         if (isset($payload['company']) && !empty($payload['company']))
             $attendee->setCompanyName(trim($payload['company']));

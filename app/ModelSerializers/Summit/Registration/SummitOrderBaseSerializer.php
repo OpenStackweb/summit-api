@@ -97,7 +97,19 @@ class SummitOrderBaseSerializer extends SilverStripeSerializer
                             }
                         }
                         break;
-
+                    case 'summit':{
+                        unset($values['summit_id']);
+                        $values['summit'] = SerializerRegistry::getInstance()->getSerializer($order->getSummit())->serialize(null,
+                            [
+                                'id',
+                                'start_date',
+                                'end_date',
+                                'registration_begin_date',
+                                'registration_end_date',
+                                'reassign_ticket_till_date'
+                            ], [], []);
+                    }
+                    break;
                     case 'owner_company':
                         {
 

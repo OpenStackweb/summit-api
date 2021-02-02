@@ -75,7 +75,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @return mixed
      */
     public function getAllBySummit($summit_id){
-        $values = Input::all();
+            $values = Input::all();
         $rules  = [
 
             'page'     => 'integer|min:1',

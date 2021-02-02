@@ -13,7 +13,6 @@
  **/
 
 use App\Http\Exceptions\HTTP403ForbiddenException;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -81,7 +80,7 @@ trait ParametrizedGetAll
         array $serializerParams = []
     )
     {
-        $values = Input::all();
+        $values = Request::all();
 
         $rules = [
 
@@ -102,18 +101,18 @@ trait ParametrizedGetAll
             $page = 1;
             $per_page = is_null($defaultPageSize) ? PagingConstants::DefaultPageSize : call_user_func($defaultPageSize);
 
-            if (Input::has('page')) {
-                $page = intval(Input::get('page'));
+            if (Request::has('page')) {
+                $page = intval(Request::get('page'));
             }
 
-            if (Input::has('per_page')) {
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('per_page')) {
+                $per_page = intval(Request::get('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), call_user_func($getFilterRules));
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::get('filter'), call_user_func($getFilterRules));
             }
 
             if (is_null($filter)) $filter = new Filter();
@@ -125,8 +124,8 @@ trait ParametrizedGetAll
 
             $order = null;
 
-            if (Input::has('order')) {
-                $order = OrderParser::parse(Input::get('order'), call_user_func($getOrderRules));
+            if (Request::has('order')) {
+                $order = OrderParser::parse(Request::get('order'), call_user_func($getOrderRules));
             } else {
                 if (!is_null($defaultOrderRules)) {
                     $order = call_user_func($defaultOrderRules);
@@ -217,7 +216,7 @@ trait ParametrizedGetAll
         callable $queryCallable = null
     )
     {
-        $values = Input::all();
+        $values = Request::all();
         $rules = [
             'page' => 'integer|min:1',
             'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::MinPageSize, PagingConstants::MaxPageSize),
@@ -236,19 +235,19 @@ trait ParametrizedGetAll
             $page = 1;
             $per_page = PHP_INT_MAX;
 
-            if (Input::has('page')) {
-                $page = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page = intval(Request::get('page'));
+                $per_page = intval(Request::get('per_page'));
             }
 
-            if (Input::has('per_page')) {
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('per_page')) {
+                $per_page = intval(Request::get('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), call_user_func($getFilterRules));
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::get('filter'), call_user_func($getFilterRules));
             }
 
             if (is_null($filter)) $filter = new Filter();
@@ -260,8 +259,8 @@ trait ParametrizedGetAll
 
             $order = null;
 
-            if (Input::has('order')) {
-                $order = OrderParser::parse(Input::get('order'), call_user_func($getOrderRules));
+            if (Request::has('order')) {
+                $order = OrderParser::parse(Request::get('order'), call_user_func($getOrderRules));
             }
 
             if (!is_null($queryCallable))

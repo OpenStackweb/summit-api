@@ -1,4 +1,7 @@
 <?php
+
+use App\Models\Foundation\Main\IGroup;
+
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,19 +17,42 @@
 
 final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
 {
+    use \InsertSummitTestData;
+
+    protected function setUp()
+    {
+        $this->setCurrentGroup(IGroup::TrackChairs);
+        parent::setUp();
+        self::insertTestData();
+        self::$summit_permission_group->addMember(self::$member);
+        self::$em->persist(self::$summit);
+        self::$em->persist(self::$summit_permission_group);
+        self::$em->flush();
+        $track_chair = self::$summit->addTrackChair(self::$member, [ self::$defaultTrack ]);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+    }
+
+    protected function tearDown()
+    {
+        self::clearTestData();
+        parent::tearDown();
+    }
+
     /**
      * @param int $summit_id
      * @return mixed
      */
-    public function testAddSelectionPlan($summit_id = 24){
+    public function testAddSelectionPlan(){
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $name       = str_random(16).'_selection_plan';
         $data = [
             'name'       => $name,
-            'is_enabled'  => true
+            'is_enabled'  => false,
+            'allow_new_presentations' => false,
         ];
 
         $headers = [
@@ -57,10 +83,40 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
      * @param int $summit_id
      * @return mixed
      */
-    public function testUpdateSelectionPlan($summit_id = 24){
-        $selection_plan = $this->testAddSelectionPlan($summit_id);
+    public function testUpdateSelectionPlan(){
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
+        ];
+
+        $name       = str_random(16).'_selection_plan';
+        $data = [
+            'name'       => $name,
+            'is_enabled'  => false,
+            'allow_new_presentations' => false,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectionPlansApiController@addSelectionPlan",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $selection_plan = json_decode($content);
+
+        $params = [
+            'id' => self::$summit->getId(),
             'selection_plan_id' => $selection_plan->id
         ];
 
@@ -98,15 +154,42 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
         return $selection_plan;
     }
 
-    /**
-     * @param int $summit_id
-     */
-    public function testAddTrackGroupToSelectionPlan($summit_id = 24){
 
-        $selection_plan = $this->testAddSelectionPlan($summit_id);
+    public function testAddTrackGroupToSelectionPlan(){
 
         $params = [
-            'id'                => $summit_id,
+            'id' => self::$summit->getId(),
+        ];
+
+        $name       = str_random(16).'_selection_plan';
+        $data = [
+            'name'       => $name,
+            'is_enabled'  => false,
+            'allow_new_presentations' => false,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectionPlansApiController@addSelectionPlan",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $selection_plan = json_decode($content);
+
+        $params = [
+            'id' => self::$summit->getId(),
             'selection_plan_id' => $selection_plan->id,
             'track_group_id'    => 1
         ];
@@ -136,6 +219,71 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
     public function testGetCurrentSelectionPlanByStatus($status = 'submission'){
 
         $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $name       = str_random(16).'_selection_plan';
+        $data = [
+            'name'       => $name,
+            'is_enabled'  => false,
+            'allow_new_presentations' => false,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectionPlansApiController@addSelectionPlan",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $selection_plan = json_decode($content);
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'selection_plan_id' => $selection_plan->id
+        ];
+
+        $start = new DateTime('now');
+        $end   = new DateTime('now');
+        $end->add(new DateInterval('P15D'));
+
+        $data = [
+            'is_enabled'  => false,
+            'submission_begin_date' => $start->getTimestamp(),
+            'submission_end_date' => $end->getTimestamp(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSelectionPlansApiController@updateSelectionPlan",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $params = [
            'status'  => $status,
             'expand' => 'track_groups,summit'
         ];
@@ -159,5 +307,261 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
         $selection_plan = json_decode($content);
         $this->assertTrue(!is_null($selection_plan));
+    }
+
+    public function testGetPresentationsBySelectionPlan(){
+
+        $params = [
+           'summit' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'filter' => 'status==Received,is_chair_visible==1',
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSelectionPlansApiController@getSelectionPlanPresentations",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $presentations = json_decode($content);
+        $this->assertTrue(!is_null($presentations));
+    }
+
+    public function testMarkPresentationAsViewed(){
+        $params = [
+            'summit' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'presentation_id' => self::$presentations[0]->getId()
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSelectionPlansApiController@markPresentationAsViewed",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $presentation = json_decode($content);
+        $this->assertTrue(!is_null($presentation));
+        $this->assertTrue($presentation->views_count > 0);
+    }
+
+    public function testAddComment(){
+        $params = [
+            'summit' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'presentation_id' => self::$presentations[0]->getId()
+        ];
+
+        $data = [
+            'is_public'  => false,
+            'body' => 'this is a test comment',
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectionPlansApiController@addCommentToPresentation",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $comment = json_decode($content);
+        $this->assertTrue(!is_null($comment));
+    }
+
+    public function testAddCategoryChangeRequest(){
+
+        $params = [
+            'summit' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'presentation_id' => self::$presentations[0]->getId(),
+            'expand' => 'presentation, new_category, old_category',
+        ];
+
+        $data = [
+            'new_category_id'  => self::$secondaryTrack->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectionPlansApiController@createPresentationCategoryChangeRequest",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $request = json_decode($content);
+        $this->assertTrue(!is_null($request));
+        $this->assertTrue($request->status === 'Pending');
+    }
+
+    public function testGetAllCategoryChangeRequests(){
+        $params = [
+            'summit' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'presentation_id' => self::$presentations[0]->getId(),
+            'expand' => 'presentation, new_category, old_category',
+        ];
+
+        $data = [
+            'new_category_id'  => self::$secondaryTrack->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectionPlansApiController@createPresentationCategoryChangeRequest",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $request = json_decode($content);
+        $this->assertTrue(!is_null($request));
+        $this->assertTrue($request->status === 'Pending');
+
+        $params = [
+            'summit' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'expand' => 'presentation, new_category, old_category',
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSelectionPlansApiController@getAllPresentationCategoryChangeRequest",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $page = json_decode($content);
+
+        $this->assertTrue(!is_null($page));
+        $this->assertTrue($page->total == 1);
+    }
+
+    public function testRejectRequest(){
+        $params = [
+            'summit' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'presentation_id' => self::$presentations[0]->getId(),
+            'expand' => 'presentation, new_category, old_category',
+        ];
+
+        $data = [
+            'new_category_id'  => self::$secondaryTrack->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectionPlansApiController@createPresentationCategoryChangeRequest",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $request = json_decode($content);
+        $this->assertTrue(!is_null($request));
+        $this->assertTrue($request->status === 'Pending');
+
+
+        $params = [
+            'summit' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'presentation_id' => self::$presentations[0]->getId(),
+            'category_change_request_id' => $request->id,
+            'expand' => 'presentation, new_category, old_category',
+        ];
+
+        $data = [
+            'approved'  => false,
+            'reason' => 'TBD',
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSelectionPlansApiController@resolvePresentationCategoryChangeRequest",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $request = json_decode($content);
+        $this->assertTrue(!is_null($request));
     }
 }

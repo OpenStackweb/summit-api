@@ -11,12 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use Doctrine\ORM\QueryBuilder;
 use Illuminate\Support\Facades\Log;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
 use App\Repositories\SilverStripeDoctrineRepository;
 use utils\DoctrineHavingFilterMapping;
+
 /**
  * Class DoctrineSummitRepository
  * @package App\Repositories\Summit
@@ -32,17 +34,21 @@ final class DoctrineSummitRepository
     protected function getFilterMappings()
     {
         return [
-            'name'                     => 'e.name',
-            'start_date'               => 'e.begin_date:datetime_epoch',
-            'end_date'                 => 'e.end_date:datetime_epoch',
-            'submission_begin_date'    => 'sp.submission_begin_date:datetime_epoch',
-            'submission_end_date'      => 'sp.submission_end_date:datetime_epoch',
-            'selection_plan_enabled'   => 'sp.is_enabled:json_boolean',
-            'registration_begin_date'  => 'e.registration_begin_date:datetime_epoch',
-            'registration_end_date'    => 'e.registration_end_date:datetime_epoch',
-            'available_on_api'         => 'e.available_on_api:json_int',
-            'summit_id'                => 'e.id:json_int',
-            'ticket_types_count'       => new DoctrineHavingFilterMapping("","tt.summit", "count(tt.id) :operator :value"),
+            'name' => 'e.name',
+            'start_date' => 'e.begin_date:datetime_epoch',
+            'end_date' => 'e.end_date:datetime_epoch',
+            'submission_begin_date' => 'sp.submission_begin_date:datetime_epoch',
+            'submission_end_date' => 'sp.submission_end_date:datetime_epoch',
+            'voting_begin_date' => 'sp.voting_begin_date:datetime_epoch',
+            'voting_end_date' => 'sp.voting_end_date:datetime_epoch',
+            'selection_begin_date' => 'sp.selection_begin_date:datetime_epoch',
+            'selection_end_date' => 'sp.selection_end_date:datetime_epoch',
+            'selection_plan_enabled' => 'sp.is_enabled:json_boolean',
+            'registration_begin_date' => 'e.registration_begin_date:datetime_epoch',
+            'registration_end_date' => 'e.registration_end_date:datetime_epoch',
+            'available_on_api' => 'e.available_on_api:json_int',
+            'summit_id' => 'e.id:json_int',
+            'ticket_types_count' => new DoctrineHavingFilterMapping("", "tt.summit", "count(tt.id) :operator :value"),
         ];
     }
 
@@ -52,9 +58,9 @@ final class DoctrineSummitRepository
     protected function getOrderMappings()
     {
         return [
-            'id'                      => 'e.id',
-            'name'                    => 'e.name',
-            'start_date'              => 'e.begin_date',
+            'id' => 'e.id',
+            'name' => 'e.name',
+            'start_date' => 'e.begin_date',
             'registration_begin_date' => 'e.registration_begin_date',
         ];
     }
@@ -63,7 +69,8 @@ final class DoctrineSummitRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraFilters(QueryBuilder $query){
+    protected function applyExtraFilters(QueryBuilder $query)
+    {
         return $query;
     }
 
@@ -71,7 +78,8 @@ final class DoctrineSummitRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query){
+    protected function applyExtraJoins(QueryBuilder $query)
+    {
         $query = $query->leftJoin("e.ticket_types", "tt");
         $query = $query->leftJoin("e.selection_plans", "sp");
         return $query;
@@ -96,7 +104,8 @@ final class DoctrineSummitRepository
     /**
      * @return Summit[]
      */
-    public function getCurrentAndFutureSummits(){
+    public function getCurrentAndFutureSummits()
+    {
         $now_utc = new \DateTime('now', new \DateTimeZone('UTC'));
         return $this->getEntityManager()->createQueryBuilder()
             ->select("s")
@@ -165,7 +174,7 @@ final class DoctrineSummitRepository
      * @param string $slug
      * @return Summit|null
      */
-    public function getBySlug(string $slug):?Summit
+    public function getBySlug(string $slug): ?Summit
     {
         try {
             return $this->getEntityManager()->createQueryBuilder()
@@ -175,8 +184,7 @@ final class DoctrineSummitRepository
                 ->setParameter('slug', strtolower($slug))
                 ->getQuery()
                 ->getOneOrNullResult();
-        }
-        catch (\Exception $ex){
+        } catch (\Exception $ex) {
             Log::warning($ex);
             return null;
         }
@@ -204,7 +212,7 @@ final class DoctrineSummitRepository
     public function getCurrentAndAvailable()
     {
         $res = $this->getEntityManager()->createQueryBuilder()
-            ->select( "s")
+            ->select("s")
             ->from($this->getBaseEntity(), 's')
             ->where('s.active = 1')
             ->andWhere('s.available_on_api = 1')
@@ -239,7 +247,8 @@ final class DoctrineSummitRepository
     /**
      * @return Summit[]
      */
-    public function getAllWithExternalRegistrationFeed():array {
+    public function getAllWithExternalRegistrationFeed(): array
+    {
         return $this->getEntityManager()->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")

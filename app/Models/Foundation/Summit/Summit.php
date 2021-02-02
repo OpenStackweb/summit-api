@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Http\Utils\DateUtils;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Main\OrderableChilds;
 use App\Models\Foundation\Summit\AllowedCurrencies;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlowType;
@@ -650,6 +651,12 @@ class Summit extends SilverstripeBaseModel
     private $metrics;
 
     /**
+     * @ORM\OneToMany(targetEntity="models\summit\SummitTrackChair", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SummitTrackChair[]
+     */
+    private $track_chairs;
+
+    /**
      * @return string
      */
     public function getDatesLabel()
@@ -969,6 +976,7 @@ class Summit extends SilverstripeBaseModel
         $this->media_upload_types = new ArrayCollection();
         $this->featured_speakers = new ArrayCollection();
         $this->metrics = new ArrayCollection();
+        $this->track_chairs =  new ArrayCollection();
     }
 
     /**
@@ -2845,7 +2853,7 @@ SQL;
      * @param int $id
      * @return null|SelectionPlan
      */
-    public function getSelectionPlanById($id){
+    public function getSelectionPlanById($id):?SelectionPlan{
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($id)));
         $selection_plan = $this->selection_plans->matching($criteria)->first();
@@ -5064,5 +5072,124 @@ SQL;
 
     public function isPubliclyOpen():bool{
         return $this->ticket_types->count() == 0;
+    }
+
+    /**
+     * @return SummitTrackChair[]
+     */
+    public function getTrackChairs(): array
+    {
+        return $this->track_chairs;
+    }
+
+    /**
+     * @param Member $member
+     * @return SummitTrackChair|null
+     */
+    public function getTrackChairByMember(Member $member):?SummitTrackChair{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('member', $member));
+        $res = $this->track_chairs->matching($criteria)->first();
+        return !$res ? null : $res;
+    }
+
+    /**
+     * @param int $id
+     * @return SummitTrackChair|null
+     */
+    public function getTrackChair(int $id):?SummitTrackChair{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $id));
+        $res = $this->track_chairs->matching($criteria)->first();
+        return !$res ? null : $res;
+    }
+
+    /**
+     * @param Member $member
+     * @param array|PresentationCategory[] $categories
+     * @return SummitTrackChair|null
+     * @throws ValidationException
+     */
+    public function addTrackChair(Member $member, array $categories):?SummitTrackChair{
+
+        if(!$member->isOnGroup(IGroup::TrackChairs)){
+            throw new ValidationException(sprintf("Member %s does not belong to group %s", $member->getId(), IGroup::TrackChairs));
+        }
+
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('member', $member));
+        $trackChair = $this->track_chairs->matching($criteria)->first();
+
+        if(!$trackChair) {
+            $trackChair = new SummitTrackChair();
+            $trackChair->setMember($member);
+            $trackChair->setSummit($this);
+        }
+
+        foreach ($categories as $category) {
+
+            if(!$category->isChairVisible())
+                throw new ValidationException
+                (
+                    sprintf("Category %s is not visible for track chairs.", $category->getId())
+                );
+
+            if ($trackChair->isCategoryAllowed($category))
+                throw new ValidationException
+                (
+                    sprintf("Category %s is already allowed for member %s", $category->getId(), $member->getId())
+                );
+
+            $trackChair->addCategory($category);
+        }
+
+        if($this->track_chairs->contains($trackChair)) return null;
+        $this->track_chairs->add($trackChair);
+
+        return $trackChair;
+    }
+
+    /**
+     * @param SummitTrackChair $trackChair
+     */
+    public function removeTrackChair(SummitTrackChair $trackChair){
+        if(!$this->track_chairs->contains($trackChair)) return;
+        $this->track_chairs->removeElement($trackChair);
+    }
+
+    /**
+     * @param Member $member
+     * @param PresentationCategory|null $category
+     * @return bool
+     */
+    public function isTrackChair(Member $member, PresentationCategory $category = null):bool{
+        if($member->isAdmin()) return true;
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('member', $member));
+        $hasPermission = $this->hasPermissionOnSummit($member);
+        $isOnGroup = $member->isOnGroup(IGroup::TrackChairs);
+        $isTrackChair =  $this->track_chairs->matching($criteria)->count() > 0;
+        if(!is_null($category)){
+            $isTrackChair = $this->track_chairs->matching($criteria)->filter(function($track_chair) use ($category){
+                return $track_chair->isCategoryAllowed($category);
+            })->count() > 0;
+        }
+
+        return ($hasPermission && $isOnGroup && $isTrackChair);
+    }
+
+    public function hasPermissionOnSummit(Member $member):bool{
+       return $this->permission_groups->filter(function($group) use ($member){
+            if(!$group instanceof SummitAdministratorPermissionGroup) return false;
+            return $group->hasMember($member);
+        })->count() > 0;
+    }
+    /**
+     * @param Member $member
+     * @return bool
+     */
+    public function isTrackChairAdmin(Member $member):bool{
+        if($member->isAdmin()) return true;
+        return $this->hasPermissionOnSummit($member) && $member->isOnGroup(IGroup::TrackChairsAdmins);
     }
 }

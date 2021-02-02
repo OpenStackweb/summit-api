@@ -85,7 +85,21 @@ final class DoctrineSummitEventRepository
             'id'             => 'e.id:json_int',
             'title'          => 'e.title:json_string',
             'abstract'       => 'e.abstract:json_string',
-            'level'          => 'p.level:json_string',
+            'level'          => 'e.level:json_string',
+            'status'          => 'p.status:json_string',
+            'progress'        => 'p.progress:json_int',
+            'is_chair_visible' =>  new DoctrineJoinFilterMapping
+            (
+                'e.category',
+                'c',
+                "c.chair_visible :operator :value"
+            ),
+            'is_voting_visible' =>  new DoctrineJoinFilterMapping
+            (
+                'e.category',
+                'c',
+                "c.voting_visible :operator :value"
+            ),
             'social_summary' => 'e.social_summary:json_string',
             'published'      => 'e.published',
             'start_date'     => 'e.start_date:datetime_epoch',
@@ -236,7 +250,6 @@ final class DoctrineSummitEventRepository
             $query = $query->addOrderBy("e.end_date", 'ASC');
             $query = $query->addOrderBy("e.id", 'ASC');
         }
-
 
         $can_view_private_events = self::isCurrentMemberOnGroup(IGroup::SummitAdministrators);
 

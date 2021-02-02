@@ -11,18 +11,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Models\Foundation\Summit\Registration\BuildDefaultPaymentGatewayProfileStrategy;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\Services\Apis\CalendarSync\ICalendarSyncRemoteFacadeFactory;
+use App\Services\Apis\ExternalRegistrationFeeds\ExternalRegistrationFeedFactory;
+use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedFactory;
 use App\Services\Apis\ExternalScheduleFeeds\ExternalScheduleFeedFactory;
 use App\Services\Apis\ExternalScheduleFeeds\IExternalScheduleFeedFactory;
+use App\Services\Model\AdminActionsCalendarSyncPreProcessor;
+use App\Services\Model\AdminActionsCalendarSyncProcessingService;
+use App\Services\Model\AdminScheduleWorkQueueManager;
 use App\Services\Model\AttendeeService;
+use App\Services\Model\IAdminActionsCalendarSyncProcessingService;
 use App\Services\Model\IAttendeeService;
+use App\Services\Model\ICalendarSyncWorkRequestPreProcessor;
+use App\Services\Model\ICalendarSyncWorkRequestQueueManager;
 use App\Services\Model\ICompanyService;
 use App\Services\Model\ILocationService;
+use App\Services\Model\IMemberActionsCalendarSyncProcessingService;
 use App\Services\Model\IMemberService;
 use App\Services\Model\Imp\CompanyService;
 use App\Services\Model\Imp\PaymentGatewayProfileService;
+use App\Services\Model\Imp\PresentationVideoMediaUploadProcessor;
 use App\Services\Model\Imp\RegistrationIngestionService;
 use App\Services\Model\Imp\SponsoredProjectService;
 use App\Services\Model\Imp\SponsorUserInfoGrantService;
@@ -33,15 +44,18 @@ use App\Services\Model\Imp\SummitMediaFileTypeService;
 use App\Services\Model\Imp\SummitMediaUploadTypeService;
 use App\Services\Model\Imp\SummitMetricService;
 use App\Services\Model\Imp\SummitRegistrationInvitationService;
+use App\Services\Model\Imp\SummitSelectedPresentationListService;
+use App\Services\Model\Imp\TrackChairService;
 use App\Services\Model\IOrganizationService;
 use App\Services\Model\IPaymentGatewayProfileService;
 use App\Services\Model\IPresentationCategoryGroupService;
+use App\Services\Model\IPresentationVideoMediaUploadProcessor;
 use App\Services\Model\IRegistrationIngestionService;
 use App\Services\Model\IRSVPTemplateService;
 use App\Services\Model\IScheduleIngestionService;
 use App\Services\Model\ISponsoredProjectService;
-use App\Services\Model\ISponsorUserInfoGrantService;
 use App\Services\Model\ISponsorshipTypeService;
+use App\Services\Model\ISponsorUserInfoGrantService;
 use App\Services\Model\ISummitAccessLevelTypeService;
 use App\Services\Model\ISummitAdministratorPermissionGroupService;
 use App\Services\Model\ISummitBadgeFeatureTypeService;
@@ -53,26 +67,34 @@ use App\Services\Model\ISummitMediaFileTypeService;
 use App\Services\Model\ISummitMediaUploadTypeService;
 use App\Services\Model\ISummitMetricService;
 use App\Services\Model\ISummitOrderExtraQuestionTypeService;
+use App\Services\Model\ISummitOrderService;
 use App\Services\Model\ISummitPushNotificationService;
 use App\Services\Model\ISummitRefundPolicyTypeService;
 use App\Services\Model\ISummitRegistrationInvitationService;
+use App\Services\Model\ISummitSelectedPresentationListService;
 use App\Services\Model\ISummitSelectionPlanService;
 use App\Services\Model\ISummitTaxTypeService;
 use App\Services\Model\ISummitTicketTypeService;
 use App\Services\Model\ISummitTrackService;
 use App\Services\Model\ISummitTrackTagGroupService;
 use App\Services\Model\ITagService;
+use App\Services\Model\ITrackChairService;
 use App\Services\Model\ITrackQuestionTemplateService;
+use App\Services\Model\MemberActionsCalendarSyncPreProcessor;
+use App\Services\Model\MemberActionsCalendarSyncProcessingService;
+use App\Services\Model\MemberScheduleWorkQueueManager;
+use App\Services\Model\MemberService;
 use App\Services\Model\OrganizationService;
 use App\Services\Model\PresentationCategoryGroupService;
+use App\Services\Model\RSVPTemplateService;
 use App\Services\Model\ScheduleIngestionService;
 use App\Services\Model\SponsorshipTypeService;
+use App\Services\Model\Strategies\CalendarSyncWorkRequestPreProcessorStrategyFactory;
+use App\Services\Model\Strategies\ICalendarSyncWorkRequestPreProcessorStrategyFactory;
 use App\Services\Model\SummitAccessLevelTypeService;
 use App\Services\Model\SummitBadgeFeatureTypeService;
 use App\Services\Model\SummitBadgeTypeService;
 use App\Services\Model\SummitLocationService;
-use App\Services\Model\MemberService;
-use App\Services\Model\RSVPTemplateService;
 use App\Services\Model\SummitOrderService;
 use App\Services\Model\SummitPromoCodeService;
 use App\Services\Model\SummitPushNotificationService;
@@ -90,6 +112,8 @@ use App\Services\SummitSponsorService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
 use services\apis\CalendarSync\CalendarSyncRemoteFacadeFactory;
+use services\model\ChatTeamService;
+use services\model\IChatTeamService;
 use services\model\IPresentationService;
 use services\model\ISpeakerService;
 use services\model\ISummitPromoCodeService;
@@ -98,25 +122,7 @@ use services\model\ISummitSponsorService;
 use services\model\PresentationService;
 use services\model\SpeakerService;
 use services\model\SummitService;
-use App\Services\Model\ISummitOrderService;
-use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedFactory;
-use App\Services\Apis\ExternalRegistrationFeeds\ExternalRegistrationFeedFactory;
-use services\model\IChatTeamService;
-use services\model\ChatTeamService;
-use App\Services\Model\Strategies\ICalendarSyncWorkRequestPreProcessorStrategyFactory;
-use App\Services\Model\Strategies\CalendarSyncWorkRequestPreProcessorStrategyFactory;
-use App\Services\Model\MemberActionsCalendarSyncPreProcessor;
-use App\Services\Model\ICalendarSyncWorkRequestQueueManager;
-use App\Services\Model\MemberScheduleWorkQueueManager;
-use App\Services\Model\AdminActionsCalendarSyncPreProcessor;
-use App\Services\Model\AdminScheduleWorkQueueManager;
-use App\Services\Model\MemberActionsCalendarSyncProcessingService;
-use App\Services\Model\ICalendarSyncWorkRequestPreProcessor;
-use App\Services\Model\IMemberActionsCalendarSyncProcessingService;
-use App\Services\Model\AdminActionsCalendarSyncProcessingService;
-use App\Services\Model\IAdminActionsCalendarSyncProcessingService;
-use App\Services\Model\IPresentationVideoMediaUploadProcessor;
-use App\Services\Model\Imp\PresentationVideoMediaUploadProcessor;
+
 /***
  * Class ModelServicesProvider
  * @package services
@@ -402,6 +408,18 @@ final class ModelServicesProvider extends ServiceProvider
             ISponsoredProjectService::class,
             SponsoredProjectService::class
         );
+
+        App::singleton
+        (
+            ISummitSelectedPresentationListService::class,
+            SummitSelectedPresentationListService::class
+        );
+
+        App::singleton
+        (
+            ITrackChairService::class,
+            TrackChairService::class
+        );
     }
 
     /**
@@ -450,7 +468,6 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitOrderExtraQuestionTypeService::class,
             ISponsorshipTypeService::class,
             ISummitOrderService::class,
-            ISponsorBadgeScanService::class,
             IRegistrationIngestionService::class,
             IExternalRegistrationFeedFactory::class,
             IPaymentGatewayProfileService::class,
@@ -463,6 +480,8 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitMediaUploadTypeService::class,
             IPresentationVideoMediaUploadProcessor::class,
             ISummitMetricService::class,
+            ISummitSelectedPresentationListService::class,
+            ITrackChairService::class,
         ];
     }
 }

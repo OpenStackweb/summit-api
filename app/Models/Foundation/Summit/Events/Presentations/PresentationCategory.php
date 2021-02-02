@@ -16,7 +16,9 @@ use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplate;
 use Doctrine\Common\Collections\Criteria;
+use models\exceptions\ValidationException;
 use models\main\File;
+use models\main\Member;
 use models\main\Tag;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -152,11 +154,16 @@ class PresentationCategory extends SilverstripeBaseModel
     }
 
     /**
-     *
      * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategoryGroup", mappedBy="categories")
      * @var PresentationCategoryGroup[]
      */
     private $groups;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="models\summit\SummitTrackChair", mappedBy="categories")
+     * @var SummitTrackChair[]
+     */
+    private $track_chairs;
 
     /**
      * @ORM\ManyToMany(targetEntity="models\main\Tag", cascade={"persist"})
@@ -184,6 +191,12 @@ class PresentationCategory extends SilverstripeBaseModel
      * @var File
      */
     protected $icon;
+
+    /**
+     * @ORM\OneToMany(targetEntity="models\summit\SummitSelectedPresentationList", mappedBy="category", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SummitSelectedPresentationList[]
+     */
+    protected $selection_lists;
 
     /**
      * @return TrackQuestionTemplate[]|ArrayCollection
@@ -250,6 +263,8 @@ class PresentationCategory extends SilverstripeBaseModel
         $this->groups                    = new ArrayCollection;
         $this->allowed_tags              = new ArrayCollection;
         $this->extra_questions           = new ArrayCollection;
+        $this->track_chairs              = new ArrayCollection;
+        $this->selection_lists           = new ArrayCollection();
         $this->session_count             = 0;
         $this->alternate_count           = 0;
         $this->lightning_alternate_count = 0;
@@ -290,6 +305,33 @@ class PresentationCategory extends SilverstripeBaseModel
     public function removeFromGroup(PresentationCategoryGroup $group){
         if(!$this->groups->contains($group)) return $this;
         $this->groups->removeElement($group);
+        return $this;
+    }
+
+    /**
+     * @param SummitTrackChair $trackChair
+     * @return $this
+     */
+    public function addToTrackChairs(SummitTrackChair $trackChair){
+        if($this->track_chairs->contains($trackChair)) return $this;
+        $this->track_chairs->add($trackChair);
+        return $this;
+    }
+
+    /**
+     * @return ArrayCollection|SummitTrackChair[]
+     */
+    public function getTrackChairs(){
+        return $this->track_chairs;
+    }
+
+    /**
+     * @param SummitTrackChair $trackChair
+     * @return $this
+     */
+    public function removeFromTrackChairs(SummitTrackChair $trackChair){
+        if(!$this->track_chairs->contains($trackChair)) return $this;
+        $this->track_chairs->removeElement($trackChair);
         return $this;
     }
 
@@ -564,4 +606,60 @@ SQL;
         return $photoUrl;
     }
 
+    public function addSelectionList(SummitSelectedPresentationList $selection_list){
+        if($this->selection_lists->contains($selection_list)) return;
+        $this->selection_lists->add($selection_list);
+        $selection_list->setCategory($this);
+    }
+
+    public function removeSelectionList(SummitSelectedPresentationList $selection_list){
+        if(!$this->selection_lists->contains($selection_list)) return;
+        $this->selection_lists->removeElement($selection_list);
+        $selection_list->clearCategory($this);
+    }
+
+    /**
+     * @param string $list_type
+     * @param PresentationCategory $category
+     * @param Member|null $owner
+     * @return SummitSelectedPresentationList|null
+     * @throws ValidationException
+     */
+    public function getSelectionListByTypeAndOwner(string $list_type, PresentationCategory $category, ?Member $owner = null):?SummitSelectedPresentationList{
+        if(!in_array($list_type, SummitSelectedPresentationList::ValidListTypes))
+            throw new ValidationException(sprintf("List Type %s is not valid.", $list_type));
+
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('list_type', $list_type));
+        $criteria->andWhere(Criteria::expr()->eq('category', $category));
+
+        if($list_type == SummitSelectedPresentationList::Individual){
+            $criteria->andWhere(Criteria::expr()->eq('owner', $owner));
+        }
+
+        $list = $this->selection_lists->matching($criteria)->first();
+        return $list === false ? null : $list;
+    }
+
+    /**
+     * @param int $list_id
+     * @return SummitSelectedPresentationList|null
+     */
+    public function getSelectionListById(int $list_id):?SummitSelectedPresentationList{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $list_id));
+
+        $list = $this->selection_lists->matching($criteria)->first();
+        return $list === false ? null : $list;
+    }
+
+    public function isTrackChair(Member $member):bool{
+        return $this->track_chairs->filter(function($t) use($member){
+            return $t->getMember()->getId() == $member->getId();
+        })->count() > 0;
+    }
+
+    public function getTrackChairAvailableSlots():int{
+        return $this->session_count + $this->alternate_count;
+    }
 }

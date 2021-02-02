@@ -44,6 +44,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitBadgeFeatureTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitBadgeTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitBookableVenueRoomAttributeTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitBookableVenueRoomAttributeValueRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitCategoryChangeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitDocumentRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitEmailEventFlowRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitEventTypeRepository;
@@ -58,6 +59,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitRefundPolicyTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitTaxTypeRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitTrackChairRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
 use App\Models\Foundation\Summit\Repositories\ITrackQuestionTemplateRepository;
 use App\Models\Foundation\Summit\Repositories\ITrackTagGroupAllowedTagsRepository;
@@ -65,6 +67,7 @@ use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
 use App\Models\Foundation\Summit\TrackTagGroupAllowedTag;
 use App\Models\ResourceServer\IApiRepository;
+use App\Repositories\Summit\DoctrineSummitTrackChairRepository;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
 use LaravelDoctrine\ORM\Facades\EntityManager;
@@ -100,6 +103,7 @@ use models\summit\SummitBadgeFeatureType;
 use models\summit\SummitBadgeType;
 use models\summit\SummitBookableVenueRoomAttributeType;
 use models\summit\SummitBookableVenueRoomAttributeValue;
+use models\summit\SummitCategoryChange;
 use models\summit\SummitDocument;
 use models\summit\SummitEventType;
 use models\summit\SummitMediaFileType;
@@ -113,6 +117,7 @@ use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitRoomReservation;
 use models\summit\SummitTaxType;
 use models\summit\SummitTicketType;
+use models\summit\SummitTrackChair;
 use repositories\main\DoctrineLegalDocumentRepository;
 
 /**
@@ -642,6 +647,20 @@ final class RepositoriesProvider extends ServiceProvider
         App::singleton(
             ILegalDocumentRepository::class,
             DoctrineLegalDocumentRepository::class
+        );
+
+        App::singleton(
+            ISummitTrackChairRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitTrackChair::class);
+            }
+        );
+
+        App::singleton(
+            ISummitCategoryChangeRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitCategoryChange::class);
+            }
         );
     }
 }

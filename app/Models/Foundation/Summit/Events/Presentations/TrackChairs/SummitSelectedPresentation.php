@@ -12,22 +12,29 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IOrderable;
+use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
-use Doctrine\Common\Collections\ArrayCollection;
 use models\main\Member;
 /**
  * Class SummitSelectedPresentation
  * @ORM\Entity
  * @ORM\Table(name="SummitSelectedPresentation")
  * @package models\summit
-*/
-class SummitSelectedPresentation extends SilverstripeBaseModel
+ */
+class SummitSelectedPresentation extends SilverstripeBaseModel implements IOrderable
 {
 
     const CollectionSelected = 'selected';
-    const CollectionMaybe    = 'maybe';
-    const CollectionPass     = 'pass';
+    const CollectionMaybe = 'maybe';
+    const CollectionPass = 'pass';
+
+    const ValidCollectionTypes = [
+        self::CollectionSelected,
+        self::CollectionMaybe,
+        self::CollectionPass,
+    ];
 
     /**
      * @ORM\Column(name="Collection", type="string")
@@ -72,9 +79,12 @@ class SummitSelectedPresentation extends SilverstripeBaseModel
 
     /**
      * @param string $collection
+     * @throws ValidationException
      */
-    public function setCollection($collection)
+    public function setCollection(string $collection): void
     {
+        if (!in_array($collection, self::ValidCollectionTypes))
+            throw new ValidationException(sprintf("collection type %s is not valid", $collection));
         $this->collection = $collection;
     }
 
@@ -140,5 +150,57 @@ class SummitSelectedPresentation extends SilverstripeBaseModel
     public function setMember($member)
     {
         $this->member = $member;
+    }
+
+    public function getPresentationId(): int
+    {
+        try {
+            return is_null($this->presentation) ? 0 : $this->presentation->getId();
+        } catch (\Exception $ex) {
+            return 0;
+        }
+    }
+
+    public function getMemberId(): int
+    {
+        try {
+            return is_null($this->member) ? 0 : $this->member->getId();
+        } catch (\Exception $ex) {
+            return 0;
+        }
+    }
+
+    public function getListId(): int
+    {
+        try {
+            return is_null($this->list) ? 0 : $this->list->getId();
+        } catch (\Exception $ex) {
+            return 0;
+        }
+    }
+
+    /**
+     * @param SummitSelectedPresentationList $selection_list
+     * @param Presentation $presentation
+     * @param string $collection
+     * @param Member|null $owner
+     * @return SummitSelectedPresentation
+     */
+    static public function create(
+        SummitSelectedPresentationList $selection_list,
+        Presentation $presentation,
+        string $collection,
+        ?Member $owner): SummitSelectedPresentation
+    {
+        $selection = new SummitSelectedPresentation();
+        $selection->list = $selection_list;
+        $selection->presentation = $presentation;
+        $selection->collection = $collection;
+        $selection->member = $owner;
+        return $selection;
+    }
+
+    public function clearList():void{
+        $this->list = null;
     }
 }

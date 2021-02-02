@@ -13,6 +13,8 @@
  **/
 
 use App\Models\Foundation\Main\OrderableChilds;
+use Illuminate\Support\Arr;
+use models\summit\PresentationTrackChairView;
 use Behat\Transliterator\Transliterator;
 use Doctrine\ORM\Mapping AS ORM;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackAnswer;
@@ -23,6 +25,7 @@ use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuesti
 use Illuminate\Support\Facades\Config;
 use models\exceptions\ValidationException;
 use models\main\Member;
+
 /**
  * Class Presentation
  * @ORM\Entity
@@ -34,9 +37,9 @@ class Presentation extends SummitEvent
     /**
      * SELECTION STATUS (TRACK CHAIRS LIST)
      */
-    const SelectionStatus_Accepted   = 'accepted';
+    const SelectionStatus_Accepted = 'accepted';
     const SelectionStatus_Unaccepted = 'unaccepted';
-    const SelectionStatus_Alternate  = 'alternate';
+    const SelectionStatus_Alternate = 'alternate';
 
     /**
      * Defines the phase that a presentation has been created, but
@@ -171,7 +174,7 @@ class Presentation extends SummitEvent
 
     /**
      * @ORM\OneToMany(targetEntity="models\summit\SummitSelectedPresentation", mappedBy="presentation", cascade={"persist", "remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
-     * @var SummitSelectedPresentation[]
+     * @var SummitSelectedPresentation[]|ArrayCollection
      */
     protected $selected_presentations;
 
@@ -180,6 +183,25 @@ class Presentation extends SummitEvent
      * @var TrackAnswer[]
      */
     protected $answers;
+
+    /**
+     * @ORM\OneToMany(targetEntity="models\summit\PresentationTrackChairView", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var PresentationTrackChairView[]
+     */
+    private $track_chair_views;
+
+    /**
+     * @ORM\OneToMany(targetEntity="models\summit\PresentationVote", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var PresentationVote[]
+     */
+    private $votes;
+
+    /**
+     * @ORM\OneToMany(targetEntity="models\summit\SummitCategoryChange", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SummitCategoryChange[]
+     */
+    private $category_changes_requests;
+
 
     /**
      * @return bool
@@ -211,13 +233,17 @@ class Presentation extends SummitEvent
     public function __construct()
     {
         parent::__construct();
-        $this->progress              = self::PHASE_NEW;
-        $this->materials             = new ArrayCollection();
-        $this->speakers              = new ArrayCollection();
-        $this->answers               = new ArrayCollection();
-        $this->comments              = new ArrayCollection();
-        $this->to_record             = false;
-        $this->attending_media       = false;
+        $this->progress = self::PHASE_NEW;
+        $this->materials = new ArrayCollection();
+        $this->speakers = new ArrayCollection();
+        $this->answers = new ArrayCollection();
+        $this->comments = new ArrayCollection();
+        $this->track_chair_views = new ArrayCollection();
+        $this->votes = new ArrayCollection();
+        $this->category_changes_requests = new ArrayCollection();
+        $this->selected_presentations = new ArrayCollection();
+        $this->to_record = false;
+        $this->attending_media = false;
     }
 
     /**
@@ -255,7 +281,8 @@ class Presentation extends SummitEvent
     /**
      * @return string
      */
-    public function getClassName(){
+    public function getClassName()
+    {
         return self::ClassNamePresentation;
     }
 
@@ -270,13 +297,15 @@ class Presentation extends SummitEvent
     /**
      * @param PresentationSpeaker $speaker
      */
-    public function addSpeaker(PresentationSpeaker $speaker){
-        if($this->speakers->contains($speaker)) return;
+    public function addSpeaker(PresentationSpeaker $speaker)
+    {
+        if ($this->speakers->contains($speaker)) return;
         $this->speakers->add($speaker);
         $speaker->addPresentation($this);
     }
 
-    public function clearSpeakers(){
+    public function clearSpeakers()
+    {
         $this->speakers->clear();
     }
 
@@ -285,7 +314,7 @@ class Presentation extends SummitEvent
      */
     public function getSpeakerIds()
     {
-        return $this->speakers->map(function($entity)  {
+        return $this->speakers->map(function ($entity) {
             return $entity->getId();
         })->toArray();
     }
@@ -295,35 +324,40 @@ class Presentation extends SummitEvent
      */
     public function getVideos()
     {
-        return $this->materials->filter(function( $element) { return $element instanceof PresentationVideo; });
+        return $this->materials->filter(function ($element) {
+            return $element instanceof PresentationVideo;
+        });
     }
 
     /**
      * @param int $material_id
      * @return PresentationMaterial|null
      */
-    public function getMaterial($material_id){
+    public function getMaterial($material_id)
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($material_id)));
         $material = $this->materials->matching($criteria)->first();
-        return $material === false ? null:$material;
+        return $material === false ? null : $material;
     }
 
     /**
      * @param PresentationVideo $video
      * @return $this
      */
-    public function addVideo(PresentationVideo $video){
+    public function addVideo(PresentationVideo $video)
+    {
         $this->materials->add($video);
         $video->setPresentation($this);
         $video->setOrder($this->getMaterialsMaxOrder() + 1);
         return $this;
     }
 
-     /**
+    /**
      * @return bool
      */
-    public function hasVideos(){
+    public function hasVideos()
+    {
         return count($this->getVideos()) > 0;
     }
 
@@ -331,9 +365,12 @@ class Presentation extends SummitEvent
      * @param int $video_id
      * @return PresentationVideo
      */
-    public function getVideoBy($video_id){
+    public function getVideoBy($video_id)
+    {
         $res = $this->materials
-            ->filter(function( $element) use($video_id) { return $element instanceof PresentationVideo && $element->getId() == $video_id; })
+            ->filter(function ($element) use ($video_id) {
+                return $element instanceof PresentationVideo && $element->getId() == $video_id;
+            })
             ->first();
         return $res === false ? null : $res;
     }
@@ -342,9 +379,12 @@ class Presentation extends SummitEvent
      * @param int $slide_id
      * @return PresentationSlide
      */
-    public function getSlideBy($slide_id){
+    public function getSlideBy($slide_id)
+    {
         $res = $this->materials
-            ->filter(function( $element) use($slide_id) { return $element instanceof PresentationSlide && $element->getId() == $slide_id; })
+            ->filter(function ($element) use ($slide_id) {
+                return $element instanceof PresentationSlide && $element->getId() == $slide_id;
+            })
             ->first();
         return $res === false ? null : $res;
     }
@@ -353,9 +393,12 @@ class Presentation extends SummitEvent
      * @param int $link_id
      * @return PresentationLink
      */
-    public function getLinkBy($link_id){
+    public function getLinkBy($link_id)
+    {
         $res = $this->materials
-            ->filter(function( $element) use($link_id) { return $element instanceof PresentationLink && $element->getId() == $link_id; })
+            ->filter(function ($element) use ($link_id) {
+                return $element instanceof PresentationLink && $element->getId() == $link_id;
+            })
             ->first();
         return $res === false ? null : $res;
     }
@@ -364,9 +407,12 @@ class Presentation extends SummitEvent
      * @param int $mediaUploadId
      * @return PresentationMediaUpload
      */
-    public function getMediaUploadBy($mediaUploadId){
+    public function getMediaUploadBy($mediaUploadId)
+    {
         $res = $this->materials
-            ->filter(function( $element) use($mediaUploadId) { return $element instanceof PresentationMediaUpload && $element->getId() == $mediaUploadId; })
+            ->filter(function ($element) use ($mediaUploadId) {
+                return $element instanceof PresentationMediaUpload && $element->getId() == $mediaUploadId;
+            })
             ->first();
         return $res === false ? null : $res;
     }
@@ -375,7 +421,8 @@ class Presentation extends SummitEvent
     /**
      * @param PresentationVideo $video
      */
-    public function removeVideo(PresentationVideo $video){
+    public function removeVideo(PresentationVideo $video)
+    {
         $this->materials->removeElement($video);
         $video->unsetPresentation();
     }
@@ -383,15 +430,17 @@ class Presentation extends SummitEvent
     /**
      * @param PresentationSlide $slide
      */
-    public function removeSlide(PresentationSlide $slide){
+    public function removeSlide(PresentationSlide $slide)
+    {
         $this->materials->removeElement($slide);
         $slide->unsetPresentation();
     }
 
     /**
-     * @param PresentationLink  $link
+     * @param PresentationLink $link
      */
-    public function removeLink(PresentationLink  $link){
+    public function removeLink(PresentationLink $link)
+    {
         $this->materials->removeElement($link);
         $link->unsetPresentation();
     }
@@ -399,7 +448,8 @@ class Presentation extends SummitEvent
     /**
      * @param PresentationMediaUpload $mediaUpload
      */
-    public function removeMediaUpload(PresentationMediaUpload $mediaUpload){
+    public function removeMediaUpload(PresentationMediaUpload $mediaUpload)
+    {
         $this->materials->removeElement($mediaUpload);
         $mediaUpload->unsetPresentation();
     }
@@ -407,8 +457,9 @@ class Presentation extends SummitEvent
     /**
      * @param PresentationSpeaker $speaker
      */
-    public function removeSpeaker(PresentationSpeaker $speaker){
-        if(!$this->speakers->contains($speaker)) return;
+    public function removeSpeaker(PresentationSpeaker $speaker)
+    {
+        if (!$this->speakers->contains($speaker)) return;
         $this->speakers->removeElement($speaker);
     }
 
@@ -416,7 +467,8 @@ class Presentation extends SummitEvent
      * @param PresentationSpeaker $speaker
      * @return bool
      */
-    public function isSpeaker(PresentationSpeaker $speaker){
+    public function isSpeaker(PresentationSpeaker $speaker)
+    {
         return $this->speakers->contains($speaker);
     }
 
@@ -425,14 +477,17 @@ class Presentation extends SummitEvent
      */
     public function getSlides()
     {
-        return $this->materials->filter(function( $element) { return $element instanceof PresentationSlide; });
+        return $this->materials->filter(function ($element) {
+            return $element instanceof PresentationSlide;
+        });
     }
 
     /**
      * @param PresentationSlide $slide
      * @return $this
      */
-    public function addSlide(PresentationSlide $slide){
+    public function addSlide(PresentationSlide $slide)
+    {
         $this->materials->add($slide);
         $slide->setPresentation($this);
         $slide->setOrder($this->getMaterialsMaxOrder() + 1);
@@ -444,16 +499,20 @@ class Presentation extends SummitEvent
      */
     public function getMediaUploads()
     {
-        return $this->materials->filter(function( $element) { return $element instanceof PresentationMediaUpload; });
+        return $this->materials->filter(function ($element) {
+            return $element instanceof PresentationMediaUpload;
+        });
     }
 
     /**
      * @param SummitMediaUploadType $media_upload_type
      * @return bool
      */
-    public function hasMediaUploadByType(SummitMediaUploadType $media_upload_type):bool{
-        $res = $this->materials->filter(function( $element) use($media_upload_type) {
-            return $element instanceof PresentationMediaUpload && $element->getMediaUploadTypeId() == $media_upload_type->getId(); });
+    public function hasMediaUploadByType(SummitMediaUploadType $media_upload_type): bool
+    {
+        $res = $this->materials->filter(function ($element) use ($media_upload_type) {
+            return $element instanceof PresentationMediaUpload && $element->getMediaUploadTypeId() == $media_upload_type->getId();
+        });
         return $res->count() > 0;
     }
 
@@ -461,7 +520,8 @@ class Presentation extends SummitEvent
      * @param PresentationMediaUpload $mediaUpload
      * @return $this
      */
-    public function addMediaUpload(PresentationMediaUpload $mediaUpload){
+    public function addMediaUpload(PresentationMediaUpload $mediaUpload)
+    {
         $this->materials->add($mediaUpload);
         $mediaUpload->setPresentation($this);
         $mediaUpload->setOrder($this->getMaterialsMaxOrder() + 1);
@@ -471,7 +531,8 @@ class Presentation extends SummitEvent
     /**
      * @return int
      */
-    protected function getMaterialsMaxOrder(){
+    protected function getMaterialsMaxOrder()
+    {
         $criteria = Criteria::create();
         $criteria->orderBy(['order' => 'DESC']);
         $material = $this->materials->matching($criteria)->first();
@@ -481,21 +542,26 @@ class Presentation extends SummitEvent
     /**
      * @return bool
      */
-    public function hasSlides(){
+    public function hasSlides()
+    {
         return count($this->getSlides()) > 0;
     }
 
     /**
      * @return PresentationLink[]
      */
-    public function getLinks(){
-        return $this->materials->filter(function($element) { return $element instanceof PresentationLink; });
+    public function getLinks()
+    {
+        return $this->materials->filter(function ($element) {
+            return $element instanceof PresentationLink;
+        });
     }
 
     /**
      * @return bool
      */
-    public function hasLinks(){
+    public function hasLinks()
+    {
         return count($this->getLinks()) > 0;
     }
 
@@ -503,7 +569,8 @@ class Presentation extends SummitEvent
      * @param PresentationLink $link
      * @return $this
      */
-    public function addLink(PresentationLink $link){
+    public function addLink(PresentationLink $link)
+    {
         $this->materials->add($link);
         $link->setPresentation($this);
         $link->setOrder($this->getMaterialsMaxOrder() + 1);
@@ -513,27 +580,28 @@ class Presentation extends SummitEvent
     /**
      * @return int
      */
-    public function getModeratorId(){
+    public function getModeratorId()
+    {
         try {
-            return !is_null($this->moderator)? $this->moderator->getId():0;
-        }
-        catch(\Exception $ex){
+            return !is_null($this->moderator) ? $this->moderator->getId() : 0;
+        } catch (\Exception $ex) {
             return 0;
         }
     }
 
-    public function hasModerator():bool {
+    public function hasModerator(): bool
+    {
         return $this->getModeratorId() > 0;
     }
 
     /**
      * @return int
      */
-    public function getSelectionPlanId(){
+    public function getSelectionPlanId()
+    {
         try {
-            return !is_null($this->selection_plan)? $this->selection_plan->getId():0;
-        }
-        catch(\Exception $ex){
+            return !is_null($this->selection_plan) ? $this->selection_plan->getId() : 0;
+        } catch (\Exception $ex) {
             return 0;
         }
     }
@@ -555,7 +623,8 @@ class Presentation extends SummitEvent
         $this->moderator = $moderator;
     }
 
-    public function unsetModerator(){
+    public function unsetModerator()
+    {
         $this->moderator = null;
     }
 
@@ -578,7 +647,8 @@ class Presentation extends SummitEvent
     /**
      * @return string
      */
-    public function getStatusNice() {
+    public function getStatusNice()
+    {
         if ($this->isPublished())
             return 'Accepted';
         return $this->status;
@@ -587,11 +657,12 @@ class Presentation extends SummitEvent
     /**
      * @return string
      */
-    public function getProgressNice(){
-        switch($this->progress){
+    public function getProgressNice()
+    {
+        switch ($this->progress) {
             case self::PHASE_NEW:
                 return 'NEW';
-            break;
+                break;
             case self::PHASE_SUMMARY:
                 return 'SUMMARY';
                 break;
@@ -624,7 +695,8 @@ class Presentation extends SummitEvent
     /**
      * @return bool
      */
-    public function isCompleted():bool {
+    public function isCompleted(): bool
+    {
         return $this->progress == Presentation::PHASE_COMPLETE;
     }
 
@@ -633,7 +705,7 @@ class Presentation extends SummitEvent
      */
     public function setProgress(int $progress)
     {
-        if($this->progress < $progress)
+        if ($this->progress < $progress)
             $this->progress = $progress;
     }
 
@@ -699,10 +771,10 @@ class Presentation extends SummitEvent
             AND sp.collection = :collection
             AND l.list_type = :list_type
             AND l.list_class = :list_class")
-            ->setParameter('presentation_id' , $this->id)
-            ->setParameter('collection',  SummitSelectedPresentation::CollectionSelected)
-            ->setParameter('list_type',  SummitSelectedPresentationList::Group)
-            ->setParameter('list_class',  SummitSelectedPresentationList::Session)->getResult();
+            ->setParameter('presentation_id', $this->id)
+            ->setParameter('collection', SummitSelectedPresentation::CollectionSelected)
+            ->setParameter('list_type', SummitSelectedPresentationList::Group)
+            ->setParameter('list_class', SummitSelectedPresentationList::Session)->getResult();
 
         // Error out if a talk has more than one selection
         if (count($session_sel) > 1) {
@@ -724,7 +796,8 @@ class Presentation extends SummitEvent
         return Presentation::SelectionStatus_Alternate;
     }
 
-    public function getRank():?int{
+    public function getRank(): ?int
+    {
         $session_sel = $this->createQuery("SELECT sp from models\summit\SummitSelectedPresentation sp 
             JOIN sp.list l
             JOIN sp.presentation p
@@ -732,10 +805,10 @@ class Presentation extends SummitEvent
             AND sp.collection = :collection
             AND l.list_type = :list_type
             AND l.list_class = :list_class")
-            ->setParameter('presentation_id' , $this->id)
-            ->setParameter('collection',  SummitSelectedPresentation::CollectionSelected)
-            ->setParameter('list_type',  SummitSelectedPresentationList::Group)
-            ->setParameter('list_class',  SummitSelectedPresentationList::Session)->getResult();
+            ->setParameter('presentation_id', $this->id)
+            ->setParameter('collection', SummitSelectedPresentation::CollectionSelected)
+            ->setParameter('list_type', SummitSelectedPresentationList::Group)
+            ->setParameter('list_class', SummitSelectedPresentationList::Session)->getResult();
 
         // Error out if a talk has more than one selection
         if (count($session_sel) > 1) {
@@ -753,7 +826,6 @@ class Presentation extends SummitEvent
         }
 
         return $selection->getOrder();
-
     }
 
     /**
@@ -772,7 +844,8 @@ class Presentation extends SummitEvent
         $this->selection_plan = $selection_plan;
     }
 
-    public function clearSelectionPlan(){
+    public function clearSelectionPlan()
+    {
         $this->selection_plan = null;
     }
 
@@ -811,7 +884,8 @@ class Presentation extends SummitEvent
     /**
      * @param TrackAnswer $answer
      */
-    public function addAnswer(TrackAnswer $answer){
+    public function addAnswer(TrackAnswer $answer)
+    {
         $this->answers->add($answer);
         $answer->setPresentation($this);
     }
@@ -820,20 +894,22 @@ class Presentation extends SummitEvent
      * @param string $link
      * @return PresentationLink|null
      */
-    public function findLink($link){
+    public function findLink($link)
+    {
         $links = $this->getLinks();
 
-        foreach ($links as $entity){
-           if($entity->getLink() == $link)
-               return $entity;
+        foreach ($links as $entity) {
+            if ($entity->getLink() == $link)
+                return $entity;
         }
         return null;
     }
 
-    public function clearLinks(){
+    public function clearLinks()
+    {
         $links = $this->getLinks();
 
-        foreach ($links as $link){
+        foreach ($links as $link) {
             $this->materials->removeElement($link);
             $link->clearPresentation();
         }
@@ -843,7 +919,8 @@ class Presentation extends SummitEvent
      * @param TrackQuestionTemplate $question
      * @return TrackAnswer|null
      */
-    public function getTrackExtraQuestionAnswer(TrackQuestionTemplate $question){
+    public function getTrackExtraQuestionAnswer(TrackQuestionTemplate $question)
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('question', $question));
         $res = $this->answers->matching($criteria)->first();
@@ -853,8 +930,26 @@ class Presentation extends SummitEvent
     /**
      * @return SummitPresentationComment[]
      */
-    public function getPublicComments(){
-        return $this->comments->filter(function( $element) { return $element instanceof SummitPresentationComment && $element->isPublic(); });
+    public function getPublicComments()
+    {
+        return $this->comments->filter(function ($element) {
+            return $element instanceof SummitPresentationComment && $element->isPublic();
+        });
+    }
+
+    /**
+     * @return int
+     */
+    public function getCommentsCount():int{
+        return $this->comments->count();
+    }
+
+
+    /**
+     * @return ArrayCollection|SummitPresentationComment[]
+     */
+    public function getComments(){
+        return $this->comments;
     }
 
     /**
@@ -862,11 +957,10 @@ class Presentation extends SummitEvent
      */
     public function getCreatorId()
     {
-        try{
-            if(is_null($this->creator)) return 0;
+        try {
+            if (is_null($this->creator)) return 0;
             return $this->creator->getId();
-        }
-        catch(\Exception $ex){
+        } catch (\Exception $ex) {
             return 0;
         }
     }
@@ -875,34 +969,36 @@ class Presentation extends SummitEvent
      * @param PresentationSpeaker $speaker
      * @return bool
      */
-    public function canEdit(PresentationSpeaker $speaker){
-        if($this->getCreatorId() == $speaker->getMemberId()) return true;
-        if($this->getModeratorId() == $speaker->getId()) return true;
-        if($this->isSpeaker($speaker)) return true;
+    public function canEdit(PresentationSpeaker $speaker)
+    {
+        if ($this->getCreatorId() == $speaker->getMemberId()) return true;
+        if ($this->getModeratorId() == $speaker->getId()) return true;
+        if ($this->isSpeaker($speaker)) return true;
         return false;
     }
 
     /**
      * @return bool
      */
-    public function fulfilSpeakersConditions(): bool {
+    public function fulfilSpeakersConditions(): bool
+    {
         $type = $this->type;
-        if(!$type instanceof PresentationType) return false;
+        if (!$type instanceof PresentationType) return false;
 
-        if($type->isUseModerator()){
-            $count  = $this->getModeratorId() > 0 ? 1 : 0;
-            $max    = $type->getMaxModerators();
-            $min    = $type->getMinModerators();
-            if($type->isModeratorMandatory() && $min > $count) return false;
-            if( $count > $max ) return false;
+        if ($type->isUseModerator()) {
+            $count = $this->getModeratorId() > 0 ? 1 : 0;
+            $max = $type->getMaxModerators();
+            $min = $type->getMinModerators();
+            if ($type->isModeratorMandatory() && $min > $count) return false;
+            if ($count > $max) return false;
         }
 
-        if($type->isUseSpeakers()){
-            $count  = $this->speakers->count();
-            $max    = $type->getMaxSpeakers();
-            $min    = $type->getMinSpeakers();
-            if($type->isAreSpeakersMandatory() && $min > $count) return false;
-            if( $count > $max ) return false;
+        if ($type->isUseSpeakers()) {
+            $count = $this->speakers->count();
+            $max = $type->getMaxSpeakers();
+            $min = $type->getMinSpeakers();
+            if ($type->isAreSpeakersMandatory() && $min > $count) return false;
+            if ($count > $max) return false;
         }
 
         return true;
@@ -913,7 +1009,8 @@ class Presentation extends SummitEvent
      * @param int $new_order
      * @throws ValidationException
      */
-    public function recalculateMaterialOrder(PresentationMaterial $material, $new_order){
+    public function recalculateMaterialOrder(PresentationMaterial $material, $new_order)
+    {
         self::recalculateOrderForSelectable($this->materials, $material, $new_order);
     }
 
@@ -922,7 +1019,8 @@ class Presentation extends SummitEvent
     /**
      * @return bool
      */
-    public function isSubmitted():bool {
+    public function isSubmitted(): bool
+    {
         return $this->progress == Presentation::PHASE_COMPLETE && $this->status == Presentation::STATUS_RECEIVED;
     }
 
@@ -942,11 +1040,12 @@ class Presentation extends SummitEvent
         '/^[\.\-_]+/' => '', // Remove all leading dots, dashes or underscores
     ];
 
-    public function generateSlug():void{
-        if(empty($this->title)) return;
+    public function generateSlug(): void
+    {
+        if (empty($this->title)) return;
         $this->slug = trim(Transliterator::utf8ToAscii($this->title));
 
-        foreach(self::$default_replacements as $regex => $replace) {
+        foreach (self::$default_replacements as $regex => $replace) {
             $this->slug = preg_replace($regex, $replace, $this->slug);
         }
     }
@@ -967,7 +1066,7 @@ class Presentation extends SummitEvent
      *
      * @return  string
      */
-    public function getEditLink():string
+    public function getEditLink(): string
     {
         return sprintf
         (
@@ -981,10 +1080,317 @@ class Presentation extends SummitEvent
     /**
      * @return int
      */
-    public function getMediaUploadsMandatoryCount():int{
-        return $this->materials->filter(function( $element) {
+    public function getMediaUploadsMandatoryCount(): int
+    {
+        return $this->materials->filter(function ($element) {
             return $element instanceof PresentationMediaUpload && $element->isMandatory();
         })->count();
     }
 
+    /**
+     * @param Member $viewer
+     */
+    public function addTrackChairView(Member $viewer)
+    {
+
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('viewer', $viewer));
+        if($this->track_chair_views->matching($criteria)->count() > 0)
+            return;
+        $view = PresentationTrackChairView::build($viewer, $this);
+        $this->track_chair_views->add($view);
+    }
+
+    /**
+     * @param Member $commenter
+     * @param string $body
+     * @param bool $is_public
+     * @return SummitPresentationComment
+     */
+    public function addTrackChairComment(Member $commenter, string $body, $is_public = true)
+    {
+        $comment = SummitPresentationComment::createComment
+        (
+            $commenter,
+            $this,
+            $body,
+            $is_public
+        );
+
+        $this->comments->add($comment);
+        return $comment;
+    }
+
+    /**
+     * @param Member $commenter
+     * @param string $body
+     * @return SummitPresentationComment
+     */
+    public function addTrackChairNotification(Member $commenter, string $body)
+    {
+        $comment = SummitPresentationComment::createNotification
+        (
+            $commenter,
+            $this,
+            $body
+        );
+
+        $this->comments->add($comment);
+        return $comment;
+    }
+
+    public function hasViews(): bool
+    {
+        return $this->track_chair_views->count() > 0;
+    }
+
+    public function getViewsCount(): int
+    {
+        return $this->track_chair_views->count();
+    }
+
+    public function clearViews():void{
+        $this->track_chair_views->clear();
+    }
+
+    /**
+     * @param string $list_class
+     * @return bool
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function isGroupSelected($list_class = SummitSelectedPresentationList::Session): bool
+    {
+        return $this->createQuery("SELECT COUNT(sp.id) from models\summit\SummitSelectedPresentation sp 
+            JOIN sp.list l
+            JOIN sp.presentation p
+            WHERE p.id = :presentation_id 
+            AND sp.collection = :collection
+            AND l.list_type = :list_type
+            AND l.list_class = :list_class")
+                ->setParameter('presentation_id', $this->id)
+                ->setParameter('collection', SummitSelectedPresentation::CollectionSelected)
+                ->setParameter('list_type', SummitSelectedPresentationList::Group)
+                ->setParameter('list_class', $list_class)->getSingleScalarResult() > 0;
+    }
+
+    /**
+     * @param Member $member
+     * @param string $list_class
+     * @return SummitSelectedPresentation|null
+     */
+    public function getSelectionByMemberAndListClass(Member $member, $list_class = SummitSelectedPresentationList::Session): ?SummitSelectedPresentation
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('member', $member));
+        $selection = $this->selected_presentations->matching($criteria)->filter(function ($election) use ($list_class) {
+            $list = $election->getList();
+            return $list->getListClass() === $list_class;
+        })->first();
+
+        return $selection === false ? null : $selection;
+    }
+
+    /**
+     * @param Member $member
+     * @param string $list_class
+     * @return string|null
+     */
+    public function getSelectionCurrentSelectionType(Member $member, $list_class = SummitSelectedPresentationList::Session): ?string
+    {
+        $selection = $this->getSelectionByMemberAndListClass($member, $list_class);
+        if (is_null($selection)) return null;
+        return $selection->getCollection();
+    }
+
+    /**
+     * @param string $collection_type
+     * @return array|Member[]
+     */
+    public function getSelectionMembers(string $collection_type): array
+    {
+
+        $selections = $this->selected_presentations->filter(function ($selection) use ($collection_type) {
+            $list = $selection->getList();
+            return $list->getListType() === SummitSelectedPresentationList::Individual
+                && $selection->getCollection() == $collection_type;
+        })->getValues();
+
+        if (!count($selections)) return [];
+
+        return array_map(function ($selection) {
+            return $selection->getMember();
+        }, $selections);
+    }
+
+    /**
+     * @param string $collection_type
+     * @return int
+     */
+    public function getSelectionMembersCount(string $collection_type): int{
+        return $this->selected_presentations->filter(function ($selection) use ($collection_type) {
+            $list = $selection->getList();
+            return $list->getListType() === SummitSelectedPresentationList::Individual
+                && $selection->getCollection() == $collection_type;
+        })->count();
+    }
+
+    /**
+     * @return array|Member[]
+     */
+    public function getSelectors()
+    {
+        return $this->getSelectionMembers(SummitSelectedPresentation::CollectionSelected);
+    }
+
+    /**
+     * @return int
+     */
+    public function getSelectorsCount():int{
+        return $this->getSelectionMembersCount(SummitSelectedPresentation::CollectionSelected);
+    }
+
+    public function isSelectedByAnyone():bool{
+        return $this->getSelectorsCount() > 0;
+    }
+
+    /**
+     * @return array|Member[]
+     */
+    public function getLikers()
+    {
+        return $this->getSelectionMembers(SummitSelectedPresentation::CollectionMaybe);
+    }
+
+    /**
+     * @return int
+     */
+    public function getLikersCount():int{
+        return $this->getSelectionMembersCount(SummitSelectedPresentation::CollectionMaybe);
+    }
+
+    /**
+     * @return array|Member[]
+     */
+    public function getPassers()
+    {
+        return $this->getSelectionMembers(SummitSelectedPresentation::CollectionPass);
+    }
+
+    /**
+     * @return int
+     */
+    public function getPassersCount():int{
+        return $this->getSelectionMembersCount(SummitSelectedPresentation::CollectionPass);
+    }
+
+    /**
+     * @return int
+     */
+    public function getVotesTotalPoints(): int
+    {
+        $res =  $this->createQuery("SELECT SUM(v.vote) from models\summit\PresentationVote v 
+            JOIN v.presentation p
+            WHERE p.id = :presentation_id")
+            ->setParameter('presentation_id', $this->id)->getSingleScalarResult();
+        return is_null($res) ? 0: intval($res);
+    }
+
+    /**
+     * @return int
+     */
+    public function getVotesCount(): int
+    {
+
+        $res = $this->createQuery("SELECT COUNT(v.id) from models\summit\PresentationVote v 
+            JOIN v.presentation p
+            WHERE p.id = :presentation_id")
+            ->setParameter('presentation_id', $this->id)->getSingleScalarResult();
+        return is_null($res) ? 0: intval($res);
+    }
+
+    /**
+     * @return float
+     */
+    public function getVotesAverage(): float
+    {
+        $res = $this->createQuery("SELECT AVG(v.vote) from models\summit\PresentationVote v 
+            JOIN v.presentation p
+            WHERE p.id = :presentation_id")
+            ->setParameter('presentation_id', $this->id)->getSingleScalarResult();
+        return is_null($res) ? 0: floatval($res);
+    }
+
+    /**
+     * @return float
+     */
+    public function getPopularityScore():float
+    {
+
+        $weight_select = floatval(Config::get("track_chairs.weight_select"));
+        $weight_maybe = floatval(Config::get("track_chairs.weight_maybe"));
+        $weight_pass = floatval(Config::get("track_chairs.weight_pass"));
+
+        return (
+            ($this->getSelectorsCount() * $weight_select) +
+            ($this->getLikersCount() * $weight_maybe) +
+            ($this->getPassersCount()* $weight_pass)
+        );
+    }
+
+    public function clearCategoryChangeRequests():void{
+        $this->category_changes_requests->clear();
+    }
+
+    /**
+     * @return ArrayCollection|SummitCategoryChange[]
+     */
+    public function getCategoryChangeRequests():ArrayCollection{
+        return  $this->category_changes_requests;
+    }
+
+    /**
+     * @return ArrayCollection|SummitCategoryChange[]
+     */
+    public function getPendingCategoryChangeRequests():ArrayCollection{
+        $criteria = Criteria::create();
+        $criteria->andWhere(Criteria::expr()->eq('status', ISummitCategoryChangeStatus::Pending));
+        return $this->category_changes_requests->matching($criteria);
+    }
+
+    /**
+     * @param Member $requester
+     * @param PresentationCategory $newCategory
+     * @return SummitCategoryChange
+     * @throws ValidationException
+     */
+    public function addCategoryChangeRequest
+    (
+        Member $requester,
+        PresentationCategory $newCategory
+    ):SummitCategoryChange
+    {
+        $criteria = Criteria::create();
+        $criteria->andWhere(Criteria::expr()->eq('new_category', $newCategory));
+        $criteria->andWhere(Criteria::expr()->eq('status', ISummitCategoryChangeStatus::Pending));
+
+        if($this->category_changes_requests->matching($criteria)->count() > 0)
+            throw new ValidationException(sprintf("There is already a pending category change request for this category."));
+
+        $request = SummitCategoryChange::create($this, $requester, $newCategory);
+
+        $this->category_changes_requests->add($request);
+
+        return $request;
+    }
+
+    /**
+     * @param int $id
+     * @return SummitCategoryChange|null
+     */
+    public function getCategoryChangeRequest(int $id):?SummitCategoryChange{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $id));
+        $res = $this->category_changes_requests->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
 }

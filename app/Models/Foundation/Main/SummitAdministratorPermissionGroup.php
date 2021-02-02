@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 use App\Models\Foundation\Main\IGroup;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -189,5 +190,15 @@ SQL;
      */
     public static function isValidGroup(string $groupSlug):bool {
         return in_array($groupSlug,self::ValidGroups);
+    }
+
+    /**
+     * @param Member $member
+     * @return bool
+     */
+    public function hasMember(Member $member):bool{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $member->getId()));
+        return $this->members->matching($criteria)->count() > 0;
     }
 }

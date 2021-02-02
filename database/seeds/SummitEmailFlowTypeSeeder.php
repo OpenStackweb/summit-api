@@ -57,6 +57,10 @@ use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeaker
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
+// Presentation Selections
+use App\Jobs\Emails\PresentationSelections\PresentationCategoryChangeRequestCreatedEmail;
+use App\Jobs\Emails\PresentationSelections\PresentationCategoryChangeRequestResolvedEmail;
+use App\Jobs\Emails\PresentationSelections\SpeakerEmail;
 /**
  * Class SummitEmailFlowTypeSeeder
  */
@@ -77,6 +81,7 @@ final class SummitEmailFlowTypeSeeder extends Seeder
 
     public static function seed(){
         $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        // Registration Flow
         $flow = new SummitEmailFlowType();
         $flow->setName("Registration");
 
@@ -177,6 +182,7 @@ final class SummitEmailFlowTypeSeeder extends Seeder
 
         $em->persist($flow);
 
+        // Bookable Rooms Flow
         $flow = new SummitEmailFlowType();
         $flow->setName("Bookable Rooms");
 
@@ -216,6 +222,7 @@ final class SummitEmailFlowTypeSeeder extends Seeder
 
         $em->persist($flow);
 
+        // Schedule Flow
         $flow = new SummitEmailFlowType();
         $flow->setName("Schedule");
 
@@ -237,9 +244,9 @@ final class SummitEmailFlowTypeSeeder extends Seeder
             ],
         ], $flow);
 
-
         $em->persist($flow);
 
+        // Presentation Submissions Flow
         $flow = new SummitEmailFlowType();
         $flow->setName("Presentation Submissions");
 
@@ -290,6 +297,32 @@ final class SummitEmailFlowTypeSeeder extends Seeder
                 'default_email_template' => ImportEventSpeakerEmail::DEFAULT_TEMPLATE
             ],
 
+        ], $flow);
+
+        $em->persist($flow);
+        $em->flush();
+
+        // Presentation Selection Flow
+
+        $flow = new SummitEmailFlowType();
+        $flow->setName("Presentation Selections");
+
+        self::createEventsTypes([
+            [
+                'name' => PresentationCategoryChangeRequestCreatedEmail::EVENT_NAME,
+                'slug' => PresentationCategoryChangeRequestCreatedEmail::EVENT_SLUG,
+                'default_email_template' => PresentationCategoryChangeRequestCreatedEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => PresentationCategoryChangeRequestResolvedEmail::EVENT_NAME,
+                'slug' => PresentationCategoryChangeRequestResolvedEmail::EVENT_SLUG,
+                'default_email_template' => PresentationCategoryChangeRequestResolvedEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => SpeakerEmail::EVENT_NAME,
+                'slug' => SpeakerEmail::EVENT_SLUG,
+                'default_email_template' => SpeakerEmail::DEFAULT_TEMPLATE
+            ],
         ], $flow);
 
         $em->persist($flow);

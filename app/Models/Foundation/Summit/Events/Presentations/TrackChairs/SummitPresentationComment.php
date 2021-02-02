@@ -158,7 +158,6 @@ class SummitPresentationComment extends SilverstripeBaseModel
         }
     }
 
-
     /**
      * @return int
      */
@@ -173,5 +172,45 @@ class SummitPresentationComment extends SilverstripeBaseModel
         }
     }
 
+    public static function createComment
+    (
+        Member $creator,
+        Presentation $presentation,
+        string $body,
+        bool $is_public = true
+    ):SummitPresentationComment{
+        $comment = new SummitPresentationComment();
+        $comment->is_public = $is_public;
+        $comment->body = $body;
+        $comment->creator = $creator;
+        $comment->presentation = $presentation;
+        return $comment;
+    }
+
+    public static function createNotification
+    (
+        Member $creator,
+        Presentation $presentation,
+        string $body
+    ):SummitPresentationComment{
+        $comment = new SummitPresentationComment();
+
+        $body = str_replace(
+            [
+                '{member}',
+                '{presentation}'
+            ],
+            [
+                $creator->getFullName(),
+                $presentation->getTitle()
+            ],
+            $body
+        );
+        $comment->body = $body;
+        $comment->creator = $creator;
+        $comment->is_activity = true;
+        $comment->presentation = $presentation;
+        return $comment;
+    }
 
 }

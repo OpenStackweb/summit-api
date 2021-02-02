@@ -1,6 +1,6 @@
-<?php namespace models\exceptions;
+<?php namespace App\Models\Exceptions;
 /**
- * Copyright 2015 OpenStack Foundation
+ * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,10 +13,10 @@
  **/
 use Exception;
 /**
- * Class EntityNotFoundException
- * @package models\exceptions
+ * Class AuthzException
+ * @package App\Models\Exceptions
  */
-class EntityNotFoundException extends Exception
+final class AuthzException extends Exception
 {
 
 }

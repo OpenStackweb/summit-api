@@ -39,14 +39,14 @@ class SummitEventEntityStateChanged extends Event
      * @param SummitEvent $summit_event
      * @param LifecycleEventArgs $args
      */
-    public function __construct(SummitEvent $summit_event, LifecycleEventArgs $args)
+    public function __construct(?SummitEvent $summit_event, LifecycleEventArgs $args)
     {
         $this->summit_event = $summit_event;
         $this->args         = $args;
     }
 
     /**
-     * @return SummitEvent
+     * @return SummitEvent|null
      */
     public function getSummitEvent()
     {

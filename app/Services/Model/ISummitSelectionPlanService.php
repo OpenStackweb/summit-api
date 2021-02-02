@@ -11,10 +11,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\SelectionPlan;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\summit\Presentation;
 use models\summit\Summit;
+use models\summit\SummitCategoryChange;
+use models\summit\SummitPresentationComment;
+
 /**
  * Interface ISummitSelectionPlanService
  * @package App\Services\Model
@@ -74,4 +80,52 @@ interface ISummitSelectionPlanService
      * @return SelectionPlan|null
      */
     public function getCurrentSelectionPlanByStatus(Summit $summit, $status);
+
+    /**
+     * @param Summit $summit
+     * @param int $selection_plan_id
+     * @param int $presentation_id
+     * @return Presentation
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     * @throws AuthzException
+     */
+    public function markPresentationAsViewed(Summit $summit, int $selection_plan_id, int $presentation_id):Presentation;
+
+    /**
+     * @param Summit $summit
+     * @param int $selection_plan_id
+     * @param int $presentation_id
+     * @param array $payload
+     * @return SummitPresentationComment
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     * @throws AuthzException
+     */
+    public function addPresentationComment(Summit $summit, int $selection_plan_id, int $presentation_id, array $payload):SummitPresentationComment;
+
+    /**
+     * @param Summit $summit
+     * @param int $selection_plan_id
+     * @param int $presentation_id
+     * @param int $new_category_id
+     * @return SummitCategoryChange|null
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     * @throws AuthzException
+     */
+    public function createPresentationCategoryChangeRequest(Summit $summit, int $selection_plan_id, int $presentation_id, int $new_category_id):?SummitCategoryChange;
+
+    /**
+     * @param Summit $summit
+     * @param int $selection_plan_id
+     * @param int $presentation_id
+     * @param int $category_change_request_id
+     * @param array $payload
+     * @return SummitCategoryChange|null
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     * @throws AuthzException
+     */
+    public function resolvePresentationCategoryChangeRequest(Summit $summit, int $selection_plan_id, int $presentation_id, int $category_change_request_id, array $payload):?SummitCategoryChange;
 }

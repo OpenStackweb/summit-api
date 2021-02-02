@@ -24,6 +24,8 @@ use models\summit\PresentationType;
 use models\summit\IPresentationType;
 use App\Models\Foundation\Summit\SelectionPlan;
 use Illuminate\Support\Facades\DB;
+use models\summit\Presentation;
+use models\main\SummitAdministratorPermissionGroup;
 /**
  * Trait InsertSummitTestData
  * @package Tests
@@ -35,6 +37,16 @@ trait InsertSummitTestData
      * @var Summit
      */
     static $summit;
+
+    /**
+     * @var SelectionPlan
+     */
+    static $default_selection_plan;
+
+    /**
+     * @var SummitAdministratorPermissionGroup
+     */
+    static $summit_permission_group;
 
     /**
      * @var Summit
@@ -52,6 +64,11 @@ trait InsertSummitTestData
     static $defaultTrack;
 
     /**
+     * @var PresentationCategory
+     */
+    static $secondaryTrack;
+
+    /**
      * @var SummitEventType
      */
     static $defaultEventType;
@@ -66,10 +83,24 @@ trait InsertSummitTestData
      */
     static $summit_repository;
 
+    /**
+     * @var ObjectRepository
+     */
+    static $summit_permission_group_repository;
+
+    /**
+     * @var array|Presentation[]
+     */
+    static $presentations;
+
+    /**
+     * @throws Exception
+     */
     protected static function insertTestData(){
         DB::setDefaultConnection("model");
         //DB::table("Summit")->delete();
         self::$summit_repository = EntityManager::getRepository(Summit::class);
+        self::$summit_permission_group_repository = EntityManager::getRepository(SummitAdministratorPermissionGroup::class);
         self::$summit = new Summit();
         self::$summit->setActive(true);
         // set feed type (sched)
@@ -120,12 +151,26 @@ trait InsertSummitTestData
         self::$defaultTrack = new PresentationCategory();
         self::$defaultTrack->setTitle('DEFAULT TRACK');
         self::$defaultTrack->setCode('DFT');
-        self::$defaultTrack->setLightningCount(true);
+        self::$defaultTrack->setSessionCount(3);
+        self::$defaultTrack->setAlternateCount(3);
+        self::$defaultTrack->setLightningCount(3);
+        self::$defaultTrack->setChairVisible(true);
+        self::$defaultTrack->setVotingVisible(true);
+
+        self::$secondaryTrack = new PresentationCategory();
+        self::$secondaryTrack->setTitle('SECONDARY TRACK');
+        self::$secondaryTrack->setCode('SDFT');
+        self::$secondaryTrack->setSessionCount(3);
+        self::$secondaryTrack->setAlternateCount(3);
+        self::$secondaryTrack->setLightningCount(3);
+        self::$secondaryTrack->setChairVisible(true);
+        self::$secondaryTrack->setVotingVisible(true);
 
         $track_group = new PresentationCategoryGroup();
         $track_group->setName("DEFAULT TRACK GROUP");
         $track_group->addCategory(self::$defaultTrack);
         self::$summit->addPresentationCategory(self::$defaultTrack);
+        self::$summit->addPresentationCategory(self::$secondaryTrack);
         self::$summit->addCategoryGroup($track_group);
 
         self::$defaultEventType = new PresentationType();
@@ -141,24 +186,48 @@ trait InsertSummitTestData
         self::$defaultEventType->setIsModeratorMandatory(false);
         self::$summit->addEventType(self::$defaultEventType);
 
-        $selection_plan = new SelectionPlan();
-        $selection_plan->setName("TEST_SELECTION_PLAN");
+        self::$default_selection_plan = new SelectionPlan();
+        self::$default_selection_plan->setName("TEST_SELECTION_PLAN");
         $submission_begin_date = new DateTime('now', self::$summit->getTimeZone());
         $submission_end_date = (clone $submission_begin_date)->add(new DateInterval("P14D"));
-        $selection_plan->setSummit(self::$summit);
-        $selection_plan->setSubmissionBeginDate($submission_begin_date);
-        $selection_plan->setSubmissionEndDate($submission_end_date);
-        $selection_plan->setIsEnabled(true);
-        $selection_plan->addTrackGroup($track_group);
+        self::$default_selection_plan->setSummit(self::$summit);
 
-        self::$summit->addSelectionPlan($selection_plan);
+        self::$default_selection_plan->setSubmissionBeginDate($submission_begin_date);
+        self::$default_selection_plan->setSubmissionEndDate($submission_end_date);
+        self::$default_selection_plan->setSelectionBeginDate($submission_begin_date);
+        self::$default_selection_plan->setSelectionEndDate($submission_end_date);
+        self::$default_selection_plan->setIsEnabled(true);
+        self::$default_selection_plan->addTrackGroup($track_group);
+
+        self::$summit->addSelectionPlan(self::$default_selection_plan);
 
         self::$em = Registry::getManager(SilverstripeBaseModel::EntityManager);
         if (!self::$em ->isOpen()) {
             self::$em  = Registry::resetManager(SilverstripeBaseModel::EntityManager);
         }
+
+        self::$presentations = [];
+
+        for($i = 0 ; $i < 20; $i++){
+            $presentation = new Presentation();
+            $presentation->setTitle(sprintf("Presentation Title %s %s", $i, str_random(16)));
+            $presentation->setAbstract(sprintf("Presentation Abstract %s %s", $i, str_random(16)));
+            $presentation->setCategory(self::$defaultTrack);
+            $presentation->setProgress(Presentation::PHASE_COMPLETE);
+            $presentation->setStatus(Presentation::STATUS_RECEIVED);
+            $presentation->setType( self::$defaultEventType );
+            self::$default_selection_plan->addPresentation($presentation);
+            self::$summit->addEvent($presentation);
+            self::$presentations[] = $presentation;
+        }
+
+        self::$summit_permission_group = new SummitAdministratorPermissionGroup();
+        self::$summit_permission_group->setTitle(sprintf("DEFAULT PERMISSION GROUP %s", str_random(16)));
+        self::$summit_permission_group->addSummit(self::$summit);
+
         self::$em->persist(self::$summit);
         self::$em->persist(self::$summit2);
+        self::$em->persist(self::$summit_permission_group);
         self::$em->flush();
     }
 
@@ -166,8 +235,10 @@ trait InsertSummitTestData
         self::$em  = Registry::resetManager(SilverstripeBaseModel::EntityManager);
         self::$summit = self::$summit_repository->find(self::$summit->getId());
         self::$summit2 = self::$summit_repository->find(self::$summit2->getId());
+        self::$summit_permission_group = self::$summit_permission_group_repository->find(self::$summit_permission_group->getId());
         self::$em->remove(self::$summit);
         self::$em->remove(self::$summit2);
+        self::$em->remove(self::$summit_permission_group);
         self::$em->flush();
     }
 }

@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 use App\Models\Utils\TimeZoneEntity;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -340,7 +342,7 @@ class SelectionPlan extends SilverstripeBaseModel
     public function addPresentation(Presentation $presentation){
         if($this->presentations->contains($presentation)) return;
         $this->presentations->add($presentation);
-        $presentation->setSelectedPresentations($this);
+        $presentation->setSelectionPlan($this);
     }
 
     public function getStageStatus($stage) {
@@ -419,4 +421,14 @@ class SelectionPlan extends SilverstripeBaseModel
         $this->allow_new_presentations = $allow_new_presentations;
     }
 
+    /**
+     * @param int $id
+     * @return Presentation|null
+     */
+    public function getPresentation(int $id):?Presentation{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', intval($id)));
+        $presentation = $this->presentations->matching($criteria)->first();
+        return $presentation === false ? null : $presentation;
+    }
 }

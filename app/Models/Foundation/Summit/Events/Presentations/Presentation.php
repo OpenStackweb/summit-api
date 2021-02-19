@@ -1144,6 +1144,15 @@ class Presentation extends SummitEvent
         return $this->track_chair_views->count() > 0;
     }
 
+
+    /**
+     * @return ArrayCollection|PresentationTrackChairView[]
+     */
+    public function getViewers()
+    {
+        return $this->track_chair_views;
+    }
+
     public function getViewsCount(): int
     {
         return $this->track_chair_views->count();

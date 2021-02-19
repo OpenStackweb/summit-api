@@ -52,6 +52,7 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
         'likers',
         'passers',
         'comments',
+        'viewers',
     ];
 
     /**
@@ -88,6 +89,15 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
                 $likers[] = $m->getId();
             }
             $values['likers'] = $likers;
+        }
+
+        if(in_array('viewers', $relations))
+        {
+            $viewers = [];
+            foreach ($presentation->getViewers() as $v) {
+                $viewers[] = $v->getId();
+            }
+            $values['viewers'] = $viewers;
         }
 
         if(in_array('passers', $relations))
@@ -134,6 +144,14 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
                             $passers[] = SerializerRegistry::getInstance()->getSerializer($m)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['passers'] = $passers;
+                    }
+                        break;
+                    case 'viewers': {
+                        $viewers = [];
+                        foreach ($presentation->getViewers() as $v) {
+                            $viewers[] = SerializerRegistry::getInstance()->getSerializer($v)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $values['viewers'] = $viewers;
                     }
                         break;
                     case 'comments':{

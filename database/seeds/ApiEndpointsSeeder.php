@@ -5567,6 +5567,20 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'add-individual-selection-list',
+                'route' => '/api/v1/summits/{id}/tracks/{track_id}/selection-lists/individual/owner/me',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
                 'name' => 'get-individual-selection-list',
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/selection-lists/individual/owner/{owner_id}',
                 'http_method' => 'GET',

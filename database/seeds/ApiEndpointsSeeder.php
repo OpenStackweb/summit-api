@@ -5580,21 +5580,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::TrackChairsAdmins,
                 ]
             ],
-            [
-                'name' => 'add-individual-selection-list',
-                'route' => '/api/v1/summits/{id}/tracks/{track_id}/selection-lists/individual/presentation-selections/{collection}/presentations/{presentation_id}',
-                'http_method' => 'POST',
-                'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
-                ],
-                'authz_groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::TrackChairs,
-                    IGroup::TrackChairsAdmins,
-                ]
-            ],
-            [
+             [
                 'name' => 'add-presentation-to-individual-selection-list',
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/selection-lists/individual/presentation-selections/{collection}/presentations/{presentation_id}',
                 'http_method' => 'POST',
@@ -5609,7 +5595,7 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
-                'name' => 'remove-presentation-to-individual-selection-list',
+                'name' => 'remove-presentation-from-individual-selection-list',
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/selection-lists/individual/presentation-selections/{collection}/presentations/{presentation_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [

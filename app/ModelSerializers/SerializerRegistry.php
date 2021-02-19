@@ -203,7 +203,7 @@ final class SerializerRegistry
 
         $this->registry['SummitCategoryChange'] = SummitCategoryChangeSerializer::class;
         // track chairs
-
+        $this->registry['PresentationTrackChairView'] = PresentationTrackChairViewSerializer::class;
         $this->registry['SummitSelectedPresentationList'] = SummitSelectedPresentationListSerializer::class;
         $this->registry['SummitSelectedPresentation'] = SummitSelectedPresentationSerializer::class;
 

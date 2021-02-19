@@ -15,6 +15,7 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\main\Member;
 use models\summit\Presentation;
 use models\utils\SilverstripeBaseModel;
+use models\utils\One2ManyPropertyTrait;
 /**
  * @ORM\Entity
  * @ORM\Table(name="PresentationTrackChairView")
@@ -23,6 +24,18 @@ use models\utils\SilverstripeBaseModel;
  */
 class PresentationTrackChairView extends SilverstripeBaseModel
 {
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getViewerId' => 'viewer',
+        'getPresentationId' => 'presentation',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasViewer' => 'viewer',
+        'hasPresentation' => 'presentation',
+    ];
+
     /**
      * @ORM\ManyToOne(targetEntity="models\main\Member")
      * @ORM\JoinColumn(name="TrackChairID", referencedColumnName="ID", onDelete="SET NULL")

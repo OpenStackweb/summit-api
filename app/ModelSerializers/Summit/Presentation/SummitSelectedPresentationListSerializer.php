@@ -30,15 +30,6 @@ final class SummitSelectedPresentationListSerializer extends SilverStripeSeriali
         'OwnerId' => 'owner_id:json_int',
     ];
 
-    protected static $allowed_fields = [
-        'name',
-        'type',
-        'popularity_score',
-        'hash',
-        'category_id',
-        'owner_id',
-    ];
-
     protected static $allowed_relations = [
         'selected_presentations',
         'interested_presentations',

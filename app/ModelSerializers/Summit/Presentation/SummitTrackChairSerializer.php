@@ -26,11 +26,6 @@ final class SummitTrackChairSerializer extends SilverStripeSerializer
         'MemberId' => 'member_id:json_int',
     ];
 
-    protected static $allowed_fields = [
-        'summit_id',
-        'member_id',
-    ];
-
     protected static $allowed_relations = [
         'categories',
     ];

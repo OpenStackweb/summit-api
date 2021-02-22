@@ -642,6 +642,13 @@ SQL;
     }
 
     /**
+     * @return ArrayCollection|SummitSelectedPresentationList[]
+     */
+    public function getSelectionLists(){
+        return $this->selection_lists;
+    }
+
+    /**
      * @param int $list_id
      * @return SummitSelectedPresentationList|null
      */

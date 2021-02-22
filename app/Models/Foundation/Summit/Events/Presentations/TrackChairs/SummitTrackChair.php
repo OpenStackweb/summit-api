@@ -64,6 +64,8 @@ class SummitTrackChair extends SilverstripeBaseModel
      * @throws ValidationException
      */
     public function addCategory(PresentationCategory $track){
+        if($this->categories->contains($track))
+            return;
         if(!$track->isChairVisible())
             throw new ValidationException(sprintf("Category %s is not visible by track chairs.", $track->getId()));
 
@@ -73,10 +75,19 @@ class SummitTrackChair extends SilverstripeBaseModel
 
     /**
      * @param PresentationCategory $track
+     * @throws ValidationException
      */
     public function removeCategory(PresentationCategory $track){
+        if(!$this->categories->contains($track))
+            return;
         $track->removeFromTrackChairs($this);
         $this->categories->removeElement($track);
+
+        $list = $track->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $track, $this->member);
+        // if we remove the track , then we need to remove the selection lists
+        if(!is_null($list)){
+            $track->removeSelectionList($list);
+        }
     }
 
     /**

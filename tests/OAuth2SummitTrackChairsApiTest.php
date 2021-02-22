@@ -76,6 +76,7 @@ class OAuth2SummitTrackChairsApiTest  extends \ProtectedApiTest
     }
 
     public function testAddTrackChair(){
+
         $params = [
             'id' => self::$summit->getId(),
             'expand' => 'member,categories'
@@ -94,6 +95,74 @@ class OAuth2SummitTrackChairsApiTest  extends \ProtectedApiTest
         $response = $this->action(
             "POST",
             "OAuth2SummitTrackChairsApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $track_chair = json_decode($content);
+        $this->assertTrue(!is_null($track_chair));
+    }
+
+    public function testUpdateTrackChair(){
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'expand' => 'member,categories,categories.selection_lists'
+        ];
+
+        $data = [
+            'member_id' => self::$member2->getId(),
+            'categories' => [self::$defaultTrack->getId()]
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitTrackChairsApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $track_chair = json_decode($content);
+        $this->assertTrue(!is_null($track_chair));
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_chair_id' => $track_chair->id,
+            'expand' => 'member,categories,categories.selection_lists'
+        ];
+
+        $data = [
+            'member_id' => self::$member2->getId(),
+            'categories' => [
+                self::$secondaryTrack->getId()
+            ]
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitTrackChairsApiController@update",
             $params,
             [],
             [],

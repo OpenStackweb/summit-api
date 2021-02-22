@@ -80,6 +80,9 @@ class SummitSelectedPresentationList extends SilverstripeBaseModel
      */
     private $selected_presentations;
 
+    /**
+     * SummitSelectedPresentationList constructor.
+     */
     public function __construct()
     {
         parent::__construct();

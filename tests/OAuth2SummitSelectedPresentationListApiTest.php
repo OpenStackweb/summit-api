@@ -110,7 +110,7 @@ final class OAuth2SummitSelectedPresentationListApiTest
     /**
      * @return mixed
      */
-    public function testAddIndividualSelectionListAndAddSelectionAndRemoveIt(){
+    public function testAddIndividualSelectionListAndReorder(){
 
         $params = [
             'id' => self::$summit->getId(),
@@ -164,9 +164,77 @@ final class OAuth2SummitSelectedPresentationListApiTest
 
         $content = $response->getContent();
         $this->assertResponseStatus(201);
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_id' =>  self::$defaultTrack->getId(),
+            'list_id' => $selection_list->id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $data = [
+            'collection' => SummitSelectedPresentation::CollectionSelected,
+            'presentations' => [
+                self::$presentations[1]->getId(),
+                self::$presentations[0]->getId(),
+                self::$presentations[2]->getId()
+            ]
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSelectedPresentationListApiController@reorderSelectionList",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
         $selection_list = json_decode($content);
         $this->assertTrue(!is_null($selection_list));
-        $this->assertTrue(count($selection_list->selected_presentations) > 0);
+        $this->assertTrue(count($selection_list->selected_presentations) == 3);
+
+        return $selection_list;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function testAddIndividualSelectionListAndReorderRemove(){
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_id' =>  self::$defaultTrack->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectedPresentationListApiController@createIndividualSelectionList",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $selection_list = json_decode($content);
+        $this->assertTrue(!is_null($selection_list));
 
         $params = [
             'id' => self::$summit->getId(),
@@ -182,8 +250,8 @@ final class OAuth2SummitSelectedPresentationListApiTest
         ];
 
         $response = $this->action(
-            "DELETE",
-            "OAuth2SummitSelectedPresentationListApiController@removePresentationFromMyIndividualList",
+            "POST",
+            "OAuth2SummitSelectedPresentationListApiController@assignPresentationToMyIndividualList",
             $params,
             [],
             [],
@@ -194,9 +262,42 @@ final class OAuth2SummitSelectedPresentationListApiTest
 
         $content = $response->getContent();
         $this->assertResponseStatus(201);
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_id' =>  self::$defaultTrack->getId(),
+            'list_id' => $selection_list->id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $data = [
+            'collection' => SummitSelectedPresentation::CollectionSelected,
+            'presentations' => [
+                self::$presentations[1]->getId(),
+                self::$presentations[2]->getId()
+            ]
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSelectedPresentationListApiController@reorderSelectionList",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
         $selection_list = json_decode($content);
         $this->assertTrue(!is_null($selection_list));
-        $this->assertTrue(count($selection_list->selected_presentations) == 0);
+        $this->assertTrue(count($selection_list->selected_presentations) == 2);
 
         return $selection_list;
     }

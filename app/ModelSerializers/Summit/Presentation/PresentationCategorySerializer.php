@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\PresentationCategory;
 
 /**
@@ -52,6 +53,7 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
         $groups = [];
         $allowed_tag = [];
         $extra_questions = [];
+        $selection_lists = [];
         $summit = $category->getSummit();
 
         foreach ($category->getGroups() as $group) {
@@ -66,26 +68,32 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
             $extra_questions[] = intval($question->getId());
         }
 
+        foreach ($category->getSelectionLists() as $list) {
+            $selection_lists[] = intval($list->getId());
+        }
+
+
         $values['track_groups'] = $groups;
         $values['allowed_tags'] = $allowed_tag;
         $values['extra_questions'] = $extra_questions;
+        $values['selection_lists'] = $selection_lists;
 
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);
             foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
+                $relation = trim($relation);
+                switch ($relation) {
                     case 'track_groups':
                         {
                             $groups = [];
                             unset($values['track_groups']);
                             foreach ($category->getGroups() as $g) {
-                                $groups[] = SerializerRegistry::getInstance()->getSerializer($g)->serialize(null, [], ['none']);
+                                $groups[] = SerializerRegistry::getInstance()->getSerializer($g)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
                             $values['track_groups'] = $groups;
                         }
                         break;
-                }
-                switch (trim($relation)) {
+
                     case 'allowed_tags':
                         {
                             $allowed_tags = [];
@@ -101,19 +109,30 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
                             $values['allowed_tags'] = $allowed_tags;
                         }
                         break;
-                }
-                switch (trim($relation)) {
+
                     case 'extra_questions':
                         {
                             $extra_questions = [];
                             unset($values['extra_questions']);
                             foreach ($category->getExtraQuestions() as $question) {
-                                $extra_questions[] = SerializerRegistry::getInstance()->getSerializer($question)->serialize(null, [], ['none']);
+                                $extra_questions[] = SerializerRegistry::getInstance()->getSerializer($question)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
                             $values['extra_questions'] = $extra_questions;
                         }
                         break;
+
+                    case 'selection_lists':
+                        {
+                            $selection_lists = [];
+                            unset($values['selection_lists']);
+                            foreach ($category->getSelectionLists() as $list) {
+                                $selection_lists[] = SerializerRegistry::getInstance()->getSerializer($list)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            }
+                            $values['selection_lists'] = $selection_lists;
+                        }
+                        break;
                 }
+
             }
         }
 

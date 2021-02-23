@@ -119,16 +119,7 @@ final class SummitSelectedPresentationListService
                 throw new AuthzException("Current user is not allowed to perform this operation.");
             }
 
-            $selection_list = $category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Group, $category);
-            if (is_null($selection_list)) {
-                $selection_list = new SummitSelectedPresentationList();
-                $selection_list->setName(sprintf("Team Selections for %s", $category->getTitle()));
-                $selection_list->setListType(SummitSelectedPresentationList::Group);
-                $selection_list->setListClass(SummitSelectedPresentationList::Session);
-                $category->addSelectionList($selection_list);
-            }
-
-            return $selection_list;
+            return $category->createTeamSelectionList();
         });
     }
 
@@ -180,18 +171,8 @@ final class SummitSelectedPresentationListService
             if(!$auth){
                 throw new AuthzException("Current user is not allowed to perform this operation.");
             }
-            $selection_list = $category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $category, $current_member);
 
-            if (is_null($selection_list)) {
-                $selection_list = new SummitSelectedPresentationList();
-                $selection_list->setName(sprintf("%s Individual Selection List", $current_member->getFullName()));
-                $selection_list->setListType(SummitSelectedPresentationList::Individual);
-                $selection_list->setListClass(SummitSelectedPresentationList::Session);
-                $selection_list->setOwner($current_member);
-                $category->addSelectionList($selection_list);
-            }
-
-            return $selection_list;
+            return $category->createIndividualSelectionList($current_member);
         });
     }
 

@@ -16,6 +16,7 @@ use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplate;
 use Doctrine\Common\Collections\Criteria;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\File;
 use models\main\Member;
@@ -668,5 +669,44 @@ SQL;
 
     public function getTrackChairAvailableSlots():int{
         return $this->session_count + $this->alternate_count;
+    }
+
+    /**
+     * @param Member $member
+     * @return SummitSelectedPresentationList
+     * @throws ValidationException
+     */
+    public function createIndividualSelectionList(Member $member ):SummitSelectedPresentationList{
+        if(!is_null($member)) {
+            $individual_selection_list = $this->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $this, $member);
+
+            if (is_null($individual_selection_list)) {
+                $individual_selection_list = new SummitSelectedPresentationList();
+                Log::debug(sprintf("PresentationCategory::createSelectionLists adding individual list for track %s and member %s", $this->getId(), $member->getId()));
+                $individual_selection_list->setName(sprintf("%s Individual Selection List for ", $member->getFullName(), $this->getTitle()));
+                $individual_selection_list->setListType(SummitSelectedPresentationList::Individual);
+                $individual_selection_list->setListClass(SummitSelectedPresentationList::Session);
+                $individual_selection_list->setOwner($member);
+                $this->addSelectionList($individual_selection_list);
+            }
+        }
+        return $individual_selection_list;
+    }
+
+    /**
+     * @return SummitSelectedPresentationList
+     * @throws ValidationException
+     */
+    public function createTeamSelectionList():SummitSelectedPresentationList{
+        $team_selection_list = $this->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Group, $this);
+        if (is_null($team_selection_list)) {
+            Log::debug(sprintf("PresentationCategory::createSelectionLists adding team list for track %s", $this->getId()));
+            $team_selection_list = new SummitSelectedPresentationList();
+            $team_selection_list->setName(sprintf("Team Selections for %s", $this->getTitle()));
+            $team_selection_list->setListType(SummitSelectedPresentationList::Group);
+            $team_selection_list->setListClass(SummitSelectedPresentationList::Session);
+            $this->addSelectionList($team_selection_list);
+        }
+        return $team_selection_list;
     }
 }

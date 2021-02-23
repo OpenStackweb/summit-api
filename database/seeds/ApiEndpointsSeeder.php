@@ -3865,6 +3865,34 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::TrackChairsAdmins,
                 ]
             ],
+            [
+                'name' => 'add-track-2-track-chair',
+                'route' => '/api/v1/summits/{id}/track-chairs/{track_chair_id}/categories/{track_id}',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
+                'name' => 'remove-track-from-track-chair',
+                'route' => '/api/v1/summits/{id}/track-chairs/{track_chair_id}/categories/{track_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
             //tracks
             [
                 'name' => 'get-tracks',

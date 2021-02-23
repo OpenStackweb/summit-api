@@ -1208,6 +1208,13 @@ Route::group([
                         'middleware' => 'auth.user',
                         'uses' => 'OAuth2SummitTrackChairsApiController@delete'
                     ]);
+
+                    Route::group(['prefix' => 'categories'], function () {
+                        Route::group(['prefix' => '{track_id}'], function () {
+                            Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitTrackChairsApiController@addTrack2TrackChair']);
+                            Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitTrackChairsApiController@removeFromTrackChair']);
+                        });
+                    });
                 });
             });
 

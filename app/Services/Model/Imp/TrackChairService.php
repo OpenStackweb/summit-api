@@ -16,7 +16,6 @@ use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Main\IGroup;
 use App\Services\Model\AbstractService;
 use App\Services\Model\ITrackChairService;
-use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -26,9 +25,7 @@ use models\main\Member;
 use models\oauth2\IResourceServerContext;
 use models\summit\PresentationCategory;
 use models\summit\Summit;
-use models\summit\SummitSelectedPresentationList;
 use models\summit\SummitTrackChair;
-use function Psy\debug;
 
 /**
  * Class TrackChairService
@@ -122,29 +119,8 @@ final class TrackChairService
             $track_chair =  $summit->addTrackChair($member, $categories);
 
             foreach ($categories as $category) {
-
-                $individual_selection_list = $category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $category, $member);
-
-                if (is_null($individual_selection_list)) {
-                    $individual_selection_list = new SummitSelectedPresentationList();
-                    Log::debug(sprintf("TrackChaiService::addTrackChair adding individual list for track %s and member %s", $category->getId(), $member->getId()));
-                    $individual_selection_list->setName(sprintf("%s Individual Selection List for %s", $member->getFullName(), $category->getTitle()));
-                    $individual_selection_list->setListType(SummitSelectedPresentationList::Individual);
-                    $individual_selection_list->setListClass(SummitSelectedPresentationList::Session);
-                    $individual_selection_list->setOwner($member);
-                    $category->addSelectionList($individual_selection_list);
-                }
-
-                $team_selection_list = $category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Group, $category);
-                if (is_null($team_selection_list)) {
-                    Log::debug(sprintf("TrackChaiService::addTrackChair adding team list for track %s", $category->getId()));
-                    $team_selection_list = new SummitSelectedPresentationList();
-                    $team_selection_list->setName(sprintf("Team Selections for %s", $category->getTitle()));
-                    $team_selection_list->setListType(SummitSelectedPresentationList::Group);
-                    $team_selection_list->setListClass(SummitSelectedPresentationList::Session);
-                    $category->addSelectionList($team_selection_list);
-                }
-
+                $category->createIndividualSelectionList($track_chair->getMember());
+                $category->createTeamSelectionList();
             }
 
             return $track_chair;
@@ -190,27 +166,8 @@ final class TrackChairService
 
                 $track_chair->addCategory($category);
 
-                $individual_selection_list = $category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $category, $track_chair->getMember());
-
-                if (is_null($individual_selection_list)) {
-                    $individual_selection_list = new SummitSelectedPresentationList();
-                    Log::debug(sprintf("TrackChaiService::updateTrackChair adding individual list for track %s and member %s", $category->getId(), $track_chair->getMemberId()));
-                    $individual_selection_list->setName(sprintf("%s Individual Selection List for ", $track_chair->getMember()->getFullName(), $category->getTitle()));
-                    $individual_selection_list->setListType(SummitSelectedPresentationList::Individual);
-                    $individual_selection_list->setListClass(SummitSelectedPresentationList::Session);
-                    $individual_selection_list->setOwner($current_member);
-                    $category->addSelectionList($individual_selection_list);
-                }
-
-                $team_selection_list = $category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Group, $category);
-                if (is_null($team_selection_list)) {
-                    Log::debug(sprintf("TrackChaiService::updateTrackChair adding team list for track %s", $category->getId()));
-                    $team_selection_list = new SummitSelectedPresentationList();
-                    $team_selection_list->setName(sprintf("Team Selections for %s", $category->getTitle()));
-                    $team_selection_list->setListType(SummitSelectedPresentationList::Group);
-                    $team_selection_list->setListClass(SummitSelectedPresentationList::Session);
-                    $category->addSelectionList($team_selection_list);
-                }
+                $category->createIndividualSelectionList($track_chair->getMember());
+                $category->createTeamSelectionList();
             }
 
             foreach ($categories_2_remove as $category){
@@ -248,6 +205,70 @@ final class TrackChairService
             }
 
             $summit->removeTrackChair($track_chair);
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function addTrack2TrackChair(Summit $summit, int $track_chair_id, int $track_id): SummitTrackChair
+    {
+        return $this->tx_service->transaction(function () use ($summit, $track_chair_id, $track_id) {
+            $current_member = $this->resource_server_ctx->getCurrentUser();
+            if (is_null($current_member))
+                throw new AuthzException("User not Found");
+
+            $isAuth = $summit->isTrackChairAdmin($current_member);
+
+            if (!$isAuth)
+                throw new AuthzException(sprintf("User %s is not authorized to perform this action.", $current_member->getId()));
+
+            $track_chair = $summit->getTrackChair($track_chair_id);
+
+            if(is_null($track_chair))
+                throw new EntityNotFoundException(sprintf("Track Chair %s not found.", $track_chair_id));
+
+            $track = $summit->getPresentationCategory($track_id);
+            if(is_null($track))
+                throw new EntityNotFoundException(sprintf("Track %s not found.", $track_id));
+
+
+            $track_chair->addCategory($track);
+
+            $track->createIndividualSelectionList($track_chair->getMember());
+            $track->createTeamSelectionList();
+
+            return $track_chair;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function removeFromTrackChair(Summit $summit, int $track_chair_id, int $track_id): SummitTrackChair
+    {
+        return $this->tx_service->transaction(function () use ($summit, $track_chair_id, $track_id) {
+            $current_member = $this->resource_server_ctx->getCurrentUser();
+            if (is_null($current_member))
+                throw new AuthzException("User not Found");
+
+            $isAuth = $summit->isTrackChairAdmin($current_member);
+
+            if (!$isAuth)
+                throw new AuthzException(sprintf("User %s is not authorized to perform this action.", $current_member->getId()));
+
+            $track_chair = $summit->getTrackChair($track_chair_id);
+
+            if(is_null($track_chair))
+                throw new EntityNotFoundException(sprintf("Track Chair %s not found.", $track_chair_id));
+
+            $track = $track_chair->getCategory($track_id);
+            if(is_null($track))
+                throw new EntityNotFoundException(sprintf("Track %s not found.", $track_id));
+
+            $track_chair->removeCategory($track);
+
+            return $track_chair;
         });
     }
 }

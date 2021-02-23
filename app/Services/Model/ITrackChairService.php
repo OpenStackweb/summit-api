@@ -51,4 +51,20 @@ interface ITrackChairService
      * @throws AuthzException
      */
     public function deleteTrackChair(Summit $summit, int $track_chair_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $track_chair_id
+     * @param int $track_id
+     * @return SummitTrackChair
+     */
+    public function addTrack2TrackChair(Summit $summit, int $track_chair_id, int $track_id): SummitTrackChair;
+
+    /**
+     * @param Summit $summit
+     * @param int $track_chair_id
+     * @param int $track_id
+     * @return SummitTrackChair
+     */
+    public function removeFromTrackChair(Summit $summit, int $track_chair_id, int $track_id): SummitTrackChair;
 }

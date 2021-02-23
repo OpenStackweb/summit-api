@@ -177,4 +177,136 @@ class OAuth2SummitTrackChairsApiTest  extends \ProtectedApiTest
         $this->assertTrue(!is_null($track_chair));
     }
 
+    public function testAddTrackChairAndAddCategory(){
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'expand' => 'member,categories'
+        ];
+
+        $data = [
+            'member_id' => self::$member2->getId(),
+            'categories' => [self::$defaultTrack->getId()]
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitTrackChairsApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $track_chair = json_decode($content);
+        $this->assertTrue(!is_null($track_chair));
+
+        // add to collection
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_chair_id' => $track_chair->id,
+            'track_id' => self::$secondaryTrack->getId(),
+            'expand' => 'member,categories'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitTrackChairsApiController@addTrack2TrackChair",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $track_chair = json_decode($content);
+        $this->assertTrue(!is_null($track_chair));
+        $this->assertTrue(count($track_chair->categories) == 2);
+    }
+
+    public function testAddTrackChairAndDeleteCategory(){
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'expand' => 'member,categories'
+        ];
+
+        $data = [
+            'member_id' => self::$member2->getId(),
+            'categories' => [
+                self::$defaultTrack->getId(),
+                self::$secondaryTrack->getId()
+            ]
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitTrackChairsApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $track_chair = json_decode($content);
+        $this->assertTrue(!is_null($track_chair));
+        $this->assertTrue(count($track_chair->categories) == 2);
+        // add to collection
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_chair_id' => $track_chair->id,
+            'track_id' => self::$defaultTrack->getId(),
+            'expand' => 'member,categories'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitTrackChairsApiController@removeFromTrackChair",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $track_chair = json_decode($content);
+        $this->assertTrue(!is_null($track_chair));
+        $this->assertTrue(count($track_chair->categories) == 1);
+    }
 }

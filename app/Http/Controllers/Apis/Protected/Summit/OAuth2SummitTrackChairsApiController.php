@@ -11,10 +11,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackChairRepository;
 use App\Services\Model\ITrackChairService;
 use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Request;
+use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
@@ -23,6 +28,7 @@ use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterElement;
+use Exception;
 /**
  * Class OAuth2SummitTrackChairsApiController
  * @package App\Http\Controllers
@@ -276,6 +282,76 @@ final class OAuth2SummitTrackChairsApiController
      */
     protected function getChildFromSummit(Summit $summit, $child_id):?IEntity{
         return $summit->getTrackChair(intval($child_id));
+    }
+
+    /**
+     * @param $summit_id
+     * @param $track_chair_id
+     * @param $track_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function addTrack2TrackChair($summit_id, $track_chair_id, $track_id){
+        try{
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+            $track_chair = $this->service->addTrack2TrackChair($summit, intval($track_chair_id), intval($track_id));
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($track_chair)->serialize(Request::input('expand', '')));
+        }
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
+        }
+        catch (EntityNotFoundException $ex) {
+            Log::warning($ex);
+            return $this->error404(array('message' => $ex->getMessage()));
+        }
+        catch (\HTTP401UnauthorizedException $ex) {
+            Log::warning($ex);
+            return $this->error401();
+        }
+        catch(HTTP403ForbiddenException $ex){
+            Log::warning($ex);
+            return $this->error403();
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $track_chair_id
+     * @param $track_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function removeFromTrackChair($summit_id, $track_chair_id, $track_id){
+        try{
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+            $track_chair = $this->service->removeFromTrackChair($summit, intval($track_chair_id), intval($track_id));
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($track_chair)->serialize(Request::input('expand', '')));
+        }
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
+        }
+        catch (EntityNotFoundException $ex) {
+            Log::warning($ex);
+            return $this->error404(array('message' => $ex->getMessage()));
+        }
+        catch (\HTTP401UnauthorizedException $ex) {
+            Log::warning($ex);
+            return $this->error401();
+        }
+        catch(HTTP403ForbiddenException $ex){
+            Log::warning($ex);
+            return $this->error403();
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
     }
 
 }

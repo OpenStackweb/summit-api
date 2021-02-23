@@ -60,6 +60,17 @@ class SummitTrackChair extends SilverstripeBaseModel
     }
 
     /**
+     * @param int $track_id
+     * @return PresentationCategory
+     */
+    public function getCategory(int $track_id):PresentationCategory{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', intval($track_id)));
+        $category = $this->categories->matching($criteria)->first();
+        return $category === false ? null : $category;
+    }
+
+    /**
      * @param PresentationCategory $track
      * @throws ValidationException
      */

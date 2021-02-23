@@ -48,6 +48,8 @@ final class DoctrineSummitTrackRepository
             (
                 "(g.name :operator :value)"
             ),
+            'voting_visible' => 't.voting_visible',
+            'chair_visible' => 't.chair_visible',
         ];
     }
 

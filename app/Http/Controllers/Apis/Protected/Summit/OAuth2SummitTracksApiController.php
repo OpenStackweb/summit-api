@@ -111,6 +111,8 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                     'description' => ['=@', '=='],
                     'code'        => ['=@', '=='],
                     'group_name'  => ['=@', '=='],
+                    'voting_visible' => ['=='],
+                    'chair_visible' => ['=='],
                 ]);
             }
 
@@ -122,6 +124,8 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                 'description'  => 'sometimes|string',
                 'code'         => 'sometimes|string',
                 'group_name'   => 'sometimes|string',
+                'voting_visible' => 'sometimes|boolean',
+                'chair_visible' => 'sometimes|boolean',
             ]);
 
             $order = null;
@@ -207,8 +211,21 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                     'description' => ['=@', '=='],
                     'code'        => ['=@', '=='],
                     'group_name'  => ['=@', '=='],
+                    'voting_visible' => ['=='],
+                    'chair_visible' => ['=='],
                 ]);
             }
+
+            if(is_null($filter)) $filter = new Filter();
+
+            $filter->validate([
+                'name'         => 'sometimes|string',
+                'description'  => 'sometimes|string',
+                'code'         => 'sometimes|string',
+                'group_name'   => 'sometimes|string',
+                'voting_visible' => 'sometimes|boolean',
+                'chair_visible' => 'sometimes|boolean',
+            ]);
 
             $order = null;
 
@@ -221,8 +238,6 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                     'title'
                 ]);
             }
-
-            if(is_null($filter)) $filter = new Filter();
 
             $data = $this->repository->getBySummit($summit, new PagingInfo($page, $per_page), $filter, $order);
 

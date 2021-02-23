@@ -75,6 +75,43 @@ class OAuth2SummitTrackChairsApiTest  extends \ProtectedApiTest
         return $track_chairs;
     }
 
+    public function testGetAllTrackChairsPerSummitAndLastName(){
+        $params = [
+            'summit_id' => self::$summit->getId(),
+            'filter' => sprintf('member_first_name=@%s,member_last_name=@%s,member_email=@%s',
+                self::$member->getLastName(),
+                self::$member->getLastName(),
+                self::$member->getLastName()
+            ),
+            'page'     => 1,
+            'per_page' => 10,
+            'order'    => '+id',
+            'expand' => 'member,categories'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitTrackChairsApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $track_chairs = json_decode($content);
+        $this->assertTrue(!is_null($track_chairs));
+        $this->assertTrue($track_chairs->total == 1);
+        return $track_chairs;
+    }
+
     public function testAddTrackChair(){
 
         $params = [

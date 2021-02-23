@@ -83,7 +83,7 @@ final class PresentationCategoryGroupService
             return $track_group;
         });
 
-        Event::fire
+        Event::dispatch
         (
             new TrackGroupInserted
             (
@@ -136,7 +136,7 @@ final class PresentationCategoryGroupService
                 );
             }
 
-            Event::fire
+            Event::dispatch
             (
                 new TrackGroupUpdated
                 (
@@ -179,7 +179,7 @@ final class PresentationCategoryGroupService
                 );
             }
 
-            Event::fire
+            Event::dispatch
             (
                 new TrackGroupDeleted
                 (
@@ -238,7 +238,7 @@ final class PresentationCategoryGroupService
 
             $track_group->addCategory($track);
 
-            Event::fire
+            Event::dispatch
             (
                 new TrackGroupUpdated
                 (
@@ -296,7 +296,7 @@ final class PresentationCategoryGroupService
 
             $track_group->removeCategory($track);
 
-            Event::fire
+            Event::dispatch
             (
                 new TrackGroupUpdated
                 (
@@ -368,7 +368,7 @@ final class PresentationCategoryGroupService
 
             $track_group->addToGroup($group);
 
-            Event::fire
+            Event::dispatch
             (
                 new TrackGroupUpdated
                 (
@@ -439,7 +439,7 @@ final class PresentationCategoryGroupService
 
             $track_group->removeFromGroup($group);
 
-            Event::fire
+            Event::dispatch
             (
                 new TrackGroupUpdated
                 (

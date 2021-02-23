@@ -93,7 +93,7 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
         $payload['ticket_currency_symbol'] = $ticket->getCurrencySymbol();
         $payload['ticket_discount'] = FormatUtils::getNiceFloat($ticket->getDiscount());
         $payload['ticket_taxes'] = FormatUtils::getNiceFloat($ticket->getTaxesAmount());
-        $payload['ticket_amount'] = FormatUtils::getNiceFloat($ticket->getFinalAmount();)
+        $payload['ticket_amount'] = FormatUtils::getNiceFloat($ticket->getFinalAmount());
         $payload['need_details'] = $owner->needToFillDetails();
 
         $promo_code = $ticket->hasPromoCode() ? $ticket->getPromoCode() : null;

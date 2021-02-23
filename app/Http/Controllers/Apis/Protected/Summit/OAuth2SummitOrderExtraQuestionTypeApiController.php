@@ -14,7 +14,6 @@
 use App\Models\Foundation\Summit\Repositories\ISummitOrderExtraQuestionTypeRepository;
 use App\Services\Model\ISummitOrderExtraQuestionTypeService;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use libs\utils\HTMLCleaner;
@@ -204,7 +203,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
     public function addQuestionValue($summit_id, $question_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
             $payload = $data->all();
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -250,7 +249,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
 
         try {
             if(!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
             $payload = $data->all();
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();

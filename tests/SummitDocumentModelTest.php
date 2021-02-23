@@ -20,9 +20,9 @@ use Illuminate\Http\UploadedFile;
  */
 class SummitDocumentModelTest extends BrowserKitTestCase
 {
-    use \InsertSummitTestData;
+    use InsertSummitTestData;
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
 
@@ -31,7 +31,7 @@ class SummitDocumentModelTest extends BrowserKitTestCase
         self::$em->flush();
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
         self::clearTestData();
         parent::tearDown();

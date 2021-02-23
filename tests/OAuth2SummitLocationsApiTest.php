@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,7 +30,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
 
     private static $bookable_room;
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
         self::insertTestData();
@@ -53,7 +53,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
         self::$em->flush();
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
         self::clearTestData();
         parent::tearDown();

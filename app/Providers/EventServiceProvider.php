@@ -11,9 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-use App\EntityPersisters\AdminSummitEventActionSyncWorkRequestPersister;
-use App\EntityPersisters\AdminSummitLocationActionSyncWorkRequestPersister;
 use App\EntityPersisters\EntityEventPersister;
 use App\Events\NewMember;
 use App\Events\OrderDeleted;
@@ -138,7 +135,7 @@ final class EventServiceProvider extends ServiceProvider
         {
             EntityEventPersister::persist(SummitEventCreatedEntityEventFactory::build($event));
 
-            SynchPresentationActions::dispatch($event->getSummitEvent()->getId());
+            SynchPresentationActions::dispatch($event->getSummitEvent()->getId())->delay(now()->addSecond(5));
 
         });
 

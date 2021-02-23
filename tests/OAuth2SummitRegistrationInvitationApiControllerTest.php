@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,7 @@ class OAuth2SummitRegistrationInvitationApiControllerTest extends ProtectedApiTe
 
     use InsertSummitTestData;
 
-    public function setUp()
+    public function setUp():void
     {
         parent::setUp();
 
@@ -29,7 +29,7 @@ class OAuth2SummitRegistrationInvitationApiControllerTest extends ProtectedApiTe
         self::$summit->seedDefaultEmailFlowEvents();
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
         self::clearTestData();
         parent::tearDown();

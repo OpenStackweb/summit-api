@@ -305,7 +305,7 @@ final class SummitService extends AbstractService implements ISummitService
                 }
 
             });
-            Event::fire(new MyScheduleAdd($member, $summit, $event_id));
+            Event::dispatch(new MyScheduleAdd($member, $summit, $event_id));
         } catch (UniqueConstraintViolationException $ex) {
             throw new ValidationException
             (
@@ -346,7 +346,7 @@ final class SummitService extends AbstractService implements ISummitService
             }
         });
 
-        Event::fire(new MyScheduleRemove($member, $summit, $event_id));
+        Event::dispatch(new MyScheduleRemove($member, $summit, $event_id));
     }
 
     /**
@@ -369,7 +369,7 @@ final class SummitService extends AbstractService implements ISummitService
                 $member->addFavoriteSummitEvent($event);
             });
 
-            Event::fire(new MyFavoritesAdd($member, $summit, $event_id));
+            Event::dispatch(new MyFavoritesAdd($member, $summit, $event_id));
         } catch (UniqueConstraintViolationException $ex) {
             throw new ValidationException
             (
@@ -393,7 +393,7 @@ final class SummitService extends AbstractService implements ISummitService
             $member->removeFavoriteSummitEvent($event);
         });
 
-        Event::fire(new MyFavoritesRemove($member, $summit, $event_id));
+        Event::dispatch(new MyFavoritesRemove($member, $summit, $event_id));
     }
 
     /**
@@ -1673,7 +1673,7 @@ final class SummitService extends AbstractService implements ISummitService
 
             $summit = SummitFactory::populate($summit, $data);
 
-            Event::fire(new SummitUpdated($summit_id));
+            Event::dispatch(new SummitUpdated($summit_id));
 
             return $summit;
         });
@@ -1705,7 +1705,7 @@ final class SummitService extends AbstractService implements ISummitService
             $summit->markAsDeleted();
             $this->summit_repository->delete($summit);
 
-            Event::fire(new SummitDeleted($summit_id));
+            Event::dispatch(new SummitDeleted($summit_id));
 
         });
     }
@@ -2226,7 +2226,7 @@ final class SummitService extends AbstractService implements ISummitService
             return SummitRSVPFactory::build($event, $member, $data);
         });
 
-        Event::fire(new RSVPCreated($rsvp));
+        Event::dispatch(new RSVPCreated($rsvp));
 
         return $rsvp;
     }
@@ -2283,7 +2283,7 @@ final class SummitService extends AbstractService implements ISummitService
 
             $rsvp = SummitRSVPFactory::populate($rsvp, $event, $member, $data);
 
-            Event::fire(new RSVPUpdated($rsvp));
+            Event::dispatch(new RSVPUpdated($rsvp));
 
             return $rsvp;
         });

@@ -13,7 +13,6 @@
  **/
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
-
 /**
  * Class Version20210406124904
  * @package Database\Migrations\Model

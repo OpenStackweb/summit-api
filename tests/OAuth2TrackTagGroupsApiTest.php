@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,17 +11,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use App\Models\Foundation\Main\IGroup;
 /**
  * Class OAuth2TrackTagGroupsApiTest
  */
 final class OAuth2TrackTagGroupsApiTest extends ProtectedApiTest
 {
-    public function testGetTrackTagGroups($summit_id = 25)
+    use InsertSummitTestData;
+
+    use InsertMemberTestData;
+
+    protected function setUp():void
+    {
+        $this->setCurrentGroup(IGroup::TrackChairs);
+        parent::setUp();
+        self::insertTestData();
+        self::$summit_permission_group->addMember(self::$member);
+        self::$em->persist(self::$summit);
+        self::$em->persist(self::$summit_permission_group);
+        self::$em->flush();
+        self::$summit->addTrackChair(self::$member, [ self::$defaultTrack ] );
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+    }
+
+    protected function tearDown():void
+    {
+        self::clearTestData();
+        parent::tearDown();
+    }
+
+    public function testGetTrackTagGroups()
     {
 
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             'expand' => 'allowed_tags,tag',
         ];
 
@@ -42,13 +66,10 @@ final class OAuth2TrackTagGroupsApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testAddTrackTagGroup($summit_id = 25){
+
+    public function testAddTrackTagGroup(){
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             'expand' => 'allowed_tags,tag'
         ];
 
@@ -85,14 +106,13 @@ final class OAuth2TrackTagGroupsApiTest extends ProtectedApiTest
     }
 
     /**
-     * @param int $summit_id
      * @return mixed
      */
-    public function testUpdateTrackTagGroup($summit_id = 27){
-        //$new_track_tag_group = $this->testAddTrackTagGroup($summit_id);
+    public function testUpdateTrackTagGroup(){
+
         $params = [
-            'id' => $summit_id,
-            'track_tag_group_id' => 25,
+            'id' => self::$summit->getId(),
+            'track_tag_group_id' => self::$defaultTrackTagGroup->getId(),
             'expand' => 'allowed_tags,tag'
         ];
 
@@ -129,11 +149,11 @@ final class OAuth2TrackTagGroupsApiTest extends ProtectedApiTest
         return $track_tag_group;
     }
 
-    public function testDeleteTrackTagGroup($summit_id = 25){
-        $new_track_tag_group = $this->testAddTrackTagGroup($summit_id);
+    public function testDeleteTrackTagGroup(){
+
         $params = [
-            'id' => $summit_id,
-            'track_tag_group_id' => $new_track_tag_group->id,
+            'id' => self::$summit->getId(),
+            'track_tag_group_id' => self::$defaultTrackTagGroup->getId(),
         ];
 
         $headers = [
@@ -155,11 +175,10 @@ final class OAuth2TrackTagGroupsApiTest extends ProtectedApiTest
         $this->assertResponseStatus(204);
     }
 
-    public function testGetTrackTagGroupById($summit_id = 25){
-        $new_track_tag_group = $this->testAddTrackTagGroup($summit_id);
+    public function testGetTrackTagGroupById(){
         $params = [
-            'id' => $summit_id,
-            'track_tag_group_id' => $new_track_tag_group->id,
+            'id' => self::$summit->getId(),
+            'track_tag_group_id' => self::$defaultTrackTagGroup->getId(),
             'expand' => 'allowed_tags,tag'
         ];
 
@@ -182,11 +201,11 @@ final class OAuth2TrackTagGroupsApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
     }
 
-    public function testGetTags($summit_id = 25)
+    public function testGetTags()
     {
 
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             //AND FILTER
             'filter' => ['tag=@101||104'],
             'order'  => '+id',
@@ -210,11 +229,11 @@ final class OAuth2TrackTagGroupsApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
     }
 
-    public function testSeedDefaultTrackTagGroups($summit_id = 26)
+    public function testSeedDefaultTrackTagGroups()
     {
 
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
@@ -238,12 +257,12 @@ final class OAuth2TrackTagGroupsApiTest extends ProtectedApiTest
      * @param int $summit_id
      * @param int $tag_id
      */
-    public function testSeedTagOnAllTracks($summit_id = 25, $tag_id = 4590)
+    public function testSeedTagOnAllTracks()
     {
 
         $params = [
-            'id' => $summit_id,
-            'tag_id' => $tag_id,
+            'id' => self::$summit->getId(),
+            'tag_id' => self::$defaultTags[0]->getId(),
         ];
 
         $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
@@ -267,13 +286,12 @@ final class OAuth2TrackTagGroupsApiTest extends ProtectedApiTest
      * @param int $track_tag_group_id
      * @param $track_id
      */
-    public function testSeedTagTrackGroupOnTrack($summit_id = 25, $track_tag_group_id = 6, $track_id = 268)
+    public function testSeedTagTrackGroupOnTrack()
     {
-
         $params = [
-            'id' => $summit_id,
-            'track_tag_group_id' => $track_tag_group_id,
-            'track_id' => $track_id,
+            'id' => self::$summit->getId(),
+            'track_tag_group_id' => self::$defaultTrackTagGroup->getId(),
+            'track_id' => self::$defaultTrack->getId(),
         ];
 
         $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];

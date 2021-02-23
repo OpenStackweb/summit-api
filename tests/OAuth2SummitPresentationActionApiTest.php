@@ -1,7 +1,4 @@
 <?php namespace Tests;
-use App\Models\Foundation\Main\IGroup;
-use models\summit\PresentationActionType;
-
 /**
  * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,23 +11,22 @@ use models\summit\PresentationActionType;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use ProtectedApiTest;
-
-
+use App\Models\Foundation\Main\IGroup;
+use models\summit\PresentationActionType;
 /**
  * Class OAuth2SummitPresentationActionApiTest
  * @package Tests
  */
 final class OAuth2SummitPresentationActionApiTest extends ProtectedApiTest
 {
-    use \InsertSummitTestData;
+    use InsertSummitTestData;
 
-    use \InsertMemberTestData;
+    use InsertMemberTestData;
 
     static $action1 = null;
     static $action2 = null;
 
-    protected function setUp()
+    protected function setUp():void
     {
         $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
@@ -57,7 +53,7 @@ final class OAuth2SummitPresentationActionApiTest extends ProtectedApiTest
         self::$em->flush();
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
         self::clearTestData();
         parent::tearDown();
@@ -65,7 +61,7 @@ final class OAuth2SummitPresentationActionApiTest extends ProtectedApiTest
 
     public function testCompleteAction(){
         $params = [
-            'summit_id' => self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
             'presentation_id' => self::$presentations[0]->getId(),
             'action_id' =>  self::$presentations[0]->getPresentationActions()[0]->getId(),

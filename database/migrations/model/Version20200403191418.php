@@ -22,7 +22,7 @@ class Version20200403191418 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $sentence = <<<SQL
 ALTER TABLE StripePaymentProfile ADD CONSTRAINT FK_PP_SPP FOREIGN KEY (ID) REFERENCES PaymentGatewayProfile (ID) ON DELETE CASCADE;
@@ -35,7 +35,7 @@ SQL;
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
 
     }

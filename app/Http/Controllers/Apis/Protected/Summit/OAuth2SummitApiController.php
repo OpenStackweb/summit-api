@@ -15,13 +15,11 @@ use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use Exception;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
-use models\main\SummitAdministratorPermissionGroup;
 use models\oauth2\IResourceServerContext;
 use models\summit\ConfirmationExternalOrderRequest;
 use models\summit\IEventFeedbackRepository;
@@ -402,7 +400,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         try {
 
             if (!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $rules = SummitValidationRulesFactory::build($payload);
             // Creates a Validator instance and validates the data.
@@ -444,7 +442,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         try {
 
             if (!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $rules = SummitValidationRulesFactory::build($payload, true);
             // Creates a Validator instance and validates the data.

@@ -219,9 +219,7 @@ final class SummitSelectedPresentationListService
             }
 
             if ($selection_list->isGroup()){
-
                 $hash = $payload['hash'] ?? "";
-
                 if(!$selection_list->compareHash(trim($hash)))
                     throw new ValidationException("The Teams List was modified by someone else. Please refresh the page.");
             }

@@ -25,7 +25,7 @@ class Version20201001182314 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $builder = new Builder($schema);
         if (!$builder->hasTable("Summit_FeaturedSpeakers")) {
@@ -50,7 +50,7 @@ class Version20201001182314 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
         $builder = new Builder($schema);
         $builder->dropIfExists("Summit_FeaturedSpeakers");

@@ -21,7 +21,6 @@ use App\Services\Model\dto\ExternalUserDTO;
 use DateTime;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
-use LaravelDoctrine\ORM\Facades\Registry;
 use libs\utils\ICacheService;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -297,7 +296,6 @@ final class MemberService
     public function registerExternalUser(ExternalUserDTO $userDTO): Member
     {
         return $this->tx_service->transaction(function () use ($userDTO) {
-
             Log::debug
             (
                 sprintf
@@ -309,9 +307,7 @@ final class MemberService
                     $userDTO->getLastName()
                 )
             );
-
             $member = $this->member_repository->getByExternalIdExclusiveLock($userDTO->getId());
-
             if(is_null($member)) {
                 $member = new Member();
                 $member->setUserExternalId($userDTO->getId());
@@ -321,11 +317,12 @@ final class MemberService
                 $member->setFirstName($userDTO->getFirstName());
                 $member->setLastName($userDTO->getLastName());
                 $this->member_repository->add($member, true);
-                Event::fire(new NewMember($member->getId()));
+                Event::dispatch(new NewMember($member->getId()));
             }
             return $member;
         });
     }
+
 
     /**
      * @param $user_external_id
@@ -390,7 +387,7 @@ final class MemberService
             }
 
             if($is_new)
-                Event::fire(new NewMember($member->getId()));
+                Event::dispatch(new NewMember($member->getId()));
 
             return $member;
         });

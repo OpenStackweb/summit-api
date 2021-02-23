@@ -185,7 +185,7 @@ final class PresentationService
             return $video;
 
         });
-        Event::fire(new PresentationMaterialUpdated($video));
+        Event::dispatch(new PresentationMaterialUpdated($video));
         return $video;
     }
 
@@ -216,7 +216,7 @@ final class PresentationService
 
             $presentation->removeVideo($video);
 
-            Event::fire(new PresentationMaterialDeleted($presentation, $video_id, 'PresentationVideo'));
+            Event::dispatch(new PresentationMaterialDeleted($presentation, $video_id, 'PresentationVideo'));
         });
 
     }
@@ -785,7 +785,7 @@ final class PresentationService
 
         });
 
-        Event::fire(new PresentationMaterialUpdated($slide));
+        Event::dispatch(new PresentationMaterialUpdated($slide));
         return $slide;
     }
 
@@ -817,7 +817,7 @@ final class PresentationService
 
             $presentation->removeSlide($slide);
 
-            Event::fire(new PresentationMaterialDeleted($presentation, $slide_id, 'PresentationSlide'));
+            Event::dispatch(new PresentationMaterialDeleted($presentation, $slide_id, 'PresentationSlide'));
         });
     }
 
@@ -886,7 +886,7 @@ final class PresentationService
             return $link;
         });
 
-        Event::fire(new PresentationMaterialUpdated($link));
+        Event::dispatch(new PresentationMaterialUpdated($link));
 
         return $link;
     }
@@ -918,7 +918,7 @@ final class PresentationService
 
             $presentation->removeLink($link);
 
-            Event::fire(new PresentationMaterialDeleted($presentation, $link_id, 'PresentationLink'));
+            Event::dispatch(new PresentationMaterialDeleted($presentation, $link_id, 'PresentationLink'));
         });
     }
 

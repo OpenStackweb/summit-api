@@ -19,7 +19,7 @@ class Version20201029175540 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $sql = <<<SQL
 ALTER TABLE `SummitSponsorMetric` CHANGE `ClassName` `ClassName` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL DEFAULT 'SummitSponsorMetric';
@@ -53,7 +53,7 @@ SQL;
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
 
     }

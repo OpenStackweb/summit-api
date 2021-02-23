@@ -11,10 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Services\Apis\PaymentGateways\StripeApi;
-
-use Illuminate\Support\Facades\Config;
 /**
  * Class StripeTest
  * @package Tests
@@ -23,10 +20,18 @@ final class StripeTest extends TestCase
 {
     public function testRefund(){
         $api = new StripeApi(
-            Config::get("stripe.private_key", null),
-            Config::get("stripe.endpoint_secret", null)
+          [
+              'secret_key' => env("STRIPE_SECRET_KEY")
+          ]
         );
 
-        $api->refundPayment("pi_1Epa7kL4yik3a08Jlf8SN6YS", 30);
+        $response = $api->generatePayment([
+            'amount' => 1,
+            'currency' => 'USD',
+        ]);
+
+        $this->assertTrue(!is_null($response));
+        $this->assertTrue(isset($response['cart_id']));
+        $this->assertTrue(!empty($response['cart_id']));
     }
 }

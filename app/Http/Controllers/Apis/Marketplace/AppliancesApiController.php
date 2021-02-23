@@ -12,16 +12,6 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Marketplace\IApplianceRepository;
-use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
-use Illuminate\Support\Facades\Input;
-use Illuminate\Support\Facades\Validator;
-use utils\Filter;
-use utils\FilterParser;
-use utils\OrderParser;
-use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Log;
-use utils\PagingInfo;
 /**
  * Class AppliancesApiController
  * @package App\Http\Controllers

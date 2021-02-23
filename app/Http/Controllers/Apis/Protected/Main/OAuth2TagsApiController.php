@@ -13,7 +13,6 @@
  **/
 use models\main\ITagRepository;
 use models\oauth2\IResourceServerContext;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Validator;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
@@ -57,7 +56,7 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
 
     public function getAll(){
 
-        $values = Input::all();
+        $values = Request::all();
 
         $rules = [
             'page'     => 'integer|min:1',
@@ -77,15 +76,15 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
             $page     = 1;
             $per_page = 5;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
 
                     'tag' => ['=@', '=='],
                 ]);
@@ -93,9 +92,9 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
                     'tag',
                     'id',
                 ]);
@@ -141,7 +140,7 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
     public function addTag(){
         try {
             if(!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $rules = [
                 'tag' => 'required|string',
@@ -163,7 +162,7 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($tag)->serialize
             (
-                Input::get('expand','')
+                Request::input('expand','')
             ));
         }
         catch (ValidationException $ex1) {

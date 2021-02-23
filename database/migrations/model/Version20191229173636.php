@@ -24,7 +24,7 @@ class Version20191229173636 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $sql = <<<SQL
 CREATE UNIQUE INDEX SummitAttendee_Email_SummitID ON SummitAttendee (SummitID, Email);
@@ -42,7 +42,7 @@ SQL;
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
         $sql = <<<SQL
 DROP INDEX SummitAttendee_Email_SummitID ON SummitAttendee;

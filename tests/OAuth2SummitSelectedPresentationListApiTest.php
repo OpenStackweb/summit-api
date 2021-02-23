@@ -18,13 +18,13 @@ use models\summit\SummitSelectedPresentation;
  * @package Tests
  */
 final class OAuth2SummitSelectedPresentationListApiTest
-    extends \ProtectedApiTest
+    extends ProtectedApiTest
 {
-    use \InsertSummitTestData;
+    use InsertSummitTestData;
 
-    use \InsertMemberTestData;
+    use InsertMemberTestData;
 
-    protected function setUp()
+    protected function setUp():void
     {
         $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
@@ -38,7 +38,7 @@ final class OAuth2SummitSelectedPresentationListApiTest
         self::$em->flush();
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
         self::clearTestData();
         parent::tearDown();

@@ -38,7 +38,7 @@ abstract class JsonUtils
      */
     public static function toObfuscatedEmail($value){
         $em   = explode("@", $value);
-        $name = implode(array_slice($em, 0, count($em) - 1), '@');
+        $name = implode( '@', array_slice($em, 0, count($em) - 1));
         $len  = floor(mb_strlen($name) / 2);
         $obfuscated_email = mb_substr($name, 0, $len) . str_repeat('*', $len) . "@" . end($em);
         return $obfuscated_email;

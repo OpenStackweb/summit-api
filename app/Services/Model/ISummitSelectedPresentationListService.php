@@ -60,7 +60,7 @@ interface ISummitSelectedPresentationListService
      * @param Summit $summit
      * @param int $track_id
      * @param int $list_id
-     * @param array$payload
+     * @param array $payload
      * @return SummitSelectedPresentationList
      * @throws EntityNotFoundException
      * @throws ValidationException

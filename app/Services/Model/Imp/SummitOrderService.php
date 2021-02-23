@@ -396,7 +396,7 @@ final class ReserveOrderTask extends AbstractTask
             // generate the key to access
             $order->generateHash();
             $order->generateQRCode();
-            Event::fire(new CreatedSummitRegistrationOrder($order->getId()));
+            Event::dispatch(new CreatedSummitRegistrationOrder($order->getId()));
             return ['order' => $order];
         });
     }
@@ -900,18 +900,21 @@ final class SummitOrderService
             $owner = $this->tx_service->transaction(function () use ($owner, $payload) {
                 if (is_null($owner)) return null;
 
+                Log::debug(sprintf("SummitOrderService::reserve trying to get member %s", $owner->getId()));
+
                 $owner = $this->member_repository->getByIdExclusiveLock($owner->getId());
 
                 if (empty($owner->getFirstName())) {
-                    $owner->setFirstName($payload['owner_first_name']);
+                    $owner->setFirstName(trim($payload['owner_first_name']));
                 }
 
                 if (empty($owner->getLastName())) {
-                    $owner->setLastName($payload['owner_last_name']);
+                    $owner->setLastName(trim($payload['owner_last_name']));
                 }
 
                 return $owner;
             });
+
             $state = Saga::start()
                 ->addTask(new PreOrderValidationTask($summit, $payload, $this->tx_service))
                 ->addTask(new PreProcessReservationTask($payload))
@@ -965,7 +968,7 @@ final class SummitOrderService
             }
 
             // validation of zip code its only for paid events
-            if(!$order->isFree() && empty($order->getBillingAddressZipCode()))
+            if (!$order->isFree() && empty($order->getBillingAddressZipCode()))
                 throw new ValidationException(sprintf("Zip Code is mandatory."));
 
             $order->setConfirmed();
@@ -1259,7 +1262,8 @@ final class SummitOrderService
      * @return SummitOrder
      * @throws \Exception
      */
-    public function reSendOrderEmail(int $order_id):SummitOrder {
+    public function reSendOrderEmail(int $order_id): SummitOrder
+    {
 
         return $this->tx_service->transaction(function () use ($order_id) {
 
@@ -1330,6 +1334,7 @@ final class SummitOrderService
                 $external_id = $user['id'];
                 try {
                     // we have an user on idp
+                    // possible race condition
                     $member = $this->member_service->registerExternalUser
                     (
                         new ExternalUserDTO
@@ -1411,7 +1416,7 @@ final class SummitOrderService
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function cancelRequestRefundTicket(int $order_id,int $ticket_id): SummitAttendeeTicket
+    public function cancelRequestRefundTicket(int $order_id, int $ticket_id): SummitAttendeeTicket
     {
         return $this->tx_service->transaction(function () use ($order_id, $ticket_id) {
 
@@ -1804,7 +1809,7 @@ final class SummitOrderService
                 $attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($payload['owner_email']));
             }
 
-            if(is_null($attendee) && isset($payload['attendee'])){
+            if (is_null($attendee) && isset($payload['attendee'])) {
                 $attendee = $payload['attendee'];
             }
 
@@ -1813,14 +1818,14 @@ final class SummitOrderService
                 Log::debug(sprintf("SummitOrderService::createOrderSingleTicket attendee is null"));
                 //first name
                 $first_name = isset($payload['owner_first_name']) ? trim($payload['owner_first_name']) : null;
-                if (empty($first_name) && !is_null($owner) && !empty($owner->getFirstName())) $first_name = $owner->getFirstName();
+                if (empty($first_name) && !is_null($owner) && !is_null($owner->getFirstName())) $first_name = $owner->getFirstName();
                 if (empty($first_name)) {
                     Log::warning("SummitOrderService::createOrderSingleTicket owner firstname is null");
                     throw new ValidationException("you must provide an owner_first_name or a valid owner_id");
                 }
                 // surname
                 $surname = isset($payload['owner_last_name']) ? trim($payload['owner_last_name']) : null;
-                if (empty($surname) && !is_null($owner) && !empty($owner->getLastName())) $surname = $owner->getLastName();
+                if (empty($surname) && !is_null($owner) && !is_null($owner->getLastName())) $surname = $owner->getLastName();
                 if (empty($surname)) {
                     Log::warning("SummitOrderService::createOrderSingleTicket owner surname is null");
                     throw new ValidationException("you must provide an owner_last_name or a valid owner_id");
@@ -1958,7 +1963,7 @@ final class SummitOrderService
 
             $summit->removeOrder($order);
 
-            Event::fire(new OrderDeleted($order->getId(), $summit->getId(), $tickets_to_return, $promo_codes_to_return));
+            Event::dispatch(new OrderDeleted($order->getId(), $summit->getId(), $tickets_to_return, $promo_codes_to_return));
 
         });
     }
@@ -2603,7 +2608,7 @@ final class SummitOrderService
                 }
             }
 
-            if(!is_null($attendee)) {
+            if (!is_null($attendee)) {
                 // update it
                 SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
                 $attendee->addTicket($ticket);
@@ -2696,7 +2701,7 @@ final class SummitOrderService
                     }
                 }
 
-                if(!is_null($attendee)) {
+                if (!is_null($attendee)) {
                     // update it
                     SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
                     $attendee->updateStatus();
@@ -2785,7 +2790,7 @@ final class SummitOrderService
 
         $csv_data = Storage::disk('local')->get($filename);
 
-        $summit = $this->tx_service->transaction(function () use($summit_id) {
+        $summit = $this->tx_service->transaction(function () use ($summit_id) {
             $summit = $this->summit_repository->getById($summit_id);
             if (is_null($summit) || !$summit instanceof Summit)
                 throw new EntityNotFoundException(sprintf("summit %s does not exists.", $summit_id));
@@ -2863,7 +2868,7 @@ final class SummitOrderService
                     }
                 }
 
-                if(!is_null($attendee)) {
+                if (!is_null($attendee)) {
                     if (is_null($ticket)) {
                         Log::debug(sprintf("SummitOrderService::processTicketData ticket is null, trying to create a new one"));
 
@@ -2996,7 +3001,7 @@ final class SummitOrderService
                     }
                     Log::debug(sprintf("SummitOrderService::processTicketData - ticket %s (%s) - trying to add new features to ticket badge (%s)", $ticket->getId(), $ticket->getNumber(), $feature_name));
                     $feature = $summit->getFeatureTypeByName(trim($feature_name));
-                    if (is_null($feature)){
+                    if (is_null($feature)) {
                         Log::warning(sprintf("SummitOrderService::processTicketData feature %s does not exist on summit %s", $feature, $summit->getId()));
                         continue;
                     }
@@ -3096,7 +3101,7 @@ final class SummitOrderService
                 }
                 foreach ($order->getTickets() as $ticket) {
                     try {
-                        if(!$ticket->isActive()){
+                        if (!$ticket->isActive()) {
                             Log::warning(sprintf("SummitOrderService::processSummitOrderReminders - summit %s order %s skipping ticket %s ( not active)", $summit->getId(), $order->getId(), $ticket->getId()));
                             continue;
                         }
@@ -3134,7 +3139,7 @@ final class SummitOrderService
             $needs_action = false;
 
             foreach ($order->getTickets() as $ticket) {
-                if(!$ticket->isActive()){
+                if (!$ticket->isActive()) {
                     Log::warning(sprintf("SummitOrderService::processOrderReminder - order %s skipping ticket %s ( NOT ACTIVE ).", $order->getId(), $ticket->getId()));
                     continue;
                 }
@@ -3229,6 +3234,7 @@ final class SummitOrderService
             }
         });
     }
+
     /**
      * @param Summit $summit
      * @param string $order_hash
@@ -3313,7 +3319,7 @@ final class SummitOrderService
             Log::debug(sprintf("SummitOrderService::processOrderPaymentConfirmation - trying to get order id %s", $orderId));
 
             $order = $this->order_repository->getByIdExclusiveLock($orderId);
-            if (is_null($order) || !$order instanceof SummitOrder){
+            if (is_null($order) || !$order instanceof SummitOrder) {
                 Log::warning(sprintf("SummitOrderService::processOrderPaymentConfirmation order %s not found.", $orderId));
             }
 
@@ -3380,8 +3386,11 @@ final class SummitOrderService
                 );
 
                 // we have an user on idp
+
                 $external_id = $user['id'];
+
                 try {
+                    // possible race condition
                     $member = $this->member_service->registerExternalUser
                     (
                         new ExternalUserDTO
@@ -3429,7 +3438,7 @@ final class SummitOrderService
      */
     public function activateTicket(Summit $summit, int $order_id, int $ticket_id): SummitAttendeeTicket
     {
-        return $this->tx_service->transaction(function() use($summit, $order_id, $ticket_id){
+        return $this->tx_service->transaction(function () use ($summit, $order_id, $ticket_id) {
             // lock and get the order
             $order = $this->order_repository->getByIdExclusiveLock($order_id);
 
@@ -3452,7 +3461,7 @@ final class SummitOrderService
      */
     public function deActivateTicket(Summit $summit, int $order_id, int $ticket_id): SummitAttendeeTicket
     {
-        return $this->tx_service->transaction(function() use($summit, $order_id, $ticket_id){
+        return $this->tx_service->transaction(function () use ($summit, $order_id, $ticket_id) {
             // lock and get the order
             $order = $this->order_repository->getByIdExclusiveLock($order_id);
 

@@ -20,7 +20,6 @@ use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
 use App\Services\Model\ILocationService;
 use Exception;
 use Illuminate\Http\Request as LaravelRequest;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -146,7 +145,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function getLocations($summit_id)
     {
-        $values = Input::all();
+        $values = Request::all();
         $rules  = [
 
             'page'     => 'integer|min:1',
@@ -169,15 +168,15 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             $page     = 1;
             $per_page = PagingConstants::DefaultPageSize;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'class_name'  => ['=='],
                     'name'        => ['==', '=@'],
                     'description' => ['=@'],
@@ -215,9 +214,9 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
                     'id',
                     'name',
                     'order'
@@ -285,7 +284,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 $locations
             );
 
-            return $this->ok($response->toArray($expand = Input::get('expand','')));
+            return $this->ok($response->toArray($expand = Request::input('expand','')));
 
         } catch (Exception $ex) {
             Log::error($ex);
@@ -319,7 +318,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 $locations
             );
 
-            return $this->ok($response->toArray($expand = Input::get('expand','')));
+            return $this->ok($response->toArray($expand = Request::input('expand','')));
 
         } catch (Exception $ex) {
             Log::error($ex);
@@ -353,7 +352,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 $locations
             );
 
-            return $this->ok($response->toArray($expand = Input::get('expand','')));
+            return $this->ok($response->toArray($expand = Request::input('expand','')));
 
         } catch (Exception $ex) {
             Log::error($ex);
@@ -387,7 +386,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 $locations
             );
 
-            return $this->ok($response->toArray($expand = Input::get('expand','')));
+            return $this->ok($response->toArray($expand = Request::input('expand','')));
 
         } catch (Exception $ex) {
             Log::error($ex);
@@ -445,7 +444,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 throw new EntityNotFoundException;
         }
 
-        $values = Input::all();
+        $values = Request::all();
 
         $rules =
         [
@@ -464,15 +463,15 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         $page     = 1;
         $per_page = PagingConstants::DefaultPageSize;
 
-        if (Input::has('page')) {
-            $page     = intval(Input::get('page'));
-            $per_page = intval(Input::get('per_page'));
+        if (Request::has('page')) {
+            $page     = intval(Request::input('page'));
+            $per_page = intval(Request::input('per_page'));
         }
 
         $filter = null;
 
-        if (Input::has('filter')) {
-            $filter = FilterParser::parse(Input::get('filter'),
+        if (Request::has('filter')) {
+            $filter = FilterParser::parse(Request::input('filter'),
             [
                 'title'          => ['=@', '=='],
                 'start_date'     => ['>', '<', '<=', '>=', '=='],
@@ -486,9 +485,9 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
 
         $order = null;
 
-        if (Input::has('order'))
+        if (Request::has('order'))
         {
-            $order = OrderParser::parse(Input::get('order'),
+            $order = OrderParser::parse(Request::input('order'),
             [
                 'title',
                 'start_date',
@@ -747,7 +746,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -791,7 +790,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     public function addVenue($summit_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $payload['class_name'] = SummitVenue::ClassName;
@@ -834,7 +833,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     public function addExternalLocation($summit_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $payload['class_name'] = SummitExternalLocation::ClassName;
@@ -877,7 +876,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     public function addHotel($summit_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $payload['class_name'] = SummitHotel::ClassName;
@@ -920,7 +919,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     public function addAirport($summit_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $payload['class_name'] = SummitAirport::ClassName;
@@ -965,7 +964,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     public function addVenueFloor($summit_id, $venue_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $rules = [
@@ -1012,7 +1011,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     public function addVenueRoom($summit_id, $venue_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $payload['class_name'] = SummitVenueRoom::ClassName;
@@ -1056,7 +1055,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     public function addVenueFloorRoom($summit_id, $venue_id, $floor_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $payload['class_name'] = SummitVenueRoom::ClassName;
@@ -1107,7 +1106,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -1153,7 +1152,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -1199,7 +1198,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     public function updateVenueFloor($summit_id, $venue_id, $floor_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $rules = [
@@ -1247,7 +1246,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     public function updateVenueRoom($summit_id, $venue_id, $room_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $payload['class_name'] = SummitVenueRoom::ClassName;
@@ -1293,7 +1292,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     public function updateVenueFloorRoom($summit_id, $venue_id, $floor_id, $room_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $payload['class_name'] = SummitVenueRoom::ClassName;
@@ -1342,7 +1341,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -1388,7 +1387,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -1434,7 +1433,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -1565,7 +1564,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @return mixed
      */
     public function getLocationBanners($summit_id, $location_id){
-        $values = Input::all();
+        $values = Request::all();
         $rules  = [
             'page'     => 'integer|min:1',
             'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::MinPageSize, PagingConstants::MaxPageSize),
@@ -1590,15 +1589,15 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             $page     = 1;
             $per_page = PagingConstants::DefaultPageSize;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'class_name'  => ['=='],
                     'title'       => ['==', '=@'],
                     'content'     => ['=@'],
@@ -1629,9 +1628,9 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
                     'id',
                     'title',
                     'start_date',
@@ -1682,7 +1681,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -1775,7 +1774,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();

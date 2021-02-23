@@ -15,7 +15,6 @@ use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackMultiV
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplateConstants;
 use App\Models\Foundation\Summit\Repositories\ITrackQuestionTemplateRepository;
 use App\Services\Model\ITrackQuestionTemplateService;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use models\exceptions\EntityNotFoundException;
@@ -66,7 +65,7 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
      * @return mixed
      */
     public function getTrackQuestionTemplates(){
-        $values = Input::all();
+        $values = Request::all();
         $rules  = [
 
             'page'     => 'integer|min:1',
@@ -86,15 +85,15 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
             $page     = 1;
             $per_page = 5;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'name'  => ['=@', '=='],
                     'label' => ['=@', '=='],
                     'class_name' => ['=='],
@@ -117,9 +116,9 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
 
                     'id',
                     'name',
@@ -168,7 +167,7 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $rules = TrackQuestionTemplateValidationRulesFactory::build($payload);
             // Creates a Validator instance and validates the data.
@@ -242,7 +241,7 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $rules = TrackQuestionTemplateValidationRulesFactory::build($payload, true);
             // Creates a Validator instance and validates the data.
@@ -358,7 +357,7 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $rules = TrackQuestionValueTemplateValidationRulesFactory::build($payload);
             // Creates a Validator instance and validates the data.
@@ -407,7 +406,7 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $rules = TrackQuestionValueTemplateValidationRulesFactory::build($payload, true);
             // Creates a Validator instance and validates the data.

@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 use App\Services\Model\ISummitPresentationActionService;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use models\exceptions\EntityNotFoundException;
@@ -80,7 +79,7 @@ final class OAuth2SummitPresentationActionApiController
                 return $this->error403();
 
             $action = $this->service->updateAction($summit, intval($selection_plan_id), intval($presentation_id), intval($action_id), true );
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($action)->serialize(Input::get('expand', '')));
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($action)->serialize(Request::input('expand', '')));
 
         } catch (ValidationException $ex) {
             Log::warning($ex);
@@ -118,7 +117,7 @@ final class OAuth2SummitPresentationActionApiController
 
             $action = $this->service->updateAction($summit, intval($selection_plan_id), intval($presentation_id), intval($action_id), false );
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($action)->serialize(Input::get('expand', '')));
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($action)->serialize(Request::input('expand', '')));
         } catch (ValidationException $ex) {
             Log::warning($ex);
             return $this->error412($ex->getMessages());

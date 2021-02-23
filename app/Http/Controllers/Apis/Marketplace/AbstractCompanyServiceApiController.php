@@ -14,7 +14,6 @@
 use models\utils\IBaseRepository;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Validator;
 use utils\Filter;
 use utils\FilterParser;
@@ -46,7 +45,7 @@ abstract class AbstractCompanyServiceApiController extends JsonController
      * @return mixed
      */
     public function getAll(){
-        $values = Input::all();
+        $values = Request::all();
 
         $rules = array
         (
@@ -67,15 +66,15 @@ abstract class AbstractCompanyServiceApiController extends JsonController
             $page     = 1;
             $per_page = 5;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'),  array
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'),  array
                 (
                     'name'    => ['=@', '=='],
                     'company' => ['=@', '=='],
@@ -84,9 +83,9 @@ abstract class AbstractCompanyServiceApiController extends JsonController
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), array
+                $order = OrderParser::parse(Request::input('order'), array
                 (
                     'name',
                     'company',

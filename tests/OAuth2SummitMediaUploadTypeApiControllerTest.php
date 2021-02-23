@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,7 @@
  **/
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\SummitMediaFileType;
-use Doctrine\Common\Persistence\ObjectRepository;
+use Doctrine\Persistence\ObjectRepository;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\utils\SilverstripeBaseModel;
 /**
@@ -29,7 +29,7 @@ final class OAuth2SummitMediaUploadTypeApiControllerTest
      */
     static $media_file_type_repository;
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
         self::$media_file_type_repository = EntityManager::getRepository(SummitMediaFileType::class);
@@ -38,7 +38,7 @@ final class OAuth2SummitMediaUploadTypeApiControllerTest
         self::$em->flush();
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
         self::clearTestData();
         parent::tearDown();

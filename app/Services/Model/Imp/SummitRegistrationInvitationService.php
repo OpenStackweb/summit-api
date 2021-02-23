@@ -242,6 +242,7 @@ final class SummitRegistrationInvitationService
                     try {
 
                         // we have an user on idp
+                        // possible race condition
                         $member = $this->member_service->registerExternalUser
                         (
                             new ExternalUserDTO

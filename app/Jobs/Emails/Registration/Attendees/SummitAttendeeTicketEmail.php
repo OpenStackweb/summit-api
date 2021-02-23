@@ -114,7 +114,7 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         // to included this attachments, for now , will be managed by managed by a environmental
         // variable
         // attachments
-        if($sendTicketAttachments) {
+        //if($sendTicketAttachments) {
             $renderer = new SummitAttendeeTicketPDFRenderer($ticket);
             $attachments = [];
             $attachments[] = [
@@ -125,15 +125,17 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
                 'content_id' => 'qrcid',
             ];
 
+            /* removing for now
             $attachments[] = [
                 'name' => 'ticket_' . $ticket->getNumber() . '.pdf',
                 'content' => base64_encode($renderer->render()),
                 'type' => 'application/pdf',
                 'disposition' => 'attachment',
             ];
+            */
 
             $payload['attachments'] = $attachments;
-        }
+        //}
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
         parent::__construct($payload, $template_identifier, $owner_email);

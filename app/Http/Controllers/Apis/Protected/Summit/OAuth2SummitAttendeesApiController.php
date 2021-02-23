@@ -37,7 +37,6 @@ use ModelSerializers\SerializerRegistry;
 use services\model\ISummitService;
 use utils\Filter;
 use utils\FilterElement;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Validator;
 use utils\FilterParser;
 
@@ -507,7 +506,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     {
         try {
             if (!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -593,7 +592,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     {
         try {
             if (!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -650,7 +649,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     {
         try {
             if (!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -835,7 +834,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         try {
 
             if (!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -862,8 +861,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'first_name' => ['=@', '=='],
                     'last_name' => ['=@', '=='],
                     'full_name' => ['=@', '=='],
@@ -901,7 +900,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'has_tickets'=> 'sometimes|required|string|in:true,false',
             ]);
 
-            $this->attendee_service->triggerSend($summit, $payload, Input::get('filter'));
+            $this->attendee_service->triggerSend($summit, $payload, Request::input('filter'));
 
             return $this->ok();
 

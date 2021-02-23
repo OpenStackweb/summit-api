@@ -26,7 +26,6 @@ use utils\OrderParser;
 use utils\PagingInfo;
 use App\Http\Utils\PagingConstants;
 use Exception;
-
 /**
  * Trait ParametrizedGetAll
  * @package App\Http\Controllers

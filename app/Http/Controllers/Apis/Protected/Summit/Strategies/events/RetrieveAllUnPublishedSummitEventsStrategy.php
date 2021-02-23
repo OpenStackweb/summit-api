@@ -11,13 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-use Illuminate\Support\Facades\Input;
 use utils\Filter;
 use utils\FilterParser;
 use utils\Order;
 use utils\OrderParser;
-
+use Illuminate\Support\Facades\Request;
 /**
  * Class RetrieveAllUnPublishedSummitEventsStrategy
  * @package App\Http\Controllers
@@ -49,9 +47,9 @@ class RetrieveAllUnPublishedSummitEventsStrategy extends RetrieveAllSummitEvents
      */
     protected function buildOrder(){
         $order = null;
-        if (Input::has('order'))
+        if (Request::has('order'))
         {
-            $order = OrderParser::parse(Input::get('order'), [
+            $order = OrderParser::parse(Request::input('order'), [
                 'title',
                 'start_date',
                 'end_date',

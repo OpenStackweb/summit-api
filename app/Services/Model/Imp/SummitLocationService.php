@@ -202,7 +202,7 @@ final class SummitLocationService
             return $location;
         });
 
-        Event::fire
+        Event::dispatch
         (
             new LocationInserted
             (
@@ -319,7 +319,7 @@ final class SummitLocationService
                 $summit->recalculateLocationOrder($location, intval($data['order']));
             }
 
-            Event::fire
+            Event::dispatch
             (
                 new LocationUpdated
                 (
@@ -381,7 +381,7 @@ final class SummitLocationService
                 );
             }
 
-            Event::fire(new LocationDeleted
+            Event::dispatch(new LocationDeleted
                 (
                     $location->getSummitId(),
                     $location->getId(),
@@ -473,7 +473,7 @@ final class SummitLocationService
             return $floor;
         });
 
-        Event::fire
+        Event::dispatch
         (
             new FloorInserted
             (
@@ -582,7 +582,7 @@ final class SummitLocationService
 
             $floor = SummitVenueFloorFactory::populate($floor, $data);
 
-            Event::fire
+            Event::dispatch
             (
                 new FloorUpdated
                 (
@@ -654,7 +654,7 @@ final class SummitLocationService
                 );
             }
 
-            Event::fire(new FloorDeleted
+            Event::dispatch(new FloorDeleted
                 (
                     $floor->getVenue()->getSummitId(),
                     $floor->getVenueId(),
@@ -765,7 +765,7 @@ final class SummitLocationService
             return $room;
         });
 
-        Event::fire
+        Event::dispatch
         (
             new SummitVenueRoomInserted
             (
@@ -911,7 +911,7 @@ final class SummitLocationService
                 }
             }
 
-            Event::fire
+            Event::dispatch
             (
                 new SummitVenueRoomUpdated
                 (
@@ -993,7 +993,7 @@ final class SummitLocationService
                 $floor->removeRoom($room);
             }
 
-            Event::fire
+            Event::dispatch
             (
                 new SummitVenueRoomDeleted
                 (
@@ -1222,7 +1222,7 @@ final class SummitLocationService
             return $map;
         });
 
-        Event::fire
+        Event::dispatch
         (
             new LocationImageInserted
             (
@@ -1329,7 +1329,7 @@ final class SummitLocationService
                 $location->recalculateMapOrder($map, intval($metadata['order']));
             }
 
-            Event::fire
+            Event::dispatch
             (
                 new LocationImageUpdated
                 (
@@ -1402,7 +1402,7 @@ final class SummitLocationService
                 );
             }
 
-            Event::fire
+            Event::dispatch
             (
                 new LocationImageDeleted
                 (
@@ -1490,7 +1490,7 @@ final class SummitLocationService
             return $image;
         });
 
-        Event::fire
+        Event::dispatch
         (
             new LocationImageInserted
             (
@@ -1597,7 +1597,7 @@ final class SummitLocationService
                 $location->recalculateImageOrder($image, intval($metadata['order']));
             }
 
-            Event::fire
+            Event::dispatch
             (
                 new LocationImageUpdated
                 (
@@ -1670,7 +1670,7 @@ final class SummitLocationService
                 );
             }
 
-            Event::fire
+            Event::dispatch
             (
                 new LocationImageDeleted
                 (
@@ -1785,7 +1785,7 @@ final class SummitLocationService
 
             $reservation->setPaymentGatewayCartId($result['cart_id']);
             $reservation->setPaymentGatewayClientToken($result['client_token']);
-            Event::fire(new CreatedBookableRoomReservation($reservation->getId()));
+            Event::dispatch(new CreatedBookableRoomReservation($reservation->getId()));
             return $reservation;
         });
     }

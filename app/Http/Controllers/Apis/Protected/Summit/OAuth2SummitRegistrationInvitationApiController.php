@@ -18,7 +18,6 @@ use App\Jobs\Emails\Registration\Invitations\ReInviteSummitRegistrationEmail;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\Services\Model\ISummitRegistrationInvitationService;
 use Illuminate\Http\Request as LaravelRequest;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -307,7 +306,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'is_sent',
                 ];
 
-                $columns_param = Input::get("columns", "");
+                $columns_param = Request::input("columns", "");
                 $columns = [];
                 if(!empty($columns_param))
                     $columns  = explode(',', $columns_param);
@@ -411,7 +410,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -438,8 +437,8 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'is_accepted' => ['=='],
                     'is_sent' => ['=='],
                 ]);
@@ -453,7 +452,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                  'is_sent' => 'sometimes|required|string|in:true,false',
             ]);
 
-            $this->service->triggerSend($summit, $payload, Input::get('filter'));
+            $this->service->triggerSend($summit, $payload, Request::input('filter'));
 
             return $this->ok();
 

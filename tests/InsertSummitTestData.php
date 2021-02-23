@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,13 +11,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Summit\TrackTagGroup;
+use App\Models\Foundation\Summit\TrackTagGroupAllowedTag;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use LaravelDoctrine\ORM\Facades\Registry;
+use models\main\Tag;
 use models\summit\PresentationCategoryGroup;
 use models\utils\SilverstripeBaseModel;
 use models\summit\SummitVenue;
 use models\summit\Summit;
-use Doctrine\Common\Persistence\ObjectRepository;
+use Doctrine\Persistence\ObjectRepository;
 use models\summit\PresentationCategory;
 use models\summit\SummitEventType;
 use models\summit\PresentationType;
@@ -26,6 +30,9 @@ use App\Models\Foundation\Summit\SelectionPlan;
 use Illuminate\Support\Facades\DB;
 use models\summit\Presentation;
 use models\main\SummitAdministratorPermissionGroup;
+use DateTimeZone;
+use DateTime;
+use DateInterval;
 /**
  * Trait InsertSummitTestData
  * @package Tests
@@ -94,6 +101,21 @@ trait InsertSummitTestData
     static $presentations;
 
     /**
+     * @var PresentationCategoryGroup
+     */
+    static $defaultTrackGroup;
+
+    /**
+     * @var TrackTagGroup;
+     */
+    static $defaultTrackTagGroup;
+
+    /**
+     * @var Tag[]
+     */
+    static $defaultTags = [];
+
+    /**
      * @throws Exception
      */
     protected static function insertTestData(){
@@ -108,7 +130,7 @@ trait InsertSummitTestData
         self::$summit->setApiFeedKey("");
         self::$summit->setTimeZoneId("America/Chicago");
         $time_zone = new DateTimeZone("America/Chicago");
-        $begin_date = new \DateTime("now", $time_zone);
+        $begin_date = new DateTime("now", $time_zone);
         self::$summit->setBeginDate($begin_date);
         self::$summit->setEndDate((clone $begin_date)->add(new DateInterval("P30D")));
         self::$summit->setRegistrationBeginDate($begin_date);
@@ -166,12 +188,27 @@ trait InsertSummitTestData
         self::$secondaryTrack->setChairVisible(true);
         self::$secondaryTrack->setVotingVisible(true);
 
-        $track_group = new PresentationCategoryGroup();
-        $track_group->setName("DEFAULT TRACK GROUP");
-        $track_group->addCategory(self::$defaultTrack);
+        self::$defaultTrackGroup = new PresentationCategoryGroup();
+        self::$defaultTrackGroup->setName("DEFAULT TRACK GROUP");
+        self::$defaultTrackGroup->addCategory(self::$defaultTrack);
+
+        self::$defaultTrackTagGroup = New TrackTagGroup();
+        self::$defaultTrackTagGroup->setName("DEFAULT TRACK TAG GROUP");
+        self::$defaultTrackTagGroup->setOrder(1);
+        self::$defaultTrackTagGroup->setLabel("DEFAULT TRACK TAG GROUP");
+
+        $tags = ['101','Case Study', 'Demo'];
+
+        foreach ($tags as $t){
+            $tag = new Tag($t);
+            self::$defaultTags[] = $tag;
+            self::$defaultTrackTagGroup->addTag($tag, false);
+        }
+
+        self::$summit->addTrackTagGroup(self::$defaultTrackTagGroup);
         self::$summit->addPresentationCategory(self::$defaultTrack);
         self::$summit->addPresentationCategory(self::$secondaryTrack);
-        self::$summit->addCategoryGroup($track_group);
+        self::$summit->addCategoryGroup(self::$defaultTrackGroup);
 
         self::$defaultEventType = new PresentationType();
         self::$defaultEventType->setType(IPresentationType::Presentation);
@@ -197,7 +234,7 @@ trait InsertSummitTestData
         self::$default_selection_plan->setSelectionBeginDate($submission_begin_date);
         self::$default_selection_plan->setSelectionEndDate($submission_end_date);
         self::$default_selection_plan->setIsEnabled(true);
-        self::$default_selection_plan->addTrackGroup($track_group);
+        self::$default_selection_plan->addTrackGroup(self::$defaultTrackGroup);
 
         self::$summit->addSelectionPlan(self::$default_selection_plan);
 

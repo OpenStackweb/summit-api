@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 use App\Http\Exceptions\HTTP403ForbiddenException;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -41,7 +40,7 @@ trait ParametrizedUpdateEntity
             ...$args){
         try {
             if(!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
             $payload = $data->all();
 
             // Creates a Validator instance and validates the data.

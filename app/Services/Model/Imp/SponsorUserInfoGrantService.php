@@ -71,7 +71,6 @@ final class SponsorUserInfoGrantService
      */
     public function addGrant(Summit $summit, int $sponsor_id, Member $current_member):SponsorUserInfoGrant {
         return $this->tx_service->transaction(function() use($summit, $sponsor_id, $current_member){
-            $grant = SponsorUserInfoGrantFactory::build(['class_name' => SponsorUserInfoGrant::ClassName]);
             $sponsor = $summit->getSummitSponsorById($sponsor_id);
             if(is_null($sponsor)){
                 throw new EntityNotFoundException(sprintf("Sponsor not found."));
@@ -85,12 +84,9 @@ final class SponsorUserInfoGrantService
                         $sponsor_id
                     )
                 );
-
-                throw new ValidationException
-                (
-                   "Thanks for sharing your info!"
-                );
+                return $sponsor->getGrant($current_member);
             }
+            $grant = SponsorUserInfoGrantFactory::build(['class_name' => SponsorUserInfoGrant::ClassName]);
             $grant->setAllowedUser($current_member);
             $sponsor->addUserInfoGrant($grant);
             return $grant;

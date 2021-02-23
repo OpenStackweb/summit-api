@@ -14,6 +14,7 @@
 use Illuminate\Mail\Message;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ICacheService;
+use Monolog\Formatter\FormatterInterface;
 use Monolog\Handler\MailHandler;
 use Monolog\Logger;
 use Monolog\Formatter\LineFormatter;
@@ -93,7 +94,7 @@ final class LaravelMailerHandler extends MailHandler
         $this->cacheService = $cacheService;
         $this->from = $from;
         $this->to = is_array($to) ? $to : array($to);
-        $this->subject = $subject;
+        $this->subject = empty($subject) ? 'API ERROR' : $subject;
         $this->addHeader(sprintf('From: %s', $from));
         $this->maxColumnWidth = $maxColumnWidth;
     }
@@ -132,7 +133,7 @@ final class LaravelMailerHandler extends MailHandler
     /**
      * {@inheritdoc}
      */
-    protected function send($content, array $records)
+    protected function send($content, array $records):void
     {
         $content = wordwrap($content, $this->maxColumnWidth);
 
@@ -209,5 +210,15 @@ final class LaravelMailerHandler extends MailHandler
         $this->encoding = $encoding;
 
         return $this;
+    }
+
+    /**
+     * Gets the default formatter.
+     *
+     * @return FormatterInterface
+     */
+    protected function getDefaultFormatter(): FormatterInterface
+    {
+        return new LineFormatter();
     }
 }

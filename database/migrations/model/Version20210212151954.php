@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailFlowType;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\utils\SilverstripeBaseModel;
-use SummitEmailFlowTypeSeeder;
+use Database\Seeders\SummitEmailFlowTypeSeeder;
 // Presentation Selections
 use App\Jobs\Emails\PresentationSelections\PresentationCategoryChangeRequestCreatedEmail;
 use App\Jobs\Emails\PresentationSelections\PresentationCategoryChangeRequestResolvedEmail;
@@ -31,7 +31,7 @@ class Version20210212151954 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         DB::setDefaultConnection("model");
         $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
@@ -66,7 +66,7 @@ class Version20210212151954 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
 
     }

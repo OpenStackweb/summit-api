@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +14,12 @@
 use models\summit\SummitEvent;
 use models\summit\Presentation;
 use LaravelDoctrine\ORM\Facades\EntityManager;
-use Doctrine\Common\Persistence\ObjectRepository;
+use Doctrine\Persistence\ObjectRepository;
 use Illuminate\Support\Facades\DB;
+use DateTimeZone;
+use DateTime;
+use DateInterval;
+use Mockery;
 /**
  * Class SummitEventMetricsTest
  */
@@ -39,7 +43,7 @@ class SummitEventMetricsTest extends ProtectedApiTest
     static $event_repository;
 
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
         self::insertTestData();
@@ -48,7 +52,7 @@ class SummitEventMetricsTest extends ProtectedApiTest
         DB::table("SummitEvent")->delete();
         self::$event_repository = EntityManager::getRepository(SummitEvent::class);
         $time_zone = new DateTimeZone("America/Chicago");
-        $now = new \DateTime("now", $time_zone);
+        $now = new DateTime("now", $time_zone);
         self::$event1 = new Presentation();
         self::$event1->setTitle("PRESENTATION 1");
         self::$event1->setStartDate((clone $now)->add(new DateInterval("P1D")));
@@ -60,7 +64,7 @@ class SummitEventMetricsTest extends ProtectedApiTest
         self::$em->flush();
     }
 
-    public function tearDown()
+    public function tearDown():void
     {
         self::clearTestData();
         Mockery::close();

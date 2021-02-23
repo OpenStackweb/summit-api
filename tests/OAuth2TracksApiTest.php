@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,25 +11,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use LaravelDoctrine\ORM\Facades\EntityManager;
+use App\Models\Foundation\Main\IGroup;
 use Illuminate\Http\UploadedFile;
 /**
  * Class OAuth2TracksApiTest
  */
 final class OAuth2TracksApiTest extends ProtectedApiTest
 {
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testGetTracksByTitle($summit_id = 23){
+    use InsertSummitTestData;
+
+    use InsertMemberTestData;
+
+    protected function setUp():void
+    {
+        $this->setCurrentGroup(IGroup::TrackChairs);
+        parent::setUp();
+        self::insertTestData();
+        self::$summit_permission_group->addMember(self::$member);
+        self::$em->persist(self::$summit);
+        self::$em->persist(self::$summit_permission_group);
+        self::$em->flush();
+        self::$summit->addTrackChair(self::$member, [ self::$defaultTrack ] );
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+    }
+
+    protected function tearDown():void
+    {
+        self::clearTestData();
+        parent::tearDown();
+    }
+
+    public function testGetTracksByTitle(){
 
         $params = [
 
-            'id'       => $summit_id,
+            'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 10,
-            'filter'   => 'name=@con',
+            'filter'   => sprintf('name=@%s', self::$defaultTrack->getTitle()),
             'order'    => '+code',
             'expand'   => 'track_groups,allowed_tags'
         ];
@@ -53,6 +73,8 @@ final class OAuth2TracksApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
         $tracks = json_decode($content);
         $this->assertTrue(!is_null($tracks));
+        $this->assertTrue($tracks->total >= 1);
+        $this->assertTrue($tracks->data[0]->name == self::$defaultTrack->getTitle());
         return $tracks;
     }
 
@@ -61,11 +83,11 @@ final class OAuth2TracksApiTest extends ProtectedApiTest
      * @param int $track_id
      * @return mixed
      */
-    public function testGetTracksById($summit_id = 25, $track_id = 248){
+    public function testGetTracksById(){
         $params = [
 
-            'id'       => $summit_id,
-            'track_id' => $track_id,
+            'id'       => self::$summit->getId(),
+            'track_id' => self::$defaultTrack->getId(),
             'expand'   =>'extra_questions'
         ];
 
@@ -92,15 +114,13 @@ final class OAuth2TracksApiTest extends ProtectedApiTest
     }
 
     /**
-     * @param int $summit_id
-     * @param int $track_id
      * @return mixed
      */
-    public function testGetTracksExtraQuestionById($summit_id = 25, $track_id = 248){
+    public function testGetTracksExtraQuestionById(){
         $params = [
 
-            'id'       => $summit_id,
-            'track_id' => $track_id,
+            'id'       => self::$summit->getId(),
+            'track_id' => self::$defaultTrack->getId(),
         ];
 
         $headers = [
@@ -126,15 +146,13 @@ final class OAuth2TracksApiTest extends ProtectedApiTest
     }
 
     /**
-     * @param int $summit_id
-     * @param int $track_id
      * @return mixed
      */
-    public function testGetTracksAllowedTagsById($summit_id = 25, $track_id = 248){
+    public function testGetTracksAllowedTagsById(){
         $params = [
 
-            'id'       => $summit_id,
-            'track_id' => $track_id,
+            'id'       => self::$summit->getId(),
+            'track_id' => self::$defaultTrack->getId(),
         ];
 
         $headers = [
@@ -159,13 +177,10 @@ final class OAuth2TracksApiTest extends ProtectedApiTest
         return $allowes_tags;
     }
 
-    /**
-     * @param int $summit_id
-     */
-    public function testGetTracksByTitleCSV($summit_id = 23){
-        $params = [
 
-            'id'       => $summit_id,
+    public function testGetTracksByTitleCSV(){
+        $params = [
+            'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 10,
             'filter'   => 'title=@con',
@@ -193,19 +208,18 @@ final class OAuth2TracksApiTest extends ProtectedApiTest
     }
 
     /**
-     * @param int $summit_id
      * @return mixed
      */
-    public function testAddTrack($summit_id = 25){
+    public function testAddTrack(){
         $params = [
-            'id' => $summit_id,
+            'id'       => self::$summit->getId(),
         ];
 
         $name       = str_random(16).'_track';
         $data = [
             'name'       => $name,
             'description' => 'test desc',
-            'code'        => '',
+            'code'        => 'CDB',
             'allowed_tags' => ['101','Case Study', 'Demo'],
         ];
 
@@ -233,16 +247,13 @@ final class OAuth2TracksApiTest extends ProtectedApiTest
     }
 
     /**
-     * @param int $summit_id
      * @return mixed
      */
-    public function testUpdateTrack($summit_id = 23){
-
-        $new_track = $this->testAddTrack($summit_id);
+    public function testUpdateTrack(){
 
         $params = [
-            'id'       => $summit_id,
-            'track_id' => $new_track->id
+            'id'       => self::$summit->getId(),
+            'track_id' => self::$defaultTrack->getId()
         ];
 
         $name       = str_random(16).'_track';
@@ -276,17 +287,12 @@ final class OAuth2TracksApiTest extends ProtectedApiTest
         return $track;
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testDeleteNewTrack($summit_id = 23){
 
-        $new_track = $this->testAddTrack($summit_id);
+    public function testDeleteNewTrack(){
 
         $params = [
-            'id'       => $summit_id,
-            'track_id' => $new_track->id
+            'id'       => self::$summit->getId(),
+            'track_id' => self::$defaultTrack->getId()
         ];
 
         $headers = [
@@ -308,37 +314,11 @@ final class OAuth2TracksApiTest extends ProtectedApiTest
         $this->assertResponseStatus(204);
     }
 
-    public function testDeleteOldTrack($summit_id = 23){
+    public function testCopyTracks(){
 
         $params = [
-            'id'       => $summit_id,
-            'track_id' => 155
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "DELETE",
-            "OAuth2SummitTracksApiController@deleteTrackBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(412);
-    }
-
-    public function testCopyTracks($from_summit_id = 24, $to_summit_id = 25){
-
-        $params = [
-            'id'            => $from_summit_id,
-            'to_summit_id' => $to_summit_id
+            'id'            => self::$summit->getId(),
+            'to_summit_id' => self::$summit2->getId()
         ];
 
         $headers = [
@@ -362,17 +342,11 @@ final class OAuth2TracksApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($added_tracks));
     }
 
-    public function testAddTrackIcon($summit_id=25){
-
-        $repo   =  EntityManager::getRepository(\models\summit\Summit::class);
-        $summit = $repo->getById($summit_id);
-        if(!$summit instanceof \models\summit\Summit)
-            throw new Exception();
-        $track = $summit->getPresentationCategories()[0];
+    public function testAddTrackIcon(){
         $params = array
         (
-            'id' => $summit_id,
-            'track_id' => $track->getId(),
+            'id' => self::$summit->getId(),
+            'track_id' => self::$defaultTrack->getId(),
         );
 
         $headers = array
@@ -380,7 +354,6 @@ final class OAuth2TracksApiTest extends ProtectedApiTest
             "HTTP_Authorization" => " Bearer " . $this->access_token,
          //   "CONTENT_TYPE" => "multipart/form-data; boundary=----WebKitFormBoundaryBkSYnzBIiFtZu4pb"
         );
-
 
         $response = $this->action
         (
@@ -401,17 +374,38 @@ final class OAuth2TracksApiTest extends ProtectedApiTest
         return intval($video_id);
     }
 
-    public function testRemoveTrackIcon($summit_id=25){
+    public function testRemoveTrackIcon(){
 
-        $repo   =  EntityManager::getRepository(\models\summit\Summit::class);
-        $summit = $repo->getById($summit_id);
-        if(!$summit instanceof \models\summit\Summit)
-            throw new Exception();
-        $track = $summit->getPresentationCategories()[0];
         $params = array
         (
-            'id' => $summit_id,
-            'track_id' => $track->getId(),
+            'id' => self::$summit->getId(),
+            'track_id' => self::$defaultTrack->getId(),
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            //   "CONTENT_TYPE" => "multipart/form-data; boundary=----WebKitFormBoundaryBkSYnzBIiFtZu4pb"
+        );
+
+        $response = $this->action
+        (
+            "POST",
+            "OAuth2SummitTracksApiController@addTrackIcon",
+            $params,
+            array(),
+            array(),
+            [
+                'file' => UploadedFile::fake()->image('icon.jpg')
+            ],
+            $headers,
+            []
+        );
+
+        $params = array
+        (
+            'id' => self::$summit->getId(),
+            'track_id' => self::$defaultTrack->getId(),
         );
 
         $headers = array

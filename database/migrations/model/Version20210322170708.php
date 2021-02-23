@@ -23,7 +23,7 @@ class Version20210322170708 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $sql = <<<SQL
 create index SummitSelectedPresentation_Presentation_List_Unique
@@ -35,7 +35,7 @@ SQL;
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
 
     }

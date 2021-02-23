@@ -23,7 +23,7 @@ class Version20210326171117 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $sql = <<<SQL
 ALTER TABLE PresentationActionType MODIFY ClassName 
@@ -45,7 +45,7 @@ SQL;
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
 
     }

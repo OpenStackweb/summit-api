@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -100,7 +99,7 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
             (
                 $response->toArray
                 (
-                    $expand    = Input::get('expand',''),
+                    $expand    = Request::input('expand',''),
                     $fields    = [],
                     $relations = [],
                     $params    = [
@@ -148,7 +147,7 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
                     ->getSerializer($team)
                     ->serialize
                     (
-                        $expand    = Input::get('expand',''),
+                        $expand    = Request::input('expand',''),
                         $fields    = [],
                         $relations = [],
                         $params    = [
@@ -181,7 +180,7 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
 
             if(!Request::isJson()) return $this->error400();
 
-            $data = Input::json();
+            $data = Request::json();
 
             $rules = array
             (
@@ -268,7 +267,7 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
 
             if(!Request::isJson()) return $this->error400();
 
-            $data = Input::json();
+            $data = Request::json();
 
             $rules = array
             (
@@ -323,7 +322,7 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
      */
     public function getMyTeamMessages($team_id){
 
-        $values = Input::all();
+        $values = Request::all();
 
         $rules = array
         (
@@ -345,15 +344,15 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
             $page     = 1;
             $per_page = 5;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'),  array
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'),  array
                 (
                     'owner_id'   => ['=='],
                     'sent_date'  => ['>', '<', '<=', '>=', '=='],
@@ -362,9 +361,9 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), array
+                $order = OrderParser::parse(Request::input('order'), array
                 (
                     'sent_date',
                     'id',
@@ -417,7 +416,7 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
 
             if(!Request::isJson()) return $this->error400();
 
-            $data = Input::json();
+            $data = Request::json();
 
             $rules = array
             (
@@ -472,7 +471,7 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
 
             if(!Request::isJson()) return $this->error400();
 
-            $data = Input::json();
+            $data = Request::json();
 
             $rules = array
             (

@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2015 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,13 +23,13 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
 
     use InsertSummitTestData;
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
         self::insertTestData();
     }
 
-    public function tearDown()
+    public function tearDown():void
     {
        // self::clearTestData();
         Mockery::close();

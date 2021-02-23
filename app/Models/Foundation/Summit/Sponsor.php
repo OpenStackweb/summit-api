@@ -182,11 +182,20 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
      * @return bool
      */
     public function hasGrant(Member $member):bool {
+        return !is_null($this->getGrant($member));
+    }
+
+    /**
+     * @param Member $member
+     * @return SponsorUserInfoGrant|null
+     */
+    public function getGrant(Member $member):?SponsorUserInfoGrant {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('allowed_user', $member));
         $grant = $this->user_info_grants->matching($criteria)->first();
-        return $grant !== false;
+        return $grant === false ? null : $grant;
     }
+
 
     public function hasCompany():bool{
         return $this->getCompanyId() > 0;

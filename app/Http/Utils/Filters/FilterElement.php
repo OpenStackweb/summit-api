@@ -124,4 +124,9 @@ class FilterElement extends AbstractFilterElement
     {
         return new self($field, $value, 'like', $same_field_op);
     }
+
+    public function __toString():string
+    {
+        return sprintf("%s%s%s", $this->field, $this->operator, is_array($this->value)? json_encode($this->value):$this->value);
+    }
 }

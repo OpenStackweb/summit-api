@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2015 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,7 @@ use App\Security\MemberScopes;
 use App\Models\Foundation\Main\IGroup;
 use App\Security\CompanyScopes;
 use App\Security\SponsoredProjectScope;
+use Mockery;
 /**
  * Class AccessTokenServiceStub
  */
@@ -269,7 +270,7 @@ abstract class ProtectedApiTest extends \Tests\BrowserKitTestCase
         $this->current_group = $group;
     }
 
-    protected function setUp()
+    protected function setUp():void
     {
         $this->access_token = 'TEST_ACCESS_TOKEN';
         parent::setUp();
@@ -278,7 +279,7 @@ abstract class ProtectedApiTest extends \Tests\BrowserKitTestCase
         self::$service->setUserExternalId(self::$member->getUserExternalId());
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
         self::clearMemberTestData();
         Mockery::close();

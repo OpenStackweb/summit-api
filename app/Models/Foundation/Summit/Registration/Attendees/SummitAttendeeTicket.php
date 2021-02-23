@@ -669,7 +669,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
             $promo_codes_to_return[$this->getPromoCode()->getCode()] +=1;
         }
 
-        Event::fire(new SummitAttendeeTicketRefundAccepted($this->getId(), $tickets_to_return, $promo_codes_to_return));
+        Event::dispatch(new SummitAttendeeTicketRefundAccepted($this->getId(), $tickets_to_return, $promo_codes_to_return));
     }
 
     /**
@@ -765,7 +765,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         $this->status = IOrderConstants::RefundRequestedStatus;
 
         if (!$refund_entire_order)
-            Event::fire(new RequestedSummitAttendeeTicketRefund($this->getId(), $days_before_event_starts));
+            Event::dispatch(new RequestedSummitAttendeeTicketRefund($this->getId(), $days_before_event_starts));
     }
 
     /**

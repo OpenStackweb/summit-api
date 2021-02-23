@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -64,7 +63,7 @@ trait GetAll
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function getAll(){
-        $values = Input::all();
+        $values = Request::all();
         $rules  = [
 
             'page'     => 'integer|min:1',
@@ -84,15 +83,15 @@ trait GetAll
             $page     = 1;
             $per_page = PagingConstants::DefaultPageSize;;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), $this->getFilterRules());
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), $this->getFilterRules());
             }
 
             if(is_null($filter)) $filter = new Filter();
@@ -104,9 +103,9 @@ trait GetAll
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), $this->getOrderRules());
+                $order = OrderParser::parse(Request::input('order'), $this->getOrderRules());
             }
 
             $data = $this->getRepository()->getAllByPage(new PagingInfo($page, $per_page), $this->applyExtraFilters($filter), $order);

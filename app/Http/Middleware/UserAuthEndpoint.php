@@ -81,10 +81,13 @@ final class UserAuthEndpoint
             Log::debug(sprintf("UserAuthEndpoint::handle route %s method %s member %s (%s) required group %s",
                 $route, $method, $current_member->getId(), $current_member->getEmail(), $required_group->getSlug()));
 
-            if($current_member->isOnGroup($required_group->getSlug()))
+            if($current_member->isOnGroup($required_group->getSlug())) {
+                Log::debug(sprintf("UserAuthEndpoint::handle member %s is on group %s request %s", $current_member->getId(), $required_group->getSlug(), $request->path()));
                 return $next($request);
+            }
         }
 
+        Log::warning(sprintf("UserAuthEndpoint::handle member %s is not authorized", $current_member->getId()));
         $http_response = Response::json(['error' => 'unauthorized member'], 403);
         return $http_response;
     }

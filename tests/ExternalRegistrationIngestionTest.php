@@ -11,9 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use GuzzleHttp\ClientInterface;
 use Illuminate\Support\Facades\App;
-use LaravelDoctrine\ORM\Facades\EntityManager;
 use Mockery;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
@@ -21,8 +19,6 @@ use models\summit\SummitBadgeType;
 use models\summit\SummitVenue;
 use models\utils\SilverstripeBaseModel;
 use LaravelDoctrine\ORM\Facades\Registry;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamInterface;
 use App\Services\Model\IRegistrationIngestionService;
 use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
 /**
@@ -31,7 +27,7 @@ use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedTyp
  */
 class ExternalRegistrationIngestionTest extends TestCase
 {
-    public function tearDown()
+    public function tearDown():void
     {
         Mockery::close();
     }

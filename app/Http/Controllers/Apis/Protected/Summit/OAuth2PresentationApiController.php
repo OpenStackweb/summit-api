@@ -26,7 +26,6 @@ use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request as LaravelRequest;
 use Exception;
@@ -160,7 +159,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             if (!Request::isJson()) return $this->error400();
 
-            $data = Input::json();
+            $data = Request::json();
 
             $data = $data->all();
             // Creates a Validator instance and validates the data.
@@ -208,7 +207,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             if (!Request::isJson()) return $this->error400();
 
-            $data = Input::json();
+            $data = Request::json();
+
             $data = $data->all();
             // Creates a Validator instance and validates the data.
             $validation = Validator::make($data, PresentationVideoValidationRulesFactory::build($data, true));
@@ -283,7 +283,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
-            $data = Input::json();
+            $data = Request::json();
+
             $data = $data->all();
             // Creates a Validator instance and validates the data.
             $validation = Validator::make($data, SummitEventValidationRulesFactory::buildForSubmission($data));
@@ -333,11 +334,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
-            $data = Input::json();
+            $data = Request::json();
 
             $data = $data->all();
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data, SummitEventValidationRulesFactory::buildForSubmission($data . true));
+            $validation = Validator::make($data, SummitEventValidationRulesFactory::buildForSubmission($data, true));
 
             if ($validation->fails()) {
                 $ex = new ValidationException;
@@ -1195,7 +1196,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
-            $data = Input::json();
+            $data = Request::json();
             $data = $data->all();
             // Creates a Validator instance and validates the data.
             $validation = Validator::make($data,[

@@ -30,7 +30,8 @@ class SynchPresentationActions implements ShouldQueue
 {
     public $tries = 2;
 
-    public $timeout = PHP_INT_MAX;
+    // no timeout
+    public $timeout = 0;
 
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 

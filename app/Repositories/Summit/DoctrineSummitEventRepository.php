@@ -73,7 +73,7 @@ final class DoctrineSummitEventRepository
         $idx  = 1;
         foreach(self::$forbidden_classes as $forbidden_class){
             $query = $query
-                ->andWhere("not e INSTANCE OF :forbidden_class".$idx);
+            ->andWhere("not e INSTANCE OF :forbidden_class".$idx);
             $query->setParameter("forbidden_class".$idx, $forbidden_class);
             $idx++;
         }
@@ -184,27 +184,27 @@ final class DoctrineSummitEventRepository
                 "(sprs.name :operator :value)"
             ),
             'selection_status' => new DoctrineSwitchFilterMapping([
-                    'selected' => new DoctrineCaseFilterMapping(
-                        'selected',
-                        "ssp.order is not null and sspl.list_type = 'Group' and sspl.category = e.category"
-                    ),
-                    'accepted' => new DoctrineCaseFilterMapping(
-                        'accepted',
-                        "ssp.order is not null and ssp.order <= cc.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category"
-                    ),
-                    'alternate' => new DoctrineCaseFilterMapping(
+                 'selected' => new DoctrineCaseFilterMapping(
+                      'selected',
+                      "ssp.order is not null and sspl.list_type = 'Group' and sspl.category = e.category"
+                  ),
+                  'accepted' => new DoctrineCaseFilterMapping(
+                    'accepted',
+                    "ssp.order is not null and ssp.order <= cc.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category"
+                  ),
+                  'alternate' => new DoctrineCaseFilterMapping(
                         'alternate',
                         "ssp.order is not null and ssp.order > cc.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category"
-                    ),
-                    'lightning-accepted' => new DoctrineCaseFilterMapping(
+                  ),
+                  'lightning-accepted' => new DoctrineCaseFilterMapping(
                         'lightning-accepted',
                         "ssp.order is not null and ssp.order <= cc.lightning_count and sspl.list_type = 'Group' and sspl.list_class = 'Lightning' and sspl.category = e.category"
-                    ),
-                    'lightning-alternate' => new DoctrineCaseFilterMapping(
+                  ),
+                  'lightning-alternate' => new DoctrineCaseFilterMapping(
                         'lightning-alternate',
                         "ssp.order is not null and ssp.order > cc.lightning_count and sspl.list_type = 'Group' and sspl.list_class = 'Lightning' and sspl.category = e.category"
-                    ),
-                ]
+                  ),
+              ]
             ),
             'track_chairs_status' =>  new DoctrineSwitchFilterMapping
             (
@@ -250,14 +250,20 @@ final class DoctrineSummitEventRepository
                         'moved',
                         sprintf
                         (
-                            "not exists (select vw1 from models\summit\PresentationTrackChairView vw1 
-                                    inner join vw1.presentation p1 join vw1.viewer v1 where p1.id = p.id and v1.id = %s) 
-                                    and exists (select cch from models\summit\PSummitCategoryChange cch 
-                                    inner join cch.presentation p2
-                                    inner join cch.new_category nc 
-                                    where p2.id = p.id and 
-                                    cch.status = %s and
-                                    nc.id = %s) ",
+                            "not exists 
+                            (
+                                select vw1 from models\summit\PresentationTrackChairView vw1 
+                                inner join vw1.presentation p1 join vw1.viewer v1 where p1.id = p.id and v1.id = %s
+                            ) 
+                            and exists 
+                            ( 
+                                select cch from models\summit\SummitCategoryChange cch 
+                                inner join cch.presentation p2
+                                inner join cch.new_category nc 
+                                where p2.id = p.id and 
+                                cch.status = %s and
+                                nc.id = %s
+                            ) ",
                             $current_member_id,
                             ISummitCategoryChangeStatus::Approved,
                             $current_track_id
@@ -279,7 +285,7 @@ final class DoctrineSummitEventRepository
             ),
             'created_by_fullname' => new DoctrineFilterMapping
              (
-                "( concat(c.first_name, ' ', c.last_name) :operator :value "
+                "concat(c.first_name, ' ', c.last_name) :operator :value "
              ),
             'created_by_email' => 'c.email',
         ];
@@ -312,11 +318,11 @@ final class DoctrineSummitEventRepository
     public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
     {
 
-        Log::debug("DoctrineSummitEventRepository::getAllByPage");
         $current_track_id  = 0;
         $current_member_id = 0;
 
         if(!is_null($filter)){
+            Log::debug(sprintf("DoctrineSummitEventRepository::getAllByPage filter %s", $filter));
             // check for dependant filtering
             $track_id_filter   = $filter->getUniqueFilter('track_id');
             if (!is_null($track_id_filter)) {
@@ -386,7 +392,6 @@ final class DoctrineSummitEventRepository
         foreach($paginator as $entity)
             $data[]= $entity;
 
-        Log::debug("DoctrineSummitEventRepository::getAllByPage End");
         return new PagingResponse
         (
             $total,

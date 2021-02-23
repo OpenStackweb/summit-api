@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2019 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@ use Illuminate\Http\UploadedFile;
 final class OAuth2SummitTicketsApiTest extends ProtectedApiTest
 {
 
-    public function setUp()
+    public function setUp():void
     {
         parent::setUp();
     }

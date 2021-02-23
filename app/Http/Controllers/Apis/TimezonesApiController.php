@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -38,7 +38,7 @@ final class TimezonesApiController extends JsonController
                 $timezones
             );
 
-            return $this->ok($response->toArray($expand = Input::get('expand','')));
+            return $this->ok($response->toArray($expand = Request::input('expand','')));
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);

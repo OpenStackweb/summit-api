@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2019 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -54,7 +54,7 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
 
     use InsertOrdersTestData;
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
         self::$test_secret_key = env('TEST_STRIPE_SECRET_KEY');
@@ -97,7 +97,7 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
 
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
         self::clearTestData();
         parent::tearDown();

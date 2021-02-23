@@ -17,9 +17,10 @@ use App\Services\Apis\IPaymentGatewayAPI;
 use Illuminate\Http\Request as LaravelRequest;
 use models\exceptions\ValidationException;
 use Stripe\Charge;
-use Stripe\Error\InvalidRequest;
-use Stripe\Error\SignatureVerification;
+use Stripe\Exception\ApiErrorException;
+use Stripe\Exception\SignatureVerificationException;
 use Stripe\Event;
+use Stripe\Refund;
 use Stripe\Stripe;
 use Stripe\PaymentIntent;
 use Stripe\WebhookSignature;
@@ -162,7 +163,7 @@ final class StripeApi implements IPaymentGatewayAPI
     /**
      * @param LaravelRequest $request
      * @return array
-     * @throws SignatureVerification
+     * @throws SignatureVerificationException
      * @throws \Exception
      * @throws \InvalidArgumentException
      */
@@ -219,7 +220,7 @@ final class StripeApi implements IPaymentGatewayAPI
         } catch (\UnexpectedValueException $e) {
             // Invalid payload
             throw $e;
-        } catch (SignatureVerification $e) {
+        } catch (SignatureVerificationException $e) {
             // Invalid signature
             throw $e;
         } catch (\Exception $e) {
@@ -263,36 +264,52 @@ final class StripeApi implements IPaymentGatewayAPI
      */
     public function refundPayment(string $cart_id, float $amount, string $currency): void
     {
-        if (empty($this->secret_key))
-            throw new \InvalidArgumentException();
+        try {
 
-        Stripe::setApiKey($this->secret_key);
-        Stripe::setApiVersion(self::Version);
+            Log::debug(sprintf("StripeApi::refundPayment calling cart_id %s amount %s currency %s", $cart_id, $amount, $currency));
 
-        $intent = PaymentIntent::retrieve($cart_id);
+            if (empty($this->secret_key))
+                throw new \InvalidArgumentException();
 
-        if (is_null($intent))
-            throw new \InvalidArgumentException();
-        if (count($intent->charges->data) == 0)
-            throw new \InvalidArgumentException("this intent payment has no charges");
-        $charge = $intent->charges->data[0];
-        if (!$charge instanceof Charge)
-            throw new \InvalidArgumentException();
-        $params = [];
-        if ($amount > 0) {
-            if (!self::isZeroDecimalCurrency($currency)) {
-                /**
-                 * All API requests expect amounts to be provided in a currency’s smallest unit. For example,
-                 * to charge $10 USD, provide an amount value of 1000 (i.e, 1000 cents).
-                 * For zero-decimal currencies, still provide amounts as an integer but without multiplying by 100.
-                 * For example, to charge ¥500, simply provide an amount value of 500.
-                 */
-                $amount = $amount * 100;
+            Stripe::setApiKey($this->secret_key);
+            Stripe::setApiVersion(self::Version);
+
+            $intent = PaymentIntent::retrieve($cart_id);
+
+            if (is_null($intent))
+                throw new \InvalidArgumentException();
+            if (count($intent->charges->data) == 0)
+                throw new \InvalidArgumentException("this intent payment has no charges");
+            $charge = $intent->charges->data[0];
+            if (!$charge instanceof Charge)
+                throw new \InvalidArgumentException();
+            $params = [
+                'charge' => $charge->id,
+                'reason' => 'requested_by_customer'
+            ];
+            if ($amount > 0) {
+                if (!self::isZeroDecimalCurrency($currency)) {
+                    /**
+                     * All API requests expect amounts to be provided in a currency’s smallest unit. For example,
+                     * to charge $10 USD, provide an amount value of 1000 (i.e, 1000 cents).
+                     * For zero-decimal currencies, still provide amounts as an integer but without multiplying by 100.
+                     * For example, to charge ¥500, simply provide an amount value of 500.
+                     */
+                    $amount = $amount * 100;
+                }
+                $params['amount'] = intval($amount);
             }
 
-            $params['amount'] = intval($amount);
+            // $charge->refund($params);
+            // @see https://github.com/stripe/stripe-php/wiki/Migration-guide-for-v7
+            $refund = Refund::create($params);
+
+            Log::debug(sprintf("StripeApi::refundPayment refund requested for cart_id %s amount %s response %s", $cart_id, $amount, $refund->toJSON()));
         }
-        $charge->refund($params);
+        catch (\Exception $ex){
+            Log::error($ex);
+            throw $ex;
+        }
     }
 
     /**
@@ -372,7 +389,7 @@ final class StripeApi implements IPaymentGatewayAPI
 
             return $intent->status;
         }
-        catch(InvalidRequest $ex){
+        catch(ApiErrorException $ex){
             Log::warning(sprintf("StripeApi::getCartStatus cart_id %s code %s message %s", $cart_id, $ex->getCode(), $ex->getMessage()));
             return null;
         }
@@ -411,13 +428,19 @@ final class StripeApi implements IPaymentGatewayAPI
      */
     public function getWebHookById(string $id){
 
-        if (empty($this->secret_key))
-            throw new \InvalidArgumentException();
+        try {
+            if (empty($this->secret_key))
+                throw new \InvalidArgumentException();
 
-        Stripe::setApiKey($this->secret_key);
-        Stripe::setApiVersion(self::Version);
+            Stripe::setApiKey($this->secret_key);
+            Stripe::setApiVersion(self::Version);
 
-        return WebhookEndpoint::retrieve($id);
+            return WebhookEndpoint::retrieve($id);
+        }
+        catch (\Exception $ex){
+            Log::error($ex);
+            throw $ex;
+        }
     }
 
     /**
@@ -425,9 +448,14 @@ final class StripeApi implements IPaymentGatewayAPI
      * @return void
      */
     public function deleteWebHookById(string $id):void{
-
-        $webhook = $this->getWebHookById($id);
-        if(!$webhook) return;
-        $webhook->delete();
+        try {
+            $webhook = $this->getWebHookById($id);
+            if (!$webhook) return;
+            $webhook->delete();
+        }
+        catch (\Exception $ex){
+            Log::error($ex);
+            throw $ex;
+        }
     }
 }

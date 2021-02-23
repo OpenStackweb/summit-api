@@ -16,7 +16,6 @@ use App\Http\Utils\EpochCellFormatter;
 use App\Http\Utils\MultipartFormDataCleaner;
 use Exception;
 use Illuminate\Http\Request as LaravelRequest;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -524,7 +523,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             if(!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $current_member = $this->resource_server_context->getCurrentUser();
             $payload = $data->all();
@@ -590,7 +589,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             if (is_null($summit)) return $this->error404();
 
             if(!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
@@ -654,7 +653,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             if (is_null($summit)) return $this->error404();
 
             if(!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $rules = array
             (
@@ -775,7 +774,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $values = Input::all();
+            $values = Request::all();
 
             $rules = array
             (
@@ -802,16 +801,16 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $page     = 1;
             $per_page = 5;
 
-            if (Input::has('page'))
+            if (Request::has('page'))
             {
-                $page = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+                $page = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $order = null;
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), array
+                $order = OrderParser::parse(Request::input('order'), array
                 (
                     'created_date',
                     'owner_id',
@@ -1134,8 +1133,8 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $filter = null;
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'location_id' => ['=='],
                     'start_date'  => ['>='],
                     'end_date'    => ['<='],
@@ -1195,7 +1194,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
             if(!Request::isJson()) return $this->error400();
 
-            $data = Input::json();
+            $data = Request::json();
 
             $rules = [
                  'events' => 'required|int_array',
@@ -1244,7 +1243,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
             if(!Request::isJson()) return $this->error400();
 
-            $data = Input::json();
+            $data = Request::json();
 
             $rules = [
                  'events' => 'required|event_dto_publish_array',
@@ -1293,7 +1292,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
             if(!Request::isJson()) return $this->error400();
 
-            $data = Input::json();
+            $data = Request::json();
 
             $rules = [
                 'events' => 'required|event_dto_array',

@@ -12,11 +12,11 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\Repositories\ILanguageRepository;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use utils\PagingResponse;
+use Illuminate\Support\Facades\Request;
 /**
  * Class LanguagesApiController
  * @package App\Http\Controllers
@@ -52,7 +52,7 @@ final class LanguagesApiController extends JsonController
                 $languages
             );
 
-            return $this->ok($response->toArray($expand = Input::get('expand','')));
+            return $this->ok($response->toArray($expand = Request::input('expand','')));
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);

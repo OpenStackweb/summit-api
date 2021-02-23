@@ -25,7 +25,7 @@ class Version20200624132001 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $builder = new Builder($schema);
 
@@ -40,7 +40,7 @@ class Version20200624132001 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
 
         $builder = new Builder($schema);

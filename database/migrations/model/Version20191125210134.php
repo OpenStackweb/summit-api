@@ -24,7 +24,7 @@ class Version20191125210134 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $sql = <<<SQL
     ALTER TABLE SummitOrder MODIFY OwnerCompany varchar(255);
@@ -63,7 +63,7 @@ SQL;
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
 
     }

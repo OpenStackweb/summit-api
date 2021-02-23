@@ -124,7 +124,7 @@ final class SummitTicketTypeService
             return $ticket_type;
         });
 
-        Event::fire
+        Event::dispatch
         (
             new SummitTicketTypeInserted
             (
@@ -207,7 +207,7 @@ final class SummitTicketTypeService
 
             $ticket_type = SummitTicketTypeFactory::populate($ticket_type, self::getTicketTypeParams($summit, $data));
 
-            Event::fire
+            Event::dispatch
             (
                 new SummitTicketTypeUpdated
                 (
@@ -247,7 +247,7 @@ final class SummitTicketTypeService
                 );
             }
 
-            Event::fire
+            Event::dispatch
             (
                 new SummitTicketTypeDeleted
                 (
@@ -311,7 +311,7 @@ final class SummitTicketTypeService
             }
 
             foreach ($res as $ticket_type){
-                Event::fire
+                Event::dispatch
                 (
                     new SummitTicketTypeInserted
                     (

@@ -17,7 +17,6 @@ use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackChairRepository;
 use App\Services\Model\ITrackChairService;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use models\exceptions\EntityNotFoundException;
@@ -206,7 +205,7 @@ final class OAuth2SummitTrackChairsApiController
                     'summit_id'
                 ];
 
-                $columns_param = Input::get("columns", "");
+                $columns_param = Request::input("columns", "");
                 $columns = [];
                 if(!empty($columns_param))
                     $columns  = explode(',', $columns_param);

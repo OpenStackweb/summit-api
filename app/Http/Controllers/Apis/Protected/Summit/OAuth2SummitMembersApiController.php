@@ -32,7 +32,6 @@ use utils\FilterParserException;
 use utils\OrderParser;
 use utils\PagingInfo;
 use utils\PagingResponse;
-use Illuminate\Support\Facades\Input;
 use Exception;
 /**
  * Class OAuth2SummitMembersApiController
@@ -129,7 +128,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
                 $favorites
             );
 
-            return $this->ok($response->toArray($expand = Input::get('expand','')));
+            return $this->ok($response->toArray($expand = Request::input('expand','')));
         }
         catch (ValidationException $ex1)
         {
@@ -265,7 +264,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
                 $schedule
             );
 
-            return $this->ok($response->toArray($expand = Input::get('expand','')));
+            return $this->ok($response->toArray($expand = Request::input('expand','')));
         }
         catch (ValidationException $ex1)
         {
@@ -378,7 +377,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function getAllBySummit($summit_id){
-        $values = Input::all();
+        $values = Request::all();
 
         $rules = [
             'page'     => 'integer|min:1',
@@ -401,15 +400,15 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             $page     = 1;
             $per_page = PagingConstants::DefaultPageSize;;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'),  [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'),  [
                     'irc'               => ['=@', '=='],
                     'twitter'           => ['=@', '=='],
                     'first_name'        => ['=@', '=='],
@@ -448,9 +447,9 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
                     'first_name',
                     'last_name',
                     'id',
@@ -501,7 +500,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function getAllBySummitCSV($summit_id){
-        $values = Input::all();
+        $values = Request::all();
 
         $allowed_columns = [
             "id",
@@ -545,15 +544,15 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             $page     = 1;
             $per_page = PHP_INT_MAX;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'),  [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'),  [
                     'irc'               => ['=@', '=='],
                     'twitter'           => ['=@', '=='],
                     'first_name'        => ['=@', '=='],
@@ -592,9 +591,9 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
                     'first_name',
                     'last_name',
                     'id',
@@ -613,7 +612,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             $relations = Request::input('relations', '');
             $relations = !empty($relations) ? explode(',', $relations) : [];
 
-            $columns_param = Input::get("columns", "");
+            $columns_param = Request::input("columns", "");
             $columns = [];
             if(!empty($columns_param))
                 $columns  = explode(',', $columns_param);

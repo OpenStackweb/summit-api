@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,11 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Tests\TestCase;
+
 /**
  * Class LanguagesApiTest
  */
-final class LanguagesApiTest extends TestCase
+final class LanguagesApiTest extends BrowserKitTestCase
 {
     public function testGetAllLanguages()
     {

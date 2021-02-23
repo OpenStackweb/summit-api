@@ -23,7 +23,7 @@ class Version20200910184756 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $sql = <<<SQL
 ALTER TABLE `PresentationMaterial` CHANGE `ClassName` `ClassName` ENUM('PresentationMaterial','PresentationLink','PresentationSlide','PresentationVideo', 'PresentationMediaUpload') CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT 'PresentationMaterial';
@@ -34,7 +34,7 @@ SQL;
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
         $sql = <<<SQL
 ALTER TABLE `PresentationMaterial` CHANGE `ClassName` `ClassName` ENUM('PresentationMaterial','PresentationLink','PresentationSlide','PresentationVideo') CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT 'PresentationMaterial';

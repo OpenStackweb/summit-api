@@ -17,9 +17,9 @@ use utils\Order;
 use utils\OrderParser;
 use utils\PagingResponse;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Input;
 use utils\FilterParser;
 use utils\PagingInfo;
+use Illuminate\Support\Facades\Request;
 /**
  * Class RetrieveSummitEventsStrategy
  * @package App\Http\Controllers
@@ -32,9 +32,9 @@ abstract class RetrieveSummitEventsStrategy
         $page     = 1;
         $per_page = 5;
 
-        if (Input::has('page')) {
-            $page     = intval(Input::get('page'));
-            $per_page = intval(Input::get('per_page'));
+        if (Request::has('page')) {
+            $page     = intval(Request::input('page'));
+            $per_page = intval(Request::input('per_page'));
         }
 
         return [$page, $per_page];
@@ -47,7 +47,7 @@ abstract class RetrieveSummitEventsStrategy
      */
     public function getEvents(array $params = [])
     {
-            $values = Input::all();
+            $values = Request::all();
 
             $rules = [
                 'page'     => 'integer|min:1',
@@ -77,8 +77,8 @@ abstract class RetrieveSummitEventsStrategy
 
         $filter = null;
 
-        if (Input::has('filter')) {
-            $filter = FilterParser::parse(Input::get('filter'), $this->getValidFilters());
+        if (Request::has('filter')) {
+            $filter = FilterParser::parse(Request::input('filter'), $this->getValidFilters());
         }
 
         if(is_null($filter)) $filter = new Filter();
@@ -96,9 +96,9 @@ abstract class RetrieveSummitEventsStrategy
      */
     protected function buildOrder(){
         $order = null;
-        if (Input::has('order'))
+        if (Request::has('order'))
         {
-            $order = OrderParser::parse(Input::get('order'), [
+            $order = OrderParser::parse(Request::input('order'), [
 
                 'title',
                 'start_date',

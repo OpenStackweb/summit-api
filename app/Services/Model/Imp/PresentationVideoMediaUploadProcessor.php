@@ -308,7 +308,7 @@ final class PresentationVideoMediaUploadProcessor
 
 
             foreach ($event_ids as $event_id) {
-                Log::warning(sprintf("PresentationVideoMediaUploadProcessor::processMuxAssetsFromStreamUrl processing event %s", $event_id));
+                Log::debug(sprintf("PresentationVideoMediaUploadProcessor::processMuxAssetsFromStreamUrl processing event %s", $event_id));
                 try {
                     $this->tx_service->transaction(function () use ($event_id, $credentials, &$excerpt) {
                         try {
@@ -380,6 +380,8 @@ final class PresentationVideoMediaUploadProcessor
             Mail::queue(new MUXExportExcerptMail($mail_to, "MUX Assets MP4 Enabling Process", $excerpt));
 
         if(count($event_ids) > 0) {
+
+            Log::debug(sprintf("PresentationVideoMediaUploadProcessor::processMuxAssetsFromStreamUrl triggering CreateVideosFromMUXAssetsForSummitJob"));
             // fire exporting
             // @see https://docs.mux.com/guides/video/download-your-videos#download-videos
             CreateVideosFromMUXAssetsForSummitJob::dispatch(
@@ -387,7 +389,7 @@ final class PresentationVideoMediaUploadProcessor
                 $credentials->getTokenId(),
                 $credentials->getTokenSecret(),
                 $mail_to
-            )->delay(now()->addMinutes(1));
+            )->delay(now()->addMinutes(10));
         }
 
         return count($event_ids);

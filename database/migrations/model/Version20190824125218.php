@@ -19,7 +19,7 @@ class Version20190824125218 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $sql = <<<SQL
       UPDATE SummitRoomReservation set Status = 'Paid' where Status = 'Payed';
@@ -46,7 +46,7 @@ SQL;
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
 
     }

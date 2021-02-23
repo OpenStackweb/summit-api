@@ -198,7 +198,7 @@ abstract class PresentationMaterial extends SilverstripeBaseModel implements IOr
      * @ORM\PostPersist
      */
     public function inserted($args){
-        Event::fire(new PresentationMaterialCreated($this));
+        Event::dispatch(new PresentationMaterialCreated($this));
     }
 
     public function clearPresentation(){

@@ -1,6 +1,6 @@
 <?php namespace App\Providers;
 /**
- * Copyright 2017 OpenStack Foundation
+ * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,8 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
+
 /**
  * Class RouteServiceProvider
  * @package App\Providers
@@ -29,6 +30,13 @@ class RouteServiceProvider extends ServiceProvider
     protected $namespace = 'App\Http\Controllers';
 
     /**
+     * The path to the "home" route for your application.
+     *
+     * @var string
+     */
+    public const HOME = '/';
+
+    /**
      * Define your route model bindings, pattern filters, etc.
      *
      * @return void
@@ -36,20 +44,23 @@ class RouteServiceProvider extends ServiceProvider
     public function boot()
     {
         //
+
         parent::boot();
     }
 
     /**
      * Define the routes for the application.
      *
-     * @param  \Illuminate\Routing\Router  $router
      * @return void
      */
-    public function map(Router $router)
+    public function map()
     {
-        $this->mapWebRoutes($router);
+        $this->mapApiRoutes();
 
-        //
+        $this->mapPublicApiRoutes();
+
+        $this->mapWebRoutes();
+
     }
 
     /**
@@ -57,11 +68,53 @@ class RouteServiceProvider extends ServiceProvider
      *
      * These routes all receive session state, CSRF protection, etc.
      *
-     * @param  \Illuminate\Routing\Router  $router
      * @return void
      */
-    protected function mapWebRoutes(Router $router)
+    protected function mapWebRoutes()
     {
-        require app_path('Http/routes.php');
+        Route::middleware('web')
+            ->namespace($this->namespace)
+            ->group(base_path('routes/web.php'));
+    }
+
+    /**
+     * Define the "api" routes for the application.
+     *
+     * These routes are typically stateless.
+     *
+     * @return void
+     */
+    protected function mapApiRoutes()
+    {
+        Route::prefix('api/v1')
+            ->middleware('api')
+            ->namespace($this->namespace)
+            ->group(base_path('routes/api_v1.php'));
+
+
+        Route::prefix('api/v2')
+            ->middleware('api')
+            ->namespace($this->namespace)
+            ->group(base_path('routes/api_v2.php'));
+    }
+
+    /**
+     * Define the "api" routes for the application.
+     *
+     * These routes are typically stateless.
+     *
+     * @return void
+     */
+    protected function mapPublicApiRoutes()
+    {
+        Route::prefix('api/public/v1')
+            ->middleware('public_api')
+            ->namespace($this->namespace)
+            ->group(base_path('routes/public_api.php'));
+
+        Route::prefix('.well-known')
+            ->middleware('well_known')
+            ->namespace($this->namespace)
+            ->group(base_path('routes/well_known.php'));
     }
 }

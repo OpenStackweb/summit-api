@@ -20,7 +20,6 @@ use models\main\IMemberRepository;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitNotificationRepository;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Input;
 use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
@@ -287,7 +286,7 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
             $notification = $summit->getNotificationById($notification_id);
             if(is_null($notification))
                 return $this->error404();
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($notification)->serialize( Request::input('expand', '')));
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($notification)->serialize(Request::input('expand', '')));
         } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412(array($ex1->getMessage()));
@@ -380,7 +379,7 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();

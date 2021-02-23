@@ -14,8 +14,6 @@
 use App\Http\Utils\PagingConstants;
 use App\Models\Foundation\Summit\Repositories\ISummitBookableVenueRoomAttributeTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitBookableVenueRoomAttributeValueRepository;
-use App\Services\Model\ILocationService;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -86,7 +84,7 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function getAllBookableRoomAttributeTypes($summit_id){
-        $values = Input::all();
+        $values = Request::all();
         $rules  = [
 
             'page'     => 'integer|min:1',
@@ -109,15 +107,15 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
             $page     = 1;
             $per_page = PagingConstants::DefaultPageSize;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'type'      => ['==', '=@'],
                     'summit_id' => ['=='],
                 ]);
@@ -131,9 +129,9 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
                     'id',
                     'type',
                 ]);
@@ -182,7 +180,7 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
     public function addBookableRoomAttributeType($summit_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -259,7 +257,7 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
     public function updateBookableRoomAttributeType($summit_id, $type_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -335,7 +333,7 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function getAllBookableRoomAttributeValues($summit_id, $type_id){
-        $values = Input::all();
+        $values = Request::all();
         $rules  = [
 
             'page'     => 'integer|min:1',
@@ -361,15 +359,15 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
             $page     = 1;
             $per_page = PagingConstants::DefaultPageSize;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'value'      => ['==', '=@'],
                     'summit_id' => ['=='],
                     'type_id' => ['=='],
@@ -385,9 +383,9 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
                     'id',
                     'value',
                 ]);
@@ -473,7 +471,7 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
     public function addBookableRoomAttributeValue($summit_id, $type_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -521,7 +519,7 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
     public function updateBookableRoomAttributeValue($summit_id, $type_id, $value_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();

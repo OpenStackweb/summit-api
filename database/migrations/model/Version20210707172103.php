@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailFlowType;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\utils\SilverstripeBaseModel;
-use SummitEmailFlowTypeSeeder;
+use Database\Seeders\SummitEmailFlowTypeSeeder;
 
 /**
  * Class Version20210707172103

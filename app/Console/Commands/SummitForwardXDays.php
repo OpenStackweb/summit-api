@@ -22,11 +22,6 @@ use Exception;
  */
 class SummitForwardXDays extends Command
 {
-    /**
-     * @var ISummitService
-     */
-    private $service;
-
 
     /**
      * The console command name.
@@ -80,7 +75,7 @@ class SummitForwardXDays extends Command
 
             Log::debug(sprintf("SummitForwardXDays::handle tenant %s current_tenant %s", $tenant, $current_tenant));
 
-            if($tenant != $current_tenant){
+            if(strtoupper($tenant) != strtoupper($current_tenant)){
                 Log::warning(sprintf("SummitForwardXDays::handle exiting bc tenants are not the same"));
                 return;
             }

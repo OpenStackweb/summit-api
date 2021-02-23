@@ -14,22 +14,14 @@
 
 use App\Models\Foundation\Summit\Registration\BuildDefaultPaymentGatewayProfileStrategy;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
-use App\Services\Apis\CalendarSync\ICalendarSyncRemoteFacadeFactory;
 use App\Services\Apis\ExternalRegistrationFeeds\ExternalRegistrationFeedFactory;
 use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedFactory;
 use App\Services\Apis\ExternalScheduleFeeds\ExternalScheduleFeedFactory;
 use App\Services\Apis\ExternalScheduleFeeds\IExternalScheduleFeedFactory;
-use App\Services\Model\AdminActionsCalendarSyncPreProcessor;
-use App\Services\Model\AdminActionsCalendarSyncProcessingService;
-use App\Services\Model\AdminScheduleWorkQueueManager;
 use App\Services\Model\AttendeeService;
-use App\Services\Model\IAdminActionsCalendarSyncProcessingService;
 use App\Services\Model\IAttendeeService;
-use App\Services\Model\ICalendarSyncWorkRequestPreProcessor;
-use App\Services\Model\ICalendarSyncWorkRequestQueueManager;
 use App\Services\Model\ICompanyService;
 use App\Services\Model\ILocationService;
-use App\Services\Model\IMemberActionsCalendarSyncProcessingService;
 use App\Services\Model\IMemberService;
 use App\Services\Model\Imp\CompanyService;
 use App\Services\Model\Imp\PaymentGatewayProfileService;
@@ -86,17 +78,12 @@ use App\Services\Model\ISummitTrackTagGroupService;
 use App\Services\Model\ITagService;
 use App\Services\Model\ITrackChairService;
 use App\Services\Model\ITrackQuestionTemplateService;
-use App\Services\Model\MemberActionsCalendarSyncPreProcessor;
-use App\Services\Model\MemberActionsCalendarSyncProcessingService;
-use App\Services\Model\MemberScheduleWorkQueueManager;
 use App\Services\Model\MemberService;
 use App\Services\Model\OrganizationService;
 use App\Services\Model\PresentationCategoryGroupService;
 use App\Services\Model\RSVPTemplateService;
 use App\Services\Model\ScheduleIngestionService;
 use App\Services\Model\SponsorshipTypeService;
-use App\Services\Model\Strategies\CalendarSyncWorkRequestPreProcessorStrategyFactory;
-use App\Services\Model\Strategies\ICalendarSyncWorkRequestPreProcessorStrategyFactory;
 use App\Services\Model\SummitAccessLevelTypeService;
 use App\Services\Model\SummitBadgeFeatureTypeService;
 use App\Services\Model\SummitBadgeTypeService;
@@ -117,7 +104,6 @@ use App\Services\SummitRefundPolicyTypeService;
 use App\Services\SummitSponsorService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
-use services\apis\CalendarSync\CalendarSyncRemoteFacadeFactory;
 use services\model\ChatTeamService;
 use services\model\IChatTeamService;
 use services\model\IPresentationService;
@@ -156,50 +142,6 @@ final class ModelServicesProvider extends ServiceProvider
         (
             IAttendeeService::class,
             AttendeeService::class
-        );
-
-        App::singleton
-        (
-            ICalendarSyncRemoteFacadeFactory::class,
-            CalendarSyncRemoteFacadeFactory::class
-        );
-
-        // work request pre processors
-
-        App::singleton
-        (
-            ICalendarSyncWorkRequestPreProcessorStrategyFactory::class,
-            CalendarSyncWorkRequestPreProcessorStrategyFactory::class
-        );
-
-        App::when(MemberActionsCalendarSyncPreProcessor::class)
-            ->needs(ICalendarSyncWorkRequestQueueManager::class)
-            ->give(MemberScheduleWorkQueueManager::class);
-
-        App::when(AdminActionsCalendarSyncPreProcessor::class)
-            ->needs(ICalendarSyncWorkRequestQueueManager::class)
-            ->give(AdminScheduleWorkQueueManager::class);
-
-        // work request process services
-
-        App::when(MemberActionsCalendarSyncProcessingService::class)
-            ->needs(ICalendarSyncWorkRequestPreProcessor::class)
-            ->give(MemberActionsCalendarSyncPreProcessor::class);
-
-        App::singleton
-        (
-            IMemberActionsCalendarSyncProcessingService::class,
-            MemberActionsCalendarSyncProcessingService::class
-        );
-
-        App::when(AdminActionsCalendarSyncProcessingService::class)
-            ->needs(ICalendarSyncWorkRequestPreProcessor::class)
-            ->give(AdminActionsCalendarSyncPreProcessor::class);
-
-        App::singleton
-        (
-            IAdminActionsCalendarSyncProcessingService::class,
-            AdminActionsCalendarSyncProcessingService::class
         );
 
         App::singleton(
@@ -456,13 +398,6 @@ final class ModelServicesProvider extends ServiceProvider
             IPresentationService::class,
             IChatTeamService::class,
             IAttendeeService::class,
-            ICalendarSyncRemoteFacadeFactory::class,
-            ICalendarSyncWorkRequestPreProcessorStrategyFactory::class,
-            ICalendarSyncWorkRequestQueueManager::class,
-            ICalendarSyncWorkRequestPreProcessor::class,
-            IMemberActionsCalendarSyncProcessingService::class,
-            ICalendarSyncWorkRequestPreProcessor::class,
-            IAdminActionsCalendarSyncProcessingService::class,
             IMemberService::class,
             ISummitPromoCodeService::class,
             ISummitEventTypeService::class,

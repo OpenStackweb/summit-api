@@ -22,7 +22,7 @@ class Version20201021172434 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $sql = <<<SQL
        update Presentation set Progress = 5 where Progress = 4;
@@ -43,7 +43,7 @@ SQL;
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
 
     }

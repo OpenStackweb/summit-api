@@ -17,7 +17,6 @@ use App\Services\Model\ISummitEventTypeService;
 use Illuminate\Support\Facades\Request;
 use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
 use App\Models\Foundation\Summit\Repositories\ISummitEventTypeRepository;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use models\exceptions\ValidationException;
@@ -26,7 +25,6 @@ use models\summit\ISummitRepository;
 use models\exceptions\EntityNotFoundException;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
-use utils\FilterElement;
 use utils\FilterParser;
 use utils\OrderParser;
 use utils\PagingInfo;
@@ -74,7 +72,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
      * @return mixed
      */
     public function getAllBySummit($summit_id){
-        $values = Input::all();
+        $values = Request::all();
         $rules  = [
 
             'page'     => 'integer|min:1',
@@ -97,15 +95,15 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
             $page     = 1;
             $per_page = 5;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'name'                       => ['=@', '=='],
                     'class_name'                 => ['=='],
                     'is_default'                 => ['=='],
@@ -146,9 +144,9 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
 
                     'id',
                     'name',
@@ -194,7 +192,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
      * @return mixed
      */
     public function getAllBySummitCSV($summit_id){
-        $values = Input::all();
+        $values = Request::all();
         $rules  = [
         ];
 
@@ -214,15 +212,15 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
             $page     = 1;
             $per_page = PHP_INT_MAX;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'name'                       => ['=@', '=='],
                     'class_name'                 => ['=='],
                     'is_default'                 => ['=='],
@@ -263,9 +261,9 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
 
                     'id',
                     'name',
@@ -351,7 +349,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -397,7 +395,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
     {
         try {
             if (!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();

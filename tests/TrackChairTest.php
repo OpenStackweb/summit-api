@@ -20,11 +20,11 @@ use models\exceptions\ValidationException;
  */
 class TrackChairTest extends BrowserKitTestCase
 {
-    use \InsertSummitTestData;
+    use InsertSummitTestData;
 
-    use \InsertMemberTestData;
+    use InsertMemberTestData;
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
         self::insertTestData();
@@ -35,7 +35,7 @@ class TrackChairTest extends BrowserKitTestCase
         self::$em->flush();
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
         self::clearMemberTestData();
         self::clearTestData();

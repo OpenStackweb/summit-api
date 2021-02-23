@@ -17,7 +17,6 @@ use App\Services\Apis\IExternalUserApi;
 use App\Services\Model\ISummitOrderService;
 use Illuminate\Support\Facades\App;
 use models\main\IMemberRepository;
-use models\summit\Summit;
 use models\summit\SummitOrder;
 /**
  * Class SummitOrderJobsTest
@@ -25,9 +24,9 @@ use models\summit\SummitOrder;
  */
 final class SummitOrderJobsTest extends TestCase
 {
-    use \InsertSummitTestData;
+    use InsertSummitTestData;
 
-    protected function tearDown()
+    protected function tearDown():void
     {
         self::clearTestData();
         parent::tearDown();
@@ -35,7 +34,7 @@ final class SummitOrderJobsTest extends TestCase
     }
 
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
         self::insertTestData();

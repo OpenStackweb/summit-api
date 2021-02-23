@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -287,7 +287,7 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
         $this->assertResponseStatus(201);
 
         $params = [
-            'status'  => $status,
+           'status'  => $status,
             'expand' => 'track_groups,summit'
         ];
 
@@ -401,7 +401,7 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
         $presentations = json_decode($content);
         $this->assertTrue(!is_null($presentations));
-        $this->assertTrue($presentations->total >= 1);
+        $this->assertTrue($presentations->total > 1);
     }
 
     public function testGetPresentationsBySelectionPlanAndConditionsCSV(){
@@ -466,11 +466,13 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
         $params = [
             'id' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
-            'filter' => [
+           /* 'filter' => [
                 'status==Received',
                 'is_chair_visible==1',
-                'track_chairs_status==voted'
-            ],
+                'track_id=='.self::$defaultTrack->getId()
+            ],*/
+
+            'filter' => sprintf("status==Received,is_chair_visible==1,track_id==%s", self::$defaultTrack->getId())
         ];
 
         $headers = [

@@ -14,7 +14,6 @@
 use App\Http\Exceptions\HTTP403ForbiddenException;
 use models\summit\Summit;
 use models\utils\IEntity;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -54,7 +53,7 @@ trait AddSummitChildElement
     public function add($summit_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
             $payload = $data->all();
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();

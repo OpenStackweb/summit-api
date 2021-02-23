@@ -810,7 +810,7 @@ class SummitEvent extends SilverstripeBaseModel
     {
         if (is_null($this->summit)) return;
         if ($this->summit->isDeleting()) return;
-        Event::fire(new SummitEventDeleted(null, $this->pre_remove_events));
+        Event::dispatch(new SummitEventDeleted(null, $this->pre_remove_events));
         $this->pre_remove_events = null;
     }
 
@@ -827,7 +827,7 @@ class SummitEvent extends SilverstripeBaseModel
      */
     public function updated($args)
     {
-        Event::fire(new SummitEventUpdated($this, $this->pre_update_args));
+        Event::dispatch(new SummitEventUpdated($this, $this->pre_update_args));
         $this->pre_update_args = null;
     }
 
@@ -838,7 +838,7 @@ class SummitEvent extends SilverstripeBaseModel
      */
     public function inserted($args)
     {
-        Event::fire(new SummitEventCreated($this, $args));
+        Event::dispatch(new SummitEventCreated($this, $args));
     }
 
     /**

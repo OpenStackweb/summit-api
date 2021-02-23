@@ -31,7 +31,6 @@ class PresentationSerializer extends SummitEventSerializer
         'ProgressNice'            => 'progress:json_string',
         'Slug'                    => 'slug:json_string',
         'SelectionStatus'         => 'selection_status:string',
-        'WillAllSpeakersAttend'   => 'will_all_speakers_attend:json_boolean',
         'DisclaimerAcceptedDate'  => 'disclaimer_accepted_date:datetime_epoch',
         'DisclaimerAccepted'      => 'disclaimer_accepted:json_boolean',
     ];
@@ -49,7 +48,7 @@ class PresentationSerializer extends SummitEventSerializer
         'progress',
         'selection_status',
         'disclaimer_accepted_date',
-        'disclaimer_accepted'
+        'disclaimer_accepted',
     ];
 
     protected static $allowed_relations = [

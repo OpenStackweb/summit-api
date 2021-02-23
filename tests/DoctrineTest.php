@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2016 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,6 @@ use ModelSerializers\SerializerRegistry;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\utils\SilverstripeBaseModel;
-use Tests\TestCase;
 /**
  * Class DoctrineTest
  */

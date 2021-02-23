@@ -25,7 +25,7 @@ final class Version20190626125814 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $builder = new Builder($schema);
         if($builder->hasTable("SummitRoomReservation") && !$builder->hasColumns("SummitRoomReservation", ["PaymentGatewayClientToken","RefundedAmount"])) {
@@ -39,7 +39,7 @@ final class Version20190626125814 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
         $builder = new Builder($schema);
         if($builder->hasTable("SummitRoomReservation") && $builder->hasColumns("SummitRoomReservation", ["PaymentGatewayClientToken","RefundedAmount"])) {

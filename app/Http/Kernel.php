@@ -14,12 +14,12 @@ class Kernel extends HttpKernel
      * @var array
      */
     protected $middleware = [
-        \Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode::class,
-        \App\Http\Middleware\EncryptCookies::class,
-        \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-        \Illuminate\Session\Middleware\StartSession::class,
-        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-        \Spatie\Cors\Cors::class,
+        //\App\Http\Middleware\TrustProxies::class,
+        \App\Http\Middleware\CheckForMaintenanceMode::class,
+        \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
+        \App\Http\Middleware\TrimStrings::class,
+        //\Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+        \Fruitcake\Cors\HandleCors::class,
         \App\Http\Middleware\SecurityHTTPHeadersWriterMiddleware::class,
         \App\Http\Middleware\ParseMultipartFormDataInputForNonPostRequests::class,
         \App\Http\Middleware\DoctrineMiddleware::class,
@@ -32,9 +32,29 @@ class Kernel extends HttpKernel
      */
     protected $middlewareGroups = [
         'web' => [
+            \App\Http\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            // \Illuminate\Session\Middleware\AuthenticateSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \App\Http\Middleware\VerifyCsrfToken::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
         'api' => [
+            'ssl',
+            'oauth2.protected',
+            'rate.limit',
+            'etags'
         ],
+        'public_api' => [
+            'ssl',
+            'rate.limit:10000,1', // 10000 request per minute
+            'etags'
+        ],
+        'well_known' => [
+            'ssl',
+            'rate.limit:1000,1', // 1000 request per minute
+        ]
     ];
 
     /**

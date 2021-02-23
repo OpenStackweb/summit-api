@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 
 /**
  * Copyright 2016 OpenStack Foundation

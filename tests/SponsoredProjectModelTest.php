@@ -1,11 +1,4 @@
 <?php namespace Tests;
-
-use LaravelDoctrine\ORM\Facades\EntityManager;
-use models\main\Company;
-use models\main\ProjectSponsorshipType;
-use models\main\SponsoredProject;
-use models\summit\SponsorshipType;
-
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,17 +11,19 @@ use models\summit\SponsorshipType;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-
+use LaravelDoctrine\ORM\Facades\EntityManager;
+use models\main\Company;
+use models\main\ProjectSponsorshipType;
+use models\main\SponsoredProject;
 /**
  * Class SponsoredProjectModelTest
  * @package Tests
  */
 class SponsoredProjectModelTest  extends BrowserKitTestCase
 {
-    use \InsertSummitTestData;
+    use InsertSummitTestData;
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
 
@@ -37,7 +32,7 @@ class SponsoredProjectModelTest  extends BrowserKitTestCase
         self::$em->flush();
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
         self::clearTestData();
         parent::tearDown();

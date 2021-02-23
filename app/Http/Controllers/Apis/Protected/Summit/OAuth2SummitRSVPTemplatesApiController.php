@@ -15,7 +15,6 @@ use App\Http\Utils\PagingConstants;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPMultiValueQuestionTemplate;
 use App\Models\Foundation\Summit\Repositories\IRSVPTemplateRepository;
 use App\Services\Model\IRSVPTemplateService;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -91,7 +90,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
      */
     public function getAllBySummit($summit_id){
 
-        $values = Input::all();
+        $values = Request::all();
         $rules  = [
             'page'     => 'integer|min:1',
             'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::MinPageSize, PagingConstants::MaxPageSize),
@@ -114,15 +113,15 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
             $page     = 1;
             $per_page = PagingConstants::DefaultPageSize;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'title'          => ['=@', '=='],
                     'is_enabled'     => [ '=='],
                 ]);
@@ -137,9 +136,9 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
                     'id',
                     'title',
                 ]);
@@ -270,7 +269,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -316,7 +315,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -400,7 +399,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -447,7 +446,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -570,7 +569,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -618,7 +617,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         try {
 
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();

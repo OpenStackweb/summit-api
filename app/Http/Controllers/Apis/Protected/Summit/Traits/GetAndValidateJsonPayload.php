@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
 use models\exceptions\ValidationException;
@@ -30,7 +29,7 @@ trait GetAndValidateJsonPayload
         if(!Request::isJson()){
             throw new \InvalidArgumentException("invalid request format");
         }
-        $data    = Input::json();
+        $data    = Request::json();
         $payload = $data->all();
         // Creates a Validator instance and validates the data.
         $validation = Validator::make($payload, $validation_rules);

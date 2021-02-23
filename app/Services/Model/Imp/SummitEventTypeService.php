@@ -88,7 +88,7 @@ final class SummitEventTypeService
 
         });
 
-        Event::fire
+        Event::dispatch
         (
             new SummitEventTypeInserted
             (
@@ -130,7 +130,7 @@ final class SummitEventTypeService
 
             $event_type = SummitEventTypeFactory::populate($event_type, $summit, $data);
 
-            Event::fire
+            Event::dispatch
             (
                 new SummitEventTypeUpdated
                 (
@@ -180,7 +180,7 @@ final class SummitEventTypeService
                 );
             }
 
-            Event::fire
+            Event::dispatch
             (
                 new SummitEventTypeDeleted
                 (
@@ -219,7 +219,7 @@ final class SummitEventTypeService
         });
 
         foreach ($added_types as $event_type){
-            Event::fire
+            Event::dispatch
             (
                 new SummitEventTypeInserted
                 (

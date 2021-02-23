@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,14 +19,14 @@ class OAuth2SummitEmailEventFlowApiControllerTest extends ProtectedApiTest
 {
     use InsertSummitTestData;
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
         self::insertTestData();
         self::$summit->seedDefaultEmailFlowEvents();
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
         self::clearTestData();
         parent::tearDown();

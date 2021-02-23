@@ -25,7 +25,7 @@ final class Version20191016014630 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $builder = new Builder($schema);
 
@@ -34,13 +34,12 @@ final class Version20191016014630 extends AbstractMigration
                 $table->timestamp('ScanDate');
             });
         }
-
     }
 
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
         $builder = new Builder($schema);
 

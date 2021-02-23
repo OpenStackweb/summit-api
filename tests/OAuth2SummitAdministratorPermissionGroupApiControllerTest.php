@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,21 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-
-
 class OAuth2SummitAdministratorPermissionGroupApiControllerTest
     extends ProtectedApiTest
 {
     use InsertSummitTestData;
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
         self::insertTestData();
     }
 
-    public function tearDown()
+    public function tearDown():void
     {
         self::clearTestData();
         Mockery::close();

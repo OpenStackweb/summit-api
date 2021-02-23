@@ -13,9 +13,9 @@
  **/
 use App\Http\Utils\CSVExporter;
 use Exception;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Request;
 /**
  * Class JsonController
  * @package App\Http\Controllers
@@ -39,8 +39,8 @@ abstract class JsonController extends Controller
     {
         $res = Response::json($data, 201);
         //jsonp
-        if (Input::has('callback')) {
-            $res->setCallback(Input::get('callback'));
+        if (Request::has('callback')) {
+            $res->setCallback(Request::input('callback'));
         }
 
         return $res;
@@ -50,8 +50,8 @@ abstract class JsonController extends Controller
     {
         $res = Response::json($data, 204);
         //jsonp
-        if (Input::has('callback')) {
-            $res->setCallback(Input::get('callback'));
+        if (Request::has('callback')) {
+            $res->setCallback(Request::input('callback'));
         }
 
         return $res;
@@ -61,8 +61,8 @@ abstract class JsonController extends Controller
     {
         $res = Response::json($data, $has_content ? 201 : 204);
         //jsonp
-        if (Input::has('callback')) {
-            $res->setCallback(Input::get('callback'));
+        if (Request::has('callback')) {
+            $res->setCallback(Request::input('callback'));
         }
         return $res;
     }
@@ -77,8 +77,8 @@ abstract class JsonController extends Controller
         $res = $this->response2XX(200, $data);
 
         //jsonp
-        if (Input::has('callback')) {
-            $res->setCallback(Input::get('callback'));
+        if (Request::has('callback')) {
+            $res->setCallback(Request::input('callback'));
         }
 
         return $res;

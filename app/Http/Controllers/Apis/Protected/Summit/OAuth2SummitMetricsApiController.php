@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 use App\Services\Model\ISummitMetricService;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -76,9 +75,9 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
-            $payload = Input::all();
+            $payload = Request::all();
             if(Request::isJson()){
-                $payload = Input::json()->all();
+                $payload = Request::json()->all();
             }
 
             $validation = Validator::make($payload,
@@ -134,9 +133,9 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
-            $payload = Input::all();
+            $payload = Request::all();
             if(Request::isJson()){
-                $payload = Input::json()->all();
+                $payload = Request::json()->all();
             }
 
             $validation = Validator::make($payload,

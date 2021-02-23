@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,7 @@ class OAuth2PresentationSubmissionTest extends ProtectedApiTest
 {
     use InsertSummitTestData;
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
 
@@ -25,7 +25,7 @@ class OAuth2PresentationSubmissionTest extends ProtectedApiTest
         self::$em->flush();
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
         self::clearTestData();
         parent::tearDown();

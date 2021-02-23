@@ -22,7 +22,6 @@ use Illuminate\Support\Facades\Log;
 use utils\PagingInfo;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Validator;
 /**
  * Class OAuth2GroupsApiController
@@ -47,7 +46,7 @@ final class OAuth2GroupsApiController extends OAuth2ProtectedController
 
     public function getAll(){
 
-        $values = Input::all();
+        $values = Request::all();
 
         $rules = array
         (
@@ -68,15 +67,15 @@ final class OAuth2GroupsApiController extends OAuth2ProtectedController
             $page     = 1;
             $per_page = 5;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'),  array
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'),  array
                 (
                     'code' => ['=@', '=='],
                     'title' => ['=@', '=='],
@@ -85,9 +84,9 @@ final class OAuth2GroupsApiController extends OAuth2ProtectedController
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), array
+                $order = OrderParser::parse(Request::input('order'), array
                 (
                     'code',
                     'title',

@@ -33,7 +33,7 @@ abstract class BrowserKitTestCase extends BaseTestCase
      */
     protected $baseUrl = 'http://localhost';
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp(); // Don't forget this!
         $this->redis = Redis::connection();
@@ -49,9 +49,10 @@ abstract class BrowserKitTestCase extends BaseTestCase
     protected function prepareForTests()
     {
         Model::unguard();
+        // clean up
         DB::setDefaultConnection("model");
-        Artisan::call('doctrine:migrations:migrate', ["--connection" => 'config']);
-        Artisan::call('doctrine:migrations:migrate', ["--connection" => 'model']);
+        Artisan::call('doctrine:migrations:migrate', ["--connection" => 'config', '--force'=> '']);
+        Artisan::call('doctrine:migrations:migrate', ["--connection" => 'model', '--force'=> '']);
         //Mail::pretend(true);
         $this->seed('TestSeeder');
     }

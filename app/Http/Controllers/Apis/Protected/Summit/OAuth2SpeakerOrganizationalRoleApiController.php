@@ -13,11 +13,11 @@
  **/
 use App\Models\Foundation\Summit\Repositories\ISpeakerOrganizationalRoleRepository;
 use models\oauth2\IResourceServerContext;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use utils\PagingResponse;
+use Illuminate\Support\Facades\Request;
 /**
  * Class OAuth2SpeakerOrganizationalRoleApiController
  * @package App\Http\Controllers
@@ -56,7 +56,7 @@ final class OAuth2SpeakerOrganizationalRoleApiController extends OAuth2Protected
                 $roles
             );
 
-            return $this->ok($response->toArray($expand = Input::get('expand', '')));
+            return $this->ok($response->toArray($expand = Request::input('expand', '')));
         } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412(array($ex1->getMessage()));

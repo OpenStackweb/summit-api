@@ -23,7 +23,7 @@ class Version20200512174027 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $sentence = <<<SQL
 alter table SummitEmailFlowType modify ClassName enum('SummitEmailFlowType') charset utf8 default 'SummitEmailFlowType' null;
@@ -47,7 +47,7 @@ SQL;
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
 
     }

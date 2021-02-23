@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,6 @@
 use models\summit\PaymentGatewayProfileFactory;
 use models\summit\IPaymentConstants;
 use models\summit\Summit;
-use Tests\TestCase;
 use models\summit\StripePaymentProfile;
 /**
  * Class StripeInterfaceTest
@@ -51,7 +50,7 @@ final class StripeInterfaceTest extends TestCase
     {
     }
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
         self::$test_secret_key = env('TEST_STRIPE_SECRET_KEY');
@@ -61,7 +60,7 @@ final class StripeInterfaceTest extends TestCase
         self::insertTestData();
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
         self::clearTestData();
         parent::tearDown();

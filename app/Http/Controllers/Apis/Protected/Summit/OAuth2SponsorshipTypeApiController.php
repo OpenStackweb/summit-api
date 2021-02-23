@@ -14,7 +14,6 @@
 use App\Models\Foundation\Summit\Repositories\ISponsorshipTypeRepository;
 use App\Services\Model\ISponsorshipTypeService;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use models\exceptions\EntityNotFoundException;
@@ -111,7 +110,7 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
     {
         try {
             if (!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
             $payload = $data->all();
 
             // Creates a Validator instance and validates the data.
@@ -172,7 +171,7 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
     {
         try {
             if (!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
             $payload = $data->all();
 
             // Creates a Validator instance and validates the data.

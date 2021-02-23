@@ -15,7 +15,6 @@
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Summit\Repositories\IPresentationSpeakerSummitAssistanceConfirmationRequestRepository;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -83,7 +82,7 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $values = Input::all();
+            $values = Request::all();
 
             $rules = array
             (
@@ -103,15 +102,15 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
             $page = 1;
             $per_page = 10;
 
-            if (Input::has('page')) {
-                $page = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'id'                => ['=='],
                     'on_site_phone'     => ['==', '=@'],
                     'speaker_email'     => ['==', '=@'],
@@ -123,8 +122,8 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
             }
 
             $order = null;
-            if (Input::has('order')) {
-                $order = OrderParser::parse(Input::get('order'), [
+            if (Request::has('order')) {
+                $order = OrderParser::parse(Request::input('order'), [
                     'id',
                     'is_confirmed',
                     'confirmation_date',
@@ -175,15 +174,15 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
             $page = 1;
             $per_page = PHP_INT_MAX;
 
-            if (Input::has('page')) {
-                $page = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'id'                => ['=='],
                     'on_site_phone'     => ['==', '=@'],
                     'speaker_email'     => ['==', '=@'],
@@ -195,8 +194,8 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
             }
 
             $order = null;
-            if (Input::has('order')) {
-                $order = OrderParser::parse(Input::get('order'), [
+            if (Request::has('order')) {
+                $order = OrderParser::parse(Request::input('order'), [
                     'id',
                     'is_confirmed',
                     'confirmation_date',
@@ -244,7 +243,7 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
     {
         try {
             if(!Request::isJson()) return $this->error400();
-            $data = Input::json()->all();
+            $data = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -296,7 +295,7 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
     {
         try {
             if(!Request::isJson()) return $this->error400();
-            $data = Input::json()->all();
+            $data = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();

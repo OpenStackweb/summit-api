@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
 * Copyright 2015 OpenStack Foundation
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,6 @@
 * limitations under the License.
 **/
 
-use models\marketplace\ICompanyServiceRepository;
 
 /**
 * Class OAuth2ConsultantApiTest
@@ -27,7 +26,7 @@ class OAuth2ConsultantApiTest extends ProtectedApiTest
 		$params  = array(
 			'page'     => 1 ,
 			'per_page' => 10,
-			'status'   => ICompanyServiceRepository::Status_active,
+			'status'   => "active",
 		);
 
 		$headers = array("HTTP_Authorization" => " Bearer " .$this->access_token);
@@ -53,7 +52,7 @@ class OAuth2ConsultantApiTest extends ProtectedApiTest
 		$params  = array(
 			'page'     => 1 ,
 			'per_page' => 10,
-			'status'   => ICompanyServiceRepository::Status_active,
+			'status'   => "active",
 		);
 
 		$headers = array(

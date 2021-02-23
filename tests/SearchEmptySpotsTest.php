@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2017 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,7 @@ use LaravelDoctrine\ORM\Facades\EntityManager;
 use App\Models\Utils\IntervalParser;
 use services\model\ISummitService;
 use utils\FilterParser;
-use Tests\TestCase;
+use DateTime;
 /**
  * Class SearchEmptySpotsTest
  */

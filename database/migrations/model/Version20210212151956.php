@@ -25,7 +25,7 @@ class Version20210212151956 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
         $repository = $em->getRepository(Summit::class);
@@ -40,7 +40,7 @@ class Version20210212151956 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
 
     }

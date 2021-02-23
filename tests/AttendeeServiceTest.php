@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,19 +12,17 @@
  * limitations under the License.
  **/
 use App\Services\Model\IAttendeeService;
-use Tests\TestCase;
 use Illuminate\Support\Facades\App;
 /**
  * Class AttendeeServiceTest
  */
-final class AttendeeServiceTest  extends TestCase
+final class AttendeeServiceTest extends TestCase
 {
     public function testRedeemPromoCodes(){
 
         $service = App::make(IAttendeeService::class);
         $repo   =  EntityManager::getRepository(\models\summit\Summit::class);
         $summit = $repo->getById(24);
-
         $service->updateRedeemedPromoCodes($summit);
     }
 }

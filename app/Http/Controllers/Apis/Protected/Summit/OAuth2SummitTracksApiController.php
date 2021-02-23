@@ -18,7 +18,6 @@ use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
 use App\Services\Model\ISummitTrackService;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use models\exceptions\ValidationException;
@@ -75,7 +74,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @return mixed
      */
     public function getAllBySummit($summit_id){
-            $values = Input::all();
+            $values = Request::all();
         $rules  = [
 
             'page'     => 'integer|min:1',
@@ -98,15 +97,15 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
             $page     = 1;
             $per_page = PagingConstants::DefaultPageSize;;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'name'        => ['=@', '=='],
                     'description' => ['=@', '=='],
                     'code'        => ['=@', '=='],
@@ -130,9 +129,9 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
 
                     'id',
                     'code',
@@ -179,7 +178,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @return mixed
      */
     public function getAllBySummitCSV($summit_id){
-        $values = Input::all();
+        $values = Request::all();
         $rules  = [];
 
         try {
@@ -198,15 +197,15 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
             $page     = 1;
             $per_page = PHP_INT_MAX;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'title'       => ['=@', '=='],
                     'description' => ['=@', '=='],
                     'code'        => ['=@', '=='],
@@ -229,9 +228,9 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
 
                     'id',
                     'code',
@@ -446,7 +445,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
     public function addTrackBySummit($summit_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -546,7 +545,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
     public function updateTrackBySummit($summit_id, $track_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();

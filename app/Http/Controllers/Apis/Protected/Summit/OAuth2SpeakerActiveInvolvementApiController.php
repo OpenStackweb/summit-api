@@ -13,11 +13,11 @@
  **/
 use App\Models\Foundation\Summit\Repositories\ISpeakerActiveInvolvementRepository;
 use models\oauth2\IResourceServerContext;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use utils\PagingResponse;
+use Illuminate\Support\Facades\Request;
 /**
  * Class OAuth2SpeakerActiveInvolvementApiController
  * @package App\Http\Controllers
@@ -55,7 +55,7 @@ final class OAuth2SpeakerActiveInvolvementApiController extends OAuth2ProtectedC
                 $involvements
             );
 
-            return $this->ok($response->toArray($expand = Input::get('expand','')));
+            return $this->ok($response->toArray($expand = Request::input('expand','')));
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);

@@ -1,7 +1,4 @@
-<?php
-
-use App\Models\Foundation\Main\IGroup;
-
+<?php namespace Tests;
 /**
  * Copyright 2016 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,16 +11,24 @@ use App\Models\Foundation\Main\IGroup;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Models\Foundation\Main\IGroup;
+use Mockery;
+use DateTime;
+/**
+ * Class OAuth2MembersApiTest
+ * @package Tests
+ */
 final class OAuth2MembersApiTest extends ProtectedApiTest
 {
     use InsertSummitTestData;
 
-    protected function setUp()
+    protected function setUp():void
     {
         $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
         self::insertTestData();
         self::$summit_permission_group->addMember(self::$member);
+        self::$summit_permission_group->addMember(self::$member2);
         self::$em->persist(self::$summit);
         self::$em->persist(self::$summit_permission_group);
         self::$em->flush();
@@ -32,7 +37,7 @@ final class OAuth2MembersApiTest extends ProtectedApiTest
         self::$em->flush();
     }
 
-    public function tearDown()
+    public function tearDown():void
     {
         self::clearTestData();
         Mockery::close();
@@ -375,31 +380,6 @@ final class OAuth2MembersApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
     }
 
-    public function testGetAllSummitPermissions(){
-        self::$member2->addSummitEditPermission(self::$summit);
-        self::$member2->addSummitEditPermission(self::$summit2);
-
-        $params = [
-            'order' => '-id'
-        ];
-
-        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
-        $response = $this->action(
-            "GET",
-            "OAuth2MembersApiController@getAllSummitEditPermissions",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $pemissions = json_decode($content);
-        $this->assertTrue(!is_null($pemissions));
-        $this->assertResponseStatus(200);
-    }
-
     public function testSignFoundationMembership(){
         $params = [
             'member_id'      => 'me',
@@ -430,7 +410,7 @@ final class OAuth2MembersApiTest extends ProtectedApiTest
 
     public function testSignResignFoundationMembership(){
         $params = [
-            'member_id'      => 'me',
+            'member_id' => 'me',
         ];
 
         $headers = [
@@ -455,8 +435,8 @@ final class OAuth2MembersApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($member));
 
         $response = $this->action(
-            "PUT",
-            "OAuth2MembersApiController@resignFoundationMembership",
+            "DELETE",
+            "OAuth2MembersApiController@resignMembership",
             $params,
             [],
             [],
@@ -466,9 +446,7 @@ final class OAuth2MembersApiTest extends ProtectedApiTest
         );
 
         $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $member = json_decode($content);
-        $this->assertTrue(!is_null($member));
+        $this->assertResponseStatus(204);
         return $member;
     }
 }

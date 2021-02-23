@@ -24,7 +24,7 @@ class Version20190506153014 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $builder = new Builder($schema);
         if(!$builder->hasTable("PresentationCreatorNotificationEmailRequest")) {
@@ -37,7 +37,7 @@ class Version20190506153014 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
         $builder = new Builder($schema);
         $this->addSql("ALTER TABLE `PresentationCreatorNotificationEmailRequest` DROP FOREIGN KEY `FK_B302D49879B1711B`;");

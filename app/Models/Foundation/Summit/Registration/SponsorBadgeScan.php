@@ -160,7 +160,7 @@ class SponsorBadgeScan extends SponsorUserInfoGrant
 
     public function getAttendeeCompany():?string{
         $attendee = $this->getBadge()->getTicket()->getOwner();
-        $attendee->getCompanyName();
+        return $attendee->getCompanyName();
     }
 
 }

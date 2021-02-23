@@ -24,7 +24,7 @@ class Version20190530205326 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $builder = new Builder($schema);
         if(!$schema->hasTable("SummitBookableVenueRoomAttributeType")) {
@@ -47,7 +47,7 @@ class Version20190530205326 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
         (new Builder($schema))->drop('BookableSummitVenueRoomAttributeType');
     }

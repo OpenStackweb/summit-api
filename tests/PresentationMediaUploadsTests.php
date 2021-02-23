@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,9 +13,8 @@
  **/
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\SummitMediaFileType;
-use Doctrine\Common\Persistence\ObjectRepository;
+use Doctrine\Persistence\ObjectRepository;
 use models\summit\Presentation;
-use Illuminate\Http\UploadedFile;
 use models\summit\SummitMediaUploadType;
 /**
  * Class PresentationMediaUploadsTests
@@ -23,7 +22,7 @@ use models\summit\SummitMediaUploadType;
 class PresentationMediaUploadsTests
     extends ProtectedApiTest
 {
-    use \InsertSummitTestData;
+    use InsertSummitTestData;
     /**
      * @var ObjectRepository
      */
@@ -39,7 +38,7 @@ class PresentationMediaUploadsTests
      */
     static $media_upload_type;
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
         self::$media_file_type_repository = EntityManager::getRepository(SummitMediaFileType::class);
@@ -52,7 +51,7 @@ class PresentationMediaUploadsTests
 
         self::$media_upload_type->setMaxSize(2048);
         self::$media_upload_type->setPrivateStorageType(\App\Models\Utils\IStorageTypesConstants::DropBox);
-        self::$media_upload_type->setPublicStorageType(\App\Models\Utils\IStorageTypesConstants::DropBox);
+        self::$media_upload_type->setPublicStorageType(\App\Models\Utils\IStorageTypesConstants::Swift);
         self::$presentation = new Presentation();
         $event_types = self::$summit->getEventTypes();
         self::$presentation->setTitle("TEST PRESENTATION");
@@ -64,7 +63,7 @@ class PresentationMediaUploadsTests
         self::$em->flush();
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
         self::clearTestData();
         parent::tearDown();

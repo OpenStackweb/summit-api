@@ -31,8 +31,6 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\SummitJsonGenerator::class,
-        \App\Console\Commands\MemberActionsCalendarSyncProcessingCommand::class,
-        \App\Console\Commands\AdminActionsCalendarSyncProcessingCommand::class,
         \App\Console\Commands\ChatTeamMessagesSender::class,
         \App\Console\Commands\SummitListJsonGenerator::class,
         \App\Console\Commands\PromoCodesRedeemProcessor::class,
@@ -70,18 +68,6 @@ class Kernel extends ConsoleKernel
 
         // list of available summits
         $schedule->command('summit-list:json-generator')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
-
-        // Calendar Sync Jobs
-
-        // Admin Actions
-        //$schedule->command('summit:admin-schedule-action-process')->withoutOverlapping();
-        // Member Actions
-        // Google Calendar
-        //$schedule->command('summit:member-schedule-action-process', [CalendarSyncInfo::ProviderGoogle, 1000])->withoutOverlapping();
-        // Outlook
-        //$schedule->command('summit:member-schedule-action-process', [CalendarSyncInfo::ProviderOutlook, 1000])->withoutOverlapping();
-        // iCloud
-        //$schedule->command('summit:member-schedule-action-process', [CalendarSyncInfo::ProvideriCloud, 1000])->withoutOverlapping();
 
         // redeem code processor
 

@@ -24,7 +24,7 @@ class Version20200523235306 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $builder = new Builder($schema);
         if($schema->hasTable("Summit") && !$builder->hasColumn("Summit", "DefaultPageUrl")) {
@@ -38,7 +38,7 @@ class Version20200523235306 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
 
         $builder = new Builder($schema);

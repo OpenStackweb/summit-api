@@ -22,7 +22,7 @@ class Version20201208151735 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $sql = <<<SQL
 ALTER TABLE SummitEvent MODIFY Level 
@@ -53,7 +53,7 @@ SQL;
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
 
     }

@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use models\exceptions\EntityNotFoundException;
 use models\summit\ISponsorUserInfoGrantRepository;
-use Illuminate\Support\Facades\Input;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use App\Services\Model\ISponsorUserInfoGrantService;
@@ -358,7 +357,7 @@ final class OAuth2SummitBadgeScanApiController
                     'attendee_company'
                 ];
 
-                $columns_param = Input::get("columns", "");
+                $columns_param = Request::input("columns", "");
                 $columns = [];
                 if(!empty($columns_param))
                     $columns  = explode(',', $columns_param);

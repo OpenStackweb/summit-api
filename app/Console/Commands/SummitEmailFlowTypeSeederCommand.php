@@ -13,6 +13,7 @@
  **/
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Database\Seeders\SummitEmailFlowTypeSeeder;
 use Exception;
 /**
  * Class SummitEmailFlowTypeSeederCommand
@@ -52,7 +53,7 @@ class SummitEmailFlowTypeSeederCommand extends Command
         try {
 
             $start   = time();
-            \SummitEmailFlowTypeSeeder::seed();
+            SummitEmailFlowTypeSeeder::seed();
             $end   = time();
             $delta = $end - $start;
             $this->info(sprintf("execution call %s seconds", $delta));

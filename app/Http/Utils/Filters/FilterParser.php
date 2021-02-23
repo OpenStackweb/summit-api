@@ -1,5 +1,4 @@
 <?php namespace utils;
-use models\exceptions\ValidationException;
 
 /**
  * Copyright 2015 OpenStack Foundation

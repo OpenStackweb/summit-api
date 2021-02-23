@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 use App\Models\ResourceServer\IApiRepository;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;

@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Jobs\MemberAssocSummitOrders;
 use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Model\IMemberService;
@@ -19,7 +18,6 @@ use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\main\IMemberRepository;
 use models\main\Member;
-
 /**
  * Class ResourceServerContext
  * @package models\oauth2
@@ -151,27 +149,27 @@ final class ResourceServerContext implements IResourceServerContext
         return isset($this->auth_context[$varName]) ? $this->auth_context[$varName] : null;
     }
 
-
+    /**
+     * @param bool $synch_groups
+     * @return Member|null
+     * @throws \Exception
+     */
     public function getCurrentUser(bool $synch_groups = true): ?Member
     {
         $member = null;
-
         // try to get by external id
         $user_external_id = $this->getAuthContextVar('user_id');
         $user_first_name = $this->getAuthContextVar('user_first_name');
         $user_last_name = $this->getAuthContextVar('user_last_name');
         $user_email = $this->getAuthContextVar('user_email');
         $user_email_verified = boolval($this->getAuthContextVar('user_email_verified'));
-
         if (is_null($user_external_id)) {
             return null;
         }
-
         // first we check by external id
         $member = $this->tx_service->transaction(function () use ($user_external_id) {
             return $this->member_repository->getByExternalIdExclusiveLock(intval($user_external_id));
         });
-
         if (is_null($member)) {
             // then by primary email
             $member = $this->tx_service->transaction(function () use ($user_email) {
@@ -182,7 +180,6 @@ final class ResourceServerContext implements IResourceServerContext
                 return $this->member_repository->getByEmailExclusiveLock($user_email);
             });
         }
-
         if (is_null($member)) {// user exist on IDP but not in our local DB, proceed to create it
             Log::debug
             (
@@ -196,18 +193,19 @@ final class ResourceServerContext implements IResourceServerContext
                 )
             );
             try {
+                // possible race condition
                 $member = $this->member_service->registerExternalUser
+                (
+                    new ExternalUserDTO
                     (
-                        new ExternalUserDTO
-                        (
-                            $user_external_id,
-                            $user_email,
-                            $user_first_name,
-                            $user_last_name,
-                            true,
-                            $user_email_verified
-                        )
-                    );
+                        $user_external_id,
+                        $user_email,
+                        $user_first_name,
+                        $user_last_name,
+                        true,
+                        $user_email_verified
+                    )
+                );
             } catch (\Exception $ex) {
                 Log::warning($ex);
                 // race condition lost
@@ -239,7 +237,6 @@ final class ResourceServerContext implements IResourceServerContext
                 $member->setFirstName($user_first_name);
             if (!empty($user_last_name))
                 $member->setLastName($user_last_name);
-
             $member->setUserExternalId($user_external_id);
             $member->setEmailVerified($user_email_verified);
             MemberAssocSummitOrders::dispatch($member->getId());

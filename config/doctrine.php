@@ -1,4 +1,5 @@
 <?php
+use Libs\Utils\Doctrine\EscapingQuoteStrategy;
 
 return [
 
@@ -23,6 +24,7 @@ return [
     'managers'                  => [
         'config' => [
             'dev'        => env('APP_DEBUG', true),
+            'quote_strategy' => EscapingQuoteStrategy::class,
             'meta'       => env('DOCTRINE_METADATA', 'annotations'),
             'connection' => env('DB_CONNECTION', 'config'),
             'namespaces' => [
@@ -80,6 +82,7 @@ return [
         'model' => [
             'dev'        => env('APP_DEBUG'),
             'meta'       => env('DOCTRINE_METADATA', 'annotations'),
+            'quote_strategy' => EscapingQuoteStrategy::class,
             'connection' => 'model',
             'namespaces' => [
                 'App'
@@ -249,8 +252,19 @@ return [
             ],
             'log_enabled'  => true,
             'file_lock_region_directory' => '/tmp'
-        ]
-
+        ],
+        'metadata'         => [
+            'driver'       => env('DOCTRINE_METADATA_CACHE', env('DOCTRINE_CACHE', 'redis')),
+            'namespace'    => null,
+        ],
+        'query'            => [
+            'driver'       => env('DOCTRINE_QUERY_CACHE', env('DOCTRINE_CACHE', 'redis')),
+            'namespace'    => null,
+        ],
+        'result'           => [
+            'driver'       => env('DOCTRINE_RESULT_CACHE', env('DOCTRINE_CACHE', 'redis')),
+            'namespace'    => null,
+        ],
     ],
     /*
     |--------------------------------------------------------------------------

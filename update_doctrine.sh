@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-composer dump-autoload --optimize;
+#!/usr/bin/bash
+php composer.phar dump-autoload --optimize;
 
 php artisan config:cache
 php artisan route:cache

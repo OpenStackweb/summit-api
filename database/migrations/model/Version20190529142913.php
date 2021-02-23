@@ -24,7 +24,7 @@ class Version20190529142913 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         if(!$schema->hasTable("SummitBookableVenueRoom")) {
             $sql = <<<SQL
@@ -48,7 +48,7 @@ SQL;
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
         $sql = <<<SQL
 ALTER TABLE SummitAbstractLocation MODIFY ClassName enum('SummitAbstractLocation', 'SummitGeoLocatedLocation', 'SummitExternalLocation', 'SummitAirport', 'SummitHotel', 'SummitVenue', 'SummitVenueRoom') DEFAULT 'SummitAbstractLocation';

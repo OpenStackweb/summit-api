@@ -12,11 +12,9 @@
  * limitations under the License.
  **/
 
-use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Http\Utils\PagingConstants;
 use Exception;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -28,12 +26,10 @@ use models\summit\SummitRoomReservation;
 use models\summit\SummitVenue;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
-use utils\FilterElement;
 use utils\FilterParser;
 use utils\OrderParser;
 use utils\PagingInfo;
 use utils\PagingResponse;
-use Illuminate\Http\Request as LaravelRequest;
 /**
  * Trait SummitBookableVenueRoomApi
  * @package App\Http\Controllers
@@ -80,7 +76,7 @@ trait SummitBookableVenueRoomApi
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function getBookableVenueRooms($summit_id){
-        $values = Input::all();
+        $values = Request::all();
         $rules  = [
             'page'     => 'integer|min:1',
             'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::MinPageSize, PagingConstants::MaxPageSize),
@@ -102,15 +98,15 @@ trait SummitBookableVenueRoomApi
             $page     = 1;
             $per_page = PagingConstants::DefaultPageSize;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'name'             => ['==', '=@'],
                     'description'      => ['=@'],
                     'capacity'         => ['>', '<', '<=', '>=', '=='],
@@ -130,9 +126,9 @@ trait SummitBookableVenueRoomApi
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
                     'id',
                     'name',
                     'capacity',
@@ -180,7 +176,7 @@ trait SummitBookableVenueRoomApi
      * @return mixed
      */
     public function getAllReservationsBySummit($summit_id){
-        $values = Input::all();
+        $values = Request::all();
         $rules  = [
 
             'page'     => 'integer|min:1',
@@ -203,15 +199,15 @@ trait SummitBookableVenueRoomApi
             $page     = 1;
             $per_page = PagingConstants::DefaultPageSize;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'summit_id'      => ['=='],
                     'room_name'      => ['==', '=@'],
                     'room_id'        => ['=='],
@@ -246,9 +242,9 @@ trait SummitBookableVenueRoomApi
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
                     'id',
                     'start_datetime',
                     'end_datetime',
@@ -311,8 +307,8 @@ trait SummitBookableVenueRoomApi
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'summit_id'      => ['=='],
                     'room_name'      => ['==', '=@'],
                     'room_id'        => ['=='],
@@ -347,9 +343,9 @@ trait SummitBookableVenueRoomApi
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
                     'id',
                     'start_datetime',
                     'end_datetime',
@@ -574,7 +570,7 @@ trait SummitBookableVenueRoomApi
             if(!$room instanceof SummitBookableVenueRoom)
                 return $this->error404();
 
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
             $payload['owner_id'] = $current_member->getId();
             $rules   = SummitRoomReservationValidationRulesFactory::build($payload);
             // Creates a Validator instance and validates the data.
@@ -716,7 +712,7 @@ trait SummitBookableVenueRoomApi
     public function updateVenueBookableRoom($summit_id, $venue_id, $room_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $payload['class_name'] = SummitBookableVenueRoom::ClassName;
@@ -811,7 +807,7 @@ trait SummitBookableVenueRoomApi
     public function updateVenueFloorBookableRoom($summit_id, $venue_id, $floor_id, $room_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $payload['class_name'] = SummitBookableVenueRoom::ClassName;
@@ -883,7 +879,7 @@ trait SummitBookableVenueRoomApi
     public function addVenueBookableRoom($summit_id, $venue_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $payload['class_name'] = SummitBookableVenueRoom::ClassName;
@@ -927,7 +923,7 @@ trait SummitBookableVenueRoomApi
     public function addVenueFloorBookableRoom($summit_id, $venue_id, $floor_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $payload['class_name'] = SummitBookableVenueRoom::ClassName;
@@ -1031,7 +1027,7 @@ trait SummitBookableVenueRoomApi
     public function refundBookableVenueRoomReservation($summit_id, $room_id, $reservation_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
             $rules = [
                 'amount' => 'required|integer|greater_than:0',
             ];

@@ -42,7 +42,7 @@ final class SummitAttendeeTicketPDFRenderer implements IRenderer
         $price = $this->ticket->getRawCost().' '.$this->ticket->getCurrency();
         $ticket_number = $this->ticket->getNumber();
         $location_name = "";
-        if(count($main_venues) > 0){
+        if($main_venues->count() > 0 && !is_null($main_venues[0])){
             $location_name = $main_venues[0]->getName().', '.$main_venues[0]->getFullAddress();
         }
         $order_number = $order->getNumber();

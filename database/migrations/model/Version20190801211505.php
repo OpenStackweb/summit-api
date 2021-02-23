@@ -24,7 +24,7 @@ class Version20190801211505 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $sql = <<<SQL
 ALTER TABLE SummitRegistrationPromoCode MODIFY ClassName 
@@ -134,7 +134,7 @@ SQL;
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
 
     }

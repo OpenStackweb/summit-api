@@ -13,6 +13,8 @@
  **/
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Database\Seeders\SummitEmailFlowEventSeeder;
+use Exception;
 /**
  * Class SummitEmailFlowEventSeederCommand
  * @package App\Console\Commands
@@ -51,7 +53,7 @@ class SummitEmailFlowEventSeederCommand extends Command
         try {
 
             $start   = time();
-            \SummitEmailFlowEventSeeder::seed();
+            SummitEmailFlowEventSeeder::seed();
             $end   = time();
             $delta = $end - $start;
             $this->info(sprintf("execution call %s seconds", $delta));

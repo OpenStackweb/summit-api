@@ -133,7 +133,7 @@ class SummitRoomReservation extends SilverstripeBaseModel
     public function refund(int $amount){
         $this->status = self::RefundedStatus;
         $this->refunded_amount = $amount;
-        Event::fire(new BookableRoomReservationRefundAccepted($this->getId()));
+        Event::dispatch(new BookableRoomReservationRefundAccepted($this->getId()));
     }
 
     /**
@@ -332,17 +332,17 @@ class SummitRoomReservation extends SilverstripeBaseModel
         $this->status = self::PaidStatus;
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
         $this->approved_payment_date = $now;
-        Event::fire(new PaymentBookableRoomReservationConfirmed($this->getId()));
+        Event::dispatch(new PaymentBookableRoomReservationConfirmed($this->getId()));
     }
 
     public function cancel():void{
         $this->status = self::Canceled;
-        Event::fire(new BookableRoomReservationCanceled($this->id));
+        Event::dispatch(new BookableRoomReservationCanceled($this->id));
     }
 
     public function requestRefund():void{
         $this->status = self::RequestedRefundStatus;
-        Event::fire(new RequestedBookableRoomReservationRefund($this->getId()));
+        Event::dispatch(new RequestedBookableRoomReservationRefund($this->getId()));
     }
 
     /**

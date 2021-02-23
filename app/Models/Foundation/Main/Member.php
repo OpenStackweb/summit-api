@@ -1483,6 +1483,7 @@ SQL;
      */
     public function setFirstName(?string $first_name): void
     {
+        Log::debug(sprintf("Member::setFirstName %s (%s)", $first_name, $this->id));
         $this->first_name = $first_name;
     }
 
@@ -1499,6 +1500,7 @@ SQL;
      */
     public function setLastName(?string $last_name): void
     {
+        Log::debug(sprintf("Member::setLastName %s (%s)", $last_name, $this->id));
         $this->last_name = $last_name;
     }
 

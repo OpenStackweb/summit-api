@@ -24,7 +24,7 @@ final class Version20190723210551 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema)
+    public function up(Schema $schema):void
     {
         $builder = new Builder($schema);
         if($schema->hasTable("SummitPresentationComment") && !$builder->hasColumn("SummitPresentationComment", "IsPublic")) {
@@ -37,7 +37,7 @@ final class Version20190723210551 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema)
+    public function down(Schema $schema):void
     {
         $builder = new Builder($schema);
         if($schema->hasTable("SummitPresentationComment") && $builder->hasColumn("SummitPresentationComment", "IsPublic")) {

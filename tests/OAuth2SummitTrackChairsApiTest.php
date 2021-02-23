@@ -16,13 +16,13 @@ use App\Models\Foundation\Main\IGroup;
  * Class OAuth2SummitTrackChairsApiTest
  * @package Tests
  */
-class OAuth2SummitTrackChairsApiTest  extends \ProtectedApiTest
+class OAuth2SummitTrackChairsApiTest  extends ProtectedApiTest
 {
-    use \InsertSummitTestData;
+    use InsertSummitTestData;
 
-    use \InsertMemberTestData;
+    use InsertMemberTestData;
 
-    protected function setUp()
+    protected function setUp():void
     {
         $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
@@ -36,7 +36,7 @@ class OAuth2SummitTrackChairsApiTest  extends \ProtectedApiTest
         self::$em->flush();
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
         self::clearTestData();
         parent::tearDown();
@@ -44,7 +44,7 @@ class OAuth2SummitTrackChairsApiTest  extends \ProtectedApiTest
 
     public function testGetAllTrackChairsPerSummit(){
         $params = [
-            'summit_id' => self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'filter' => 'track_id=='.self::$defaultTrack->getId(),
             'page'     => 1,
             'per_page' => 10,
@@ -77,7 +77,7 @@ class OAuth2SummitTrackChairsApiTest  extends \ProtectedApiTest
 
     public function testGetAllTrackChairsPerSummitAndLastName(){
         $params = [
-            'summit_id' => self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'filter' => sprintf('member_first_name=@%s,member_last_name=@%s,member_email=@%s',
                 self::$member->getLastName(),
                 self::$member->getLastName(),

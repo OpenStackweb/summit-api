@@ -21,7 +21,7 @@ use DateInterval;
  */
 final class MuxImportTest extends TestCase
 {
-    use \InsertSummitTestData;
+    use InsertSummitTestData;
 
     protected function tearDown():void
     {

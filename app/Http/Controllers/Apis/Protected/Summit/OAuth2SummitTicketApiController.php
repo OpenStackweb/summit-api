@@ -15,7 +15,6 @@ use App\Http\Utils\EpochCellFormatter;
 use App\Jobs\IngestSummitExternalRegistrationData;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
 use App\Services\Model\ISummitOrderService;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use models\exceptions\EntityNotFoundException;
@@ -236,7 +235,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     $allowed_columns[] = $question->getLabel();
                 }
 
-                $columns_param = Input::get("columns", "");
+                $columns_param = Request::input("columns", "");
                 $columns = [];
                 if(!empty($columns_param))
                     $columns  = explode(',', $columns_param);

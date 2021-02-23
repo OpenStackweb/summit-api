@@ -121,7 +121,7 @@ final class SummitTrackService
             return $track;
         });
 
-        Event::fire(new TrackInserted($track->getSummitId(), $track->getId()));
+        Event::dispatch(new TrackInserted($track->getSummitId(), $track->getId()));
 
         return $track;
     }
@@ -173,7 +173,7 @@ final class SummitTrackService
                 }
             }
 
-            Event::fire(new TrackUpdated($track->getSummitId(), $track->getId()));
+            Event::dispatch(new TrackUpdated($track->getSummitId(), $track->getId()));
 
             return $track;
 
@@ -208,7 +208,7 @@ final class SummitTrackService
                 );
             }
 
-            Event::fire(new TrackDeleted($track->getSummitId(), $track->getId()));
+            Event::dispatch(new TrackDeleted($track->getSummitId(), $track->getId()));
 
             $this->track_repository->delete($track);
         });
@@ -266,7 +266,7 @@ final class SummitTrackService
         });
 
         foreach ($added_tracks as $track){
-            Event::fire(new TrackInserted($track->getSummitId(), $track->getId()));
+            Event::dispatch(new TrackInserted($track->getSummitId(), $track->getId()));
         }
 
         return $added_tracks;

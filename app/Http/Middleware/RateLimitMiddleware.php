@@ -54,13 +54,18 @@ final class RateLimitMiddleware extends ThrottleRequests
     }
 
     /**
-     * @param \Illuminate\Http\Request $request
-     * @param Closure $next
-     * @param int $max_attempts
-     * @param int $decay_minutes
-     * @return \Illuminate\Http\Response|mixed
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @param  int|string  $maxAttempts
+     * @param  float|int  $decayMinutes
+     * @param  string  $prefix
+     * @return \Symfony\Component\HttpFoundation\Response
+     *
+     * @throws \Illuminate\Http\Exceptions\ThrottleRequestsException
      */
-    public function handle($request, Closure $next, $max_attempts = 0, $decay_minutes = 0)
+    public function handle($request, Closure $next, $maxAttempts = 60, $decayMinutes = 1, $prefix = '')
     {
         $route     = RequestUtils::getCurrentRoutePath($request);
         $method    = $request->getMethod();
@@ -69,11 +74,11 @@ final class RateLimitMiddleware extends ThrottleRequests
         $client_ip = $request->getClientIp();
 
         if (!is_null($endpoint) && $endpoint->getRateLimit() > 0) {
-            $max_attempts = $endpoint->getRateLimit();
+            $maxAttempts = $endpoint->getRateLimit();
         }
 
         if (!is_null($endpoint) && $endpoint->getRateLimitDecay() > 0) {
-            $decay_minutes = $endpoint->getRateLimitDecay();
+            $decayMinutes = $endpoint->getRateLimitDecay();
         }
 
         $endpoint_rate_limit_by_ip = $this->endpoint_rate_limit_by_ip_repository->getByIPRouteMethod
@@ -84,26 +89,26 @@ final class RateLimitMiddleware extends ThrottleRequests
         );
 
         if(!is_null($endpoint_rate_limit_by_ip)){
-            $max_attempts  = $endpoint_rate_limit_by_ip->getRateLimit();
-            $decay_minutes = $endpoint_rate_limit_by_ip->getRateLimitDecay();
+            $maxAttempts  = $endpoint_rate_limit_by_ip->getRateLimit();
+            $decayMinutes = $endpoint_rate_limit_by_ip->getRateLimitDecay();
         }
 
-        if ($max_attempts == 0 || $decay_minutes == 0) {
+        if ($maxAttempts == 0 || $decayMinutes == 0) {
             // short circuit (infinite)
             return $next($request);
         }
 
-        if ($this->limiter->tooManyAttempts($key, $max_attempts)) {
-            return $this->buildException($key, $max_attempts);
+        if ($this->limiter->tooManyAttempts($key, $maxAttempts)) {
+            throw $this->buildException($key, $maxAttempts);
         }
 
-        $this->limiter->hit($key, $decay_minutes);
+        $this->limiter->hit($key, $decayMinutes);
 
         $response = $next($request);
 
         return $this->addHeaders(
-            $response, $max_attempts,
-            $this->calculateRemainingAttempts($key, $max_attempts)
+            $response, $maxAttempts,
+            $this->calculateRemainingAttempts($key, $maxAttempts)
         );
     }
 }

@@ -33,7 +33,7 @@ use App\Models\Foundation\Summit\ISummitExternalScheduleFeedType;
  */
 final class ExternalFeedIngestionTest extends TestCase
 {
-    public function tearDown()
+    public function tearDown():void
     {
         Mockery::close();
     }

@@ -64,8 +64,11 @@ class FilterParserTest extends TestCase
                 'p.actions',
                 "a",
                 [
-                    'type_id',
-                    'is_completed'
+                    "type" => 'at',
+                ],
+                [
+                    'type_id' => 'at.id',
+                    'is_completed' => 'a.is_completed'
                 ]
             )
         ]);
@@ -93,8 +96,11 @@ class FilterParserTest extends TestCase
                 'p.actions',
                 "a",
                 [
-                    'type_id',
-                    'is_completed'
+                    "type" => 'at',
+                ],
+                [
+                    'type_id' => 'at.id',
+                    'is_completed' => 'a.is_completed'
                 ]
             )
         ]);

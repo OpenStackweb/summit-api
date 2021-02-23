@@ -115,12 +115,14 @@ final class OAuth2SummitOrdersApiController
                 ], $validation_rules);
             }
             else{
-                if(empty($owner->getFirstName())){
+
+                if(is_null($owner->getFirstName())){
                     $validation_rules = array_merge([
                         'owner_first_name' => 'required|string|max:255',
                     ], $validation_rules);
                 }
-                if(empty($owner->getLastName())){
+
+                if(is_null($owner->getLastName())){
                     $validation_rules = array_merge([
                         'owner_last_name' => 'required|string|max:255',
                     ], $validation_rules);
@@ -128,6 +130,7 @@ final class OAuth2SummitOrdersApiController
             }
 
             $payload = $this->getJsonPayload($validation_rules);
+
             if(!is_null($owner)){
                 $payload_ex = [
                     'owner_first_name' => !empty($owner->getFirstName()) ? $owner->getFirstName() : $payload['owner_first_name'],
@@ -519,7 +522,7 @@ final class OAuth2SummitOrdersApiController
 
             $order = $this->service->cancelRequestRefundOrder(intval($order_id));
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($order)->serialize( Request::input('expand', '')));
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($order)->serialize(Request::input('expand', '')));
 
         }
         catch (ValidationException $ex) {

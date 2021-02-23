@@ -14,7 +14,6 @@
 use App\Models\Foundation\Summit\Repositories\ITrackTagGroupAllowedTagsRepository;
 use App\Services\Model\ISummitTrackTagGroupService;
 use models\oauth2\IResourceServerContext;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Validator;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
@@ -88,7 +87,7 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
                 $track_tag_groups
             );
 
-            return $this->ok($response->toArray($expand = Input::get('expand','')));
+            return $this->ok($response->toArray($expand = Request::input('expand','')));
         }
 
         catch (EntityNotFoundException $ex1) {
@@ -115,7 +114,7 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
      */
     public function getAllowedTags($summit_id){
 
-        $values = Input::all();
+        $values = Request::all();
 
         $rules = [
             'page'     => 'integer|min:1',
@@ -138,15 +137,15 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
             $page     = 1;
             $per_page = 5;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'),  array
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'),  array
                 (
                     'tag' => ['=@', '=='],
                 ));
@@ -154,9 +153,9 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), array
+                $order = OrderParser::parse(Request::input('order'), array
                 (
                     'tag',
                     'id',
@@ -207,7 +206,7 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
     public function addTrackTagGroup($summit_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -258,7 +257,7 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
     public function updateTrackTagGroup($summit_id, $track_tag_group_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build
             (

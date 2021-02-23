@@ -28,7 +28,6 @@ use services\model\ISummitPromoCodeService;
 use utils\Filter;
 use utils\FilterParser;
 use utils\OrderParser;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Validator;
 use utils\PagingInfo;
 use Exception;
@@ -87,7 +86,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
      * @return mixed
      */
     public function getAllBySummit($summit_id){
-        $values = Input::all();
+        $values = Request::all();
         $rules  = [
 
             'page'     => 'integer|min:1',
@@ -110,15 +109,15 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             $page     = 1;
             $per_page = PagingConstants::DefaultPageSize;;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
 
                     'code'          => ['=@', '=='],
                     'creator'       => ['=@', '=='],
@@ -161,9 +160,9 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
 
                     'id',
                     'code',
@@ -209,7 +208,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
      * @return \Illuminate\Http\Response|mixed
      */
     public function getAllBySummitCSV($summit_id){
-        $values = Input::all();
+        $values = Request::all();
         $rules  = [];
         $allowed_columns = [
             "id",
@@ -246,8 +245,8 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             $per_page = PHP_INT_MAX;
             $filter   = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'), [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
                     'code'          => ['=@', '=='],
                     'creator'       => ['=@', '=='],
                     'creator_email' => ['=@', '=='],
@@ -289,15 +288,15 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
 
                     'id',
                     'code',
                 ]);
             }
-            $columns_param = Input::get("columns", "");
+            $columns_param = Request::input("columns", "");
             $columns = [];
             if(!empty($columns_param))
                 $columns  = explode(',', $columns_param);
@@ -308,7 +307,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
 
             $data     = $this->promo_code_repository->getBySummit($summit, new PagingInfo($page, $per_page), $filter, $order);
             $filename = "promocodes-" . date('Ymd');
-            $list     = $data->toArray(Input::get("expand", ""));
+            $list     = $data->toArray(Request::input("expand", ""));
 
             return $this->export
             (
@@ -366,7 +365,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
     public function addPromoCodeBySummit($summit_id){
         try {
             if(!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -412,7 +411,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
     {
         try {
             if (!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -587,7 +586,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             if (is_null($summit)) return $this->error404();
             $payload = [];
             if (Request::isJson()) {
-                $data    = Input::json();
+                $data    = Request::json();
                 $payload = $data->all();
                 $discount_code_rules = [
                     'amount'     => 'sometimes|required_without:rate|numeric|min:0',

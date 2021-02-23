@@ -14,7 +14,6 @@
 
 use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use Exception;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -578,7 +577,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     {
         try {
             if (!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -654,7 +653,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     {
         try {
             if (!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -756,7 +755,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     {
         try {
             if (!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $speaker_from = $this->speaker_repository->getById($speaker_from_id);
             if (is_null($speaker_from)) return $this->error404();
@@ -786,7 +785,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     {
         try {
             if (!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
@@ -860,7 +859,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     {
         try {
             if (!Request::isJson()) return $this->error400();
-            $data = Input::json();
+            $data = Request::json();
 
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
@@ -998,7 +997,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 $presentations
             );
 
-            return $this->ok($response->toArray($expand = Input::get('expand', '')));
+            return $this->ok($response->toArray($expand = Request::input('expand', '')));
         } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412(array($ex1->getMessage()));
@@ -1052,7 +1051,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 $presentations
             );
 
-            return $this->ok($response->toArray($expand = Input::get('expand', '')));
+            return $this->ok($response->toArray($expand = Request::input('expand', '')));
         } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412(array($ex1->getMessage()));

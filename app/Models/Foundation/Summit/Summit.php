@@ -3520,9 +3520,9 @@ SQL;
     }
 
     /**
-     * @return SummitBadgeType[]
+     * @return ArrayCollection|SummitBadgeType[]
      */
-    public function getBadgeTypes(): array
+    public function getBadgeTypes()
     {
         return $this->badge_types;
     }
@@ -5065,13 +5065,13 @@ SQL;
         $days = $this->getSummitDays();
         $list = [];
         foreach ($days as $day){
-            Log::debug(sprintf("Summit::getSummitDaysWithEvents day %s", $day->format('Y-m-d H:i:s')));
+            //Log::debug(sprintf("Summit::getSummitDaysWithEvents day %s", $day->format('Y-m-d H:i:s')));
             $begin = clone($day);
             $begin = $begin->setTime(0,0,0)->setTimezone(new \DateTimeZone('UTC'));
             $end   = clone($day);
             $end = $end->setTime(23,59,59)->setTimezone(new \DateTimeZone('UTC'));
 
-            Log::debug(sprintf("Summit::getSummitDaysWithEvents UTC begin date %s UTC end date %s", $begin->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s')));
+            //Log::debug(sprintf("Summit::getSummitDaysWithEvents UTC begin date %s UTC end date %s", $begin->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s')));
             $count = 0;
             try {
                 $sql = <<<SQL
@@ -5094,7 +5094,7 @@ SQL;
                 $count = 0;
             }
             if($count > 0){
-                Log::debug(sprintf("Summit::getSummitDaysWithEvents UTC begin date %s UTC end date %s count %s", $begin->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'), $count));
+                //Log::debug(sprintf("Summit::getSummitDaysWithEvents UTC begin date %s UTC end date %s count %s", $begin->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s'), $count));
                 $list[] = $day;
             }
         }

@@ -24,7 +24,6 @@ use Illuminate\Support\Facades\Log;
 use utils\PagingInfo;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Validator;
 /**
  * Class OAuth2OrganizationsApiController
@@ -57,7 +56,7 @@ final class OAuth2OrganizationsApiController extends OAuth2ProtectedController
 
     public function getAll(){
 
-        $values = Input::all();
+        $values = Request::all();
 
         $rules = [
 
@@ -78,15 +77,15 @@ final class OAuth2OrganizationsApiController extends OAuth2ProtectedController
             $page     = 1;
             $per_page = 5;
 
-            if (Input::has('page')) {
-                $page     = intval(Input::get('page'));
-                $per_page = intval(Input::get('per_page'));
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
             }
 
             $filter = null;
 
-            if (Input::has('filter')) {
-                $filter = FilterParser::parse(Input::get('filter'),  [
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'),  [
 
                     'name' => ['=@', '=='],
                 ]);
@@ -94,9 +93,9 @@ final class OAuth2OrganizationsApiController extends OAuth2ProtectedController
 
             $order = null;
 
-            if (Input::has('order'))
+            if (Request::has('order'))
             {
-                $order = OrderParser::parse(Input::get('order'), [
+                $order = OrderParser::parse(Request::input('order'), [
 
                     'name',
                     'id',
@@ -145,7 +144,7 @@ final class OAuth2OrganizationsApiController extends OAuth2ProtectedController
 
             if(!Request::isJson()) return $this->error400();
 
-            $data = Input::json();
+            $data = Request::json();
 
             $rules = [
                    'name' => 'required|string|max:255',

@@ -320,6 +320,10 @@ class PresentationSpeaker extends SilverstripeBaseModel
         $this->irc_handle = $irc_handle;
     }
 
+    /**
+     * @param string|null $username
+     * @return string|null
+     */
     private static function parseTwitterUsername(?string $username):?string{
         if(empty($username)) return $username;
         if(preg_match('/https:\/\/twitter\.com\/(.*)/', $username, $matches)){
@@ -1326,7 +1330,7 @@ SQL;
      */
     public function deleted($args){
 
-        Event::fire(new PresentationSpeakerDeleted(null,  $this->pre_remove_events));
+        Event::dispatch(new PresentationSpeakerDeleted(null,  $this->pre_remove_events));
         $this->pre_remove_events = null;
     }
 
@@ -1347,7 +1351,7 @@ SQL;
      */
     public function updated($args)
     {
-        Event::fire(new PresentationSpeakerUpdated($this, $this->pre_update_args));
+        Event::dispatch(new PresentationSpeakerUpdated($this, $this->pre_update_args));
         $this->pre_update_args = null;
     }
 
@@ -1357,7 +1361,7 @@ SQL;
      */
     public function inserted($args){
         if(self::$bypass_events) return;
-        Event::fire(new PresentationSpeakerCreated($this, $args));
+        Event::dispatch(new PresentationSpeakerCreated($this, $args));
     }
 
     /**

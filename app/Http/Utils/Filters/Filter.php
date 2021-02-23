@@ -70,7 +70,9 @@ final class Filter
                         $or_res[] = $e;
                     }
                 }
-                if (count($or_res)) $res[] = $or_res;
+                foreach ($or_res as $e){
+                    $res[] = $e;
+                }
             }
         }
         return $res;
@@ -568,5 +570,27 @@ final class Filter
             }
         }
         return $list;
+    }
+
+    public function __toString():string
+    {
+        $res = "";
+        foreach ($this->filters as $filter) {
+
+            if ($filter instanceof FilterElement) {
+                $res .= '('.$filter.')';
+            }
+            else if (is_array($filter)) {
+                // OR
+                $or_res = [];
+                foreach ($filter as $e) {
+                    if ($e instanceof FilterElement) {
+                        $or_res[] =  '('.$e.')';
+                    }
+                }
+                if (count($or_res)) $res = '('.implode("|",$or_res).')';
+            }
+        }
+        return $res;
     }
 }

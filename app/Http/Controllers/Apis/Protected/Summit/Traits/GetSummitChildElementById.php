@@ -53,7 +53,7 @@ trait GetSummitChildElementById
             $child = $this->getChildFromSummit($summit,  $child_id);
             if(is_null($child))
                 return $this->error404();
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($child, $this->getChildSerializer())->serialize( Request::input('expand', '')));
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($child, $this->getChildSerializer())->serialize(Request::input('expand', '')));
         } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412($ex1->getMessages());

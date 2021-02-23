@@ -1,4 +1,4 @@
-<?php
+<?php namespace Tests;
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,13 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\Common\Persistence\ObjectRepository;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\main\Member;
 use models\summit\PresentationSpeaker;
 use models\utils\SilverstripeBaseModel;
-use Illuminate\Support\Facades\DB;
 use models\main\Group;
 use App\Models\Foundation\Main\IGroup;
 /**
@@ -62,7 +60,7 @@ trait InsertMemberTestData
     static $member_repository;
 
     /**
-     * @var ObjectRepository
+     * @var \Doctrine\Persistence\ObjectRepository
      */
     static $group_repository;
 

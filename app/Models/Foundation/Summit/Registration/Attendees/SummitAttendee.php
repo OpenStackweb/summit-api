@@ -371,9 +371,12 @@ class SummitAttendee extends SilverstripeBaseModel
      * @param bool $overrideTicketOwnerIsSameAsOrderOwnerRule
      */
     public function sendInvitationEmail(SummitAttendeeTicket $ticket, bool $overrideTicketOwnerIsSameAsOrderOwnerRule = false){
+
         $email = $this->getEmail();
         $key = md5($email);
+
         Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s", $email));
+
         if($ticket->getOwnerEmail() != $this->getEmail()) return;
         if(!$ticket->isActive()){
             Log::warning(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket is not active", $email));
@@ -417,10 +420,13 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     public function getFirstName(): ?string
     {
+        $res = null;
         if($this->hasMember()){
-            return $this->member->getFirstName();
+            $res = $this->member->getFirstName();
         }
-        return $this->first_name;
+        if(empty($res))
+            $res = $this->first_name;
+        return $res;
     }
 
     /**
@@ -436,10 +442,13 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     public function getSurname(): ?string
     {
+        $res = null;
         if($this->hasMember()){
-            return $this->member->getLastName();
+            $res = $this->member->getLastName();
         }
-        return $this->surname;
+        if(empty($res))
+            $res = $this->surname;
+        return $res;
     }
 
     /**

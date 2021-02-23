@@ -19,7 +19,7 @@ use models\oauth2\IResourceServerContext;
 use ModelSerializers\SerializerRegistry;
 use services\model\IChatTeamService;
 use utils\PagingResponse;
-use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Request;
 /**
  * Class OAuth2TeamInvitationsApiController
  * @package App\Http\Controllers
@@ -69,7 +69,7 @@ final class OAuth2TeamInvitationsApiController extends OAuth2ProtectedController
                 $invitations
             );
 
-            return $this->ok($response->toArray($expand = Input::get('expand','')));
+            return $this->ok($response->toArray($expand = Request::input('expand','')));
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);
@@ -106,7 +106,7 @@ final class OAuth2TeamInvitationsApiController extends OAuth2ProtectedController
                 $invitations
             );
 
-            return $this->ok($response->toArray($expand = Input::get('expand','')));
+            return $this->ok($response->toArray($expand = Request::input('expand','')));
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);
@@ -143,7 +143,7 @@ final class OAuth2TeamInvitationsApiController extends OAuth2ProtectedController
                 $invitations
             );
 
-            return $this->ok($response->toArray($expand = Input::get('expand','')));
+            return $this->ok($response->toArray($expand = Request::input('expand','')));
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);

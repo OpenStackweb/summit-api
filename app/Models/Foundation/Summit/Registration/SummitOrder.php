@@ -314,7 +314,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
             $ticket->setPaid();
         }
 
-        Event::fire(new PaymentSummitRegistrationOrderConfirmed($this->getId()));
+        Event::dispatch(new PaymentSummitRegistrationOrderConfirmed($this->getId()));
     }
 
     /**
@@ -345,7 +345,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
             $ticket->setCancelled();
         }
 
-        Event::fire(new SummitOrderCanceled($this->id, $sendMail, $tickets_to_return, $promo_codes_to_return));
+        Event::dispatch(new SummitOrderCanceled($this->id, $sendMail, $tickets_to_return, $promo_codes_to_return));
     }
 
     /**
@@ -412,7 +412,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
             $ticket->setRefundRequests();
         }
 
-        Event::fire(new RequestedSummitOrderRefund($this->getId(), $days_before_event_starts));
+        Event::dispatch(new RequestedSummitOrderRefund($this->getId(), $days_before_event_starts));
     }
 
     function cancelRefundRequest():void {
@@ -965,7 +965,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
             $ticket->setRefunded();
         }
 
-        Event::fire(new SummitOrderRefundAccepted($this->getId(), $tickets_to_return, $promo_codes_to_return));
+        Event::dispatch(new SummitOrderRefundAccepted($this->getId(), $tickets_to_return, $promo_codes_to_return));
     }
 
     /**

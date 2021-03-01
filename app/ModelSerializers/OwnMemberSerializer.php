@@ -46,6 +46,7 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
         'rsvp',
         'sponsor_memberships',
         'legal_agreements',
+        'track_chairs',
     ];
 
     private static $expand_group_events = [
@@ -146,6 +147,14 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
             $values['legal_agreements'] = $res;
         }
 
+        if(in_array('track_chairs', $relations)){
+            $res = [];
+            foreach ($member->getTrackChairs() as $track_chair){
+                $res[] = intval($track_chair->getId());
+            }
+            $values['track_chairs'] = $res;
+        }
+
         if (!empty($expand)) {
             foreach (explode(',', $expand) as $relation) {
                 $relation = trim($relation);
@@ -236,11 +245,22 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         if(is_null($summit)) break;
                         $res = [];
                         foreach ($member->getLegalAgreements() as $agreement){
-                            $rsvps[] = SerializerRegistry::getInstance()
+                            $res[] = SerializerRegistry::getInstance()
                                 ->getSerializer($agreement)
                                 ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['legal_agreements'] = $res;
+                    }
+                        break;
+                    case 'track_chairs':{
+                        if(!in_array('track_chairs', $relations)) break;
+                        $res = [];
+                        foreach ($member->getTrackChairs() as $trackChair){
+                            $res[] = SerializerRegistry::getInstance()
+                                ->getSerializer($trackChair)
+                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $values['track_chairs'] = $res;
                     }
                         break;
                 }

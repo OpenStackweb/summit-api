@@ -34,7 +34,7 @@ class SummitTrackChair extends SilverstripeBaseModel
 {
     use SummitOwned;
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member")
+     * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="track_chairs")
      * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */
@@ -145,5 +145,9 @@ class SummitTrackChair extends SilverstripeBaseModel
     {
         parent::__construct();
         $this->categories = new ArrayCollection();
+    }
+
+    public function clearMember():void{
+        $this->member = null;
     }
 }

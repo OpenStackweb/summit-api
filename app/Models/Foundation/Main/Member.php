@@ -35,6 +35,7 @@ use models\summit\SummitEvent;
 use models\summit\SummitEventFeedback;
 use models\summit\SummitOrder;
 use models\summit\SummitRoomReservation;
+use models\summit\SummitTrackChair;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 
@@ -298,6 +299,12 @@ class Member extends SilverstripeBaseModel
     protected $summit_attendance_metrics;
 
     /**
+     * @ORM\OneToMany(targetEntity="models\summit\SummitTrackChair", mappedBy="member", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SummitTrackChair[]
+     */
+    private $track_chairs;
+
+    /**
      * Member constructor.
      */
     public function __construct()
@@ -324,6 +331,7 @@ class Member extends SilverstripeBaseModel
         $this->summit_permission_groups = new ArrayCollection();
         $this->summit_attendance_metrics = new ArrayCollection();
         $this->legal_agreements = new ArrayCollection();
+        $this->track_chairs =  new ArrayCollection();
     }
 
     /**
@@ -1868,4 +1876,28 @@ SQL;
         return $this->belongsToGroup(IGroup::FoundationMembers) && $this->legal_agreements->count() > 0;
     }
 
+    /**
+     * @param SummitTrackChair $trackChair
+     */
+    public function addTrackChair(SummitTrackChair $trackChair){
+        if($this->track_chairs->contains($trackChair)) return;
+        $this->track_chairs->add($trackChair);
+        $trackChair->setMember($this);
+    }
+
+    /**
+     * @param SummitTrackChair $trackChair
+     */
+    public function removeTrackChair(SummitTrackChair $trackChair){
+        if(!$this->track_chairs->contains($trackChair)) return;
+        $this->track_chairs->removeElement($trackChair);
+        $trackChair->clearMember();
+    }
+
+    /**
+     * @return ArrayCollection|SummitTrackChair[]
+     */
+    public function getTrackChairs(){
+        return $this->track_chairs;
+    }
 }

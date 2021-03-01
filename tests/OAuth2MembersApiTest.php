@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Foundation\Main\IGroup;
+
 /**
  * Copyright 2016 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,8 +20,16 @@ final class OAuth2MembersApiTest extends ProtectedApiTest
 
     protected function setUp()
     {
+        $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
         self::insertTestData();
+        self::$summit_permission_group->addMember(self::$member);
+        self::$em->persist(self::$summit);
+        self::$em->persist(self::$summit_permission_group);
+        self::$em->flush();
+        self::$summit->addTrackChair(self::$member, [ self::$defaultTrack ] );
+        self::$em->persist(self::$summit);
+        self::$em->flush();
     }
 
     public function tearDown()
@@ -155,7 +165,7 @@ final class OAuth2MembersApiTest extends ProtectedApiTest
     public function testGetMyMember()
     {
         $params = [
-            'expand' => 'groups'
+            'expand' => 'groups,track_chairs'
         ];
 
         $headers  = array("HTTP_Authorization" => " Bearer " . $this->access_token);

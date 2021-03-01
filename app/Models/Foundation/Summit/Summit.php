@@ -5122,7 +5122,7 @@ SQL;
 
         if(!$trackChair) {
             $trackChair = new SummitTrackChair();
-            $trackChair->setMember($member);
+            $member->addTrackChair($trackChair);
             $trackChair->setSummit($this);
         }
 

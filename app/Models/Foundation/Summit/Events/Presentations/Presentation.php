@@ -1158,7 +1158,7 @@ class Presentation extends SummitEvent
     public function getMemberViewers(){
         return array_map(function ($view) {
             return $view->getViewer();
-        }, $this->track_chair_views);
+        }, $this->track_chair_views->getValues());
     }
 
     public function getViewsCount(): int

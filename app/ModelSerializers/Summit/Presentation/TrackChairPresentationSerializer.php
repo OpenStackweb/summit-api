@@ -94,8 +94,8 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
         if(in_array('viewers', $relations))
         {
             $viewers = [];
-            foreach ($presentation->getViewers() as $v) {
-                $viewers[] = $v->getId();
+            foreach ($presentation->getMemberViewers() as $m) {
+                $viewers[] = $m->getId();
             }
             $values['viewers'] = $viewers;
         }
@@ -148,8 +148,8 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
                         break;
                     case 'viewers': {
                         $viewers = [];
-                        foreach ($presentation->getViewers() as $v) {
-                            $viewers[] = SerializerRegistry::getInstance()->getSerializer($v)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        foreach ($presentation->getMemberViewers() as $m) {
+                            $viewers[] = SerializerRegistry::getInstance()->getSerializer($m)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['viewers'] = $viewers;
                     }

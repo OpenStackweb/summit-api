@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Foundation\Main\IGroup;
+use models\summit\SummitSelectedPresentation;
 
 /**
  * Copyright 2018 OpenStack Foundation
@@ -309,12 +310,74 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($selection_plan));
     }
 
-    public function testGetPresentationsBySelectionPlan(){
+    public function testGetPresentationsBySelectionPlanAndConditions(){
+
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_id' =>  self::$defaultTrack->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectedPresentationListApiController@createIndividualSelectionList",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $selection_list = json_decode($content);
+        $this->assertTrue(!is_null($selection_list));
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_id' =>  self::$defaultTrack->getId(),
+            'collection' => SummitSelectedPresentation::CollectionSelected,
+            'presentation_id' => self::$presentations[0]->getId(),
+            'expand' => 'selected_presentations,interested_presentations,'
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectedPresentationListApiController@assignPresentationToMyIndividualList",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $selection_list = json_decode($content);
+        $this->assertTrue(!is_null($selection_list));
+        $this->assertTrue(count($selection_list->selected_presentations) > 0);
+
 
         $params = [
            'summit' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
-            'filter' => 'status==Received,is_chair_visible==1',
+            'filter' => [
+                'status==Received',
+                'is_chair_visible==1',
+                'track_chairs_status==voted'
+            ],
         ];
 
         $headers = [
@@ -336,6 +399,97 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
         $presentations = json_decode($content);
         $this->assertTrue(!is_null($presentations));
+        $this->assertTrue($presentations->total == 1);
+    }
+
+    public function testGetPresentationsBySelectionPlanAndConditionsPass(){
+
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_id' =>  self::$defaultTrack->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectedPresentationListApiController@createIndividualSelectionList",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $selection_list = json_decode($content);
+        $this->assertTrue(!is_null($selection_list));
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_id' =>  self::$defaultTrack->getId(),
+            'collection' => SummitSelectedPresentation::CollectionPass,
+            'presentation_id' => self::$presentations[0]->getId(),
+            'expand' => 'selected_presentations,interested_presentations,'
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectedPresentationListApiController@assignPresentationToMyIndividualList",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $selection_list = json_decode($content);
+        $this->assertTrue(!is_null($selection_list));
+
+        $params = [
+            'summit' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'filter' => [
+                'status==Received',
+                'is_chair_visible==1',
+                'track_chairs_status==pass'
+            ],
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSelectionPlansApiController@getSelectionPlanPresentations",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $presentations = json_decode($content);
+        $this->assertTrue(!is_null($presentations));
+        $this->assertTrue($presentations->total == 1);
     }
 
     public function testMarkPresentationAsViewed(){

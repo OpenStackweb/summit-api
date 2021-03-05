@@ -13,7 +13,10 @@
  **/
 use App\Models\Foundation\Main\IGroup;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Illuminate\Support\Facades\App;
 use models\main\Tag;
+use models\oauth2\IResourceServerContext;
+use models\summit\ISummitCategoryChangeStatus;
 use models\summit\ISummitEventRepository;
 use models\summit\Presentation;
 use models\summit\Summit;
@@ -77,9 +80,11 @@ final class DoctrineSummitEventRepository
     }
 
     /**
+     * @param int $current_member_id
+     * @param int $current_track_id
      * @return array
      */
-    protected function getFilterMappings()
+    protected function getCustomFilterMappings(int $current_member_id , int $current_track_id)
     {
         return [
             'id'             => 'e.id:json_int',
@@ -189,6 +194,65 @@ final class DoctrineSummitEventRepository
                   ),
               ]
             ),
+            'track_chairs_status' =>  new DoctrineSwitchFilterMapping
+            (
+                [
+                    'voted' => new DoctrineCaseFilterMapping(
+                        'voted',
+                        "exists (select ssp1 from models\summit\SummitSelectedPresentation ssp1 inner join ssp1.presentation p1 where p1.id = p.id)"
+                    ),
+                    'untouched' => new DoctrineCaseFilterMapping(
+                        'untouched',
+                        "not exists (select ssp1 from models\summit\SummitSelectedPresentation ssp1 inner join ssp1.presentation p1 where p1.id = p.id)"
+                    ),
+                    'team_selected' => new DoctrineCaseFilterMapping(
+                        'team_selected',
+                        "sspl.list_type = 'Group' and sspl.list_class = 'Session' and ssp.collection= 'selected'"
+                    ),
+                    'selected' => new DoctrineCaseFilterMapping(
+                        'selected',
+                        "sspl.list_type = 'Individual' and sspl.list_class = 'Session' and ssp.collection = 'selected' and ssp_member.id = ".$current_member_id
+                    ),
+                    'maybe' => new DoctrineCaseFilterMapping(
+                        'maybe',
+                        "sspl.list_type = 'Individual' and sspl.list_class = 'Session' and ssp.collection = 'maybe' and ssp_member.id = ".$current_member_id
+                    ),
+                    'pass' => new DoctrineCaseFilterMapping(
+                        'selected',
+                        "sspl.list_type = 'Individual' and sspl.list_class = 'Session' and ssp.collection = 'pass' and ssp_member.id = ".$current_member_id
+                    ),
+                ]
+            ),
+            'viewed_status' =>  new DoctrineSwitchFilterMapping
+            (
+                [
+                    'seen' => new DoctrineCaseFilterMapping(
+                        'seen',
+                        sprintf("exists (select vw1 from models\summit\PresentationTrackChairView vw1 inner join vw1.presentation p1 join vw1.viewer v1 where p1.id = p.id and v1.id = %s)", $current_member_id)
+                    ),
+                    'unseen' => new DoctrineCaseFilterMapping(
+                        'unseen',
+                        sprintf("not exists (select vw1 from models\summit\PresentationTrackChairView vw1 inner join vw1.presentation p1 join vw1.viewer v1 where p1.id = p.id and v1.id = %s)", $current_member_id)
+                    ),
+                    'moved' => new DoctrineCaseFilterMapping(
+                        'moved',
+                        sprintf
+                        (
+                            "not exists (select vw1 from models\summit\PresentationTrackChairView vw1 
+                                    inner join vw1.presentation p1 join vw1.viewer v1 where p1.id = p.id and v1.id = %s) 
+                                    and exists (select cch from models\summit\PSummitCategoryChange cch 
+                                    inner join cch.presentation p2
+                                    inner join cch.new_category nc 
+                                    where p2.id = p.id and 
+                                    cch.status = %s and
+                                    nc.id = %s) ",
+                            $current_member_id,
+                            ISummitCategoryChangeStatus::Approved,
+                            $current_track_id
+                        )
+                    ),
+                ]
+            ),
         ];
     }
 
@@ -218,6 +282,12 @@ final class DoctrineSummitEventRepository
     public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
     {
 
+        $track_id_filter  = $filter->getFilter('track_id');
+        $current_track_id = 0;
+        if(!is_null($track_id_filter)){
+            $current_track_id = intval($track_id_filter->getValue());
+        }
+
         $query  = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")
@@ -227,6 +297,7 @@ final class DoctrineSummitEventRepository
             ->leftJoin("e.sponsors", "sprs", Join::LEFT_JOIN)
             ->leftJoin("p.speakers", "sp", Join::LEFT_JOIN)
             ->leftJoin('p.selected_presentations', "ssp", Join::LEFT_JOIN)
+            ->leftJoin('ssp.member', "ssp_member", Join::LEFT_JOIN)
             ->leftJoin('p.selection_plan', "selp", Join::LEFT_JOIN)
             ->leftJoin('ssp.list', "sspl", Join::LEFT_JOIN)
             ->leftJoin('p.moderator', "spm", Join::LEFT_JOIN)
@@ -236,7 +307,9 @@ final class DoctrineSummitEventRepository
             ->leftJoin('spm.registration_request', "sprr2", Join::LEFT_JOIN);
 
         if(!is_null($filter)){
-            $filter->apply2Query($query, $this->getFilterMappings());
+            $resource_server_ctx = App::make(IResourceServerContext::class);
+            $member = $resource_server_ctx->getCurrentUser(false);
+            $filter->apply2Query($query, $this->getCustomFilterMappings($member->getId(), $current_track_id));
         }
 
         if (!is_null($order)) {

@@ -353,6 +353,8 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                         'status' => ['=='],
                         'is_chair_visible' => ['=='],
                         'is_voting_visible' => ['=='],
+                        'track_chairs_status' => ['=='],
+                        'viewed_status' => ['=='],
                     ];
                 },
                 function () {
@@ -374,6 +376,8 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                         'status' => 'sometimes|string',
                         'is_chair_visible' => 'sometimes|boolean',
                         'is_voting_visible' => 'sometimes|boolean',
+                        'track_chairs_status' => 'sometimes|string|in:voted,untouched,team_selected,selected,maybe,pass',
+                        'viewed_status' => 'sometimes|string|in:seen,unseen,moved',
                     ];
                 },
                 function () {

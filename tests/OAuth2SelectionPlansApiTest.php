@@ -1,8 +1,11 @@
 <?php
+<<<<<<< HEAD
 
 use App\Models\Foundation\Main\IGroup;
 use models\summit\SummitSelectedPresentation;
 
+=======
+>>>>>>> 76f1b0cb... Fixes on track chairs filters
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,12 +18,18 @@ use models\summit\SummitSelectedPresentation;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Models\Foundation\Main\IGroup;
+use models\summit\SummitSelectedPresentation;
 
+/**
+ * Class OAuth2SelectionPlansApiTest
+ * @package Tests
+ */
 final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
 {
-    use \InsertSummitTestData;
+    use InsertSummitTestData;
 
-    protected function setUp()
+    protected function setUp():void
     {
         $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
@@ -34,7 +43,7 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
         self::$em->flush();
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
         self::clearTestData();
         parent::tearDown();
@@ -285,7 +294,7 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
         $this->assertResponseStatus(201);
 
         $params = [
-           'status'  => $status,
+            'status'  => $status,
             'expand' => 'track_groups,summit'
         ];
 
@@ -312,6 +321,98 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
 
     public function testGetPresentationsBySelectionPlanAndConditions(){
 
+<<<<<<< HEAD
+=======
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_id' =>  self::$defaultTrack->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectedPresentationListApiController@createIndividualSelectionList",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $selection_list = json_decode($content);
+        $this->assertTrue(!is_null($selection_list));
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_id' =>  self::$defaultTrack->getId(),
+            'collection' => SummitSelectedPresentation::CollectionSelected,
+            'presentation_id' => self::$presentations[0]->getId(),
+            'expand' => 'selected_presentations,interested_presentations,'
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectedPresentationListApiController@assignPresentationToMyIndividualList",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $selection_list = json_decode($content);
+        $this->assertTrue(!is_null($selection_list));
+        $this->assertTrue(count($selection_list->selected_presentations) > 0);
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'filter' => [
+                'status==Received',
+                'is_chair_visible==1',
+                'track_chairs_status==voted'
+            ],
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSelectionPlansApiController@getSelectionPlanPresentations",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $presentations = json_decode($content);
+        $this->assertTrue(!is_null($presentations));
+        $this->assertTrue($presentations->total >= 1);
+    }
+
+    public function testGetPresentationsBySelectionPlanAndConditionsMoved(){
+>>>>>>> 76f1b0cb... Fixes on track chairs filters
 
         $params = [
             'id' => self::$summit->getId(),
@@ -369,13 +470,106 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($selection_list));
         $this->assertTrue(count($selection_list->selected_presentations) > 0);
 
+<<<<<<< HEAD
+=======
 
         $params = [
-           'summit' => self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
             'filter' => [
                 'status==Received',
                 'is_chair_visible==1',
+                'viewed_status==moved'
+            ],
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSelectionPlansApiController@getSelectionPlanPresentations",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $presentations = json_decode($content);
+        $this->assertTrue(!is_null($presentations));
+        $this->assertTrue($presentations->total == 0);
+    }
+
+    public function testGetPresentationsBySelectionPlanAndConditionsPass(){
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_id' =>  self::$defaultTrack->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectedPresentationListApiController@createIndividualSelectionList",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $selection_list = json_decode($content);
+        $this->assertTrue(!is_null($selection_list));
+>>>>>>> 76f1b0cb... Fixes on track chairs filters
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_id' =>  self::$defaultTrack->getId(),
+            'collection' => SummitSelectedPresentation::CollectionPass,
+            'presentation_id' => self::$presentations[0]->getId(),
+            'expand' => 'selected_presentations,interested_presentations,'
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectedPresentationListApiController@assignPresentationToMyIndividualList",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $selection_list = json_decode($content);
+        $this->assertTrue(!is_null($selection_list));
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'filter' => [
+                'status==Received',
+                'is_chair_visible==1',
+<<<<<<< HEAD
                 'track_chairs_status==voted'
             ],
         ];
@@ -466,6 +660,8 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
             'filter' => [
                 'status==Received',
                 'is_chair_visible==1',
+=======
+>>>>>>> 76f1b0cb... Fixes on track chairs filters
                 'track_chairs_status==pass'
             ],
         ];

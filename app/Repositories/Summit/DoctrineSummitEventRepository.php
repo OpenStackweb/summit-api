@@ -11,28 +11,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Models\Foundation\Main\IGroup;
+use App\Repositories\SilverStripeDoctrineRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+<<<<<<< HEAD
 use Illuminate\Support\Facades\App;
 use models\main\Tag;
 use models\oauth2\IResourceServerContext;
+=======
+use Illuminate\Support\Facades\Log;
+use models\main\Tag;
+>>>>>>> 76f1b0cb... Fixes on track chairs filters
 use models\summit\ISummitCategoryChangeStatus;
 use models\summit\ISummitEventRepository;
 use models\summit\Presentation;
 use models\summit\Summit;
 use models\summit\SummitEvent;
-use App\Repositories\SilverStripeDoctrineRepository;
+use models\summit\SummitGroupEvent;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineJoinFilterMapping;
+use utils\DoctrineLeftJoinFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
 use utils\PagingResponse;
-use Doctrine\ORM\Query\Expr\Join;
-use utils\DoctrineLeftJoinFilterMapping;
-use models\summit\SummitGroupEvent;
+
 /**
  * Class DoctrineSummitEventRepository
  * @package App\Repositories\Summit
@@ -71,7 +78,7 @@ final class DoctrineSummitEventRepository
         $idx  = 1;
         foreach(self::$forbidden_classes as $forbidden_class){
             $query = $query
-            ->andWhere("not e INSTANCE OF :forbidden_class".$idx);
+                ->andWhere("not e INSTANCE OF :forbidden_class".$idx);
             $query->setParameter("forbidden_class".$idx, $forbidden_class);
             $idx++;
         }
@@ -172,27 +179,92 @@ final class DoctrineSummitEventRepository
                 "(sprs.name :operator :value)"
             ),
             'selection_status' => new DoctrineSwitchFilterMapping([
-                 'selected' => new DoctrineCaseFilterMapping(
-                      'selected',
-                      "ssp.order is not null and sspl.list_type = 'Group' and sspl.category = e.category"
-                  ),
-                  'accepted' => new DoctrineCaseFilterMapping(
-                    'accepted',
-                    "ssp.order is not null and ssp.order <= cc.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category"
-                  ),
-                  'alternate' => new DoctrineCaseFilterMapping(
+                    'selected' => new DoctrineCaseFilterMapping(
+                        'selected',
+                        "ssp.order is not null and sspl.list_type = 'Group' and sspl.category = e.category"
+                    ),
+                    'accepted' => new DoctrineCaseFilterMapping(
+                        'accepted',
+                        "ssp.order is not null and ssp.order <= cc.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category"
+                    ),
+                    'alternate' => new DoctrineCaseFilterMapping(
                         'alternate',
                         "ssp.order is not null and ssp.order > cc.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category"
-                  ),
-                  'lightning-accepted' => new DoctrineCaseFilterMapping(
+                    ),
+                    'lightning-accepted' => new DoctrineCaseFilterMapping(
                         'lightning-accepted',
                         "ssp.order is not null and ssp.order <= cc.lightning_count and sspl.list_type = 'Group' and sspl.list_class = 'Lightning' and sspl.category = e.category"
-                  ),
-                  'lightning-alternate' => new DoctrineCaseFilterMapping(
+                    ),
+                    'lightning-alternate' => new DoctrineCaseFilterMapping(
                         'lightning-alternate',
                         "ssp.order is not null and ssp.order > cc.lightning_count and sspl.list_type = 'Group' and sspl.list_class = 'Lightning' and sspl.category = e.category"
-                  ),
-              ]
+                    ),
+                ]
+            ),
+            'track_chairs_status' =>  new DoctrineSwitchFilterMapping
+            (
+                [
+                    'voted' => new DoctrineCaseFilterMapping(
+                        'voted',
+                        "exists (select ssp1 from models\summit\SummitSelectedPresentation ssp1 inner join ssp1.presentation p1 where p1.id = p.id)"
+                    ),
+                    'untouched' => new DoctrineCaseFilterMapping(
+                        'untouched',
+                        "not exists (select ssp1 from models\summit\SummitSelectedPresentation ssp1 inner join ssp1.presentation p1 where p1.id = p.id)"
+                    ),
+                    'team_selected' => new DoctrineCaseFilterMapping(
+                        'team_selected',
+                        "sspl.list_type = 'Group' and sspl.list_class = 'Session' and ssp.collection= 'selected'"
+                    ),
+                    'selected' => new DoctrineCaseFilterMapping(
+                        'selected',
+                        "sspl.list_type = 'Individual' and sspl.list_class = 'Session' and ssp.collection = 'selected' and ssp_member.id = ".$current_member_id
+                    ),
+                    'maybe' => new DoctrineCaseFilterMapping(
+                        'maybe',
+                        "sspl.list_type = 'Individual' and sspl.list_class = 'Session' and ssp.collection = 'maybe' and ssp_member.id = ".$current_member_id
+                    ),
+                    'pass' => new DoctrineCaseFilterMapping(
+                        'selected',
+                        "sspl.list_type = 'Individual' and sspl.list_class = 'Session' and ssp.collection = 'pass' and ssp_member.id = ".$current_member_id
+                    ),
+                ]
+            ),
+            'viewed_status' =>  new DoctrineSwitchFilterMapping
+            (
+                [
+                    'seen' => new DoctrineCaseFilterMapping(
+                        'seen',
+                        sprintf("exists (select vw1 from models\summit\PresentationTrackChairView vw1 inner join vw1.presentation p1 join vw1.viewer v1 where p1.id = p.id and v1.id = %s)", $current_member_id)
+                    ),
+                    'unseen' => new DoctrineCaseFilterMapping(
+                        'unseen',
+                        sprintf("not exists (select vw1 from models\summit\PresentationTrackChairView vw1 inner join vw1.presentation p1 join vw1.viewer v1 where p1.id = p.id and v1.id = %s)", $current_member_id)
+                    ),
+                    'moved' => new DoctrineCaseFilterMapping(
+                        'moved',
+                        sprintf
+                        (
+                            "not exists 
+                            (
+                                select vw1 from models\summit\PresentationTrackChairView vw1 
+                                inner join vw1.presentation p1 join vw1.viewer v1 where p1.id = p.id and v1.id = %s
+                            ) 
+                            and exists 
+                            ( 
+                                select cch from models\summit\SummitCategoryChange cch 
+                                inner join cch.presentation p2
+                                inner join cch.new_category nc 
+                                where p2.id = p.id and 
+                                cch.status = %s and
+                                nc.id = %s
+                            ) ",
+                            $current_member_id,
+                            ISummitCategoryChangeStatus::Approved,
+                            $current_track_id
+                        )
+                    ),
+                ]
             ),
             'track_chairs_status' =>  new DoctrineSwitchFilterMapping
             (
@@ -282,10 +354,27 @@ final class DoctrineSummitEventRepository
     public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
     {
 
+<<<<<<< HEAD
         $track_id_filter  = $filter->getFilter('track_id');
         $current_track_id = 0;
         if(!is_null($track_id_filter)){
             $current_track_id = intval($track_id_filter->getValue());
+=======
+        Log::debug("DoctrineSummitEventRepository::getAllByPage");
+        $current_track_id  = 0;
+        $current_member_id = 0;
+
+        if(!is_null($filter)){
+            // check for dependant filtering
+            $track_id_filter   = $filter->getUniqueFilter('track_id');
+            if (!is_null($track_id_filter)) {
+                $current_track_id = intval($track_id_filter->getValue());
+            }
+            $current_member_id_filter   = $filter->getUniqueFilter('current_member_id');
+            if (!is_null($current_member_id_filter)) {
+                $current_member_id = intval($current_member_id_filter->getValue());
+            }
+>>>>>>> 76f1b0cb... Fixes on track chairs filters
         }
 
         $query  = $this->getEntityManager()->createQueryBuilder()
@@ -307,9 +396,13 @@ final class DoctrineSummitEventRepository
             ->leftJoin('spm.registration_request', "sprr2", Join::LEFT_JOIN);
 
         if(!is_null($filter)){
+<<<<<<< HEAD
             $resource_server_ctx = App::make(IResourceServerContext::class);
             $member = $resource_server_ctx->getCurrentUser(false);
             $filter->apply2Query($query, $this->getCustomFilterMappings($member->getId(), $current_track_id));
+=======
+            $filter->apply2Query($query, $this->getCustomFilterMappings($current_member_id, $current_track_id));
+>>>>>>> 76f1b0cb... Fixes on track chairs filters
         }
 
         if (!is_null($order)) {
@@ -347,6 +440,7 @@ final class DoctrineSummitEventRepository
         foreach($paginator as $entity)
             $data[]= $entity;
 
+        Log::debug("DoctrineSummitEventRepository::getAllByPage End");
         return new PagingResponse
         (
             $total,
@@ -386,6 +480,21 @@ final class DoctrineSummitEventRepository
     public function getAllByPageLocationTBD(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
     {
 
+        $current_track_id  = 0;
+        $current_member_id = 0;
+
+        if(!is_null($filter)){
+            // check for dependant filtering
+            $track_id_filter   = $filter->getUniqueFilter('track_id');
+            if (!is_null($track_id_filter)) {
+                $current_track_id = intval($track_id_filter->getValue());
+            }
+            $current_member_id_filter   = $filter->getUniqueFilter('current_member_id');
+            if (!is_null($current_member_id_filter)) {
+                $current_member_id = intval($current_member_id_filter->getValue());
+            }
+        }
+
         $query  = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")
@@ -400,7 +509,7 @@ final class DoctrineSummitEventRepository
             ->where("l.id is null or l.id = 0");
 
         if(!is_null($filter)){
-            $filter->apply2Query($query, $this->getFilterMappings());
+            $filter->apply2Query($query, $this->getCustomFilterMappings($current_member_id, $current_track_id));
         }
 
         if (!is_null($order)) {

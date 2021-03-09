@@ -15,7 +15,6 @@
 use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\Repositories\ISummitCategoryChangeRepository;
 use App\Services\Model\ISummitSelectionPlanService;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Request;
@@ -27,7 +26,6 @@ use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
 use Exception;
 use ModelSerializers\IPresentationSerializerTypes;
-use ModelSerializers\ISerializerTypeSelector;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterElement;
@@ -122,7 +120,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         try {
 
             if (!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -164,7 +162,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         try {
 
             if (!Request::isJson()) return $this->error400();
-            $payload = Input::json()->all();
+            $payload = Request::json()->all();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -389,6 +387,10 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                     if ($filter instanceof Filter) {
                         $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
                         $filter->addFilterCondition(FilterElement::makeEqual('selection_plan_id', $selection_plan_id));
+                        $current_member = $this->resource_server_context->getCurrentUser(false);
+                        if(!is_null($current_member)) {
+                            $filter->addFilterCondition(FilterElement::makeEqual('current_member_id', $current_member->getId()));
+                        }
                     }
                     return $filter;
                 },

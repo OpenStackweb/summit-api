@@ -202,7 +202,6 @@ class Presentation extends SummitEvent
      */
     private $category_changes_requests;
 
-
     /**
      * @return bool
      */
@@ -1361,14 +1360,14 @@ class Presentation extends SummitEvent
     /**
      * @return ArrayCollection|SummitCategoryChange[]
      */
-    public function getCategoryChangeRequests():ArrayCollection{
+    public function getCategoryChangeRequests(){
         return  $this->category_changes_requests;
     }
 
     /**
      * @return ArrayCollection|SummitCategoryChange[]
      */
-    public function getPendingCategoryChangeRequests():ArrayCollection{
+    public function getPendingCategoryChangeRequests(){
         $criteria = Criteria::create();
         $criteria->andWhere(Criteria::expr()->eq('status', ISummitCategoryChangeStatus::Pending));
         return $this->category_changes_requests->matching($criteria);
@@ -1409,5 +1408,21 @@ class Presentation extends SummitEvent
         $criteria->where(Criteria::expr()->eq('id', $id));
         $res = $this->category_changes_requests->matching($criteria)->first();
         return $res === false ? null : $res;
+    }
+
+    /**
+     * @param Member $member
+     * @return int
+     * @throws ValidationException
+     */
+    public function getRemainingSelectionsForMember(Member $member):int{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('member', $member));
+        $criteria->andWhere(Criteria::expr()->eq('collection', SummitSelectedPresentation::CollectionSelected));
+        $res = $this->selected_presentations->matching($criteria)->first();
+        if($res === false ) return 0;
+        $list = $res->getList();
+        if(is_null($list) || !$list instanceof SummitSelectedPresentationList) return 0;
+        return $list->getAvailableSlots();
     }
 }

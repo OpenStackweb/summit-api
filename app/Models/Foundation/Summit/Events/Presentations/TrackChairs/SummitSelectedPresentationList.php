@@ -333,4 +333,31 @@ class SummitSelectedPresentationList extends SilverstripeBaseModel
         $highest = $this->selected_presentations->matching($criteria)->first();
         return $highest === false ? 0: $highest->getOrder();
     }
+
+
+    /**
+     * @return int
+     * @throws ValidationException
+     */
+    public function getAvailableSlots():int{
+        $selection_count = $this->
+        getSelectedPresentationsByCollection
+        (
+            SummitSelectedPresentation::CollectionSelected
+        )->count();
+        return $this->getMaxPresentations() - $selection_count;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getMaxPresentations()
+    {
+        return $this->category->getSessionCount() + $this->category->getAlternateCount();
+    }
+
+    public function getMaxAlternates()
+    {
+        return intval($this->Category()->AlternateCount);
+    }
 }

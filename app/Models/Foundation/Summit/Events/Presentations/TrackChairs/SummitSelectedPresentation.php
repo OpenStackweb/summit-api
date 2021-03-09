@@ -105,9 +105,9 @@ class SummitSelectedPresentation extends SilverstripeBaseModel implements IOrder
     }
 
     /**
-     * @return SummitSelectedPresentationList
+     * @return SummitSelectedPresentationList|null
      */
-    public function getList()
+    public function getList():?SummitSelectedPresentationList
     {
         return $this->list;
     }

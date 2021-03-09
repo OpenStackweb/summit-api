@@ -16,14 +16,8 @@ use App\Models\Foundation\Main\IGroup;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\Tools\Pagination\Paginator;
-<<<<<<< HEAD
-use Illuminate\Support\Facades\App;
-use models\main\Tag;
-use models\oauth2\IResourceServerContext;
-=======
 use Illuminate\Support\Facades\Log;
 use models\main\Tag;
->>>>>>> 76f1b0cb... Fixes on track chairs filters
 use models\summit\ISummitCategoryChangeStatus;
 use models\summit\ISummitEventRepository;
 use models\summit\Presentation;
@@ -354,12 +348,6 @@ final class DoctrineSummitEventRepository
     public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
     {
 
-<<<<<<< HEAD
-        $track_id_filter  = $filter->getFilter('track_id');
-        $current_track_id = 0;
-        if(!is_null($track_id_filter)){
-            $current_track_id = intval($track_id_filter->getValue());
-=======
         Log::debug("DoctrineSummitEventRepository::getAllByPage");
         $current_track_id  = 0;
         $current_member_id = 0;
@@ -374,7 +362,6 @@ final class DoctrineSummitEventRepository
             if (!is_null($current_member_id_filter)) {
                 $current_member_id = intval($current_member_id_filter->getValue());
             }
->>>>>>> 76f1b0cb... Fixes on track chairs filters
         }
 
         $query  = $this->getEntityManager()->createQueryBuilder()
@@ -396,13 +383,7 @@ final class DoctrineSummitEventRepository
             ->leftJoin('spm.registration_request', "sprr2", Join::LEFT_JOIN);
 
         if(!is_null($filter)){
-<<<<<<< HEAD
-            $resource_server_ctx = App::make(IResourceServerContext::class);
-            $member = $resource_server_ctx->getCurrentUser(false);
-            $filter->apply2Query($query, $this->getCustomFilterMappings($member->getId(), $current_track_id));
-=======
             $filter->apply2Query($query, $this->getCustomFilterMappings($current_member_id, $current_track_id));
->>>>>>> 76f1b0cb... Fixes on track chairs filters
         }
 
         if (!is_null($order)) {

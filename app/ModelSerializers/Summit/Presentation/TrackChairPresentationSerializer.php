@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use Libs\ModelSerializers\AbstractSerializer;
+use models\main\Member;
 use models\summit\Presentation;
 /**
  * Class TrackChairPresentationSerializer
@@ -28,7 +29,7 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
         'VotesCount'      => 'votes_count:json_int',
         'VotesAverage' => 'votes_average:json_float',
         'VotesTotalPoints' => 'votes_total_points:json_int',
-    ];
+     ];
 
     protected static $allowed_fields = [
         'is_group_selected',
@@ -38,6 +39,7 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
         'votes_count',
         'votes_average',
         'votes_total_points',
+        'remaining_selections',
     ];
 
     protected static $allowed_relations = [
@@ -53,6 +55,7 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
         'passers',
         'comments',
         'viewers',
+        'category_changes_requests',
     ];
 
     /**
@@ -72,6 +75,7 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
 
         $values = parent::serialize($expand, $fields, $relations, $params);
 
+        $values['remaining_selections'] = $presentation->getRemainingSelectionsForMember($this->resource_server_context->getCurrentUser(false));
 
         if(in_array('selectors', $relations))
         {
@@ -118,6 +122,15 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
             $values['comments'] = $comments;
         }
 
+        if(in_array('category_changes_requests', $relations))
+        {
+            $category_changes_requests = [];
+            foreach ($presentation->getCategoryChangeRequests() as $request) {
+                $category_changes_requests[] = $request->getId();
+            }
+            $values['category_changes_requests'] = $category_changes_requests;
+        }
+
         if (!empty($expand)) {
             foreach (explode(',', $expand) as $relation) {
                 $relation = trim($relation);
@@ -160,6 +173,14 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
                             $comments[] = SerializerRegistry::getInstance()->getSerializer($comment)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['comments'] = $comments;
+                    }
+                        break;
+                    case 'category_changes_requests':{
+                        $category_changes_requests = [];
+                        foreach ($presentation->getCategoryChangeRequests() as $request) {
+                            $category_changes_requests[] = SerializerRegistry::getInstance()->getSerializer($request)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $values['category_changes_requests'] = $category_changes_requests;
                     }
                         break;
                 }

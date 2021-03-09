@@ -720,6 +720,7 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
             'summit' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
             'expand' => 'presentation, new_category, old_category',
+            'order' => '+requester_fullname'
         ];
 
         $response = $this->action(

@@ -52,7 +52,11 @@ final class SummitCategoryChangeSerializer extends SilverStripeSerializer
                     case 'presentation':
                         {
                             unset($values['presentation_id']);
-                            $values['presentation'] = SerializerRegistry::getInstance()->getSerializer($request->getPresentation())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $values['presentation'] = SerializerRegistry::getInstance()->getSerializer
+                            (
+                                $request->getPresentation(),
+                                IPresentationSerializerTypes::TrackChairs
+                            )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         break;
                     case 'new_category':

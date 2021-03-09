@@ -565,6 +565,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                         'requester_email' => ['=@', '=='],
                         'aprover_fullname' => ['=@', '=='],
                         'aprover_email' => ['=@', '=='],
+                        'presentation_title' => ['=@', '=='],
                     ];
                 },
                 function () {
@@ -578,13 +579,18 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                         'requester_fullname' => 'sometimes|string',
                         'aprover_fullname' => 'sometimes|string',
                         'aprover_email' => 'sometimes|string',
+                        'presentation_title' => 'sometimes|string',
                     ];
                 },
                 function () {
                     return [
                         'id',
                         'approval_date',
-                        'status'
+                        'status',
+                        'presentation_title',
+                        'new_category_title',
+                        'old_category_title',
+                        'requester_fullname',
                     ];
                 },
                 function ($filter) use ($summit, $selection_plan_id) {

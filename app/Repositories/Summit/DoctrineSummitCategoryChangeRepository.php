@@ -57,8 +57,8 @@ final class DoctrineSummitCategoryChangeRepository
             'selection_plan_id' => 'sp.id',
             'new_category_id' => 'ncat.id',
             'old_category_id' => 'ocat.id',
-            'new_category_title' => 'ncat.title',
-            'old_category_title' => 'ocat.title',
+            'new_category_name' => 'ncat.title',
+            'old_category_name' => 'ocat.title',
             'presentation_title' => 'p.title',
             'requester_fullname' => "concat(r.first_name, ' ', r.last_name) :operator :value",
             'requester_email' => 'r.email',
@@ -78,8 +78,8 @@ final class DoctrineSummitCategoryChangeRepository
             'approval_date'    => 'e.approval_date',
             'presentation_title'    => 'p.id',
             'status'    => 'e.status',
-            'new_category_title' => 'ncat.title',
-            'old_category_title' => 'ocat.title',
+            'new_category_name' => 'ncat.title',
+            'old_category_name' => 'ocat.title',
             'requester_fullname' => "concat(r.first_name, ' ', r.last_name)",
         ];
     }

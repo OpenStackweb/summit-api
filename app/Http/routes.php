@@ -246,6 +246,7 @@ Route::group([
 
                     Route::group(['prefix' => 'presentations'], function () {
                         Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@getSelectionPlanPresentations']);
+                        Route::get('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@getSelectionPlanPresentationsCSV']);
 
                         Route::group(['prefix' => 'all'], function () {
                             // category-change-requests

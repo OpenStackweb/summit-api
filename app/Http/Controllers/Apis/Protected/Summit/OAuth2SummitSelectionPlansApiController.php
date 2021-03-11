@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\EpochCellFormatter;
 use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\Repositories\ISummitCategoryChangeRepository;
 use App\Services\Model\ISummitSelectionPlanService;
@@ -423,6 +424,126 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
     /**
      * @param $summit_id
      * @param $selection_plan_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getSelectionPlanPresentationsCSV($summit_id, $selection_plan_id)
+    {
+        try {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $member = $this->resource_server_context->getCurrentUser();
+
+            if (is_null($member))
+                return $this->error403();
+
+            $authz = $summit->isTrackChair($member) || $summit->isTrackChairAdmin($member);
+
+            if (!$authz)
+                return $this->error403();
+
+            return $this->_getAllCSV(
+                function () {
+                    return [
+                        'title' => ['=@', '=='],
+                        'abstract' => ['=@', '=='],
+                        'social_summary' => ['=@', '=='],
+                        'tags' => ['=@', '=='],
+                        'level' => ['=@', '=='],
+                        'summit_type_id' => ['=='],
+                        'event_type_id' => ['=='],
+                        'track_id' => ['=='],
+                        'speaker_id' => ['=='],
+                        'speaker' => ['=@', '=='],
+                        'speaker_email' => ['=@', '=='],
+                        'selection_status' => ['=='],
+                        'id' => ['=='],
+                        'selection_plan_id' => ['=='],
+                        'status' => ['=='],
+                        'is_chair_visible' => ['=='],
+                        'is_voting_visible' => ['=='],
+                        'track_chairs_status' => ['=='],
+                        'viewed_status' => ['=='],
+                    ];
+                },
+                function () {
+                    return [
+                        'title' => 'sometimes|string',
+                        'abstract' => 'sometimes|string',
+                        'social_summary' => 'sometimes|string',
+                        'tags' => 'sometimes|string',
+                        'level' => 'sometimes|string',
+                        'summit_type_id' => 'sometimes|integer',
+                        'event_type_id' => 'sometimes|integer',
+                        'track_id' => 'sometimes|integer',
+                        'speaker_id' => 'sometimes|integer',
+                        'speaker' => 'sometimes|string',
+                        'speaker_email' => 'sometimes|string',
+                        'selection_status' => 'sometimes|string',
+                        'id' => 'sometimes|integer',
+                        'selection_plan_id' => 'sometimes|integer',
+                        'status' => 'sometimes|string',
+                        'is_chair_visible' => 'sometimes|boolean',
+                        'is_voting_visible' => 'sometimes|boolean',
+                        'track_chairs_status' => 'sometimes|string|in:voted,untouched,team_selected,selected,maybe,pass',
+                        'viewed_status' => 'sometimes|string|in:seen,unseen,moved',
+                    ];
+                },
+                function () {
+                    return [
+                        'track'
+                    ];
+                },
+                function ($filter) use ($summit, $selection_plan_id) {
+                    if ($filter instanceof Filter) {
+                        $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+                        $filter->addFilterCondition(FilterElement::makeEqual('selection_plan_id', $selection_plan_id));
+                        $current_member = $this->resource_server_context->getCurrentUser(false);
+                        if(!is_null($current_member)) {
+                            $filter->addFilterCondition(FilterElement::makeEqual('current_member_id', $current_member->getId()));
+                        }
+                    }
+                    return $filter;
+                },
+                function () {
+                    return IPresentationSerializerTypes::TrackChairs;
+                },
+                function () {
+                    return [
+                        'created' => new EpochCellFormatter(),
+                        'last_edited' => new EpochCellFormatter(),
+                    ];
+                },
+                function () {
+                    return [];
+                },
+                'presentations-',
+                [],
+                function ($page, $per_page, $filter, $order, $applyExtraFilters) {
+                    return $this->summit_event_repository->getAllByPage
+                    (
+                        new PagingInfo($page, $per_page),
+                        call_user_func($applyExtraFilters, $filter),
+                        $order
+                    );
+                }
+            );
+        } catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
+        } catch (EntityNotFoundException $ex) {
+            Log::warning($ex);
+            return $this->error404($ex->getMessage());
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $selection_plan_id
      * @param $presentation_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
@@ -437,8 +558,13 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
             if (is_null($selection_plan)) return $this->error404();
 
             $presentation = $selection_plan->getPresentation(intval($presentation_id));
+            if(is_null($presentation)) throw new EntityNotFoundException();
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize(Request::input('expand', '')));
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer
+            (
+                $presentation
+            )->serialize(Request::input('expand', '')));
+
         } catch (ValidationException $ex) {
             Log::warning($ex);
             return $this->error412($ex->getMessages());

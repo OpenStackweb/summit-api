@@ -59,7 +59,11 @@ class SummitSelectedPresentationSerializer extends SilverStripeSerializer
                     {
                         if ($selected_presentation->getPresentationId() > 0) {
                             unset($values['presentation_id']);
-                            $values['presentation'] = SerializerRegistry::getInstance()->getSerializer($selected_presentation->getPresentation())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $values['presentation'] = SerializerRegistry::getInstance()->getSerializer
+                            (
+                                $selected_presentation->getPresentation(),
+                                IPresentationSerializerTypes::TrackChairs
+                            )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                     }
                     break;

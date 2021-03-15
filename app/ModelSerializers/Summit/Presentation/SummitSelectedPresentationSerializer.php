@@ -30,7 +30,8 @@ class SummitSelectedPresentationSerializer extends SilverStripeSerializer
         'type',
         'category_id',
         'presentation_id',
-        'order'
+        'order',
+        'list_id',
     ];
 
     /**
@@ -58,9 +59,10 @@ class SummitSelectedPresentationSerializer extends SilverStripeSerializer
                     {
                         if ($selected_presentation->getPresentationId() > 0) {
                             unset($values['presentation_id']);
-                            $values['presentation_id'] = SerializerRegistry::getInstance()->getSerializer($selected_presentation->getPresentation())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $values['presentation'] = SerializerRegistry::getInstance()->getSerializer($selected_presentation->getPresentation())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                     }
+                    break;
                     case 'list':
                     {
                         if ($selected_presentation->getListId() > 0) {
@@ -68,7 +70,7 @@ class SummitSelectedPresentationSerializer extends SilverStripeSerializer
                             $values['list'] = SerializerRegistry::getInstance()->getSerializer($selected_presentation->getList())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                     }
-
+                    break;
                 }
             }
         }

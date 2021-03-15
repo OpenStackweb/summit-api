@@ -198,7 +198,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
 
         $current_member = $this->resource_server_context->getCurrentUser();
 
-        if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->isSummitAdmin()) {
+        if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->hasAllowedSummits()) {
             return $this->error403(['message' => sprintf("Member %s has not permission for any Summit", $current_member->getId())]);
         }
 
@@ -247,7 +247,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             },
             function ($filter) use ($current_member) {
                 if ($filter instanceof Filter) {
-                    if (!is_null($current_member) && !$current_member->isAdmin() && $current_member->isSummitAdmin()) {
+                    if (!is_null($current_member) && !$current_member->isAdmin() && $current_member->hasAllowedSummits()) {
                         // filter only the ones that we are allowed to see
                         $filter->addFilterCondition
                         (
@@ -294,8 +294,15 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $current_member = $this->resource_server_context->getCurrentUser();
-            if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators))
+
+            if
+            (
+                !is_null($current_member) &&
+                !$current_member->isAdmin() &&
+                !$current_member->hasPermissionFor($summit)
+            )
                 return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
+
             $serializer_type = $this->serializer_type_selector->getSerializerType();
             return $this->ok
             (
@@ -325,7 +332,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             $summit = $this->repository->getCurrent();
             if (is_null($summit)) return $this->error404();
             $current_member = $this->resource_server_context->getCurrentUser();
-            if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators))
+            if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->hasPermissionFor($summit))
                 return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
             $serializer_type = $this->serializer_type_selector->getSerializerType();
             return $this->ok
@@ -362,7 +369,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             if (is_null($summit)) return $this->error404();
 
             $current_member = $this->resource_server_context->getCurrentUser();
-            if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators))
+            if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->hasPermissionFor($summit))
                 return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
 
             $serializer_type = $this->serializer_type_selector->getSerializerType();

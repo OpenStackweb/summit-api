@@ -1719,6 +1719,13 @@ SQL;
     }
 
     /**
+     * @return bool
+     */
+    public function hasAllowedSummits():bool{
+        return count($this->getAllAllowedSummitsIds()) > 0;
+    }
+
+    /**
      * @param Summit $summit
      * @return bool
      */
@@ -1755,6 +1762,33 @@ SQL;
         );
         $allowed_summits = $stmt->fetchAll(\PDO::FETCH_COLUMN);
         return count($allowed_summits) > 0 && $this->isOnGroup($groupSlug);
+    }
+
+    /**
+     * @param Summit $summit
+     * @return bool
+     */
+    public function hasPermissionFor(Summit $summit): bool
+    {
+        $sql = <<<SQL
+SELECT DISTINCT(SummitAdministratorPermissionGroup_Summits.SummitID) 
+FROM SummitAdministratorPermissionGroup_Members 
+INNER JOIN SummitAdministratorPermissionGroup_Summits ON 
+SummitAdministratorPermissionGroup_Summits.SummitAdministratorPermissionGroupID = SummitAdministratorPermissionGroup_Members.SummitAdministratorPermissionGroupID
+WHERE SummitAdministratorPermissionGroup_Members.MemberID = :member_id
+AND 
+SummitAdministratorPermissionGroup_Summits.SummitID = :summit_id
+SQL;
+
+        $stmt = $this->prepareRawSQL($sql);
+        $stmt->execute(
+            [
+                'member_id' => $this->getId(),
+                'summit_id' => $summit->getId()
+            ]
+        );
+        $allowed_summits = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        return count($allowed_summits) > 0;
     }
 
     /**

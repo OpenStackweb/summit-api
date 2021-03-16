@@ -215,8 +215,13 @@ final class SummitSelectedPresentationListService
                 throw new ValidationException(sprintf("You can not add more presentations (%s).", $category->getTrackChairAvailableSlots()));
             }
 
-            if ($selection_list->isGroup() && !$selection_list->compareHash(trim($payload['hash']))) {
-                throw new ValidationException(sprintf("The list %s was modified by someone else, please Refresh.", $selection_list->getId()));
+            if ($selection_list->isGroup()){
+
+                if(empty($payload['hash']))
+                    throw new ValidationException(sprintf("hash attributed is mandatory for list %s.", $selection_list->getId()));
+
+                if(!$selection_list->compareHash(trim($payload['hash'])))
+                    throw new ValidationException(sprintf("The list %s was modified by someone else, please Refresh.", $selection_list->getId()));
             }
 
             /**

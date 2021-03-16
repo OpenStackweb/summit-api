@@ -216,7 +216,7 @@ class OAuth2SummitSelectedPresentationListApiController
             $payload = $data->all();
             // Creates a Validator instance and validates the data.
             $validation = Validator::make($payload,[
-                'hash' => 'sometimes|string',
+                'hash' => 'sometimes|nullable|string',
                 'collection' => sprintf('required|string|in:%s,%s', SummitSelectedPresentation::CollectionMaybe, SummitSelectedPresentation::CollectionSelected),
                 'presentations' => 'required|int_array',
             ]);

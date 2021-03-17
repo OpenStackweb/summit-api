@@ -256,7 +256,7 @@ final class SummitSelectedPresentationListService
                 // check if the selection already exists on the current list
                 $selection = $selection_list->getSelectionByPresentation($presentation);
 
-                if(is_null($selection)) {
+                if(is_null($selection) || $selection->getCollection() !== trim($payload['collection'])) {
                     // selection does not exists , create it
                     $selection = SummitSelectedPresentation::create
                     (
@@ -272,15 +272,8 @@ final class SummitSelectedPresentationListService
                         $presentation->addTrackChairNotification($current_member, '{member} added this presentation to the team list');
                     }
                 }
-                // if the selection already existed , check if belongs to the specified collection
-                // due on a same list we have interested, selected and rejected collection
-
-                if($selection->getCollection() !== trim($payload['collection'])){
-                    throw new ValidationException(sprintf("Selection does not belongs to specified collection %s", $payload['collection']));
-                }
 
                 $selection->setOrder($order + 1);
-
             }
 
             if($selection_list->isGroup())

@@ -218,7 +218,7 @@ class OAuth2SummitSelectedPresentationListApiController
             $validation = Validator::make($payload,[
                 'hash' => 'sometimes|nullable|string',
                 'collection' => sprintf('required|string|in:%s,%s', SummitSelectedPresentation::CollectionMaybe, SummitSelectedPresentation::CollectionSelected),
-                'presentations' => 'required|int_array',
+                'presentations' => 'nullable|sometimes|int_array',
             ]);
 
             if ($validation->fails()) {

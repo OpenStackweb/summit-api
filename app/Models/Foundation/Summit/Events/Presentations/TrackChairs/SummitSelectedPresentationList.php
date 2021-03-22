@@ -14,6 +14,7 @@
 
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\Criteria;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -303,15 +304,18 @@ class SummitSelectedPresentationList extends SilverstripeBaseModel
         return $res === false ? null : $res;
     }
 
+
     public function recalculateHash():string{
+        Log::debug(sprintf("recalculating hash for list %s", $this->id));
         if(!$this->isGroup()){
             throw new ValidationException("You could only calculate hash on Team list");
         }
+
         $criteria = Criteria::create();
         $criteria->orderBy(['order'=> 'ASC']);
         $hash = '';
         foreach ($this->selected_presentations->matching($criteria) as $p){
-            $hash .= strval($p->getId());
+            $hash .= strval($p->getPresentationId());
         }
         $this->hash = md5($hash);
 

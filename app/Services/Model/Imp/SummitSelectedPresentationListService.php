@@ -193,7 +193,8 @@ final class SummitSelectedPresentationListService
             if (is_null($category) || !$category instanceof PresentationCategory || !$category->isChairVisible()) throw new EntityNotFoundException("Track not found.");
 
             $selection_list = $category->getSelectionListById($list_id);
-            if (is_null($selection_list)) throw new EntityNotFoundException("List not found.");
+            if (is_null($selection_list))
+                throw new EntityNotFoundException("List not found.");
 
             $current_member = $this->resource_server_ctx->getCurrentUser();
 
@@ -217,7 +218,7 @@ final class SummitSelectedPresentationListService
 
             if ($selection_list->isGroup()){
 
-                if(empty($payload['hash']))
+                if(!isset($payload['hash']))
                     throw new ValidationException(sprintf("hash attributed is mandatory for list %s.", $selection_list->getId()));
 
                 if(!$selection_list->compareHash(trim($payload['hash'])))
@@ -256,7 +257,13 @@ final class SummitSelectedPresentationListService
                 // check if the selection already exists on the current list
                 $selection = $selection_list->getSelectionByPresentation($presentation);
 
-                if(is_null($selection) || $selection->getCollection() !== trim($payload['collection'])) {
+                if(!is_null($selection) && $selection->getCollection() !== trim($payload['collection'])){
+                    // we should remove it from original collection
+                    $selection_list->removeSelection($selection);
+                    $selection = null;
+                }
+
+                if(is_null($selection)) {
                     // selection does not exists , create it
                     $selection = SummitSelectedPresentation::create
                     (

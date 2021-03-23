@@ -179,9 +179,11 @@ final class SummitSelectedPresentationListService
     /**
      * @inheritDoc
      */
-    public function reorderList(Summit $summit, int $track_id, int $list_id, $payload): SummitSelectedPresentationList
+    public function reorderList(Summit $summit, int $track_id, int $list_id, array $payload): SummitSelectedPresentationList
     {
         return $this->tx_service->transaction(function () use ($summit, $track_id, $list_id, $payload) {
+
+            Log::debug(sprintf("SummitSelectedPresentationListService::reorderList track %s list %s payload %s.", $track_id, $list_id, json_encode($payload)));
 
             $selection_plan = $summit->getCurrentSelectionPlanByStatus(SelectionPlan::STATUS_SELECTION);
 
@@ -218,10 +220,9 @@ final class SummitSelectedPresentationListService
 
             if ($selection_list->isGroup()){
 
-                if(!isset($payload['hash']))
-                    throw new ValidationException(sprintf("hash attributed is mandatory for list %s.", $selection_list->getId()));
+                $hash = $payload['hash'] ?? "";
 
-                if(!$selection_list->compareHash(trim($payload['hash'])))
+                if(!$selection_list->compareHash(trim($hash)))
                     throw new ValidationException(sprintf("The list %s was modified by someone else, please Refresh.", $selection_list->getId()));
             }
 

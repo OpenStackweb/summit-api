@@ -259,11 +259,15 @@ class SummitSelectedPresentationList extends SilverstripeBaseModel
         return false;
     }
 
-    public function compareHash(string $oldHash):bool{
-        if ($this->hash == null) return true;
-        return ($this->hash == $oldHash);
+    /**
+     * @param string|null $oldHash
+     * @return bool
+     */
+    public function compareHash(?string $oldHash):bool{
+        if(empty($this->hash)) return true;
+        if(!empty($this->hash) && empty($oldHash)) return false;
+        return hash_equals($this->hash, $oldHash);
     }
-
 
     public function isGroup():bool {
         return ($this->list_type == SummitSelectedPresentationList::Group);

@@ -60,12 +60,12 @@ interface ISummitSelectedPresentationListService
      * @param Summit $summit
      * @param int $track_id
      * @param int $list_id
-     * @param $payload
+     * @param array$payload
      * @return SummitSelectedPresentationList
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function reorderList(Summit $summit, int $track_id, int $list_id, $payload):SummitSelectedPresentationList;
+    public function reorderList(Summit $summit, int $track_id, int $list_id, array $payload):SummitSelectedPresentationList;
 
     /**
      * @param Summit $summit

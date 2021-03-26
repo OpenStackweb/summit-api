@@ -397,9 +397,13 @@ final class MemberService
                     // do not remove if we are super admins, since we do need this group too ( backward compatibility with SS CMS)
                     if($group->getCode() == IGroup::Administrators && in_array(IGroup::SuperAdmins, $groups))
                         continue;
+
                     // skipping this groups bc are managed by SS side
-                    if($group->getCode() == IGroup::FoundationMembers || in_array(IGroup::CommunityMembers, $groups))
+                    if(in_array($group->getCode(), [IGroup::FoundationMembers, IGroup::CommunityMembers, IGroup::TrackChairs])){
+                        Log::debug(sprintf("MemberService::synchronizeGroups skipping group %s removal", $group->getCode()));
                         continue;
+                    }
+
                     Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s marking group %s to remove (external) dues is not on member current groups", $member->getId(), $member->getEmail(), $group->getCode()));
                     $groups2Remove[] = $group;
                 }

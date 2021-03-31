@@ -115,6 +115,7 @@ class SummitSerializer extends SilverStripeSerializer
         'summit_documents',
         'featured_speakers',
         'dates_with_events',
+        'presentation_action_types',
     ];
 
     /**
@@ -310,6 +311,15 @@ class SummitSerializer extends SilverStripeSerializer
                 $featured_speakers[] = $speaker->getId();
             }
             $values['featured_speakers'] = $featured_speakers;
+        }
+
+        // presentation_action_types
+        if (in_array('presentation_action_types', $relations)) {
+            $presentation_action_types = [];
+            foreach ($summit->getPresentationActionTypes() as $action) {
+                $presentation_action_types[] = SerializerRegistry::getInstance()->getSerializer($action)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'presentation_action_types'));
+            }
+            $values['presentation_action_types'] = $presentation_action_types;
         }
 
         if (!empty($expand)) {

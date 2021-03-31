@@ -1362,6 +1362,19 @@ Route::group([
                     Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@removeFeatureSpeaker']);
                 });
             });
+
+            // presentation action types
+
+            Route::group(['prefix' => 'presentation-action-types'], function(){
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPresentationActionTypeApiController@getAllBySummit']);
+                Route::get('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPresentationActionTypeApiController@getAllBySummitCSV']);
+                Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPresentationActionTypeApiController@add']);
+                Route::group(['prefix' => '{action_id}'], function() {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPresentationActionTypeApiController@get']);
+                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPresentationActionTypeApiController@update']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPresentationActionTypeApiController@delete']);
+                });
+            });
         });
     });
 

@@ -11,10 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
-
+use Illuminate\Support\Facades\DB;
 /**
  * Class TestSeeder
  */
@@ -23,6 +22,14 @@ final class TestSeeder extends Seeder
     public function run()
     {
         Model::unguard();
+        DB::setDefaultConnection("model");
+        DB::table('Summit')->delete();
+        DB::table('SummitEventType')->delete();
+        DB::table('PresentationType')->delete();
+        DB::table('SummitAbstractLocation')->delete();
+        DB::table('SummitGeoLocatedLocation')->delete();
+        DB::table('SummitVenue')->delete();
+        DB::setDefaultConnection("config");
         $this->call('ApiSeeder');
         $this->call('ApiScopesSeeder');
         $this->call('ApiEndpointsSeeder');

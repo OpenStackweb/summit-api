@@ -43,6 +43,7 @@ use App\Services\Model\Imp\SummitEmailEventFlowService;
 use App\Services\Model\Imp\SummitMediaFileTypeService;
 use App\Services\Model\Imp\SummitMediaUploadTypeService;
 use App\Services\Model\Imp\SummitMetricService;
+use App\Services\Model\Imp\SummitPresentationActionTypeService;
 use App\Services\Model\Imp\SummitRegistrationInvitationService;
 use App\Services\Model\Imp\SummitSelectedPresentationListService;
 use App\Services\Model\Imp\TrackChairService;
@@ -68,6 +69,7 @@ use App\Services\Model\ISummitMediaUploadTypeService;
 use App\Services\Model\ISummitMetricService;
 use App\Services\Model\ISummitOrderExtraQuestionTypeService;
 use App\Services\Model\ISummitOrderService;
+use App\Services\Model\ISummitPresentationActionTypeService;
 use App\Services\Model\ISummitPushNotificationService;
 use App\Services\Model\ISummitRefundPolicyTypeService;
 use App\Services\Model\ISummitRegistrationInvitationService;
@@ -420,6 +422,11 @@ final class ModelServicesProvider extends ServiceProvider
             ITrackChairService::class,
             TrackChairService::class
         );
+
+        App::singleton(
+            ISummitPresentationActionTypeService::class,
+            SummitPresentationActionTypeService::class
+        );
     }
 
     /**
@@ -482,6 +489,7 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitMetricService::class,
             ISummitSelectedPresentationListService::class,
             ITrackChairService::class,
+            ISummitPresentationActionTypeService::class,
         ];
     }
 }

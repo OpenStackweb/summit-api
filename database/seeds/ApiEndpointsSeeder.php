@@ -6445,6 +6445,93 @@ class ApiEndpointsSeeder extends Seeder
                         IGroup::SummitAdministrators,
                     ]
                 ],
+                [
+                    'name' => 'get-presentation-action-types',
+                    'route' => '/api/v1/summits/{id}/presentation-action-types',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                        sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::TrackChairsAdmins,
+                    ]
+                ],
+                [
+                    'name' => 'get-presentation-action-types-csv',
+                    'route' => '/api/v1/summits/{id}/presentation-action-types/csv',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                        sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::TrackChairsAdmins,
+                    ]
+                ],
+                [
+                    'name' => 'add-presentation-action-types',
+                    'route' => '/api/v1/summits/{id}/presentation-action-types',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::TrackChairsAdmins,
+                    ]
+                ],
+                [
+                    'name' => 'get-presentation-action-type-by-id',
+                    'route' => '/api/v1/summits/{id}/presentation-action-types/{action_id}',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                        sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::TrackChairsAdmins,
+                    ]
+                ],
+                [
+                    'name' => 'delete-presentation-action-type',
+                    'route' => '/api/v1/summits/{id}/presentation-action-types/{action_id}',
+                    'http_method' => 'DELETE',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::TrackChairsAdmins,
+                    ]
+                ],
+                [
+                    'name' => 'update-presentation-action-type',
+                    'route' => '/api/v1/summits/{id}/presentation-action-types/{action_id}',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::TrackChairsAdmins,
+                    ]
+                ]
             ]
         );
     }

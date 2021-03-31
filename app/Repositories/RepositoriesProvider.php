@@ -28,6 +28,7 @@ use App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner;
 use App\Models\Foundation\Summit\Repositories\IDefaultSummitEventTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IDefaultTrackTagGroupRepository;
 use App\Models\Foundation\Summit\Repositories\IPaymentGatewayProfileRepository;
+use App\Models\Foundation\Summit\Repositories\IPresentationActionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationCategoryGroupRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationSpeakerSummitAssistanceConfirmationRequestRepository;
 use App\Models\Foundation\Summit\Repositories\IRSVPTemplateRepository;
@@ -67,7 +68,6 @@ use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
 use App\Models\Foundation\Summit\TrackTagGroupAllowedTag;
 use App\Models\ResourceServer\IApiRepository;
-use App\Repositories\Summit\DoctrineSummitTrackChairRepository;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
 use LaravelDoctrine\ORM\Facades\EntityManager;
@@ -85,6 +85,7 @@ use models\summit\ISponsorUserInfoGrantRepository;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitTicketTypeRepository;
 use models\summit\PaymentGatewayProfile;
+use models\summit\PresentationActionType;
 use models\summit\PresentationCategory;
 use models\summit\PresentationCategoryGroup;
 use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
@@ -119,7 +120,6 @@ use models\summit\SummitTaxType;
 use models\summit\SummitTicketType;
 use models\summit\SummitTrackChair;
 use repositories\main\DoctrineLegalDocumentRepository;
-
 /**
  * Class RepositoriesProvider
  * @package repositories
@@ -660,6 +660,13 @@ final class RepositoriesProvider extends ServiceProvider
             ISummitCategoryChangeRepository::class,
             function(){
                 return EntityManager::getRepository(SummitCategoryChange::class);
+            }
+        );
+
+        App::singleton(
+            IPresentationActionTypeRepository::class,
+            function(){
+                return EntityManager::getRepository(PresentationActionType::class);
             }
         );
     }

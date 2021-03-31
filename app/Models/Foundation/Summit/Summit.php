@@ -151,7 +151,6 @@ class Summit extends SilverstripeBaseModel
      */
     private $external_summit_id;
 
-
     /**
      * @ORM\Column(name="ScheduleDefaultStartDate", type="datetime")
      * @var \DateTime
@@ -579,7 +578,6 @@ class Summit extends SilverstripeBaseModel
      */
     private $excluded_categories_for_accepted_presentations;
 
-
     /**
      * @ORM\ManyToMany(targetEntity="models\summit\PresentationSpeaker")
      * @ORM\JoinTable(name="Summit_FeaturedSpeakers",
@@ -655,6 +653,12 @@ class Summit extends SilverstripeBaseModel
      * @var SummitTrackChair[]
      */
     private $track_chairs;
+
+    /**
+     * @ORM\OneToMany(targetEntity="models\summit\PresentationActionType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var PresentationActionType[]
+     */
+    private $presentation_action_types;
 
     /**
      * @return string
@@ -976,7 +980,8 @@ class Summit extends SilverstripeBaseModel
         $this->media_upload_types = new ArrayCollection();
         $this->featured_speakers = new ArrayCollection();
         $this->metrics = new ArrayCollection();
-        $this->track_chairs =  new ArrayCollection();
+        $this->track_chairs = new ArrayCollection();
+        $this->presentation_action_types = new ArrayCollection();
     }
 
     /**
@@ -1349,6 +1354,9 @@ class Summit extends SilverstripeBaseModel
         return $this->events->matching($criteria);
     }
 
+    /**
+     * @return Presentation[]
+     */
     public function getPresentations()
     {
         $query = $this->createQuery("SELECT p from models\summit\Presentation p JOIN p.summit s WHERE s.id = :summit_id");
@@ -5191,5 +5199,65 @@ SQL;
     public function isTrackChairAdmin(Member $member):bool{
         if($member->isAdmin()) return true;
         return $this->hasPermissionOnSummit($member) && $member->isOnGroup(IGroup::TrackChairsAdmins);
+    }
+
+    /**
+     * @param PresentationActionType $presentation_action_type
+     * @return $this
+     */
+    public function addPresentationActionType(PresentationActionType $presentation_action_type)
+    {
+        if($this->presentation_action_types->contains($presentation_action_type)) return $this;
+        $presentation_action_type->setOrder($this->getPresentationActionTypeMaxOrder() + 1);
+        $this->presentation_action_types->add($presentation_action_type);
+        $presentation_action_type->setSummit($this);
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPresentationActionTypeMaxOrder():int{
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'DESC']);
+        $action = $this->presentation_action_types->matching($criteria)->first();
+        return $action === false ? 0 : $action->getOrder();
+    }
+
+    /**
+     * @return ArrayCollection|\Doctrine\Common\Collections\Collection
+     */
+    public function getPresentationActionTypes(){
+        $criteria = Criteria::create();
+        $criteria->orderBy(["order" => Criteria::ASC ]);
+        return $this->presentation_action_types->matching($criteria);
+    }
+
+    /**
+     * @param PresentationActionType $presentation_action_type
+     * @return $this
+     */
+    public function removePresentationActionType(PresentationActionType $presentation_action_type){
+        if(!$this->presentation_action_types->contains($presentation_action_type)) return $this;
+        $this->presentation_action_types->removeElement($presentation_action_type);
+        $presentation_action_type->setSummit(null);
+        return $this;
+    }
+
+    /**
+     * @param int $action_id
+     * @return PresentationActionType|null
+     */
+    public function getPresentationActionTypeById(int $action_id):?PresentationActionType{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $action_id));
+        $action = $this->presentation_action_types->matching($criteria)->first();
+        return $action === false ? null: $action;
+    }
+
+    public function synchAllPresentationActions():void{
+        foreach ($this-$this->getPresentations() as $presentation){
+            $presentation->initializeActions();
+        }
     }
 }

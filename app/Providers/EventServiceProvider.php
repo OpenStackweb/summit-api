@@ -18,6 +18,7 @@ use App\EntityPersisters\EntityEventPersister;
 use App\Events\NewMember;
 use App\Events\OrderDeleted;
 use App\Events\PaymentSummitRegistrationOrderConfirmed;
+use App\Events\PresentationActionTypeCreated;
 use App\Events\RequestedSummitAttendeeTicketRefund;
 use App\Events\RequestedSummitOrderRefund;
 use App\Events\RSVPCreated;
@@ -66,6 +67,7 @@ use App\Jobs\Emails\BookableRooms\BookableRoomReservationRefundRequestedOwnerEma
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationCanceledEmail;
 use App\Jobs\Emails\Schedule\RSVPRegularSeatMail;
 use App\Jobs\Emails\Schedule\RSVPWaitListSeatMail;
+use App\Jobs\SynchAllPresentationActions;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
@@ -600,6 +602,15 @@ final class EventServiceProvider extends ServiceProvider
                 CompensatePromoCodes::dispatch($order->getSummit(), $code, $qty);
             }
 
+        });
+
+        Event::listen(PresentationActionTypeCreated::class, function($event){
+
+            if(!$event instanceof PresentationActionTypeCreated) return;
+
+            $summit = $event->getActionType()->getSummit();
+
+            SynchAllPresentationActions::dispatch($summit->getId());
         });
     }
 }

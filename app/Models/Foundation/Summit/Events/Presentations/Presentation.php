@@ -12,17 +12,16 @@
  * limitations under the License.
  **/
 
-use App\Models\Foundation\Main\OrderableChilds;
-use Illuminate\Support\Arr;
-use models\summit\PresentationTrackChairView;
-use Behat\Transliterator\Transliterator;
 use Doctrine\ORM\Mapping AS ORM;
+use App\Models\Foundation\Main\OrderableChilds;
+use Behat\Transliterator\Transliterator;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackAnswer;
 use App\Models\Foundation\Summit\SelectionPlan;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\ArrayCollection;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplate;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Member;
 
@@ -131,7 +130,6 @@ class Presentation extends SummitEvent
      */
     protected $moderator;
 
-
     /**
      * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="CreatorID", referencedColumnName="ID", onDelete="SET NULL")
@@ -203,6 +201,12 @@ class Presentation extends SummitEvent
     private $category_changes_requests;
 
     /**
+     * @ORM\OneToMany(targetEntity="models\summit\PresentationAction", mappedBy="presentation", cascade={"persist", "remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var PresentationAction[]
+     */
+    private $actions;
+
+    /**
      * @return bool
      */
     public function isToRecord()
@@ -241,6 +245,7 @@ class Presentation extends SummitEvent
         $this->votes = new ArrayCollection();
         $this->category_changes_requests = new ArrayCollection();
         $this->selected_presentations = new ArrayCollection();
+        $this->actions = new ArrayCollection();
         $this->to_record = false;
         $this->attending_media = false;
     }
@@ -1424,5 +1429,65 @@ class Presentation extends SummitEvent
         $list = $res->getList();
         if(is_null($list) || !$list instanceof SummitSelectedPresentationList) return 0;
         return $list->getAvailableSlots();
+    }
+
+    /**
+     * @param PresentationActionType $type
+     * @return bool
+     */
+    public function hasActionByType(PresentationActionType $type):bool{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type', $type));
+        return $this->actions->matching($criteria)->count() > 0;
+    }
+
+    /**
+     * @param PresentationActionType $type
+     * @return PresentationAction|null
+     */
+    public function getActionByType(PresentationActionType $type):?PresentationAction {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type', $type));
+        $res = $this->actions->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    /**
+     * @param bool $complete
+     * @param PresentationActionType $type
+     * @return PresentationAction|null
+     */
+    public function setCompletionByType(bool $complete, PresentationActionType $type):?PresentationAction{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type', $type));
+        $res = $this->actions->matching($criteria)->first();
+        if($res === false) return null;
+        $res->setIsCompleted($complete);
+        return $res;
+    }
+
+    public function initializeActions():void {
+        Log::debug(sprintf("Presentation::initializeActions presentation %s", $this->id));
+        foreach ($this->summit->getPresentationActionTypes() as $presentationActionType){
+            if(!$this->hasActionByType($presentationActionType)){
+                // create it
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "Presentation::initializeActions creating new presentation action for type %s",
+                        $presentationActionType->getName()
+                    )
+                );
+                $action = new PresentationAction();
+                $action->setType($presentationActionType);
+                $action->setPresentation($this);
+                $this->actions->add($action);
+            }
+        }
+    }
+
+    public function getPresentationActions(){
+        return $this->actions;
     }
 }

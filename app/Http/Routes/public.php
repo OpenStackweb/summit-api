@@ -223,6 +223,12 @@ Route::group([
         Route::get('', 'LanguagesApiController@getAll');
     });
 
+
+    // timezones
+    Route::group(array('prefix' => 'timezones'), function () {
+        Route::get('', 'TimezonesApiController@getAll');
+    });
+
 });
 
 Route::group([

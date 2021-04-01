@@ -5256,7 +5256,7 @@ SQL;
     }
 
     public function synchAllPresentationActions():void{
-        foreach ($this-$this->getPresentations() as $presentation){
+        foreach ($this->getPresentations() as $presentation){
             $presentation->initializeActions();
         }
     }

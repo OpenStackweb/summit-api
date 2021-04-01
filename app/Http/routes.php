@@ -270,6 +270,14 @@ Route::group([
                                     Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@resolvePresentationCategoryChangeRequest']);
                                 });
                             });
+                            // presentation actions
+
+                            Route::group(['prefix' => 'actions'], function () {
+                                Route::group(['prefix' => '{action_id}'], function () {
+                                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPresentationActionApiController@complete']);
+                                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPresentationActionApiController@uncomplete']);
+                                });
+                            });
 
                         });
                     });

@@ -54,7 +54,8 @@ class PresentationSerializer extends SummitEventSerializer
         'speakers',
         'links',
         'extra_questions',
-        'public_comments'
+        'public_comments',
+        'actions',
     ];
 
     /**
@@ -131,6 +132,15 @@ class PresentationSerializer extends SummitEventSerializer
                 $answers[] = $answer->getId();
             }
             $values['extra_questions'] = $answers;
+        }
+
+        if(in_array('actions', $relations))
+        {
+            $actions = [];
+            foreach ($presentation->getPresentationActions() as $action) {
+                $actions[] = $action->getId();
+            }
+            $values['actions'] = $actions;
         }
 
         if (!empty($expand)) {
@@ -228,6 +238,14 @@ class PresentationSerializer extends SummitEventSerializer
                         $values['extra_questions'] = $answers;
                     }
                     break;
+                    case 'actions':{
+                        $actions = [];
+                        foreach ($presentation->getPresentationActions() as $action) {
+                            $actions[]= SerializerRegistry::getInstance()->getSerializer($action)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $values['actions'] = $actions;
+                    }
+                        break;
                 }
             }
         }

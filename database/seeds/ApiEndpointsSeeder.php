@@ -5191,6 +5191,34 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'presentation-action-complete',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
+                'name' => 'presentation-action-uncomplete',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
                 'name' => 'add-comment-2-presentation',
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/comments',
                 'http_method' => 'POST',

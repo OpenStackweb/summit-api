@@ -11,8 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use models\main\Member;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
@@ -23,11 +23,26 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class PresentationAction extends SilverstripeBaseModel
 {
+    use One2ManyPropertyTrait;
     /**
      * @ORM\Column(name="IsCompleted", type="boolean")
      * @var boolean
      */
     private $is_completed;
+
+    protected $getIdMappings = [
+        'getPresentationId' => 'presentation',
+        'getTypeId' => 'type',
+        'getCreatedById' => 'created_by',
+        'getUpdatedById' => 'updated_by',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasPresentation' => 'presentation',
+        'hasType' => 'type',
+        'hasCreatedBy' => 'created_by',
+        'hasUpdatedBy' => 'updated_by',
+    ];
 
     public function __construct()
     {

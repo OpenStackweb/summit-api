@@ -204,6 +204,7 @@ final class SerializerRegistry
         $this->registry['SummitCategoryChange'] = SummitCategoryChangeSerializer::class;
 
         $this->registry['PresentationActionType'] = PresentationActionTypeSerializer::class;
+        $this->registry['PresentationAction'] = PresentationActionSerializer::class;
 
         // track chairs
         $this->registry['PresentationTrackChairView'] = PresentationTrackChairViewSerializer::class;

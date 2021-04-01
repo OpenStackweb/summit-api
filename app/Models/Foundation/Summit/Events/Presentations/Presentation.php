@@ -1453,6 +1453,17 @@ class Presentation extends SummitEvent
     }
 
     /**
+     * @param int $id
+     * @return PresentationAction|null
+     */
+    public function getActionById(int $id):?PresentationAction {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $id));
+        $res = $this->actions->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    /**
      * @param bool $complete
      * @param PresentationActionType $type
      * @return PresentationAction|null
@@ -1476,7 +1487,7 @@ class Presentation extends SummitEvent
                     sprintf
                     (
                         "Presentation::initializeActions creating new presentation action for type %s",
-                        $presentationActionType->getName()
+                        $presentationActionType->getLabel()
                     )
                 );
                 $action = new PresentationAction();
@@ -1487,7 +1498,27 @@ class Presentation extends SummitEvent
         }
     }
 
+    /**
+     * @param $a
+     * @param $b
+     * @return int
+     */
+    private function actionSort($a,$b) {
+        $o1 = $a->getType()->getOrder();
+        $o2 = $b->getType()->getOrder();
+        if ($o1 == $o2) {
+            return 0;
+        }
+        return ($o1 < $o2) ? -1 : 1;
+    }
+
+    /**
+     * @return array|PresentationAction[]
+     */
     public function getPresentationActions(){
-        return $this->actions;
+        // ordered by type order
+        $array =$this->actions->toArray();
+        usort($array, [ $this , 'actionSort' ]);
+        return $array;
     }
 }

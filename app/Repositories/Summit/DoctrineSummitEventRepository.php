@@ -25,6 +25,7 @@ use models\summit\Summit;
 use models\summit\SummitEvent;
 use models\summit\SummitGroupEvent;
 use utils\DoctrineCaseFilterMapping;
+use utils\DoctrineCollectionFieldsFilterMapping;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineJoinFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
@@ -252,6 +253,18 @@ final class DoctrineSummitEventRepository
                             $current_track_id
                         )
                     ),
+                ]
+            ),
+            'actions' => new DoctrineCollectionFieldsFilterMapping
+            (
+                'p.actions',
+                "a",
+                [
+                    "type" => 'at',
+                ],
+                [
+                    'type_id' => 'at.id',
+                    'is_completed' => 'a.is_completed'
                 ]
             ),
         ];

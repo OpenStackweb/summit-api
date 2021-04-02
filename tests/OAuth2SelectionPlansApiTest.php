@@ -377,7 +377,8 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
             'filter' => [
                 'status==Received',
                 'is_chair_visible==1',
-                'track_chairs_status==voted'
+                'track_chairs_status==voted',
+                'actions==type_id==2&&is_completed==1',
             ],
         ];
 

@@ -36,7 +36,6 @@ final class FilterParser
             // parse OR filters
             $or_filters = preg_split("|(?<!\\\),|", $filter);
 
-
             if (count($or_filters) > 1) {
                 $f = [];
                 foreach ($or_filters as $of) {
@@ -44,15 +43,7 @@ final class FilterParser
                     //single filter
                     if(empty($of)) continue;
 
-                    preg_match('/[=<>][=>@]{0,1}/', $of, $matches);
-
-                    if (count($matches) != 1)
-                        throw new FilterParserException(sprintf("invalid OR filter format %s (should be [:FIELD_NAME:OPERAND:VALUE])", $of));
-
-                    $op       = $matches[0];
-                    $operands = explode($op, $of);
-                    $field    = $operands[0];
-                    $value    = $operands[1];
+                    list($field, $op, $value) = self::filterExpresion($of);
 
                     if (!isset($allowed_fields[$field])){
                         throw new FilterParserException(sprintf("filter by field %s is not allowed", $field));
@@ -83,15 +74,8 @@ final class FilterParser
                 }
             } else {
                 //single filter
-                preg_match('/[=<>][=>@]{0,1}/', $filter, $matches);
 
-                if (count($matches) != 1)
-                    throw new FilterParserException(sprintf("invalid filter format %s (should be [:FIELD_NAME:OPERAND:VALUE])", $filter));
-
-                $op       = $matches[0];
-                $operands = explode($op, $filter);
-                $field    = $operands[0];
-                $value    = $operands[1];
+                list($field, $op, $value) = self::filterExpresion($filter);
 
                 // check if value has AND or OR values on same field
                 $same_field_op = null;
@@ -127,6 +111,25 @@ final class FilterParser
         return new Filter($res);
     }
 
+    /**
+     * @param string $exp
+     * @return array
+     * @throws FilterParserException
+     */
+    public static function filterExpresion(string $exp){
+
+        preg_match('/[=<>][=>@]{0,1}/', $exp, $matches);
+
+        if (count($matches) != 1)
+            throw new FilterParserException(sprintf("invalid OR filter format %s (should be [:FIELD_NAME:OPERAND:VALUE])", $exp));
+
+        $op       = $matches[0];
+        $operands = explode($op, $exp, 2);
+        $field    = $operands[0];
+        $value    = $operands[1];
+
+        return [$field, $op, $value];
+    }
     /**
      * Factory Method
      *

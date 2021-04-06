@@ -79,7 +79,7 @@ final class OAuth2SummitPresentationActionApiController
             if (!$authz)
                 return $this->error403();
 
-            $action = $this->service->updateAction($summit, intval($selection_plan_id), intval($presentation_id), intval($action_id),$member, true );
+            $action = $this->service->updateAction($summit, intval($selection_plan_id), intval($presentation_id), intval($action_id), true );
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($action)->serialize(Input::get('expand', '')));
 
         } catch (ValidationException $ex) {
@@ -116,7 +116,7 @@ final class OAuth2SummitPresentationActionApiController
             if (!$authz)
                 return $this->error403();
 
-            $action = $this->service->updateAction($summit, intval($selection_plan_id), intval($presentation_id), intval($action_id), $member, false );
+            $action = $this->service->updateAction($summit, intval($selection_plan_id), intval($presentation_id), intval($action_id), false );
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($action)->serialize(Input::get('expand', '')));
         } catch (ValidationException $ex) {

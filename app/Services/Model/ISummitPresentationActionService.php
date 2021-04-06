@@ -28,7 +28,6 @@ interface ISummitPresentationActionService
      * @param int $selection_plan_id
      * @param int $presentation_id
      * @param int $action_id
-     * @param Member $performer
      * @param bool $isCompleted
      * @return PresentationAction|null
      * @throws EntityNotFoundException
@@ -40,7 +39,6 @@ interface ISummitPresentationActionService
         int $selection_plan_id,
         int $presentation_id,
         int $action_id,
-        Member $performer,
         bool $isCompleted
     ):?PresentationAction;
 }

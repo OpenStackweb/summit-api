@@ -59,6 +59,13 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
     ];
 
     /**
+     * @return string
+     */
+    protected function getMediaUploadsSerializerType(){
+        return SerializerRegistry::SerializerType_Private;
+    }
+
+    /**
      * @param null $expand
      * @param array $fields
      * @param array $relations

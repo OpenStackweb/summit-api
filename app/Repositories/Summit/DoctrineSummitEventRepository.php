@@ -111,6 +111,8 @@ final class DoctrineSummitEventRepository
             'published'      => 'e.published',
             'start_date'     => 'e.start_date:datetime_epoch',
             'end_date'       => 'e.end_date:datetime_epoch',
+            'created'     => 'e.created:datetime_epoch',
+            'last_edited'       => 'e.last_edited:datetime_epoch',
             'tags'           => new DoctrineLeftJoinFilterMapping
             (
                 'e.tags',
@@ -283,7 +285,8 @@ final class DoctrineSummitEventRepository
             'created'       => 'e.created',
             'track'         => 'cc.title',
             'location'      => 'l.name',
-            'trackchairsel' => 'ssp.order'
+            'trackchairsel' => 'ssp.order',
+            'last_edited'   => 'e.last_edited',
         ];
     }
 

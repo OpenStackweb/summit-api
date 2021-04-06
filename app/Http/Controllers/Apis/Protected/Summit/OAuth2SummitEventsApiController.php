@@ -433,6 +433,8 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             if(!Request::isJson()) return $this->error400();
             $data = Input::json();
 
+            $current_member = $this->resource_server_context->getCurrentUser();
+
             $rules = [
                 'title'                          => 'required|string|max:255',
                 'description'                    => 'required|string|max:1100',
@@ -571,7 +573,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 'social_summary',
             ];
 
-            $event = $this->service->updateEvent($summit, $event_id, HTMLCleaner::cleanData($data->all(), $fields), $current_member);
+            $event = $this->service->updateEvent($summit, $event_id, HTMLCleaner::cleanData($data->all(), $fields));
 
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($event)->serialize());
 

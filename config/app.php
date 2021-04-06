@@ -216,6 +216,7 @@ return [
         'Doctrine'      => LaravelDoctrine\ORM\Facades\Doctrine::class,
         'Encryption'    => services\utils\Facades\Encryption::class,
         'QrCode'        => SimpleSoftwareIO\QrCode\Facades\QrCode::class,
+        'ResourceServerContext' => \App\Facades\ResourceServerContext::class,
     ],
 
     'app_name'    => env('APP_NAME', 'Open Infrastructure Summit'),

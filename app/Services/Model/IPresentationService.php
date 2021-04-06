@@ -52,45 +52,41 @@ interface IPresentationService
 
     /**
      * @param Summit $summit
-     * @param Member $member
      * @param array $data
      * @return Presentation
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function submitPresentation(Summit $summit, Member $member, array $data);
+    public function submitPresentation(Summit $summit, array $data);
 
     /**
      * @param Summit $summit
      * @param int $presentation_id
-     * @param Member $member
      * @param array $data
      * @return Presentation
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function updatePresentationSubmission(Summit $summit, $presentation_id, Member $member, array $data);
+    public function updatePresentationSubmission(Summit $summit, $presentation_id, array $data);
 
 
     /**
      * @param Summit $summit
      * @param int $presentation_id
-     * @param Member $member
      * @return Presentation
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function completePresentationSubmission(Summit $summit, $presentation_id, Member $member);
+    public function completePresentationSubmission(Summit $summit, $presentation_id);
 
     /**
      * @param Summit $summit
-     * @param Member $member
      * @param int $presentation_id
      * @return void
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function deletePresentation(Summit $summit, Member $member, $presentation_id);
+    public function deletePresentation(Summit $summit, $presentation_id);
 
     /**
      * @param LaravelRequest $request

@@ -347,7 +347,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 'attendees_expected_learnt',
             ];
 
-            $presentation = $this->presentation_service->submitPresentation($summit, $current_member, HTMLCleaner::cleanData($data, $fields));
+            $presentation = $this->presentation_service->submitPresentation($summit, HTMLCleaner::cleanData($data, $fields));
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize(Request::input('expand', '')));
         }
@@ -418,10 +418,10 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 'attendees_expected_learnt',
             ];
 
-            $presentation = $this->presentation_service->updatePresentationSubmission(
+            $presentation = $this->presentation_service->updatePresentationSubmission
+            (
                 $summit,
                 $presentation_id,
-                $current_member,
                 HTMLCleaner::cleanData($data, $fields)
             );
 
@@ -461,8 +461,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $presentation = $this->presentation_service->completePresentationSubmission
             (
                 $summit,
-                $presentation_id,
-                $current_member
+                $presentation_id
             );
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize(Request::input('expand', '')));
@@ -498,7 +497,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
-            $this->presentation_service->deletePresentation($summit, $current_member, $presentation_id);
+            $this->presentation_service->deletePresentation($summit, $presentation_id);
 
             return $this->deleted();
 

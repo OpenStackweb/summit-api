@@ -59,6 +59,18 @@ class PresentationSerializer extends SummitEventSerializer
     ];
 
     /**
+     * @return string
+     */
+    protected function getMediaUploadsSerializerType(){
+        $serializerType = SerializerRegistry::SerializerType_Public;
+        $currentUser = $this->resource_server_context->getCurrentUser();
+        if(!is_null($currentUser) && $currentUser->isAdmin()){
+            $serializerType = SerializerRegistry::SerializerType_Private;
+        }
+        return $serializerType;
+    }
+
+    /**
      * @param null $expand
      * @param array $fields
      * @param array $relations
@@ -217,14 +229,12 @@ class PresentationSerializer extends SummitEventSerializer
                     break;
                     case 'media_uploads':{
                         $media_uploads = [];
-                        $serializerType = SerializerRegistry::SerializerType_Public;
-                        $currentUser = $this->resource_server_context->getCurrentUser();
-                        if(!is_null($currentUser) && $currentUser->isAdmin()){
-                            $serializerType = SerializerRegistry::SerializerType_Private;
-                        }
 
                         foreach ($presentation->getMediaUploads() as $mediaUpload) {
-                            $media_uploads[] = SerializerRegistry::getInstance()->getSerializer($mediaUpload, $serializerType)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $media_uploads[] = SerializerRegistry::getInstance()->getSerializer
+                            (
+                                $mediaUpload, $this->getMediaUploadsSerializerType()
+                            )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
 
                         $values['media_uploads'] = $media_uploads;

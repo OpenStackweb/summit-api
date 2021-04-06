@@ -131,13 +131,6 @@ class Presentation extends SummitEvent
     protected $moderator;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="CreatorID", referencedColumnName="ID", onDelete="SET NULL")
-     * @var Member
-     */
-    protected $creator;
-
-    /**
      * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="presentations", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
      * @var SelectionPlan
@@ -854,19 +847,21 @@ class Presentation extends SummitEvent
     }
 
     /**
+     * @deprecated
      * @return Member
      */
     public function getCreator()
     {
-        return $this->creator;
+        return $this->created_by;
     }
 
     /**
+     * @deprecated moved to created by attribute
      * @param Member $creator
      */
     public function setCreator(Member $creator)
     {
-        $this->creator = $creator;
+        $this->created_by = $creator;
     }
 
     /**
@@ -957,13 +952,14 @@ class Presentation extends SummitEvent
     }
 
     /**
+     * @deprecated
      * @return int
      */
     public function getCreatorId()
     {
         try {
-            if (is_null($this->creator)) return 0;
-            return $this->creator->getId();
+            if (is_null($this->created_by)) return 0;
+            return $this->created_by->getId();
         } catch (\Exception $ex) {
             return 0;
         }
@@ -975,7 +971,7 @@ class Presentation extends SummitEvent
      */
     public function canEdit(PresentationSpeaker $speaker)
     {
-        if ($this->getCreatorId() == $speaker->getMemberId()) return true;
+        if ($this->getCreatedById() == $speaker->getMemberId()) return true;
         if ($this->getModeratorId() == $speaker->getId()) return true;
         if ($this->isSpeaker($speaker)) return true;
         return false;

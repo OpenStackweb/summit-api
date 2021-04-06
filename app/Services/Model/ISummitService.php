@@ -44,10 +44,9 @@ interface ISummitService
      * @param Summit $summit
      * @param int $event_id
      * @param array $data
-     * @param null|Member $current_member
      * @return SummitEvent
      */
-    public function updateEvent(Summit $summit, $event_id, array $data, Member $current_member = null);
+    public function updateEvent(Summit $summit, $event_id, array $data);
 
     /**
      * @param Summit $summit

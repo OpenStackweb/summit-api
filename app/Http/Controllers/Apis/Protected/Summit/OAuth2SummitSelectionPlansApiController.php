@@ -383,7 +383,15 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 },
                 function () {
                     return [
-                        'track'
+                        'id',
+                        'title',
+                        'start_date',
+                        'end_date',
+                        'created',
+                        'track',
+                        'location',
+                        'trackchairsel',
+                        'last_edited',
                     ];
                 },
                 function ($filter) use ($summit, $selection_plan_id) {
@@ -496,7 +504,15 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 },
                 function () {
                     return [
-                        'track'
+                        'id',
+                        'title',
+                        'start_date',
+                        'end_date',
+                        'created',
+                        'track',
+                        'location',
+                        'trackchairsel',
+                        'last_edited',
                     ];
                 },
                 function ($filter) use ($summit, $selection_plan_id) {

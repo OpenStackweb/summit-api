@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\Validator;
 use libs\utils\ICacheService;
 use models\main\ChatTeamPermission;
 use models\main\PushNotificationMessagePriority;
+use models\oauth2\IResourceServerContext;
+use models\oauth2\ResourceServerContext;
 use Sokil\IsoCodes\IsoCodesFactory;
 use Illuminate\Support\Facades\URL;
 /**
@@ -541,7 +543,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        App::singleton('models\\oauth2\\IResourceServerContext', 'models\\oauth2\\ResourceServerContext');
+
+        App::singleton(IResourceServerContext::class, ResourceServerContext::class);
+
+        App::bind('resource_server_context',function($app){
+            // bind facade accesor with singleton instance
+            return $app->make(IResourceServerContext::class);
+        });
+
         App::singleton('App\Models\ResourceServer\IAccessTokenService', 'App\Models\ResourceServer\AccessTokenService');
         App::singleton('App\Models\ResourceServer\IApi', 'models\\resource_server\\Api');
         App::singleton('App\Models\ResourceServer\IApiEndpoint', 'models\\resource_server\\ApiEndpoint');

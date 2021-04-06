@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Facades\ResourceServerContext;
 use App\Services\Model\AbstractService;
 use App\Services\Model\ISummitPresentationActionService;
 use models\exceptions\EntityNotFoundException;
@@ -29,10 +31,11 @@ implements ISummitPresentationActionService
     /**
      * @inheritDoc
      */
-    public function updateAction(Summit $summit, int $selection_plan_id, int $presentation_id, int $action_id, Member $performer, bool $isCompleted): ?PresentationAction
+    public function updateAction(Summit $summit, int $selection_plan_id, int $presentation_id, int $action_id, bool $isCompleted): ?PresentationAction
     {
-        return $this->tx_service->transaction(function() use($summit, $selection_plan_id, $presentation_id, $action_id, $performer, $isCompleted){
+        return $this->tx_service->transaction(function() use($summit, $selection_plan_id, $presentation_id, $action_id, $isCompleted){
 
+            $performer = ResourceServerContext::getCurrentUser(false);
             $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
             if(is_null($selection_plan))
                 throw new EntityNotFoundException(sprintf("Selection Plan %s not found.", $selection_plan_id));
@@ -56,6 +59,8 @@ implements ISummitPresentationActionService
 
             // emit notification
             $presentation->addTrackChairComment($performer, $message, true);
+
+            $presentation->setUpdatedBy($performer);
 
             return $action;
         });

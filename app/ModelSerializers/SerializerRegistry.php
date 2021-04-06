@@ -303,7 +303,7 @@ final class SerializerRegistry
 
         // orders
 
-        $this->registry['SummitOrder'] =[
+        $this->registry['SummitOrder'] = [
             self::SerializerType_Public                   => SummitOrderBaseSerializer::class,
             ISummitOrderSerializerTypes::CheckOutType     => SummitOrderBaseSerializer::class,
             ISummitOrderSerializerTypes::ReservationType  => SummitOrderReservationSerializer::class,

@@ -13,6 +13,7 @@
  **/
 use App\Events\PresentationMaterialDeleted;
 use App\Events\PresentationMaterialUpdated;
+use App\Facades\ResourceServerContext;
 use App\Http\Utils\FileSizeUtil;
 use App\Http\Utils\FileUploadInfo;
 use App\Http\Utils\IFileUploader;
@@ -131,7 +132,6 @@ final class PresentationService
 
             $presentation = $this->presentation_repository->getById($presentation_id);
 
-
             if (is_null($presentation))
                 throw new EntityNotFoundException('presentation not found!');
 
@@ -242,17 +242,17 @@ final class PresentationService
 
     /**
      * @param Summit $summit
-     * @param Member $member
      * @param array $data
      * @return Presentation
      * @throws ValidationException
      * @throws EntityNotFoundException
      * @throws \Exception
      */
-    public function submitPresentation(Summit $summit, Member $member, array $data)
+    public function submitPresentation(Summit $summit, array $data)
     {
-        return $this->tx_service->transaction(function () use ($summit, $member, $data) {
+        return $this->tx_service->transaction(function () use ($summit, $data) {
 
+            $member = ResourceServerContext::getCurrentUser(false);
             $current_selection_plan = $summit->getCurrentSelectionPlanByStatus(SelectionPlan::STATUS_SUBMISSION);
 
             if (is_null($current_selection_plan))
@@ -300,8 +300,11 @@ final class PresentationService
                     ['limit' => $limit]));
 
             $presentation = new Presentation();
-            $presentation->setCreator($member);
+            //$presentation->setCreator($member);
             $presentation->setSelectionPlan($current_selection_plan);
+
+            $presentation->setCreatedBy(ResourceServerContext::getCurrentUser(false));
+            $presentation->setUpdatedBy(ResourceServerContext::getCurrentUser(false));
 
             $summit->addEvent($presentation);
             if(!$presentation->isCompleted())
@@ -324,15 +327,16 @@ final class PresentationService
     /**
      * @param Summit $summit
      * @param int $presentation_id
-     * @param Member $member
      * @param array $data
      * @return Presentation
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function updatePresentationSubmission(Summit $summit, $presentation_id, Member $member, array $data)
+    public function updatePresentationSubmission(Summit $summit, $presentation_id, array $data)
     {
-        return $this->tx_service->transaction(function () use ($summit, $presentation_id, $member, $data) {
+        return $this->tx_service->transaction(function () use ($summit, $presentation_id, $data) {
+
+            $member = ResourceServerContext::getCurrentUser(false);
 
             $current_selection_plan = $summit->getCurrentSelectionPlanByStatus(SelectionPlan::STATUS_SUBMISSION);
             $current_speaker = $this->speaker_repository->getByMember($member);
@@ -373,6 +377,8 @@ final class PresentationService
                     'validation_errors.PresentationService.updatePresentationSubmission.CurrentSpeakerCanNotEditPresentation',
                     ['presentation_id' => $presentation_id]
                 ));
+
+            $presentation->setUpdatedBy(ResourceServerContext::getCurrentUser(false));
 
             return $this->saveOrUpdatePresentation
             (
@@ -557,15 +563,16 @@ final class PresentationService
 
     /**
      * @param Summit $summit
-     * @param Member $member
      * @param int $presentation_id
      * @throws ValidationException
      * @throws EntityNotFoundException
      * @return void
      */
-    public function deletePresentation(Summit $summit, Member $member, $presentation_id)
+    public function deletePresentation(Summit $summit, $presentation_id)
     {
-        return $this->tx_service->transaction(function () use ($summit, $member, $presentation_id) {
+        return $this->tx_service->transaction(function () use ($summit, $presentation_id) {
+
+            $member = ResourceServerContext::getCurrentUser(false);
 
             $current_speaker = $this->speaker_repository->getByMember($member);
             if (is_null($current_speaker))
@@ -592,17 +599,19 @@ final class PresentationService
     /**
      * @param Summit $summit
      * @param int $presentation_id
-     * @param Member $member
      * @return Presentation
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function completePresentationSubmission(Summit $summit, $presentation_id, Member $member)
+    public function completePresentationSubmission(Summit $summit, $presentation_id)
     {
-        return $this->tx_service->transaction(function () use ($summit, $member, $presentation_id) {
+        return $this->tx_service->transaction(function () use ($summit, $presentation_id) {
+
+            $member = ResourceServerContext::getCurrentUser(false);
 
             $current_selection_plan = $summit->getCurrentSelectionPlanByStatus(SelectionPlan::STATUS_SUBMISSION);
             $current_speaker = $this->speaker_repository->getByMember($member);
+
             if (is_null($current_speaker))
                 throw new EntityNotFoundException(sprintf("member %s does not has a speaker profile", $member->getId()));
 
@@ -638,7 +647,6 @@ final class PresentationService
                     $presentation_id
                 ));
 
-
             if (!$presentation->fulfilSpeakersConditions()) {
                 throw new ValidationException
                 (
@@ -671,6 +679,8 @@ final class PresentationService
             }
 
             PresentationCreatorNotificationEmail::dispatch($presentation);
+
+            $presentation->setUpdatedBy($member);
 
             return $presentation;
         });

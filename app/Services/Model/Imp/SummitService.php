@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Facades\ResourceServerContext;
 use League\Csv\Reader;
 use App\Events\MyFavoritesAdd;
 use App\Events\MyFavoritesRemove;
@@ -602,22 +604,23 @@ final class SummitService extends AbstractService implements ISummitService
      * @param Summit $summit
      * @param array $data
      * @return SummitEvent
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function addEvent(Summit $summit, array $data)
     {
-        return $this->saveOrUpdateEvent($summit, $data);
+        return $this->saveOrUpdateEvent($summit, $data, null);
     }
 
     /**
      * @param Summit $summit
      * @param int $event_id
      * @param array $data
-     * @param null|Member $current_member
      * @return SummitEvent
      */
-    public function updateEvent(Summit $summit, $event_id, array $data, Member $current_member = null)
+    public function updateEvent(Summit $summit, $event_id, array $data)
     {
-        return $this->saveOrUpdateEvent($summit, $data, $event_id, $current_member);
+        return $this->saveOrUpdateEvent($summit, $data, $event_id);
     }
 
     /**
@@ -700,10 +703,12 @@ final class SummitService extends AbstractService implements ISummitService
      * @throws ValidationException
      * @throws Exception
      */
-    private function saveOrUpdateEvent(Summit $summit, array $data, $event_id = null, Member $current_member = null)
+    private function saveOrUpdateEvent(Summit $summit, array $data, $event_id = null)
     {
 
-        return $this->tx_service->transaction(function () use ($summit, $data, $event_id, $current_member) {
+        return $this->tx_service->transaction(function () use ($summit, $data, $event_id) {
+
+            $current_member = ResourceServerContext::getCurrentUser(false);
 
             if (!is_null($current_member) && !$this->permissions_manager->canEditFields($current_member, 'SummitEvent', $data)) {
                 throw new ValidationException(sprintf("user %s cant set requested summit event fields", $current_member->getEmail()));
@@ -763,8 +768,12 @@ final class SummitService extends AbstractService implements ISummitService
 
 
             // new event
-            if (is_null($event))
+            if (is_null($event)) {
                 $event = SummitEventFactory::build($event_type, $summit);
+                $event->setCreatedBy($current_member);
+            }
+
+            $event->setUpdatedBy($current_member);
 
             // main data
 
@@ -1005,7 +1014,7 @@ final class SummitService extends AbstractService implements ISummitService
 
             $event = $this->event_repository->getById($event_id);
 
-            if (is_null($event))
+            if (is_null($event) || !$event instanceof SummitEvent)
                 throw new EntityNotFoundException(sprintf("event id %s does not exists!", $event_id));
 
             if (is_null($event->getType()))
@@ -1042,6 +1051,7 @@ final class SummitService extends AbstractService implements ISummitService
             $this->validateBlackOutTimesAndTimes($event);
             $event->unPublish();
             $event->publish();
+            $event->setUpdatedBy(ResourceServerContext::getCurrentUser(false));
             $this->event_repository->add($event);
             return $event;
         });
@@ -1121,6 +1131,8 @@ final class SummitService extends AbstractService implements ISummitService
                 throw new ValidationException(sprintf("event %s does not belongs to summit id %s", $event_id, $summit->getIdentifier()));
 
             $event->unPublish();
+
+            $event->setUpdatedBy(ResourceServerContext::getCurrentUser(false));
 
             return $event;
         });
@@ -1934,6 +1946,8 @@ final class SummitService extends AbstractService implements ISummitService
             $eventClone->setCategory($event->getCategory());
             $eventClone->setEtherpadLink($event->getEtherpadLink());
             $eventClone->setStreamingUrl($event->getStreamingUrl());
+            $eventClone->setCreatedBy(ResourceServerContext::getCurrentUser(false));
+            $eventClone->setUpdatedBy(ResourceServerContext::getCurrentUser(false));
 
             if ($event->hasRSVPTemplate()) {
                 $eventClone->setRSVPTemplate($event->getRSVPTemplate());

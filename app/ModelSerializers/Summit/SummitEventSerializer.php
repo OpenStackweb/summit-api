@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Facades\ResourceServerContext;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SummitEvent;
 
@@ -50,6 +51,8 @@ class SummitEventSerializer extends SilverStripeSerializer
         'ImageUrl' => 'image:json_url',
         "StreamThumbnailUrl" => "stream_thumbnail:json_url",
         'Level' => 'level',
+        'CreatedById' => 'created_by_id:json_int',
+        'UpdatedById' => 'updated_by_id:json_int',
     ];
 
     protected static $allowed_fields = [
@@ -83,6 +86,8 @@ class SummitEventSerializer extends SilverStripeSerializer
         'image',
         'stream_thumbnail',
         'level',
+        'created_by_id',
+        'updated_by_id',
     ];
 
     protected static $allowed_relations = [
@@ -141,7 +146,7 @@ class SummitEventSerializer extends SilverStripeSerializer
             $values['current_attendance'] = $attendance;
         }
 
-        if ($event->hasAccess($this->resource_server_context->getCurrentUser())) {
+        if ($event->hasAccess(ResourceServerContext::getCurrentUser())) {
             $values['streaming_url'] = $event->getStreamingUrl();
             $values['etherpad_link'] = $event->getEtherpadLink();
         }
@@ -213,6 +218,22 @@ class SummitEventSerializer extends SilverStripeSerializer
                                 $tags[] = SerializerRegistry::getInstance()->getSerializer($tag)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
                             $values['tags'] = $tags;
+                        }
+                        break;
+                    case 'created_by':
+                        {
+                            if(!$event->hasCreatedBy())
+                                break;
+                            unset($values['created_by_id']);
+                            $values['created_by'] = SerializerRegistry::getInstance()->getSerializer($event->getCreatedBy())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        break;
+                    case 'updated_by':
+                        {
+                            if(!$event->hasUpdatedBy())
+                                break;
+                            unset($values['updated_by_id']);
+                            $values['updated_by'] = SerializerRegistry::getInstance()->getSerializer($event->getUpdatedBy())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         break;
                 }

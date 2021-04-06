@@ -30,8 +30,8 @@ use DateTime;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Config;
 use Cocur\Slugify\Slugify;
+use models\utils\One2ManyPropertyTrait;
 use Doctrine\ORM\Mapping AS ORM;
-
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitEventRepository")
  * @ORM\AssociationOverrides({
@@ -55,6 +55,18 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class SummitEvent extends SilverstripeBaseModel
 {
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getCreatedById' => 'created_by',
+        'getUpdatedById' => 'updated_by',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasCreatedBy' => 'created_by',
+        'hasUpdatedBy' => 'updated_by',
+    ];
+
     /**
      * @ORM\Column(name="Title", type="string")
      * @var string
@@ -248,19 +260,32 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @var PreRemoveEventArgs
      */
-    private $pre_remove_events;
+    protected $pre_remove_events;
     /**
      * @var PreUpdateEventArgs
      */
-    private $pre_update_args;
-
+    protected $pre_update_args;
 
     /**
      * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
      * @ORM\JoinColumn(name="ImageID", referencedColumnName="ID")
      * @var File
      */
-    private $image;
+    protected $image;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY")
+     * @ORM\JoinColumn(name="CreatedByID", referencedColumnName="ID", onDelete="SET NULL")
+     * @var Member
+     */
+    protected $created_by = null;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY")
+     * @ORM\JoinColumn(name="UpdatedByID", referencedColumnName="ID", onDelete="SET NULL")
+     * @var Member
+     */
+    protected $updated_by = null;
 
     /**
      * SummitEvent constructor.
@@ -1309,5 +1334,39 @@ class SummitEvent extends SilverstripeBaseModel
             throw new ValidationException(sprintf("Level %s is invalid.", $level));
         $this->level = $level;
     }
+
+    /**
+     * @return Member
+     */
+    public function getCreatedBy(): ?Member
+    {
+        return $this->created_by;
+    }
+
+    /**
+     * @param Member $created_by
+     */
+    public function setCreatedBy(Member $created_by): void
+    {
+        $this->created_by = $created_by;
+    }
+
+    /**
+     * @return Member
+     */
+    public function getUpdatedBy(): ?Member
+    {
+        return $this->updated_by;
+    }
+
+    /**
+     * @param Member $updated_by
+     */
+    public function setUpdatedBy(Member $updated_by): void
+    {
+        $this->updated_by = $updated_by;
+    }
+
+
 
 }

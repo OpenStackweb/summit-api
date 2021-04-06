@@ -515,8 +515,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'disclaimer_accepted' => 'sometimes|boolean',
                 'first_name' => 'required_without:member_id|string|max:255',
                 'surname' => 'required_without:member_id|string|max:255',
-                'admin_notes' => 'sometimes|string|max:1024',
-                'company' => 'sometimes|string|max:255',
+                'admin_notes' => 'nullable|sometimes|string|max:1024',
+                'company' => 'nullable|sometimes|string|max:255',
                 'email' => 'required_without:member_id|string|max:255|email',
                 'member_id' => 'required_without:email|integer',
                 'extra_questions' => 'sometimes|order_extra_question_dto_array',
@@ -604,11 +604,11 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'disclaimer_accepted' => 'sometimes|boolean',
                 'first_name' => 'required_without:member_id|string|max:255',
                 'surname' => 'required_without:member_id|string|max:255',
-                'company' => 'sometimes|string|max:255',
+                'company' => 'nullable|sometimes|string|max:255',
                 'email' => 'required_without:member_id|string|max:255|email',
                 'member_id' => 'required_without:email|integer',
                 'extra_questions' => 'sometimes|order_extra_question_dto_array',
-                'admin_notes' => 'sometimes|string|max:1024',
+                'admin_notes' => 'nullable|sometimes|string|max:1024',
             ];
 
             // Creates a Validator instance and validates the data.

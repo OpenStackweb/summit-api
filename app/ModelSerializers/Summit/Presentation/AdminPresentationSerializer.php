@@ -28,4 +28,10 @@ class AdminPresentationSerializer extends PresentationSerializer
         'selection_status',
     ];
 
+    /**
+     * @return string
+     */
+    protected function getSpeakersSerializerType():string{
+        return SerializerRegistry::SerializerType_Private;
+    }
 }

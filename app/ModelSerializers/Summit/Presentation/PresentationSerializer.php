@@ -61,13 +61,20 @@ class PresentationSerializer extends SummitEventSerializer
     /**
      * @return string
      */
-    protected function getMediaUploadsSerializerType(){
+    protected function getMediaUploadsSerializerType():string{
         $serializerType = SerializerRegistry::SerializerType_Public;
         $currentUser = $this->resource_server_context->getCurrentUser();
         if(!is_null($currentUser) && $currentUser->isAdmin()){
             $serializerType = SerializerRegistry::SerializerType_Private;
         }
         return $serializerType;
+    }
+
+    /**
+     * @return string
+     */
+    protected function getSpeakersSerializerType():string{
+        return SerializerRegistry::SerializerType_Public;
     }
 
     /**
@@ -162,11 +169,18 @@ class PresentationSerializer extends SummitEventSerializer
                     case 'speakers': {
                         $speakers = [];
                         foreach ($presentation->getSpeakers() as $s) {
-                            $speakers[] = SerializerRegistry::getInstance()->getSerializer($s)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $speakers[] = SerializerRegistry::getInstance()->getSerializer
+                            (
+                                $s, $this->getSpeakersSerializerType()
+                            )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['speakers'] = $speakers;
                         if(isset($values['moderator_speaker_id']) && intval($values['moderator_speaker_id']) > 0 ){
-                            $values['moderator'] = SerializerRegistry::getInstance()->getSerializer($presentation->getModerator())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $values['moderator'] = SerializerRegistry::getInstance()->getSerializer
+                            (
+                                $presentation->getModerator(),
+                                $this->getSpeakersSerializerType()
+                            )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                     }
                     break;

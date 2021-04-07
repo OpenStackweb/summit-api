@@ -1418,7 +1418,7 @@ class Summit extends SilverstripeBaseModel
 
         $query = $this->createQuery("SELECT p from models\summit\Presentation p 
         JOIN p.summit s
-        JOIN p.creator c 
+        JOIN p.created_by c 
         JOIN p.selection_plan sp
         WHERE s.id = :summit_id and c.id = :creator_id".$selection_plan_cond);
 

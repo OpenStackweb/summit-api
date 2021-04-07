@@ -5192,7 +5192,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'presentation-action-complete',
-                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_id}',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_id}/complete',
                 'http_method' => 'PUT',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)
@@ -5206,7 +5206,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'presentation-action-uncomplete',
-                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_id}',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_id}/incomplete',
                 'http_method' => 'DELETE',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)

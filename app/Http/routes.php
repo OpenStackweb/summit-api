@@ -274,8 +274,8 @@ Route::group([
 
                             Route::group(['prefix' => 'actions'], function () {
                                 Route::group(['prefix' => '{action_id}'], function () {
-                                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPresentationActionApiController@complete']);
-                                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPresentationActionApiController@uncomplete']);
+                                    Route::put('complete', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPresentationActionApiController@complete']);
+                                    Route::delete('incomplete', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPresentationActionApiController@uncomplete']);
                                 });
                             });
 

@@ -26,6 +26,12 @@ final class Version20210406124904 extends AbstractMigration
     public function up(Schema $schema):void
     {
         $sql = <<<SQL
+UPDATE Presentation set CreatorID = NULL
+WHERE NOT EXISTS (select Member.ID from Member where Member.ID = Presentation.CreatorID);
+SQL;
+        $this->addSql($sql);
+
+        $sql = <<<SQL
 UPDATE SummitEvent,Presentation
 SET SummitEvent.CreatedByID = Presentation.CreatorID
 WHERE SummitEvent.ID = Presentation.ID;

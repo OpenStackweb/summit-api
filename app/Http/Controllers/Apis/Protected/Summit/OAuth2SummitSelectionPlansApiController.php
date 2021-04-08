@@ -625,7 +625,12 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         } catch (EntityNotFoundException $ex) {
             Log::warning($ex);
             return $this->error404($ex->getMessage());
-        } catch (Exception $ex) {
+        }
+        catch (AuthzException $ex) {
+            Log::warning($ex);
+            return $this->error403($ex);
+        }
+        catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -669,7 +674,12 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         } catch (EntityNotFoundException $ex) {
             Log::warning($ex);
             return $this->error404($ex->getMessage());
-        } catch (Exception $ex) {
+        }
+        catch (AuthzException $ex) {
+            Log::warning($ex);
+            return $this->error403($ex);
+        }
+        catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -767,7 +777,12 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         } catch (EntityNotFoundException $ex) {
             Log::warning($ex);
             return $this->error404($ex->getMessage());
-        } catch (Exception $ex) {
+        }
+        catch (AuthzException $ex) {
+            Log::warning($ex);
+            return $this->error403($ex);
+        }
+        catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -817,7 +832,12 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         } catch (EntityNotFoundException $ex) {
             Log::warning($ex);
             return $this->error404($ex->getMessage());
-        } catch (Exception $ex) {
+        }
+        catch (AuthzException $ex) {
+            Log::warning($ex);
+            return $this->error403($ex);
+        }
+        catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -870,7 +890,12 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         } catch (EntityNotFoundException $ex) {
             Log::warning($ex);
             return $this->error404($ex->getMessage());
-        } catch (Exception $ex) {
+        }
+        catch (AuthzException $ex) {
+            Log::warning($ex);
+            return $this->error403($ex);
+        }
+        catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }

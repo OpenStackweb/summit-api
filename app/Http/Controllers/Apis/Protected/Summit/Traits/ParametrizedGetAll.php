@@ -13,6 +13,7 @@
  **/
 
 use App\Http\Exceptions\HTTP403ForbiddenException;
+use App\Models\Exceptions\AuthzException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -183,6 +184,10 @@ trait ParametrizedGetAll
             Log::warning($ex);
             return $this->error403();
         }
+        catch(AuthzException $ex){
+            Log::warning($ex);
+            return $this->error403($ex->getMessage());
+        }
         catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
@@ -314,7 +319,11 @@ trait ParametrizedGetAll
         } catch (\HTTP401UnauthorizedException $ex) {
             Log::warning($ex);
             return $this->error401();
-        } catch (Exception $ex) {
+        } catch(AuthzException $ex){
+            Log::warning($ex);
+            return $this->error403($ex->getMessage());
+        }
+        catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }

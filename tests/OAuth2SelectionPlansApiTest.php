@@ -900,4 +900,38 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
         $request = json_decode($content);
         $this->assertTrue(!is_null($request));
     }
+
+    public function testGetPresentationsBySelectionPlan(){
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'filter' => [
+                'status==Received',
+                'is_chair_visible==1',
+                sprintf('track_id==%s', self::$defaultTrack->getId()),
+            ],
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSelectionPlansApiController@getSelectionPlanPresentations",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $presentations = json_decode($content);
+        $this->assertTrue(!is_null($presentations));
+        $this->assertTrue($presentations->total >= 1);
+    }
 }

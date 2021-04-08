@@ -402,6 +402,24 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                         if(!is_null($current_member)) {
                             $filter->addFilterCondition(FilterElement::makeEqual('current_member_id', $current_member->getId()));
                         }
+                        $track_id_filters = $filter->getFilter("track_id");
+                        if(!is_null($track_id_filters)){
+
+                            foreach ($track_id_filters as $filterElement){
+                                $value = $filterElement->getValue();
+                                if(!is_array($value)){
+                                    $value = [$value];
+                                }
+
+                                foreach ($value as $v){
+                                    $category = $summit->getPresentationCategory(intval($v));
+                                    if(is_null($category))
+                                        throw new EntityNotFoundException(sprintf("track %s does not belongs to summit.", $v));
+                                    if(!$summit->isTrackChair($current_member, $category))
+                                        throw new AuthzException(sprintf("current user is not allowed on track %s", $v));
+                                }
+                            }
+                        }
                     }
                     return $filter;
                 },
@@ -422,10 +440,16 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         } catch (ValidationException $ex) {
             Log::warning($ex);
             return $this->error412($ex->getMessages());
-        } catch (EntityNotFoundException $ex) {
+        }
+        catch (EntityNotFoundException $ex) {
             Log::warning($ex);
             return $this->error404($ex->getMessage());
-        } catch (Exception $ex) {
+        }
+        catch (AuthzException $ex) {
+            Log::warning($ex);
+            return $this->error403($ex);
+        }
+        catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -523,6 +547,25 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                         if(!is_null($current_member)) {
                             $filter->addFilterCondition(FilterElement::makeEqual('current_member_id', $current_member->getId()));
                         }
+
+                        $track_id_filters = $filter->getFilter("track_id");
+                        if(!is_null($track_id_filters)){
+
+                            foreach ($track_id_filters as $filterElement){
+                                $value = $filterElement->getValue();
+                                if(!is_array($value)){
+                                    $value = [$value];
+                                }
+
+                                foreach ($value as $v){
+                                    $category = $summit->getPresentationCategory(intval($v));
+                                    if(is_null($category))
+                                        throw new EntityNotFoundException(sprintf("track %s does not belongs to summit.", $v));
+                                    if(!$summit->isTrackChair($current_member, $category))
+                                        throw new AuthzException(sprintf("current user is not allowed on track %s", $v));
+                                }
+                            }
+                        }
                     }
                     return $filter;
                 },
@@ -552,7 +595,12 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         } catch (ValidationException $ex) {
             Log::warning($ex);
             return $this->error412($ex->getMessages());
-        } catch (EntityNotFoundException $ex) {
+        }
+        catch (AuthzException $ex) {
+            Log::warning($ex);
+            return $this->error403($ex);
+        }
+        catch (EntityNotFoundException $ex) {
             Log::warning($ex);
             return $this->error404($ex->getMessage());
         } catch (Exception $ex) {

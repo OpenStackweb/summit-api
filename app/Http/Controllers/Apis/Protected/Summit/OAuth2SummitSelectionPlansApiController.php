@@ -402,9 +402,10 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                         if(!is_null($current_member)) {
                             $filter->addFilterCondition(FilterElement::makeEqual('current_member_id', $current_member->getId()));
                         }
+                        // filter by tracks
                         $track_id_filters = $filter->getFilter("track_id");
-                        if(!is_null($track_id_filters)){
-
+                        if(!is_null($track_id_filters) && count($track_id_filters) > 0){
+                            // if exists , check if we have persmissions
                             foreach ($track_id_filters as $filterElement){
                                 $value = $filterElement->getValue();
                                 if(!is_array($value)){
@@ -418,6 +419,13 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                                     if(!$summit->isTrackChair($current_member, $category))
                                         throw new AuthzException(sprintf("current user is not allowed on track %s", $v));
                                 }
+                            }
+                        }
+                        else {
+                            // if not , only filter by track allowed
+                            $track_chair =  $summit->getTrackChairByMember($current_member);
+                            if(!is_null($track_chair)){
+                                $filter->addFilterCondition(FilterElement::makeEqual("track_id", $track_chair->getCategoriesIds(), "AND"));
                             }
                         }
                     }
@@ -548,9 +556,10 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                             $filter->addFilterCondition(FilterElement::makeEqual('current_member_id', $current_member->getId()));
                         }
 
+                        // filter by tracks
                         $track_id_filters = $filter->getFilter("track_id");
-                        if(!is_null($track_id_filters)){
-
+                        if(!is_null($track_id_filters) && count($track_id_filters) > 0){
+                            // if exists , check if we have persmissions
                             foreach ($track_id_filters as $filterElement){
                                 $value = $filterElement->getValue();
                                 if(!is_array($value)){
@@ -564,6 +573,13 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                                     if(!$summit->isTrackChair($current_member, $category))
                                         throw new AuthzException(sprintf("current user is not allowed on track %s", $v));
                                 }
+                            }
+                        }
+                        else {
+                            // if not , only filter by track allowed
+                            $track_chair =  $summit->getTrackChairByMember($current_member);
+                            if(!is_null($track_chair)){
+                                $filter->addFilterCondition(FilterElement::makeEqual("track_id", $track_chair->getCategoriesIds(), "AND"));
                             }
                         }
                     }

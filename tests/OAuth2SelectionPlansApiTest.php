@@ -909,7 +909,7 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
             'filter' => [
                 'status==Received',
                 'is_chair_visible==1',
-                sprintf('track_id==%s', self::$defaultTrack->getId()),
+               // sprintf('track_id==%s', self::$defaultTrack->getId()),
             ],
         ];
 

@@ -150,4 +150,12 @@ class SummitTrackChair extends SilverstripeBaseModel
     public function clearMember():void{
         $this->member = null;
     }
+
+    public function getCategoriesIds():array{
+        $res = [];
+        foreach ($this->categories as $c){
+            $res[] = $c->getId();
+        }
+        return $res;
+    }
 }

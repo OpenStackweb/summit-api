@@ -116,8 +116,10 @@ Route::group([
 
                     Route::group(['prefix'=>'supporting-companies'], function(){
                         Route::get('',  [ 'uses' => 'OAuth2SponsoredProjectApiController@getSupportingCompanies']);
+                        Route::post('',  [ 'uses' => 'OAuth2SponsoredProjectApiController@addSupportingCompanies']);
                         Route::group(['prefix'=>'{company_id}'], function(){
-                            Route::put('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SponsoredProjectApiController@addSupportingCompanies']);
+                            Route::get('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SponsoredProjectApiController@getSupportingCompany']);
+                            Route::put('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SponsoredProjectApiController@updateSupportingCompanies']);
                             Route::delete('',  [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SponsoredProjectApiController@deleteSupportingCompanies']);
                         });
                     });

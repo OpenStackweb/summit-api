@@ -208,9 +208,10 @@ final class SponsoredProjectService
      * @return SupportingCompany
      * @throws \Exception
      */
-    public function addCompanyToProjectSponsorshipType(int $project_id, int $sponsorship_id, int $company_id, array $payload): SupportingCompany
+    public function addCompanyToProjectSponsorshipType(int $project_id, int $sponsorship_id, array $payload): SupportingCompany
     {
-        return $this->tx_service->transaction(function() use ($project_id, $sponsorship_id, $company_id, $payload){
+        return $this->tx_service->transaction(function() use ($project_id, $sponsorship_id, $payload){
+
             $sponsoredProject = $this->repository->getById($project_id);
 
             if(is_null($sponsoredProject) || !$sponsoredProject instanceof SponsoredProject)
@@ -220,12 +221,48 @@ final class SponsoredProjectService
             if(is_null($projectSponsorshipType) || !$projectSponsorshipType instanceof ProjectSponsorshipType)
                 throw new EntityNotFoundException(sprintf("sponsorship type %s not found.", $project_id));
 
-            $company = $this->company_repository->getById($company_id);
+
+            $company = $this->company_repository->getById(intval($payload['company_id']));
 
             if(is_null($company) || !$company instanceof Company)
-                throw new EntityNotFoundException(sprintf("company %s not found.", $company_id));
+                throw new EntityNotFoundException(sprintf("company %s not found.", $payload['company_id']));
 
             $supportingCompany = $projectSponsorshipType->addSupportingCompany($company);
+
+            if (isset($payload['order']) && intval($payload['order']) != $supportingCompany->getOrder()) {
+                // request to update order
+                $projectSponsorshipType->recalculateSupportingCompanyOrder($supportingCompany, intval($payload['order']));
+            }
+
+            return $supportingCompany;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function updateCompanyToProjectSponsorshipType(int $project_id, int $sponsorship_id, int $company_id, array $payload): SupportingCompany
+    {
+        return $this->tx_service->transaction(function() use ($project_id, $sponsorship_id,$company_id, $payload){
+
+            $sponsoredProject = $this->repository->getById($project_id);
+
+            if(is_null($sponsoredProject) || !$sponsoredProject instanceof SponsoredProject)
+                throw new EntityNotFoundException(sprintf("sponsored project %s not found.", $project_id));
+
+            $projectSponsorshipType = $sponsoredProject->getSponsorshipTypeById($sponsorship_id);
+            if(is_null($projectSponsorshipType) || !$projectSponsorshipType instanceof ProjectSponsorshipType)
+                throw new EntityNotFoundException(sprintf("sponsorship type %s not found.", $project_id));
+
+            $company = $this->company_repository->getById(intval($payload['company_id']));
+
+            if(is_null($company) || !$company instanceof Company)
+                throw new EntityNotFoundException(sprintf("company %s not found.", $payload['company_id']));
+
+            $supportingCompany = $projectSponsorshipType->getSupportingCompanyById($company_id);
+
+            if(is_null($supportingCompany))
+                throw new ValidationException(sprintf("Supporting company %s not found.", $company_id));
 
             if (isset($payload['order']) && intval($payload['order']) != $supportingCompany->getOrder()) {
                 // request to update order
@@ -259,4 +296,5 @@ final class SponsoredProjectService
             $projectSponsorshipType->removeSupportingCompany($company);
         });
     }
+
 }

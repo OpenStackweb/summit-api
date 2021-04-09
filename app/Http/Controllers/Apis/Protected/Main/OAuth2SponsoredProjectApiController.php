@@ -18,6 +18,7 @@ use App\Models\Foundation\Main\Repositories\ISupportingCompanyRepository;
 use App\Services\Model\ISponsoredProjectService;
 use Illuminate\Support\Facades\Log;
 use libs\utils\HTMLCleaner;
+use models\exceptions\EntityNotFoundException;
 use models\oauth2\IResourceServerContext;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
@@ -236,6 +237,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
             return $this->project_sponsorship_type_repository->getById(intval($id));
         });
     }
+
     /**
      * @param $id
      * @return mixed
@@ -340,16 +342,44 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         );
     }
 
+
+    /**
+     * @param $id
+     * @param $sponsorship_type_id
+     * @return mixed
+     */
+    public function addSupportingCompanies($id, $sponsorship_type_id){
+        return $this->_add(
+            function($payload){
+                return [
+                    'company_id' => 'required|integer',
+                    'order' => 'sometimes|integer|min:1',
+                ];
+            },
+            function($payload, $project_id, $sponsorship_type_id){
+                return $this->service->addCompanyToProjectSponsorshipType
+                (
+                    $project_id,
+                    $sponsorship_type_id,
+                    $payload
+                );
+            },
+            $id,
+            $sponsorship_type_id
+        );
+    }
+
     /**
      * @param $id
      * @param $sponsorship_type_id
      * @param $company_id
      * @return mixed
      */
-    public function addSupportingCompanies($id, $sponsorship_type_id, $company_id){
+    public function updateSupportingCompanies($id, $sponsorship_type_id, $company_id){
         return $this->_update($company_id,
             function($payload){
                 return [
+                    'company_id' => 'sometimes|integer',
                     'order' => 'sometimes|integer|min:1',
                 ];
             },
@@ -377,5 +407,20 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         return $this->_delete($company_id, function($id, $project_id, $sponsorship_type_id){
             $this->service->removeCompanyToProjectSponsorshipType($id, $sponsorship_type_id, $id);
         }, $id, $sponsorship_type_id);
+    }
+
+    /**
+     * @param $id
+     * @param $sponsorship_type_id
+     * @param $company_id
+     * @return mixed
+     */
+    public function getSupportingCompany($id, $sponsorship_type_id, $company_id){
+        return $this->_get($sponsorship_type_id, function($id, $company_id){
+            $sponsorship_type = $this->project_sponsorship_type_repository->getById(intval($id));
+            if(is_null($sponsorship_type))
+                throw new EntityNotFoundException();
+            return $sponsorship_type->getSupportingCompanyById(intval($company_id));
+        }, $company_id);
     }
 }

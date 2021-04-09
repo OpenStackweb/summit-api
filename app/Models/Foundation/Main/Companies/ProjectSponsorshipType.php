@@ -238,6 +238,15 @@ class ProjectSponsorshipType extends SilverstripeBaseModel implements IOrderable
         return $this->supporting_companies;
     }
 
-
+    /**
+     * @param int $id
+     * @return SupportingCompany|null
+     */
+    public function getSupportingCompanyById(int $id):?SupportingCompany{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $id));
+        $res = $this->supporting_companies->matching($criteria)->first();
+        return !$res ? null : $res;
+    }
 
 }

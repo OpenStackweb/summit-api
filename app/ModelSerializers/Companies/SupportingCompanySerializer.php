@@ -11,14 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Libs\ModelSerializers\AbstractSerializer;
 use Libs\ModelSerializers\One2ManyExpandSerializer;
 use models\oauth2\IResourceServerContext;
 /**
  * Class SupportingCompanySerializer
  * @package ModelSerializers
  */
-final class SupportingCompanySerializer extends AbstractSerializer
+final class SupportingCompanySerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
         'CompanyId' => 'company_id:json_int',

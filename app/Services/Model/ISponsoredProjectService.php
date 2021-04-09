@@ -74,13 +74,23 @@ interface ISponsoredProjectService
     /**
      * @param int $project_id
      * @param int $sponsorship_id
+     * @param array $payload
+     * @return SupportingCompany
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function addCompanyToProjectSponsorshipType(int $project_id, int $sponsorship_id, array $payload):SupportingCompany;
+
+    /**
+     * @param int $project_id
+     * @param int $sponsorship_id
      * @param int $company_id
      * @param array $payload
      * @return SupportingCompany
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function addCompanyToProjectSponsorshipType(int $project_id, int $sponsorship_id, int $company_id, array $payload):SupportingCompany;
+    public function updateCompanyToProjectSponsorshipType(int $project_id, int $sponsorship_id, int $company_id, array $payload):SupportingCompany;
 
     /**
      * @param int $project_id

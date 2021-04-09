@@ -6181,6 +6181,18 @@ class ApiEndpointsSeeder extends Seeder
                 [
                     'name' => 'add-sponsored-project-supporting-companies',
                     'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies/{company_id}',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'update-sponsored-project-supporting-companies',
+                    'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies/{company_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
                         sprintf(SponsoredProjectScope::Write, $current_realm)
@@ -6196,6 +6208,18 @@ class ApiEndpointsSeeder extends Seeder
                     'http_method' => 'DELETE',
                     'scopes' => [
                         sprintf(SponsoredProjectScope::Write, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'get-sponsored-project-supporting-company',
+                    'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies/{company_id}',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SponsoredProjectScope::Read, $current_realm)
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,

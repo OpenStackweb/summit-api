@@ -137,9 +137,9 @@ class SponsoredProject extends SilverstripeBaseModel
     }
 
     /**
-     * @return ProjectSponsorshipType[]
+     * @return ArrayCollection
      */
-    public function getSponsorshipTypes(): array
+    public function getSponsorshipTypes()
     {
         return $this->sponsorship_types;
     }

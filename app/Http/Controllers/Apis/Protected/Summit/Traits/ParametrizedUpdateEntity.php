@@ -40,7 +40,7 @@ trait ParametrizedUpdateEntity
             callable $updateEntityFn,
             ...$args){
         try {
-            if(Request::isJson()) return $this->error400();
+            if(!Request::isJson()) return $this->error400();
             $data = Input::json();
             $payload = $data->all();
 

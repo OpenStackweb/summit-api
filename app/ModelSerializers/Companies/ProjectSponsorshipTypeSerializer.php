@@ -25,7 +25,7 @@ class ProjectSponsorshipTypeSerializer extends SilverStripeSerializer
     protected static $array_mappings = [
         'Name' => 'name:json_string',
         'Description' => 'description:json_string',
-        'Active' => 'active:json_boolean',
+        'Active' => 'is_active:json_boolean',
         'Order' => 'order:json_int',
         'SponsoredProjectId' => 'sponsored_project_id:json_int',
         'SupportingCompaniesIds' => 'supporting_companies',

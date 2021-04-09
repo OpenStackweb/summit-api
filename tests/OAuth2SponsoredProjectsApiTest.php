@@ -72,10 +72,36 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
     }
 
-    public function testAddSponsorshipType(){
+    public function testAddSponsorshipTypeAndGet(){
+
+        $data = [
+            'name' => str_random(16).'_sponsored project',
+            'description' => str_random(16).'_sponsored project description',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SponsoredProjectApiController@add",
+            [],
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $sponsored_projects = json_decode($content);
+        $this->assertTrue(!is_null($sponsored_projects));
 
         $params = [
-            'id' => 1,
+            'id' => $sponsored_projects->id,
         ];
 
         $data = [
@@ -104,7 +130,57 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTest
         $this->assertResponseStatus(201);
         $sponsorship_type = json_decode($content);
         $this->assertTrue(!is_null($sponsorship_type));
-        return $sponsorship_type;
+
+        $params = [
+            'id' => 1,
+            'sponsorship_type_id' => $sponsorship_type->id
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SponsoredProjectApiController@getSponsorshipType",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $sponsorship_type = json_decode($content);
+        $this->assertTrue(!is_null($sponsorship_type));
+
+        $params = [
+            'id' => 1,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SponsoredProjectApiController@getAllSponsorshipTypes",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $sponsorship_type = json_decode($content);
+        $this->assertTrue(!is_null($sponsorship_type));
     }
 
     public function testUpdateSponsorshipType(){

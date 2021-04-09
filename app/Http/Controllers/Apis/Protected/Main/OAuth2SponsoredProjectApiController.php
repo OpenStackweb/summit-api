@@ -16,10 +16,12 @@ use App\Models\Foundation\Main\Repositories\IProjectSponsorshipTypeRepository;
 use App\Models\Foundation\Main\Repositories\ISponsoredProjectRepository;
 use App\Models\Foundation\Main\Repositories\ISupportingCompanyRepository;
 use App\Services\Model\ISponsoredProjectService;
+use Illuminate\Support\Facades\Log;
 use libs\utils\HTMLCleaner;
 use models\oauth2\IResourceServerContext;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
+use Psr\Log\LogLevel;
 use utils\Filter;
 use utils\FilterElement;
 use utils\PagingInfo;
@@ -201,7 +203,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
             },
             function ($filter) use($id) {
                 if($filter instanceof Filter){
-                    if(is_integer($id))
+                    if(is_numeric($id))
                         $filter->addFilterCondition(FilterElement::makeEqual('sponsored_project_id', intval($id)));
                     else
                         $filter->addFilterCondition(FilterElement::makeEqual('sponsored_project_slug', $id));
@@ -229,7 +231,8 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
      * @param $sponsorship_type_id
      */
     public function getSponsorshipType($id, $sponsorship_type_id){
-        $this->_get($sponsorship_type_id, function($id){
+        Log::debug(sprintf("OAuth2SponsoredProjectApiController::getSponsorshipType id %s sponsorship_type_id %s", $id, $sponsorship_type_id));
+        return $this->_get($sponsorship_type_id, function($id){
             return $this->project_sponsorship_type_repository->getById(intval($id));
         });
     }
@@ -309,12 +312,12 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
             },
             function ($filter) use($id, $sponsorship_type_id) {
                 if($filter instanceof Filter){
-                    if(is_integer($id))
+                    if(is_numeric($id))
                         $filter->addFilterCondition(FilterElement::makeEqual('sponsored_project_id', intval($id)));
                     else
                         $filter->addFilterCondition(FilterElement::makeEqual('sponsored_project_slug', $id));
 
-                    if(is_integer($sponsorship_type_id))
+                    if(is_numeric($sponsorship_type_id))
                         $filter->addFilterCondition(FilterElement::makeEqual('sponsorship_type_id', intval($sponsorship_type_id)));
                     else
                         $filter->addFilterCondition(FilterElement::makeEqual('sponsorship_type_slug', $sponsorship_type_id));

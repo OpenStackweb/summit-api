@@ -384,7 +384,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 ];
             },
             function($id, $payload, $project_id, $sponsorship_type_id){
-                return $this->service->addCompanyToProjectSponsorshipType
+                return $this->service->updateCompanyToProjectSponsorshipType
                 (
                     $project_id,
                     $sponsorship_type_id,

@@ -55,7 +55,7 @@ class ProjectSponsorshipType extends SilverstripeBaseModel implements IOrderable
 
     /**
      * @ORM\ManyToOne(targetEntity="SponsoredProject", fetch="EXTRA_LAZY", inversedBy="sponsorship_types")
-     * @ORM\JoinColumn(name="SponsoredProjectID", referencedColumnName="ID", onDelete="SET NULL")
+     * @ORM\JoinColumn(name="SponsoredProjectID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SponsoredProject
      */
     private $sponsored_project;

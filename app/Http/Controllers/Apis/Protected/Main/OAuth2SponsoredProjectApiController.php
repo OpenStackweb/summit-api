@@ -379,7 +379,6 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         return $this->_update($company_id,
             function($payload){
                 return [
-                    'company_id' => 'sometimes|integer',
                     'order' => 'sometimes|integer|min:1',
                 ];
             },

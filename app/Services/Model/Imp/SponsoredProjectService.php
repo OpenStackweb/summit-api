@@ -259,11 +259,6 @@ final class SponsoredProjectService
             if(is_null($projectSponsorshipType) || !$projectSponsorshipType instanceof ProjectSponsorshipType)
                 throw new EntityNotFoundException(sprintf("sponsorship type %s not found.", $project_id));
 
-            $company = $this->company_repository->getById(intval($payload['company_id']));
-
-            if(is_null($company) || !$company instanceof Company)
-                throw new EntityNotFoundException(sprintf("company %s not found.", $payload['company_id']));
-
             $supportingCompany = $projectSponsorshipType->getSupportingCompanyById($company_id);
 
             if(is_null($supportingCompany))

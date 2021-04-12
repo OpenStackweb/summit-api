@@ -404,7 +404,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
      */
     public function deleteSupportingCompanies($id, $sponsorship_type_id, $company_id){
         return $this->_delete($company_id, function($id, $project_id, $sponsorship_type_id){
-            $this->service->removeCompanyToProjectSponsorshipType($id, $sponsorship_type_id, $id);
+            $this->service->removeCompanyToProjectSponsorshipType($project_id, $sponsorship_type_id, $id);
         }, $id, $sponsorship_type_id);
     }
 

@@ -257,7 +257,7 @@ final class SponsoredProjectService
 
             $projectSponsorshipType = $sponsoredProject->getSponsorshipTypeById($sponsorship_id);
             if(is_null($projectSponsorshipType) || !$projectSponsorshipType instanceof ProjectSponsorshipType)
-                throw new EntityNotFoundException(sprintf("sponsorship type %s not found.", $project_id));
+                throw new EntityNotFoundException(sprintf("sponsorship type %s not found.", $sponsorship_id));
 
             $supportingCompany = $projectSponsorshipType->getSupportingCompanyById($company_id);
 
@@ -292,11 +292,12 @@ final class SponsoredProjectService
             if(is_null($projectSponsorshipType) || !$projectSponsorshipType instanceof ProjectSponsorshipType)
                 throw new EntityNotFoundException(sprintf("sponsorship type %s not found.", $sponsorship_id));
 
-            $company = $projectSponsorshipType->getSupportingCompanyById($company_id);
-            if(is_null($company) || !$company instanceof SupportingCompany)
+            $supportingCompany = $projectSponsorshipType->getSupportingCompanyById($company_id);
+
+            if(is_null($supportingCompany) || !$supportingCompany instanceof SupportingCompany)
                 throw new EntityNotFoundException(sprintf("supporting company %s not found.", $company_id));
 
-            $projectSponsorshipType->removeSupportingCompany($company);
+            $projectSponsorshipType->removeSupportingCompany($supportingCompany);
         });
     }
 

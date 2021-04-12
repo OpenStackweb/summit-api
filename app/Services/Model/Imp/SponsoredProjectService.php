@@ -227,6 +227,11 @@ final class SponsoredProjectService
             if(is_null($company) || !$company instanceof Company)
                 throw new EntityNotFoundException(sprintf("company %s not found.", $payload['company_id']));
 
+            $oldSupportingCompany = $projectSponsorshipType->getSupportingCompanyByCompany($company);
+            if(!is_null($oldSupportingCompany)){
+                throw new ValidationException(sprintf("Company %s already is a supporting company.", $payload['company_id']));
+            }
+
             $supportingCompany = $projectSponsorshipType->addSupportingCompany($company);
 
             if (isset($payload['order']) && intval($payload['order']) != $supportingCompany->getOrder()) {

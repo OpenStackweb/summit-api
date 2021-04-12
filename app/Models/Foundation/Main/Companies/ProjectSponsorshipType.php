@@ -185,21 +185,29 @@ class ProjectSponsorshipType extends SilverstripeBaseModel implements IOrderable
         self::recalculateOrderForSelectable($this->supporting_companies, $value, $new_order);
     }
 
+
     /**
      * @param Company $company
      * @return SupportingCompany|null
      */
     public function addSupportingCompany(Company $company):?SupportingCompany {
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('company', $company));
-        $supporting_company = $this->supporting_companies->matching($criteria)->first();
-        if($supporting_company) return $supporting_company;
         $supporting_company = new SupportingCompany();
         $supporting_company->setCompany($company);
         $supporting_company->setSponsorshipType($this);
         $this->supporting_companies->add($supporting_company);
         $supporting_company->setOrder($this->supporting_companies->count());
         return $supporting_company;
+    }
+
+    /**
+     * @param Company $company
+     * @return SupportingCompany|null
+     */
+    public function getSupportingCompanyByCompany(Company $company):?SupportingCompany {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('company', $company));
+        $supporting_company = $this->supporting_companies->matching($criteria)->first();
+        return !$supporting_company ? null : $supporting_company;
     }
 
     /**

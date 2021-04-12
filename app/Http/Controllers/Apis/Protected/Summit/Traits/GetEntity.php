@@ -40,7 +40,7 @@ trait GetEntity
     public function get($id)
     {
         try {
-            $entity = $this->getEntity($id);
+            $entity = $this->getEntity(intval($id));
             $fields = Request::input('fields', '');
             $relations = Request::input('relations', '');
 

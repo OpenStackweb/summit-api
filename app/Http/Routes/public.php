@@ -31,6 +31,15 @@ Route::group([
     Route::group(['prefix' => 'sponsored-projects'], function(){
         Route::group(['prefix'=>'{id}'], function(){
             Route::get('',  [ 'uses' => 'OAuth2SponsoredProjectApiController@get']);
+            Route::group(['prefix'=>'sponsorship-types'], function(){
+                Route::get('', 'OAuth2SponsoredProjectApiController@getAllSponsorshipTypes');
+                Route::group(['prefix'=>'{sponsorship_type_id}'], function(){
+                    Route::get('',  [ 'uses' => 'OAuth2SponsoredProjectApiController@getSponsorshipType']);
+                    Route::group(['prefix'=>'supporting-companies'], function(){
+                        Route::get('',  [ 'uses' => 'OAuth2SponsoredProjectApiController@getSupportingCompanies']);
+                    });
+                });
+            });
         });
     });
 

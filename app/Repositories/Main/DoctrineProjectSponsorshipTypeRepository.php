@@ -56,6 +56,7 @@ final class DoctrineProjectSponsorshipTypeRepository
         return [
             'id'   => 'e.id',
             'name' => 'e.name',
+            'order'=> 'e.order',
         ];
     }
 

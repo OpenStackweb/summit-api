@@ -6185,14 +6185,6 @@ class ApiEndpointsSeeder extends Seeder
                     'scopes' => [
                         sprintf(SponsoredProjectScope::Write, $current_realm)
                     ],
-                ],
-                [
-                    'name' => 'add-sponsored-project-supporting-companies',
-                    'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies/{company_id}',
-                    'http_method' => 'POST',
-                    'scopes' => [
-                        sprintf(SponsoredProjectScope::Write, $current_realm)
-                    ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
                         IGroup::Administrators,

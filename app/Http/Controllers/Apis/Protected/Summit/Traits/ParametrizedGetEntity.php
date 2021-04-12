@@ -35,6 +35,9 @@ trait ParametrizedGetEntity
     {
         try {
             $entity = $getEntityFn($id, ...$args);
+            if(is_null($entity))
+                throw new EntityNotFoundException();
+
             $fields = Request::input('fields', '');
             $relations = Request::input('relations', '');
 

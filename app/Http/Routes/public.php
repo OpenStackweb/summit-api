@@ -29,6 +29,7 @@ Route::group([
 ], function () {
 
     Route::group(['prefix' => 'sponsored-projects'], function(){
+        Route::get('', 'OAuth2SponsoredProjectApiController@getAll');
         Route::group(['prefix'=>'{id}'], function(){
             Route::get('',  [ 'uses' => 'OAuth2SponsoredProjectApiController@get']);
             Route::group(['prefix'=>'sponsorship-types'], function(){

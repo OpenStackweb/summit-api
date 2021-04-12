@@ -200,6 +200,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 return [
                     'name',
                     'id',
+                    'order'
                 ];
             },
             function ($filter) use($id) {

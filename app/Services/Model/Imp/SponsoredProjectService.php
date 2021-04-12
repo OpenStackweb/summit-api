@@ -274,11 +274,15 @@ final class SponsoredProjectService
     }
 
     /**
-     * @inheritDoc
+     * @param int $project_id
+     * @param int $sponsorship_id
+     * @param int $company_id
+     * @throws \Exception
      */
     public function removeCompanyToProjectSponsorshipType(int $project_id, int $sponsorship_id, int $company_id): void
     {
         $this->tx_service->transaction(function() use ($project_id, $sponsorship_id, $company_id){
+
             $sponsoredProject = $this->repository->getById($project_id);
 
             if(is_null($sponsoredProject) || !$sponsoredProject instanceof SponsoredProject)
@@ -286,12 +290,11 @@ final class SponsoredProjectService
 
             $projectSponsorshipType = $sponsoredProject->getSponsorshipTypeById($sponsorship_id);
             if(is_null($projectSponsorshipType) || !$projectSponsorshipType instanceof ProjectSponsorshipType)
-                throw new EntityNotFoundException(sprintf("sponsorship type %s not found.", $project_id));
+                throw new EntityNotFoundException(sprintf("sponsorship type %s not found.", $sponsorship_id));
 
-            $company = $this->company_repository->getById($company_id);
-
-            if(is_null($company) || !$company instanceof Company)
-                throw new EntityNotFoundException(sprintf("company %s not found.", $company_id));
+            $company = $projectSponsorshipType->getSupportingCompanyById($company_id);
+            if(is_null($company) || !$company instanceof SupportingCompany)
+                throw new EntityNotFoundException(sprintf("supporting company %s not found.", $company_id));
 
             $projectSponsorshipType->removeSupportingCompany($company);
         });

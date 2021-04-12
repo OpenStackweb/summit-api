@@ -211,13 +211,10 @@ class ProjectSponsorshipType extends SilverstripeBaseModel implements IOrderable
     }
 
     /**
-     * @param Company $company
+     * @param SupportingCompany $supporting_company
      */
-    public function removeSupportingCompany(Company $company){
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('company', $company));
-        $supporting_company = $this->supporting_companies->matching($criteria)->first();
-        if(!$supporting_company) return;
+    public function removeSupportingCompany(SupportingCompany $supporting_company){
+        if(!$this->supporting_companies->contains($supporting_company)) return;
         $this->supporting_companies->removeElement($supporting_company);
     }
 

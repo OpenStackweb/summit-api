@@ -533,7 +533,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                     return $filter;
                 },
                 function () {
-                    return IPresentationSerializerTypes::TrackChairs;
+                    return IPresentationSerializerTypes::TrackChairs_CSV;
                 },
                 function () {
                     return [

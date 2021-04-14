@@ -19,4 +19,5 @@
 interface IPresentationSerializerTypes
 {
     const TrackChairs = "TRACK_CHAIRS";
+    const TrackChairs_CSV = "TRACK_CHAIRS_CSV";
 }

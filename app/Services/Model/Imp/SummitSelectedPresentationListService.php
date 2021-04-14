@@ -223,7 +223,7 @@ final class SummitSelectedPresentationListService
                 $hash = $payload['hash'] ?? "";
 
                 if(!$selection_list->compareHash(trim($hash)))
-                    throw new ValidationException(sprintf("The list %s was modified by someone else, please Refresh.", $selection_list->getId()));
+                    throw new ValidationException("The Teams List was modified by someone else. Please refresh the page.");
             }
 
             /**

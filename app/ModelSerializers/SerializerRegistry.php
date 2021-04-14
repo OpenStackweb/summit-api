@@ -54,8 +54,6 @@ use App\ModelSerializers\Summit\AdminStripePaymentProfileSerializer;
 use App\ModelSerializers\Summit\AdminSummitSerializer;
 use App\ModelSerializers\Summit\PersonalCalendarShareInfoSerializer;
 use App\ModelSerializers\Summit\Presentation\SummitPresentationCommentSerializer;
-use ModelSerializers\SummitTrackChairSerializer;
-use ModelSerializers\SummitTrackChairCSVSerializer;
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackAnswerSerializer;
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackDropDownQuestionTemplateSerializer;
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackLiteralContentQuestionTemplateSerializer;
@@ -198,7 +196,8 @@ final class SerializerRegistry
                 self::SerializerType_Public  =>  PresentationSerializer::class,
                 self::SerializerType_Private =>  AdminPresentationSerializer::class,
                 self::SerializerType_CSV =>  AdminPresentationCSVSerializer::class,
-                IPresentationSerializerTypes::TrackChairs => TrackChairPresentationSerializer::class
+                IPresentationSerializerTypes::TrackChairs => TrackChairPresentationSerializer::class,
+                IPresentationSerializerTypes::TrackChairs_CSV => TrackChairPresentationCSVSerializer::class
             ];
 
         $this->registry['SummitCategoryChange'] = SummitCategoryChangeSerializer::class;

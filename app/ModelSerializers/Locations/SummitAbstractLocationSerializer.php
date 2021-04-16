@@ -22,6 +22,7 @@ class SummitAbstractLocationSerializer extends SilverStripeSerializer
     protected static $array_mappings = array
     (
         'Name'         => 'name:json_string',
+        'ShortName'         => 'short_name:json_string',
         'Description'  => 'description:json_string',
         'LocationType' => 'location_type',
         'Order'        => 'order:json_int',

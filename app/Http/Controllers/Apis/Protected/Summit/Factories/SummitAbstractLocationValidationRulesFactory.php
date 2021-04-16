@@ -28,6 +28,7 @@ final class SummitAbstractLocationValidationRulesFactory
         if($update){
             return [
                 'name'        => 'sometimes|string|max:255',
+                'short_name'        => 'sometimes|string|max:255',
                 'description' => 'sometimes|string',
                 'order'       => 'sometimes|integer|min:1'
             ];
@@ -35,6 +36,7 @@ final class SummitAbstractLocationValidationRulesFactory
 
         return [
             'name'        => 'required|string|max:255',
+            'short_name'  => 'sometimes|string|max:255',
             'description' => 'sometimes|string',
         ];
     }

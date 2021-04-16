@@ -66,6 +66,12 @@ class SummitAbstractLocation extends SilverstripeBaseModel implements IOrderable
     protected $name;
 
     /**
+     * @ORM\Column(name="ShortName", type="string")
+     * @var string
+     */
+    protected $short_name;
+
+    /**
      * @ORM\Column(name="Description", type="string")
      * @var string
      */
@@ -286,4 +292,22 @@ class SummitAbstractLocation extends SilverstripeBaseModel implements IOrderable
     public function getBannerByClass($class_name){
 
     }
+
+    /**
+     * @return string
+     */
+    public function getShortName(): ?string
+    {
+        return $this->short_name;
+    }
+
+    /**
+     * @param string $short_name
+     */
+    public function setShortName(string $short_name): void
+    {
+        $this->short_name = $short_name;
+    }
+
+
 }

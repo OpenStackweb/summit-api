@@ -72,6 +72,9 @@ final class SummitLocationFactory
         if(isset($data['name']))
             $location->setName(trim($data['name']));
 
+        if(isset($data['short_name']))
+            $location->setShortName(trim($data['short_name']));
+
         if(isset($data['description']))
             $location->setDescription(trim($data['description']));
 

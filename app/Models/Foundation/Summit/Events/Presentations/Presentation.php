@@ -977,6 +977,18 @@ class Presentation extends SummitEvent
         return false;
     }
 
+
+    /**
+     * @return bool
+     */
+    public function fulfilMediaUploadsConditions():bool{
+
+        $summitMediaUploadCount = $this->summit->getMediaUploadsMandatoryCount();
+        if($summitMediaUploadCount === 0) return true;
+        if($summitMediaUploadCount > $this->getMediaUploadsMandatoryCount()) return false;
+        return true;
+    }
+
     /**
      * @return bool
      */

@@ -307,6 +307,7 @@ final class PresentationService
             $presentation->setUpdatedBy(ResourceServerContext::getCurrentUser(false));
 
             $summit->addEvent($presentation);
+
             if(!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SUMMARY);
 
@@ -629,28 +630,36 @@ final class PresentationService
 
             $presentation = $summit->getEvent($presentation_id);
             if (is_null($presentation))
-                throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
+                throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
 
             if (!$presentation instanceof Presentation)
-                throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
+                throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
 
             if($presentation->isSubmitted()){
                 throw new ValidationException
                 (
-                    sprintf("presentation %s is not allowed to mark as completed", $presentation_id)
+                    sprintf("Presentation %s is not allowed to mark as completed.", $presentation_id)
                 );
             }
 
+
             if (!$presentation->canEdit($current_speaker))
-                throw new ValidationException(sprintf("member %s can not edit presentation %s",
+                throw new ValidationException(sprintf("Member %s can not edit presentation %s.",
                     $member->getId(),
                     $presentation_id
                 ));
 
+              if (!$presentation->fulfilMediaUploadsConditions()) {
+                  throw new ValidationException
+                  (
+                      sprintf("Presentation %s is not allowed to mark as completed because does not fulfil media uploads conditions.", $presentation_id)
+                  );
+              }
+
             if (!$presentation->fulfilSpeakersConditions()) {
                 throw new ValidationException
                 (
-                    sprintf("presentation %s is not allowed to mark as completed because does not fulfil speakers conditions", $presentation_id)
+                    sprintf("Presentation %s is not allowed to mark as completed because does not fulfil speakers conditions.", $presentation_id)
                 );
             }
 
@@ -659,14 +668,14 @@ final class PresentationService
             $level = $presentation->getLevel();
 
             if (empty($title)) {
-                throw new ValidationException('Title is Mandatory!');
+                throw new ValidationException('Title is Mandatory.');
             }
 
             if (empty($abstract)) {
-                throw new ValidationException('Abstract is mandatory!');
+                throw new ValidationException('Abstract is mandatory.');
             }
 
-            if (empty($level)) {
+            if ($presentation->getType()->isAllowsLevel() && empty($level)) {
                 throw new ValidationException('Level is mandatory.');
             }
 

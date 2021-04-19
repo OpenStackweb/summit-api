@@ -47,6 +47,7 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
         'sponsor_memberships',
         'legal_agreements',
         'track_chairs',
+        'schedule_shareable_link',
     ];
 
     private static $expand_group_events = [
@@ -138,6 +139,14 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                 $res[] = intval($ticket_id);
             }
             $values['summit_tickets'] = $res;
+        }
+
+        if(in_array('schedule_shareable_link', $relations) && !is_null($summit)){
+            $link = $member->getScheduleShareableLinkBy($summit);
+            if(!is_null($link)) {
+                $values['schedule_shareable_link'] = SerializerRegistry::getInstance()
+                    ->getSerializer($link)->serialize();
+            }
         }
 
         if(in_array('legal_agreements', $relations)){

@@ -22,7 +22,7 @@ final class PersonalCalendarShareInfoSerializer extends SilverStripeSerializer
     protected static $array_mappings = [
         'Link'       => 'link:json_url',
         'SummitId'   => 'summit_id:json_int',
-        'OwnerId'    => 'summit_id:json_int',
+        'OwnerId'    => 'owner_id:json_int',
         'Cid'        => 'cid:json_string',
     ];
 

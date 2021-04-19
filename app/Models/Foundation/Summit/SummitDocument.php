@@ -50,6 +50,12 @@ class SummitDocument extends SilverstripeBaseModel
     private $label;
 
     /**
+     * @ORM\Column(name="ShowAlways", type="boolean")
+     * @var bool
+     */
+    private $show_always;
+
+    /**
      * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist","remove"})
      * @ORM\JoinColumn(name="FileID", referencedColumnName="ID")
      * @var File
@@ -77,6 +83,7 @@ class SummitDocument extends SilverstripeBaseModel
         $this->label = '';
         $this->description = '';
         $this->name = '';
+        $this->show_always = false;
     }
 
     /**
@@ -194,5 +201,22 @@ class SummitDocument extends SilverstripeBaseModel
         }
         return $fileUrl;
     }
+
+    /**
+     * @return bool
+     */
+    public function isShowAlways(): bool
+    {
+        return $this->show_always;
+    }
+
+    /**
+     * @param bool $show_always
+     */
+    public function setShowAlways(bool $show_always): void
+    {
+        $this->show_always = $show_always;
+    }
+
 
 }

@@ -23,6 +23,7 @@ class SummitDocumentSerializer extends SilverStripeSerializer
     protected static $array_mappings = [
         'Name' => 'name:json_string',
         'Description' => 'description:json_string',
+        'ShowAlways' => 'show_always:json_boolean',
         'Label' => 'label:json_string',
         'SummitId' => 'summit_id:json_int',
         'FileUrl' => 'file:json_url',

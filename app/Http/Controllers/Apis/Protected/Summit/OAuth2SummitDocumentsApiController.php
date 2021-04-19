@@ -88,6 +88,7 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
                 'label'           => 'required|string:512',
                 'description'     => 'nullable|string',
                 'event_types'     => 'sometimes|int_array',
+                'show_always'     => 'sometimes|boolean',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -150,6 +151,7 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
                 'label'           => 'nullable|string:512',
                 'description'     => 'nullable|string',
                 'event_types'     => 'sometimes|int_array',
+                'show_always'     => 'sometimes|boolean',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -173,6 +175,7 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
                 $document_id,
                 HTMLCleaner::cleanData($payload, $fields)
             );
+
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($document)->serialize());
         }
         catch (EntityNotFoundException $ex1)

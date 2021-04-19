@@ -37,10 +37,16 @@ final class SummitDocumentFactory
     public static function populate(Summit $summit, SummitDocument $document, array $payload):SummitDocument {
         if(isset($payload['name']))
             $document->setName(trim($payload['name']));
+
         if(isset($payload['label']))
             $document->setLabel(trim($payload['label']));
+
+        if(isset($payload['show_always']))
+            $document->setShowAlways(boolval($payload['show_always']));
+
         if(isset($payload['description']))
             $document->setDescription(trim($payload['description']));
+
         return $document;
     }
 }

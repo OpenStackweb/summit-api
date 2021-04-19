@@ -108,7 +108,10 @@ final class ParseMultiPartFormDataInputStream
             $block = $this->decide($value);
 
             foreach ($block['parameters'] as $key => $val ) {
-                $results['parameters'][$key] = $val;
+                if(key_exists($key, $results['parameters']) && is_array($results['parameters'][$key] ) && is_array($val))
+                    $results['parameters'][$key] = array_merge($results['parameters'][$key], $val);
+                else
+                    $results['parameters'][$key] = $val;
             }
 
             foreach ( $block['files'] as $key => $val ) {
@@ -245,6 +248,8 @@ final class ParseMultiPartFormDataInputStream
                 $val = intval($val);
             if(!empty($val) && is_double($val))
                 $val = doubleval($val);
+            if(!empty($val) && is_numeric($val))
+                $val = $val + 0;
             if (preg_match('/^(.*)\[\]$/i', $match[1], $tmp)) {
                 $data[$tmp[1]][] = $val;
             } else {

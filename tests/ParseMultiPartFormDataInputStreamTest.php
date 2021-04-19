@@ -81,4 +81,52 @@ DATA;
         $this->assertTrue(count($res['parameters']) > 0);
 
     }
+
+    public function testArray(){
+        $input = <<<DATA
+------WebKitFormBoundaryt61VjbNKJb4PiKXk
+Content-Disposition: form-data; name="name"
+
+ncode
+------WebKitFormBoundaryt61VjbNKJb4PiKXk
+Content-Disposition: form-data; name="label"
+
+Code
+------WebKitFormBoundaryt61VjbNKJb4PiKXk
+Content-Disposition: form-data; name="description"
+
+ndndnllll
+------WebKitFormBoundaryt61VjbNKJb4PiKXk
+Content-Disposition: form-data; name="file_preview"
+
+
+------WebKitFormBoundaryt61VjbNKJb4PiKXk
+Content-Disposition: form-data; name="summit_id"
+
+6
+------WebKitFormBoundaryt61VjbNKJb4PiKXk
+Content-Disposition: form-data; name="event_types[]"
+56
+------WebKitFormBoundaryt61VjbNKJb4PiKXk
+Content-Disposition: form-data; name="event_types[]"
+59
+------WebKitFormBoundaryt61VjbNKJb4PiKXk
+Content-Disposition: form-data; name="event_types[]"
+58
+------WebKitFormBoundaryt61VjbNKJb4PiKXk--
+
+  
+DATA;
+
+        $_SERVER['CONTENT_TYPE'] = 'multipart/form-data; boundary=----WebKitFormBoundaryt61VjbNKJb4PiKXk';
+        $parser = new \utils\ParseMultiPartFormDataInputStream($input);
+
+        $res = $parser->getInput();
+
+        $this->assertTrue(isset($res['parameters']));
+        $parameters = $res['parameters'];
+        $this->assertTrue(count($parameters) > 0);
+        $this->assertTrue(isset($parameters['event_types']));
+        $this->assertTrue(count($parameters['event_types']) == 3);
+    }
 }

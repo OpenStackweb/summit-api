@@ -97,6 +97,7 @@ class SummitAbstractLocation extends SilverstripeBaseModel implements IOrderable
 
     public static $metadata = [
         'name'         => 'string',
+        'short_name'   => 'string',
         'description'  => 'string',
         'type'         => [ self::TypeExternal, self::TypeInternal],
         'banners'      => 'array',

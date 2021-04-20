@@ -97,6 +97,10 @@ Content-Disposition: form-data; name="description"
 
 ndndnllll
 ------WebKitFormBoundaryt61VjbNKJb4PiKXk
+Content-Disposition: form-data; name="show_always"
+
+true
+------WebKitFormBoundaryt61VjbNKJb4PiKXk
 Content-Disposition: form-data; name="file_preview"
 
 

@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Http\Utils\MultipartFormDataCleaner;
 use App\Models\Foundation\Summit\Repositories\ISummitDocumentRepository;
 use App\Services\Model\ISummitDocumentService;
 use Illuminate\Http\Request as LaravelRequest;
@@ -91,6 +93,8 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
                 'show_always'     => 'sometimes|boolean',
             ];
 
+            $payload = MultipartFormDataCleaner::cleanBool('show_always', $payload);
+
             // Creates a Validator instance and validates the data.
             $validation = Validator::make($payload, $rules);
 
@@ -153,6 +157,8 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
                 'event_types'     => 'sometimes|int_array',
                 'show_always'     => 'sometimes|boolean',
             ];
+
+            $payload = MultipartFormDataCleaner::cleanBool('show_always', $payload);
 
             // Creates a Validator instance and validates the data.
             $validation = Validator::make($payload, $rules);

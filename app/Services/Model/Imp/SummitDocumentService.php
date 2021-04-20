@@ -93,6 +93,9 @@ final class SummitDocumentService
                 }
             }
 
+            if(!$document->isShowAlways() &&  $document->getEventTypes()->count() == 0)
+                throw new ValidationException("You need to to set at least one Activity Type.");
+
             $file = $payload['file'];
             $attachment = $this->file_uploader->build
             (
@@ -149,6 +152,9 @@ final class SummitDocumentService
                     $document->addEventType($event_type);
                 }
             }
+
+            if(!$document->isShowAlways() &&  $document->getEventTypes()->count() == 0)
+                throw new ValidationException("You need to to set at least one Activity Type.");
 
             if(isset($payload['file'])){
 

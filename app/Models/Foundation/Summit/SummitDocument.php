@@ -216,6 +216,9 @@ class SummitDocument extends SilverstripeBaseModel
     public function setShowAlways(bool $show_always): void
     {
         $this->show_always = $show_always;
+        if($this->show_always){
+            $this->clearEventTypes();
+        }
     }
 
 

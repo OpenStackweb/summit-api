@@ -82,7 +82,7 @@ final class SummitDocumentService
 
             $document = SummitDocumentFactory::build($summit, $payload);
 
-            if(isset($payload['event_types'])){
+            if(!$document->isShowAlways() && isset($payload['event_types'])){
                 $document->clearEventTypes();
                 foreach($payload['event_types'] as $event_type_id){
                     $event_type = $summit->getEventType(intval($event_type_id));
@@ -93,7 +93,7 @@ final class SummitDocumentService
                 }
             }
 
-            if(!$document->isShowAlways() &&  $document->getEventTypes()->count() == 0)
+            if(!$document->isShowAlways() && $document->getEventTypes()->count() == 0)
                 throw new ValidationException("You need to to set at least one Activity Type.");
 
             $file = $payload['file'];
@@ -142,7 +142,7 @@ final class SummitDocumentService
 
             $document = SummitDocumentFactory::populate($summit, $document, $payload);
 
-            if(isset($payload['event_types'])){
+            if(!$document->isShowAlways() && isset($payload['event_types'])){
                 $document->clearEventTypes();
                 foreach($payload['event_types'] as $event_type_id){
                     $event_type = $summit->getEventType(intval($event_type_id));
@@ -153,7 +153,7 @@ final class SummitDocumentService
                 }
             }
 
-            if(!$document->isShowAlways() &&  $document->getEventTypes()->count() == 0)
+            if(!$document->isShowAlways() && $document->getEventTypes()->count() == 0)
                 throw new ValidationException("You need to to set at least one Activity Type.");
 
             if(isset($payload['file'])){

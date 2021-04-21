@@ -161,12 +161,12 @@ final class OAuth2SummitOrdersApiController
             if (is_null($summit)) return $this->error404();
 
             $payload = $this->getJsonPayload([
-                'billing_address_1'         => 'sometimes|string|max:255',
-                'billing_address_2'         => 'sometimes|string|max:255',
-                'billing_address_zip_code'  => 'sometimes|string|max:255',
-                'billing_address_city'      => 'sometimes|string|max:255',
-                'billing_address_state'     => 'sometimes|string|max:255',
-                'billing_address_country'   => 'sometimes|string|country_iso_alpha2_code',
+                'billing_address_1'         => 'nullable|sometimes|string|max:255',
+                'billing_address_2'         => 'nullable|sometimes|string|max:255',
+                'billing_address_zip_code'  => 'nullable|sometimes|string|max:255',
+                'billing_address_city'      => 'nullable|sometimes|string|max:255',
+                'billing_address_state'     => 'nullable|sometimes|string|max:255',
+                'billing_address_country'   => 'nullable|sometimes|string|country_iso_alpha2_code',
             ]);
 
             $order = $this->service->checkout($summit, $hash, $payload);

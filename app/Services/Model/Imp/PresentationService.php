@@ -642,7 +642,6 @@ final class PresentationService
                 );
             }
 
-
             if (!$presentation->canEdit($current_speaker))
                 throw new ValidationException(sprintf("Member %s can not edit presentation %s.",
                     $member->getId(),
@@ -683,7 +682,7 @@ final class PresentationService
             $presentation->setStatus(Presentation::STATUS_RECEIVED);
 
             foreach($presentation->getSpeakers() as $speaker){
-                if($speaker->getMemberId() == $presentation->getCreatorId()) continue;
+                if($speaker->getMemberId() == $presentation->getCreatedById()) continue;
                 PresentationSpeakerNotificationEmail::dispatch($speaker, $presentation);
             }
 

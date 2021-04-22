@@ -2674,7 +2674,6 @@ final class SummitOrderService
                     SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
                     $attendee->updateStatus();
                     $attendee->addTicket($ticket);
-                    $attendee->sendInvitationEmail($ticket);
                 }
             }
 

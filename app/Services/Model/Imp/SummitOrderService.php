@@ -2473,7 +2473,7 @@ final class SummitOrderService
 
             $ticket = $this->ticket_repository->getByHashExclusiveLock($hash);
 
-            if (is_null($ticket))
+            if (is_null($ticket) && !$ticket->isActive())
                 throw new EntityNotFoundException("ticket not found");
 
             if (!$ticket->isPaid())
@@ -2532,7 +2532,7 @@ final class SummitOrderService
         return $this->tx_service->transaction(function () use ($current_user, $ticket_id, $payload) {
             $ticket = $this->ticket_repository->getByIdExclusiveLock($ticket_id);
 
-            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
+            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket || !$ticket->isActive())
                 throw new EntityNotFoundException("ticket not found");
 
             if (!$ticket->canEditTicket($current_user)) {
@@ -2797,7 +2797,12 @@ final class SummitOrderService
                     }
 
                     if (!is_null($ticket) && !$ticket->isPaid()) {
-                        Log::debug("SummitOrderService::processTicketData - ticket is not paid");
+                        Log::warning("SummitOrderService::processTicketData - ticket is not paid");
+                        return;
+                    }
+
+                    if (!is_null($ticket) && !$ticket->isActive()) {
+                        Log::warning("SummitOrderService::processTicketData - ticket is not active");
                         return;
                     }
                 }
@@ -3064,6 +3069,10 @@ final class SummitOrderService
                 }
                 foreach ($order->getTickets() as $ticket) {
                     try {
+                        if(!$ticket->isActive()){
+                            Log::warning(sprintf("SummitOrderService::processSummitOrderReminders - summit %s order %s skipping ticket %s ( not active)", $summit->getId(), $order->getId(), $ticket->getId()));
+                            continue;
+                        }
                         $this->processTicketReminder($ticket);
                     } catch (\Exception $ex) {
                         Log::error($ex);
@@ -3098,6 +3107,10 @@ final class SummitOrderService
             $needs_action = false;
 
             foreach ($order->getTickets() as $ticket) {
+                if(!$ticket->isActive()){
+                    Log::warning(sprintf("SummitOrderService::processOrderReminder - order %s skipping ticket %s ( NOT ACTIVE ).", $order->getId(), $ticket->getId()));
+                    continue;
+                }
                 if (!$ticket->hasOwner()) {
                     $needs_action = true;
                     break;
@@ -3372,6 +3385,52 @@ final class SummitOrderService
                 $invitation->setOrder($order);
                 $invitation->markAsAccepted();
             }
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function activateTicket(Summit $summit, int $order_id, int $ticket_id): SummitAttendeeTicket
+    {
+        return $this->tx_service->transaction(function() use($summit, $order_id, $ticket_id){
+            // lock and get the order
+            $order = $this->order_repository->getByIdExclusiveLock($order_id);
+
+            if (is_null($order) || !$order instanceof SummitOrder)
+                throw new EntityNotFoundException("order not found");
+
+            $ticket = $order->getTicketById($ticket_id);
+
+            if (is_null($ticket))
+                throw new EntityNotFoundException("ticket not found");
+
+            $ticket->activate();
+
+            return $ticket;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function deActivateTicket(Summit $summit, int $order_id, int $ticket_id): SummitAttendeeTicket
+    {
+        return $this->tx_service->transaction(function() use($summit, $order_id, $ticket_id){
+            // lock and get the order
+            $order = $this->order_repository->getByIdExclusiveLock($order_id);
+
+            if (is_null($order) || !$order instanceof SummitOrder)
+                throw new EntityNotFoundException("order not found");
+
+            $ticket = $order->getTicketById($ticket_id);
+
+            if (is_null($ticket))
+                throw new EntityNotFoundException("ticket not found");
+
+            $ticket->deActivate();
+
+            return $ticket;
         });
     }
 }

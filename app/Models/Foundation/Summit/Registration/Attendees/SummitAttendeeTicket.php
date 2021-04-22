@@ -160,6 +160,12 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     private $former_hashes;
 
     /**
+     * @ORM\Column(name="IsActive", type="boolean")
+     * @var bool
+     */
+    private $is_active;
+
+    /**
      * SummitAttendeeTicket constructor.
      */
     public function __construct()
@@ -172,6 +178,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         $this->raw_cost = 0.0;
         $this->discount = 0.0;
         $this->refunded_amount = 0.0;
+        $this->is_active = true;
     }
 
     /**
@@ -936,4 +943,23 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         // i am order owner
         if($this->order->getOwnerEmail() == $member->getEmail()) return true;
     }
+
+    /**
+     * @return bool
+     */
+    public function isActive(): bool
+    {
+        return $this->is_active;
+    }
+
+    public function activate(): void
+    {
+        $this->is_active = true;
+    }
+
+    public function deActivate(): void
+    {
+        $this->is_active = false;
+    }
+
 }

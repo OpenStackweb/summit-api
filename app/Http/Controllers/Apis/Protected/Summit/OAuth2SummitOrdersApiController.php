@@ -900,7 +900,8 @@ final class OAuth2SummitOrdersApiController
     public function getTicketByHash($hash){
         try {
             $ticket = $this->service->getTicketByHash($hash);
-
+            if(is_null($ticket) || !$ticket->isActive())
+                throw new EntityNotFoundException();
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::PublicEdition)->serialize(Request::input('expand', '')));
         }
         catch (ValidationException $ex) {
@@ -1188,6 +1189,67 @@ final class OAuth2SummitOrdersApiController
             $order = $this->service->refundOrder($summit, intval($order_id), floatval($payload['amount']));
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($order)->serialize( Request::input('expand', '')));
+        }
+        catch(\InvalidArgumentException $ex){
+            Log::warning($ex);
+            return $this->error400();
+        }
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
+        }
+        catch(EntityNotFoundException $ex)
+        {
+            Log::warning($ex);
+            return $this->error404(array('message'=> $ex->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $order_id
+     * @param $ticket_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function activateTicket($summit_id, $order_id, $ticket_id){
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $ticket = $this->service->activateTicket($summit, intval($order_id), intval($ticket_id));
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::AdminType)->serialize( Request::input('expand', '')));
+
+        }
+        catch(\InvalidArgumentException $ex){
+            Log::warning($ex);
+            return $this->error400();
+        }
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
+        }
+        catch(EntityNotFoundException $ex)
+        {
+            Log::warning($ex);
+            return $this->error404(array('message'=> $ex->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    public function deActivateTicket($summit_id, $order_id, $ticket_id){
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+            $ticket = $this->service->deActivateTicket($summit, intval($order_id), intval($ticket_id));
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::AdminType)->serialize( Request::input('expand', '')));
+
         }
         catch(\InvalidArgumentException $ex){
             Log::warning($ex);

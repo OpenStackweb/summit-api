@@ -39,6 +39,7 @@ final class DoctrineSummitAttendeeTicketRepository
     {
         return [
             'number'              => 'e.number:json_string',
+            'is_active'           => 'e.is_active',
             'order_number'        => 'o.number:json_string',
             'owner_name'          => [
                 "concat(m.first_name, ' ', m.last_name) :operator :value",

@@ -435,6 +435,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             function($filter) use($owner){
                 if($filter instanceof Filter){
                     $filter->addFilterCondition(FilterElement::makeEqual('member_id', $owner->getId()));
+                    $filter->addFilterCondition(FilterElement::makeEqual('is_active', true));
                 }
                 return $filter;
             },

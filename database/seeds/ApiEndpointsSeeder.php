@@ -616,6 +616,36 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name'        => 'activate-ticket',
+                'route'       => '/api/v1/summits/{id}/orders/{order_id}/tickets/{ticket_id}/activate',
+                'http_method' => 'PUT',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name'        => 'deactivate-ticket',
+                'route'       => '/api/v1/summits/{id}/orders/{order_id}/tickets/{ticket_id}/activate',
+                'http_method' => 'DELETE',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
                 'name'        => 'add-ticket-2-order',
                 'route'       => '/api/v1/summits/{id}/orders/{order_id}/tickets',
                 'http_method' => 'POST',

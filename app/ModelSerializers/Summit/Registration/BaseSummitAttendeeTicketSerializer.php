@@ -37,6 +37,7 @@ class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer
         'Discount'           => 'discount:json_float',
         'RefundedAmount'     => 'refunded_amount:json_float',
         'Currency'           => 'currency:json_string',
+        'Active'             => 'is_active:json_bool',
     ];
 
     protected static $allowed_relations = [

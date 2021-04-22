@@ -886,6 +886,10 @@ Route::group([
                         Route::post('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@addTicket']);
                         Route::group(['prefix' => '{ticket_id}'], function () {
                             Route::put('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@updateTicket']);
+                            Route::group(['prefix' => 'activate'], function () {
+                                Route::put('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@activateTicket']);
+                                Route::delete('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@deActivateTicket']);
+                            });
                             Route::get('pdf', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@getTicketPDFBySummit']);
                         });
                     });

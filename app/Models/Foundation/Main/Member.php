@@ -1805,7 +1805,7 @@ LEFT JOIN Member ON Member.ID = SummitAttendee.MemberID
 WHERE 
 ( Member.ID = :member_id OR SummitAttendee.Email = :member_email) AND 
 SummitAttendee.SummitID = :summit_id AND 
-SummitAttendeeTicket.Status = :ticket_status
+SummitAttendeeTicket.Status = :ticket_status AND SummitAttendeeTicket.IsActive = 1
 SQL;
 
         $stmt = $this->prepareRawSQL($sql);
@@ -1841,13 +1841,14 @@ SQL;
         JOIN o.summit su 
         WHERE su.id = :summit_id 
         and ( m.id = :member_id or o.email = :member_email) 
-        and t.status = :ticket_status");
+        and t.status = :ticket_status and t.is_active = :active");
 
         return $query
             ->setParameter('member_id', $this->getId())
             ->setParameter('member_email', $this->email)
             ->setParameter('ticket_status', IOrderConstants::PaidStatus)
             ->setParameter('summit_id', $summit->getId())
+            ->setParameter('active', true)
             ->getResult();
     }
 

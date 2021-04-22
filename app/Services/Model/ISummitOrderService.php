@@ -114,6 +114,25 @@ interface ISummitOrderService extends IProcessPaymentService
     public function updateTicket(Summit $summit, int $order_id, int $ticket_id, array $payload):SummitAttendeeTicket;
 
     /**
+     * @param Summit $summit
+     * @param int $order_id
+     * @param int $ticket_id
+     * @return SummitAttendeeTicket
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function activateTicket(Summit $summit, int $order_id, int $ticket_id):SummitAttendeeTicket;
+
+    /**
+     * @param Summit $summit
+     * @param int $order_id
+     * @param int $ticket_id
+     * @return SummitAttendeeTicket
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function deActivateTicket(Summit $summit, int $order_id, int $ticket_id):SummitAttendeeTicket;
+    /**
      * @param Member $current_user
      * @param int $order_id
      * @return SummitOrder

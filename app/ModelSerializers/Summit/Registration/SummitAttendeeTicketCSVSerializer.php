@@ -46,6 +46,7 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
         'Currency' => 'currency:json_string',
         'BadgeTypeId' => 'badge_type_id:json_int',
         'BadgeTypeName' => 'badge_type_name:json_string',
+        'Active'    => 'is_active:json_bool',
     ];
 
     /**

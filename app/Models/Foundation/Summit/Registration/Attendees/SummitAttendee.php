@@ -369,6 +369,10 @@ class SummitAttendee extends SilverstripeBaseModel
     public function sendInvitationEmail(SummitAttendeeTicket $ticket, bool $overrideTicketOwnerIsSameAsOrderOwnerRule = false){
         Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s", $this->getEmail()));
         if($ticket->getOwnerEmail() != $this->getEmail()) return;
+        if(!$ticket->isActive()){
+            Log::warning(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket is not active", $this->getEmail()));
+            return;
+        }
         $this->updateStatus();
         if($this->isComplete()) {
             Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s is complete", $this->getEmail()));

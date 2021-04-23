@@ -413,6 +413,10 @@ final class SummitSelectionPlanService
             if(is_null($change_request))
                 throw new EntityNotFoundException("Category Change Request not found.");
 
+            if(!$change_request->isPending()){
+                throw new ValidationException("Change request has already been  approved/rejected.");
+            }
+
             $newCategory = $change_request->getNewCategory();
 
             $isAuth = $summit->isTrackChairAdmin($current_member) || $summit->isTrackChair($current_member, $newCategory);

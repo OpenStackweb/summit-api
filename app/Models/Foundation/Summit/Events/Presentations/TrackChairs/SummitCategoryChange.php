@@ -199,6 +199,13 @@ class SummitCategoryChange extends SilverstripeBaseModel
     }
 
     /**
+     * @return bool
+     */
+    public function isPending():bool{
+        return $this->status == ISummitCategoryChangeStatus::Pending;
+    }
+
+    /**
      * @param Member $aprover
      * @param string|null $reason
      * @throws \Exception

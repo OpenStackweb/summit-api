@@ -441,6 +441,7 @@ final class SummitSelectionPlanService
                 $presentation->setCategory($newCategory);
                 $presentation->addTrackChairNotification
                 (
+                    $current_member,
                     sprintf
                     (
                         "{member} approved %s's request to move this presentation from %s to %s",
@@ -449,22 +450,13 @@ final class SummitSelectionPlanService
                         $newCategory->getTitle()
                     )
                 );
-                $presentation->addTrackChairNotification
-                (
-                    $current_member,
-                    sprintf(
-                        "{member} rejected %s's request to move this presentation from %s to %s because : %s" ,
-                        $change_request->getRequester()->getFullName(),
-                        $category->getTitle(),
-                        $newCategory->getTitle(),
-                        $reason
-                    )
-                );
+
                 foreach($presentation->getPendingCategoryChangeRequests() as $pending_request){
                     if($pending_request->getId() == $change_request->getId()) continue;
                     $pending_request->reject($current_member, sprintf( "Request ID %s was approved instead.", $change_request->getId()));
                 }
             }
+
             else{
                 $change_request->reject($current_member, $reason);
                 $presentation->addTrackChairNotification(

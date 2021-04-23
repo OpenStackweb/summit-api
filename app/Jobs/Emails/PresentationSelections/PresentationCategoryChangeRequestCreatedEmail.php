@@ -13,6 +13,7 @@
  **/
 use App\Jobs\Emails\AbstractEmailJob;
 use models\summit\SummitCategoryChange;
+use Illuminate\Support\Facades\Config;
 /**
  * Class PresentationCategoryChangeRequestCreatedEmail
  * @package App\Jobs\Emails\PresentationSelections
@@ -55,7 +56,7 @@ class PresentationCategoryChangeRequestCreatedEmail extends AbstractEmailJob
         $payload['status'] = $request->getNiceStatus();
         $payload['presentation_title'] = $presentation->getTitle();
         $payload['presentation_id'] = $presentation->getId();
-        $payload['review_link'] = ''; //TBD
+        $payload['review_link'] = sprintf(Config::get("track_chairs.review_link"), $summit->getRawSlug());
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
         parent::__construct($payload, $template_identifier, implode(",", $to_emails));

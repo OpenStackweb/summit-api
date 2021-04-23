@@ -16,4 +16,5 @@ return [
     'weight_select' => env('TRACK_CHAIR_WEIGHT_PASS', 2),
     'weight_maybe' => env('TRACK_CHAIRS_WEIGHT_MAYBE', 1),
     'weight_pass' => env('TRACK_CHAIRS_WEIGHT_PASS', -1),
+    'review_link' => env('TRACK_CHAIRS_REVIEW_LINK',''),
 ];

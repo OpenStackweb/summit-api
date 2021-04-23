@@ -39,6 +39,7 @@ class PresentationCategoryChangeRequestResolvedEmail extends AbstractEmailJob
         $requester = $request->getRequester();
         $old_category = $request->getOldCategory();
         $new_category = $request->getNewCategory();
+
         foreach($old_category->getTrackChairs() as $chair){
             $to_emails[] = $chair->getMember()->getEmail();
         }

@@ -38,14 +38,14 @@ class PresentationTrackChairView extends SilverstripeBaseModel
 
     /**
      * @ORM\ManyToOne(targetEntity="models\main\Member")
-     * @ORM\JoinColumn(name="TrackChairID", referencedColumnName="ID", onDelete="SET NULL")
+     * @ORM\JoinColumn(name="TrackChairID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Member
      */
     private $viewer;
 
     /**
      * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="track_chair_views")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="SET NULL")
+     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Presentation
      */
     private $presentation;

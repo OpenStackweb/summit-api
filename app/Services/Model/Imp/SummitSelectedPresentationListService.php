@@ -92,7 +92,7 @@ final class SummitSelectedPresentationListService
                 throw new AuthzException("Current user is not allowed to perform this operation.");
             }
 
-            $selection_list = $category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Group, $category);
+            $selection_list = $category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Group);
             if (is_null($selection_list)) throw new EntityNotFoundException("list not found.");
 
             return $selection_list;
@@ -145,7 +145,7 @@ final class SummitSelectedPresentationListService
             $member = $this->member_repository->getById(intval($owner_id));
             if (is_null($member)) throw new EntityNotFoundException("member not found.");
 
-            $selection_list = $category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $category, $member);
+            $selection_list = $category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $member);
             if (is_null($selection_list)) throw new EntityNotFoundException("list not found.");
 
             return $selection_list;
@@ -339,7 +339,7 @@ final class SummitSelectedPresentationListService
             if(!$authz)
                 throw new AuthzException("User is not authorized to perform this action");
 
-            $selection_list = $category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $category, $current_member);
+            $selection_list = $category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $current_member);
             if (is_null($selection_list))
                 throw new EntityNotFoundException(sprintf("Individual List not found for member %s and category %s", $current_member->getId(), $category->getId()));
 
@@ -443,7 +443,7 @@ final class SummitSelectedPresentationListService
                 throw new AuthzException("Current user is not allowed to perform this operation.");
             }
 
-            $selection_list = $category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $category, $current_member);
+            $selection_list = $category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $current_member);
             if (is_null($selection_list))
                 throw new EntityNotFoundException(sprintf("Individual List not found for member %s and category %s", $current_member->getId(), $category->getId()));
 

@@ -94,7 +94,7 @@ class SummitTrackChair extends SilverstripeBaseModel
         $track->removeFromTrackChairs($this);
         $this->categories->removeElement($track);
 
-        $list = $track->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $track, $this->member);
+        $list = $track->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $this->member);
         // if we remove the track , then we need to remove the selection lists
         if(!is_null($list)){
             $track->removeSelectionList($list);

@@ -348,8 +348,7 @@ class SummitSelectedPresentationList extends SilverstripeBaseModel
      * @throws ValidationException
      */
     public function getAvailableSlots():int{
-        $selection_count = $this->
-        getSelectedPresentationsByCollection
+        $selection_count = $this->getSelectedPresentationsByCollection
         (
             SummitSelectedPresentation::CollectionSelected
         )->count();
@@ -359,9 +358,9 @@ class SummitSelectedPresentationList extends SilverstripeBaseModel
     /**
      * @return mixed
      */
-    public function getMaxPresentations()
+    public function getMaxPresentations():int
     {
-        return $this->category->getSessionCount() + $this->category->getAlternateCount();
+        return $this->category->getTrackChairAvailableSlots();
     }
 
     public function getMaxAlternates()

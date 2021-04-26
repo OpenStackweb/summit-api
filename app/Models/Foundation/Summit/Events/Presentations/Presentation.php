@@ -1429,13 +1429,8 @@ class Presentation extends SummitEvent
      * @throws ValidationException
      */
     public function getRemainingSelectionsForMember(Member $member):int{
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('member', $member));
-        $criteria->andWhere(Criteria::expr()->eq('collection', SummitSelectedPresentation::CollectionSelected));
-        $res = $this->selected_presentations->matching($criteria)->first();
-        if($res === false ) return 0;
-        $list = $res->getList();
-        if(is_null($list) || !$list instanceof SummitSelectedPresentationList) return 0;
+        $list = $this->category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $member);
+        if(is_null($list) || !$list instanceof SummitSelectedPresentationList) return $this->category->getTrackChairAvailableSlots();
         return $list->getAvailableSlots();
     }
 

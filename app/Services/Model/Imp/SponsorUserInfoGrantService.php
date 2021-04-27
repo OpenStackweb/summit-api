@@ -15,6 +15,7 @@ use App\Models\Foundation\Summit\Factories\SponsorUserInfoGrantFactory;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Services\Model\AbstractService;
 use App\Services\Model\ISponsorUserInfoGrantService;
+use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -76,7 +77,19 @@ final class SponsorUserInfoGrantService
                 throw new EntityNotFoundException(sprintf("Sponsor not found."));
             }
             if($sponsor->hasGrant($current_member)){
-                throw new ValidationException(sprintf("User %s already gave grant to sponsor %s", $current_member->getEmail(), $sponsor_id));
+                Log::warning(
+                    sprintf
+                    (
+                        "User %s already gave grant to sponsor %s",
+                        $current_member->getEmail(),
+                        $sponsor_id
+                    )
+                );
+
+                throw new ValidationException
+                (
+                   "Thanks for sharing your info!"
+                );
             }
             $grant->setAllowedUser($current_member);
             $sponsor->addUserInfoGrant($grant);

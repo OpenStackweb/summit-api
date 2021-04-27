@@ -621,18 +621,17 @@ SQL;
 
     /**
      * @param string $list_type
-     * @param PresentationCategory $category
      * @param Member|null $owner
      * @return SummitSelectedPresentationList|null
      * @throws ValidationException
      */
-    public function getSelectionListByTypeAndOwner(string $list_type, PresentationCategory $category, ?Member $owner = null):?SummitSelectedPresentationList{
+    public function getSelectionListByTypeAndOwner(string $list_type, ?Member $owner = null):?SummitSelectedPresentationList{
         if(!in_array($list_type, SummitSelectedPresentationList::ValidListTypes))
             throw new ValidationException(sprintf("List Type %s is not valid.", $list_type));
 
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('list_type', $list_type));
-        $criteria->andWhere(Criteria::expr()->eq('category', $category));
+        $criteria->andWhere(Criteria::expr()->eq('category', $this));
 
         if($list_type == SummitSelectedPresentationList::Individual){
             $criteria->andWhere(Criteria::expr()->eq('owner', $owner));
@@ -678,12 +677,12 @@ SQL;
      */
     public function createIndividualSelectionList(Member $member ):SummitSelectedPresentationList{
         if(!is_null($member)) {
-            $individual_selection_list = $this->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $this, $member);
+            $individual_selection_list = $this->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $member);
 
             if (is_null($individual_selection_list)) {
                 $individual_selection_list = new SummitSelectedPresentationList();
                 Log::debug(sprintf("PresentationCategory::createSelectionLists adding individual list for track %s and member %s", $this->getId(), $member->getId()));
-                $individual_selection_list->setName(sprintf("%s Individual Selection List for ", $member->getFullName(), $this->getTitle()));
+                $individual_selection_list->setName(sprintf("%s Individual Selection List for %s", $member->getFullName(), $this->getTitle()));
                 $individual_selection_list->setListType(SummitSelectedPresentationList::Individual);
                 $individual_selection_list->setListClass(SummitSelectedPresentationList::Session);
                 $individual_selection_list->setOwner($member);
@@ -698,7 +697,7 @@ SQL;
      * @throws ValidationException
      */
     public function createTeamSelectionList():SummitSelectedPresentationList{
-        $team_selection_list = $this->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Group, $this);
+        $team_selection_list = $this->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Group);
         if (is_null($team_selection_list)) {
             Log::debug(sprintf("PresentationCategory::createSelectionLists adding team list for track %s", $this->getId()));
             $team_selection_list = new SummitSelectedPresentationList();

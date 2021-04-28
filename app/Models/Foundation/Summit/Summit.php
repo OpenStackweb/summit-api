@@ -1965,8 +1965,9 @@ SQL;
 
 
     public function generateRegistrationSlugPrefix():void{
-        if(is_null($this->registration_slug_prefix)){
-            $this->registration_slug_prefix = $this->getSlug("");
+        $newSlug = $this->getSlug("");
+        if(empty($this->registration_slug_prefix) || $this->registration_slug_prefix != $newSlug){
+            $this->registration_slug_prefix = $newSlug;
         }
     }
     /**

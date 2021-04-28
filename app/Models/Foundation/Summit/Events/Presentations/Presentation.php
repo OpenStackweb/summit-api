@@ -1405,6 +1405,9 @@ class Presentation extends SummitEvent
         if($this->category_changes_requests->matching($criteria)->count() > 0)
             throw new ValidationException(sprintf("There is already a pending category change request for this category."));
 
+        if($this->category->getId() == $newCategory->getId())
+            throw new ValidationException("This presentation already belongs to %s.", $newCategory->getTitle());
+
         $request = SummitCategoryChange::create($this, $requester, $newCategory);
 
         $this->category_changes_requests->add($request);

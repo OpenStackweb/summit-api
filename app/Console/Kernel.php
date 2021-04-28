@@ -60,10 +60,10 @@ class Kernel extends ConsoleKernel
 
         $env = App::environment();
 
-        $schedule->command('summit:json-generator')->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('summit:json-generator')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
 
         // list of available summits
-        $schedule->command('summit-list:json-generator')->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('summit-list:json-generator')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
 
         // Calendar Sync Jobs
 
@@ -83,26 +83,26 @@ class Kernel extends ConsoleKernel
 
         // bookable rooms
 
-        $schedule->command('summit:room-reservation-revocation')->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('summit:room-reservation-revocation')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
         // external schedule ingestion task
 
-        $schedule->command("summit:external-schedule-feed-ingestion-process")->everyFifteenMinutes()->withoutOverlapping();
+        $schedule->command("summit:external-schedule-feed-ingestion-process")->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
 
         // AVG schedule feedback rate
-        $schedule->command("summit:feedback-avg-rate-processor")->everyFifteenMinutes()->withoutOverlapping();
+        $schedule->command("summit:feedback-avg-rate-processor")->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
         // registration orders
 
-        $schedule->command('summit:order-reservation-revocation')->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('summit:order-reservation-revocation')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
 
         // reminder emails
 
-        $schedule->command('summit:registration-order-reminder-action-email')->everyThirtyMinutes()->timezone(new \DateTimeZone('UTC'))->withoutOverlapping();
-
-        // production YOCO (13) advance AT 0700 AM ( 12:00 AM PST)
-
+        $schedule->command('summit:registration-order-reminder-action-email')->everyThirtyMinutes()->timezone(new \DateTimeZone('UTC'))->withoutOverlapping()->onOneServer();
 
         if ($env == 'production') {
-            $schedule->command("summit:forward-x-days", [13, 2, '--check-ended'])->dailyAt("07:00")->timezone('UTC')->withoutOverlapping();
+            // FNTECH production YOCO (13) advance AT 0700 AM ( 12:00 AM PST)
+            $schedule->command("summit:forward-x-days", ["FNTECH", 13, 2, '--check-ended'])->dailyAt("07:00")->timezone('UTC')->withoutOverlapping()->onOneServer();
+            // FNTECH production Hybrid Alive (30) advance AT 0700 AM ( 12:00 AM PST)
+            $schedule->command("summit:forward-x-days", ["FNTECH", 30, 3, '--check-ended'])->dailyAt("07:00")->timezone('UTC')->withoutOverlapping()->onOneServer();
         }
 
     }

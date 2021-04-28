@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use services\model\ISummitService;
 use Exception;
@@ -39,7 +40,7 @@ class SummitForwardXDays extends Command
      *
      * @var string
      */
-    protected $signature = 'summit:forward-x-days {summit_id} {days} {--negative} {--check-ended}';
+    protected $signature = 'summit:forward-x-days {tenant} {summit_id} {days} {--negative} {--check-ended}';
 
     /**
      * The console command description.
@@ -71,6 +72,19 @@ class SummitForwardXDays extends Command
     public function handle()
     {
         try {
+            $tenant = $this->argument('tenant');
+            if(empty($tenant))
+                throw new \InvalidArgumentException("tenant is required");
+
+            $current_tenant = Config::get("app.tenant_name");
+
+            Log::debug(sprintf("SummitForwardXDays::handle tenant %s current_tenant %s", $tenant, $current_tenant));
+
+            if($tenant != $current_tenant){
+                Log::warning(sprintf("SummitForwardXDays::handle exiting bc tenants are not the same"));
+                return;
+            }
+
             $summit_id = $this->argument('summit_id');
             if(empty($summit_id))
                 throw new \InvalidArgumentException("summit_id is required");

@@ -68,6 +68,7 @@ use App\Jobs\Emails\BookableRooms\BookableRoomReservationCanceledEmail;
 use App\Jobs\Emails\Schedule\RSVPRegularSeatMail;
 use App\Jobs\Emails\Schedule\RSVPWaitListSeatMail;
 use App\Jobs\SynchAllPresentationActions;
+use App\Jobs\SynchPresentationActions;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
@@ -136,6 +137,9 @@ final class EventServiceProvider extends ServiceProvider
         Event::listen(\App\Events\SummitEventCreated::class, function($event)
         {
             EntityEventPersister::persist(SummitEventCreatedEntityEventFactory::build($event));
+
+            SynchPresentationActions::dispatch($event->getSummitEvent()->getId());
+
         });
 
         Event::listen(\App\Events\SummitEventUpdated::class, function($event)

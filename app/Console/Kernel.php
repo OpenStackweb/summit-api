@@ -13,6 +13,7 @@
  **/
 
 use App\Console\Commands\PresentationMaterialsCreateMUXAssetsCommand;
+use App\Console\Commands\SummitSyncAllPresentationActions;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Facades\App;
@@ -46,6 +47,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\PresentationMaterialsCreateMUXAssetsCommand::class,
         \App\Console\Commands\RecalculateAttendeesStatusCommand::class,
         \App\Console\Commands\EnableMP4SupportAtMUXCommand::class,
+        \App\Console\Commands\SummitSyncAllPresentationActions::class,
     ];
 
     /**
@@ -60,7 +62,11 @@ class Kernel extends ConsoleKernel
 
         $env = App::environment();
 
+        // summit json cache
         $schedule->command('summit:json-generator')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
+
+        // synch presentation actions
+        $schedule->command('summit:synch-presentation-actions')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
 
         // list of available summits
         $schedule->command('summit-list:json-generator')->everyFiveMinutes()->withoutOverlapping()->onOneServer();

@@ -5260,4 +5260,8 @@ SQL;
             $presentation->initializeActions();
         }
     }
+
+    public function synchPresentationAction(Presentation $presentation):void{
+        $presentation->initializeActions();
+    }
 }

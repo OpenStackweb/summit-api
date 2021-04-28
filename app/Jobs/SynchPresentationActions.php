@@ -19,12 +19,14 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
+use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
+use models\summit\Presentation;
 /**
- * Class SynchAllPresentationActions
+ * Class SynchPresentationActions
  * @package App\Jobs
  */
-class SynchAllPresentationActions implements ShouldQueue
+class SynchPresentationActions implements ShouldQueue
 {
     public $tries = 2;
 
@@ -35,15 +37,15 @@ class SynchAllPresentationActions implements ShouldQueue
     /**
      * @var int
      */
-    private $summit_id;
+    private $event_id;
 
     /**
      * SynchAllPresentationActions constructor.
-     * @param int $summit_id
+     * @param int $event_id
      */
-    public function __construct(int $summit_id)
+    public function __construct(int $event_id)
     {
-        $this->summit_id = $summit_id;
+        $this->event_id = $event_id;
     }
 
     /**
@@ -52,17 +54,17 @@ class SynchAllPresentationActions implements ShouldQueue
      * @throws \Exception
      */
     public function handle(
-        ISummitRepository $repository,
+        ISummitEventRepository $repository,
         ITransactionService $tx_service
     )
     {
-        Log::debug(sprintf("SynchAllPresentationActions::handle summit %s", $this->summit_id));
+        Log::debug(sprintf("SynchPresentationActions::handle event id %s", $this->event_id));
         $tx_service->transaction(function() use($repository){
-            $summit = $repository->getById($this->summit_id);
-            if(is_null($summit))
-                throw new EntityNotFoundException(sprintf("Summit %s not found", $this->summit_id));
+            $event = $repository->getById($this->event_id);
+            if(is_null($event) || !$event instanceof Presentation)
+                throw new EntityNotFoundException(sprintf("Event %s is not a presentation", $this->event_id));
 
-            $summit->synchAllPresentationActions();
+            $event->getSummit()->synchAllPresentationActions();
         });
     }
 }

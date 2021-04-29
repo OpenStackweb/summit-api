@@ -30,7 +30,7 @@ class Version20210429160901 extends AbstractMigration
 
         if($schema->hasTable("Presentation")) {
             $builder->table('Presentation', function (Table $table) {
-              $table->boolean("will_all_speakers_attend")->setDefault(false)->setNotnull(true);
+              $table->boolean("WillAllSpeakersAttend")->setDefault(false)->setNotnull(true);
             });
         }
     }
@@ -44,7 +44,7 @@ class Version20210429160901 extends AbstractMigration
 
         if($schema->hasTable("Presentation")) {
             $builder->table('Presentation', function (Table $table) {
-                $table->dropColumn("will_all_speakers_attend");
+                $table->dropColumn("WillAllSpeakersAttend");
             });
         }
     }

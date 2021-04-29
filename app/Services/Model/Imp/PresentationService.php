@@ -462,6 +462,9 @@ final class PresentationService
             if (isset($data['description']))
                 $presentation->setAbstract(html_entity_decode(trim($data['description'])));
 
+            if (isset($data['will_all_speakers_attend']))
+                $presentation->setWillAllSpeakersAttend(boolval($data['will_all_speakers_attend']));
+
             if (isset($data['social_description']))
                 $presentation->setSocialSummary(strip_tags(trim($data['social_description'])));
 

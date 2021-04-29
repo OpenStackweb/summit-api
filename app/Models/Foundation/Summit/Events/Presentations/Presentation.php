@@ -124,6 +124,12 @@ class Presentation extends SummitEvent
     protected $attending_media;
 
     /**
+     * @ORM\Column(name="WillAllSpeakersAttend", type="boolean")
+     * @var bool
+     */
+    protected $will_all_speakers_attend;
+
+    /**
      * @ORM\ManyToOne(targetEntity="PresentationSpeaker", inversedBy="moderated_presentations", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="ModeratorID", referencedColumnName="ID", onDelete="SET NULL")
      * @var PresentationSpeaker
@@ -241,6 +247,7 @@ class Presentation extends SummitEvent
         $this->actions = new ArrayCollection();
         $this->to_record = false;
         $this->attending_media = false;
+        $this->will_all_speakers_attend = false;
     }
 
     /**
@@ -1527,4 +1534,21 @@ class Presentation extends SummitEvent
         usort($array, [ $this , 'actionSort' ]);
         return $array;
     }
+
+    /**
+     * @return bool
+     */
+    public function isWillAllSpeakersAttend(): bool
+    {
+        return $this->will_all_speakers_attend;
+    }
+
+    /**
+     * @param bool $will_all_speakers_attend
+     */
+    public function setWillAllSpeakersAttend(bool $will_all_speakers_attend): void
+    {
+        $this->will_all_speakers_attend = $will_all_speakers_attend;
+    }
+
 }

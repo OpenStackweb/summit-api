@@ -23,6 +23,7 @@ use models\summit\Summit;
 use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
 use DateTime;
+use DateTimeZone;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSelectionPlanRepository")
  * @ORM\AssociationOverrides({
@@ -130,6 +131,14 @@ class SelectionPlan extends SilverstripeBaseModel
     }
 
     /**
+     * @return DateTimeZone|null
+     */
+    public function getTimeZone()
+    {
+        return $this->summit->getTimeZone();
+    }
+
+    /**
      * @return DateTime
      */
     public function getSubmissionBeginDate()
@@ -158,6 +167,14 @@ class SelectionPlan extends SilverstripeBaseModel
     public function getSubmissionEndDate()
     {
         return $this->submission_end_date;
+    }
+
+    public function getSubmissionEndDateLocal():?DateTime{
+        return $this->convertDateFromUTC2TimeZone($this->submission_end_date);
+    }
+
+    public function getSubmissionBeginDateLocal():?DateTime{
+        return $this->convertDateFromUTC2TimeZone($this->submission_begin_date);
     }
 
     /**

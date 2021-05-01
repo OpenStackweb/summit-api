@@ -61,8 +61,12 @@ class PresentationCreatorNotificationEmail extends AbstractEmailJob
         $payload['creator_email'] = $creator->getEmail();
         $payload['selection_plan_name'] = $selection_plan->getName();
         $payload['presentation_edit_link'] = $presentation->getEditLink();
-        $payload['summit_date'] = $summit->getMonthYear();
-        $payload['until_date'] = $selection_plan->getSubmissionEndDate()->format('d F, Y');
+
+        $summitBeginDate = $summit->getLocalBeginDate();
+        $payload['summit_date'] = !is_null($summitBeginDate)? $summitBeginDate->format("F d, Y") : "";
+        $submissionEndDateLocal = $selection_plan->getSubmissionEndDateLocal();
+        $payload['until_date'] = !is_null($submissionEndDateLocal) ? $submissionEndDateLocal->format('F d, Y') : "";
+
         $payload['selection_process_link'] = sprintf("%s/app/%s", $speaker_management_base_url, $summit->getRawSlug());
         $payload['speaker_management_link'] = sprintf("%s/app/%s", $speaker_management_base_url, $summit->getRawSlug());
         $payload['bio_edit_link'] = sprintf("%s/app/%s/profile", $speaker_management_base_url, $summit->getRawSlug());

@@ -33,8 +33,7 @@ class SummitAdministratorPermissionGroup extends SilverstripeBaseModel
      */
     private $title;
 
-    const ValidGroups = [IGroup::SummitAdministrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins];
-
+    const ValidGroups = [IGroup::SummitAdministrators, IGroup::TrackChairsAdmins];
 
     public function __construct()
     {

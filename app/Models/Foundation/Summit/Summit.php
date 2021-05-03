@@ -5175,7 +5175,6 @@ SQL;
         if($member->isAdmin()) return true;
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('member', $member));
-        $hasPermission = $this->hasPermissionOnSummit($member);
         $isOnGroup = $member->isOnGroup(IGroup::TrackChairs);
         $isTrackChair =  $this->track_chairs->matching($criteria)->count() > 0;
         if(!is_null($category)){
@@ -5184,7 +5183,7 @@ SQL;
             })->count() > 0;
         }
 
-        return ($hasPermission && $isOnGroup && $isTrackChair);
+        return ($isOnGroup && $isTrackChair);
     }
 
     public function hasPermissionOnSummit(Member $member):bool{

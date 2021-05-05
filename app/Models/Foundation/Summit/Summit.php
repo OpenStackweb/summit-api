@@ -5173,6 +5173,7 @@ SQL;
      */
     public function isTrackChair(Member $member, PresentationCategory $category = null):bool{
         if($member->isAdmin()) return true;
+
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('member', $member));
         $isOnGroup = $member->isOnGroup(IGroup::TrackChairs);
@@ -5192,13 +5193,24 @@ SQL;
             return $group->hasMember($member);
         })->count() > 0;
     }
+
     /**
      * @param Member $member
      * @return bool
      */
     public function isTrackChairAdmin(Member $member):bool{
         if($member->isAdmin()) return true;
+        if($this->isSummitAdmin($member)) return true;
         return $this->hasPermissionOnSummit($member) && $member->isOnGroup(IGroup::TrackChairsAdmins);
+    }
+
+    /**
+     * @param Member $member
+     * @return bool
+     */
+    public function isSummitAdmin(Member $member):bool{
+        if($member->isAdmin()) return true;
+        return $this->hasPermissionOnSummit($member) && $member->isOnGroup(IGroup::SummitAdministrators);
     }
 
     /**

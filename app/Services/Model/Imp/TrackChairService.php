@@ -85,6 +85,7 @@ final class TrackChairService
             $current_member = $this->resource_server_ctx->getCurrentUser();
             if (is_null($current_member))
                 throw new AuthzException("User not Found");
+
             $isAuth = $summit->isTrackChairAdmin($current_member);
 
             if (!$isAuth)

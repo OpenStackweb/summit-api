@@ -20,5 +20,6 @@ final class AdminMemberSerializer extends AbstractMemberSerializer
 {
     protected static $array_mappings = [
         'Email' => 'email:json_string',
+        'UserExternalId' => 'user_external_id:json_int'
     ];
 }

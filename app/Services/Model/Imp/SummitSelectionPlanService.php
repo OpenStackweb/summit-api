@@ -374,6 +374,18 @@ final class SummitSelectionPlanService
 
             $change_request = $presentation->addCategoryChangeRequest($current_member,  $new_category);
 
+            $presentation->addTrackChairNotification
+            (
+                $current_member,
+                sprintf
+                (
+                    "%s submitted a request to change the category from %s to %s",
+                    $current_member->getFullName(),
+                    $category->getTitle(),
+                    $new_category->getTitle()
+                )
+            );
+
             PresentationCategoryChangeRequestCreatedEmail::dispatch($change_request);
 
             return $change_request;

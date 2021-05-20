@@ -19,6 +19,7 @@ use App\Http\Utils\FileUploadInfo;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use App\Models\Foundation\Summit\Factories\PresentationLinkFactory;
 use App\Models\Foundation\Summit\Factories\PresentationMediaUploadFactory;
 use App\Models\Foundation\Summit\Factories\PresentationSlideFactory;
@@ -41,6 +42,7 @@ use models\main\Member;
 use models\summit\ISpeakerRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\Presentation;
+use models\summit\PresentationExtraQuestionAnswer;
 use models\summit\PresentationLink;
 use models\summit\PresentationMediaUpload;
 use models\summit\PresentationSlide;
@@ -51,6 +53,7 @@ use libs\utils\ITransactionService;
 use models\summit\Summit;
 use Illuminate\Http\Request as LaravelRequest;
 use App\Services\Model\IFolderService;
+use models\summit\SummitOrderExtraQuestionTypeConstants;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
@@ -526,39 +529,40 @@ final class PresentationService
                 }
             }
 
+            $extra_questions = $payload['extra_questions'] ?? [];
             // extra questions values
-            if (isset($data['extra_questions'])) {
-                foreach ($data['extra_questions'] as $extra_question) {
-                    if (!isset($extra_question['id'])) continue;
-                    if (!isset($extra_question['value'])) continue;
+            $mandatory_questions = $selection_plan->getMandatoryExtraQuestions();
+            if (count($extra_questions) < $mandatory_questions->count()) {
+                throw new ValidationException("You neglected to fill in all mandatory questions for the presentation.");
+            }
+            if (count($extra_questions)) {
 
-                    $extra_question_id = $extra_question['id'];
-                    $extra_question_value = $extra_question['value'];
+                $questions = $selection_plan->getExtraQuestions();
+                if ($questions->count() > 0) {
+                    $presentation->clearExtraQuestionAnswers();
+                    foreach ($questions as $question) {
+                        if (!$question instanceof SummitSelectionPlanExtraQuestionType) continue;
+                        foreach ($extra_questions as $question_answer) {
+                            if (intval($question_answer['question_id']) == $question->getId()) {
+                                $value = trim($question_answer['answer']);
 
-                    $track_question = $track->getExtraQuestionById($extra_question_id);
-                    if (is_null($track_question)) {
-                        throw new EntityNotFoundException(
-                            trans(
-                                'not_found_errors.PresentationService.saveOrUpdatePresentation.trackQuestionNotFound',
-                                ['question_id' => $extra_question_id]
-                            )
-                        );
+                                if (empty($value) && $question->isMandatory())
+                                    throw new ValidationException(sprintf('Question "%s" is mandatory', $question->getLabel()));
+
+                                if ($question->allowsValues() && !$question->allowValue($value)) {
+                                    Log::warning(sprintf("value %s is not allowed for question %s", $value, $question->getName()));
+                                    throw new ValidationException("The answer you provided is invalid");
+                                }
+
+                                $answer = new PresentationExtraQuestionAnswer();
+                                $answer->setQuestion($question);
+                                $answer->setValue($value);
+                                $presentation->addExtraQuestionAnswer($answer);
+                                break;
+                            }
+                        }
                     }
 
-                    $answer = $presentation->getTrackExtraQuestionAnswer($track_question);
-
-                    if (is_null($answer)) {
-                        $answer = new TrackAnswer();
-                        $presentation->addAnswer($answer);
-                        $track_question->addAnswer($answer);
-                    }
-
-                    if (is_array($extra_question_value)) {
-                        $extra_question_value = str_replace('{comma}', ',', $extra_question_value);
-                        $extra_question_value = implode(',', $extra_question_value);
-                    }
-
-                    $answer->setValue($extra_question_value);
                 }
             }
             return $presentation;

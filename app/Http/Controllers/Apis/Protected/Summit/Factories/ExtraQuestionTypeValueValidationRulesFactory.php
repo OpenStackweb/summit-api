@@ -1,6 +1,6 @@
 <?php namespace App\Http\Controllers;
 /**
- * Copyright 2019 OpenStack Foundation
+ * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,13 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use models\summit\SummitOrderExtraQuestionTypeConstants;
+
+
 /**
- * Class SummitOrderExtraQuestionTypeValidationRulesFactory
+ * Class ExtraQuestionTypeValueValidationRulesFactory
  * @package App\Http\Controllers
  */
-class SummitOrderExtraQuestionTypeValidationRulesFactory
-extends ExtraQuestionTypeValidationRulesFactory
+final class ExtraQuestionTypeValueValidationRulesFactory
 {
     /**
      * @param array $data
@@ -26,19 +26,17 @@ extends ExtraQuestionTypeValidationRulesFactory
      */
     public static function build(array $data, $update = false){
 
-        $rules = static::build($data,$update);
-
         if($update){
-            return array_merge([
-                'usage'       => 'sometimes|string|in:'.implode(",", SummitOrderExtraQuestionTypeConstants::ValidQuestionUsages),
-                'printable'   => 'sometimes|boolean',
-            ], $rules);
+            return [
+                'label' => 'sometimes|string',
+                'value' => 'sometimes|string',
+                'order' => 'sometimes|integer|min:1'
+            ];
         }
 
-        return array_merge([
-            'usage'       => 'required|string|in:'.implode(",", SummitOrderExtraQuestionTypeConstants::ValidQuestionUsages),
-            'printable'   => 'sometimes|boolean',
-
-        ], $rules);
+        return [
+            'label' => 'sometimes|string',
+            'value' => 'required|string',
+        ];
     }
 }

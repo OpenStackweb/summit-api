@@ -160,11 +160,16 @@ trait InsertMemberTestData
         self::$member2 =  self::$member_repository->find(self::$member2->getId());
         self::$group2 =  self::$group_repository->find(self::$group2->getId());
 
-        self::$em->remove(self::$member);
-        self::$em->remove(self::$group);
+        if(!is_null(self::$member))
+            self::$em->remove(self::$member);
+        if(!is_null(self::$group))
+            self::$em->remove(self::$group);
 
-        self::$em->remove(self::$member2);
-        self::$em->remove(self::$group2);
+        if(!is_null(self::$member2))
+            self::$em->remove(self::$member2);
+        if(!is_null(self::$group2))
+            self::$em->remove(self::$group2);
+
         self::$em->flush();
     }
 }

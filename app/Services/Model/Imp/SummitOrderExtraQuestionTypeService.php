@@ -11,30 +11,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Summit\Factories\SummitOrderExtraQuestionTypeFactory;
-use App\Models\Foundation\Summit\Factories\SummitOrderExtraQuestionValueFactory;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderExtraQuestionTypeRepository;
-use App\Services\Model\AbstractService;
+use App\Services\Model\Imp\ExtraQuestionTypeService;
 use App\Services\Model\ISummitOrderExtraQuestionTypeService;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\summit\Summit;
 use models\summit\SummitOrderExtraQuestionType;
-use models\summit\SummitOrderExtraQuestionValue;
 /**
  * Class SummitOrderExtraQuestionTypeService
  * @package App\Services
  */
 final class SummitOrderExtraQuestionTypeService
-    extends AbstractService
+    extends ExtraQuestionTypeService
     implements ISummitOrderExtraQuestionTypeService
 {
-
-    /**
-     * @var ISummitOrderExtraQuestionTypeRepository
-     */
-    private $repository;
 
     /**
      * SummitOrderExtraQuestionTypeService constructor.
@@ -63,13 +57,13 @@ final class SummitOrderExtraQuestionTypeService
         return $this->tx_service->transaction(function () use ($summit, $payload) {
             $name = trim($payload['name']);
             $former_question = $summit->getOrderExtraQuestionByName($name);
-            if(!is_null($former_question))
-                throw new ValidationException("question name already exists for summit");
+            if (!is_null($former_question))
+                throw new ValidationException("Question Name already exists for Summit.");
 
             $label = trim($payload['label']);
             $former_question = $summit->getOrderExtraQuestionByLabel($label);
-            if(!is_null($former_question))
-                throw new ValidationException("question label already exists for summit");
+            if (!is_null($former_question))
+                throw new ValidationException("Question Label already exists for Summit.");
 
             $question = SummitOrderExtraQuestionTypeFactory::build($payload);
 
@@ -92,26 +86,26 @@ final class SummitOrderExtraQuestionTypeService
         return $this->tx_service->transaction(function () use ($summit, $question_id, $payload) {
 
             $question = $summit->getOrderExtraQuestionById($question_id);
-            if(is_null($question))
-                throw new EntityNotFoundException("question not found");
+            if (is_null($question))
+                throw new EntityNotFoundException("Question not Found.");
 
-            if(isset($payload['name'])) {
+            if (isset($payload['name'])) {
                 $name = trim($payload['name']);
                 $former_question = $summit->getOrderExtraQuestionByName($name);
                 if (!is_null($former_question) && $former_question->getId() != $question_id)
-                    throw new ValidationException("question name already exists for summit");
+                    throw new ValidationException("Question Name already exists for Summit.");
             }
 
-            if(isset($payload['label'])) {
+            if (isset($payload['label'])) {
                 $label = trim($payload['label']);
                 $former_question = $summit->getOrderExtraQuestionByLabel($label);
                 if (!is_null($former_question) && $former_question->getId() != $question_id)
-                    throw new ValidationException("question label already exists for summit");
+                    throw new ValidationException("Question Label already exists for Summit.");
             }
 
             if (isset($payload['order']) && intval($payload['order']) != $question->getOrder()) {
                 // request to update order
-                $summit->recalculateQuestionOrder($question,  intval($payload['order']) );
+                $summit->recalculateQuestionOrder($question, intval($payload['order']));
             }
 
             return SummitOrderExtraQuestionTypeFactory::populate($question, $payload);
@@ -129,12 +123,12 @@ final class SummitOrderExtraQuestionTypeService
         $this->tx_service->transaction(function () use ($summit, $question_id) {
 
             $question = $summit->getOrderExtraQuestionById($question_id);
-            if(is_null($question))
-                throw new EntityNotFoundException("question not found");
+            if (is_null($question))
+                throw new EntityNotFoundException("Question not found.");
 
             // check if question has answers
 
-            if($this->repository->hasAnswers($question)){
+            if ($this->repository->hasAnswers($question)) {
                 //throw new ValidationException(sprintf("you can not delete question %s bc already has answers from attendees", $question_id));
                 $this->repository->deleteAnswersFrom($question);
             }
@@ -147,35 +141,19 @@ final class SummitOrderExtraQuestionTypeService
      * @param Summit $summit
      * @param int $question_id
      * @param array $payload
-     * @return SummitOrderExtraQuestionValue
+     * @return ExtraQuestionTypeValue
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function addOrderExtraQuestionValue(Summit $summit, int $question_id, array $payload): SummitOrderExtraQuestionValue
+    public function addOrderExtraQuestionValue(Summit $summit, int $question_id, array $payload): ExtraQuestionTypeValue
     {
         return $this->tx_service->transaction(function () use ($summit, $question_id, $payload) {
+
             $question = $summit->getOrderExtraQuestionById($question_id);
-            if(is_null($question))
-                throw new EntityNotFoundException("question not found");
+            if (is_null($question))
+                throw new EntityNotFoundException("Question not found.");
 
-            $name   = trim($payload['value']);
-            $former_value = $question->getValueByName($name);
-            if(!is_null($former_value))
-                throw new ValidationException("value already exists");
-
-            if(isset($payload['label'])) {
-                $label = trim($payload['label']);
-                $former_value = $question->getValueByLabel($label);
-                if (!is_null($former_value))
-                    throw new ValidationException("value already exists");
-            }
-
-            $value = SummitOrderExtraQuestionValueFactory::build($payload);
-
-            $question->addValue($value);
-
-            return $value;
-
+            return parent::_addOrderExtraQuestionValue($question, $payload);
         });
     }
 
@@ -184,42 +162,18 @@ final class SummitOrderExtraQuestionTypeService
      * @param int $question_id
      * @param int $value_id
      * @param array $payload
-     * @return SummitOrderExtraQuestionValue
+     * @return ExtraQuestionTypeValue
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function updateOrderExtraQuestionValue(Summit $summit, int $question_id, int $value_id, array $payload): SummitOrderExtraQuestionValue
+    public function updateOrderExtraQuestionValue(Summit $summit, int $question_id, int $value_id, array $payload): ExtraQuestionTypeValue
     {
         return $this->tx_service->transaction(function () use ($summit, $question_id, $value_id, $payload) {
             $question = $summit->getOrderExtraQuestionById($question_id);
-            if(is_null($question))
-                throw new EntityNotFoundException("question not found");
+            if (is_null($question))
+                throw new EntityNotFoundException("Question not found.");
 
-            $value = $question->getValueById($value_id);
-            if(is_null($value))
-                throw new EntityNotFoundException("value not found");
-
-            if(isset($payload['value'])) {
-                $name = trim($payload['value']);
-                $former_value = $question->getValueByName($name);
-                if (!is_null($former_value) && $former_value->getId() != $value_id)
-                    throw new ValidationException("value already exists");
-            }
-
-            if(isset($payload['label'])) {
-                $label = trim($payload['label']);
-                $former_value = $question->getValueByLabel($label);
-                if (!is_null($former_value) && $former_value->getId() != $value_id)
-                    throw new ValidationException("value already exists");
-            }
-
-
-            if (isset($payload['order']) && intval($payload['order']) != $value->getOrder()) {
-                // request to update order
-                $question->recalculateValueOrder($value,  intval($payload['order']) );
-            }
-
-            return SummitOrderExtraQuestionValueFactory::populate($value, $payload);
+            return parent::_updateOrderExtraQuestionValue($question, $value_id, $payload);
         });
     }
 
@@ -234,21 +188,10 @@ final class SummitOrderExtraQuestionTypeService
     {
         $this->tx_service->transaction(function () use ($summit, $question_id, $value_id) {
             $question = $summit->getOrderExtraQuestionById($question_id);
-            if(is_null($question))
-                throw new EntityNotFoundException("question not found");
+            if (is_null($question))
+                throw new EntityNotFoundException("Question not found.");
 
-            $value = $question->getValueById($value_id);
-
-            if(is_null($value))
-                throw new EntityNotFoundException("value not found");
-
-            // check if question has answers
-
-            if($this->repository->hasAnswers($question)){
-                throw new ValidationException(sprintf("you can not delete question value %s bc already has answers from attendees", $value_id));
-            }
-
-            $question->removeValue($value);
+            parent::_deleteOrderExtraQuestionValue($question, $value_id);
         });
     }
 }

@@ -24,6 +24,7 @@ use App\Models\Foundation\Summit\DefaultTrackTagGroup;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlow;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplate;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner;
 use App\Models\Foundation\Summit\Repositories\IDefaultSummitEventTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IDefaultTrackTagGroupRepository;
@@ -59,6 +60,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRefundPolicyTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitSelectionPlanExtraQuestionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitTaxTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackChairRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
@@ -120,6 +122,7 @@ use models\summit\SummitTaxType;
 use models\summit\SummitTicketType;
 use models\summit\SummitTrackChair;
 use repositories\main\DoctrineLegalDocumentRepository;
+
 /**
  * Class RepositoriesProvider
  * @package repositories
@@ -667,6 +670,13 @@ final class RepositoriesProvider extends ServiceProvider
             IPresentationActionTypeRepository::class,
             function(){
                 return EntityManager::getRepository(PresentationActionType::class);
+            }
+        );
+
+        App::singleton(
+            ISummitSelectionPlanExtraQuestionTypeRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitSelectionPlanExtraQuestionType::class);
             }
         );
     }

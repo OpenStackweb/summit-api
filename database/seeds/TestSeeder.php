@@ -22,13 +22,6 @@ final class TestSeeder extends Seeder
     public function run()
     {
         Model::unguard();
-        DB::setDefaultConnection("model");
-        DB::table('Summit')->delete();
-        DB::table('SummitEventType')->delete();
-        DB::table('PresentationType')->delete();
-        DB::table('SummitAbstractLocation')->delete();
-        DB::table('SummitGeoLocatedLocation')->delete();
-        DB::table('SummitVenue')->delete();
         DB::setDefaultConnection("config");
         $this->call('ApiSeeder');
         $this->call('ApiScopesSeeder');

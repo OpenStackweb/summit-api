@@ -14,6 +14,8 @@
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Redis;
 use Laravel\BrowserKitTesting\TestCase as BaseTestCase;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 /**
  * Class TestCase
  * @package Tests
@@ -46,6 +48,20 @@ abstract class BrowserKitTestCase extends BaseTestCase
      */
     protected function prepareForTests()
     {
+        Model::unguard();
+        DB::setDefaultConnection("model");
+        DB::table('Group_Members')->delete();
+        DB::table('Member')->delete();
+        DB::table('Group')->delete();
+
+        DB::table('Summit')->delete();
+        DB::table('SummitEventType')->delete();
+        DB::table('PresentationType')->delete();
+        DB::table('SummitAbstractLocation')->delete();
+        DB::table('SummitGeoLocatedLocation')->delete();
+        DB::table('SummitVenue')->delete();
+        DB::table('PresentationTrackChairView')->delete();
+
         Artisan::call('doctrine:migrations:migrate', ["--connection" => 'config']);
         Artisan::call('doctrine:migrations:migrate', ["--connection" => 'model']);
         //Mail::pretend(true);

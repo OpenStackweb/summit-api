@@ -111,12 +111,12 @@ final class SummitAttendeeFactory
 
         $extra_questions = $payload['extra_questions'] ?? [];
 
-        if (count($extra_questions)) {
+        $mandatory_questions = $summit->getMandatoryOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+        if (count($extra_questions) < $mandatory_questions->count()) {
+            throw new ValidationException("You neglected to fill in all mandatory questions for the attendee.");
+        }
 
-            $mandatory_questions = $summit->getMandatoryOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
-            if (count($extra_questions) < $mandatory_questions->count()) {
-                throw new ValidationException("You neglected to fill in all mandatory questions for the attendee.");
-            }
+        if (count($extra_questions)) {
 
             $questions = $summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
             if ($questions->count() > 0) {

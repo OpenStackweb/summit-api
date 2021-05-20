@@ -205,10 +205,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             if (is_null($summit)) return $this->error404();
 
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, [
-                'label' => 'sometimes|string',
-                'value' => 'required|string',
-            ]);
+            $validation = Validator::make($payload, ExtraQuestionTypeValueValidationRulesFactory::build($payload));
 
             if ($validation->fails()) {
                 $messages = $validation->messages()->toArray();
@@ -254,11 +251,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             if (is_null($summit)) return $this->error404();
 
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, [
-                'label' => 'sometimes|string',
-                'value' => 'sometimes|string',
-                'order' => 'sometimes|integer|min:1'
-            ]);
+            $validation = Validator::make($payload, ExtraQuestionTypeValueValidationRulesFactory::build($payload, true));
 
             if ($validation->fails()) {
                 $messages = $validation->messages()->toArray();

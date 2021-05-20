@@ -1,6 +1,6 @@
-<?php namespace models\summit;
+<?php namespace App\Models\Foundation\ExtraQuestions;
 /**
- * Copyright 2019 OpenStack Foundation
+ * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,11 +12,12 @@
  * limitations under the License.
  **/
 
+
 /**
- * Interface SummitOrderExtraQuestionTypeConstants
- * @package models\summit
+ * interface ExtraQuestionTypeConstants
+ * @package App\Models\Foundation\ExtraQuestions
  */
-interface SummitOrderExtraQuestionTypeConstants
+interface ExtraQuestionTypeConstants
 {
     const TextAreaQuestionType        = 'TextArea';
     const TextQuestionType            = 'Text';
@@ -36,19 +37,14 @@ interface SummitOrderExtraQuestionTypeConstants
         self::RadioButtonListQuestionType,
     ];
 
-    const AllowedMultivalueQuestionType = [
+    const AllowedMultiValueQuestionType = [
         self::ComboBoxQuestionType,
         self::CheckBoxListQuestionType,
         self::RadioButtonListQuestionType,
     ];
 
-    const OrderQuestionUsage          = 'Order';
-    const TicketQuestionUsage         = 'Ticket';
-    const BothQuestionUsage           = 'Both';
-
-    const ValidQuestionUsages = [
-        self::OrderQuestionUsage,
-        self::TicketQuestionUsage,
-        self::BothQuestionUsage
+    const AllowedPlaceHolderQuestionType = [
+        self::TextAreaQuestionType,
+        self::TextQuestionType,
     ];
 }

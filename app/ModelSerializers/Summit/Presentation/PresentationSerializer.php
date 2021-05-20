@@ -148,7 +148,7 @@ class PresentationSerializer extends SummitEventSerializer
         if(in_array('extra_questions', $relations))
         {
             $answers = [];
-            foreach ($presentation->getAnswers() as $answer) {
+            foreach ($presentation->getExtraQuestionAnswers() as $answer) {
                 $answers[] = $answer->getId();
             }
             $values['extra_questions'] = $answers;
@@ -257,7 +257,7 @@ class PresentationSerializer extends SummitEventSerializer
                     break;
                     case 'extra_questions':{
                         $answers = [];
-                        foreach ($presentation->getAnswers() as $answer) {
+                        foreach ($presentation->getExtraQuestionAnswers() as $answer) {
                             $answers[]= SerializerRegistry::getInstance()->getSerializer($answer)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['extra_questions'] = $answers;

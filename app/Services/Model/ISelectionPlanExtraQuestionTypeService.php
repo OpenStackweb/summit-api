@@ -1,6 +1,6 @@
 <?php namespace App\Services\Model;
 /**
- * Copyright 2019 OpenStack Foundation
+ * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,55 +12,56 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
+use App\Models\Foundation\Summit\SelectionPlan;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
-use models\summit\Summit;
 use models\summit\SummitOrderExtraQuestionType;
 /**
- * Interface ISummitOrderExtraQuestionTypeService
+ * Interface ISelectionPlanExtraQuestionTypeService
  * @package App\Services\Model
  */
-interface ISummitOrderExtraQuestionTypeService extends IExtraQuestionTypeService
+interface ISelectionPlanExtraQuestionTypeService
 {
     /**
-     * @param Summit $summit
+     * @param SelectionPlan $selectionPlan
      * @param array $payload
      * @return SummitOrderExtraQuestionType
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function addOrderExtraQuestion(Summit $summit, array $payload):SummitOrderExtraQuestionType;
+    public function addExtraQuestion(SelectionPlan $selectionPlan, array $payload):SummitSelectionPlanExtraQuestionType;
 
     /**
-     * @param Summit $summit
+     * @param SelectionPlan $selectionPlan
      * @param int $question_id
      * @param array $payload
      * @return SummitOrderExtraQuestionType
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function updateOrderExtraQuestion(Summit $summit, int $question_id, array $payload):SummitOrderExtraQuestionType;
+    public function updateExtraQuestion(SelectionPlan $selectionPlan, int $question_id, array $payload):SummitSelectionPlanExtraQuestionType;
 
     /**
-     * @param Summit $summit
+     * @param SelectionPlan $selectionPlan
      * @param int $question_id
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function deleteOrderExtraQuestion(Summit $summit, int $question_id):void;
+    public function deleteExtraQuestion(SelectionPlan $selectionPlan, int $question_id):void;
 
     /**
-     * @param Summit $summit
+     * @param SelectionPlan $selectionPlan
      * @param int $question_id
      * @param array $payload
      * @return ExtraQuestionTypeValue
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function addOrderExtraQuestionValue(Summit $summit, int $question_id, array $payload):ExtraQuestionTypeValue;
+    public function addExtraQuestionValue(SelectionPlan $selectionPlan, int $question_id, array $payload):ExtraQuestionTypeValue;
 
     /**
-     * @param Summit $summit
+     * @param SelectionPlan $selectionPlan
      * @param int $question_id
      * @param int $value_id
      * @param array $payload
@@ -68,15 +69,14 @@ interface ISummitOrderExtraQuestionTypeService extends IExtraQuestionTypeService
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function updateOrderExtraQuestionValue(Summit $summit, int $question_id, int $value_id, array $payload):ExtraQuestionTypeValue;
+    public function updateExtraQuestionValue(SelectionPlan $selectionPlan, int $question_id, int $value_id, array $payload):ExtraQuestionTypeValue;
 
     /**
-     * @param Summit $summit
+     * @param SelectionPlan $selectionPlan
      * @param int $question_id
      * @param int $value_id
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function deleteOrderExtraQuestionValue(Summit $summit, int $question_id, int $value_id):void;
-
+    public function deleteExtraQuestionValue(SelectionPlan $selectionPlan, int $question_id, int $value_id):void;
 }

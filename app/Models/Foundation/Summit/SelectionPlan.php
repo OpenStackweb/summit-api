@@ -12,10 +12,13 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\OrderableChilds;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 use App\Models\Utils\TimeZoneEntity;
 use Doctrine\Common\Collections\ArrayCollection;
+use models\exceptions\ValidationException;
 use models\summit\Presentation;
 use models\summit\PresentationCategory;
 use models\summit\PresentationCategoryGroup;
@@ -121,6 +124,12 @@ class SelectionPlan extends SilverstripeBaseModel
      * @var Presentation[]
      */
     private $presentations;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType", mappedBy="selection_plan",  cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var SummitSelectionPlanExtraQuestionType[]
+     */
+    private $extra_questions;
 
     /**
      * @return string
@@ -302,6 +311,7 @@ class SelectionPlan extends SilverstripeBaseModel
         $this->allow_new_presentations         = true;
         $this->category_groups                 = new ArrayCollection;
         $this->presentations                   = new ArrayCollection;
+        $this->extra_questions                 = new ArrayCollection;
         $this->max_submission_allowed_per_user = Summit::DefaultMaxSubmissionAllowedPerUser;
     }
 
@@ -448,4 +458,105 @@ class SelectionPlan extends SilverstripeBaseModel
         $presentation = $this->presentations->matching($criteria)->first();
         return $presentation === false ? null : $presentation;
     }
+
+    /**
+     *  Extra Questions
+     */
+
+
+    /**
+     * @param int $question_id
+     * @return SummitSelectionPlanExtraQuestionType|null
+     */
+    public function getExtraQuestionById(int $question_id):?SummitSelectionPlanExtraQuestionType{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $question_id));
+        $question = $this->extra_questions->matching($criteria)->first();
+        return $question === false ? null : $question;
+    }
+
+    /**
+     * @param string $name
+     * @return SummitSelectionPlanExtraQuestionType|null
+     */
+    public function getExtraQuestionByName(string $name):?SummitSelectionPlanExtraQuestionType{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('name', trim($name)));
+        $question = $this->extra_questions->matching($criteria)->first();
+        return $question === false ? null : $question;
+    }
+
+    /**
+     * @param string $label
+     * @return SummitSelectionPlanExtraQuestionType|null
+     */
+    public function getExtraQuestionByLabel(string $label):?SummitSelectionPlanExtraQuestionType{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('label', trim($label)));
+        $question = $this->extra_questions->matching($criteria)->first();
+        return $question === false ? null : $question;
+    }
+
+    /**
+     * @return int
+     */
+    private function getExtraQuestionMaxOrder():int{
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'DESC']);
+        $question = $this->extra_questions->matching($criteria)->first();
+        return $question === false ? 0 : $question->getOrder();
+    }
+
+    /**
+     * @param SummitSelectionPlanExtraQuestionType $question
+     * @throws ValidationException
+     */
+    public function addExtraQuestion(SummitSelectionPlanExtraQuestionType $question){
+        if($this->extra_questions->contains($question)) return;
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('name', $question->getName()));
+        $formerExtraQuestion = $this->extra_questions->matching($criteria)->first();
+        if($formerExtraQuestion){
+            throw new ValidationException(sprintf("Question Name %s already exists.", $question->getName()));
+        };
+        $question->setOrder($this->getExtraQuestionMaxOrder()+1);
+        $this->extra_questions->add($question);
+        $question->setSelectionPlan($this);
+    }
+
+    public function removeExtraQuestion(SummitSelectionPlanExtraQuestionType $question){
+        if(!$this->extra_questions->contains($question)) return;
+        $this->extra_questions->removeElement($question);
+        $question->clearSelectionPlan();
+    }
+
+    use OrderableChilds;
+
+    /**
+     * @param SummitSelectionPlanExtraQuestionType $question
+     * @param int $new_order
+     * @throws ValidationException
+     */
+    public function recalculateQuestionOrder(SummitSelectionPlanExtraQuestionType $question, $new_order){
+        self::recalculateOrderForSelectable($this->extra_questions, $question, $new_order);
+    }
+
+    /**
+     * @return ArrayCollection|\Doctrine\Common\Collections\Collection
+     */
+    public function getExtraQuestions(){
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'ASC']);
+        return $this->extra_questions->matching($criteria);
+    }
+
+    /**
+     * @return ArrayCollection|\Doctrine\Common\Collections\Collection
+     */
+    public function getMandatoryExtraQuestions(){
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('mandatory', true));
+        return $this->extra_questions->matching($criteria);
+    }
+
 }

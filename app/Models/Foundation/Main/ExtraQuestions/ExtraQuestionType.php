@@ -1,6 +1,6 @@
-<?php namespace models\summit;
+<?php namespace App\Models\Foundation\ExtraQuestions;
 /**
- * Copyright 2019 OpenStack Foundation
+ * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Models\Foundation\Main\IOrderable;
 use App\Models\Foundation\Main\OrderableChilds;
 use Doctrine\Common\Collections\Criteria;
@@ -19,75 +20,70 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitOrderExtraQuestionTypeRepository")
- * @ORM\AssociationOverrides({
- *     @ORM\AssociationOverride(
- *          name="summit",
- *          inversedBy="order_extra_questions"
- *     )
+ * @ORM\Entity
+ * @ORM\Table(name="ExtraQuestionType")
+ * @ORM\InheritanceType("JOINED")
+ * @ORM\DiscriminatorColumn(name="ClassName", type="string")
+ * @ORM\DiscriminatorMap({
+ *     "ExtraQuestionType" = "ExtraQuestionType",
+ *     "SummitSelectionPlanExtraQuestionType" = "App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType",
+ *     "SummitOrderExtraQuestionType" = "models\summit\SummitOrderExtraQuestionType",
  * })
- * @ORM\Table(name="SummitOrderExtraQuestionType")
- * Class SummitOrderExtraQuestionType
- * @package models\summit
+ * Class ExtraQuestionType
+ * @package App\Models\Foundation\ExtraQuestions
  */
-class SummitOrderExtraQuestionType extends SilverstripeBaseModel
-implements IOrderable
+abstract class ExtraQuestionType extends SilverstripeBaseModel
+    implements IOrderable
 {
-    use SummitOwned;
-
     /**
      * @ORM\Column(name="Name", type="string")
      * @var string
      */
-    private $name;
+    protected $name;
 
     /**
      * @ORM\Column(name="Type", type="string")
      * @var string
      */
-    private $type;
+    protected $type;
 
     /**
      * @ORM\Column(name="Label", type="string")
      * @var string
      */
-    private $label;
+    protected $label;
 
     /**
      * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
-    private $order;
+    protected $order;
 
     /**
      * @ORM\Column(name="Mandatory", type="boolean")
      * @var boolean
      */
-    private $mandatory;
-
-    /**
-     * @ORM\Column(name="`Usage`", type="string")
-     * @var string
-     */
-    private $usage;
+    protected $mandatory;
 
     /**
      * @ORM\Column(name="Placeholder", type="string")
      * @var string
      */
-    private $placeholder;
+    protected $placeholder;
 
     /**
-     * @ORM\Column(name="Printable", type="boolean")
-     * @var boolean
+     * @ORM\OneToMany(targetEntity="ExtraQuestionTypeValue", mappedBy="question", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var ExtraQuestionTypeValue[]
      */
-    private $printable;
+    protected $values;
 
-    /**
-     * @ORM\OneToMany(targetEntity="SummitOrderExtraQuestionValue", mappedBy="question", cascade={"persist","remove"}, orphanRemoval=true)
-     * @var SummitOrderExtraQuestionValue[]
-     */
-    private $values;
+    public function __construct()
+    {
+        parent::__construct();
+        $this->values = new ArrayCollection();
+        $this->mandatory = false;
+        $this->order = 1;
+    }
 
     /**
      * @return string
@@ -116,16 +112,19 @@ implements IOrderable
     /**
      * @return string
      */
-    public function getPlaceholder(): string
+    public function getPlaceholder(): ?string
     {
         return $this->placeholder;
     }
 
     /**
      * @param string $placeholder
+     * @throws ValidationException
      */
     public function setPlaceholder(string $placeholder): void
     {
+        if(!in_array($this->type, ExtraQuestionTypeConstants::AllowedPlaceHolderQuestionType))
+            throw new ValidationException(sprintf("%s type does not allows a placeholder", $this->type));
         $this->placeholder = $placeholder;
     }
 
@@ -135,7 +134,7 @@ implements IOrderable
      */
     public function setType(string $type): void
     {
-        if(!in_array($type, SummitOrderExtraQuestionTypeConstants::ValidQuestionTypes))
+        if(!in_array($type, ExtraQuestionTypeConstants::ValidQuestionTypes))
             throw new ValidationException(sprintf("%s type is not valid", $type));
 
         $this->type = $type;
@@ -190,67 +189,16 @@ implements IOrderable
     }
 
     /**
-     * @return string
-     */
-    public function getUsage(): string
-    {
-        return $this->usage;
-    }
-
-    /**
-     * @param string $usage
+     * @param ExtraQuestionTypeValue $value
      * @throws ValidationException
      */
-    public function setUsage(string $usage): void
-    {
-        if(!in_array($usage, SummitOrderExtraQuestionTypeConstants::ValidQuestionUsages))
-            throw new ValidationException(sprintf("%s usage is not valid", $usage));
-        $this->usage = $usage;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isPrintable(): bool
-    {
-        return $this->printable;
-    }
-
-    /**
-     * @param bool $printable
-     */
-    public function setPrintable(bool $printable): void
-    {
-        $this->printable = $printable;
-    }
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->values = new ArrayCollection();
-        $this->mandatory = false;
-        $this->printable = false;
-    }
-
-    /**
-     * @return SummitOrderExtraQuestionValue[]
-     */
-    public function getValues()
-    {
-        return $this->values;
-    }
-
-    /**
-     * @param SummitOrderExtraQuestionValue $value
-     * @throws ValidationException
-     */
-    public function addValue(SummitOrderExtraQuestionValue $value){
+    public function addValue(ExtraQuestionTypeValue $value){
         if(!$this->allowsValues())
-            throw new ValidationException(sprintf("%s type does not allow multivalues", $this->type));
+            throw new ValidationException(sprintf("%s type does not allow multiple values.", $this->type));
         if($this->values->contains($value)) return;
+        $value->setOrder($this->getValueMaxOrder() + 1);
         $this->values->add($value);
         $value->setQuestion($this);
-        $value->setOrder($this->getValueMaxOrder() + 1);
     }
 
     /**
@@ -264,15 +212,15 @@ implements IOrderable
     }
 
     public function allowsValues():bool {
-        return in_array($this->type, SummitOrderExtraQuestionTypeConstants::AllowedMultivalueQuestionType);
+        return in_array($this->type, ExtraQuestionTypeConstants::AllowedMultiValueQuestionType);
     }
     /**
-     * @param SummitOrderExtraQuestionValue $value
+     * @param ExtraQuestionTypeValue $value
      * @throws ValidationException
      */
-    public function removeValue(SummitOrderExtraQuestionValue $value){
+    public function removeValue(ExtraQuestionTypeValue $value){
         if(!$this->allowsValues())
-            throw new ValidationException(sprintf("%s type does not allow multivalues", $this->type));
+            throw new ValidationException(sprintf("%s type does not allow multiple values.", $this->type));
 
         if(!$this->values->contains($value)) return;
         $this->values->removeElement($value);
@@ -280,9 +228,9 @@ implements IOrderable
 
     /**
      * @param string $label
-     * @return SummitOrderExtraQuestionValue|null
+     * @return ExtraQuestionTypeValue|null
      */
-    public function getValueByLabel(string $label):?SummitOrderExtraQuestionValue{
+    public function getValueByLabel(string $label):?ExtraQuestionTypeValue{
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('label', trim($label)));
         $value = $this->values->matching($criteria)->first();
@@ -291,9 +239,9 @@ implements IOrderable
 
     /**
      * @param string $name
-     * @return SummitOrderExtraQuestionValue|null
+     * @return ExtraQuestionTypeValue|null
      */
-    public function getValueByName(string $name):?SummitOrderExtraQuestionValue{
+    public function getValueByName(string $name):?ExtraQuestionTypeValue{
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('value', trim($name)));
         $value = $this->values->matching($criteria)->first();
@@ -308,7 +256,7 @@ implements IOrderable
 
         if(empty($value) && !$this->isMandatory()) return true;
 
-        if($this->type == SummitOrderExtraQuestionTypeConstants::ComboBoxQuestionType)
+        if($this->type == ExtraQuestionTypeConstants::ComboBoxQuestionType)
             return !is_null($this->getValueById(intval($value)));
 
         foreach (explode(',',$value) as $v)
@@ -321,9 +269,9 @@ implements IOrderable
 
     /**
      * @param int $id
-     * @return SummitOrderExtraQuestionValue|null
+     * @return ExtraQuestionTypeValue|null
      */
-    public function getValueById(int $id):?SummitOrderExtraQuestionValue{
+    public function getValueById(int $id):?ExtraQuestionTypeValue{
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $id));
         $value = $this->values->matching($criteria)->first();
@@ -333,11 +281,11 @@ implements IOrderable
     use OrderableChilds;
 
     /**
-     * @param SummitOrderExtraQuestionValue $value
+     * @param ExtraQuestionTypeValue $value
      * @param int $new_order
      * @throws ValidationException
      */
-    public function recalculateValueOrder(SummitOrderExtraQuestionValue $value, $new_order){
+    public function recalculateValueOrder(ExtraQuestionTypeValue $value, $new_order){
         self::recalculateOrderForSelectable($this->values, $value, $new_order);
     }
 
@@ -364,6 +312,13 @@ implements IOrderable
         }
 
         return implode(',', $niceValues);
+    }
+
+    /**
+     * @return ExtraQuestionTypeValue[]|ArrayCollection
+     */
+    public function getValues(){
+        return $this->values;
     }
 
 }

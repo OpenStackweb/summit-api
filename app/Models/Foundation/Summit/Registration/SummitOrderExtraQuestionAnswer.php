@@ -11,8 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
 use models\utils\One2ManyPropertyTrait;
-use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * @ORM\Entity
@@ -20,7 +20,7 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class SummitOrderExtraQuestionAnswer
  * @package models\summit
  */
-class SummitOrderExtraQuestionAnswer extends SilverstripeBaseModel
+class SummitOrderExtraQuestionAnswer extends ExtraQuestionAnswer
 {
     use One2ManyPropertyTrait;
 
@@ -48,19 +48,6 @@ class SummitOrderExtraQuestionAnswer extends SilverstripeBaseModel
      * @var SummitAttendee
      */
     private $attendee;
-
-    /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitOrderExtraQuestionType")
-     * @ORM\JoinColumn(name="QuestionID", referencedColumnName="ID")
-     * @var SummitOrderExtraQuestionType
-     */
-    private $question;
-
-    /**
-     * @ORM\Column(name="Value", type="string")
-     * @var string
-     */
-    private $value;
 
     /**
      * @return SummitOrder
@@ -94,44 +81,6 @@ class SummitOrderExtraQuestionAnswer extends SilverstripeBaseModel
         $this->attendee = $attendee;
     }
 
-    /**
-     * @return SummitOrderExtraQuestionType
-     */
-    public function getQuestion(): ?SummitOrderExtraQuestionType
-    {
-        return $this->question;
-    }
-
-    /**
-     * @param SummitOrderExtraQuestionType $question
-     */
-    public function setQuestion(SummitOrderExtraQuestionType $question): void
-    {
-        $this->question = $question;
-    }
-
-    /**
-     * @return string
-     */
-    public function getValue(): string
-    {
-        return $this->value;
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasValue():bool {
-        return !empty($this->value);
-    }
-
-    /**
-     * @param string $value
-     */
-    public function setValue(string $value): void
-    {
-        $this->value = $value;
-    }
 
     public function clearOrder(){
         $this->order = null;

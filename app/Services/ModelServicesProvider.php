@@ -35,6 +35,7 @@ use App\Services\Model\Imp\CompanyService;
 use App\Services\Model\Imp\PaymentGatewayProfileService;
 use App\Services\Model\Imp\PresentationVideoMediaUploadProcessor;
 use App\Services\Model\Imp\RegistrationIngestionService;
+use App\Services\Model\Imp\SelectionPlanOrderExtraQuestionTypeService;
 use App\Services\Model\Imp\SponsoredProjectService;
 use App\Services\Model\Imp\SponsorUserInfoGrantService;
 use App\Services\Model\Imp\SummitAdministratorPermissionGroupService;
@@ -55,6 +56,7 @@ use App\Services\Model\IPresentationVideoMediaUploadProcessor;
 use App\Services\Model\IRegistrationIngestionService;
 use App\Services\Model\IRSVPTemplateService;
 use App\Services\Model\IScheduleIngestionService;
+use App\Services\Model\ISelectionPlanExtraQuestionTypeService;
 use App\Services\Model\ISponsoredProjectService;
 use App\Services\Model\ISponsorshipTypeService;
 use App\Services\Model\ISponsorUserInfoGrantService;
@@ -434,6 +436,11 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitPresentationActionService::class,
             SummitPresentationActionService::class
         );
+
+        App::singleton(
+            ISelectionPlanExtraQuestionTypeService::class,
+            SelectionPlanOrderExtraQuestionTypeService::class
+        );
     }
 
     /**
@@ -498,6 +505,7 @@ final class ModelServicesProvider extends ServiceProvider
             ITrackChairService::class,
             ISummitPresentationActionTypeService::class,
             ISummitPresentationActionService::class,
+            ISelectionPlanExtraQuestionTypeService::class,
         ];
     }
 }

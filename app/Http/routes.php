@@ -244,6 +244,26 @@ Route::group([
                         Route::delete('{track_group_id}', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@deleteTrackGroupToSelectionPlan']);
                     });
 
+                    // extra questions
+
+                    Route::group(['prefix' => 'extra-questions'], function(){
+                        Route::get('', ['uses' => 'OAuth2SummitSelectionPlansApiController@getExtraQuestions']);
+                        Route::get('metadata', [ 'uses' => 'OAuth2SummitSelectionPlansApiController@getExtraQuestionsMetadata']);
+                        Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addExtraQuestion']);
+                        Route::group(['prefix' => '{question_id}'], function(){
+                            Route::get('', ['uses' => 'OAuth2SummitSelectionPlansApiController@getExtraQuestion']);
+                            Route::put('', ['uses' => 'OAuth2SummitSelectionPlansApiController@updateExtraQuestion']);
+                            Route::delete('', ['uses' => 'OAuth2SummitSelectionPlansApiController@deleteExtraQuestion']);
+                            Route::group(['prefix' => 'values'], function () {
+                                Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addExtraQuestionValue']);
+                                Route::group(['prefix' => '{value_id}'], function () {
+                                    Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@updateExtraQuestionValue']);
+                                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@deleteExtraQuestionValue']);
+                                });
+                            });
+                        });
+                    });
+
                     // presentations
 
                     Route::group(['prefix' => 'presentations'], function () {

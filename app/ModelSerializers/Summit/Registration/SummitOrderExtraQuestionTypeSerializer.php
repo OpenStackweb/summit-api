@@ -16,22 +16,12 @@ use models\summit\SummitOrderExtraQuestionType;
  * Class SummitOrderExtraQuestionTypeSerializer
  * @package ModelSerializers
  */
-final class SummitOrderExtraQuestionTypeSerializer extends SilverStripeSerializer
+final class SummitOrderExtraQuestionTypeSerializer extends ExtraQuestionTypeSerializer
 {
     protected static $array_mappings = [
-        'Name'        => 'name:json_string',
-        'Type'        => 'type:json_string',
-        'Label'       => 'label:json_string',
         'Usage'       => 'usage:json_string',
-        'Placeholder' => 'placeholder:json_string',
         'Printable'   => 'printable:json_boolean',
-        'Order'       => 'order:json_int',
-        'Mandatory'   => 'mandatory:json_boolean',
         'SummitId'    => 'summit_id:json_int',
-    ];
-
-    protected static $allowed_relations = [
-        'values',
     ];
 
     /**
@@ -47,36 +37,6 @@ final class SummitOrderExtraQuestionTypeSerializer extends SilverStripeSerialize
         if (!$question instanceof SummitOrderExtraQuestionType) return [];
         if(!count($relations)) $relations = $this->getAllowedRelations();
         $values = parent::serialize($expand, $fields, $relations, $params);
-
-        if(in_array('values', $relations) && $question->allowsValues()) {
-            $question_values = [];
-            foreach ($question->getValues() as $value) {
-                $question_values[] = $value->getId();
-            }
-            $values['values'] = $question_values;
-        }
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-                    case 'values':
-                        {
-                            if (!$question->allowsValues())
-                                break;
-                            unset($values['values']);
-                            $question_values = [];
-                            foreach ($question->getValues() as $value) {
-                                $question_values[] = SerializerRegistry::getInstance()->getSerializer($value)->serialize();
-                            }
-                            $values['values'] = $question_values;
-                        }
-                        break;
-
-
-                }
-            }
-        }
         return $values;
     }
 }

@@ -1,6 +1,6 @@
-<?php namespace models\summit;
+<?php namespace App\Models\Foundation\ExtraQuestions;
 /**
- * Copyright 2019 OpenStack Foundation
+ * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,37 +16,37 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * @ORM\Entity
- * @ORM\Table(name="SummitOrderExtraQuestionValue")
- * Class SummitOrderExtraQuestionValue
- * @package models\summit
+ * @ORM\Table(name="ExtraQuestionTypeValue")
+ * Class ExtraQuestionTypeValue
+ * @package App\Models\Foundation\ExtraQuestions
  */
-class SummitOrderExtraQuestionValue extends SilverstripeBaseModel
-    implements IOrderable
+class ExtraQuestionTypeValue extends SilverstripeBaseModel
+implements IOrderable
 {
     /**
      * @ORM\Column(name="Label", type="string")
      * @var string
      */
-    private $label;
+    protected $label;
 
     /**
      * @ORM\Column(name="Value", type="string")
      * @var string
      */
-    private $value;
+    protected $value;
 
     /**
      * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
-    private $order;
+    protected $order;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitOrderExtraQuestionType", inversedBy="values")
+     * @ORM\ManyToOne(targetEntity="ExtraQuestionType", inversedBy="values")
      * @ORM\JoinColumn(name="QuestionID", referencedColumnName="ID")
-     * @var SummitOrderExtraQuestionType
+     * @var ExtraQuestionType
      */
-    private $question;
+    protected $question;
 
     /**
      * @return string
@@ -97,17 +97,17 @@ class SummitOrderExtraQuestionValue extends SilverstripeBaseModel
     }
 
     /**
-     * @return SummitOrderExtraQuestionType
+     * @return ExtraQuestionType
      */
-    public function getQuestion(): SummitOrderExtraQuestionType
+    public function getQuestion(): ExtraQuestionType
     {
         return $this->question;
     }
 
     /**
-     * @param SummitOrderExtraQuestionType $question
+     * @param ExtraQuestionType $question
      */
-    public function setQuestion(SummitOrderExtraQuestionType $question): void
+    public function setQuestion(ExtraQuestionType $question): void
     {
         $this->question = $question;
     }
@@ -115,7 +115,7 @@ class SummitOrderExtraQuestionValue extends SilverstripeBaseModel
     public function __construct()
     {
         parent::__construct();
-        $this->order = 0;
+        $this->order = 1;
     }
 
     /**
@@ -129,6 +129,5 @@ class SummitOrderExtraQuestionValue extends SilverstripeBaseModel
             return 0;
         }
     }
-
 
 }

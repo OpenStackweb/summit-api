@@ -1,6 +1,6 @@
 <?php namespace App\Models\Foundation\Summit\Factories;
 /**
- * Copyright 2019 OpenStack Foundation
+ * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,34 +13,17 @@
  **/
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use App\Models\Foundation\ExtraQuestions\Factories\ExtraQuestionTypeFactory;
-use models\summit\SummitOrderExtraQuestionType;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 /**
- * Class SummitOrderExtraQuestionTypeFactory
+ * Class SummitSelectionPlanExtraQuestionTypeFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitOrderExtraQuestionTypeFactory extends ExtraQuestionTypeFactory
+final class SummitSelectionPlanExtraQuestionTypeFactory
+    extends ExtraQuestionTypeFactory
 {
-    /**
-     * @param ExtraQuestionType $question
-     * @param array $data
-     * @return ExtraQuestionType
-     * @throws \models\exceptions\ValidationException
-     */
-    public static function populate(ExtraQuestionType $question, array $data):ExtraQuestionType{
-
-        $question = parent::populate($question, $data);
-
-        if(isset($data['usage']))
-            $question->setUsage(trim($data['usage']));
-
-        if(isset($data['printable']))
-            $question->setPrintable(boolval($data['printable']));
-
-        return $question;
-    }
 
     protected static function getNewEntity(): ExtraQuestionType
     {
-        return new SummitOrderExtraQuestionType;
+        return new SummitSelectionPlanExtraQuestionType();
     }
 }

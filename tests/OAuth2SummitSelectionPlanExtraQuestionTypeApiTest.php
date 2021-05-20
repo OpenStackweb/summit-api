@@ -41,11 +41,11 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
         parent::tearDown();
     }
 
-
-    public function testAddExtraOrderQuestion(){
+    public function testAddExtraQuestion(){
 
         $params = [
-            'id' => self::$summit->getId()
+            'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
         ];
 
         $name = str_random(16).'_question';
@@ -54,9 +54,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
             'name' => $name,
             'type' => SummitOrderExtraQuestionTypeConstants::ComboBoxQuestionType,
             'label' => $name,
-            'usage' => SummitOrderExtraQuestionTypeConstants::BothQuestionUsage,
             'mandatory' => true,
-            'printable' => true,
         ];
 
         $headers = [
@@ -66,7 +64,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
 
         $response = $this->action(
             "POST",
-            "OAuth2SummitOrderExtraQuestionTypeApiController@add",
+            "OAuth2SummitSelectionPlansApiController@addExtraQuestion",
             $params,
             [],
             [],
@@ -84,7 +82,8 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
 
     public function testAddQuestionValue(){
         $params = [
-            'id' => self::$summit->getId()
+            'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
         ];
 
         $name = str_random(16).'_question';
@@ -105,7 +104,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
 
         $response = $this->action(
             "POST",
-            "OAuth2SummitOrderExtraQuestionTypeApiController@add",
+            "OAuth2SummitSelectionPlansApiController@addExtraQuestion",
             $params,
             [],
             [],
@@ -121,6 +120,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
 
         $params = [
             'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
             'question_id' => $question->id
         ];
 
@@ -131,14 +131,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
             'label' => $name,
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "POST",
-            "OAuth2SummitOrderExtraQuestionTypeApiController@addQuestionValue",
+            "OAuth2SummitSelectionPlansApiController@addExtraQuestionValue",
             $params,
             [],
             [],
@@ -149,8 +144,61 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
 
         $content = $response->getContent();
         $this->assertResponseStatus(201);
-        $question = json_decode($content);
-        $this->assertTrue(!is_null($question));
-        return $question;
+        $value = json_decode($content);
+        $this->assertTrue(!is_null($value));
+
+        // get all values
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'question_id' => $question->id,
+            'expand' => 'values',
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSelectionPlansApiController@getExtraQuestions",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $page = json_decode($content);
+        $this->assertTrue(!is_null($page));
+        $this->assertTrue($page->total == 1);
+        return $value;
+    }
+
+    public function testGetMetadata(){
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+         ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSelectionPlansApiController@getExtraQuestionsMetadata",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $metadata = json_decode($content);
+        $this->assertTrue(!empty($metadata));
     }
 }

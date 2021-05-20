@@ -1,6 +1,6 @@
-<?php namespace ModelSerializers;
+<?php namespace App\Models\Foundation\Summit\Repositories;
 /**
- * Copyright 2019 OpenStack Foundation
+ * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,17 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use App\Models\Foundation\ExtraQuestions\IExtraQuestionTypeRepository;
 /**
- * Class SummitOrderExtraQuestionValueSerializer
- * @package ModelSerializers
+ * Interface ISummitSelectionPlanExtraQuestionTypeRepository
+ * @package App\Models\Foundation\Summit\Repositories
  */
-final class SummitOrderExtraQuestionValueSerializer extends SilverStripeSerializer
+interface ISummitSelectionPlanExtraQuestionTypeRepository
+extends IExtraQuestionTypeRepository
 {
-    protected static $array_mappings = [
-        'Label'      => 'label:json_string',
-        'Value'      => 'value:json_string',
-        'Order'      => 'order:json_int',
-        'QuestionId' => 'question_id:json_int',
-    ];
+
 }

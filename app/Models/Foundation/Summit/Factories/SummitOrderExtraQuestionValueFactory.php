@@ -1,4 +1,4 @@
-<?php namespace App\Models\Foundation\Summit\Factories;
+<?php namespace App\Models\Foundation\Factories;
 /**
  * Copyright 2019 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,27 +11,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use models\summit\SummitOrderExtraQuestionValue;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 /**
- * Class SummitOrderExtraQuestionValueFactory
- * @package App\Models\Foundation\Summit\Factories
+ * Class ExtraQuestionTypeValueFactory
+ * @package App\Models\Foundation\Factories
  */
-final class SummitOrderExtraQuestionValueFactory
+final class ExtraQuestionTypeValueFactory
 {
     /**
      * @param array $data
-     * @return SummitOrderExtraQuestionValue
+     * @return ExtraQuestionTypeValue
      */
-    public static function build(array $data):SummitOrderExtraQuestionValue{
-        return self::populate(new SummitOrderExtraQuestionValue, $data);
+    public static function build(array $data):ExtraQuestionTypeValue{
+        return self::populate(new ExtraQuestionTypeValue, $data);
     }
 
     /**
-     * @param SummitOrderExtraQuestionValue $value
+     * @param ExtraQuestionTypeValue $value
      * @param array $data
-     * @return SummitOrderExtraQuestionValue
+     * @return ExtraQuestionTypeValue
      */
-    public static function populate(SummitOrderExtraQuestionValue $value, array $data):SummitOrderExtraQuestionValue{
+    public static function populate(ExtraQuestionTypeValue $value, array $data):ExtraQuestionTypeValue{
 
         if(isset($data['label']))
             $value->setLabel(trim($data['label']));

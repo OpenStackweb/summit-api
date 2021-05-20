@@ -1,4 +1,4 @@
-<?php namespace App\Models\Foundation\Summit\Repositories;
+<?php namespace models\summit;
 /**
  * Copyright 2019 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,11 +11,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Models\Foundation\ExtraQuestions\IExtraQuestionTypeRepository;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 /**
- * Interface ISummitOrderExtraQuestionTypeRepository
- * @package App\Models\Foundation\Summit\Repositories
+ * Interface SummitOrderExtraQuestionTypeConstants
+ * @package models\summit
  */
-interface ISummitOrderExtraQuestionTypeRepository extends IExtraQuestionTypeRepository
+interface SummitOrderExtraQuestionTypeConstants
+    extends ExtraQuestionTypeConstants
 {
+
+    const OrderQuestionUsage          = 'Order';
+    const TicketQuestionUsage         = 'Ticket';
+    const BothQuestionUsage           = 'Both';
+
+    const ValidQuestionUsages = [
+        self::OrderQuestionUsage,
+        self::TicketQuestionUsage,
+        self::BothQuestionUsage
+    ];
 }

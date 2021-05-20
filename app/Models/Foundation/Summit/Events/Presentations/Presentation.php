@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use Doctrine\ORM\Mapping AS ORM;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use App\Models\Foundation\Main\OrderableChilds;
 use Behat\Transliterator\Transliterator;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackAnswer;
@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Member;
+use Doctrine\ORM\Mapping AS ORM;
 
 /**
  * Class Presentation
@@ -206,6 +207,12 @@ class Presentation extends SummitEvent
     private $actions;
 
     /**
+     * @ORM\OneToMany(targetEntity="models\summit\PresentationExtraQuestionAnswer", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var PresentationExtraQuestionAnswer[]
+     */
+    private $extra_question_answers;
+
+    /**
      * @return bool
      */
     public function isToRecord()
@@ -245,6 +252,7 @@ class Presentation extends SummitEvent
         $this->category_changes_requests = new ArrayCollection();
         $this->selected_presentations = new ArrayCollection();
         $this->actions = new ArrayCollection();
+        $this->extra_question_answers = new ArrayCollection();
         $this->to_record = false;
         $this->attending_media = false;
         $this->will_all_speakers_attend = false;
@@ -872,6 +880,7 @@ class Presentation extends SummitEvent
     }
 
     /**
+     * @deprecated
      * @return TrackAnswer[]
      */
     public function getAnswers()
@@ -880,6 +889,7 @@ class Presentation extends SummitEvent
     }
 
     /**
+     * @deprecated
      * @param TrackAnswer[] $answers
      */
     public function setAnswers($answers)
@@ -888,6 +898,7 @@ class Presentation extends SummitEvent
     }
 
     /**
+     * @deprecated
      * @param TrackAnswer $answer
      */
     public function addAnswer(TrackAnswer $answer)
@@ -922,6 +933,7 @@ class Presentation extends SummitEvent
     }
 
     /**
+     * @deprecated
      * @param TrackQuestionTemplate $question
      * @return TrackAnswer|null
      */
@@ -1549,6 +1561,49 @@ class Presentation extends SummitEvent
     public function setWillAllSpeakersAttend(bool $will_all_speakers_attend): void
     {
         $this->will_all_speakers_attend = $will_all_speakers_attend;
+    }
+
+    /**
+     * @return PresentationExtraQuestionAnswer[]
+     */
+    public function getExtraQuestionAnswers()
+    {
+        return $this->extra_question_answers;
+    }
+
+    /**
+     * @param SummitSelectionPlanExtraQuestionType $question
+     * @return PresentationExtraQuestionAnswer|null
+     */
+    public function getExtraQuestionAnswerByQuestion(SummitSelectionPlanExtraQuestionType $question):?PresentationExtraQuestionAnswer{
+        $answer = $this->extra_question_answers->matching(
+            $criteria = Criteria::create()
+                ->where(Criteria::expr()->eq("question", $question))
+        )->first();
+        return $answer ? $answer : null;
+    }
+
+    public function clearExtraQuestionAnswers()
+    {
+        return $this->extra_question_answers->clear();
+    }
+
+    /**
+     * @param PresentationExtraQuestionAnswer $answer
+     */
+    public function addExtraQuestionAnswer(PresentationExtraQuestionAnswer $answer){
+        if($this->extra_question_answers->contains($answer)) return;
+        $this->extra_question_answers->add($answer);
+        $answer->setPresentation($this);
+    }
+
+    /**
+     * @param PresentationExtraQuestionAnswer $answer
+     */
+    public function removeExtraQuestionAnswer(PresentationExtraQuestionAnswer $answer){
+        if(!$this->extra_question_answers->contains($answer)) return;
+        $this->extra_question_answers->removeElement($answer);
+        $answer->clearPresentation();
     }
 
 }

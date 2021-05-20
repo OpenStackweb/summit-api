@@ -1,4 +1,4 @@
-<?php namespace App\ModelSerializers\Summit;
+<?php namespace ModelSerializers;
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,6 +55,13 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
 
         $values['track_groups'] = $category_groups;
 
+        $extra_questions  = [];
+        foreach ($selection_plan->getExtraQuestions() as $extraQuestion) {
+            $extra_questions[] = $extraQuestion->getId();
+        }
+
+        $values['extra_questions'] = $extra_questions;
+
         if (!empty($expand)) {
             $relations = explode(',', $expand);
             foreach ($relations as $relation) {
@@ -68,6 +75,14 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
                         $values['track_groups'] = $category_groups;
                     }
                     break;
+                    case 'extra_questions':{
+                        $extra_questions  = [];
+                        foreach ($selection_plan->getExtraQuestions() as $extraQuestion) {
+                            $extra_questions[] = SerializerRegistry::getInstance()->getSerializer($extraQuestion)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $values['extra_questions'] = $extra_questions;
+                    }
+                        break;
                     case 'summit':{
                         unset($values['summit_id']);
                         $values['summit'] = SerializerRegistry::getInstance()->getSerializer($selection_plan->getSummit())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));

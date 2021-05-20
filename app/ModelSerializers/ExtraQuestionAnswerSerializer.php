@@ -1,6 +1,6 @@
 <?php namespace ModelSerializers;
 /**
- * Copyright 2019 OpenStack Foundation
+ * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,17 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
 use Libs\ModelSerializers\AbstractSerializer;
-use models\summit\SummitOrderExtraQuestionAnswer;
 /**
- * Class SummitOrderExtraQuestionAnswerSerializer
+ * Class ExtraQuestionAnswerSerializer
  * @package ModelSerializers
  */
-final class SummitOrderExtraQuestionAnswerSerializer extends ExtraQuestionAnswerSerializer
+class ExtraQuestionAnswerSerializer extends SilverStripeSerializer
 {
+
     protected static $array_mappings = [
-        'OrderId'    => 'order_id:json_int',
-        'AttendeeId' => 'attendee_id:json_int',
+        'Value'      => 'value:json_string',
+        'QuestionId' => 'question_id:json_int',
     ];
 
     /**
@@ -34,7 +35,7 @@ final class SummitOrderExtraQuestionAnswerSerializer extends ExtraQuestionAnswer
     public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
     {
         $answer = $this->object;
-        if (!$answer instanceof SummitOrderExtraQuestionAnswer) return [];
+        if (!$answer instanceof ExtraQuestionAnswer) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
 
         if (!count($relations)) $relations = $this->getAllowedRelations();
@@ -43,33 +44,21 @@ final class SummitOrderExtraQuestionAnswerSerializer extends ExtraQuestionAnswer
             $exp_expand = explode(',', $expand);
             foreach ($exp_expand as $relation) {
                 switch (trim($relation)) {
-
-                    case 'order':
+                    case 'question':
                         {
 
-                            if ($answer->hasOrder()) {
-                                unset($values['order_id']);
-                                $values['order'] = SerializerRegistry::getInstance()->getSerializer($answer->getOrder())
-                                    ->serialize(AbstractSerializer::getExpandForPrefix('order', $expand));
+                            if ($answer->hasQuestion()) {
+                                unset($values['question_id']);
+                                $values['question'] = SerializerRegistry::getInstance()->getSerializer($answer->getQuestion())
+                                    ->serialize(AbstractSerializer::getExpandForPrefix('question', $expand));
                             }
                         }
                         break;
 
-                    case 'attendee':
-                        {
-
-                            if ($answer->hasAttendee()) {
-                                unset($values['attendee_id']);
-                                $values['attendee'] = SerializerRegistry::getInstance()->getSerializer($answer->getAttendee())
-                                    ->serialize(AbstractSerializer::getExpandForPrefix('attendee', $expand));
-                            }
-                        }
-                        break;
 
                 }
             }
         }
-
 
         return $values;
     }

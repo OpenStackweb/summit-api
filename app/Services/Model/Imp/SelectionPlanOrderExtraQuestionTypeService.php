@@ -111,7 +111,7 @@ final class SelectionPlanOrderExtraQuestionTypeService
     {
         $this->tx_service->transaction(function () use ($selectionPlan, $question_id) {
 
-            $question = $selectionPlan->getOrderExtraQuestionById($question_id);
+            $question = $selectionPlan->getExtraQuestionById($question_id);
             if (is_null($question))
                 throw new EntityNotFoundException("Question not found.");
 

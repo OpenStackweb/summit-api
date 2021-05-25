@@ -33,7 +33,7 @@ abstract class ExtraQuestionTypeValidationRulesFactory
                 'type'        => 'sometimes|string|in:'.implode(",", ExtraQuestionTypeConstants::ValidQuestionTypes),
                 'label'       => 'sometimes|string',
                 'mandatory'   => 'sometimes|boolean',
-                'placeholder' => 'sometimes|string',
+                'placeholder' => 'sometimes|nullable|string',
                 'order'       => 'sometimes|integer|min:1',
             ];
         }
@@ -43,7 +43,7 @@ abstract class ExtraQuestionTypeValidationRulesFactory
             'type'        => 'required|string|in:'.implode(",", ExtraQuestionTypeConstants::ValidQuestionTypes),
             'label'       => 'required|string',
             'mandatory'   => 'required|boolean',
-            'placeholder' => 'sometimes|string',
+            'placeholder' => 'sometimes|nullable|string',
         ];
     }
 }

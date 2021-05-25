@@ -123,6 +123,7 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
      */
     public function setPlaceholder(string $placeholder): void
     {
+        if(empty($placeholder)) return;
         if(!in_array($this->type, ExtraQuestionTypeConstants::AllowedPlaceHolderQuestionType))
             throw new ValidationException(sprintf("%s type does not allows a placeholder", $this->type));
         $this->placeholder = $placeholder;

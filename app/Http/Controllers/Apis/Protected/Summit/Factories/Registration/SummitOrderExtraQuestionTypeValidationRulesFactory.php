@@ -26,7 +26,7 @@ extends ExtraQuestionTypeValidationRulesFactory
      */
     public static function build(array $data, $update = false){
 
-        $rules = static::build($data,$update);
+        $rules = parent::build($data,$update);
 
         if($update){
             return array_merge([

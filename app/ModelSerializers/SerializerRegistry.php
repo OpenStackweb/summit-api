@@ -178,6 +178,7 @@ final class SerializerRegistry
         $this->registry['PrivatePresentationCategoryGroup'] = PrivatePresentationCategoryGroupSerializer::class;
         $this->registry['Tag'] = TagSerializer::class;
         $this->registry['Language'] = LanguageSerializer::class;
+        $this->registry['PresentationExtraQuestionAnswer'] = PresentationExtraQuestionAnswerSerializer::class;
         // track questions
         $this->registry['TrackAnswer'] = TrackAnswerSerializer::class;
         $this->registry['TrackQuestionValueTemplate'] = TrackQuestionValueTemplateSerializer::class;

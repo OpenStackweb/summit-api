@@ -548,10 +548,9 @@ final class MemberService
     public function signCommunityMembership(Member $member): Member
     {
         return $this->tx_service->transaction(function() use($member){
-            if(!$member->isFoundationMember())
-                throw new ValidationException(sprintf("Member %s is not a foundation member", $member->getId()));
-
-            $member->resignFoundationMembership();
+            if($member->isFoundationMember()) {
+                $member->resignFoundationMembership();
+            }
 
             $group = $this->group_repository->getBySlug(IGroup::CommunityMembers);
             if(is_null($group))

@@ -519,7 +519,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'company' => 'nullable|sometimes|string|max:255',
                 'email' => 'required_without:member_id|string|max:255|email',
                 'member_id' => 'required_without:email|integer',
-                'extra_questions' => 'sometimes|order_extra_question_dto_array',
+                'extra_questions' => 'sometimes|extra_question_dto_array',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -607,7 +607,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'company' => 'nullable|sometimes|string|max:255',
                 'email' => 'required_without:member_id|string|max:255|email',
                 'member_id' => 'required_without:email|integer',
-                'extra_questions' => 'sometimes|order_extra_question_dto_array',
+                'extra_questions' => 'sometimes|extra_question_dto_array',
                 'admin_notes' => 'nullable|sometimes|string|max:1024',
             ];
 
@@ -793,7 +793,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'attendee_last_name' => 'nullable|string|max:255',
                 'attendee_email' => 'required|string|max:255|email',
                 'attendee_company' => 'nullable|string|max:255',
-                'extra_questions' => 'sometimes|order_extra_question_dto_array'
+                'extra_questions' => 'sometimes|extra_question_dto_array'
             ]);
 
             $ticket = $this->attendee_service->reassignAttendeeTicket($summit, $attendee, intval($ticket_id), $payload);

@@ -327,7 +327,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 'will_all_speakers_attend'  => 'sometimes|boolean',
                 'links'                     => 'sometimes|url_array',
                 'tags'                      => 'sometimes|string_array',
-                'extra_questions'           => 'sometimes|entity_value_array',
+                'extra_questions'           => 'sometimes|extra_question_dto_array',
             ];
 
             $data = $data->all();
@@ -398,7 +398,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                     'attending_media'           => 'required|boolean',
                     'links'                     => 'sometimes|url_array',
                     'tags'                      => 'sometimes|string_array',
-                    'extra_questions'           => 'sometimes|entity_value_array',
+                    'extra_questions'           => 'sometimes|extra_question_dto_array',
                 ];
 
             $data = $data->all();

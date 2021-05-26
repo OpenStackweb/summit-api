@@ -103,7 +103,7 @@ final class OAuth2SummitOrdersApiController
 
             $validation_rules = [
                 'tickets'          => 'required|ticket_dto_array',
-                'extra_questions'  => 'sometimes|order_extra_question_dto_array',
+                'extra_questions'  => 'sometimes|extra_question_dto_array',
                 'owner_company'    => 'nullable|string|max:255',
             ];
 
@@ -435,7 +435,7 @@ final class OAuth2SummitOrdersApiController
         try {
             $current_user = $this->getResourceServerContext()->getCurrentUser();
             $payload = $this->getJsonPayload([
-                'extra_questions'           => 'sometimes|order_extra_question_dto_array',
+                'extra_questions'           => 'sometimes|extra_question_dto_array',
                 'owner_company'             => 'sometimes|string|max:255',
                 'billing_address_1'         => 'sometimes|string|max:255',
                 'billing_address_2'         => 'sometimes|string|max:255',
@@ -594,7 +594,7 @@ final class OAuth2SummitOrdersApiController
                 'attendee_last_name'  => 'nullable|string|max:255',
                 'attendee_email'      => 'required|string|max:255|email',
                 'attendee_company'    => 'nullable|string|max:255',
-                'extra_questions'     => 'sometimes|order_extra_question_dto_array'
+                'extra_questions'     => 'sometimes|extra_question_dto_array'
             ]);
 
             $ticket = $this->service->ownerAssignTicket($current_user, intval($order_id), intval($ticket_id), $payload);
@@ -711,7 +711,7 @@ final class OAuth2SummitOrdersApiController
                 'attendee_last_name'  => 'nullable|string|max:255',
                 'attendee_email'      => 'required|string|max:255|email',
                 'attendee_company'    => 'nullable|string|max:255',
-                'extra_questions'     => 'sometimes|order_extra_question_dto_array'
+                'extra_questions'     => 'sometimes|extra_question_dto_array'
             ]);
 
             $ticket = $this->service->updateTicket($summit, intval($order_id), intval($ticket_id), $payload);
@@ -756,7 +756,7 @@ final class OAuth2SummitOrdersApiController
                 'attendee_last_name'  => 'nullable|string|max:255',
                 'attendee_email'      => 'required|string|max:255|email',
                 'attendee_company'    => 'nullable|string|max:255',
-                'extra_questions'     => 'sometimes|order_extra_question_dto_array'
+                'extra_questions'     => 'sometimes|extra_question_dto_array'
             ]);
 
             $ticket = $this->service->addTicket($summit, intval($order_id), $payload);
@@ -932,7 +932,7 @@ final class OAuth2SummitOrdersApiController
                 'attendee_company'    => 'nullable|string|max:255',
                 'disclaimer_accepted' => 'nullable|boolean',
                 'share_contact_info'  => 'nullable|boolean',
-                'extra_questions'     => 'sometimes|order_extra_question_dto_array'
+                'extra_questions'     => 'sometimes|extra_question_dto_array'
             ]);
 
             $ticket = $this->service->updateTicketByHash($hash, $payload);
@@ -1006,7 +1006,7 @@ final class OAuth2SummitOrdersApiController
                 'attendee_company'    => 'nullable|string|max:255',
                 'disclaimer_accepted' => 'nullable|boolean',
                 'share_contact_info'  => 'nullable|boolean',
-                'extra_questions'     => 'sometimes|order_extra_question_dto_array'
+                'extra_questions'     => 'sometimes|extra_question_dto_array'
             ]);
 
             $ticket = $this->service->updateTicketById($current_user, $ticket_id, $payload);
@@ -1095,7 +1095,7 @@ final class OAuth2SummitOrdersApiController
             'owner_id'                  => 'required_without:owner_first_name,owner_last_name,owner_email|int',
             'ticket_type_id'            => 'required|int',
             'promo_code'                => 'sometimes|string',
-            'extra_questions'           => 'sometimes|order_extra_question_dto_array',
+            'extra_questions'           => 'sometimes|extra_question_dto_array',
             'owner_company'             => 'required|string|max:255',
             'billing_address_1'         => 'sometimes|string|max:255',
             'billing_address_2'         => 'sometimes|string|max:255',
@@ -1139,7 +1139,7 @@ final class OAuth2SummitOrdersApiController
             'owner_last_name'           => 'required_without:owner_id|string|max:255',
             'owner_email'               => 'required_without:owner_id|string|max:255|email',
             'owner_id'                  => 'required_without:owner_first_name,owner_last_name,owner_email|int',
-            'extra_questions'           => 'sometimes|order_extra_question_dto_array',
+            'extra_questions'           => 'sometimes|extra_question_dto_array',
             'owner_company'             => 'required|string|max:255',
             'billing_address_1'         => 'sometimes|string|max:255',
             'billing_address_2'         => 'sometimes|string|max:255',

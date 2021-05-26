@@ -57,12 +57,12 @@ class AppServiceProvider extends ServiceProvider
         'extra_questions'     => 'sometimes|order_extra_question_dto_array'
     ];
 
-    static $order_extra_question_dto_fields = [
+    static $extra_question_dto_fields = [
         'question_id',
         'answer',
     ];
 
-    static $order_extra_question_dto_validation_rules = [
+    static $extra_question_dto_validation_rules = [
         'question_id' => 'required|int',
         'answer'      => 'nullable|string|max:255',
     ];
@@ -205,12 +205,12 @@ class AppServiceProvider extends ServiceProvider
             return true;
         });
 
-        Validator::extend('order_extra_question_dto_array', function($attribute, $value, $parameters, $validator)
+        Validator::extend('extra_question_dto_array', function($attribute, $value, $parameters, $validator)
         {
-            $validator->addReplacer('order_extra_question_dto_array', function($message, $attribute, $rule, $parameters) use ($validator) {
+            $validator->addReplacer('extra_question_dto_array', function($message, $attribute, $rule, $parameters) use ($validator) {
                 return sprintf
                 (
-                    "%s should be an array of order extra question data {question_id : int, answer: string}",
+                    "%s should be an array of extra question data {question_id : int, answer: string}",
                     $attribute);
             });
 
@@ -219,11 +219,11 @@ class AppServiceProvider extends ServiceProvider
             foreach($value as $element)
             {
                 foreach($element as $key => $element_val){
-                    if(!in_array($key, self::$order_extra_question_dto_fields)) return false;
+                    if(!in_array($key, self::$extra_question_dto_fields)) return false;
                 }
 
                 // Creates a Validator instance and validates the data.
-                $validation = Validator::make($element, self::$order_extra_question_dto_validation_rules);
+                $validation = Validator::make($element, self::$extra_question_dto_validation_rules);
 
                 if($validation->fails()) return false;
             }

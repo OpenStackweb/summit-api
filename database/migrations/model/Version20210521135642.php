@@ -40,7 +40,7 @@ ALTER TABLE ExtraQuestionAnswer MODIFY ClassName
 enum(
 'ExtraQuestionAnswer',
 'SummitOrderExtraQuestionAnswer',
-'SummitSelectionPlanExtraQuestionType'
+'PresentationExtraQuestionAnswer'
 ) default 'ExtraQuestionAnswer' null;
 SQL;
         $this->addSql($sql);

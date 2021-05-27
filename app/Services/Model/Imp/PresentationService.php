@@ -529,14 +529,22 @@ final class PresentationService
                 }
             }
 
-            $extra_questions = $payload['extra_questions'] ?? [];
-            // extra questions values
-            $mandatory_questions = $selection_plan->getMandatoryExtraQuestions();
-            if (count($extra_questions) < $mandatory_questions->count()) {
-                throw new ValidationException("You neglected to fill in all mandatory questions for the presentation.");
-            }
-            if (count($extra_questions)) {
+            $extra_questions = $data['extra_questions'] ?? [];
 
+            if (count($extra_questions)) {
+                // extra questions values
+                $mandatory_questions = $selection_plan->getMandatoryExtraQuestions();
+                if (count($extra_questions) < $mandatory_questions->count()) {
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "You neglected to fill in all mandatory questions for the presentation %s (%s) .",
+                            count($extra_questions),
+                            $mandatory_questions->count()
+                        )
+                    );
+                }
                 $questions = $selection_plan->getExtraQuestions();
                 if ($questions->count() > 0) {
                     $presentation->clearExtraQuestionAnswers();

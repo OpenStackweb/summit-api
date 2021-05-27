@@ -91,4 +91,13 @@ abstract class ExtraQuestionAnswer extends SilverstripeBaseModel
     {
         $this->value = $value;
     }
+
+    public function __toString():string
+    {
+        $value = $this->value;
+        if($this->question->allowsValues()){
+            $value = $this->question->getNiceValue($value);
+        }
+        return sprintf("%s : %s", $this->question->getLabel(), $value);
+    }
 }

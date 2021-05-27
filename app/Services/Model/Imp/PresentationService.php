@@ -30,6 +30,7 @@ use App\Services\FileSystem\FileNameSanitizer;
 use App\Services\Filesystem\FileUploadStrategyFactory;
 use App\Services\Model\AbstractService;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackAnswer;
+use App\Services\Model\Imp\PresentationRelationsManagement;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
@@ -303,7 +304,6 @@ final class PresentationService
                     ['limit' => $limit]));
 
             $presentation = new Presentation();
-            //$presentation->setCreator($member);
             $presentation->setSelectionPlan($current_selection_plan);
 
             $presentation->setCreatedBy(ResourceServerContext::getCurrentUser(false));
@@ -395,6 +395,7 @@ final class PresentationService
         });
     }
 
+    use PresentationRelationsManagement;
     /**
      * @param Summit $summit
      * @param SelectionPlan $selection_plan
@@ -529,51 +530,7 @@ final class PresentationService
                 }
             }
 
-            $extra_questions = $data['extra_questions'] ?? [];
-
-            if (count($extra_questions)) {
-                // extra questions values
-                $mandatory_questions = $selection_plan->getMandatoryExtraQuestions();
-                if (count($extra_questions) < $mandatory_questions->count()) {
-                    throw new ValidationException
-                    (
-                        sprintf
-                        (
-                            "You neglected to fill in all mandatory questions for the presentation %s (%s) .",
-                            count($extra_questions),
-                            $mandatory_questions->count()
-                        )
-                    );
-                }
-                $questions = $selection_plan->getExtraQuestions();
-                if ($questions->count() > 0) {
-                    $presentation->clearExtraQuestionAnswers();
-                    foreach ($questions as $question) {
-                        if (!$question instanceof SummitSelectionPlanExtraQuestionType) continue;
-                        foreach ($extra_questions as $question_answer) {
-                            if (intval($question_answer['question_id']) == $question->getId()) {
-                                $value = trim($question_answer['answer']);
-
-                                if (empty($value) && $question->isMandatory())
-                                    throw new ValidationException(sprintf('Question "%s" is mandatory', $question->getLabel()));
-
-                                if ($question->allowsValues() && !$question->allowValue($value)) {
-                                    Log::warning(sprintf("value %s is not allowed for question %s", $value, $question->getName()));
-                                    throw new ValidationException("The answer you provided is invalid");
-                                }
-
-                                $answer = new PresentationExtraQuestionAnswer();
-                                $answer->setQuestion($question);
-                                $answer->setValue($value);
-                                $presentation->addExtraQuestionAnswer($answer);
-                                break;
-                            }
-                        }
-                    }
-
-                }
-            }
-            return $presentation;
+            return $this->savePresentationExtraQuestions($presentation, $data);
         });
     }
 

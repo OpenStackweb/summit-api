@@ -841,9 +841,9 @@ class Presentation extends SummitEvent
     }
 
     /**
-     * @return SelectionPlan
+     * @return SelectionPlan|null
      */
-    public function getSelectionPlan()
+    public function getSelectionPlan():?SelectionPlan
     {
         return $this->selection_plan;
     }

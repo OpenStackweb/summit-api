@@ -434,41 +434,10 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $data = Input::json();
 
             $current_member = $this->resource_server_context->getCurrentUser();
-
-            $rules = [
-                'title'                          => 'required|string|max:255',
-                'description'                    => 'required|string|max:1100',
-                'type_id'                        => 'required|integer',
-                'location_id'                    => 'sometimes|integer',
-                'start_date'                     => 'sometimes|required|date_format:U',
-                'end_date'                       => 'sometimes|required_with:start_date|date_format:U|after:start_date',
-                'track_id'                       => 'required|integer',
-                'rsvp_link'                      => 'nullable|sometimes|url',
-                'streaming_url'                  => 'nullable|sometimes|url',
-                'etherpad_link'                  => 'nullable|sometimes|url',
-                'meeting_url'                    => 'nullable|sometimes|url',
-                'rsvp_template_id'               => 'sometimes|integer',
-                'rsvp_max_user_number'           => 'required_with:rsvp_template_id|integer|min:0',
-                'rsvp_max_user_wait_list_number' => 'required_with:rsvp_template_id|integer|min:0',
-                'head_count'                     => 'sometimes|integer',
-                'social_description'             => 'sometimes|string|max:110',
-                'allow_feedback'                 => 'sometimes|boolean',
-                'tags'                           => 'sometimes|string_array',
-                'sponsors'                       => 'sometimes|int_array',
-                'level'                          => 'sometimes|string',
-                // presentation rules
-                'attendees_expected_learnt'      =>  'sometimes|string|max:1100',
-                'attending_media'                =>  'sometimes|boolean',
-                'to_record'                      =>  'sometimes|boolean',
-                'speakers'                       =>  'sometimes|int_array',
-                'moderator_speaker_id'           =>  'sometimes|integer',
-                // group event
-                'groups'                         =>  'sometimes|int_array',
-                'selection_plan_id'              =>  'sometimes|integer',
-            ];
+            $payload = $data->all();
 
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data->all(), $rules);
+            $validation = Validator::make($payload, SummitEventValidationRulesFactory::build($payload));
 
             if ($validation->fails()) {
                 $messages = $validation->messages()->toArray();
@@ -485,7 +454,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 'social_summary',
             ];
 
-            $event = $this->service->addEvent($summit, HTMLCleaner::cleanData($data->all(), $fields));
+            $event = $this->service->addEvent($summit, HTMLCleaner::cleanData($payload, $fields));
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($event)->serialize());
         }
@@ -521,42 +490,9 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
-            $rules = [
-                // summit event rules
-                'title'                          => 'sometimes|string|max:255',
-                'description'                    => 'sometimes|string|max:1100',
-                'rsvp_link'                      => 'nullable|sometimes|url',
-                'streaming_url'                  => 'nullable|sometimes|url',
-                'etherpad_link'                  => 'nullable|sometimes|url',
-                'meeting_url'                    => 'nullable|sometimes|url',
-                'rsvp_template_id'               => 'sometimes|integer',
-                'rsvp_max_user_number'           => 'required_with:rsvp_template_id|integer|min:0',
-                'rsvp_max_user_wait_list_number' => 'required_with:rsvp_template_id|integer|min:0',
-                'head_count'                     => 'sometimes|integer',
-                'social_description'             => 'sometimes|string|max:110',
-                'location_id'                    => 'sometimes|integer',
-                'start_date'                     => 'sometimes|date_format:U',
-                'end_date'                       => 'sometimes|required_with:start_date|date_format:U|after:start_date',
-                'allow_feedback'                 => 'sometimes|boolean',
-                'type_id'                        => 'sometimes|required|integer',
-                'track_id'                       => 'sometimes|required|integer',
-                'tags'                           => 'sometimes|string_array',
-                'sponsors'                       => 'sometimes|int_array',
-                'level'                          => 'sometimes|string',
-                // presentation rules
-                'attendees_expected_learnt'      => 'sometimes|string|max:1100',
-                'attending_media'                => 'sometimes|boolean',
-                'to_record'                      => 'sometimes|boolean',
-                'speakers'                       => 'sometimes|int_array',
-                'moderator_speaker_id'           => 'sometimes|integer',
-                // group event
-                'groups'                         => 'sometimes|int_array',
-                'occupancy'                      => 'sometimes|in:EMPTY,25%,50%,75%,FULL',
-                'selection_plan_id'              => 'sometimes|integer',
-            ];
-
+            $payload = $data->all();
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data->all(), $rules);
+            $validation = Validator::make($payload, SummitEventValidationRulesFactory::build($payload, true));
 
             if ($validation->fails()) {
                 $messages = $validation->messages()->toArray();
@@ -573,7 +509,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 'social_summary',
             ];
 
-            $event = $this->service->updateEvent($summit, $event_id, HTMLCleaner::cleanData($data->all(), $fields));
+            $event = $this->service->updateEvent($summit, $event_id, HTMLCleaner::cleanData($payload, $fields));
 
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($event)->serialize());
 

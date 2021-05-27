@@ -13,6 +13,8 @@
  **/
 
 use App\Facades\ResourceServerContext;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
+use App\Services\Model\Imp\PresentationRelationsManagement;
 use League\Csv\Reader;
 use App\Events\MyFavoritesAdd;
 use App\Events\MyFavoritesRemove;
@@ -67,6 +69,7 @@ use models\summit\ISummitEntityEventRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
 use models\summit\Presentation;
+use models\summit\PresentationExtraQuestionAnswer;
 use models\summit\PresentationSpeaker;
 use models\summit\PresentationType;
 use models\summit\RSVP;
@@ -83,6 +86,7 @@ use models\summit\SummitEventWithFile;
 use models\summit\SummitGeoLocatedLocation;
 use models\summit\SummitGroupEvent;
 use models\summit\SummitScheduleEmptySpot;
+use models\utils\SilverstripeBaseModel;
 use services\apis\IEventbriteAPI;
 use libs\utils\ITransactionService;
 use Exception;
@@ -915,6 +919,7 @@ final class SummitService extends AbstractService implements ISummitService
         }
     }
 
+    use PresentationRelationsManagement;
     /**
      * @param SummitEvent $event
      * @param SummitEventType $event_type
@@ -999,6 +1004,9 @@ final class SummitService extends AbstractService implements ISummitService
                 $event->setSelectionPlan($selection_plan);
             }
         }
+
+        $this->savePresentationExtraQuestions($event, $data);
+
     }
 
     /**

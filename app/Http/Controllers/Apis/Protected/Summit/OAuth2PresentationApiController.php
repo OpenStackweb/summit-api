@@ -314,25 +314,9 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             if (is_null($current_member)) return $this->error403();
 
             $data = Input::json();
-
-            $rules =
-            [
-                'title'                     => 'required|string|max:255',
-                'description'               => 'required|string|max:1100',
-                'social_description'        => 'required|string|max:110',
-                'attendees_expected_learnt' => 'required|string|max:1100',
-                'type_id'                   => 'required|integer',
-                'track_id'                  => 'required|integer',
-                'attending_media'           => 'required|boolean',
-                'will_all_speakers_attend'  => 'sometimes|boolean',
-                'links'                     => 'sometimes|url_array',
-                'tags'                      => 'sometimes|string_array',
-                'extra_questions'           => 'sometimes|extra_question_dto_array',
-            ];
-
             $data = $data->all();
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data, $rules);
+            $validation = Validator::make($data, SummitEventValidationRulesFactory::buildForSubmission($data));
 
             if ($validation->fails()) {
                 $ex = new ValidationException;
@@ -386,24 +370,9 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $data = Input::json();
 
-            $rules =
-                [
-                    'title'                     => 'required|string|max:255',
-                    'description'               => 'required|string|max:1100',
-                    'social_description'        => 'required|string|max:110',
-                    'attendees_expected_learnt' => 'required|string|max:1100',
-                    'will_all_speakers_attend'  => 'sometimes|boolean',
-                    'type_id'                   => 'required|integer',
-                    'track_id'                  => 'required|integer',
-                    'attending_media'           => 'required|boolean',
-                    'links'                     => 'sometimes|url_array',
-                    'tags'                      => 'sometimes|string_array',
-                    'extra_questions'           => 'sometimes|extra_question_dto_array',
-                ];
-
             $data = $data->all();
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data, $rules);
+            $validation = Validator::make($data, SummitEventValidationRulesFactory::buildForSubmission($data. true));
 
             if ($validation->fails()) {
                 $ex = new ValidationException;

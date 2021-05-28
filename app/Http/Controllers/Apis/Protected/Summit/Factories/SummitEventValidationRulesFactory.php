@@ -60,6 +60,7 @@ final class SummitEventValidationRulesFactory
                 'groups'                         => 'sometimes|int_array',
                 'occupancy'                      => 'sometimes|in:EMPTY,25%,50%,75%,FULL',
                 'selection_plan_id'              => 'sometimes|integer',
+                'disclaimer_accepted'       => 'sometimes|boolean',
             ];
         }
 
@@ -94,6 +95,7 @@ final class SummitEventValidationRulesFactory
             // group event
             'groups'                         =>  'sometimes|int_array',
             'selection_plan_id'              =>  'sometimes|integer',
+            'disclaimer_accepted'       => 'sometimes|boolean',
         ];
     }
 
@@ -108,7 +110,7 @@ final class SummitEventValidationRulesFactory
             return  [
                 'title'                     => 'required|string|max:255',
                 'description'               => 'required|string|max:1100',
-                'social_description'        => 'required|string|max:110',
+                'social_description'        => 'sometimes|string|max:110',
                 'attendees_expected_learnt' => 'required|string|max:1100',
                 'will_all_speakers_attend'  => 'sometimes|boolean',
                 'type_id'                   => 'required|integer',
@@ -117,13 +119,14 @@ final class SummitEventValidationRulesFactory
                 'links'                     => 'sometimes|url_array',
                 'tags'                      => 'sometimes|string_array',
                 'extra_questions'           => 'sometimes|extra_question_dto_array',
+                'disclaimer_accepted'       => 'sometimes|boolean',
             ];
         }
 
         return [
             'title'                     => 'required|string|max:255',
             'description'               => 'required|string|max:1100',
-            'social_description'        => 'required|string|max:110',
+            'social_description'        => 'sometimes|string|max:110',
             'attendees_expected_learnt' => 'required|string|max:1100',
             'type_id'                   => 'required|integer',
             'track_id'                  => 'required|integer',
@@ -132,6 +135,7 @@ final class SummitEventValidationRulesFactory
             'links'                     => 'sometimes|url_array',
             'tags'                      => 'sometimes|string_array',
             'extra_questions'           => 'sometimes|extra_question_dto_array',
+            'disclaimer_accepted'       => 'sometimes|boolean',
         ];
     }
 }

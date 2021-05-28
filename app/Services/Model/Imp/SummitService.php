@@ -12,10 +12,6 @@
  * limitations under the License.
  **/
 
-use App\Facades\ResourceServerContext;
-use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
-use App\Services\Model\Imp\PresentationRelationsManagement;
-use League\Csv\Reader;
 use App\Events\MyFavoritesAdd;
 use App\Events\MyFavoritesRemove;
 use App\Events\MyScheduleAdd;
@@ -24,10 +20,12 @@ use App\Events\RSVPCreated;
 use App\Events\RSVPUpdated;
 use App\Events\SummitDeleted;
 use App\Events\SummitUpdated;
+use App\Facades\ResourceServerContext;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
 use App\Jobs\Emails\Schedule\ShareEventEmail;
 use App\Jobs\ProcessEventDataImport;
+use App\Models\Foundation\Summit\Factories\PresentationFactory;
 use App\Models\Foundation\Summit\Factories\SummitEventFeedbackFactory;
 use App\Models\Foundation\Summit\Factories\SummitFactory;
 use App\Models\Foundation\Summit\Factories\SummitRSVPFactory;
@@ -38,21 +36,27 @@ use App\Services\Model\AbstractService;
 use App\Services\Model\IFolderService;
 use App\Services\Model\IMemberService;
 use CalDAVClient\Facade\Utils\ICalTimeZoneBuilder;
+use DateInterval;
+use DateTime;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Exception;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use League\Csv\Reader;
+use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use Models\foundation\summit\EntityEvents\EntityEventTypeFactory;
+use Models\foundation\summit\EntityEvents\SummitEntityEventProcessContext;
 use models\main\File;
 use models\main\ICompanyRepository;
 use models\main\IGroupRepository;
 use models\main\IMemberRepository;
 use models\main\ITagRepository;
-use Models\foundation\summit\EntityEvents\EntityEventTypeFactory;
-use Models\foundation\summit\EntityEvents\SummitEntityEventProcessContext;
 use models\main\Member;
 use models\main\PersonalCalendarShareInfo;
 use models\main\Tag;
@@ -69,7 +73,6 @@ use models\summit\ISummitEntityEventRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
 use models\summit\Presentation;
-use models\summit\PresentationExtraQuestionAnswer;
 use models\summit\PresentationSpeaker;
 use models\summit\PresentationType;
 use models\summit\RSVP;
@@ -86,19 +89,13 @@ use models\summit\SummitEventWithFile;
 use models\summit\SummitGeoLocatedLocation;
 use models\summit\SummitGroupEvent;
 use models\summit\SummitScheduleEmptySpot;
-use models\utils\SilverstripeBaseModel;
 use services\apis\IEventbriteAPI;
-use libs\utils\ITransactionService;
-use Exception;
-use DateTime;
-use Illuminate\Support\Facades\Log;
 use utils\Filter;
 use utils\FilterElement;
 use utils\FilterParser;
 use utils\Order;
 use utils\OrderElement;
 use utils\PagingInfo;
-use DateInterval;
 
 /**
  * Class SummitService
@@ -771,44 +768,24 @@ final class SummitService extends AbstractService implements ISummitService
             }
 
 
+            if (is_null($event_id) && is_null($event_type)) {
+                // is event is new one and we dont provide an event type ...
+                throw new ValidationException('type_id is mandatory!');
+            }
+
             // new event
             if (is_null($event)) {
-                $event = SummitEventFactory::build($event_type, $summit);
+                $event = SummitEventFactory::build($event_type, $summit, $data);
                 $event->setCreatedBy($current_member);
+            }
+            else{
+                $event->setSummit($summit);
+                if (!is_null($event_type))
+                    $event->setType($event_type);
+                SummitEventFactory::populate($event, $data);
             }
 
             $event->setUpdatedBy($current_member);
-
-            // main data
-
-            if (isset($data['title']))
-                $event->setTitle(html_entity_decode(trim($data['title'])));
-
-            if (isset($data['level']) && !is_null($event_type) && $event_type->isAllowsLevel())
-                $event->setLevel($data['level']);
-
-            if (isset($data['description']))
-                $event->setAbstract(html_entity_decode(trim($data['description'])));
-
-            if (isset($data['rsvp_link']) && isset($data['rsvp_template_id'])) {
-                throw new ValidationException("rsvp_link and rsvp_template_id are both set, you need to especify only one");
-            }
-
-            if (isset($data['rsvp_link'])) {
-                $event->setRSVPLink(html_entity_decode(trim($data['rsvp_link'])));
-            }
-
-            if (isset($data['streaming_url'])) {
-                $event->setStreamingUrl(html_entity_decode(trim($data['streaming_url'])));
-            }
-
-            if (isset($data['etherpad_link'])) {
-                $event->setEtherpadLink(html_entity_decode(trim($data['etherpad_link'])));
-            }
-
-            if (isset($data['meeting_url'])) {
-                $event->setMeetingUrl(html_entity_decode(trim($data['meeting_url'])));
-            }
 
             if (isset($data['rsvp_template_id'])) {
 
@@ -826,32 +803,10 @@ final class SummitService extends AbstractService implements ISummitService
                 $event->setRSVPMaxUserWaitListNumber(intval($data['rsvp_max_user_wait_list_number']));
             }
 
-            if (isset($data['head_count']))
-                $event->setHeadCount(intval($data['head_count']));
-
-            if (isset($data['social_description']))
-                $event->setSocialSummary(strip_tags(trim($data['social_description'])));
-
-            if (isset($data['occupancy']))
-                $event->setOccupancy($data['occupancy']);
-
-            $event->setAllowFeedBack(isset($data['allow_feedback']) ?
-                filter_var($data['allow_feedback'], FILTER_VALIDATE_BOOLEAN) :
-                false);
-
-            if (!is_null($event_type))
-                $event->setType($event_type);
-
-            if (is_null($event_id) && is_null($event_type)) {
-                // is event is new one and we dont provide an event type ...
-                throw new ValidationException('type_id is mandatory!');
-            }
-
             if (!is_null($track)) {
                 $event->setCategory($track);
             }
 
-            $event->setSummit($summit);
             if (!is_null($location))
                 $event->setLocation($location);
 
@@ -919,7 +874,6 @@ final class SummitService extends AbstractService implements ISummitService
         }
     }
 
-    use PresentationRelationsManagement;
     /**
      * @param SummitEvent $event
      * @param SummitEventType $event_type
@@ -931,20 +885,10 @@ final class SummitService extends AbstractService implements ISummitService
     {
         if (!$event instanceof Presentation) return;
 
-        // main data
-        if (isset($data['attendees_expected_learnt']))
-            $event->setAttendeesExpectedLearnt(html_entity_decode($data['attendees_expected_learnt']));
-
-        $event->setAttendingMedia(isset($data['attending_media']) ?
-            filter_var($data['attending_media'], FILTER_VALIDATE_BOOLEAN) : 0);
-
         // if we are creating the presentation from admin, then
         // we should mark it as received and complete
         $event->setStatus(Presentation::STATUS_RECEIVED);
         $event->setProgress(Presentation::PHASE_COMPLETE);
-
-        $event->setToRecord(isset($data['to_record']) ?
-            filter_var($data['to_record'], FILTER_VALIDATE_BOOLEAN) : 0);
 
         // speakers
 
@@ -953,7 +897,7 @@ final class SummitService extends AbstractService implements ISummitService
             $speakers = $data['speakers'] ?? [];
 
             if ($event_type->isAreSpeakersMandatory() && count($speakers) == 0) {
-                throw new ValidationException('speakers are mandatory!');
+                throw new ValidationException('Speakers are mandatory.');
             }
 
             if($shouldClearSpeakers){
@@ -964,7 +908,8 @@ final class SummitService extends AbstractService implements ISummitService
                 $event->clearSpeakers();
                 foreach ($speakers as $speaker_id) {
                     $speaker = $this->speaker_repository->getById(intval($speaker_id));
-                    if (is_null($speaker) || !$speaker instanceof PresentationSpeaker) throw new EntityNotFoundException(sprintf('speaker id %s', $speaker_id));
+                    if (is_null($speaker) || !$speaker instanceof PresentationSpeaker)
+                        throw new EntityNotFoundException(sprintf('Speaker id %s.', $speaker_id));
                     $event->addSpeaker($speaker);
                 }
             }
@@ -976,7 +921,7 @@ final class SummitService extends AbstractService implements ISummitService
             $moderator_id = isset($data['moderator_speaker_id']) ? intval($data['moderator_speaker_id']) : 0;
 
             if ($event_type->isModeratorMandatory() && $moderator_id == 0) {
-                throw new ValidationException('moderator_speaker_id is mandatory!');
+                throw new ValidationException('moderator_speaker_id is mandatory.');
             }
 
             if ($moderator_id > 0) {
@@ -999,14 +944,23 @@ final class SummitService extends AbstractService implements ISummitService
             if (!is_null($selection_plan)) {
                 $track = $event->getCategory();
                 if (!$selection_plan->hasTrack($track)) {
-                    throw new ValidationException(sprintf("Track %s (%s) does not belongs to Selection Plan %s (%s)", $track->getTitle(), $track->getId(), $selection_plan->getName(), $selection_plan->getId()));
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "Track %s (%s) does not belongs to Selection Plan %s (%s).",
+                            $track->getTitle(),
+                            $track->getId(),
+                            $selection_plan->getName(),
+                            $selection_plan->getId()
+                        )
+                    );
                 }
                 $event->setSelectionPlan($selection_plan);
             }
         }
 
-        $this->savePresentationExtraQuestions($event, $data);
-
+        PresentationFactory::populate($event, $data, true);
     }
 
     /**

@@ -61,8 +61,13 @@ class SynchPresentationActions implements ShouldQueue
         Log::debug(sprintf("SynchPresentationActions::handle event id %s", $this->event_id));
         $tx_service->transaction(function() use($repository){
             $event = $repository->getById($this->event_id);
-            if(is_null($event) || !$event instanceof Presentation)
-                throw new EntityNotFoundException(sprintf("Event %s is not a presentation", $this->event_id));
+
+            if(is_null($event))
+                throw new EntityNotFoundException(sprintf("Event %s ", $this->event_id));
+
+            if(!$event instanceof Presentation){
+                return;
+            }
 
             $event->getSummit()->synchAllPresentationActions();
         });

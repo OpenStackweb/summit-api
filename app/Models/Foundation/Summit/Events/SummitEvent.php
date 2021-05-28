@@ -551,7 +551,7 @@ class SummitEvent extends SilverstripeBaseModel
     }
 
     /**
-     * @return SummitEventType
+     * @return SummitEventType|null
      */
     public function getType()
     {

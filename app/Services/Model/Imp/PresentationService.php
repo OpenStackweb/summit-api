@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Events\PresentationMaterialDeleted;
 use App\Events\PresentationMaterialUpdated;
 use App\Facades\ResourceServerContext;
@@ -19,43 +20,34 @@ use App\Http\Utils\FileUploadInfo;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
-use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
+use App\Models\Foundation\Summit\Factories\PresentationFactory;
 use App\Models\Foundation\Summit\Factories\PresentationLinkFactory;
 use App\Models\Foundation\Summit\Factories\PresentationMediaUploadFactory;
 use App\Models\Foundation\Summit\Factories\PresentationSlideFactory;
 use App\Models\Foundation\Summit\Factories\PresentationVideoFactory;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Utils\IStorageTypesConstants;
-use App\Services\FileSystem\FileNameSanitizer;
 use App\Services\Filesystem\FileUploadStrategyFactory;
 use App\Services\Model\AbstractService;
-use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackAnswer;
-use App\Services\Model\Imp\PresentationRelationsManagement;
-use Illuminate\Support\Facades\Config;
+use App\Services\Model\IFolderService;
+use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
+use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\IFolderRepository;
 use models\main\ITagRepository;
-use models\main\Member;
 use models\summit\ISpeakerRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\Presentation;
-use models\summit\PresentationExtraQuestionAnswer;
 use models\summit\PresentationLink;
 use models\summit\PresentationMediaUpload;
 use models\summit\PresentationSlide;
 use models\summit\PresentationSpeaker;
 use models\summit\PresentationType;
 use models\summit\PresentationVideo;
-use libs\utils\ITransactionService;
 use models\summit\Summit;
-use Illuminate\Http\Request as LaravelRequest;
-use App\Services\Model\IFolderService;
-use models\summit\SummitOrderExtraQuestionTypeConstants;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
  * Class PresentationService
@@ -413,6 +405,7 @@ final class PresentationService
     )
     {
         return $this->tx_service->transaction(function () use ($summit, $selection_plan, $presentation, $current_speaker, $data) {
+
             $event_type = $summit->getEventType(intval($data['type_id']));
             if (is_null($event_type)) {
                 throw new EntityNotFoundException(
@@ -460,77 +453,9 @@ final class PresentationService
                     ]));
             }
 
-            if (isset($data['title']))
-                $presentation->setTitle(html_entity_decode(trim($data['title'])));
-
-            if (isset($data['description']))
-                $presentation->setAbstract(html_entity_decode(trim($data['description'])));
-
-            if (isset($data['will_all_speakers_attend']))
-                $presentation->setWillAllSpeakersAttend(boolval($data['will_all_speakers_attend']));
-
-            if (isset($data['social_description']))
-                $presentation->setSocialSummary(strip_tags(trim($data['social_description'])));
-
-            if (isset($data['level']) && !is_null($event_type) && $event_type->isAllowsLevel())
-                $presentation->setLevel($data['level']);
-
-            if (isset($data['attendees_expected_learnt']))
-                $presentation->setAttendeesExpectedLearnt(html_entity_decode($data['attendees_expected_learnt']));
-
-            $presentation->setAttendingMedia(isset($data['attending_media']) ?
-                filter_var($data['attending_media'], FILTER_VALIDATE_BOOLEAN) : 0);
-
             $presentation->setType($event_type);
             $presentation->setCategory($track);
-            // add me as speaker
-            //$presentation->addSpeaker($current_speaker);
-
-            if (isset($data['tags'])) {
-                $presentation->clearTags();
-
-                if (count($data['tags']) > 0) {
-                    if(!$presentation->isCompleted())
-                        $presentation->setProgress(Presentation::PHASE_TAGS);
-                }
-
-                foreach ($data['tags'] as $tag_value) {
-                    $tag = $track->getAllowedTagByVal($tag_value);
-                    if (is_null($tag)) {
-                        throw new ValidationException(
-                            trans(
-                                'validation_errors.PresentationService.saveOrUpdatePresentation.TagNotAllowed',
-                                [
-                                    'tag' => $tag_value,
-                                    'track_id' => $track->getId()
-                                ]
-                            )
-                        );
-                    }
-                    $presentation->addTag($tag);
-                }
-            }
-
-            if (isset($data['links'])) {
-                $presentation->clearLinks();
-
-                if (count($data['links']) > Presentation::MaxAllowedLinks) {
-                    throw new ValidationException(trans(
-                        'validation_errors.PresentationService.saveOrUpdatePresentation.MaxAllowedLinks',
-                        [
-                            'max_allowed_links' => Presentation::MaxAllowedLinks
-                        ]));
-                }
-
-                foreach ($data['links'] as $link) {
-                    $presentationLink = new PresentationLink();
-                    $presentationLink->setName(trim($link));
-                    $presentationLink->setLink(trim($link));
-                    $presentation->addLink($presentationLink);
-                }
-            }
-
-            return $this->savePresentationExtraQuestions($presentation, $data);
+            return PresentationFactory::populate($presentation, $data);
         });
     }
 

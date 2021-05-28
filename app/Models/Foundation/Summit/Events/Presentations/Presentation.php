@@ -131,6 +131,12 @@ class Presentation extends SummitEvent
     protected $will_all_speakers_attend;
 
     /**
+     * @ORM\Column(name="DisclaimerAcceptedDate", type="datetime")
+     * @var \DateTime
+     */
+    protected $disclaimer_accepted_date;
+
+    /**
      * @ORM\ManyToOne(targetEntity="PresentationSpeaker", inversedBy="moderated_presentations", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="ModeratorID", referencedColumnName="ID", onDelete="SET NULL")
      * @var PresentationSpeaker
@@ -256,6 +262,7 @@ class Presentation extends SummitEvent
         $this->to_record = false;
         $this->attending_media = false;
         $this->will_all_speakers_attend = false;
+        $this->disclaimer_accepted_date = null;
     }
 
     /**
@@ -1606,4 +1613,26 @@ class Presentation extends SummitEvent
         $answer->clearPresentation();
     }
 
+    /**
+     * @return \DateTime
+     */
+    public function getDisclaimerAcceptedDate(): ?\DateTime
+    {
+        return $this->disclaimer_accepted_date;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDisclaimerAccepted():bool{
+        return !is_null($this->disclaimer_accepted_date);
+    }
+
+    /**
+     * @param \DateTime $disclaimer_accepted_date
+     */
+    public function setDisclaimerAcceptedDate(\DateTime $disclaimer_accepted_date): void
+    {
+        $this->disclaimer_accepted_date = $disclaimer_accepted_date;
+    }
 }

@@ -387,7 +387,6 @@ final class PresentationService
         });
     }
 
-    use PresentationRelationsManagement;
     /**
      * @param Summit $summit
      * @param SelectionPlan $selection_plan

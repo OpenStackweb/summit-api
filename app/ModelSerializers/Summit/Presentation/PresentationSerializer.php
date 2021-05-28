@@ -48,6 +48,8 @@ class PresentationSerializer extends SummitEventSerializer
         'status',
         'progress',
         'selection_status',
+        'disclaimer_accepted_date',
+        'disclaimer_accepted'
     ];
 
     protected static $allowed_relations = [

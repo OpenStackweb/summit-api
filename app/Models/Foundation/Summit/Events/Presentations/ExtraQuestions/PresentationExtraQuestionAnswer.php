@@ -13,6 +13,8 @@
  **/
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
 use Doctrine\ORM\Mapping AS ORM;
+use models\utils\One2ManyPropertyTrait;
+
 /**
  * @ORM\Entity
  * @ORM\Table(name="PresentationExtraQuestionAnswer")
@@ -49,5 +51,15 @@ class PresentationExtraQuestionAnswer
     public function clearPresentation(){
         $this->presentation = null;
     }
+
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getPresentationId'    => 'presentation',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasPresentation'    => 'presentation',
+    ];
 
 }

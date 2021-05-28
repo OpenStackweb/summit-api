@@ -11,8 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\One2ManyPropertyTrait;
 
 /**
@@ -48,18 +49,21 @@ class PresentationExtraQuestionAnswer
         $this->presentation = $presentation;
     }
 
-    public function clearPresentation(){
+    public function clearPresentation()
+    {
         $this->presentation = null;
     }
 
     use One2ManyPropertyTrait;
 
     protected $getIdMappings = [
-        'getPresentationId'    => 'presentation',
+        'getPresentationId' => 'presentation',
+        'getQuestionId' => 'question',
     ];
 
     protected $hasPropertyMappings = [
-        'hasPresentation'    => 'presentation',
+        'hasPresentation' => 'presentation',
+        'hasQuestion' => 'question',
     ];
 
 }

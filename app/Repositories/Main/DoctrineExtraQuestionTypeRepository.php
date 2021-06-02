@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use App\Models\Foundation\ExtraQuestions\IExtraQuestionTypeRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
@@ -93,7 +94,7 @@ abstract class DoctrineExtraQuestionTypeRepository
             $query = $this->getEntityManager()
                 ->createQueryBuilder()
                 ->select("count(e.id)")
-                ->from($this->getBaseEntity(), "e")->join("e.question", "q")
+                ->from(ExtraQuestionAnswer::class, "e")->join("e.question", "q")
                 ->where("q = :question")->setParameter("question", $questionType);
 
             return $query->getQuery()->getSingleScalarResult() > 0;
@@ -111,7 +112,7 @@ abstract class DoctrineExtraQuestionTypeRepository
         try {
             $query = $this->getEntityManager()
                 ->createQueryBuilder()
-                ->delete($this->getBaseEntity(), "e")
+                ->delete(ExtraQuestionAnswer::class, "e")
                 ->where("e.question = :question")
                 ->setParameter("question", $questionType);
 

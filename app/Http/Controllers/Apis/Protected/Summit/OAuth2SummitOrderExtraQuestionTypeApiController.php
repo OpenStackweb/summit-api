@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
+use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
@@ -142,7 +143,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
      */
     protected function addChild(Summit $summit, array $payload): IEntity
     {
-       return $this->service->addOrderExtraQuestion($summit, $payload);
+       return $this->service->addOrderExtraQuestion($summit, HTMLCleaner::cleanData($payload, ['label']));
     }
 
     /**
@@ -188,7 +189,11 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
      */
     protected function updateChild(Summit $summit, int $child_id, array $payload): IEntity
     {
-        return $this->service->updateOrderExtraQuestion($summit, $child_id, $payload);
+        return $this->service->updateOrderExtraQuestion
+        (
+            $summit, $child_id,
+            HTMLCleaner::cleanData($payload, ['label'])
+        );
     }
 
     /**

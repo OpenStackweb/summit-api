@@ -1045,7 +1045,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 return SelectionPlanExtraQuestionValidationRulesFactory::build($payload);
             },
             function ($payload, $selection_plan){
-                return $this->selection_plan_extra_questions_service->addExtraQuestion($selection_plan, $payload);
+                return $this->selection_plan_extra_questions_service->addExtraQuestion($selection_plan,     HTMLCleaner::cleanData($payload, ['label']));
             },
             ...$args
         );
@@ -1093,7 +1093,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
             return SelectionPlanExtraQuestionValidationRulesFactory::build($payload, true);
         },
         function ($question_id, $payload, $selection_plan){
-            return $this->selection_plan_extra_questions_service->updateExtraQuestion($selection_plan, $question_id, $payload);
+            return $this->selection_plan_extra_questions_service->updateExtraQuestion($selection_plan, $question_id, HTMLCleaner::cleanData($payload, ['label']));
         }, ...$args);
     }
 

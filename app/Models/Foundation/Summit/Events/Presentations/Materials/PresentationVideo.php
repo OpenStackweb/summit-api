@@ -37,6 +37,12 @@ class PresentationVideo extends PresentationMaterial
     private $youtube_id;
 
     /**
+     * @ORM\Column(name="ExternalUrl", type="string")
+     * @var string
+     */
+    private $external_url;
+
+    /**
      * @return string
      */
     public function getYoutubeId()
@@ -124,5 +130,22 @@ class PresentationVideo extends PresentationMaterial
         $this->highlighted = false;
         $this->views       = 0;
         $this->date_uploaded = new \DateTime();
+        $this->external_url = null;
+    }
+
+    /**
+     * @return string
+     */
+    public function getExternalUrl(): ?string
+    {
+        return $this->external_url;
+    }
+
+    /**
+     * @param string $external_url
+     */
+    public function setExternalUrl(?string $external_url): void
+    {
+        $this->external_url = $external_url;
     }
 }

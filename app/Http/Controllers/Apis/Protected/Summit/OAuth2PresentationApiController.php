@@ -11,8 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Http\Utils\FileTypes;
 use App\Http\Utils\MultipartFormDataCleaner;
+use App\Jobs\VideoStreamUrlMUXProcessingForSummitJob;
 use App\Models\Foundation\Main\IGroup;
 use Illuminate\Support\Facades\Config;
 use libs\utils\HTMLCleaner;
@@ -32,6 +34,7 @@ use models\summit\Presentation;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use services\model\IPresentationService;
+
 /**
  * Class OAuth2PresentationApiController
  * @package App\Http\Controllers
@@ -77,16 +80,17 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
     {
         parent::__construct($resource_server_context);
         $this->presentation_repository = $presentation_repository;
-        $this->presentation_service    = $presentation_service;
-        $this->member_repository       = $member_repository;
-        $this->summit_repository       = $summit_repository;
+        $this->presentation_service = $presentation_service;
+        $this->member_repository = $member_repository;
+        $this->summit_repository = $summit_repository;
     }
 
     //presentations
 
     //videos
 
-    public function getPresentationVideos($summit_id, $presentation_id){
+    public function getPresentationVideos($summit_id, $presentation_id)
+    {
         try {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -98,10 +102,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $videos = $presentation->getVideos();
 
             $items = [];
-            foreach($videos as $i)
-            {
-                if($i instanceof IEntity)
-                {
+            foreach ($videos as $i) {
+                if ($i instanceof IEntity) {
                     $i = SerializerRegistry::getInstance()->getSerializer($i)->serialize();
                 }
                 $items[] = $i;
@@ -121,7 +123,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $video_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function getPresentationVideo($summit_id, $presentation_id, $video_id){
+    public function getPresentationVideo($summit_id, $presentation_id, $video_id)
+    {
         try {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -148,33 +151,25 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $presentation_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function addVideo(LaravelRequest $request, $summit_id, $presentation_id){
+    public function addVideo(LaravelRequest $request, $summit_id, $presentation_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            if(!Request::isJson()) return $this->error400();
+            if (!Request::isJson()) return $this->error400();
 
             $data = Input::json();
 
-            $rules =
-            [
-                'youtube_id'      => 'required|alpha_dash',
-                'name'            => 'sometimes|required|string:512',
-                'description'     => 'sometimes|required|string',
-                'featured'        => 'sometimes|required|boolean',
-                'display_on_site' => 'sometimes|required|boolean',
-            ];
-
             $data = $data->all();
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data, $rules);
+            $validation = Validator::make($data, PresentationVideoValidationRulesFactory::build($data));
 
             if ($validation->fails()) {
-               $ex = new ValidationException;
-               $ex->setMessages($validation->messages()->toArray());
-               throw $ex;
+                $ex = new ValidationException;
+                $ex->setMessages($validation->messages()->toArray());
+                throw $ex;
             }
 
             $fields = [
@@ -185,19 +180,13 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $video = $this->presentation_service->addVideoTo($presentation_id, HTMLCleaner::cleanData($data, $fields));
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($video)->serialize());
-        }
-        catch (EntityNotFoundException $ex1)
-        {
+        } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
-        }
-        catch (ValidationException $ex2)
-        {
+        } catch (ValidationException $ex2) {
             Log::warning($ex2);
             return $this->error412($ex2->getMessages());
-        }
-        catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -210,28 +199,19 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $video_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function updateVideo(LaravelRequest $request, $summit_id, $presentation_id, $video_id){
+    public function updateVideo(LaravelRequest $request, $summit_id, $presentation_id, $video_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            if(!Request::isJson()) return $this->error400();
+            if (!Request::isJson()) return $this->error400();
 
             $data = Input::json();
-
-            $rules = [
-                'youtube_id'     => 'required|alpha_dash',
-                'name'            => 'sometimes|required|string:512',
-                'description'     => 'sometimes|required|string',
-                'display_on_site' => 'sometimes|required|boolean',
-                'featured'        => 'sometimes|required|boolean',
-                'order'           => 'sometimes|integer|min:1',
-            ];
-
             $data = $data->all();
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data, $rules);
+            $validation = Validator::make($data, PresentationVideoValidationRulesFactory::build($data, true));
 
             if ($validation->fails()) {
                 $ex = new ValidationException;
@@ -247,19 +227,13 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $video = $this->presentation_service->updateVideo($presentation_id, $video_id, HTMLCleaner::cleanData($data, $fields));
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($video)->serialize());
-        }
-        catch (EntityNotFoundException $ex1)
-        {
+        } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
-        }
-        catch (ValidationException $ex2)
-        {
+        } catch (ValidationException $ex2) {
             Log::warning($ex2);
             return $this->error412($ex2->getMessages());
-        }
-        catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -271,7 +245,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $video_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function deleteVideo($summit_id, $presentation_id, $video_id){
+    public function deleteVideo($summit_id, $presentation_id, $video_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -280,19 +255,13 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $this->presentation_service->deleteVideo($presentation_id, $video_id);
 
             return $this->deleted();
-        }
-        catch (EntityNotFoundException $ex1)
-        {
+        } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
-        }
-        catch (ValidationException $ex2)
-        {
+        } catch (ValidationException $ex2) {
             Log::warning($ex2);
             return $this->error412($ex2->getMessages());
-        }
-        catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -302,13 +271,14 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
-    public function submitPresentation($summit_id){
+    public function submitPresentation($summit_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            if(!Request::isJson()) return $this->error400();
+            if (!Request::isJson()) return $this->error400();
 
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
@@ -334,19 +304,13 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $presentation = $this->presentation_service->submitPresentation($summit, HTMLCleaner::cleanData($data, $fields));
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize(Request::input('expand', '')));
-        }
-        catch (EntityNotFoundException $ex1)
-        {
+        } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404(['message' => $ex1->getMessage()]);
-        }
-        catch (ValidationException $ex2)
-        {
+        } catch (ValidationException $ex2) {
             Log::warning($ex2);
             return $this->error412($ex2->getMessages());
-        }
-        catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -357,13 +321,14 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $presentation_id
      * @return mixed
      */
-    public function updatePresentationSubmission($summit_id, $presentation_id){
+    public function updatePresentationSubmission($summit_id, $presentation_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            if(!Request::isJson()) return $this->error400();
+            if (!Request::isJson()) return $this->error400();
 
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
@@ -372,7 +337,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $data = $data->all();
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data, SummitEventValidationRulesFactory::buildForSubmission($data. true));
+            $validation = Validator::make($data, SummitEventValidationRulesFactory::buildForSubmission($data . true));
 
             if ($validation->fails()) {
                 $ex = new ValidationException;
@@ -395,19 +360,13 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             );
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize(Request::input('expand', '')));
-        }
-        catch (EntityNotFoundException $ex1)
-        {
+        } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
-        }
-        catch (ValidationException $ex2)
-        {
+        } catch (ValidationException $ex2) {
             Log::warning($ex2);
             return $this->error412($ex2->getMessages());
-        }
-        catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -418,7 +377,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $presentation_id
      * @return mixed
      */
-    public function completePresentationSubmission($summit_id, $presentation_id){
+    public function completePresentationSubmission($summit_id, $presentation_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -434,19 +394,13 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             );
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize(Request::input('expand', '')));
-        }
-        catch (EntityNotFoundException $ex1)
-        {
+        } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
-        }
-        catch (ValidationException $ex2)
-        {
+        } catch (ValidationException $ex2) {
             Log::warning($ex2);
             return $this->error412($ex2->getMessages());
-        }
-        catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -457,7 +411,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $presentation_id
      * @return mixed
      */
-    public function deletePresentation($summit_id, $presentation_id){
+    public function deletePresentation($summit_id, $presentation_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -489,7 +444,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $presentation_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function getPresentationSlides($summit_id, $presentation_id){
+    public function getPresentationSlides($summit_id, $presentation_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -502,10 +458,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $slides = $presentation->getSlides();
 
             $items = [];
-            foreach($slides as $i)
-            {
-                if($i instanceof IEntity)
-                {
+            foreach ($slides as $i) {
+                if ($i instanceof IEntity) {
                     $i = SerializerRegistry::getInstance()->getSerializer($i)->serialize();
                 }
                 $items[] = $i;
@@ -531,7 +485,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $slide_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function getPresentationSlide($summit_id, $presentation_id, $slide_id){
+    public function getPresentationSlide($summit_id, $presentation_id, $slide_id)
+    {
         try {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -558,7 +513,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $presentation_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function addPresentationSlide(LaravelRequest $request, $summit_id, $presentation_id){
+    public function addPresentationSlide(LaravelRequest $request, $summit_id, $presentation_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -567,12 +523,12 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
             $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
-            if(!$isAdmin){
+            if (!$isAdmin) {
                 // check if we could edit presentation
                 $presentation = $summit->getEvent($presentation_id);
-                if(is_null($presentation) || !$presentation instanceof Presentation)
+                if (is_null($presentation) || !$presentation instanceof Presentation)
                     return $this->error404();
-                if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
+                if (!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
                     return $this->error403();
             }
 
@@ -580,18 +536,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $data = MultipartFormDataCleaner::cleanBool('display_on_site', $data);
             $data = MultipartFormDataCleaner::cleanBool('featured', $data);
 
-            $rules = [
-                'file'            => 'required_without_all:link,filepath',
-                'link'            => 'required_without_all:file,filepath|url',
-                'filepath'        => 'required_without_all:link,file',
-                'name'            => 'required|string:512',
-                'description'     => 'nullable|string',
-                'display_on_site' => 'nullable|boolean',
-                'featured'        => 'nullable|boolean',
-            ];
-
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data, $rules);
+            $validation = Validator::make($data, PresentationSlideValidationRulesFactory::build($data));
 
             if ($validation->fails()) {
                 $ex = new ValidationException;
@@ -614,19 +560,13 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             );
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($slide)->serialize());
-        }
-        catch (EntityNotFoundException $ex1)
-        {
+        } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
-        }
-        catch (ValidationException $ex2)
-        {
+        } catch (ValidationException $ex2) {
             Log::warning($ex2);
             return $this->error412($ex2->getMessages());
-        }
-        catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -639,7 +579,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $slide_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function updatePresentationSlide(LaravelRequest $request, $summit_id, $presentation_id, $slide_id){
+    public function updatePresentationSlide(LaravelRequest $request, $summit_id, $presentation_id, $slide_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -648,12 +589,12 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
             $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
-            if(!$isAdmin){
+            if (!$isAdmin) {
                 // check if we could edit presentation
                 $presentation = $summit->getEvent($presentation_id);
-                if(is_null($presentation) || !$presentation instanceof Presentation)
+                if (is_null($presentation) || !$presentation instanceof Presentation)
                     return $this->error404();
-                if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
+                if (!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
                     return $this->error403();
             }
 
@@ -662,17 +603,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $data = MultipartFormDataCleaner::cleanBool('featured', $data);
             $data = MultipartFormDataCleaner::cleanInt('order', $data);
 
-            $rules = [
-                'link'            => 'nullable|url',
-                'name'            => 'nullable|string:512',
-                'description'     => 'nullable|string',
-                'display_on_site' => 'nullable|boolean',
-                'featured'        => 'nullable|boolean',
-                'order'           => 'nullable|integer|min:1',
-            ];
-
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data, $rules);
+            $validation = Validator::make($data, PresentationSlideValidationRulesFactory::build($data, true));
 
             if ($validation->fails()) {
                 $ex = new ValidationException;
@@ -696,19 +628,13 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             );
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($slide)->serialize());
-        }
-        catch (EntityNotFoundException $ex1)
-        {
+        } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
-        }
-        catch (ValidationException $ex2)
-        {
+        } catch (ValidationException $ex2) {
             Log::warning($ex2);
             return $this->error412($ex2->getMessages());
-        }
-        catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -720,7 +646,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $slide_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function deletePresentationSlide($summit_id, $presentation_id, $slide_id){
+    public function deletePresentationSlide($summit_id, $presentation_id, $slide_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -729,31 +656,25 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
             $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
-            if(!$isAdmin){
+            if (!$isAdmin) {
                 // check if we could edit presentation
                 $presentation = $summit->getEvent($presentation_id);
-                if(is_null($presentation) || !$presentation instanceof Presentation)
+                if (is_null($presentation) || !$presentation instanceof Presentation)
                     return $this->error404();
-                if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
+                if (!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
                     return $this->error403();
             }
 
             $this->presentation_service->deleteSlide($presentation_id, $slide_id);
 
             return $this->deleted();
-        }
-        catch (EntityNotFoundException $ex1)
-        {
+        } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
-        }
-        catch (ValidationException $ex2)
-        {
+        } catch (ValidationException $ex2) {
             Log::warning($ex2);
             return $this->error412($ex2->getMessages());
-        }
-        catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -766,7 +687,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $presentation_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function getPresentationLinks($summit_id, $presentation_id){
+    public function getPresentationLinks($summit_id, $presentation_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -779,10 +701,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $links = $presentation->getLinks();
 
             $items = [];
-            foreach($links as $i)
-            {
-                if($i instanceof IEntity)
-                {
+            foreach ($links as $i) {
+                if ($i instanceof IEntity) {
                     $i = SerializerRegistry::getInstance()->getSerializer($i)->serialize();
                 }
                 $items[] = $i;
@@ -808,7 +728,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $link_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function getPresentationLink($summit_id, $presentation_id, $link_id){
+    public function getPresentationLink($summit_id, $presentation_id, $link_id)
+    {
         try {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -835,7 +756,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $presentation_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function addPresentationLink(LaravelRequest $request, $summit_id, $presentation_id){
+    public function addPresentationLink(LaravelRequest $request, $summit_id, $presentation_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -844,12 +766,12 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
             $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
-            if(!$isAdmin){
+            if (!$isAdmin) {
                 // check if we could edit presentation
                 $presentation = $summit->getEvent($presentation_id);
-                if(is_null($presentation) || !$presentation instanceof Presentation)
+                if (is_null($presentation) || !$presentation instanceof Presentation)
                     return $this->error404();
-                if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
+                if (!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
                     return $this->error403();
             }
 
@@ -857,16 +779,9 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $data = MultipartFormDataCleaner::cleanBool('display_on_site', $data);
             $data = MultipartFormDataCleaner::cleanBool('featured', $data);
 
-            $rules = [
-                'link'            => 'required|url',
-                'name'            => 'required|string:512',
-                'description'     => 'nullable|string',
-                'display_on_site' => 'nullable|boolean',
-                'featured'        => 'nullable|boolean',
-            ];
 
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data, $rules);
+            $validation = Validator::make($data, PresentationLinkValidationRulesFactory::build($data));
 
             if ($validation->fails()) {
                 $ex = new ValidationException;
@@ -882,19 +797,13 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $link = $this->presentation_service->addLinkTo($presentation_id, HTMLCleaner::cleanData($data, $fields));
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($link)->serialize());
-        }
-        catch (EntityNotFoundException $ex1)
-        {
+        } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
-        }
-        catch (ValidationException $ex2)
-        {
+        } catch (ValidationException $ex2) {
             Log::warning($ex2);
             return $this->error412($ex2->getMessages());
-        }
-        catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -907,7 +816,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $link_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function updatePresentationLink(LaravelRequest $request, $summit_id, $presentation_id, $link_id){
+    public function updatePresentationLink(LaravelRequest $request, $summit_id, $presentation_id, $link_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -916,12 +826,12 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
             $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
-            if(!$isAdmin){
+            if (!$isAdmin) {
                 // check if we could edit presentation
                 $presentation = $summit->getEvent($presentation_id);
-                if(is_null($presentation) || !$presentation instanceof Presentation)
+                if (is_null($presentation) || !$presentation instanceof Presentation)
                     return $this->error404();
-                if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
+                if (!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
                     return $this->error403();
             }
 
@@ -930,17 +840,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $data = MultipartFormDataCleaner::cleanBool('featured', $data);
             $data = MultipartFormDataCleaner::cleanInt('order', $data);
 
-            $rules = [
-                'link'            => 'sometimes|required|url',
-                'name'            => 'sometimes|required|string:512',
-                'description'     => 'nullable|string',
-                'display_on_site' => 'nullable|boolean',
-                'featured'        => 'nullable|boolean',
-                'order'           => 'nullable|integer|min:1',
-            ];
-
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data, $rules);
+            $validation = Validator::make($data, PresentationLinkValidationRulesFactory::build($data, true));
 
             if ($validation->fails()) {
                 $ex = new ValidationException;
@@ -956,19 +857,13 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $link = $this->presentation_service->updateLink($presentation_id, $link_id, HTMLCleaner::cleanData($data, $fields));
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($link)->serialize());
-        }
-        catch (EntityNotFoundException $ex1)
-        {
+        } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
-        }
-        catch (ValidationException $ex2)
-        {
+        } catch (ValidationException $ex2) {
             Log::warning($ex2);
             return $this->error412($ex2->getMessages());
-        }
-        catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -980,7 +875,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $link_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function deletePresentationLink($summit_id, $presentation_id, $link_id){
+    public function deletePresentationLink($summit_id, $presentation_id, $link_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -989,31 +885,25 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
             $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
-            if(!$isAdmin){
+            if (!$isAdmin) {
                 // check if we could edit presentation
                 $presentation = $summit->getEvent($presentation_id);
-                if(is_null($presentation) || !$presentation instanceof Presentation)
+                if (is_null($presentation) || !$presentation instanceof Presentation)
                     return $this->error404();
-                if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
+                if (!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
                     return $this->error403();
             }
 
             $this->presentation_service->deleteLink($presentation_id, $link_id);
 
             return $this->deleted();
-        }
-        catch (EntityNotFoundException $ex1)
-        {
+        } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
-        }
-        catch (ValidationException $ex2)
-        {
+        } catch (ValidationException $ex2) {
             Log::warning($ex2);
             return $this->error412($ex2->getMessages());
-        }
-        catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -1026,7 +916,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $presentation_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function getPresentationMediaUploads($summit_id, $presentation_id){
+    public function getPresentationMediaUploads($summit_id, $presentation_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -1039,10 +930,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $mediaUploads = $presentation->getMediaUploads();
 
             $items = [];
-            foreach($mediaUploads as $i)
-            {
-                if($i instanceof IEntity)
-                {
+            foreach ($mediaUploads as $i) {
+                if ($i instanceof IEntity) {
                     $i = SerializerRegistry::getInstance()->getSerializer($i)->serialize();
                 }
                 $items[] = $i;
@@ -1068,7 +957,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $media_upload_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function getPresentationMediaUpload($summit_id, $presentation_id, $media_upload_id){
+    public function getPresentationMediaUpload($summit_id, $presentation_id, $media_upload_id)
+    {
         try {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -1095,7 +985,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $presentation_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function addPresentationMediaUpload(LaravelRequest $request, $summit_id, $presentation_id){
+    public function addPresentationMediaUpload(LaravelRequest $request, $summit_id, $presentation_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -1106,13 +997,13 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $serializeType = SerializerRegistry::SerializerType_Private;
 
             $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
-            if(!$isAdmin){
+            if (!$isAdmin) {
                 $serializeType = SerializerRegistry::SerializerType_Public;
                 // check if we could edit presentation
                 $presentation = $summit->getEvent($presentation_id);
-                if(is_null($presentation) || !$presentation instanceof Presentation)
+                if (is_null($presentation) || !$presentation instanceof Presentation)
                     return $this->error404();
-                if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
+                if (!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
                     return $this->error403();
             }
 
@@ -1156,19 +1047,13 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                     $relations
                 )
             );
-        }
-        catch (EntityNotFoundException $ex1)
-        {
+        } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
-        }
-        catch (ValidationException $ex2)
-        {
+        } catch (ValidationException $ex2) {
             Log::warning($ex2);
             return $this->error412($ex2->getMessages());
-        }
-        catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -1181,7 +1066,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $media_upload_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function updatePresentationMediaUpload(LaravelRequest $request, $summit_id, $presentation_id, $media_upload_id){
+    public function updatePresentationMediaUpload(LaravelRequest $request, $summit_id, $presentation_id, $media_upload_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -1191,13 +1077,13 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             if (is_null($current_member)) return $this->error403();
             $serializeType = SerializerRegistry::SerializerType_Private;
             $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
-            if(!$isAdmin){
+            if (!$isAdmin) {
                 $serializeType = SerializerRegistry::SerializerType_Public;
                 // check if we could edit presentation
                 $presentation = $summit->getEvent($presentation_id);
-                if(is_null($presentation) || !$presentation instanceof Presentation)
+                if (is_null($presentation) || !$presentation instanceof Presentation)
                     return $this->error404();
-                if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
+                if (!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
                     return $this->error403();
             }
 
@@ -1242,19 +1128,13 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                     $relations
                 )
             );
-        }
-        catch (EntityNotFoundException $ex1)
-        {
+        } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
-        }
-        catch (ValidationException $ex2)
-        {
+        } catch (ValidationException $ex2) {
             Log::warning($ex2);
             return $this->error412($ex2->getMessages());
-        }
-        catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -1266,7 +1146,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $media_upload_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function deletePresentationMediaUpload($summit_id, $presentation_id, $media_upload_id){
+    public function deletePresentationMediaUpload($summit_id, $presentation_id, $media_upload_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -1275,31 +1156,76 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
             $isAdmin = $current_member->isAdmin() || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
-            if(!$isAdmin){
+            if (!$isAdmin) {
                 // check if we could edit presentation
                 $presentation = $summit->getEvent($presentation_id);
-                if(is_null($presentation) || !$presentation instanceof Presentation)
+                if (is_null($presentation) || !$presentation instanceof Presentation)
                     return $this->error404();
-                if(!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
+                if (!$current_member->hasSpeaker() || !$presentation->canEdit($current_member->getSpeaker()))
                     return $this->error403();
             }
 
             $this->presentation_service->deleteMediaUpload($summit, intval($presentation_id), intval($media_upload_id));
 
             return $this->deleted();
-        }
-        catch (EntityNotFoundException $ex1)
-        {
+        } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
-        }
-        catch (ValidationException $ex2)
-        {
+        } catch (ValidationException $ex2) {
             Log::warning($ex2);
             return $this->error412($ex2->getMessages());
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
         }
-        catch (Exception $ex)
-        {
+    }
+
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function importAssetsFromMUX($summit_id)
+    {
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            if (!Request::isJson()) return $this->error400();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $data = Input::json();
+            $data = $data->all();
+            // Creates a Validator instance and validates the data.
+            $validation = Validator::make($data,[
+                'mux_token_id' => 'required|string',
+                'mux_token_secret' => 'required|string',
+                'email_to' => 'sometimes|email',
+            ]);
+
+            if ($validation->fails()) {
+                $ex = new ValidationException;
+                $ex->setMessages($validation->messages()->toArray());
+                throw $ex;
+            }
+
+            VideoStreamUrlMUXProcessingForSummitJob::dispatch(
+                $summit_id,
+                $data['mux_token_id'],
+                $data['mux_token_secret'],
+                $data['email_to'] ?? null
+            )->delay(now()->addMinutes(1));
+
+            return $this->ok();
+
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404(['message' => $ex1->getMessage()]);
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412($ex2->getMessages());
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }

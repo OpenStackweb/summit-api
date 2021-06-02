@@ -4318,6 +4318,16 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'POST',
                 'scopes' => [sprintf('%s/summits/confirm-external-orders', $current_realm)],
             ),
+            [
+                'name' => 'import-assets-from-mux',
+                'route' => '/api/v1/summits/{id}/presentations/all/import/mux',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteEventData, $current_realm),
+                    sprintf(SummitScopes::WritePresentationData, $current_realm)
+                ],
+            ],
             // presentation submissions
             [
                 'name' => 'submit-presentation',

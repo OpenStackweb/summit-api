@@ -28,15 +28,15 @@ final class ExtraQuestionTypeValueValidationRulesFactory
 
         if($update){
             return [
-                'label' => 'sometimes|string|max:255',
-                'value' => 'sometimes|string',
+                'label' => 'sometimes|string',
+                'value' => 'sometimes|string|max:255',
                 'order' => 'sometimes|integer|min:1'
             ];
         }
 
         return [
-            'label' => 'sometimes|string|max:255',
-            'value' => 'required|string',
+            'label' => 'sometimes|string',
+            'value' => 'required|string|max:255',
         ];
     }
 }

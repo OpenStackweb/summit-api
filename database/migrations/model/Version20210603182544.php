@@ -26,7 +26,7 @@ class Version20210603182544 extends AbstractMigration
     public function up(Schema $schema):void
     {
         $sql = <<<SQL
-ALTER TABLE `ExtraQuestionTypeValue` CHANGE `Value` TEXT MEDIUMTEXT CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL;
+ALTER TABLE `ExtraQuestionTypeValue` CHANGE `Value` `Value` TEXT CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL;
 SQL;
         $this->addSql($sql);
     }

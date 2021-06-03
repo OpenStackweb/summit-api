@@ -2237,14 +2237,14 @@ final class SummitOrderService
     {
         return $this->tx_service->transaction(function () use ($summit, $ticket_id, $requestor) {
             $ticket = null;
-            // check by id
-            if (is_integer($ticket_id))
+            // check by numeric id
+            if (is_numeric($ticket_id))
                 $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
 
-            if (is_string($ticket_id)) {
-                if (is_null($ticket))
-                    $ticket = $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
-
+            if (is_null($ticket) && is_string($ticket_id)) {
+                // check by ticket number
+                $ticket = $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
+                // if not found ... check by external ticket id
                 if (is_null($ticket))
                     $ticket = $this->ticket_repository->getByExternalAttendeeIdExclusiveLock($summit, strval($ticket_id));
             }

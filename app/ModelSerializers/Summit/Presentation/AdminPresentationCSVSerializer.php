@@ -72,7 +72,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
         foreach ($presentation->getExtraQuestionAnswers() as $answer){
             if(!empty($values['extra_questions']))
                 $values['extra_questions'] = $values['extra_questions'] . '|';
-            $values['extra_questions'] =  $values['extra_questions'] . (string)$answer;
+            $values['extra_questions'] =  $values['extra_questions'] . str_replace(",", "", (string)$answer);
         }
         return $values;
     }

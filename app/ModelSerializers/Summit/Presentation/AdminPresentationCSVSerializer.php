@@ -65,6 +65,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
                 $values['public_video'] = sprintf('=HYPERLINK("%s";"%s")', $media_upload_csv['public_url'], $media_upload_csv['filename']);
             }
         }
+
         // extra questions
 
         $values['extra_questions'] = '';

@@ -64,7 +64,7 @@ class AppServiceProvider extends ServiceProvider
 
     static $extra_question_dto_validation_rules = [
         'question_id' => 'required|int',
-        'answer'      => 'nullable|string|max:255',
+        'answer'      => 'nullable|string|max:512',
     ];
 
     const DefaultSchema = 'https://';

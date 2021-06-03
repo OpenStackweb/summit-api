@@ -98,6 +98,6 @@ abstract class ExtraQuestionAnswer extends SilverstripeBaseModel
         if($this->question->allowsValues()){
             $value = $this->question->getNiceValue($value);
         }
-        return sprintf("%s : %s", $this->question->getLabel(), $value);
+        return sprintf("%s : %s", strip_tags($this->question->getLabel()), $value);
     }
 }

@@ -454,6 +454,32 @@ final class PresentationService
 
             $presentation->setType($event_type);
             $presentation->setCategory($track);
+            // tags
+            if (isset($data['tags'])) {
+                $presentation->clearTags();
+
+                if (count($data['tags']) > 0) {
+                    if(!$presentation->isCompleted())
+                        $presentation->setProgress(Presentation::PHASE_TAGS);
+                }
+
+                foreach ($data['tags'] as $tag_value) {
+                    $tag = $track->getAllowedTagByVal($tag_value);
+                    if (is_null($tag)) {
+                        throw new ValidationException(
+                            trans(
+                                'validation_errors.PresentationService.saveOrUpdatePresentation.TagNotAllowed',
+                                [
+                                    'tag' => $tag_value,
+                                    'track_id' => $track->getId()
+                                ]
+                            )
+                        );
+                    }
+                    $presentation->addTag($tag);
+                }
+            }
+
             return PresentationFactory::populate($presentation, $data);
         });
     }

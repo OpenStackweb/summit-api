@@ -440,6 +440,8 @@ Route::group([
             Route::group(['prefix' => 'presentations'], function () {
                 // opened without role CFP - valid selection plan on CFP status
                 Route::post('', 'OAuth2PresentationApiController@submitPresentation');
+                // import from mux
+                Route::post('all/import/mux', 'OAuth2PresentationApiController@importAssetsFromMUX');
 
                 Route::group(['prefix' => '{presentation_id}'], function () {
 

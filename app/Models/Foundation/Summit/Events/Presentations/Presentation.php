@@ -372,6 +372,12 @@ class Presentation extends SummitEvent
         return $this;
     }
 
+    public function getVideosWithExternalUrls(){
+        return $this->materials->filter(function ($element) {
+            return $element instanceof PresentationVideo && !empty($element->getExternalUrl());
+        });
+    }
+
     /**
      * @return bool
      */

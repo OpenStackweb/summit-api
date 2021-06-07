@@ -119,4 +119,35 @@ class OAuth2PresentationSubmissionTest extends ProtectedApiTest
         $content = $response->getContent();
         $this->assertResponseStatus(204);
     }
+
+    public function testImportAssetsFromMUX(){
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $data = [
+            'mux_token_id'       => "TOKEN",
+            'mux_token_secret' => "SECRET",
+            "email_to" => "test@test.com"
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationApiController@importAssetsFromMUX",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+    }
 }

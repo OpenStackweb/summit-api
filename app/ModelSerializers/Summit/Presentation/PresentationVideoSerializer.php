@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 /**
  * Class PresentationVideoSerializer
  * @package ModelSerializers
@@ -20,6 +21,7 @@ final class PresentationVideoSerializer extends PresentationMaterialSerializer
     protected static $array_mappings =
     [
         'YouTubeID'    => 'youtube_id:json_text',
+        'ExternalUrl'  => 'external_url:json_url',
         'DateUploaded' => 'data_uploaded:datetime_epoch',
         'Highlighted'  => 'highlighted:json_boolean',
         'Views'        => 'views:json_int',

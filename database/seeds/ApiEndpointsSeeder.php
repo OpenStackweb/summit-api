@@ -4327,6 +4327,11 @@ class ApiEndpointsSeeder extends Seeder
                     sprintf(SummitScopes::WriteEventData, $current_realm),
                     sprintf(SummitScopes::WritePresentationData, $current_realm)
                 ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
             ],
             // presentation submissions
             [

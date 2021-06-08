@@ -32,12 +32,12 @@ class MUXExportExcerptMail extends Mailable
     /**
      * @var string
      */
-    private $step;
+    public $step;
 
     /**
      * @var string
      */
-    private $excerpt;
+    public $excerpt;
 
     /**
      * MUXExportExcerptMail constructor.

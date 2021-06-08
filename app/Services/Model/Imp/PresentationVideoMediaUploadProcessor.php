@@ -278,68 +278,76 @@ final class PresentationVideoMediaUploadProcessor
         ?string $mail_to
     ): int
     {
-        $event_ids = $this->tx_service->transaction(function () use ($summit_id) {
-            return $this->event_repository->getPublishedEventsIdsBySummit($summit_id);
-        });
-
-        $this->_configMux($credentials);
+        $event_ids = [];
         $excerpt = 'Starting MUX Assets Enabling MP4 Support Process.'.PHP_EOL;
 
-        foreach ($event_ids as $event_id) {
-            Log::warning(sprintf("PresentationVideoMediaUploadProcessor::processMuxAssetsFromStreamUrl processing event %s", $event_id));
-            try {
-                $this->tx_service->transaction(function () use ($event_id, $credentials, &$excerpt) {
-                    try {
+        try {
+            $event_ids = $this->tx_service->transaction(function () use ($summit_id) {
+                return $this->event_repository->getPublishedEventsIdsBySummit($summit_id);
+            });
 
-                        $event = $this->event_repository->getByIdExclusiveLock($event_id);
-                        if (is_null($event) || !$event instanceof Presentation) {
-                            Log::warning(sprintf("PresentationVideoMediaUploadProcessor::processMuxAssetsFromStreamUrl event %s not found", $event_id));
-                            return false;
-                        }
+            $this->_configMux($credentials);
 
-                        if (!$event->isPublished()) {
-                            Log::warning(sprintf("PresentationVideoMediaUploadProcessor::processMuxAssetsFromStreamUrl event %s not published", $event_id));
-                            $excerpt .= sprintf("event %s not published", $event_id) . PHP_EOL;
-                            return false;
-                        }
 
-                        if (!empty($event->getMuxAssetId())) {
-                            $excerpt .= sprintf("event %s - mux asset id (%s) - already has enabled mp4 support.", $event_id, $event->getMuxAssetId()) . PHP_EOL;
-                            return false;
-                        }
-                        $stream_url = $event->getStreamingUrl();
-                        // test $stream_url
-                        if (!preg_match(self::MUX_STREAM_REGEX, $stream_url, $matches)) {
-                            Log::warning(sprintf("PresentationVideoMediaUploadProcessor::processMuxAssetsFromStreamUrl event %s stream url does not match mux format (%s)", $event_id, $stream_url));
-                            $excerpt .= sprintf("event %s stream url does not match mux format (%s)", $event_id, $stream_url) . PHP_EOL;
-                        }
+            foreach ($event_ids as $event_id) {
+                Log::warning(sprintf("PresentationVideoMediaUploadProcessor::processMuxAssetsFromStreamUrl processing event %s", $event_id));
+                try {
+                    $this->tx_service->transaction(function () use ($event_id, $credentials, &$excerpt) {
+                        try {
 
-                        $playback_id = $matches[1];
-                        $event->setMuxPlaybackId($playback_id);
-                        $playbackResponse = $this->playback_api->getAssetOrLivestreamId($playback_id);
-                        $asset_id = $playbackResponse->getData()->getObject()->getId();
-                        $event->setMuxAssetId($asset_id);
-                        $assetResponse = $this->assets_api->getAsset($asset_id);
-                        $staticRenditions = $assetResponse->getData()->getStaticRenditions();
-                        if(!is_null($staticRenditions)){
-                            $excerpt .= sprintf("event %s - mux asset id (%s) - has already enabled mp4 support.", $event_id, $asset_id) . PHP_EOL;
-                            return false;
+                            $event = $this->event_repository->getByIdExclusiveLock($event_id);
+                            if (is_null($event) || !$event instanceof Presentation) {
+                                Log::warning(sprintf("PresentationVideoMediaUploadProcessor::processMuxAssetsFromStreamUrl event %s not found", $event_id));
+                                return false;
+                            }
+
+                            if (!$event->isPublished()) {
+                                Log::warning(sprintf("PresentationVideoMediaUploadProcessor::processMuxAssetsFromStreamUrl event %s not published", $event_id));
+                                $excerpt .= sprintf("event %s not published", $event_id) . PHP_EOL;
+                                return false;
+                            }
+
+                            if (!empty($event->getMuxAssetId())) {
+                                $excerpt .= sprintf("event %s - mux asset id (%s) - already has enabled mp4 support.", $event_id, $event->getMuxAssetId()) . PHP_EOL;
+                                return false;
+                            }
+                            $stream_url = $event->getStreamingUrl();
+                            // test $stream_url
+                            if (!preg_match(self::MUX_STREAM_REGEX, $stream_url, $matches)) {
+                                Log::warning(sprintf("PresentationVideoMediaUploadProcessor::processMuxAssetsFromStreamUrl event %s stream url does not match mux format (%s)", $event_id, $stream_url));
+                                $excerpt .= sprintf("event %s stream url does not match mux format (%s)", $event_id, $stream_url) . PHP_EOL;
+                            }
+
+                            $playback_id = $matches[1];
+                            $event->setMuxPlaybackId($playback_id);
+                            $playbackResponse = $this->playback_api->getAssetOrLivestreamId($playback_id);
+                            $asset_id = $playbackResponse->getData()->getObject()->getId();
+                            $event->setMuxAssetId($asset_id);
+                            $assetResponse = $this->assets_api->getAsset($asset_id);
+                            $staticRenditions = $assetResponse->getData()->getStaticRenditions();
+                            if (!is_null($staticRenditions)) {
+                                $excerpt .= sprintf("event %s - mux asset id (%s) - has already enabled mp4 support.", $event_id, $asset_id) . PHP_EOL;
+                                return false;
+                            }
+                            $this->_enableMP4Support($asset_id);
+                            $excerpt .= sprintf("event %s - mux asset id (%s) - has been enabled mp4 support.", $event_id, $asset_id) . PHP_EOL;
+                        } catch (\Exception $ex) {
+                            $excerpt .= sprintf("event %s - error on enabling mp4 support.", $event_id) . PHP_EOL;
+                            Log::warning($ex);
+                            throw $ex;
                         }
-                        $this->_enableMP4Support($asset_id);
-                        $excerpt .= sprintf("event %s - mux asset id (%s) - has been enabled mp4 support.", $event_id, $asset_id) . PHP_EOL;
-                    }
-                    catch (\Exception $ex) {
-                        $excerpt .= sprintf("event %s - error on enabling mp4 support.", $event_id) . PHP_EOL;
-                        Log::warning($ex);
-                        throw $ex;
-                    }
-                });
-            } catch (\Exception $ex) {
-                Log::error($ex);
+                    });
+                } catch (\Exception $ex) {
+                    Log::error($ex);
+                }
             }
-        }
 
-        $excerpt .= sprintf("%s events processed.", count($event_ids)) . PHP_EOL;
+            $excerpt .= sprintf("%s events processed.", count($event_ids)) . PHP_EOL;
+        }
+        catch (\Exception $ex){
+            $excerpt .= sprintf("Process Error %s", $ex->getMessage()) . PHP_EOL;
+            Log::error($ex);
+        }
 
         if (!empty($mail_to))
             Mail::queue(new MUXExportExcerptMail($mail_to, "MUX Assets MP4 Enabling Process", $excerpt));
@@ -367,89 +375,94 @@ final class PresentationVideoMediaUploadProcessor
                                               MuxCredentials $credentials,
                                               ?string $mail_to): int
     {
-
-        $event_ids = $this->tx_service->transaction(function () use ($summit_id) {
-            return $this->event_repository->getPublishedEventsIdsBySummit($summit_id);
-        });
-
-        $this->_configMux($credentials);
+        $event_ids = [];
         $excerpt = 'Starting Create Videos From MUX Assets Process.'.PHP_EOL;
-
-        foreach ($event_ids as $event_id) {
-            $this->tx_service->transaction(function () use ($event_id, $credentials, &$excerpt) {
-                try {
-
-                    $event = $this->event_repository->getByIdExclusiveLock($event_id);
-                    if (is_null($event) || !$event instanceof Presentation) {
-                        Log::warning(sprintf("PresentationVideoMediaUploadProcessor::createVideosFromMUXAssets event %s not found", $event_id));
-                        return false;
-                    }
-
-                    if (!$event->isPublished()) {
-                        Log::warning(sprintf("PresentationVideoMediaUploadProcessor::createVideosFromMUXAssets event %s not published", $event_id));
-                        $excerpt .= sprintf("event %s not published.", $event_id) . PHP_EOL;
-                        return false;
-                    }
-
-                    if ($event->getVideosWithExternalUrls()->count() > 0) {
-                        $excerpt .= sprintf("event %s already processed.", $event_id) . PHP_EOL;
-                        return false;
-                    }
-
-                    $assetId = $event->getMuxAssetId();
-                    if(empty($assetId)){
-                        $excerpt .= sprintf("event %s not processed.", $event_id) . PHP_EOL;
-                        return false;
-                    }
-
-                    $result = $this->assets_api->getAsset($assetId);
-                    $staticRenditions = $result->getData()->getStaticRenditions();
-
-                    if(is_null($staticRenditions)){
-                        $excerpt .= sprintf("event %s - mp4 not enabled.", $event_id) . PHP_EOL;
-                        return false;
-                    }
-
-                    if ($staticRenditions->getStatus() != 'ready') {
-                        $excerpt .= sprintf("event %s - transcoding not ready (%s)", $event_id, $staticRenditions->getStatus()) . PHP_EOL;
-                        return false;
-                    }
-
-                    $bestFile = null;
-
-                    $fileNames = [
-                        'low.mp4',
-                        'medium.mp4',
-                        'high.mp4',
-                    ];
-
-                    foreach ($staticRenditions->getFiles() as $file) {
-                        if (is_null($bestFile)) $bestFile = $file;
-                        if (array_search($bestFile->getName(), $fileNames) < array_search($file->getName(), $fileNames)) {
-                            $bestFile = $file;
-                        }
-                    }
-                    if (is_null($bestFile)) {
-                        $excerpt .= sprintf("event %s - transcoding not ready (%s).", $event_id, $staticRenditions->getStatus()) . PHP_EOL;
-                        return 0;
-                    };
-                    $newVideo = PresentationVideoFactory::build([
-                        'name' => $event->getTitle(),
-                        'external_url' => sprintf("https://stream.mux.com/%s/%s", $event->getMuxPlaybackId(), $bestFile->getName())
-                    ]);
-
-                    $event->addVideo($newVideo);
-
-                } catch (\Exception $ex) {
-                    $excerpt .= sprintf("event %s - error on exporting mux asset.", $event_id) . PHP_EOL;
-                    Log::warning($ex);
-                    throw $ex;
-                }
+        try {
+            $event_ids = $this->tx_service->transaction(function () use ($summit_id) {
+                return $this->event_repository->getPublishedEventsIdsBySummit($summit_id);
             });
+
+            $this->_configMux($credentials);
+
+            foreach ($event_ids as $event_id) {
+                $this->tx_service->transaction(function () use ($event_id, $credentials, &$excerpt) {
+                    try {
+
+                        $event = $this->event_repository->getByIdExclusiveLock($event_id);
+                        if (is_null($event) || !$event instanceof Presentation) {
+                            Log::warning(sprintf("PresentationVideoMediaUploadProcessor::createVideosFromMUXAssets event %s not found", $event_id));
+                            return false;
+                        }
+
+                        if (!$event->isPublished()) {
+                            Log::warning(sprintf("PresentationVideoMediaUploadProcessor::createVideosFromMUXAssets event %s not published", $event_id));
+                            $excerpt .= sprintf("event %s not published.", $event_id) . PHP_EOL;
+                            return false;
+                        }
+
+                        if ($event->getVideosWithExternalUrls()->count() > 0) {
+                            $excerpt .= sprintf("event %s already processed.", $event_id) . PHP_EOL;
+                            return false;
+                        }
+
+                        $assetId = $event->getMuxAssetId();
+                        if (empty($assetId)) {
+                            $excerpt .= sprintf("event %s not processed.", $event_id) . PHP_EOL;
+                            return false;
+                        }
+
+                        $result = $this->assets_api->getAsset($assetId);
+                        $staticRenditions = $result->getData()->getStaticRenditions();
+
+                        if (is_null($staticRenditions)) {
+                            $excerpt .= sprintf("event %s - mp4 not enabled.", $event_id) . PHP_EOL;
+                            return false;
+                        }
+
+                        if ($staticRenditions->getStatus() != 'ready') {
+                            $excerpt .= sprintf("event %s - transcoding not ready (%s)", $event_id, $staticRenditions->getStatus()) . PHP_EOL;
+                            return false;
+                        }
+
+                        $bestFile = null;
+
+                        $fileNames = [
+                            'low.mp4',
+                            'medium.mp4',
+                            'high.mp4',
+                        ];
+
+                        foreach ($staticRenditions->getFiles() as $file) {
+                            if (is_null($bestFile)) $bestFile = $file;
+                            if (array_search($bestFile->getName(), $fileNames) < array_search($file->getName(), $fileNames)) {
+                                $bestFile = $file;
+                            }
+                        }
+                        if (is_null($bestFile)) {
+                            $excerpt .= sprintf("event %s - transcoding not ready (%s).", $event_id, $staticRenditions->getStatus()) . PHP_EOL;
+                            return 0;
+                        };
+                        $newVideo = PresentationVideoFactory::build([
+                            'name' => $event->getTitle(),
+                            'external_url' => sprintf("https://stream.mux.com/%s/%s", $event->getMuxPlaybackId(), $bestFile->getName())
+                        ]);
+
+                        $event->addVideo($newVideo);
+
+                    } catch (\Exception $ex) {
+                        $excerpt .= sprintf("event %s - error on exporting mux asset.", $event_id) . PHP_EOL;
+                        Log::warning($ex);
+                        throw $ex;
+                    }
+                });
+            }
+
+            $excerpt .= sprintf("%s events processed.", count($event_ids)) . PHP_EOL;
         }
-
-        $excerpt .= sprintf("%s events processed.", count($event_ids)) . PHP_EOL;
-
+        catch (\Exception $ex){
+            $excerpt .= sprintf("Process Error %s", $ex->getMessage()) . PHP_EOL;
+            Log::error($ex);
+        }
         if (!empty($mail_to))
             Mail::queue(new MUXExportExcerptMail($mail_to, "Videos Creation Process", $excerpt));
 

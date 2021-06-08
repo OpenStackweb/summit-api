@@ -247,21 +247,27 @@ final class PresentationVideoMediaUploadProcessor
     {
         if (!is_null($this->assets_api)) return;
 
-        // Authentication Setup
-        $config = MuxConfig::getDefaultConfiguration()
-            ->setUsername($credentials->getTokenId())
-            ->setPassword($credentials->getTokenSecret());
+        try {
+            // Authentication Setup
+            $config = MuxConfig::getDefaultConfiguration()
+                ->setUsername($credentials->getTokenId())
+                ->setPassword($credentials->getTokenSecret());
 
-        // API Client Initialization
-        $this->assets_api = new MuxAssetApi(
-            new GuzzleHttpClient,
-            $config
-        );
+            // API Client Initialization
+            $this->assets_api = new MuxAssetApi(
+                new GuzzleHttpClient,
+                $config
+            );
 
-        $this->playback_api = new MuxPlaybackIDApi(
-            new GuzzleHttpClient,
-            $config
-        );
+            $this->playback_api = new MuxPlaybackIDApi(
+                new GuzzleHttpClient,
+                $config
+            );
+        }
+        catch (\Exception $ex){
+            Log::error($ex);
+            throw $ex;
+        }
     }
 
     /**
@@ -352,14 +358,16 @@ final class PresentationVideoMediaUploadProcessor
         if (!empty($mail_to))
             Mail::queue(new MUXExportExcerptMail($mail_to, "MUX Assets MP4 Enabling Process", $excerpt));
 
-        // fire exporting
-        // @see https://docs.mux.com/guides/video/download-your-videos#download-videos
-        CreateVideosFromMUXAssetsForSummitJob::dispatch(
-            $summit_id,
-            $credentials->getTokenId(),
-            $credentials->getTokenSecret(),
-            $mail_to
-        )->delay(now()->addMinutes(30));
+        if(count($event_ids) > 0) {
+            // fire exporting
+            // @see https://docs.mux.com/guides/video/download-your-videos#download-videos
+            CreateVideosFromMUXAssetsForSummitJob::dispatch(
+                $summit_id,
+                $credentials->getTokenId(),
+                $credentials->getTokenSecret(),
+                $mail_to
+            )->delay(now()->addMinutes(30));
+        }
 
         return count($event_ids);
     }

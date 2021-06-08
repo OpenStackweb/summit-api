@@ -49,7 +49,7 @@ class MUXExportExcerptMail extends Mailable
     {
         $this->mail_to = $mail_to;
         $this->step = $step;
-        $this->excerpt = $excerpt;
+        $this->excerpt = nl2br($excerpt);
     }
 
     public function build()

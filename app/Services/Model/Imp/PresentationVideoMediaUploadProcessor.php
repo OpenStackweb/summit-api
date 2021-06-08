@@ -284,8 +284,20 @@ final class PresentationVideoMediaUploadProcessor
         ?string $mail_to
     ): int
     {
+
+        Log::debug
+        (
+            sprintf
+            (
+                "PresentationVideoMediaUploadProcessor::processSummitEventsStreamURLs Summit %s Credentials %s mail to %s",
+                $summit_id,
+                $credentials,
+                $mail_to
+            )
+        );
+
         $event_ids = [];
-        $excerpt = 'Starting MUX Assets Enabling MP4 Support Process.'.PHP_EOL;
+        $excerpt = sprintf('Starting MUX Assets Enabling MP4 Support Process Summit %s.', $summit_id).PHP_EOL;
 
         try {
             $event_ids = $this->tx_service->transaction(function () use ($summit_id) {
@@ -366,7 +378,7 @@ final class PresentationVideoMediaUploadProcessor
                 $credentials->getTokenId(),
                 $credentials->getTokenSecret(),
                 $mail_to
-            )->delay(now()->addMinutes(30));
+            )->delay(now()->addMinutes(1));
         }
 
         return count($event_ids);
@@ -383,8 +395,18 @@ final class PresentationVideoMediaUploadProcessor
                                               MuxCredentials $credentials,
                                               ?string $mail_to): int
     {
+        Log::debug
+        (
+            sprintf
+            (
+                "PresentationVideoMediaUploadProcessor::createVideosFromMUXAssets Summit %s Credentials %s mail to %s",
+                $summit_id,
+                $credentials,
+                $mail_to
+            )
+        );
         $event_ids = [];
-        $excerpt = 'Starting Create Videos From MUX Assets Process.'.PHP_EOL;
+        $excerpt = sprintf('Starting Create Videos From MUX Assets Process Summit %s.', $summit_id).PHP_EOL;
         try {
             $event_ids = $this->tx_service->transaction(function () use ($summit_id) {
                 return $this->event_repository->getPublishedEventsIdsBySummit($summit_id);

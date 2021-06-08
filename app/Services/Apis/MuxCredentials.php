@@ -56,4 +56,9 @@ final class MuxCredentials
     {
         return $this->token_secret;
     }
+
+    public function __toString()
+    {
+        return sprintf("id %s secret %s", $this->token_id, $this->token_secret);
+    }
 }

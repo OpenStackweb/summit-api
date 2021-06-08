@@ -76,7 +76,17 @@ class VideoStreamUrlMUXProcessingForSummitJob implements ShouldQueue
      */
     public function handle(IPresentationVideoMediaUploadProcessor $service){
 
-        Log::debug(sprintf("VideoStreamUrlMUXProcessingForSummitJob::handle summit %s", $this->summit_id));
+        Log::debug
+        (
+            sprintf
+            (
+                "VideoStreamUrlMUXProcessingForSummitJob::handle  summit %s token id %s token secret %s mail_to %s",
+                $this->summit_id,
+                $this->mux_token_id,
+                $this->mux_token_secret,
+                $this->email_to
+            )
+        );
 
         try {
             $service->processSummitEventsStreamURLs

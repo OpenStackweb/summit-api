@@ -330,12 +330,21 @@ final class PresentationVideoMediaUploadProcessor
                                 return false;
                             }
                             $stream_url = $event->getStreamingUrl();
-                            // test $stream_url
+                            if(empty($stream_url)){
+                                Log::warning(sprintf("PresentationVideoMediaUploadProcessor::processMuxAssetsFromStreamUrl event %s stream url does not match mux format (empty)", $event_id));
+                                $excerpt .= sprintf("event %s stream url does not match mux format (empty)", $event_id) . PHP_EOL;
+                            }
+                            // test $stream_url to check if a mux playlist format
                             if (!preg_match(self::MUX_STREAM_REGEX, $stream_url, $matches)) {
                                 Log::warning(sprintf("PresentationVideoMediaUploadProcessor::processMuxAssetsFromStreamUrl event %s stream url does not match mux format (%s)", $event_id, $stream_url));
                                 $excerpt .= sprintf("event %s stream url does not match mux format (%s)", $event_id, $stream_url) . PHP_EOL;
+                                return false;
                             }
-
+                            if(count($matches) < 2){
+                                Log::warning(sprintf("PresentationVideoMediaUploadProcessor::processMuxAssetsFromStreamUrl event %s stream url does not match mux format (%s)", $event_id, $stream_url));
+                                $excerpt .= sprintf("event %s stream url does not match mux format (%s)", $event_id, $stream_url) . PHP_EOL;
+                                return false;
+                            }
                             $playback_id = $matches[1];
                             $event->setMuxPlaybackId($playback_id);
                             $playbackResponse = $this->playback_api->getAssetOrLivestreamId($playback_id);

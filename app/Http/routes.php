@@ -762,7 +762,7 @@ Route::group([
 
             // tax-types
             Route::group(['prefix' => 'tax-types'], function () {
-                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTaxTypeApiController@getAllBySummit']);
+                Route::get('', [ 'uses' => 'OAuth2SummitTaxTypeApiController@getAllBySummit']);
                 Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTaxTypeApiController@add']);
                 Route::group(['prefix' => '{tax_id}'], function () {
                     Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTaxTypeApiController@get']);

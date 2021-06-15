@@ -61,6 +61,14 @@ class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer
 
         Log::debug(sprintf("BaseSummitAttendeeTicketSerializer::serialize  expand %s", $expand));
 
+        if (in_array('applied_taxes', $relations)) {
+            $applied_taxes = [];
+            foreach ($ticket->getAppliedTaxes() as $tax) {
+                $applied_taxes[] = $tax->getId();
+            }
+            $values['applied_taxes'] = $applied_taxes;
+        }
+
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);
             foreach ($exp_expand as $relation) {

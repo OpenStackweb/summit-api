@@ -898,7 +898,9 @@ Route::group([
                 Route::get('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@getAllBySummit']);
                 Route::get('csv', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@getAllBySummitCSV']);
                 Route::post('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@add']);
-                Route::group(['prefix' => '{order_id}'], function () {
+                Route::group(['prefix' => '{order_id}', 'where' => [
+                    'order_id' => '[0-9]+'
+                ]], function () {
                     Route::get('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@get']);
                     Route::put('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@update']);
                     Route::delete('', [ 'middleware' => 'auth.user', 'uses' =>'OAuth2SummitOrdersApiController@delete']);
@@ -917,7 +919,9 @@ Route::group([
                     });
                 });
                 Route::post('reserve', 'OAuth2SummitOrdersApiController@reserve');
-                Route::group(['prefix' => '{hash}'], function () {
+                Route::group(['prefix' => '{hash}', 'where' => [
+                    'hash' => '[a-zA-Z0-9]+'
+                ]], function () {
                     Route::put('checkout', 'OAuth2SummitOrdersApiController@checkout');
                     Route::group(['prefix' => 'tickets'], function () {
                         Route::get('mine', 'OAuth2SummitOrdersApiController@getMyTicketByOrderHash');

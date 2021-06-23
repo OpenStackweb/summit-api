@@ -51,11 +51,18 @@ final class Order
      */
     public function apply2Query(QueryBuilder $query, array $mappings)
     {
+        $hidden_ord_idx = 0;
         foreach ($this->ordering as $order) {
             if ($order instanceof OrderElement) {
                 if (isset($mappings[$order->getField()])) {
                     $mapping = $mappings[$order->getField()];
                     $orders[$mapping] = $order->getDirection();
+                    // @see https://www.doctrine-project.org/projects/doctrine-orm/en/2.6/reference/dql-doctrine-query-language.html#select-expressions
+                    if(str_contains(strtoupper($mapping),"CASE WHEN") || str_contains(strtoupper($mapping),"COALESCE")){
+                        $query->addSelect("({$mapping}) AS HIDDEN ORD_{$hidden_ord_idx}");
+                        $mapping = "ORD_{$hidden_ord_idx}";
+                        ++$hidden_ord_idx;
+                    }
                     $query->addOrderBy($mapping, $order->getDirection());
                 }
             }

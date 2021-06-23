@@ -301,6 +301,7 @@ final class OAuth2SummitOrdersApiController
                     'id',
                     'number',
                     'status',
+                    'owner_name'
                 ];
             },
             function($filter) use($summit){

@@ -152,7 +152,9 @@ trait InsertMemberTestData
     }
 
     protected static function clearMemberTestData(){
-        self::$em  = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+        if (!self::$em ->isOpen()) {
+            self::$em  = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+        }
 
         self::$member =  self::$member_repository->find(self::$member->getId());
         self::$group =  self::$group_repository->find(self::$group->getId());

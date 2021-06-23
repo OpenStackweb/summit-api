@@ -232,7 +232,9 @@ trait InsertSummitTestData
     }
 
     protected static function clearTestData(){
-        self::$em  = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+        if (!self::$em ->isOpen()) {
+            self::$em  = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+        }
         self::$summit = self::$summit_repository->find(self::$summit->getId());
         self::$summit2 = self::$summit_repository->find(self::$summit2->getId());
         self::$summit_permission_group = self::$summit_permission_group_repository->find(self::$summit_permission_group->getId());

@@ -52,20 +52,7 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
 
     use InsertSummitTestData;
 
-    /**
-     * This method is called before the first test of this test class is run.
-     */
-    public static function setUpBeforeClass()/* The :void return type declaration that should be here would cause a BC issue */
-    {
-    }
-
-    /**
-     * This method is called after the last test of this test class is run.
-     */
-    public static function tearDownAfterClass()/* The :void return type declaration that should be here would cause a BC issue */
-    {
-    }
-
+    use InsertOrdersTestData;
 
     protected function setUp()
     {
@@ -76,6 +63,7 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
         self::$live_public_key = env('LIVE_STRIPE_PUBLISHABLE_KEY');
 
         self::insertTestData();
+        self::InsertOrdersTestData();
         // build payment profile and attach to summit
         self::$profile = PaymentGatewayProfileFactory::build(IPaymentConstants::ProviderStripe, [
             'application_type'     => IPaymentConstants::ApplicationTypeRegistration,
@@ -106,11 +94,12 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
 
         self::$em->persist(self::$summit);
         self::$em->flush();
+
     }
 
     protected function tearDown()
     {
-        //self::clearTestData();
+        self::clearTestData();
         parent::tearDown();
     }
 
@@ -804,12 +793,12 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
         $this->assertResponseStatus(204);
     }
 
-    public function testGetAllOrders($summit_id=3){
+    public function testGetAllOrders(){
         $params = [
-            'summit_id' => $summit_id,
+            'summit_id' => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 10,
-            'order'    => '+id',
+            'order'    => '+owner_name',
             'expand'   => 'tickets,tickets.owner',
             //'filter'   => 'status<>Cancelled,status<>Reserved',
         ];

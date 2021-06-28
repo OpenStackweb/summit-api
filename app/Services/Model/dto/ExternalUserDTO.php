@@ -55,7 +55,7 @@ class ExternalUserDTO
      * @param bool $active
      * @param bool $email_verified
      */
-    public function __construct($id, string $email, string $first_name, string $last_name, bool $active = false, bool $email_verified = false)
+    public function __construct($id, string $email, ?string $first_name, ?string $last_name, bool $active = false, bool $email_verified = false)
     {
         $this->id = $id;
         $this->email = $email;
@@ -82,7 +82,7 @@ class ExternalUserDTO
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getFirstName(): ?string
     {
@@ -90,7 +90,7 @@ class ExternalUserDTO
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getLastName(): ?string
     {

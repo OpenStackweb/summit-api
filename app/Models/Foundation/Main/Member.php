@@ -630,17 +630,17 @@ class Member extends SilverstripeBaseModel
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getLastName()
+    public function getLastName():?string
     {
         return $this->last_name;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getFirstName()
+    public function getFirstName():?string
     {
         return $this->first_name;
     }

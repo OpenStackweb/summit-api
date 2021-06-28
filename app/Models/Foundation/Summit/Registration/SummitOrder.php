@@ -239,7 +239,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
 
         $lname = $this->getOwnerSurname();
         if(empty($lname))
-            throw new ValidationException("owner first last name is null");
+            throw new ValidationException("owner last name is null");
 
         $token = $this->number.'.'.$email.'.'.$fname.".".$lname;
         $token = $token . random_bytes(16).time();

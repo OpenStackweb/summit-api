@@ -897,6 +897,21 @@ final class SummitOrderService
     {
 
         try {
+            $owner = $this->tx_service->transaction(function () use ($owner, $payload) {
+                if (is_null($owner)) return null;
+
+                $owner = $this->member_repository->getByIdExclusiveLock($owner->getId());
+
+                if (empty($owner->getFirstName())) {
+                    $owner->setFirstName($payload['owner_first_name']);
+                }
+
+                if (empty($owner->getLastName())) {
+                    $owner->setLastName($payload['owner_last_name']);
+                }
+
+                return $owner;
+            });
             $state = Saga::start()
                 ->addTask(new PreOrderValidationTask($summit, $payload, $this->tx_service))
                 ->addTask(new PreProcessReservationTask($payload))
@@ -1785,14 +1800,14 @@ final class SummitOrderService
                 Log::debug(sprintf("SummitOrderService::createOrderSingleTicket attendee is null"));
                 //first name
                 $first_name = isset($payload['owner_first_name']) ? trim($payload['owner_first_name']) : null;
-                if (empty($first_name) && !is_null($owner)) $first_name = $owner->getFirstName();
+                if (empty($first_name) && !is_null($owner) && !empty($owner->getFirstName())) $first_name = $owner->getFirstName();
                 if (empty($first_name)) {
                     Log::warning("SummitOrderService::createOrderSingleTicket owner firstname is null");
                     throw new ValidationException("you must provide an owner_first_name or a valid owner_id");
                 }
                 // surname
                 $surname = isset($payload['owner_last_name']) ? trim($payload['owner_last_name']) : null;
-                if (empty($surname) && !is_null($owner)) $surname = $owner->getLastName();
+                if (empty($surname) && !is_null($owner) && !empty($owner->getLastName())) $surname = $owner->getLastName();
                 if (empty($surname)) {
                     Log::warning("SummitOrderService::createOrderSingleTicket owner surname is null");
                     throw new ValidationException("you must provide an owner_last_name or a valid owner_id");

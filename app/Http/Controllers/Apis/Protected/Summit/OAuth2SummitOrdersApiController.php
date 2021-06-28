@@ -114,12 +114,24 @@ final class OAuth2SummitOrdersApiController
                     'owner_email'      => 'required|string|max:255|email',
                 ], $validation_rules);
             }
+            else{
+                if(empty($owner->getFirstName())){
+                    $validation_rules = array_merge([
+                        'owner_first_name' => 'required|string|max:255',
+                    ], $validation_rules);
+                }
+                if(empty($owner->getLastName())){
+                    $validation_rules = array_merge([
+                        'owner_last_name' => 'required|string|max:255',
+                    ], $validation_rules);
+                }
+            }
 
             $payload = $this->getJsonPayload($validation_rules);
             if(!is_null($owner)){
                 $payload_ex = [
-                    'owner_first_name' => $owner->getFirstName(),
-                    'owner_last_name'  => $owner->getLastName(),
+                    'owner_first_name' => !empty($owner->getFirstName()) ? $owner->getFirstName() : $payload['owner_first_name'],
+                    'owner_last_name'  => !empty($owner->getLastName()) ? $owner->getLastName() : $payload['owner_last_name'],
                     'owner_email'      => $owner->getEmail(),
                 ];
                 $payload = array_merge($payload, $payload_ex);

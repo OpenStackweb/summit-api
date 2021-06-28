@@ -11,12 +11,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Http\Utils\IFileUploader;
 use App\Models\Foundation\Summit\Factories\SummitBadgeFeatureTypeFactory;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\File;
 use models\summit\Summit;
 use models\summit\SummitBadgeFeatureType;
+use Illuminate\Http\UploadedFile;
 /**
  * Class SummitBadgeFeatureTypeService
  * @package App\Services\Model
@@ -25,9 +29,24 @@ final class SummitBadgeFeatureTypeService extends AbstractService
 implements ISummitBadgeFeatureTypeService
 {
 
-    public function __construct(ITransactionService $tx_service)
+    /**
+     * @var IFileUploader
+     */
+    private $file_uploader;
+
+    /**
+     * SummitBadgeFeatureTypeService constructor.
+     * @param IFileUploader $file_uploader
+     * @param ITransactionService $tx_service
+     */
+    public function __construct
+    (
+        IFileUploader $file_uploader,
+        ITransactionService $tx_service
+    )
     {
         parent::__construct($tx_service);
+        $this->file_uploader = $file_uploader;
     }
 
     /**
@@ -101,4 +120,67 @@ implements ISummitBadgeFeatureTypeService
 
         });
     }
+
+    /**
+     * @param Summit $summit
+     * @param int $feature_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @return File
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addFeatureImage
+    (
+        Summit $summit,
+        int $feature_id,
+        UploadedFile $file,
+        int $max_file_size = 10485760
+    ):File
+    {
+        return $this->tx_service->transaction(function () use ($summit, $feature_id, $file, $max_file_size) {
+
+            $allowed_extensions = ['png', 'jpg', 'jpeg', 'gif', 'svg'];
+
+            $feature = $summit->getFeatureTypeById($feature_id);
+
+            if (is_null($feature) || !$feature instanceof SummitBadgeFeatureType) {
+                throw new EntityNotFoundException('feature type not found on summit!');
+            }
+
+            if (!in_array($file->extension(), $allowed_extensions)) {
+                throw new ValidationException("file does not has a valid extension ('png','jpg','jpeg','gif','pdf').");
+            }
+
+            if ($file->getSize() > $max_file_size) {
+                throw new ValidationException(sprintf("file exceeds max_file_size (%s MB).", ($max_file_size / 1024) / 1024));
+            }
+
+            $file = $this->file_uploader->build($file, 'summit-event-images', true);
+            $feature->setImage($file);
+
+            return $file;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $feature_id
+     * @throws EntityNotFoundException
+     */
+    public function removeFeatureImage(Summit $summit, int $feature_id): void
+    {
+        $this->tx_service->transaction(function () use ($summit, $feature_id) {
+
+            $feature = $summit->getFeatureTypeById($feature_id);
+
+            if (is_null($feature) || !$feature instanceof SummitBadgeFeatureType) {
+                throw new EntityNotFoundException('feature type not found on summit!');
+            }
+
+            $feature->clearImage();
+
+        });
+    }
+
 }

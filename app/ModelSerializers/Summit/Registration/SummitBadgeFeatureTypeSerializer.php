@@ -23,5 +23,6 @@ final class SummitBadgeFeatureTypeSerializer extends SilverStripeSerializer
         'Description'       => 'description:json_string',
         'TemplateContent'   => 'template_content:json_string',
         'SummitId'          => 'summit_id:json_int',
+        'ImageUrl'          => 'image:json_url',
     ];
 }

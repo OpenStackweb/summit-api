@@ -11,18 +11,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use Illuminate\Http\UploadedFile;
 
-
+/**
+ * Class OAuth2SummitBadgeFeatureTypeApiTest
+ */
 final class OAuth2SummitBadgeFeatureTypeApiTest extends ProtectedApiTest
 {
+
+    use InsertSummitTestData;
+
+    public function createApplication()
+    {
+        $app = parent::createApplication();
+
+        $fileUploaderMock = Mockery::mock(\App\Http\Utils\IFileUploader::class)
+            ->shouldIgnoreMissing();
+
+        $fileUploaderMock->shouldReceive('build')->andReturn(new \models\main\File());
+
+        $app->instance(\App\Http\Utils\IFileUploader::class, $fileUploaderMock);
+
+        return $app;
+    }
+
+    protected function setUp():void
+    {
+        parent::setUp();
+        self::insertTestData();
+    }
+
+    protected function tearDown():void
+    {
+        self::clearTestData();
+        parent::tearDown();
+    }
+
+    public function testAddBadgeFeatureType(){
+        return $this->_testAddBadgeFeatureType();
+    }
 
     /**
      * @param int $summit_id
      * @return mixed
      */
-    public function testAddBadgeFeatureType($summit_id = 27){
+    protected function _testAddBadgeFeatureType(){
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $name        = str_random(16).'_feature_type';
@@ -96,11 +131,11 @@ HTML;
         return $feature;
     }
 
-    public function testUpdateBadgeFeatureType($summit_id = 27){
+    public function testUpdateBadgeFeatureType(){
 
-        $feature_old = $this->testAddBadgeFeatureType();
+        $feature_old = $this->_testAddBadgeFeatureType();
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             "feature_id" => $feature_old->id
         ];
 
@@ -133,10 +168,14 @@ HTML;
         return $feature;
     }
 
+    public function testGetAllBySummit(){
 
-    public function testGetAllBySummit($summit_id=27){
+        $this->_testAddBadgeFeatureType();
+        $this->_testAddBadgeFeatureType();
+        $this->_testAddBadgeFeatureType();
+
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $headers = [
@@ -158,16 +197,17 @@ HTML;
         $this->assertResponseStatus(200);
         $data = json_decode($content);
         $this->assertTrue(!is_null($data));
+        $this->assertTrue($data->total == 3);
         return $data;
     }
 
     /**
      * @param int $summit_id
      */
-    public function testDeleteAccessLevel($summit_id=27){
-        $feature_old = $this->testAddBadgeFeatureType();
+    public function testDeleteFeature(){
+        $feature_old = $this->_testAddBadgeFeatureType();
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             "feature_id" => $feature_old->id
         ];
 
@@ -179,6 +219,83 @@ HTML;
         $response = $this->action(
             "DELETE",
             "OAuth2SummitBadgeFeatureTypeApiController@delete",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(204);
+    }
+
+    public function testAddFeatureImage(){
+
+        $feature_old = $this->_testAddBadgeFeatureType();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            "feature_id" => $feature_old->id
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitBadgeFeatureTypeApiController@addFeatureImage",
+            $params,
+            [],
+            [],
+            [
+                'file' => UploadedFile::fake()->image('feat.svg'),
+            ],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $file = json_decode($content);
+        $this->assertTrue(!is_null($file));
+    }
+
+    public function testDeleteFeatureImage(){
+
+        $feature_old = $this->_testAddBadgeFeatureType();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            "feature_id" => $feature_old->id
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitBadgeFeatureTypeApiController@addFeatureImage",
+            $params,
+            [],
+            [],
+            [
+                'file' => UploadedFile::fake()->image('feat.svg'),
+            ],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $file = json_decode($content);
+        $this->assertTrue(!is_null($file));
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitBadgeFeatureTypeApiController@deleteFeatureImage",
             $params,
             [],
             [],

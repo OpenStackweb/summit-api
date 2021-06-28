@@ -858,6 +858,10 @@ Route::group([
                     Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeFeatureTypeApiController@get']);
                     Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeFeatureTypeApiController@update']);
                     Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeFeatureTypeApiController@delete']);
+                    Route::group(['prefix' => 'image'], function () {
+                        Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeFeatureTypeApiController@addFeatureImage']);
+                        Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeFeatureTypeApiController@deleteFeatureImage']);
+                    });
                 });
             });
 

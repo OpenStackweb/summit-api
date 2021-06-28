@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Utils\Traits\HasImageTrait;
+use models\main\File;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -47,6 +50,13 @@ class SummitBadgeFeatureType extends SilverstripeBaseModel
      * @var string
      */
     private $template_content;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
+     * @ORM\JoinColumn(name="ImageID", referencedColumnName="ID")
+     * @var File
+     */
+    private $image;
 
     /**
      * @return string
@@ -101,4 +111,7 @@ class SummitBadgeFeatureType extends SilverstripeBaseModel
         parent::__construct();
         $this->template_content = '';
     }
+
+    use HasImageTrait;
+
 }

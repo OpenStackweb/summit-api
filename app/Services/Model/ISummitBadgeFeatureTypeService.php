@@ -11,8 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Http\UploadedFile;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\File;
 use models\summit\Summit;
 use models\summit\SummitBadgeFeatureType;
 /**
@@ -47,4 +50,28 @@ interface ISummitBadgeFeatureTypeService
      * @throws EntityNotFoundException
      */
     public function deleteBadgeFeatureType(Summit $summit, int $feature_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $feature_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @return File
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addFeatureImage
+    (
+        Summit $summit,
+        int $feature_id,
+        UploadedFile $file,
+        int $max_file_size = 10485760
+    ):File;
+
+    /**
+     * @param Summit $summit
+     * @param int $feature_id
+     * @throws EntityNotFoundException
+     */
+    public function removeFeatureImage(Summit $summit, int $feature_id): void;
 }

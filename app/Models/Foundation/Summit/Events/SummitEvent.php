@@ -16,6 +16,7 @@ use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 use App\Events\SummitEventCreated;
 use App\Events\SummitEventDeleted;
 use App\Events\SummitEventUpdated;
+use App\Models\Utils\Traits\HasImageTrait;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use models\exceptions\ValidationException;
@@ -1199,53 +1200,7 @@ class SummitEvent extends SilverstripeBaseModel
         return $this->attendance_metrics->matching($criteria)->toArray();
     }
 
-    /**
-     * @return bool
-     */
-    public function hasImage(){
-        return $this->getImageId() > 0;
-    }
-
-    /**
-     * @return int
-     */
-    public function getImageId()
-    {
-        try{
-            if(is_null($this->image)) return 0;
-            return $this->image->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
-    public function getImage():?File{
-        return $this->image;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getImageUrl():?string{
-        $photoUrl = null;
-        if($this->hasImage() && $photo = $this->getImage()){
-            $photoUrl =  $photo->getUrl();
-        }
-        return $photoUrl;
-    }
-
-    /**
-     * @param File $image
-     */
-    public function setImage(File $image): void
-    {
-        $this->image = $image;
-    }
-
-    public function clearImage():void{
-        $this->image = null;
-    }
+    use HasImageTrait;
 
     /**
      * @param Member|null $member

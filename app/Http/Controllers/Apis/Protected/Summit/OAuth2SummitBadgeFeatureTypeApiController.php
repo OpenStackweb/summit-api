@@ -13,11 +13,17 @@
  **/
 use App\Models\Foundation\Summit\Repositories\ISummitBadgeFeatureTypeRepository;
 use App\Services\Model\ISummitBadgeFeatureTypeService;
+use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Support\Facades\Log;
+use models\exceptions\EntityNotFoundException;
+use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
 use models\utils\IBaseRepository;
 use models\utils\IEntity;
+use ModelSerializers\SerializerRegistry;
+use Exception;
 /**
  * Class OAuth2SummitBadgeFeatureTypeApiController
  * @package App\Http\Controllers
@@ -177,5 +183,70 @@ final class OAuth2SummitBadgeFeatureTypeApiController
     protected function updateChild(Summit $summit, int $child_id, array $payload): IEntity
     {
         return $this->service->updateBadgeFeatureType($summit, $child_id, $payload);
+    }
+
+    /**
+     * @param LaravelRequest $request
+     * @param $summit_id
+     * @param $feature_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function addFeatureImage(LaravelRequest $request, $summit_id, $feature_id){
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $file = $request->file('file');
+            if (is_null($file)) {
+                return $this->error412(array('file param not set!'));
+            }
+
+            $image = $this->service->addFeatureImage($summit, $feature_id, $file);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($image)->serialize());
+
+        }
+        catch (ValidationException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message'=> $ex2->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $feature_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function deleteFeatureImage($summit_id, $feature_id) {
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+            $this->service->removeFeatureImage($summit, $feature_id);
+            return $this->deleted();
+        }
+        catch (ValidationException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message'=> $ex2->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
     }
 }

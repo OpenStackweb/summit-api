@@ -48,7 +48,8 @@
         "stripe/stripe-php": "^6.37",
         "symfony/yaml": "4.2.2",
         "tecnickcom/tcpdf": "^6.2",
-        "league/flysystem-aws-s3-v3": "^1.0"
+        "league/flysystem-aws-s3-v3": "^1.0",
+        "eluceo/ical": "^0.15.0"
     },
     "require-dev": {
         "filp/whoops": "^2.0",

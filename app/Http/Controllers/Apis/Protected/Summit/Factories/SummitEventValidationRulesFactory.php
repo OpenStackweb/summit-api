@@ -56,6 +56,7 @@ final class SummitEventValidationRulesFactory
                 'speakers'                       => 'sometimes|int_array',
                 'moderator_speaker_id'           => 'sometimes|integer',
                 'extra_questions'                => 'sometimes|extra_question_dto_array',
+                'links'                          => 'sometimes|url_array',
                 // group event
                 'groups'                         => 'sometimes|int_array',
                 'occupancy'                      => 'sometimes|in:EMPTY,25%,50%,75%,FULL',
@@ -92,6 +93,7 @@ final class SummitEventValidationRulesFactory
             'speakers'                       =>  'sometimes|int_array',
             'moderator_speaker_id'           =>  'sometimes|integer',
             'extra_questions'                => 'sometimes|extra_question_dto_array',
+            'links'                          => 'sometimes|url_array',
             // group event
             'groups'                         =>  'sometimes|int_array',
             'selection_plan_id'              =>  'sometimes|integer',

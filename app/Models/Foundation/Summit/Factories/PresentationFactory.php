@@ -79,7 +79,6 @@ final class PresentationFactory
         // links
 
         if (isset($payload['links'])) {
-            $presentation->clearLinks();
 
             if (count($payload['links']) > Presentation::MaxAllowedLinks) {
                 throw new ValidationException(trans(
@@ -89,6 +88,7 @@ final class PresentationFactory
                     ]));
             }
 
+            $presentation->clearLinks();
             foreach ($payload['links'] as $link) {
                 $presentationLink = new PresentationLink();
                 $presentationLink->setName(trim($link));

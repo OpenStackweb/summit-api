@@ -54,7 +54,7 @@ class AppServiceProvider extends ServiceProvider
         'attendee_email'      => 'nullable|string|max:255|email',
         'disclaimer_accepted' => 'nullable|boolean',
         'share_contact_info'  => 'nullable|boolean',
-        'extra_questions'     => 'sometimes|order_extra_question_dto_array'
+        'extra_questions'     => 'sometimes|extra_question_dto_array'
     ];
 
     static $extra_question_dto_fields = [

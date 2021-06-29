@@ -132,10 +132,15 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     {
         try
         {
-            $strategy = new RetrieveAllSummitEventsBySummitCSVStrategy($this->repository, $this->event_repository, $this->resource_server_context);
+            $strategy = new RetrieveAllSummitEventsBySummitCSVStrategy
+            (
+                $this->repository,
+                $this->event_repository,
+                $this->resource_server_context
+            );
             $response = $strategy->getEvents(['summit_id' => $summit_id]);
 
-            $filename = "events-" . date('Ymd');
+            $filename = "activities-" . date('Ymd');
             $list     = $response->toArray(null, [], ['none'],[],SerializerRegistry::SerializerType_CSV);
 
             return $this->export

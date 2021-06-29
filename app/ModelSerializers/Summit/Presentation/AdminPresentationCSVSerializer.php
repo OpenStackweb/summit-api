@@ -39,6 +39,39 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
             $serializerType = SerializerRegistry::SerializerType_Private;
         }
 
+        $values['moderator_id'] = "";
+        $values['moderator_full_name'] = "";
+        $values['moderator_email'] = "";
+
+        if($presentation->hasModerator()){
+            unset($values['moderator_speaker_id']);
+
+            $values['moderator_id'] = $presentation->getModerator()->getId();
+            $values['moderator_full_name'] = $presentation->getModerator()->getFullName();
+            $values['moderator_email'] = $presentation->getModerator()->getEmail();
+        }
+
+        $values['speaker_ids'] = "";
+        $values['speaker_fullnames'] = "";
+        $values['speaker_emails'] = "";
+
+        if($presentation->getSpeakers()->count() > 0){
+
+            $speaker_ids = [];
+            $speaker_fullnames = [];
+            $speaker_emails = [];
+
+            foreach ($presentation->getSpeakers() as $speaker) {
+                $speaker_ids[] = $speaker->getId();
+                $speaker_fullnames[] = $speaker->getFullName();
+                $speaker_emails[] = $speaker->getEmail();
+            }
+
+            $values['speaker_ids'] = implode("|", $speaker_ids);
+            $values['speaker_fullnames'] = implode("|", $speaker_fullnames);
+            $values['speaker_emails'] = implode("|", $speaker_emails);
+        }
+
         if(isset($values['description'])){
             $values['description'] = strip_tags($values['description']);
         }
@@ -49,6 +82,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
         // add video column
         $values['video'] = '';
         $values['public_video'] = '';
+
         foreach ($presentation->getMediaUploads() as $mediaUpload) {
             if($mediaUpload->getMediaUploadType()->isVideo()) {
                 $media_upload_csv = SerializerRegistry::getInstance()->getSerializer($mediaUpload, $serializerType)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'media_uploads'));;

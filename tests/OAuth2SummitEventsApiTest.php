@@ -14,6 +14,20 @@
 
 final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 {
+    use InsertSummitTestData;
+
+    protected function setUp():void
+    {
+        parent::setUp();
+        self::insertTestData();
+    }
+
+    protected function tearDown():void
+    {
+        self::clearTestData();
+        parent::tearDown();
+    }
+
     public function testPostEvent($summit_id = 23, $location_id = 0, $type_id = 0, $track_id = 0, $start_date = 1477645200, $end_date = 1477647600)
     {
         $params = array
@@ -476,11 +490,11 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
     {
         $params = array
         (
-            'id' => 31,
+            'id' => self::$summit->getId(),
             //'expand' => 'feedback',
-            'filter' => [
+            /*'filter' => [
                 'published==1'
-            ]
+            ]*/
         );
 
         $headers = array

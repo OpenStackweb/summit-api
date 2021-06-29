@@ -306,7 +306,7 @@ class Presentation extends SummitEvent
     }
 
     /**
-     * @return ArrayCollection
+     * @return ArrayCollection|PresentationSpeaker[]
      */
     public function getSpeakers()
     {

@@ -1834,6 +1834,15 @@ SQL;
      */
     public function getPaidSummitTickets(Summit $summit)
     {
+       return $this->getPaidSummitTicketsBySummitId($summit->getId());
+    }
+
+    /**
+     * @param Summit $summit
+     * @return SummitAttendeeTicket[]
+     */
+    public function getPaidSummitTicketsBySummitId(int $summit_id)
+    {
 
         $query = $this->createQuery("SELECT t from models\summit\SummitAttendeeTicket t
         JOIN t.owner o
@@ -1847,7 +1856,7 @@ SQL;
             ->setParameter('member_id', $this->getId())
             ->setParameter('member_email', $this->email)
             ->setParameter('ticket_status', IOrderConstants::PaidStatus)
-            ->setParameter('summit_id', $summit->getId())
+            ->setParameter('summit_id', $summit_id)
             ->setParameter('active', true)
             ->getResult();
     }

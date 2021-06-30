@@ -189,10 +189,10 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $relations = Request::input('relations', '');
             $relations = !empty($relations) ? explode(',', $relations) :[];
             $fields    = !empty($fields) ? explode(',', $fields) :[];
-
+            $params    = ['summit_id' => $summit_id];
             $strategy = new RetrievePublishedSummitEventsBySummitStrategy($this->repository, $this->event_repository, $this->resource_server_context);
-            $response = $strategy->getEvents(['summit_id' => $summit_id]);
-            return $this->ok($response->toArray($expand, $fields, $relations));
+            $response = $strategy->getEvents($params);
+            return $this->ok($response->toArray($expand, $fields, $relations, $params));
         }
         catch (EntityNotFoundException $ex1)
         {

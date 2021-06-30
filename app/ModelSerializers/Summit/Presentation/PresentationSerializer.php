@@ -177,7 +177,13 @@ class PresentationSerializer extends SummitEventSerializer
                             $speakers[] = SerializerRegistry::getInstance()->getSerializer
                             (
                                 $s, $this->getSpeakersSerializerType()
-                            )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            )->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                [],
+                                [],
+                                $params
+                            );
                         }
                         $values['speakers'] = $speakers;
                         if(isset($values['moderator_speaker_id']) && intval($values['moderator_speaker_id']) > 0 ){
@@ -185,7 +191,13 @@ class PresentationSerializer extends SummitEventSerializer
                             (
                                 $presentation->getModerator(),
                                 $this->getSpeakersSerializerType()
-                            )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            )->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                [],
+                                [],
+                                $params
+                            );
                         }
                     }
                     break;

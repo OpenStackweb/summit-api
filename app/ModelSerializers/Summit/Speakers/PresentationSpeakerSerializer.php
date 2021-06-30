@@ -57,13 +57,14 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
     {
         if(!count($relations)) $relations  = $this->getAllowedRelations();
-
         $speaker                           = $this->object;
+
         if(!$speaker instanceof PresentationSpeaker) return [];
 
         $values                            = parent::serialize($expand, $fields, $relations, $params);
         $summit_id                         = isset($params['summit_id'])? intval($params['summit_id']):null;
         $published                         = isset($params['published'])? intval($params['published']):true;
+
         if(!is_null($summit_id)) {
             $values['presentations']           = $speaker->getPresentationIds($summit_id, $published);
             $values['moderated_presentations'] = $speaker->getModeratedPresentationIds($summit_id, $published);
@@ -74,6 +75,20 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
             $member              = $speaker->getMember();
             $values['gender']    = $member->getGender();
             $values['member_id'] = intval($member->getId());
+            $values['member_external_id'] = intval($member->getUserExternalId());
+            if(!is_null($summit_id)) {
+                // check badges if the speaker user has tickets
+                $badge_features = [];
+                $already_processed_features= [];
+                foreach($member->getPaidSummitTicketsBySummitId($summit_id) as $ticket){
+                    foreach($ticket->getBadgeFeatures() as $feature) {
+                        if(in_array($feature->getId(), $already_processed_features)) continue;
+                        $already_processed_features[] = $feature->getId();
+                        $badge_features[] = SerializerRegistry::getInstance()->getSerializer($feature)->serialize();
+                    }
+                }
+                $values['badge_features'] = $badge_features;
+            }
         }
 
         if(empty($values['first_name']) || empty($values['last_name'])){
@@ -137,9 +152,10 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
 
         if (!empty($expand)) {
             foreach (explode(',', $expand) as $relation) {
-                $relation=trim($relation);
+                $relation =trim($relation);
                 switch ($relation) {
                     case 'presentations': {
+                        // if summit_id is null then all presentations
                         $presentations = [];
                         foreach ($speaker->getPresentations($summit_id, $published) as $p) {
                             $presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));

@@ -43,9 +43,10 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
         $values['moderator_full_name'] = "";
         $values['moderator_email'] = "";
 
-        if($presentation->hasModerator()){
+        if(isset($values['moderator_speaker_id']))
             unset($values['moderator_speaker_id']);
 
+        if($presentation->hasModerator()){
             $values['moderator_id'] = $presentation->getModerator()->getId();
             $values['moderator_full_name'] = $presentation->getModerator()->getFullName();
             $values['moderator_email'] = $presentation->getModerator()->getEmail();

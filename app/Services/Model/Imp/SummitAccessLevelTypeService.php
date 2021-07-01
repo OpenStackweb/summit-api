@@ -67,6 +67,12 @@ implements ISummitAccessLevelTypeService
 
             $summit->addBadgeAccessLevelType($access_level);
 
+            if($access_level->isDefault()){
+                // add to all existent badge types
+                foreach($summit->getBadgeTypes() as $badgeType){
+                    $badgeType->addAccessLevel($access_level);
+                }
+            }
             return $access_level;
 
        });
@@ -96,9 +102,7 @@ implements ISummitAccessLevelTypeService
                     throw new ValidationException(sprintf("access level with name %s already exists!", $name));
                 }
             }
-
             return SummitAccessLevelTypeFactory::populate($access_level, $data);
-
         });
     }
 

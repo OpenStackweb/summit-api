@@ -1597,7 +1597,11 @@ final class SummitService extends AbstractService implements ISummitService
             foreach ($this->default_event_types_repository->getAll() as $default_event_type) {
                 $summit->addEventType($default_event_type->buildType($summit));
             }
+
             $summit->seedDefaultEmailFlowEvents();
+
+            $summit->seedDefaultAccessLevelTypes();
+
             $this->summit_repository->add($summit);
 
             return $summit;

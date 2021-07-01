@@ -3403,6 +3403,14 @@ SQL;
         return $attr === false ? null : $attr;
     }
 
+
+
+    public function getDefaultBadgeAccessLevelTypes(){
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('is_default', true));
+        return $this->badge_access_level_types->matching($criteria);
+    }
+
     /**
      * @param string $level_name
      * @return SummitAccessLevelType|null
@@ -4634,6 +4642,36 @@ SQL;
             }
         }
         return $list;
+    }
+
+    /**
+     * this define the default access level types
+     * that need to be seeded when a new show is created
+     */
+    public function seedDefaultAccessLevelTypes():void{
+
+        $defaults = [
+            [
+                'name' => 'CHAT',
+                'description'=> 'Enables Chat Feature.'
+            ],
+            [
+                'name' => 'IN_PERSON',
+                'description'=> 'Allows in person show access.'
+            ],
+            [
+                'name' => 'VIRTUAL',
+                'description'=> 'Allows virtual show access.'
+            ]
+        ];
+
+        foreach($defaults as $default) {
+            $a = new SummitAccessLevelType();
+            $a->setName($default['name']);
+            $a->setDescription($default['description']);
+            $a->setIsDefault(true);
+            $this->addBadgeAccessLevelType($a);
+        }
     }
 
     /**

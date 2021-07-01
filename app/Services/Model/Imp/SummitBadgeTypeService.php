@@ -50,6 +50,11 @@ final class SummitBadgeTypeService extends AbstractService
                 throw new ValidationException("there is already a default badge type");
             }
             $badge_type = SummitBadgeTypeFactory::build($data);
+            // add default access levels
+            foreach($summit->getDefaultBadgeAccessLevelTypes() as $default_access_level){
+                $badge_type->addAccessLevel($default_access_level);
+            }
+
             $summit->addBadgeType($badge_type);
             return $badge_type;
         });
@@ -77,6 +82,7 @@ final class SummitBadgeTypeService extends AbstractService
                     throw new ValidationException("badge type name already exists");
                 }
             }
+
             if(isset($data['is_default'])) {
                 $is_default = boolval($data['is_default']);
                 if ($is_default && $summit->hasDefaultBadgeType() && !$badge_type->isDefault()) {

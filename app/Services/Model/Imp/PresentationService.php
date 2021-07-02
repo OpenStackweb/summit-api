@@ -603,11 +603,6 @@ final class PresentationService
             $presentation->setProgress(Presentation::PHASE_COMPLETE);
             $presentation->setStatus(Presentation::STATUS_RECEIVED);
 
-            foreach($presentation->getSpeakers() as $speaker){
-                if($speaker->getMemberId() == $presentation->getCreatedById()) continue;
-                PresentationSpeakerNotificationEmail::dispatch($speaker, $presentation);
-            }
-
             PresentationCreatorNotificationEmail::dispatch($presentation);
 
             $presentation->setUpdatedBy($member);

@@ -18,6 +18,7 @@ use models\main\File;
 use models\main\Member;
 use models\main\PersonalCalendarShareInfo;
 use models\summit\ConfirmationExternalOrderRequest;
+use models\summit\Presentation;
 use models\summit\RSVP;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
@@ -250,9 +251,9 @@ interface ISummitService
      * @param int $presentation_id
      * @throws ValidationException
      * @throws EntityNotFoundException
-     * @return void
+     * @return Presentation
      */
-    public function addSpeaker2Presentation($current_member_id, $speaker_id, $presentation_id);
+    public function addSpeaker2Presentation(int $current_member_id, int $speaker_id, int $presentation_id):Presentation;
 
     /**
      * @param int $current_member_id
@@ -260,9 +261,9 @@ interface ISummitService
      * @param int $presentation_id
      * @throws ValidationException
      * @throws EntityNotFoundException
-     * @return void
+     * @return Presentation
      */
-    public function addModerator2Presentation($current_member_id, $speaker_id, $presentation_id);
+    public function addModerator2Presentation(int $current_member_id, int $speaker_id, int $presentation_id):Presentation;
 
     /**
      * @param int $current_member_id
@@ -270,9 +271,9 @@ interface ISummitService
      * @param int $presentation_id
      * @throws ValidationException
      * @throws EntityNotFoundException
-     * @return void
+     * @return Presentation
      */
-    public function removeSpeakerFromPresentation($current_member_id, $speaker_id, $presentation_id);
+    public function removeSpeakerFromPresentation(int $current_member_id, int $speaker_id, int $presentation_id):Presentation;
 
     /**
      * @param int $current_member_id
@@ -280,9 +281,9 @@ interface ISummitService
      * @param int $presentation_id
      * @throws ValidationException
      * @throws EntityNotFoundException
-     * @return void
+     * @return Presentation
      */
-    public function removeModeratorFromPresentation($current_member_id, $speaker_id, $presentation_id);
+    public function removeModeratorFromPresentation(int $current_member_id, int $speaker_id, int $presentation_id):Presentation;
 
 
     /**

@@ -23,6 +23,7 @@ use App\Events\SummitUpdated;
 use App\Facades\ResourceServerContext;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
+use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
 use App\Jobs\Emails\Schedule\ShareEventEmail;
 use App\Jobs\ProcessEventDataImport;
 use App\Models\Foundation\Summit\Factories\PresentationFactory;
@@ -33,9 +34,7 @@ use App\Models\Foundation\Summit\Repositories\IDefaultSummitEventTypeRepository;
 use App\Models\Utils\IntervalParser;
 use App\Permissions\IPermissionsManager;
 use App\Services\Model\AbstractService;
-use App\Services\Model\IFolderService;
 use App\Services\Model\IMemberService;
-use CalDAVClient\Facade\Utils\ICalTimeZoneBuilder;
 use DateInterval;
 use DateTime;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
@@ -47,6 +46,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use League\Csv\Reader;
+use libs\utils\ICalTimeZoneBuilder;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -60,7 +60,6 @@ use models\main\ITagRepository;
 use models\main\Member;
 use models\main\PersonalCalendarShareInfo;
 use models\main\Tag;
-use models\oauth2\IResourceServerContext;
 use models\summit\CalendarSync\WorkQueue\AbstractCalendarSyncWorkRequest;
 use models\summit\CalendarSync\WorkQueue\MemberEventScheduleSummitActionSyncWorkRequest;
 use models\summit\ConfirmationExternalOrderRequest;
@@ -160,11 +159,6 @@ final class SummitService extends AbstractService implements ISummitService
     private $calendar_sync_work_request_repository;
 
     /**
-     * @var IFolderService
-     */
-    private $folder_service;
-
-    /**
      * @var ICompanyRepository
      */
     private $company_repository;
@@ -195,11 +189,6 @@ final class SummitService extends AbstractService implements ISummitService
     private $file_uploader;
 
     /**
-     * @var IResourceServerContext
-     */
-    private $resource_server_context;
-
-    /**
      * @var ISpeakerService ISpeakerService
      */
     private $speaker_service;
@@ -222,13 +211,11 @@ final class SummitService extends AbstractService implements ISummitService
      * @param IRSVPRepository $rsvp_repository
      * @param IAbstractCalendarSyncWorkRequestRepository $calendar_sync_work_request_repository
      * @param IEventbriteAPI $eventbrite_api
-     * @param IFolderService $folder_service
      * @param ICompanyRepository $company_repository
      * @param IGroupRepository $group_repository
      * @param IDefaultSummitEventTypeRepository $default_event_types_repository
      * @param IPermissionsManager $permissions_manager
      * @param IFileUploader $file_uploader
-     * @param IResourceServerContext $resource_server_context
      * @param ISpeakerService $speaker_service
      * @param IMemberService $member_service
      * @param ITransactionService $tx_service
@@ -246,13 +233,11 @@ final class SummitService extends AbstractService implements ISummitService
         IRSVPRepository $rsvp_repository,
         IAbstractCalendarSyncWorkRequestRepository $calendar_sync_work_request_repository,
         IEventbriteAPI $eventbrite_api,
-        IFolderService $folder_service,
         ICompanyRepository $company_repository,
         IGroupRepository $group_repository,
         IDefaultSummitEventTypeRepository $default_event_types_repository,
         IPermissionsManager $permissions_manager,
         IFileUploader $file_uploader,
-        IResourceServerContext $resource_server_context,
         ISpeakerService $speaker_service,
         IMemberService $member_service,
         ITransactionService $tx_service
@@ -270,13 +255,11 @@ final class SummitService extends AbstractService implements ISummitService
         $this->rsvp_repository = $rsvp_repository;
         $this->calendar_sync_work_request_repository = $calendar_sync_work_request_repository;
         $this->eventbrite_api = $eventbrite_api;
-        $this->folder_service = $folder_service;
         $this->company_repository = $company_repository;
         $this->group_repository = $group_repository;
         $this->default_event_types_repository = $default_event_types_repository;
         $this->permissions_manager = $permissions_manager;
         $this->file_uploader = $file_uploader;
-        $this->resource_server_context = $resource_server_context;
         $this->speaker_service = $speaker_service;
         $this->member_service = $member_service;
     }
@@ -1716,15 +1699,15 @@ final class SummitService extends AbstractService implements ISummitService
      * @param int $current_member_id
      * @param int $speaker_id
      * @param int $presentation_id
-     * @return void
+     * @return Presentation
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function addSpeaker2Presentation($current_member_id, $speaker_id, $presentation_id)
+    public function addSpeaker2Presentation(int $current_member_id, int $speaker_id, int $presentation_id):Presentation
     {
         return $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id) {
             $current_member = $this->member_repository->getById($current_member_id);
-            if (is_null($current_member))
+            if (is_null($current_member) || !($current_member instanceof Member))
                 throw new EntityNotFoundException(sprintf("member %s not found", $current_member_id));
 
             $current_speaker = $this->speaker_repository->getByMember($current_member);
@@ -1745,12 +1728,17 @@ final class SummitService extends AbstractService implements ISummitService
                 ));
 
             $speaker = $this->speaker_repository->getById(intval($speaker_id));
-            if (is_null($speaker))
+            if (is_null($speaker) || !($speaker instanceof PresentationSpeaker))
                 throw new EntityNotFoundException(sprintf('speaker %s not found', $speaker_id));
             if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
             $presentation->addSpeaker($speaker);
+
+            if($speaker->getMemberId() != $presentation->getCreatedById())
+                PresentationSpeakerNotificationEmail::dispatch($speaker, $presentation);
+
+            return $presentation;
         });
     }
 
@@ -1758,16 +1746,16 @@ final class SummitService extends AbstractService implements ISummitService
      * @param int $current_member_id
      * @param int $speaker_id
      * @param int $presentation_id
-     * @return void
+     * @return Presentation
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function removeSpeakerFromPresentation($current_member_id, $speaker_id, $presentation_id)
+    public function removeSpeakerFromPresentation(int $current_member_id, int $speaker_id, int $presentation_id):Presentation
     {
         return $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id) {
 
             $current_member = $this->member_repository->getById($current_member_id);
-            if (is_null($current_member))
+            if (is_null($current_member) || !($current_member instanceof Member))
                 throw new EntityNotFoundException(sprintf("member %s not found", $current_member_id));
 
             $current_speaker = $this->speaker_repository->getByMember($current_member);
@@ -1788,12 +1776,15 @@ final class SummitService extends AbstractService implements ISummitService
                 ));
 
             $speaker = $this->speaker_repository->getById(intval($speaker_id));
-            if (is_null($speaker))
+            if (is_null($speaker) || !($speaker instanceof PresentationSpeaker))
                 throw new EntityNotFoundException(sprintf('speaker %s not found', $speaker_id));
+
             if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
             $presentation->removeSpeaker($speaker);
+
+            return $presentation;
         });
     }
 
@@ -1801,15 +1792,15 @@ final class SummitService extends AbstractService implements ISummitService
      * @param int $current_member_id
      * @param int $speaker_id
      * @param int $presentation_id
-     * @return void
+     * @return Presentation
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function addModerator2Presentation($current_member_id, $speaker_id, $presentation_id)
+    public function addModerator2Presentation(int $current_member_id, int $speaker_id, int $presentation_id):Presentation
     {
         return $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id) {
             $current_member = $this->member_repository->getById($current_member_id);
-            if (is_null($current_member))
+            if (is_null($current_member) || !($current_member instanceof Member))
                 throw new EntityNotFoundException(sprintf("member %s not found", $current_member_id));
 
             $current_speaker = $this->speaker_repository->getByMember($current_member);
@@ -1830,12 +1821,15 @@ final class SummitService extends AbstractService implements ISummitService
                 ));
 
             $speaker = $this->speaker_repository->getById(intval($speaker_id));
-            if (is_null($speaker))
+            if (is_null($speaker) || !($speaker instanceof PresentationSpeaker))
                 throw new EntityNotFoundException(sprintf('speaker %s not found', $speaker_id));
+
             if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
             $presentation->setModerator($speaker);
+
+            return $presentation;
         });
     }
 
@@ -1843,16 +1837,16 @@ final class SummitService extends AbstractService implements ISummitService
      * @param int $current_member_id
      * @param int $speaker_id
      * @param int $presentation_id
-     * @return void
+     * @return Presentation
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function removeModeratorFromPresentation($current_member_id, $speaker_id, $presentation_id)
+    public function removeModeratorFromPresentation(int $current_member_id, int $speaker_id, int $presentation_id):Presentation
     {
         return $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id) {
 
             $current_member = $this->member_repository->getById($current_member_id);
-            if (is_null($current_member))
+            if (is_null($current_member) || !($current_member instanceof Member))
                 throw new EntityNotFoundException(sprintf("member %s not found", $current_member_id));
 
             $current_speaker = $this->speaker_repository->getByMember($current_member);
@@ -1873,12 +1867,15 @@ final class SummitService extends AbstractService implements ISummitService
                 ));
 
             $speaker = $this->speaker_repository->getById(intval($speaker_id));
-            if (is_null($speaker))
+            if (is_null($speaker) || !($speaker instanceof PresentationSpeaker))
                 throw new EntityNotFoundException(sprintf('speaker %s not found', $speaker_id));
+
             if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
             $presentation->unsetModerator();
+
+            return $presentation;
         });
     }
 

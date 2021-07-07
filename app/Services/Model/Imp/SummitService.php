@@ -23,6 +23,7 @@ use App\Events\SummitUpdated;
 use App\Facades\ResourceServerContext;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
+use App\Jobs\Emails\PresentationSubmissions\PresentationModeratorNotificationEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
 use App\Jobs\Emails\Schedule\ShareEventEmail;
 use App\Jobs\ProcessEventDataImport;
@@ -1828,6 +1829,9 @@ final class SummitService extends AbstractService implements ISummitService
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
             $presentation->setModerator($speaker);
+
+            if($speaker->getMemberId() != $presentation->getCreatedById())
+                PresentationModeratorNotificationEmail::dispatch($speaker, $presentation);
 
             return $presentation;
         });

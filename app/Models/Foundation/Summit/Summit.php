@@ -4626,6 +4626,7 @@ SQL;
             ->select('distinct ft')
             ->from('App\Models\Foundation\Summit\EmailFlows\SummitEmailFlowType', 'ft')
             ->orderBy("ft.id");
+
         $res = $builder->getQuery()->getResult();
         $list = [];
         foreach($res as $flow_type){

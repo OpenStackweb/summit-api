@@ -15,6 +15,7 @@
 use App\Http\Utils\EpochCellFormatter;
 use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
 use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
+use App\Jobs\SynchAllAttendeesStatus;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\IAttendeeService;
 use App\Services\Model\ISummitOrderService;
@@ -349,6 +350,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
         if (is_null($summit)) return $this->error404();
+
+        SynchAllAttendeesStatus::dispatch($summit->getId());
 
         return $this->_getAll(
             function () {

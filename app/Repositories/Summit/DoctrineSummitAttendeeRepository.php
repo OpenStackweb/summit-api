@@ -118,6 +118,9 @@ final class DoctrineSummitAttendeeRepository
             'company'           => 'e.company_name',
             'member_id'         => 'm.id',
             'status'            => 'e.status',
+            'email'             => <<<SQL
+COALESCE(LOWER(m.email), LOWER(e.email)) 
+SQL
         ];
     }
 
@@ -138,6 +141,7 @@ final class DoctrineSummitAttendeeRepository
      */
     public function getBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null)
     {
+
         $query  = $this->getEntityManager()
             ->createQueryBuilder()
             ->select("e")
@@ -150,7 +154,6 @@ final class DoctrineSummitAttendeeRepository
         $query->setParameter("summit_id", $summit->getId());
 
         if(!is_null($filter)){
-
             $filter->apply2Query($query, $this->getFilterMappings());
         }
 
@@ -166,12 +169,12 @@ final class DoctrineSummitAttendeeRepository
             ->setFirstResult($paging_info->getOffset())
             ->setMaxResults($paging_info->getPerPage());
 
-        $paginator = new Paginator($query, $fetchJoinCollection = true);
-        $total     = $paginator->count();
-        $data      = array();
-
+        $paginator = new Paginator($query);
+        $data      = [];
         foreach($paginator as $entity)
-            array_push($data, $entity);
+            $data[] = $entity;
+
+        $total     = $paginator->count();
 
         return new PagingResponse
         (
@@ -278,4 +281,5 @@ final class DoctrineSummitAttendeeRepository
 
         return $query->getQuery()->getOneOrNullResult();
     }
+
 }

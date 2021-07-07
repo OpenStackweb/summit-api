@@ -5312,6 +5312,12 @@ SQL;
         }
     }
 
+    public function synchAllAttendeesStatus():void{
+        foreach($this->attendees as $attendee){
+            $attendee->updateStatus();
+        }
+    }
+
     public function synchPresentationAction(Presentation $presentation):void{
         $presentation->initializeActions();
     }

@@ -1744,17 +1744,17 @@ SQL;
     }
 
     /**
-     * @return mixed
+     * @return string|null
      */
-    public function getCompany()
+    public function getCompany():?string
     {
         return $this->company;
     }
 
     /**
-     * @param mixed $company
+     * @param string $company
      */
-    public function setCompany($company): void
+    public function setCompany(string $company): void
     {
         $this->company = $company;
     }

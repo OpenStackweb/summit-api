@@ -163,6 +163,14 @@ final class DoctrineSummitEventRepository
             (
                 "(sprr.email :operator :value OR spmm.email :operator :value OR spmm2.email :operator :value OR sprr2.email :operator :value)"
             ),
+            'speaker_title' => new DoctrineFilterMapping
+            (
+                "(sp.title :operator :value OR spm.title :operator :value)"
+            ),
+            'speaker_company' => new DoctrineFilterMapping
+            (
+                "(sp.company :operator :value OR spm.company :operator :value)"
+            ),
             'speaker_id' => new DoctrineFilterMapping
             (
                 "(sp.id :operator :value OR spm.id :operator :value)"

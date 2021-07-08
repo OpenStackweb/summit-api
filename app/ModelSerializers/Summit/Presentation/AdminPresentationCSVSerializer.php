@@ -39,9 +39,13 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
             $serializerType = SerializerRegistry::SerializerType_Private;
         }
 
+        // moderator data
+
         $values['moderator_id'] = "";
         $values['moderator_full_name'] = "";
         $values['moderator_email'] = "";
+        $values['moderator_title'] = "";
+        $values['moderator_company'] = "";
 
         if(isset($values['moderator_speaker_id']))
             unset($values['moderator_speaker_id']);
@@ -50,27 +54,39 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
             $values['moderator_id'] = $presentation->getModerator()->getId();
             $values['moderator_full_name'] = $presentation->getModerator()->getFullName();
             $values['moderator_email'] = $presentation->getModerator()->getEmail();
+            $values['moderator_title'] = trim($presentation->getModerator()->getTitle());
+            $values['moderator_company'] = trim($presentation->getModerator()->getCompany());
         }
+
+        // speaker data
 
         $values['speaker_ids'] = "";
         $values['speaker_fullnames'] = "";
         $values['speaker_emails'] = "";
+        $values['speaker_titles'] = "";
+        $values['speaker_companies'] = "";
 
         if($presentation->getSpeakers()->count() > 0){
 
             $speaker_ids = [];
             $speaker_fullnames = [];
             $speaker_emails = [];
+            $speaker_titles = [];
+            $speaker_companies = [];
 
             foreach ($presentation->getSpeakers() as $speaker) {
                 $speaker_ids[] = $speaker->getId();
                 $speaker_fullnames[] = $speaker->getFullName();
                 $speaker_emails[] = $speaker->getEmail();
+                $speaker_titles[] = trim($speaker->getTitle());
+                $speaker_companies[] = trim($speaker->getCompany());
             }
 
             $values['speaker_ids'] = implode("|", $speaker_ids);
             $values['speaker_fullnames'] = implode("|", $speaker_fullnames);
             $values['speaker_emails'] = implode("|", $speaker_emails);
+            $values['speaker_titles'] = implode("|", $speaker_titles);
+            $values['speaker_companies'] = implode("|", $speaker_companies);
         }
 
         if(isset($values['description'])){
@@ -109,6 +125,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
                 $values['extra_questions'] = $values['extra_questions'] . '|';
             $values['extra_questions'] =  $values['extra_questions'] . str_replace(",", "", (string)$answer);
         }
+
         return $values;
     }
 }

@@ -67,6 +67,12 @@ interface IMemberService
     public function registerExternalUserById($user_external_id):Member;
 
     /**
+     * @param mixed $user_external_id
+     * @throws EntityNotFoundException
+     */
+    public function deleteExternalUserById($user_external_id):void;
+
+    /**
      * @param Member $member
      * @param array $groups
      * @return Member

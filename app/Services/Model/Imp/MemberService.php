@@ -371,6 +371,23 @@ final class MemberService
     }
 
     /**
+     * @param mixed $user_external_id
+     * @throws EntityNotFoundException
+     */
+    public function deleteExternalUserById($user_external_id): void
+    {
+        $this->tx_service->transaction(function () use ($user_external_id) {
+            Log::debug(sprintf("MemberService::deleteExternalUserById trying to get user by external id %s", $user_external_id));
+            $member = $this->member_repository->getByExternalIdExclusiveLock(intval($user_external_id));
+            // if we dont registered yet a member with that external id try to get by email
+            if(is_null($member)) {
+                throw new EntityNotFoundException(sprintf("Member not found (%s)", $user_external_id));
+            }
+            Log::debug(sprintf("MemberService::deleteExternalUserById deleting user %s (%s)", $member->getId(), $member->getEmail()));
+            $this->member_repository->delete($member);
+        });
+    }
+    /**
      * @param Member $member
      * @param array $groups
      * @return Member
@@ -575,4 +592,5 @@ final class MemberService
 
         });
     }
+
 }

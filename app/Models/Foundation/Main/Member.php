@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Models\Foundation\Main\IGroup;
 use models\summit\SummitMetric;
 use Illuminate\Support\Facades\App;
@@ -38,7 +37,6 @@ use models\summit\SummitRoomReservation;
 use models\summit\SummitTrackChair;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
-
 /**
  * @ORM\Table(name="`Member`")
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineMemberRepository")

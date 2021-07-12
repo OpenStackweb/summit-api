@@ -1,6 +1,6 @@
 <?php namespace App\Jobs;
 /**
- * Copyright 2020 OpenStack Foundation
+ * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,12 +11,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Services\Model\IMemberService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Facades\Log;
+use models\exceptions\EntityNotFoundException;
+use Exception;
 /**
  * Class PublishUserDeleted
  * @package App\Jobs
@@ -34,14 +37,21 @@ class PublishUserDeleted implements ShouldQueue
      */
     public $user_email;
 
-
     /**
-     * Execute the job.
-     *
-     * @return void
+     * @param IMemberService $service
      */
-    public function handle()
+    public function handle(IMemberService $service)
     {
+        Log::debug(sprintf("PublishUserDeleted::handle user %s %s", $this->user_id, $this->user_email));
 
+        try {
+            $service->deleteExternalUserById($this->user_id);
+        }
+        catch (EntityNotFoundException $ex){
+            Log::warning($ex);
+        }
+        catch (Exception $ex){
+            Log::error($ex);
+        }
     }
 }

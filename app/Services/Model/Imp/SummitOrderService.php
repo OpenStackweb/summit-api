@@ -1260,6 +1260,7 @@ final class SummitOrderService
     public function reSendOrderEmail(int $order_id):SummitOrder {
 
         return $this->tx_service->transaction(function () use ($order_id) {
+
             $order = $this->order_repository->getByIdExclusiveLock($order_id);
 
             if (is_null($order) || !$order instanceof SummitOrder)
@@ -1324,20 +1325,28 @@ final class SummitOrderService
                         $ownerEmail
                     )
                 );
-
-                // we have an user on idp
-                $member = $this->member_service->registerExternalUser
-                (
-                    new ExternalUserDTO
+                $external_id = $user['id'];
+                try {
+                    // we have an user on idp
+                    $member = $this->member_service->registerExternalUser
                     (
-                        $user['id'],
-                        $user['email'],
-                        $user['first_name'],
-                        $user['last_name'],
-                        boolval($user['active']),
-                        boolval($user['email_verified'])
-                    )
-                );
+                        new ExternalUserDTO
+                        (
+                            $external_id,
+                            $user['email'],
+                            $user['first_name'],
+                            $user['last_name'],
+                            boolval($user['active']),
+                            boolval($user['email_verified'])
+                        )
+                    );
+                }
+                catch (\Exception $ex){
+                    Log::warning($ex);
+                    // race condition lost
+                    $member = $this->member_repository->getByExternalIdExclusiveLock(intval($external_id));
+                    $order = $this->order_repository->getByIdExclusiveLock($order_id);
+                }
 
                 // add the order to newly created member
                 $member->addSummitRegistrationOrder($order);
@@ -3367,18 +3376,27 @@ final class SummitOrderService
                 );
 
                 // we have an user on idp
-                $member = $this->member_service->registerExternalUser
-                (
-                     new ExternalUserDTO
-                     (
-                         $user['id'],
-                         $user['email'],
-                         $user['first_name'],
-                         $user['last_name'],
-                         boolval($user['active']),
-                         boolval($user['email_verified'])
-                     )
-                );
+                $external_id = $user['id'];
+                try {
+                    $member = $this->member_service->registerExternalUser
+                    (
+                        new ExternalUserDTO
+                        (
+                            $external_id,
+                            $user['email'],
+                            $user['first_name'],
+                            $user['last_name'],
+                            boolval($user['active']),
+                            boolval($user['email_verified'])
+                        )
+                    );
+                }
+                catch (\Exception $ex){
+                    // race condition lost, try to get it
+                    Log::warning($ex);
+                    $member = $this->member_repository->getByExternalIdExclusiveLock(intval($external_id));
+                    $order = $this->order_repository->getByIdExclusiveLock($orderId);
+                }
                 // add the order to newly created member
                 $member->addSummitRegistrationOrder($order);
             }

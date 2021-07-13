@@ -43,29 +43,21 @@ final class ResourceServerContext implements IResourceServerContext
     private $member_service;
 
     /**
-     * @var IGroupRepository
-     */
-    private $group_repository;
-
-    /**
      * ResourceServerContext constructor.
-     * @param IGroupRepository $group_repository
      * @param IMemberRepository $member_repository
      * @param IMemberService $member_service
      * @param ITransactionService $tx_service
      */
     public function __construct
     (
-        IGroupRepository $group_repository,
         IMemberRepository $member_repository,
         IMemberService $member_service,
         ITransactionService $tx_service
     )
     {
         $this->member_repository = $member_repository;
-        $this->group_repository  = $group_repository;
-        $this->member_service    = $member_service;
-        $this->tx_service        = $tx_service;
+        $this->member_service = $member_service;
+        $this->tx_service = $tx_service;
     }
 
     /**
@@ -154,77 +146,57 @@ final class ResourceServerContext implements IResourceServerContext
         return $this->getAuthContextVar('application_type');
     }
 
-    private function getAuthContextVar(string $varName){
+    private function getAuthContextVar(string $varName)
+    {
         return isset($this->auth_context[$varName]) ? $this->auth_context[$varName] : null;
     }
 
 
     public function getCurrentUser(bool $synch_groups = true): ?Member
     {
-        return $this->tx_service->transaction(function() use($synch_groups) {
-            $member = null;
-            // legacy test, for new IDP version this value came on null
-            $id = $this->getCurrentUserExternalId();
-            if(!is_null($id) && !empty($id)){
-                $member = $this->member_repository->getByExternalId(intval($id));
-                if(!is_null($member)) {
-                    return $synch_groups ? $this->checkGroups($member) : $member;
-                }
-            }
+        $member = null;
 
-            // is null
-            if(is_null($member)){
-                // try to get by external id
-                $id = $this->getCurrentUserId();
+        // try to get by external id
+        $user_external_id = $this->getAuthContextVar('user_id');
+        $user_first_name = $this->getAuthContextVar('user_first_name');
+        $user_last_name = $this->getAuthContextVar('user_last_name');
+        $user_email = $this->getAuthContextVar('user_email');
+        $user_email_verified = boolval($this->getAuthContextVar('user_email_verified'));
 
-                if(is_null($id)) {
-                    return null;
-                }
-                $member = $this->member_repository->getByExternalId(intval($id));
+        if (is_null($user_external_id)) {
+            return null;
+        }
 
-                if(!is_null($member)){
-                    $user_first_name  = $this->getAuthContextVar('user_first_name');
-                    $user_last_name   = $this->getAuthContextVar('user_last_name');
-                    $user_email       = $this->getAuthContextVar('user_email');
-                    $user_email_verified = boolval($this->getAuthContextVar('user_email_verified'));
+        // first we check by external id
+        $member = $this->tx_service->transaction(function () use ($user_external_id) {
+            return $this->member_repository->getByExternalIdExclusiveLock(intval($user_external_id));
+        });
 
-                    if(!empty($user_email))
-                        $member->setEmail($user_email);
-                    if(!empty($user_first_name))
-                        $member->setFirstName($user_first_name);
-                    if(!empty($user_last_name))
-                        $member->setLastName($user_last_name);
-
-                    $member->setEmailVerified($user_email_verified);
-                    return $synch_groups ? $this->checkGroups($member) : $member;
-                }
-            }
-
-            if(is_null($member)) {
+        if (is_null($member)) {
+            // then by primary email
+            $member = $this->tx_service->transaction(function () use ($user_email) {
                 // we assume that is new idp version and claims already exists on context
-                $user_external_id    = $this->getAuthContextVar('user_id');
-                $user_first_name     = $this->getAuthContextVar('user_first_name');
-                $user_last_name      = $this->getAuthContextVar('user_last_name');
-                $user_email          = $this->getAuthContextVar('user_email');
-                $user_email_verified = boolval($this->getAuthContextVar('user_email_verified'));
+                $user_email = $this->getAuthContextVar('user_email');
                 // at last resort try to get by email
                 Log::debug(sprintf("ResourceServerContext::getCurrentUser getting user by email %s", $user_email));
-                $member = $this->member_repository->getByEmail($user_email);
+                return $this->member_repository->getByEmailExclusiveLock($user_email);
+            });
+        }
 
-                if (is_null($member))  {// user exist on IDP but not in our local DB, proceed to create it
-                    Log::debug
-                    (
-                        sprintf
-                        (
-                            "ResourceServerContext::getCurrentUser creating user email %s user_external_id %s fname %s lname %s",
-                            $user_email,
-                            $user_external_id,
-                            $user_first_name,
-                            $user_last_name
-                        )
-                    );
-
-                    $member = $this->member_service->registerExternalUser
+        if (is_null($member)) {// user exist on IDP but not in our local DB, proceed to create it
+            Log::debug
+            (
+                sprintf
+                (
+                    "ResourceServerContext::getCurrentUser creating user email %s user_external_id %s fname %s lname %s",
+                    $user_email,
+                    $user_external_id,
+                    $user_first_name,
+                    $user_last_name
+                )
+            );
+            try {
+                $member = $this->member_service->registerExternalUser
                     (
                         new ExternalUserDTO
                         (
@@ -236,19 +208,40 @@ final class ResourceServerContext implements IResourceServerContext
                             $user_email_verified
                         )
                     );
-                }
-
-                if(!empty($user_email))
-                    $member->setEmail($user_email);
-                if(!empty($user_first_name))
-                    $member->setFirstName($user_first_name);
-                if(!empty($user_last_name))
-                    $member->setLastName($user_last_name);
-
-                $member->setEmailVerified(boolval($user_email_verified));
-                $member->setUserExternalId($user_external_id);
-
+            } catch (\Exception $ex) {
+                Log::warning($ex);
+                // race condition lost
+                $member = $this->tx_service->transaction(function () use ($user_external_id) {
+                    return $this->member_repository->getByExternalIdExclusiveLock(intval($user_external_id));
+                });
             }
+        }
+
+        if (is_null($member)) {
+            Log::warning(sprintf("ResourceServerContext::getCurrentUser user not found %s (%s).", $user_external_id, $user_email));
+            return null;
+        }
+
+        return $this->tx_service->transaction(function () use
+        (
+            $member,
+            $user_email,
+            $user_first_name,
+            $user_last_name,
+            $user_external_id,
+            $user_email_verified,
+            $synch_groups
+        ) {
+            // update member fields
+            if (!empty($user_email))
+                $member->setEmail($user_email);
+            if (!empty($user_first_name))
+                $member->setFirstName($user_first_name);
+            if (!empty($user_last_name))
+                $member->setLastName($user_last_name);
+
+            $member->setUserExternalId($user_external_id);
+            $member->setEmailVerified($user_email_verified);
 
             return $synch_groups ? $this->checkGroups($member) : $member;
         });
@@ -258,15 +251,16 @@ final class ResourceServerContext implements IResourceServerContext
      * @param Member $member
      * @return Member
      */
-    private function checkGroups(Member $member):Member{
+    private function checkGroups(Member $member): Member
+    {
         Log::debug(sprintf("ResourceServerContext::checkGroups member %s %s", $member->getId(), $member->getEmail()));
         // check groups
         $groups = [];
-        foreach ($this->getCurrentUserGroups() as $idpGroup){
+        foreach ($this->getCurrentUserGroups() as $idpGroup) {
             Log::debug(sprintf("ResourceServerContext::checkGroups member %s %s group %s", $member->getId(), $member->getEmail(), json_encode($idpGroup)));
             $slug = $idpGroup['slug'] ?? '';
             Log::debug(sprintf("ResourceServerContext::checkGroups member %s %s group slug %s", $member->getId(), $member->getEmail(), $slug));
-            if(empty($slug)){
+            if (empty($slug)) {
                 continue;
             }
             $groups[] = trim($slug);
@@ -274,13 +268,14 @@ final class ResourceServerContext implements IResourceServerContext
         }
         return $this->member_service->synchronizeGroups($member, $groups);
     }
+
     /**
      * @return array
      */
     public function getCurrentUserGroups(): array
     {
         $res = $this->getAuthContextVar('user_groups');
-        if(is_null($res)){
+        if (is_null($res)) {
             Log::debug("ResourceServerContext::getCurrentUserGroups is null");
             return [];
         }

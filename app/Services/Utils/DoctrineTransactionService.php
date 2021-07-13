@@ -78,6 +78,7 @@ final class DoctrineTransactionService implements ITransactionService
                     // new entity manager
                     $con = $em->getConnection();
                 }
+
                 $con->setTransactionIsolation($isolationLevel);
                 $con->beginTransaction(); // suspend auto-commit
                 $result = $callback($this);
@@ -99,9 +100,8 @@ final class DoctrineTransactionService implements ITransactionService
             } catch (Exception $ex) {
                 Log::warning("rolling back transaction");
                 Log::warning($ex);
-                $em->close();
-                Log::warning("DoctrineTransactionService::transaction con->rollBack");
                 $con->rollBack();
+                $em->close();
                 throw $ex;
             }
         }

@@ -238,20 +238,29 @@ final class SummitRegistrationInvitationService
                             $email
                         )
                     );
+                    $external_id =  $user['id'];
+                    try {
 
-                    // we have an user on idp
-                    $member = $this->member_service->registerExternalUser
-                    (
-                        new ExternalUserDTO
+                        // we have an user on idp
+                        $member = $this->member_service->registerExternalUser
                         (
-                            $user['id'],
-                            $user['email'],
-                            $user['first_name'],
-                            $user['last_name'],
-                            boolval($user['active']),
-                            boolval($user['email_verified'])
-                        )
-                    );
+                            new ExternalUserDTO
+                            (
+                                $external_id,
+                                $user['email'],
+                                $user['first_name'],
+                                $user['last_name'],
+                                boolval($user['active']),
+                                boolval($user['email_verified'])
+                            )
+                        );
+                    }
+                    catch (\Exception $ex){
+                        Log::warning($ex);
+                        // race condition lost
+                        $member = $this->member_repository->getByExternalIdExclusiveLock(intval($external_id));
+                        $invitation = $this->invitation_repository->getByIdExclusiveLock($invitation->getId());
+                    }
                 }
             }
 

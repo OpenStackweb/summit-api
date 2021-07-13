@@ -306,6 +306,7 @@ final class SummitSelectionPlanService
         return $this->tx_service->transaction(function() use($summit, $selection_plan_id, $presentation_id, $payload){
 
             $current_member = $this->resource_server_ctx->getCurrentUser();
+
             if(is_null($current_member))
                 throw new AuthzException("User not Found");
 

@@ -20,6 +20,7 @@ use App\Services\Model\dto\ExternalUserDTO;
 use DateTime;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
+use LaravelDoctrine\ORM\Facades\Registry;
 use libs\utils\ICacheService;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -276,6 +277,7 @@ final class MemberService
     public function registerExternalUser(ExternalUserDTO $userDTO): Member
     {
         return $this->tx_service->transaction(function () use ($userDTO) {
+
             Log::debug
             (
                 sprintf
@@ -288,15 +290,19 @@ final class MemberService
                 )
             );
 
-            $member = new Member();
-            $member->setActive($userDTO->isActive());
-            $member->setEmailVerified( $userDTO->isEmailVerified());
-            $member->setEmail($userDTO->getEmail());
-            $member->setFirstName( $userDTO->getFirstName());
-            $member->setLastName($userDTO->getLastName());
-            $member->setUserExternalId($userDTO->getId());
-            $this->member_repository->add($member, true);
-            Event::fire(new NewMember($member->getId()));
+            $member = $this->member_repository->getByExternalIdExclusiveLock($userDTO->getId());
+
+            if(is_null($member)) {
+                $member = new Member();
+                $member->setUserExternalId($userDTO->getId());
+                $member->setActive($userDTO->isActive());
+                $member->setEmailVerified($userDTO->isEmailVerified());
+                $member->setEmail($userDTO->getEmail());
+                $member->setFirstName($userDTO->getFirstName());
+                $member->setLastName($userDTO->getLastName());
+                $this->member_repository->add($member, true);
+                Event::fire(new NewMember($member->getId()));
+            }
             return $member;
         });
     }

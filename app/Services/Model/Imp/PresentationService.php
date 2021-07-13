@@ -514,48 +514,8 @@ final class PresentationService
                     $presentation_id
                 ));
 
-            $mediaUploads = $presentation->getMediaUploads();
+            $presentation->clearMediaUploads();
 
-            if ($mediaUploads->count()) {
-                Log::debug(sprintf("PresentationService::deletePresentation processing media uploads"));
-                $private_paths = [];
-                $public_paths = [];
-
-                foreach ($mediaUploads as $mediaUpload) {
-
-                    $mediaUploadType = $mediaUpload->getMediaUploadType();
-                    $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
-
-                    if (!is_null($strategy)) {
-                        $privatePath  = $mediaUpload->getPath(IStorageTypesConstants::PrivateType);
-                        if(!isset($private_paths[$privatePath]))
-                            $private_paths[$privatePath] = $strategy;
-                        Log::debug(sprintf("PresentationService::deletePresentation marking as deleted %s/%s ", $privatePath, $mediaUpload->getFilename()));
-                        $strategy->markAsDeleted($privatePath, $mediaUpload->getFilename());
-                    }
-
-                    $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
-
-                    if (!is_null($strategy)) {
-                        $publicPath  = $mediaUpload->getPath(IStorageTypesConstants::PublicType);
-                        if(!isset($public_paths[$publicPath]))
-                            $public_paths[$publicPath] = $strategy;
-                        Log::debug(sprintf("PresentationService::deletePresentation marking as deleted %s/%s ", $publicPath, $mediaUpload->getFilename()));
-                        $strategy->markAsDeleted($publicPath, $mediaUpload->getFilename());
-                    }
-                }
-
-                foreach($private_paths as $path => $strategy){
-                    Log::debug(sprintf("PresentationService::deletePresentation marking as deleted path ( private) %s.", $path));
-                    $strategy->markAsDeleted($path);
-                }
-
-                foreach($public_paths as $path => $strategy){
-                    Log::debug(sprintf("PresentationService::deletePresentation marking as deleted path ( public ) %s.", $path));
-                    $strategy->markAsDeleted($path);
-                }
-
-            }
             $summit->removeEvent($presentation);
 
         });

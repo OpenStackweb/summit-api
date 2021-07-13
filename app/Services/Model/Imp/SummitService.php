@@ -1102,6 +1102,11 @@ final class SummitService extends AbstractService implements ISummitService
             if ($event->getSummit()->getIdentifier() !== $summit->getIdentifier())
                 throw new ValidationException(sprintf("event %s does not belongs to summit id %s", $event_id, $summit->getIdentifier()));
 
+
+            if($event instanceof Presentation){
+                $event->clearMediaUploads();
+            }
+
             $this->event_repository->delete($event);
 
             return true;

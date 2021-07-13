@@ -47,7 +47,7 @@ final class DoctrineTransactionService implements ITransactionService
      * @param  Closure $callback
      * @param int $isolationLevel
      * @return mixed
-     *
+     * @see lib/Doctrine/ORM/EntityManager.php
      * @throws \Exception
      */
     public function transaction(Closure $callback, int $isolationLevel = TransactionIsolationLevel::READ_COMMITTED)
@@ -100,8 +100,8 @@ final class DoctrineTransactionService implements ITransactionService
             } catch (Exception $ex) {
                 Log::warning("rolling back transaction");
                 Log::warning($ex);
-                $con->rollBack();
                 $em->close();
+                $con->rollBack();
                 throw $ex;
             }
         }

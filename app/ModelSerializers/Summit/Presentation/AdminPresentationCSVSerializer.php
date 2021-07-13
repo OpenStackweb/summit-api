@@ -89,6 +89,26 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
             $values['speaker_companies'] = implode("|", $speaker_companies);
         }
 
+        // submitter
+
+        $values['submitter_id'] = "";
+        $values['submitter_full_name'] = "";
+        $values['submitter_email'] = "";
+        $values['submitter_title'] = "";
+        $values['submitter_company'] = "";
+
+        if($presentation->hasCreatedBy()){
+            $creator = $presentation->getCreatedBy();
+            if($creator->hasSpeaker()){
+                $submitter = $creator->getSpeaker();
+                $values['submitter_id'] = $submitter->getId();
+                $values['submitter_full_name'] = $submitter->getFullName();
+                $values['submitter_email'] = $submitter->getEmail();
+                $values['submitter_title'] = $submitter->getTitle();
+                $values['submitter_company'] = $submitter->getCompany();
+            }
+        }
+
         if(isset($values['description'])){
             $values['description'] = strip_tags($values['description']);
         }

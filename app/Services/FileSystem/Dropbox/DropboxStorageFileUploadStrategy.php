@@ -11,21 +11,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Services\FileSystem\IFileUploadStrategy;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
+use App\Services\FileSystem\AbstractFileUploadStrategy;
 /**
  * Class DropboxStorageFileUploadStrategy
  * @package App\Services\FileSystem\Dropbox
  */
-final class DropboxStorageFileUploadStrategy implements IFileUploadStrategy
+final class DropboxStorageFileUploadStrategy extends AbstractFileUploadStrategy
 {
+    const Driver = 'dropbox';
 
-    /**
-     * @inheritDoc
-     */
-    public function save(UploadedFile $file, string $path, string $filename)
+    protected function getDriver(): string
     {
-        return Storage::disk('dropbox')->putFileAs($path, $file, $filename);
+        return self::Driver;
     }
 }

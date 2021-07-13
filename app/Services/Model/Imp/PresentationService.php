@@ -514,6 +514,22 @@ final class PresentationService
                     $presentation_id
                 ));
 
+            foreach($presentation->getMediaUploads() as $mediaUpload){
+
+                $mediaUploadType = $mediaUpload->getMediaUploadType();
+                $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
+
+                if (!is_null($strategy)) {
+                    $strategy->markAsDeleted($mediaUpload->getPath(IStorageTypesConstants::PrivateType), $mediaUpload->getFilename());
+                }
+
+                $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
+
+                if (!is_null($strategy)) {
+                    $strategy->markAsDeleted($mediaUpload->getPath(IStorageTypesConstants::PublicType), $mediaUpload->getFilename());
+                }
+            }
+
             $summit->removeEvent($presentation);
 
         });
@@ -1068,7 +1084,6 @@ final class PresentationService
             if (is_null($mediaUpload))
                 throw new EntityNotFoundException('Presentation Media Upload not found.');
 
-
             $fileInfo = FileUploadInfo::build($request, $payload);
 
             if(!is_null($fileInfo)) {
@@ -1091,6 +1106,7 @@ final class PresentationService
                 }
 
                 $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
+
                 if (!is_null($strategy)) {
                     $strategy->save($fileInfo->getFile(), $mediaUpload->getPath(IStorageTypesConstants::PrivateType), $fileInfo->getFileName());
                 }
@@ -1130,6 +1146,19 @@ final class PresentationService
             $mediaUpload = $presentation->getMediaUploadBy($media_upload_id);
             if(is_null($mediaUpload)){
                 throw new EntityNotFoundException("Media Upload not found.");
+            }
+
+            $mediaUploadType = $mediaUpload->getMediaUploadType();
+            $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
+
+            if (!is_null($strategy)) {
+                $strategy->markAsDeleted($mediaUpload->getPath(IStorageTypesConstants::PrivateType), $mediaUpload->getFilename());
+            }
+
+            $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
+
+            if (!is_null($strategy)) {
+                $strategy->markAsDeleted($mediaUpload->getPath(IStorageTypesConstants::PublicType), $mediaUpload->getFilename());
             }
 
             $presentation->removeMediaUpload($mediaUpload);

@@ -25,5 +25,12 @@ interface IFileUploadStrategy
      * @param string $filename
      * @return mixed
      */
-    public function save(UploadedFile $file,  string $path, string $filename);
+    public function save(UploadedFile $file, string $path, string $filename);
+
+    /**
+     * @param string $path
+     * @param string $filename
+     * @return mixed
+     */
+    public function markAsDeleted(string $path, string $filename);
 }

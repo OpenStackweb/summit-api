@@ -142,7 +142,7 @@ class PresentationMediaUpload extends PresentationMaterial
             return sprintf($format, $mountingFolder, $summit->getId(), $presentation->getId());
 
         $presentation->generateSlug();
-        return sprintf($format, $mountingFolder, sprintf("%s-%s",$summit->getId(), filter_var($summit->getRawSlug(), FILTER_SANITIZE_ENCODED)), sprintf("%s-%s", $presentation->getId(), filter_var($presentation->getSlug(), FILTER_SANITIZE_ENCODED)));
+        return sprintf($format, $mountingFolder, sprintf("%s-%s", $summit->getId(), filter_var($summit->getRawSlug(), FILTER_SANITIZE_ENCODED)), sprintf("%s-%s", $presentation->getId(), filter_var($presentation->getSlug(), FILTER_SANITIZE_ENCODED)));
     }
 
     public function __construct()

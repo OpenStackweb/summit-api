@@ -11,24 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Services\FileSystem\IFileUploadStrategy;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
+use App\Services\FileSystem\AbstractFileUploadStrategy;
 /**
  * Class SwiftStorageFileUploadStrategy
  * @package App\Services\FileSystem\Swift
  */
-class SwiftStorageFileUploadStrategy implements IFileUploadStrategy
+class SwiftStorageFileUploadStrategy extends AbstractFileUploadStrategy
 {
 
-    /**
-     * @param UploadedFile $file
-     * @param string $path
-     * @param string $filename
-     * @return mixed
-     */
-    public function save(UploadedFile $file, string $path, string $filename)
+    const Driver = "swift";
+
+    protected function getDriver(): string
     {
-        return Storage::disk('swift')->putFileAs($path, $file, $filename);
+        return self::Driver;
     }
 }

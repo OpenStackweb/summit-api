@@ -11,22 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Services\FileSystem\IFileUploadStrategy;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
-
+use App\Services\FileSystem\AbstractFileUploadStrategy;
 /**
  * Class S3StorageFileUploadStrategy
  * @package App\Services\FileSystem\S3
  */
-final class S3StorageFileUploadStrategy  implements IFileUploadStrategy
+final class S3StorageFileUploadStrategy extends AbstractFileUploadStrategy
 {
 
-    /**
-     * @inheritDoc
-     */
-    public function save(UploadedFile $file, string $path, string $filename)
+    const Driver = "s3";
+
+    protected function getDriver(): string
     {
-        return Storage::disk('s3')->putFileAs($path, $file, $filename);
+        return self::Driver;
     }
 }

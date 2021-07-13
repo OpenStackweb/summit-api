@@ -11,24 +11,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Services\FileSystem\IFileUploadStrategy;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
+use App\Services\FileSystem\AbstractFileUploadStrategy;
 /**
  * Class LocalStorageFileUploadStrategy
  * @package App\Services\FileSystem\Local
  */
-final class LocalStorageFileUploadStrategy implements IFileUploadStrategy
+final class LocalStorageFileUploadStrategy extends AbstractFileUploadStrategy
 {
+    const Driver = 'local';
 
-    /**
-     * @param UploadedFile $file
-     * @param string $path
-     * @param string $filename
-     * @return mixed
-     */
-    public function save(UploadedFile $file, string $path, string $filename)
+    protected function getDriver(): string
     {
-        return Storage::disk('local')->putFileAs($path, $file, $filename);
+        return self::Driver;
     }
 }

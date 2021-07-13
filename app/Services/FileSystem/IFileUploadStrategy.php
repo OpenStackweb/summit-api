@@ -29,8 +29,8 @@ interface IFileUploadStrategy
 
     /**
      * @param string $path
-     * @param string $filename
+     * @param string|null $filename
      * @return mixed
      */
-    public function markAsDeleted(string $path, string $filename);
+    public function markAsDeleted(string $path, ?string $filename = null);
 }

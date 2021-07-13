@@ -520,7 +520,7 @@ class Presentation extends SummitEvent
     }
 
     /**
-     * @return PresentationMediaUpload[]
+     * @return ArrayCollection|PresentationMediaUpload[]
      */
     public function getMediaUploads()
     {

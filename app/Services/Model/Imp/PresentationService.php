@@ -256,7 +256,7 @@ final class PresentationService
                     'validation_errors.PresentationService.submitPresentation.NotValidSelectionPlan'
                 ));
 
-            if(!$current_selection_plan->isAllowNewPresentations()){
+            if (!$current_selection_plan->isAllowNewPresentations()) {
                 throw new ValidationException(sprintf("Selection Plan %s does not allow new submissions", $current_selection_plan->getId()));
             }
 
@@ -267,10 +267,10 @@ final class PresentationService
                     'validation_errors.PresentationService.submitPresentation.NotValidSpeaker'
                 ));
 
-            if(!$current_selection_plan->IsEnabled()){
+            if (!$current_selection_plan->IsEnabled()) {
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
-            if(!$current_selection_plan->isSubmissionOpen()){
+            if (!$current_selection_plan->isSubmissionOpen()) {
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
             // check qty
@@ -278,13 +278,13 @@ final class PresentationService
             $limit = $this->getSubmissionLimitFor($summit);
             $presentations = [];
 
-            foreach ($current_speaker->getPresentationsBySelectionPlanAndRole($current_selection_plan, PresentationSpeaker::ROLE_MODERATOR)  as $p){
-                if(isset($presentations[$p->getId()])) continue;
+            foreach ($current_speaker->getPresentationsBySelectionPlanAndRole($current_selection_plan, PresentationSpeaker::ROLE_MODERATOR) as $p) {
+                if (isset($presentations[$p->getId()])) continue;
                 $presentations[$p->getId()] = $p->getId();
             }
 
-            foreach ($current_speaker->getPresentationsBySelectionPlanAndRole($current_selection_plan, PresentationSpeaker::ROLE_SPEAKER)  as $p){
-                if(isset($presentations[$p->getId()])) continue;
+            foreach ($current_speaker->getPresentationsBySelectionPlanAndRole($current_selection_plan, PresentationSpeaker::ROLE_SPEAKER) as $p) {
+                if (isset($presentations[$p->getId()])) continue;
                 $presentations[$p->getId()] = $p->getId();
             }
 
@@ -303,7 +303,7 @@ final class PresentationService
 
             $summit->addEvent($presentation);
 
-            if(!$presentation->isCompleted())
+            if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SUMMARY);
 
             $presentation = $this->saveOrUpdatePresentation
@@ -347,10 +347,10 @@ final class PresentationService
                     'validation_errors.PresentationService.updatePresentationSubmission.NotValidSelectionPlan'
                 ));
 
-            if(!$current_selection_plan->IsEnabled()){
+            if (!$current_selection_plan->IsEnabled()) {
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
-            if(!$current_selection_plan->isSubmissionOpen()){
+            if (!$current_selection_plan->isSubmissionOpen()) {
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
 
@@ -428,7 +428,7 @@ final class PresentationService
                     ['type_id' => $event_type->getIdentifier()]));
             }
 
-            if($presentation->getId() > 0 && $presentation->getTypeId() != $event_type->getId()){
+            if ($presentation->getId() > 0 && $presentation->getTypeId() != $event_type->getId()) {
                 // presentation is not new and we are trying to change the presentation type
                 throw new ValidationException("you cant change the presentation type");
             }
@@ -459,7 +459,7 @@ final class PresentationService
                 $presentation->clearTags();
 
                 if (count($data['tags']) > 0) {
-                    if(!$presentation->isCompleted())
+                    if (!$presentation->isCompleted())
                         $presentation->setProgress(Presentation::PHASE_TAGS);
                 }
 
@@ -487,9 +487,9 @@ final class PresentationService
     /**
      * @param Summit $summit
      * @param int $presentation_id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return void
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function deletePresentation(Summit $summit, $presentation_id)
     {
@@ -514,22 +514,48 @@ final class PresentationService
                     $presentation_id
                 ));
 
-            foreach($presentation->getMediaUploads() as $mediaUpload){
+            $mediaUploads = $presentation->getMediaUploads();
 
-                $mediaUploadType = $mediaUpload->getMediaUploadType();
-                $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
+            if ($mediaUploads->count()) {
+                Log::debug(sprintf("PresentationService::deletePresentation processing media uploads"));
+                $private_paths = [];
+                $public_paths = [];
 
-                if (!is_null($strategy)) {
-                    $strategy->markAsDeleted($mediaUpload->getPath(IStorageTypesConstants::PrivateType), $mediaUpload->getFilename());
+                foreach ($mediaUploads as $mediaUpload) {
+
+                    $mediaUploadType = $mediaUpload->getMediaUploadType();
+                    $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
+
+                    if (!is_null($strategy)) {
+                        $privatePath  = $mediaUpload->getPath(IStorageTypesConstants::PrivateType);
+                        if(!isset($private_paths[$privatePath]))
+                            $private_paths[$privatePath] = $strategy;
+                        Log::debug(sprintf("PresentationService::deletePresentation marking as deleted %s/%s ", $privatePath, $mediaUpload->getFilename()));
+                        $strategy->markAsDeleted($privatePath, $mediaUpload->getFilename());
+                    }
+
+                    $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
+
+                    if (!is_null($strategy)) {
+                        $publicPath  = $mediaUpload->getPath(IStorageTypesConstants::PublicType);
+                        if(!isset($public_paths[$publicPath]))
+                            $public_paths[$publicPath] = $strategy;
+                        Log::debug(sprintf("PresentationService::deletePresentation marking as deleted %s/%s ", $publicPath, $mediaUpload->getFilename()));
+                        $strategy->markAsDeleted($publicPath, $mediaUpload->getFilename());
+                    }
                 }
 
-                $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
-
-                if (!is_null($strategy)) {
-                    $strategy->markAsDeleted($mediaUpload->getPath(IStorageTypesConstants::PublicType), $mediaUpload->getFilename());
+                foreach($private_paths as $path => $strategy){
+                    Log::debug(sprintf("PresentationService::deletePresentation marking as deleted path ( private) %s.", $path));
+                    $strategy->markAsDeleted($path);
                 }
+
+                foreach($public_paths as $path => $strategy){
+                    Log::debug(sprintf("PresentationService::deletePresentation marking as deleted path ( public ) %s.", $path));
+                    $strategy->markAsDeleted($path);
+                }
+
             }
-
             $summit->removeEvent($presentation);
 
         });
@@ -559,10 +585,10 @@ final class PresentationService
                     'validation_errors.PresentationService.updatePresentationSubmission.NotValidSelectionPlan'
                 ));
 
-            if(!$current_selection_plan->IsEnabled()){
+            if (!$current_selection_plan->IsEnabled()) {
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
-            if(!$current_selection_plan->isSubmissionOpen()){
+            if (!$current_selection_plan->isSubmissionOpen()) {
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
 
@@ -573,7 +599,7 @@ final class PresentationService
             if (!$presentation instanceof Presentation)
                 throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
 
-            if($presentation->isSubmitted()){
+            if ($presentation->isSubmitted()) {
                 throw new ValidationException
                 (
                     sprintf("Presentation %s is not allowed to mark as completed.", $presentation_id)
@@ -586,12 +612,12 @@ final class PresentationService
                     $presentation_id
                 ));
 
-              if (!$presentation->fulfilMediaUploadsConditions()) {
-                  throw new ValidationException
-                  (
-                      sprintf("Presentation %s is not allowed to mark as completed because does not fulfil media uploads conditions.", $presentation_id)
-                  );
-              }
+            if (!$presentation->fulfilMediaUploadsConditions()) {
+                throw new ValidationException
+                (
+                    sprintf("Presentation %s is not allowed to mark as completed because does not fulfil media uploads conditions.", $presentation_id)
+                );
+            }
 
             if (!$presentation->fulfilSpeakersConditions()) {
                 throw new ValidationException
@@ -641,7 +667,7 @@ final class PresentationService
         LaravelRequest $request,
         $presentation_id,
         array $slide_data,
-        array $allowed_extensions =  [],
+        array $allowed_extensions = [],
         $max_file_size = 10485760 // bytes
     )
     {
@@ -665,13 +691,13 @@ final class PresentationService
             $fileInfo = FileUploadInfo::build($request, $slide_data);
             $hasFile = !is_null($fileInfo);
 
-            if($hasFile && $hasLink){
+            if ($hasFile && $hasLink) {
                 throw new ValidationException("you must provide a file or a link, not both.");
             }
 
             $slide = PresentationSlideFactory::build($slide_data);
             // check if there is any file sent
-            if($hasFile){
+            if ($hasFile) {
 
                 if (!in_array($fileInfo->getFileExt(), $allowed_extensions)) {
                     throw new ValidationException(
@@ -718,10 +744,10 @@ final class PresentationService
         array $slide_data,
         array $allowed_extensions = [],
         $max_file_size = 10485760 // bytes
-    ){
+    )
+    {
 
-        $slide = $this->tx_service->transaction(function () use
-        (
+        $slide = $this->tx_service->transaction(function () use (
             $request,
             $presentation_id,
             $slide_data,
@@ -751,17 +777,17 @@ final class PresentationService
             $fileInfo = FileUploadInfo::build($request, $slide_data);
             $hasFile = !is_null($fileInfo);
 
-            if($hasFile && $hasLink){
+            if ($hasFile && $hasLink) {
                 throw new ValidationException("you must provide a file or a link, not both.");
             }
 
-            if(!$hasLink && !$hasFile && !$slide->hasSlide()){
+            if (!$hasLink && !$hasFile && !$slide->hasSlide()) {
                 throw new ValidationException("you must provide a file or a link.");
             }
 
             PresentationSlideFactory::populate($slide, $slide_data);
 
-            if($hasLink && $slide->hasSlide()){
+            if ($hasLink && $slide->hasSlide()) {
                 // drop file
                 $file = $slide->getSlide();
                 $this->folder_repository->delete($file);
@@ -769,13 +795,13 @@ final class PresentationService
             }
 
             // check if there is any file sent
-            if($hasFile){
+            if ($hasFile) {
                 if (!in_array($fileInfo->getFileExt(), $allowed_extensions)) {
                     throw new ValidationException(
                         sprintf("file does not has a valid extension '(%s)'.", implode("','", $allowed_extensions)));
                 }
 
-                if ($fileInfo->getSize(FileSizeUtil::B) > $max_file_size){
+                if ($fileInfo->getSize(FileSizeUtil::B) > $max_file_size) {
                     throw new ValidationException(sprintf("file exceeds max_file_size (%s MB).", ($max_file_size / 1024) / 1024));
                 }
 
@@ -952,7 +978,7 @@ final class PresentationService
         Summit $summit,
         int $presentation_id,
         array $payload
-    ):PresentationMediaUpload
+    ): PresentationMediaUpload
     {
         return $this->tx_service->transaction(function () use (
             $request,
@@ -972,14 +998,14 @@ final class PresentationService
 
             $mediaUploadType = $summit->getMediaUploadTypeById($media_upload_type_id);
 
-            if(is_null($mediaUploadType))
+            if (is_null($mediaUploadType))
                 throw new EntityNotFoundException(sprintf("Media Upload Type %s not found.", $media_upload_type_id));
 
-            if(!$mediaUploadType->isPresentationTypeAllowed($presentation->getType())){
+            if (!$mediaUploadType->isPresentationTypeAllowed($presentation->getType())) {
                 throw new ValidationException(sprintf("Presentation Type %s is not allowed on Media Upload %s", $presentation->getTypeId(), $media_upload_type_id));
             }
 
-            if($presentation->hasMediaUploadByType($mediaUploadType)){
+            if ($presentation->hasMediaUploadByType($mediaUploadType)) {
                 throw new ValidationException
                 (
                     sprintf
@@ -992,15 +1018,15 @@ final class PresentationService
 
             $fileInfo = FileUploadInfo::build($request, $payload);
 
-            if(is_null($fileInfo)){
+            if (is_null($fileInfo)) {
                 throw new ValidationException("You must provide a file.");
             }
 
-            if($mediaUploadType->getMaxSize() < $fileInfo->getSize()){
-                throw new ValidationException(sprintf("Max Size is %s MB (%s).", $mediaUploadType->getMaxSizeMB(), $fileInfo->getSize()/1024));
+            if ($mediaUploadType->getMaxSize() < $fileInfo->getSize()) {
+                throw new ValidationException(sprintf("Max Size is %s MB (%s).", $mediaUploadType->getMaxSizeMB(), $fileInfo->getSize() / 1024));
             }
 
-            if(!$mediaUploadType->isValidExtension($fileInfo->getFileExt())){
+            if (!$mediaUploadType->isValidExtension($fileInfo->getFileExt())) {
                 throw new ValidationException(sprintf("File Extension %s is not valid (%s).", $fileInfo->getFileExt(), $mediaUploadType->getValidExtensions()));
             }
 
@@ -1013,28 +1039,28 @@ final class PresentationService
             ));
 
             $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
-            if(!is_null($strategy)){
+            if (!is_null($strategy)) {
                 $strategy->save($fileInfo->getFile(), $mediaUpload->getPath(IStorageTypesConstants::PrivateType), $fileInfo->getFileName());
             }
 
             $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
-            if(!is_null($strategy)){
+            if (!is_null($strategy)) {
                 $strategy->save($fileInfo->getFile(), $mediaUpload->getPath(IStorageTypesConstants::PublicType), $fileInfo->getFileName());
             }
 
             $mediaUpload->setFilename($fileInfo->getFileName());
             $presentation->addMediaUpload($mediaUpload);
 
-            if(!$presentation->isCompleted()){
+            if (!$presentation->isCompleted()) {
                 Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s is not complete", $presentation_id));
                 $summitMediaUploadCount = $summit->getMediaUploadsMandatoryCount();
                 Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s got summitMediaUploadCount %s", $presentation_id, $summitMediaUploadCount));
-                if($summitMediaUploadCount == 0) {
+                if ($summitMediaUploadCount == 0) {
                     Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s marking as PHASE_UPLOADS ( no mandatories uploads)", $presentation_id));
                     $presentation->setProgress(Presentation::PHASE_UPLOADS);
                 }
 
-                if($summitMediaUploadCount > 0 && $summitMediaUploadCount == $presentation->getMediaUploadsMandatoryCount()){
+                if ($summitMediaUploadCount > 0 && $summitMediaUploadCount == $presentation->getMediaUploadsMandatoryCount()) {
                     Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s marking as PHASE_UPLOADS ( mandatories completed)", $presentation_id));
                     $presentation->setProgress(Presentation::PHASE_UPLOADS);
                 }
@@ -1086,22 +1112,22 @@ final class PresentationService
 
             $fileInfo = FileUploadInfo::build($request, $payload);
 
-            if(!is_null($fileInfo)) {
+            if (!is_null($fileInfo)) {
                 // process file
                 $mediaUploadType = $mediaUpload->getMediaUploadType();
                 if (is_null($mediaUploadType))
                     throw new ValidationException("Media Upload Type is not set.");
 
                 $fileInfo = FileUploadInfo::build($request, $payload);
-                if(is_null($fileInfo)){
+                if (is_null($fileInfo)) {
                     throw new ValidationException("You must provide a file.");
                 }
 
-                if($mediaUploadType->getMaxSize() < $fileInfo->getSize()){
-                    throw new ValidationException(sprintf("Max Size is %s MB (%s).", $mediaUploadType->getMaxSizeMB(), $fileInfo->getSize()/1024));
+                if ($mediaUploadType->getMaxSize() < $fileInfo->getSize()) {
+                    throw new ValidationException(sprintf("Max Size is %s MB (%s).", $mediaUploadType->getMaxSizeMB(), $fileInfo->getSize() / 1024));
                 }
 
-                if(!$mediaUploadType->isValidExtension($fileInfo->getFileExt())){
+                if (!$mediaUploadType->isValidExtension($fileInfo->getFileExt())) {
                     throw new ValidationException(sprintf("File Extension %s is not valid (%s).", $fileInfo->getFileExt(), $mediaUploadType->getValidExtensions()));
                 }
 
@@ -1144,7 +1170,7 @@ final class PresentationService
                 throw new EntityNotFoundException('Presentation not found.');
 
             $mediaUpload = $presentation->getMediaUploadBy($media_upload_id);
-            if(is_null($mediaUpload)){
+            if (is_null($mediaUpload)) {
                 throw new EntityNotFoundException("Media Upload not found.");
             }
 

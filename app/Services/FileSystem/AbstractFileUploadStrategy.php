@@ -31,16 +31,28 @@ abstract class AbstractFileUploadStrategy implements IFileUploadStrategy
 
     /**
      * @param string $path
-     * @param string $filename
+     * @param string|null $filename
      * @return bool|mixed
      */
-    public function markAsDeleted(string $path, string $filename)
+    public function markAsDeleted(string $path, ?string $filename = null)
     {
         Log::debug(sprintf("AbstractFileUploadStrategy:: markAsDeleted path %s filename %s", $path, $filename));
+        $from = empty($filename) ? $path : sprintf("%s/%s", $path, $filename);
+        $to = null;
+        if(empty($filename)){
+            $parts = explode("/", $path);
+            $parts[count($parts) - 1] = sprintf("DELETED_%s", $parts[count($parts) - 1] );
+            $to = implode("/", $parts);
+        }
+        else{
+            $to = sprintf("%s/DELETED_%s", $path, $filename);
+        }
+        Log::debug(sprintf("AbstractFileUploadStrategy:: markAsDeleted from %s to %s", $from, $to));
+
         return Storage::disk($this->getDriver())->move
         (
-            sprintf("%s/%s", $path, $filename),
-            sprintf("%s/DELETED_%s", $path, $filename)
+            $from,
+            $to
         );
     }
 }

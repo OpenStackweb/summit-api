@@ -219,6 +219,7 @@ final class SerializerRegistry
 
         $this->registry['SummitTrackChair'] = [
             self::SerializerType_Public => SummitTrackChairSerializer::class,
+            self::SerializerType_Private => AdminSummitTrackChairSerializer::class,
             self::SerializerType_CSV => SummitTrackChairCSVSerializer::class
         ];
 

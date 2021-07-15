@@ -14,6 +14,7 @@
 
 use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Http\Utils\EpochCellFormatter;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackChairRepository;
 use App\Services\Model\ITrackChairService;
 use Illuminate\Support\Facades\Input;
@@ -40,7 +41,6 @@ final class OAuth2SummitTrackChairsApiController
      * @var ISummitRepository
      */
     private $summit_repository;
-
 
     /**
      * @var ITrackChairService
@@ -118,6 +118,16 @@ final class OAuth2SummitTrackChairsApiController
                 return $filter;
             },
             function () {
+                $current_user = $this->resource_server_context->getCurrentUser();
+                if(!is_null($current_user)){
+                    if(
+                        $current_user->isOnGroup(IGroup::Administrators) ||
+                        $current_user->isOnGroup(IGroup::SuperAdmins) ||
+                        $current_user->isOnGroup(IGroup::TrackChairsAdmins) ||
+                        $current_user->isOnGroup(IGroup::SummitAdministrators)
+                    )
+                        return SerializerRegistry::SerializerType_Private;
+                }
                 return SerializerRegistry::SerializerType_Public;
             }
         );

@@ -19,7 +19,7 @@ use ModelSerializers\SilverStripeSerializer;
  * Class SummitTrackChairSerializer
  * @package ModelSerializers
  */
-final class SummitTrackChairSerializer extends SilverStripeSerializer
+class SummitTrackChairSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
         'SummitId' => 'summit_id:json_int',
@@ -29,6 +29,10 @@ final class SummitTrackChairSerializer extends SilverStripeSerializer
     protected static $allowed_relations = [
         'categories',
     ];
+
+    protected function getMemberSerializerType():string{
+        return SerializerRegistry::SerializerType_Public;
+    }
 
     /**
      * @param null $expand
@@ -73,7 +77,11 @@ final class SummitTrackChairSerializer extends SilverStripeSerializer
 
                             if ($track_chair->getMemberId() > 0) {
                                 unset($values['member_id']);
-                                $values['member'] = SerializerRegistry::getInstance()->getSerializer($track_chair->getMember())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $values['member'] = SerializerRegistry::getInstance()->getSerializer
+                                (
+                                    $track_chair->getMember(),
+                                    $this->getMemberSerializerType()
+                                )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
                         }
                         break;

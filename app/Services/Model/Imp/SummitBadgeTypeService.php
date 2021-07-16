@@ -58,7 +58,7 @@ final class SummitBadgeTypeService extends AbstractService
 
             if(!$is_default && is_null($formerDefault)){
                 // force default
-                $data['is_default'] = true;
+                throw new ValidationException("You must define a default badge type.");
             }
 
             $badge_type = SummitBadgeTypeFactory::build($data);
@@ -97,16 +97,18 @@ final class SummitBadgeTypeService extends AbstractService
             $formerDefault = $summit->getDefaultBadgeType();
             if(isset($data['is_default'])) { // trying to set a default ( true or false)
                 $is_default = boolval($data['is_default']);
+
                 if ($is_default && !$badge_type->isDefault()) { // is we want to set it as default ...
                     if(!is_null($formerDefault)){
                         // remove former default
                         $formerDefault->setIsDefault(false);
                     }
                 }
-                // if we dont have a default
-                if(!$is_default && is_null($formerDefault)){
+                // if we dont have a default or the default is already the current one
+                // and we want to clear the default force it
+                if(!$is_default && ( is_null($formerDefault)  || $formerDefault->getId() == $formerDefault->getId())){
                     // force default
-                    $data['is_default'] = true;
+                   throw new ValidationException("You must define a default badge type.");
                 }
             }
 

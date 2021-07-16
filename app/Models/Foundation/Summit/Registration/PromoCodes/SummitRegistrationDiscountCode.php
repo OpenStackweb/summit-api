@@ -196,8 +196,9 @@ class SummitRegistrationDiscountCode extends SummitRegistrationPromoCode
     /**
      * @param SummitAttendeeTicket $ticket
      * @return SummitAttendeeTicket
+     * @throws ValidationException
      */
-    public function applyTo(SummitAttendeeTicket $ticket){
+    public function applyTo(SummitAttendeeTicket $ticket):SummitAttendeeTicket{
         $ticket = parent::applyTo($ticket);
 
         if(!$ticket->isFree()) {

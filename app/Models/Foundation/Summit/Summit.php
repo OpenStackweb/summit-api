@@ -4667,6 +4667,7 @@ SQL;
         ];
 
         foreach($defaults as $default) {
+            if(!is_null($this->getBadgeAccessLevelTypeByName($default['name']))) continue;
             $a = new SummitAccessLevelType();
             $a->setName($default['name']);
             $a->setDescription($default['description']);

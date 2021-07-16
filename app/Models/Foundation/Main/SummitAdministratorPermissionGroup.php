@@ -72,6 +72,7 @@ class SummitAdministratorPermissionGroup extends SilverstripeBaseModel
             throw new ValidationException(sprintf("Member %s should belong to following groups (%s)", $member->getId(),
             implode(",", self::ValidGroups)));
         }
+
         if ($this->members->contains($member)) return;
         $this->members->add($member);
         $member->add2SummitAdministratorPermissionGroup($this);
@@ -79,9 +80,10 @@ class SummitAdministratorPermissionGroup extends SilverstripeBaseModel
 
     public function canAddMember(Member $member):bool{
         return
-        $member->isOnGroup(IGroup::SummitAdministrators) ||
-        $member->isOnGroup(IGroup::TrackChairs) ||
-        $member->isOnGroup(IGroup::TrackChairsAdmins);
+        $member->isOnGroup(IGroup::SummitAdministrators, true) ||
+        $member->isOnGroup(IGroup::TrackChairs, true) ||
+        $member->isOnGroup(IGroup::TrackChairsAdmins, true) ||
+        $member->isOnGroup(IGroup::BadgePrinters, true);
     }
 
     /**

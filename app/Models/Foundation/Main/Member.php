@@ -729,6 +729,7 @@ class Member extends SilverstripeBaseModel
             Log::debug(sprintf("Member::isAdmin has Super Admin Group On DB"));
             return true;
         }
+
         $adminGroup = $this->getGroupByCode(IGroup::Administrators);
         if (!is_null($adminGroup)) {
             Log::debug(sprintf("Member::isAdmin has Admin Group On DB"));
@@ -736,7 +737,7 @@ class Member extends SilverstripeBaseModel
         }
 
         if (!$skip_external) {
-            Log::debug(sprintf("Member::isAdmin check on external "));
+            Log::debug(sprintf("Member::isAdmin check on external"));
             if ($this->isOnExternalGroup(IGroup::SuperAdmins))
                 return true;
 
@@ -763,9 +764,11 @@ class Member extends SilverstripeBaseModel
      */
     public function isOnExternalGroup(string $code): bool
     {
+        Log::debug(sprintf("Member::isOnExternalGroup id %s code %s", $this->id, $code));
         $resource_server_ctx = App::make(IResourceServerContext::class);
         if ($resource_server_ctx instanceof IResourceServerContext) {
             foreach ($resource_server_ctx->getCurrentUserGroups() as $group) {
+                Log::debug(sprintf("Member::isOnExternalGroup id %s code %s external group %s", $this->id, $code, $group['slug']));
                 if
                 (
                     isset($group['slug']) &&

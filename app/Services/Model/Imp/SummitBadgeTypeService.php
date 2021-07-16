@@ -39,22 +39,33 @@ final class SummitBadgeTypeService extends AbstractService
     public function addBadgeType(Summit $summit, array $data): SummitBadgeType
     {
         return $this->tx_service->transaction(function () use ($summit, $data) {
+
             $name = trim($data['name']);
 
             $former_badge_type = $summit->getBadgeTypeByName($name);
+
             if (!is_null($former_badge_type)) {
                 throw new ValidationException("badge type name already exists");
             }
+
             $is_default = boolval($data['is_default']);
-            if($is_default && $summit->hasDefaultBadgeType()){
-                throw new ValidationException("there is already a default badge type");
+            $formerDefault = $summit->getDefaultBadgeType();
+            if($is_default){
+                if(!is_null($formerDefault)){
+                    $formerDefault->setIsDefault(false);
+                }
             }
+
+            if(!$is_default && is_null($formerDefault)){
+                // force default
+                $data['is_default'] = true;
+            }
+
             $badge_type = SummitBadgeTypeFactory::build($data);
             // add default access levels
             foreach($summit->getDefaultBadgeAccessLevelTypes() as $default_access_level){
                 $badge_type->addAccessLevel($default_access_level);
             }
-
             $summit->addBadgeType($badge_type);
             return $badge_type;
         });
@@ -82,11 +93,20 @@ final class SummitBadgeTypeService extends AbstractService
                     throw new ValidationException("badge type name already exists");
                 }
             }
-
-            if(isset($data['is_default'])) {
+            // default check
+            $formerDefault = $summit->getDefaultBadgeType();
+            if(isset($data['is_default'])) { // trying to set a default ( true or false)
                 $is_default = boolval($data['is_default']);
-                if ($is_default && $summit->hasDefaultBadgeType() && !$badge_type->isDefault()) {
-                    throw new ValidationException("there is already a default badge type");
+                if ($is_default && !$badge_type->isDefault()) { // is we want to set it as default ...
+                    if(!is_null($formerDefault)){
+                        // remove former default
+                        $formerDefault->setIsDefault(false);
+                    }
+                }
+                // if we dont have a default
+                if(!$is_default && is_null($formerDefault)){
+                    // force default
+                    $data['is_default'] = true;
                 }
             }
 

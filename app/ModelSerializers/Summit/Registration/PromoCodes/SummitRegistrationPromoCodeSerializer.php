@@ -25,7 +25,6 @@ class SummitRegistrationPromoCodeSerializer extends SilverStripeSerializer
         'Source'            => 'source:json_string',
         'SummitId'          => 'summit_id:json_int',
         'CreatorId'         => 'creator_id:json_int',
-        'BadgeTypeId'       => 'badge_type_id:json_int',
         'QuantityAvailable' => 'quantity_available:json_int',
         'QuantityUsed'      => 'quantity_used:json_int',
         'ValidSinceDate'    => 'valid_since_date:datetime_epoch',
@@ -105,17 +104,7 @@ class SummitRegistrationPromoCodeSerializer extends SilverStripeSerializer
                         }
                         $values['allowed_ticket_types'] = $ticket_types;
                     }
-                        break;
-                    case 'badge_type': {
-                        if($code->hasBadgeType()){
-                            unset($values['badge_type_id']);
-                            $values['badge_type'] = SerializerRegistry::getInstance()->getSerializer
-                            (
-                                $code->getBadgeType()
-                            )->serialize($expand);
-                        }
-                    }
-                        break;
+                    break;
                 }
             }
         }

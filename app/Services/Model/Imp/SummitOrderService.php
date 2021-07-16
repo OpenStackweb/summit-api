@@ -301,13 +301,13 @@ final class ReserveOrderTask extends AbstractTask
 
                 $ticket->setTicketType($ticket_type);
 
+                if (!$ticket->hasBadge()) {
+                    $ticket->setBadge(SummitBadgeType::buildBadgeFromType($default_badge_type));
+                }
+
                 $promo_code = !empty($promo_code_value) ? $this->summit->getPromoCodeByCode($promo_code_value) : null;
                 if (!is_null($promo_code)) {
                     $promo_code->applyTo($ticket);
-                }
-                if (!$ticket->hasBadge()) {
-                    $badge = SummitBadgeType::buildBadgeFromType($default_badge_type);
-                    $ticket->setBadge($badge);
                 }
 
                 $ticket->applyTaxes($this->summit->getTaxTypes()->toArray());
@@ -1877,16 +1877,15 @@ final class SummitOrderService
 
             Log::debug(sprintf("SummitOrderService::createOrderSingleTicket ticket number %s", $ticket->getNumber()));
 
+            if (!$ticket->hasBadge()) {
+                $ticket->setBadge(SummitBadgeType::buildBadgeFromType($default_badge_type));
+            }
+
             // promo code usage
             $promo_code = isset($payload['promo_code']) ? $this->promo_code_repository->getByValueExclusiveLock($summit, trim($payload['promo_code'])) : null;
             if (!is_null($promo_code)) {
                 $promo_code->addUsage(1);
                 $promo_code->applyTo($ticket);
-            }
-
-            if (!$ticket->hasBadge()) {
-                $badge = SummitBadgeType::buildBadgeFromType($default_badge_type);
-                $ticket->setBadge($badge);
             }
 
             $ticket->applyTaxes($summit->getTaxTypes()->toArray());

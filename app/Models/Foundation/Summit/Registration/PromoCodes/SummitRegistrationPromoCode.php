@@ -92,13 +92,6 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     protected $valid_until_date;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitBadgeType",)
-     * @ORM\JoinColumn(name="BadgeTypeID", referencedColumnName="ID")
-     * @var SummitBadgeType
-     */
-    protected $badge_type;
-
-    /**
      * @ORM\ManyToOne(targetEntity="models\summit\Summit", inversedBy="promo_codes")
      * @ORM\JoinColumn(name="SummitID", referencedColumnName="ID")
      * @var Summit
@@ -131,7 +124,6 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      * @var SummitTicketType[]
      */
     protected $allowed_ticket_types;
-
 
     public function setSummit($summit){
         $this->summit = $summit;
@@ -350,28 +342,6 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         return true;
     }
 
-    /**
-     * @return int
-     */
-    public function getBadgeTypeId(){
-        try {
-            return is_null($this->badge_type) ? 0: $this->badge_type->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasBadgeType(){
-        return $this->getBadgeTypeId() > 0;
-    }
-
-    public function clearBadgeType(){
-        $this->badge_type = null;
-    }
 
     public function setSourceAdmin(){
         $this->source = 'ADMIN';
@@ -415,7 +385,6 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         'valid_until_date'     => 'datetime',
         'source'               => ['CSV','ADMIN'],
         'summit_id'            => 'integer',
-        'badge_type_id'        => 'integer',
         'creator_id'           => 'integer',
         'allowed_ticket_types' => 'array',
     ];
@@ -496,22 +465,6 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     }
 
     /**
-     * @return SummitBadgeType
-     */
-    public function getBadgeType(): ?SummitBadgeType
-    {
-        return $this->badge_type;
-    }
-
-    /**
-     * @param SummitBadgeType $badge_type
-     */
-    public function setBadgeType(SummitBadgeType $badge_type): void
-    {
-        $this->badge_type = $badge_type;
-    }
-
-    /**
      * @param SummitTicketType $ticket_type
      */
     public function addAllowedTicketType(SummitTicketType $ticket_type){
@@ -546,12 +499,14 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     /**
      * @param SummitAttendeeTicket $ticket
      * @return SummitAttendeeTicket
+     * @throws ValidationException
      */
-    public function applyTo(SummitAttendeeTicket $ticket){
-        if($this->hasBadgeType()){
-            $badge = $ticket->hasBadge() ? $ticket->getBadge() : new SummitAttendeeBadge();
-            $ticket->setBadge($badge->applyPromoCode($this));
-        }
+    public function applyTo(SummitAttendeeTicket $ticket):SummitAttendeeTicket{
+        $badge = $ticket->hasBadge() ? $ticket->getBadge() : null;
+        if(is_null($badge))
+            throw new ValidationException(sprintf("Ticket %s has not badge set.", $ticket->getId()));
+        // apply the promo code code to badge
+        $badge->applyPromoCode($this);
         $ticket->setPromoCode($this);
         return $ticket;
     }

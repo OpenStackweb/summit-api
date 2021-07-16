@@ -446,8 +446,9 @@ class SummitTicketType extends SilverstripeBaseModel
      * @return int
      */
     public function getBadgeTypeId(){
+        $res = $this->getBadgeType();
         try {
-            return is_null($this->badge_type) ? 0: $this->badge_type->getId();
+            return is_null($res) ? 0: $res->getId();
         }
         catch(\Exception $ex){
             return 0;
@@ -459,20 +460,19 @@ class SummitTicketType extends SilverstripeBaseModel
      */
     public function getBadgeType(): ?SummitBadgeType
     {
-        return $this->badge_type;
+        $res = $this->badge_type;
+        if(is_null($res)){
+            $res = $this->summit->getDefaultBadgeType();
+        }
+        return $res;
     }
 
     /**
      * @return bool
      */
-    public function hasBadgeType(){
+    public function hasBadgeType():bool{
         return $this->getBadgeTypeId() > 0;
     }
-
-    public function clearBadgeType(){
-        $this->badge_type = null;
-    }
-
     /**
      * @param SummitBadgeType $badge_type
      */

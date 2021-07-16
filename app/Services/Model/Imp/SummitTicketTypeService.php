@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\Event;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
-use models\summit\ISummitTicketTypeRepository;
 use models\summit\Summit;
 use models\summit\SummitTicketType;
 use services\apis\IEventbriteAPI;
@@ -33,33 +32,24 @@ final class SummitTicketTypeService
 {
 
     /**
-     * @var ISummitTicketTypeRepository
-     */
-    private $repository;
-
-    /**
      * @var IEventbriteAPI
      */
     private $eventbrite_api;
 
     /**
      * SummitTicketTypeService constructor.
-     * @param ISummitTicketTypeRepository $repository
      * @param IEventbriteAPI $eventbrite_api
      * @param ITransactionService $tx_service
      */
     public function __construct
     (
-        ISummitTicketTypeRepository $repository,
         IEventbriteAPI $eventbrite_api,
         ITransactionService $tx_service
     )
     {
         parent::__construct($tx_service);
-        $this->repository     = $repository;
         $this->eventbrite_api = $eventbrite_api;
     }
-
 
     /**
      * @param Summit $summit
@@ -67,7 +57,7 @@ final class SummitTicketTypeService
      * @return array
      * @throws EntityNotFoundException
      */
-    static private function getPromoCodeParams(Summit $summit, array $data):array{
+    static private function getTicketTypeParams(Summit $summit, array $data):array{
         if(isset($data['badge_type_id'])){
             $badge_type = $summit->getBadgeTypeById(intval($data['badge_type_id']));
             if(is_null($badge_type))
@@ -120,7 +110,7 @@ final class SummitTicketTypeService
                 }
             }
 
-            $ticket_type = SummitTicketTypeFactory::build($summit, self::getPromoCodeParams($summit, $data));
+            $ticket_type = SummitTicketTypeFactory::build($summit, self::getTicketTypeParams($summit, $data));
 
             if($summit->hasTicketTypes()){
                 // before add check if we have the same currency
@@ -215,7 +205,7 @@ final class SummitTicketTypeService
             if(!empty($currency) && !empty($summit_currency) && $summit_currency != $currency)
                 throw new ValidationException(sprintf("ticket type should have same currency as summit (%s)", $summit_currency));
 
-            $ticket_type = SummitTicketTypeFactory::populate($ticket_type, self::getPromoCodeParams($summit, $data));
+            $ticket_type = SummitTicketTypeFactory::populate($ticket_type, self::getTicketTypeParams($summit, $data));
 
             Event::fire
             (

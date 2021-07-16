@@ -33,7 +33,12 @@ class SummitAdministratorPermissionGroup extends SilverstripeBaseModel
      */
     private $title;
 
-    const ValidGroups = [IGroup::SummitAdministrators, IGroup::TrackChairsAdmins];
+    const ValidGroups = [
+        IGroup::SummitAdministrators,
+        IGroup::TrackChairsAdmins,
+        IGroup::TrackChairs,
+        IGroup::BadgePrinters,
+    ];
 
     public function __construct()
     {
@@ -79,11 +84,10 @@ class SummitAdministratorPermissionGroup extends SilverstripeBaseModel
     }
 
     public function canAddMember(Member $member):bool{
-        return
-        $member->isOnGroup(IGroup::SummitAdministrators, true) ||
-        $member->isOnGroup(IGroup::TrackChairs, true) ||
-        $member->isOnGroup(IGroup::TrackChairsAdmins, true) ||
-        $member->isOnGroup(IGroup::BadgePrinters, true);
+        foreach (self::ValidGroups as $slug){
+            if($member->isOnGroup($slug, true)) return true;
+        }
+        return false;
     }
 
     /**

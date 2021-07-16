@@ -29,7 +29,7 @@ abstract class PromoCodeEmail extends AbstractEmailJob
     public function __construct(SummitRegistrationPromoCode $promo_code){
 
         if(!$promo_code instanceof IOwnablePromoCode)
-            throw new \InvalidArgumentException('promo code is not ownable.');
+            throw new \InvalidArgumentException('promo code is not ownerable.');
 
         $summit = $promo_code->getSummit();
         $payload = [];

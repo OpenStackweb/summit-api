@@ -23,7 +23,6 @@ use models\main\IMemberRepository;
 use models\main\Member;
 use models\summit\IOwnablePromoCode;
 use models\summit\ISpeakerRepository;
-use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\Summit;
 use models\summit\SummitRegistrationDiscountCode;
 use models\summit\SummitRegistrationPromoCode;
@@ -36,11 +35,6 @@ final class SummitPromoCodeService
     extends AbstractService
     implements ISummitPromoCodeService
 {
-    /**
-     * @var ISummitRegistrationPromoCodeRepository
-     */
-    private $promo_code_repository;
-
     /**
      * @var IMemberRepository
      */
@@ -58,7 +52,6 @@ final class SummitPromoCodeService
 
     /**
      * SummitPromoCodeService constructor.
-     * @param ISummitRegistrationPromoCodeRepository $promo_code_repository
      * @param IMemberRepository $member_repository
      * @param ICompanyRepository $company_repository
      * @param ISpeakerRepository $speaker_repository
@@ -66,7 +59,6 @@ final class SummitPromoCodeService
      */
     public function __construct
     (
-        ISummitRegistrationPromoCodeRepository $promo_code_repository,
         IMemberRepository $member_repository,
         ICompanyRepository $company_repository,
         ISpeakerRepository $speaker_repository,
@@ -74,7 +66,6 @@ final class SummitPromoCodeService
     )
     {
         parent::__construct($tx_service);
-        $this->promo_code_repository             = $promo_code_repository;
         $this->member_repository                 = $member_repository;
         $this->company_repository                = $company_repository;
         $this->speaker_repository                = $speaker_repository;
@@ -132,13 +123,6 @@ final class SummitPromoCodeService
             if(is_null($sponsor))
                 throw new EntityNotFoundException(sprintf("sponsor_id %s not found", $data['sponsor_id']));
             $params['sponsor'] = $sponsor;
-        }
-
-        if(isset($data['badge_type_id'])){
-            $badge_type = $summit->getBadgeTypeById(intval($data['badge_type_id']));
-            if(is_null($badge_type))
-                throw new EntityNotFoundException(sprintf("badge_type_id %s not found", $data['badge_type_id']));
-            $params['badge_type'] = $badge_type;
         }
 
         return $params;

@@ -84,9 +84,6 @@ final class SummitPromoCodeFactory
 
         // common members
 
-        if(isset($params['badge_type']))
-            $promo_code->setBadgeType($params['badge_type']);
-
         if(isset($params['allowed_ticket_types'])){
             foreach ($params['allowed_ticket_types'] as $ticket_type){
                 $promo_code->addAllowedTicketType($ticket_type);

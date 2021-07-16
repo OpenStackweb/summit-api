@@ -229,7 +229,6 @@ class SummitAttendeeBadge extends SilverstripeBaseModel implements IQREntity
      * @return $this
      */
     public function applyPromoCode(SummitRegistrationPromoCode $promo_code){
-        $this->setType($promo_code->getBadgeType());
         foreach ($promo_code->getBadgeFeatures() as $feature)
             $this->addFeature($feature);
         return $this;

@@ -29,6 +29,7 @@ use Exception;
 use Illuminate\Support\Facades\Log;
 use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
+use models\summit\SummitBadgeType;
 use models\summit\SummitRegistrationDiscountCode;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\SummitRegistrationPromoCode;
@@ -232,6 +233,11 @@ final class RegistrationIngestionService
                             $ticket->setTicketType($ticket_type);
                         }
 
+                        // default badge
+                        if (!$ticket->hasBadge()) {
+                            $ticket->setBadge(SummitBadgeType::buildBadgeFromType($default_badge_type));
+                        }
+
                         if (count($external_promo_code)) {
                             // has promo code
                             $promo_code = $summit->getPromoCodeByCode($external_promo_code['code']);
@@ -261,13 +267,6 @@ final class RegistrationIngestionService
                             }
 
                             $promo_code->applyTo($ticket);
-                        }
-
-                        // default badge
-                        if (!$ticket->hasBadge()) {
-                            $badge = new SummitAttendeeBadge();
-                            $badge->setType($default_badge_type);
-                            $ticket->setBadge($badge);
                         }
 
                         // assign attendee

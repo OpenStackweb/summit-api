@@ -13,7 +13,6 @@
  **/
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
-use models\main\EmailCreationRequest;
 use models\main\Member;
 use models\summit\Summit;
 use models\summit\SummitRegistrationPromoCode;

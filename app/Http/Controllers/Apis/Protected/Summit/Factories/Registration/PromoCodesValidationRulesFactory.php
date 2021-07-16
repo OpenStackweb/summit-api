@@ -52,7 +52,6 @@ final class PromoCodesValidationRulesFactory
             'quantity_available'   => 'sometimes|integer|min:0',
             'valid_since_date'     => 'nullable|date_format:U',
             'valid_until_date'     => 'nullable|required_with:valid_since_date|date_format:U|after:valid_since_date',
-            'badge_type_id'        => 'nullable|integer',
             'allowed_ticket_types' => 'sometimes|int_array',
             'badge_features'       => 'sometimes|int_array',
         ];

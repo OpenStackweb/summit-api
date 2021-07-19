@@ -385,6 +385,10 @@ class SummitEvent extends SilverstripeBaseModel
         }
     }
 
+    public function hasCategory():bool{
+        return $this->getCategoryId() > 0;
+    }
+
     /**
      * @return string
      */

@@ -146,6 +146,10 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
             $values['extra_questions'] =  $values['extra_questions'] . str_replace(",", "", (string)$answer);
         }
 
+        if($presentation->hasCategory()){
+            $values['track'] = $presentation->getCategory()->getTitle();
+        }
+
         return $values;
     }
 }

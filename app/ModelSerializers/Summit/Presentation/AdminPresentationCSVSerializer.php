@@ -13,6 +13,7 @@
  **/
 use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
+use models\main\Member;
 use models\summit\Presentation;
 /**
  * Class AdminPresentationCSVSerializer
@@ -34,8 +35,8 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
         if(!$presentation instanceof Presentation) return $values;
 
         $serializerType = SerializerRegistry::SerializerType_Public;
-        $currentUser = $this->resource_server_context->getCurrentUser();
-        if(!is_null($currentUser) && $currentUser->isAdmin()){
+
+        if(isset($params['current_user']) && $params['current_user'] instanceof Member && $params['current_user']->isAdmin()){
             $serializerType = SerializerRegistry::SerializerType_Private;
         }
 
@@ -65,6 +66,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
         $values['speaker_emails'] = "";
         $values['speaker_titles'] = "";
         $values['speaker_companies'] = "";
+
 
         if($presentation->getSpeakers()->count() > 0){
 
@@ -109,6 +111,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
             }
         }
 
+
         if(isset($values['description'])){
             $values['description'] = strip_tags($values['description']);
         }
@@ -117,6 +120,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
         }
 
         // add video column
+
         $values['video'] = '';
         $values['public_video'] = '';
 

@@ -14,6 +14,7 @@
 
 use App\Facades\ResourceServerContext;
 use Libs\ModelSerializers\AbstractSerializer;
+use models\main\Member;
 use models\summit\SummitEvent;
 
 /**
@@ -104,7 +105,8 @@ class SummitEventSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize(
+        $expand = null, array $fields = array(), array $relations = array(), array $params = array())
     {
         $event = $this->object;
         if (!$event instanceof SummitEvent) return [];
@@ -146,7 +148,7 @@ class SummitEventSerializer extends SilverStripeSerializer
             $values['current_attendance'] = $attendance;
         }
 
-        if ($event->hasAccess(ResourceServerContext::getCurrentUser())) {
+        if (isset($params['current_user']) && $params['current_user'] instanceof Member  && $event->hasAccess($params['current_user'])) {
             $values['streaming_url'] = $event->getStreamingUrl();
             $values['etherpad_link'] = $event->getEtherpadLink();
         }

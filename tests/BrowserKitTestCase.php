@@ -50,18 +50,6 @@ abstract class BrowserKitTestCase extends BaseTestCase
     {
         Model::unguard();
         DB::setDefaultConnection("model");
-        DB::table('Group_Members')->delete();
-        DB::table('Member')->delete();
-        DB::table('Group')->delete();
-
-        DB::table('Summit')->delete();
-        DB::table('SummitEventType')->delete();
-        DB::table('PresentationType')->delete();
-        DB::table('SummitAbstractLocation')->delete();
-        DB::table('SummitGeoLocatedLocation')->delete();
-        DB::table('SummitVenue')->delete();
-        DB::table('PresentationTrackChairView')->delete();
-
         Artisan::call('doctrine:migrations:migrate', ["--connection" => 'config']);
         Artisan::call('doctrine:migrations:migrate', ["--connection" => 'model']);
         //Mail::pretend(true);

@@ -33,9 +33,11 @@ class AdminSummitEventCSVSerializer extends SummitEventSerializer
         if(isset($values['description'])){
             $values['description'] = strip_tags($values['description']);
         }
+
         if($summit_event->hasCategory()){
             $values['track'] = $summit_event->getCategory()->getTitle();
         }
+
         return $values;
     }
 }

@@ -490,7 +490,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
     {
         $params = array
         (
-            'id' => self::$summit->getId(),
+            'id' => 31,
             //'expand' => 'feedback',
             /*'filter' => [
                 'published==1'

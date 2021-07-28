@@ -47,6 +47,10 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
         'member',
     ];
 
+    protected function getMemberSerializerType():string{
+        return SerializerRegistry::SerializerType_Public;
+    }
+
     /**
      * @param null $expand
      * @param array $fields
@@ -172,7 +176,11 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
                     case 'member': {
                        if($speaker->hasMember()){
                            unset($values['member_id']);
-                           $values['member'] =  SerializerRegistry::getInstance()->getSerializer($speaker->getMember())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                           $values['member'] =  SerializerRegistry::getInstance()->getSerializer
+                           (
+                               $speaker->getMember())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation).
+                               $this->getMemberSerializerType()
+                           );
                        }
                     }
                     break;

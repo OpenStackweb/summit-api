@@ -23,6 +23,10 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
         'Email' => 'email:json_string',
     ];
 
+    protected function getMemberSerializerType():string{
+        return SerializerRegistry::SerializerType_Admin;
+    }
+
     /**
      * @param null $expand
      * @param array $fields

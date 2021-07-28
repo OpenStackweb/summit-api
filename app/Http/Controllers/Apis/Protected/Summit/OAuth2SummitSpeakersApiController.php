@@ -167,7 +167,14 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 return $filter;
             },
             function () {
-                return $this->serializer_type_selector->getSerializerType();
+                $current_member = $this->resource_server_context->getCurrentUser();
+                $serializer_type = SerializerRegistry::SerializerType_Public;
+
+                if(!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin())){
+                    $serializer_type = SerializerRegistry::SerializerType_Admin;
+                }
+
+                return $serializer_type;
             },
             null,
             null,
@@ -234,7 +241,13 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 return $filter;
             },
             function () {
-                return $this->serializer_type_selector->getSerializerType();
+                $current_member = $this->resource_server_context->getCurrentUser();
+                $serializer_type = SerializerRegistry::SerializerType_Public;
+
+                if(!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin())){
+                    $serializer_type = SerializerRegistry::SerializerType_Admin;
+                }
+                return $serializer_type;
             },
             null,
             null,
@@ -292,7 +305,13 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 return $filter;
             },
             function () {
-                return $this->serializer_type_selector->getSerializerType();
+                $current_member = $this->resource_server_context->getCurrentUser();
+                $serializer_type = SerializerRegistry::SerializerType_Public;
+
+                if(!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin())){
+                    $serializer_type = SerializerRegistry::SerializerType_Admin;
+                }
+                return $serializer_type;
             },
             null,
             null,
@@ -327,6 +346,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             if (!is_null($current_member)) {
                 if ($speaker->getMemberId() == $current_member->getId())
                     $serializer_type = SerializerRegistry::SerializerType_Private;
+
+                if($current_member->isAdmin() || $current_member->isSummitAdmin()){
+                    $serializer_type = SerializerRegistry::SerializerType_Admin;
+                }
             }
 
             return $this->ok
@@ -518,6 +541,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             if (!is_null($current_member)) {
                 if ($speaker->getMemberId() == $current_member->getId() || $speaker->canBeEditedBy($current_member))
                     $serializer_type = SerializerRegistry::SerializerType_Private;
+                if($current_member->isAdmin() || $current_member->isSummitAdmin()){
+                    $serializer_type = SerializerRegistry::SerializerType_Admin;
+                }
+
             }
 
             return $this->ok
@@ -933,7 +960,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     /**
      * @param $role
      * @param $selection_plan_id
-     * @return mixedf
+     * @return mixed
      */
     public function getMySpeakerPresentationsByRoleAndBySelectionPlan($role, $selection_plan_id)
     {

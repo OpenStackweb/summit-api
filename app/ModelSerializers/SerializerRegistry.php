@@ -244,7 +244,8 @@ final class SerializerRegistry
         $this->registry['PresentationSpeaker'] =
             [
                 self::SerializerType_Public => PresentationSpeakerSerializer::class,
-                self::SerializerType_Private => AdminPresentationSpeakerSerializer::class
+                self::SerializerType_Private => AdminPresentationSpeakerSerializer::class,
+                self::SerializerType_Admin => AdminPresentationSpeakerSerializer::class
             ];
 
         $this->registry['SpeakerEditPermissionRequest'] = SpeakerEditPermissionRequestSerializer::class;

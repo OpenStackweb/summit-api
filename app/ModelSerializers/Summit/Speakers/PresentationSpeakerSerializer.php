@@ -178,9 +178,9 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
                            unset($values['member_id']);
                            $values['member'] =  SerializerRegistry::getInstance()->getSerializer
                            (
-                               $speaker->getMember())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation).
+                               $speaker->getMember(),
                                $this->getMemberSerializerType()
-                           );
+                           )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                        }
                     }
                     break;

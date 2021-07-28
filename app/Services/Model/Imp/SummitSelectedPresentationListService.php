@@ -388,15 +388,47 @@ final class SummitSelectedPresentationListService
             }
 
             $former_collection = $selected_presentation->getCollection();
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitSelectedPresentationListService::assignPresentationToMyIndividualList list %s former collection %s current collection %s",
+                    $selection_list->getId(),
+                    $former_collection,
+                    $collection
+                )
+            );
+
             $selected_presentation->setCollection($collection);
             $selected_presentation->setOrder($highest_order_in_list + 1);
             $selection_list->addSelection($selected_presentation);
 
             // reorder list from where it was removed
             if (!empty($former_collection) && $former_collection != SummitSelectedPresentation::CollectionPass) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitSelectedPresentationListService::assignPresentationToMyIndividualList reordering former list"
+                    )
+                );
+
                 $left_selections = $selection_list->getSelectedPresentationsByCollection($former_collection);
-                foreach ($left_selections as $order => $selection) {
-                    $selection->setOrder($order+1);
+                $order = 1;
+                foreach ($left_selections as $selection) {
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitSelectedPresentationListService::assignPresentationToMyIndividualList list %s former collection %s presentation %s new order %s",
+                            $selection_list->getId(),
+                            $former_collection,
+                            $selection->getPresentationId(),
+                            $order
+                        )
+                    );
+                    $selection->setOrder($order);
+                    ++$order;
                 }
             }
 

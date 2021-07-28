@@ -147,9 +147,11 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             $relations = !empty($relations) ? explode(',', $relations) : [];
             $current_member = $this->resource_server_context->getCurrentUser();
             $serializer_type = SerializerRegistry::SerializerType_Public;
-            if(!is_null($current_member) && $current_member->isAdmin()){
+
+            if(!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin() ||  $current_member->isTrackChairAdmin())){
                 $serializer_type = SerializerRegistry::SerializerType_Admin;
             }
+
             return $this->ok
             (
                 $data->toArray

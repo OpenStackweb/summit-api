@@ -758,6 +758,16 @@ class Member extends SilverstripeBaseModel
         return false;
     }
 
+    public function isTrackChairAdmin(): bool
+    {
+        $summitAdminGroup = $this->getGroupByCode(IGroup::TrackChairsAdmins);
+        if (!is_null($summitAdminGroup))
+            return true;
+        if ($this->isOnExternalGroup(IGroup::TrackChairsAdmins))
+            return true;
+        return false;
+    }
+
     /**
      * @param string $code
      * @return bool

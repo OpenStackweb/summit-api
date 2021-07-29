@@ -1086,10 +1086,12 @@ final class SummitOrderService
                 $company = $payload['attendee_company'] ?? null;
                 $email = $payload['attendee_email'] ?? '';
                 $extra_questions = $payload['extra_questions'] ?? [];
+                $disclaimer_accepted = $payload['disclaimer_accepted'] ?? false;
 
                 $basic_payload = [
                     'email' => trim($email),
-                    'extra_questions' => $extra_questions
+                    'extra_questions' => $extra_questions,
+                    'disclaimer_accepted' => $disclaimer_accepted,
                 ];
 
                 if (!is_null($first_name))

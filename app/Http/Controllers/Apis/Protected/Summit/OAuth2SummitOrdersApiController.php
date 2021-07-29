@@ -607,6 +607,7 @@ final class OAuth2SummitOrdersApiController
                 'attendee_last_name'  => 'nullable|string|max:255',
                 'attendee_email'      => 'required|string|max:255|email',
                 'attendee_company'    => 'nullable|string|max:255',
+                'disclaimer_accepted' => 'nullable|boolean',
                 'extra_questions'     => 'sometimes|extra_question_dto_array'
             ]);
 
@@ -724,6 +725,7 @@ final class OAuth2SummitOrdersApiController
                 'attendee_last_name'  => 'nullable|string|max:255',
                 'attendee_email'      => 'required|string|max:255|email',
                 'attendee_company'    => 'nullable|string|max:255',
+                'disclaimer_accepted' => 'nullable|boolean',
                 'extra_questions'     => 'sometimes|extra_question_dto_array'
             ]);
 
@@ -769,6 +771,7 @@ final class OAuth2SummitOrdersApiController
                 'attendee_last_name'  => 'nullable|string|max:255',
                 'attendee_email'      => 'required|string|max:255|email',
                 'attendee_company'    => 'nullable|string|max:255',
+                'disclaimer_accepted' => 'nullable|boolean',
                 'extra_questions'     => 'sometimes|extra_question_dto_array'
             ]);
 

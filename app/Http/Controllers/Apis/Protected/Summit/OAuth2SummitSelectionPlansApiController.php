@@ -610,8 +610,11 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
 
             return $this->ok(SerializerRegistry::getInstance()->getSerializer
             (
-                $presentation
-            )->serialize(Request::input('expand', '')));
+                $presentation,
+                IPresentationSerializerTypes::TrackChairs
+            )->serialize(
+                Request::input('expand', ''
+                )));
 
         } catch (ValidationException $ex) {
             Log::warning($ex);

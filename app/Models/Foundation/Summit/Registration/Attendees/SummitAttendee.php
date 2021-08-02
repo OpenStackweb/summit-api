@@ -374,6 +374,7 @@ class SummitAttendee extends SilverstripeBaseModel
             return;
         }
         $this->updateStatus();
+        $ticket->generateHash();
         if($this->isComplete()) {
             Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s is complete", $this->getEmail()));
             SummitAttendeeTicketEmail::dispatch($ticket)->delay(now()->addMinutes(5));

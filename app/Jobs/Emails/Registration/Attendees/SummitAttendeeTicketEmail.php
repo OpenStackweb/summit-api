@@ -42,6 +42,19 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         $attendee = $ticket->getOwner();
         $summit = $attendee->getSummit();
         $order = $ticket->getOrder();
+
+        $base_url = Config::get('registration.dashboard_base_url', null);
+        $edit_ticket_link = Config::get('registration.dashboard_attendee_edit_form_url', null);
+
+        if (empty($base_url))
+            throw new \InvalidArgumentException("missing dashboard_base_url value");
+        if (empty($edit_ticket_link))
+            throw new \InvalidArgumentException("missing dashboard_attendee_edit_form_url value");
+
+        $payload['hash'] = $ticket->getHash();
+
+        $payload['edit_ticket_link'] = sprintf($edit_ticket_link, $base_url, $payload['hash']);
+
         $payload['order_owner_full_name'] = $order->getOwnerFullName();
         $payload['order_owner_company'] = $order->getOwnerCompany();
         $payload['order_owner_email'] = $order->getOwnerEmail();

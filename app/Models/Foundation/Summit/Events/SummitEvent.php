@@ -563,6 +563,10 @@ class SummitEvent extends SilverstripeBaseModel
         return $this->type;
     }
 
+    public function hasType():bool{
+        return $this->getTypeId() > 0;
+    }
+
     /**
      * @param SummitEventType $type
      * @return $this

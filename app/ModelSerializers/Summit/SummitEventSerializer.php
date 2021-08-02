@@ -209,6 +209,7 @@ class SummitEventSerializer extends SilverStripeSerializer
                     }
                     case 'type':
                         {
+                            if(!$event->hasType()) break;
                             unset($values['type_id']);
                             $values['type'] = SerializerRegistry::getInstance()->getSerializer($event->getType())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }

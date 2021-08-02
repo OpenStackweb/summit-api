@@ -418,7 +418,7 @@ class StripePaymentProfile extends PaymentGatewayProfile
                 // create it
                 $info = $api->createWebHook(action('PaymentGatewayWebHookController@confirm', [
                     'id' => $this->summit->getId(),
-                    'application_type' => $this->getApplicationType()
+                    'application_name' => $this->getApplicationType()
                 ]));
                 // and set web hook info
                 $this->setWebHookInfo($info);

@@ -40,7 +40,7 @@ final class PaymentGatewayProfileValidationRulesFactory
                     'test_mode_enabled'    => 'required|boolean',
                     'live_secret_key'      => 'sometimes|string',
                     'live_publishable_key' => 'required_with:live_secret_key|string',
-                    'test_secret_key'      => 'required_with:test_mode_enabled|string',
+                    'test_secret_key'      => 'sometimes|string',
                     'test_publishable_key' => 'required_with:test_secret_key|string',
                     'send_email_receipt'   => 'sometimes|boolean',
                 ]);
@@ -59,7 +59,7 @@ final class PaymentGatewayProfileValidationRulesFactory
                 'test_mode_enabled'    => 'required|boolean',
                 'live_secret_key'      => 'sometimes|string',
                 'live_publishable_key' => 'required_with:live_secret_key|string',
-                'test_secret_key'      => 'required_with:test_mode_enabled|string',
+                'test_secret_key'      => 'sometimes|string',
                 'test_publishable_key' => 'required_with:test_secret_key|string',
                 'send_email_receipt'   => 'sometimes|boolean',
             ]);

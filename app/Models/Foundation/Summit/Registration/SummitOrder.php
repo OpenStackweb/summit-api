@@ -906,10 +906,13 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      * @return string
      */
     public function getOwnerFullName():string {
+        $res = "";
         if($this->hasOwner()){
-            return $this->owner->getFullName();
+            $res = $this->owner->getFullName();
         }
-        return sprintf("%s %s", $this->owner_first_name, $this->owner_surname);
+        if(empty($res))
+            $res = sprintf("%s %s", $this->owner_first_name, $this->owner_surname);
+        return $res;
     }
 
     /**

@@ -125,6 +125,14 @@ final class TrackChairPresentationCSVSerializer extends TrackChairPresentationSe
             $values['track'] = $presentation->getCategory()->getTitle();
         }
 
+        // presentation flags
+        $values['presentation_flags'] = '';
+        foreach($presentation->getPresentationActions() as $action){
+            if(!empty($values['presentation_flags']))
+                $values['presentation_flags'] = $values['presentation_flags'] . '|';
+            $values['presentation_flags'] =  $values['presentation_flags'] . str_replace(",", "", (string)$action);
+        }
+
         return $values;
     }
 }

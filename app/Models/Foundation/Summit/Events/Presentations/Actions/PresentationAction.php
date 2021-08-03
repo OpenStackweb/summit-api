@@ -158,5 +158,10 @@ class PresentationAction extends SilverstripeBaseModel
         $this->updated_by = $updated_by;
     }
 
+    public function __toString():string
+    {
+        return sprintf("%s : %s", strip_tags($this->type->getLabel()), $this->is_completed ? "ON":"OFF");
+    }
+
 
 }

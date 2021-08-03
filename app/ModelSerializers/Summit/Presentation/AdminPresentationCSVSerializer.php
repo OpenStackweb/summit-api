@@ -67,7 +67,6 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
         $values['speaker_titles'] = "";
         $values['speaker_companies'] = "";
 
-
         if($presentation->getSpeakers()->count() > 0){
 
             $speaker_ids = [];
@@ -111,7 +110,6 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
             }
         }
 
-
         if(isset($values['description'])){
             $values['description'] = strip_tags($values['description']);
         }
@@ -154,6 +152,14 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
             $values['track'] = $presentation->getCategory()->getTitle();
         }
 
+
+        // presentation flags
+        $values['presentation_flags'] = '';
+        foreach($presentation->getPresentationActions() as $action){
+            if(!empty($values['presentation_flags']))
+                $values['presentation_flags'] = $values['presentation_flags'] . '|';
+            $values['presentation_flags'] =  $values['presentation_flags'] . str_replace(",", "", (string)$action);
+        }
         return $values;
     }
 }

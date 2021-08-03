@@ -1557,7 +1557,7 @@ class Presentation extends SummitEvent
      */
     public function getPresentationActions(){
         // ordered by type order
-        $array =$this->actions->toArray();
+        $array = $this->actions->toArray();
         usort($array, [ $this , 'actionSort' ]);
         return $array;
     }

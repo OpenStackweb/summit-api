@@ -1679,6 +1679,7 @@ SQL;
     public function canBeEditedBy(Member $member):bool{
         Log::debug(sprintf("PresentationSpeaker::canBeEditedBy member %s speaker member id %s", $member->getId(), $this->getMemberId()));
         if($member->isAdmin()) return true;
+        if($member->isSummitAdmin()) return true;
         if($this->getMemberId() == $member->getId()) return true;
         $criteria = Criteria::create();
         $criteria

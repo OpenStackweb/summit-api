@@ -73,7 +73,7 @@ class SummitOrderReminderEmail extends AbstractEmailJob
                 'number' => $ticket->getNumber(),
                 'ticket_type_name' => $ticket->getTicketType()->getName(),
                 'has_owner' => false,
-                'price' => $ticket->getFinalAmount(),
+                'price' => round($ticket->getFinalAmount(),2),
                 'currency' => $ticket->getCurrency(),
                 'currency_symbol' => '$',
                 'need_details' => false,
@@ -88,7 +88,7 @@ class SummitOrderReminderEmail extends AbstractEmailJob
 
                 if ($promo_code instanceof SummitRegistrationDiscountCode) {
                     $promo_code_dto['is_discount'] = true;
-                    $promo_code_dto['discount_amount'] = $promo_code->getAmount();
+                    $promo_code_dto['discount_amount'] = round($promo_code->getAmount(),2);
                     $promo_code_dto['discount_rate'] = $promo_code->getRate();
                 }
 

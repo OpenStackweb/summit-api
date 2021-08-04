@@ -40,8 +40,8 @@ class RegisteredMemberOrderPaidMail extends AbstractEmailJob
         }
 
         $summit = $order->getSummit();
-        $payload['order_raw_amount'] = $order->getRawAmount();
-        $payload['order_amount'] = $order->getFinalAmount();
+        $payload['order_raw_amount'] = round($order->getRawAmount(),2);
+        $payload['order_amount'] = round($order->getFinalAmount(),2);
         $payload['order_currency'] = $order->getCurrency();
         $payload['order_currency_symbol'] = '$';
         $payload['order_taxes'] = $order->getTaxesAmount();
@@ -79,7 +79,7 @@ class RegisteredMemberOrderPaidMail extends AbstractEmailJob
                 'number' => $ticket->getNumber(),
                 'ticket_type_name' => $ticket->getTicketType()->getName(),
                 'has_owner' => false,
-                'price' => $ticket->getFinalAmount(),
+                'price' => round($ticket->getFinalAmount(),2),
                 'currency' => $ticket->getCurrency(),
                 'currency_symbol' => '$',
                 'need_details' => false,
@@ -94,7 +94,7 @@ class RegisteredMemberOrderPaidMail extends AbstractEmailJob
 
                 if ($promo_code instanceof SummitRegistrationDiscountCode) {
                     $promo_code_dto['is_discount'] = true;
-                    $promo_code_dto['discount_amount'] = $promo_code->getAmount();
+                    $promo_code_dto['discount_amount'] = round($promo_code->getAmount(),2);
                     $promo_code_dto['discount_rate'] = $promo_code->getRate();
                 }
 

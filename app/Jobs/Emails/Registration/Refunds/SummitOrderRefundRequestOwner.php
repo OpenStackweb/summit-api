@@ -47,7 +47,7 @@ class SummitOrderRefundRequestOwner extends AbstractEmailJob
         $payload['summit_logo'] = $summit->getLogoUrl();
         $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
         $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
-        $payload['order_amount'] = $order->getFinalAmount();
+        $payload['order_amount'] = round($order->getFinalAmount(),2);
         $payload['order_currency'] = $order->getCurrency();
         $payload['order_currency_symbol'] = "$";
         $payload['tickets'] = [];
@@ -58,7 +58,7 @@ class SummitOrderRefundRequestOwner extends AbstractEmailJob
                 'number' => $ticket->getNumber(),
                 'ticket_type_name' => $ticket->getTicketType()->getName(),
                 'has_owner' => false,
-                'price' => $ticket->getFinalAmount(),
+                'price' => round($ticket->getFinalAmount(),2),
                 'currency' => $ticket->getCurrency(),
                 'currency_symbol' => '$',
                 'need_details' => false,
@@ -72,7 +72,7 @@ class SummitOrderRefundRequestOwner extends AbstractEmailJob
 
                 if ($promo_code instanceof SummitRegistrationDiscountCode) {
                     $promo_code_dto['is_discount'] = true;
-                    $promo_code_dto['discount_amount'] = $promo_code->getAmount();
+                    $promo_code_dto['discount_amount'] = round($promo_code->getAmount(),2);
                     $promo_code_dto['discount_rate'] = $promo_code->getRate();
                 }
 

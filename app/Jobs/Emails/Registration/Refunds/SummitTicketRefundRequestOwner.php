@@ -52,7 +52,7 @@ class SummitTicketRefundRequestOwner extends AbstractEmailJob
         $payload['ticket_number'] = $ticket->getNumber();
         $payload['ticket_type_name'] = $ticket->getTicketType()->getName();
         $payload['ticket_currency'] = $ticket->getCurrency();
-        $payload['ticket_amount'] = $ticket->getFinalAmount();
+        $payload['ticket_amount'] = round($ticket->getFinalAmount(),2);
         $payload['ticket_currency_symbol'] = '$';
 
         $payload['ticket_promo_code'] = '';

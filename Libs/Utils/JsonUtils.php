@@ -100,7 +100,7 @@ abstract class JsonUtils
     public static function toJsonFloat($value)
     {
         if(empty($value)) return 0.00;
-        return floatval($value);
+        return round(floatval($value),2);
     }
 
     /**

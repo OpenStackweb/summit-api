@@ -1,4 +1,7 @@
 <?php namespace ModelSerializers;
+use models\summit\Presentation;
+use models\summit\SummitEvent;
+
 /**
  * Copyright 2016 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,5 +36,29 @@ class AdminPresentationSerializer extends PresentationSerializer
      */
     protected function getSpeakersSerializerType():string{
         return SerializerRegistry::SerializerType_Private;
+    }
+
+    /**
+     * @param null $expand
+     * @param array $fields
+     * @param array $relations
+     * @param array $params
+     * @return array
+     */
+    public function serialize(
+        $expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    {
+        $presentation = $this->object;
+        if (!$presentation instanceof Presentation) return [];
+
+        if (!count($relations)) $relations = $this->getAllowedRelations();
+
+        $values = parent::serialize($expand, $fields, $relations, $params);
+
+        // always set
+        $values['streaming_url'] = $presentation->getStreamingUrl();
+        $values['etherpad_link'] = $presentation->getEtherpadLink();
+
+        return $values;
     }
 }

@@ -196,16 +196,18 @@ final class SerializerRegistry
             self::SerializerType_CSV => AdminSummitEventCSVSerializer::class
         ];
 
+        $this->registry['Presentation'] =
+        [
+            self::SerializerType_Public => PresentationSerializer::class,
+            self::SerializerType_Private => AdminPresentationSerializer::class,
+            self::SerializerType_CSV => AdminPresentationCSVSerializer::class,
+            IPresentationSerializerTypes::TrackChairs => TrackChairPresentationSerializer::class,
+            IPresentationSerializerTypes::TrackChairs_CSV => TrackChairPresentationCSVSerializer::class
+        ];
+
         $this->registry['SummitGroupEvent'] = SummitGroupEventSerializer::class;
         $this->registry['TrackTagGroup'] = TrackTagGroupSerializer::class;
-        $this->registry['Presentation'] =
-            [
-                self::SerializerType_Public => PresentationSerializer::class,
-                self::SerializerType_Private => AdminPresentationSerializer::class,
-                self::SerializerType_CSV => AdminPresentationCSVSerializer::class,
-                IPresentationSerializerTypes::TrackChairs => TrackChairPresentationSerializer::class,
-                IPresentationSerializerTypes::TrackChairs_CSV => TrackChairPresentationCSVSerializer::class
-            ];
+
 
         $this->registry['SummitCategoryChange'] = SummitCategoryChangeSerializer::class;
 

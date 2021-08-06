@@ -148,7 +148,7 @@ class SummitEventSerializer extends SilverStripeSerializer
             $values['current_attendance'] = $attendance;
         }
 
-        if (isset($params['current_user']) && $event->hasAccess($params['current_user'])) {
+        if ($event->hasAccess($params['current_user'] ?? null)) {
             $values['streaming_url'] = $event->getStreamingUrl();
             $values['etherpad_link'] = $event->getEtherpadLink();
         }

@@ -92,6 +92,21 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     }
 
     /**
+     * @return string
+     */
+    private function getSerializerType():string{
+
+        $current_user = $this->resource_server_context->getCurrentUser(true);
+        $application_type = $this->resource_server_context->getApplicationType();
+        Log::debug(sprintf("OAuth2SummitEventsApiController::getSerializerType app_type %s has current user %b", $application_type, !is_null($current_user)));
+        if($application_type == "SERVICE" || (!is_null($current_user) && ($current_user->isAdmin() || ($current_user->isSummitAdmin())))){
+            Log::debug(sprintf("OAuth2SummitEventsApiController::getSerializerType app_type %s has current user %b PRIVATE", $application_type, !is_null($current_user)));
+            return SerializerRegistry::SerializerType_Private;
+        }
+        Log::debug(sprintf("OAuth2SummitEventsApiController::getSerializerType app_type %s has current user %b PUBLIC", $application_type, !is_null($current_user)));
+        return SerializerRegistry::SerializerType_Public;
+    }
+    /**
      *  Events endpoints
      */
 
@@ -105,7 +120,19 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         {
             $strategy = new RetrieveAllSummitEventsBySummitStrategy($this->repository, $this->event_repository, $this->resource_server_context);
             $response = $strategy->getEvents(['summit_id' => $summit_id]);
-            return $this->ok($response->toArray(Request::input('expand', '')));
+            return $this->ok
+            (
+                $response->toArray
+                (
+                    Request::input('expand', ''),
+                    [],
+                    [],
+                    [
+                        'current_user' => $this->resource_server_context->getCurrentUser(true)]
+                    ,
+                    $this->getSerializerType()
+                )
+            );
         }
         catch (EntityNotFoundException $ex1)
         {
@@ -141,7 +168,8 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $response = $strategy->getEvents(['summit_id' => $summit_id]);
 
             $filename = "activities-" . date('Ymd');
-            $list     = $response->toArray(
+            $list     = $response->toArray
+            (
                 null,
                 [],
                 ['none'],
@@ -197,6 +225,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $relations = Request::input('relations', '');
             $relations = !empty($relations) ? explode(',', $relations) :[];
             $fields    = !empty($fields) ? explode(',', $fields) :[];
+
             $params    = [
                 'summit_id' => $summit_id,
                 'current_user' => $this->resource_server_context->getCurrentUser(true)
@@ -209,7 +238,8 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 $expand,
                 $fields,
                 $relations,
-                $params
+                $params,
+                $this->getSerializerType()
             ));
         }
         catch (EntityNotFoundException $ex1)
@@ -296,7 +326,8 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                     [],
                     [
                         'current_user' => $this->resource_server_context->getCurrentUser(true)
-                    ]
+                    ],
+                    $this->getSerializerType()
                 )
             );
         }
@@ -335,7 +366,8 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                     [],
                     [
                         'current_user' => $this->resource_server_context->getCurrentUser(true)
-                    ]
+                    ],
+                    $this->getSerializerType()
                 )
             );
         }
@@ -377,7 +409,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         $relations = !empty($relations) ? explode(',', $relations) : array();
         $fields    = !empty($fields) ? explode(',', $fields) : array();
 
-        return SerializerRegistry::getInstance()->getSerializer($event)->serialize
+        return SerializerRegistry::getInstance()->getSerializer($event, $this->getSerializerType())->serialize
         (
             $expand,
             $fields,
@@ -509,7 +541,11 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
             $event = $this->service->addEvent($summit, HTMLCleaner::cleanData($payload, $fields));
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($event)->serialize
+            return $this->created(SerializerRegistry::getInstance()->getSerializer
+            (
+                $event,
+                $this->getSerializerType()
+            )->serialize
             (
                 Request::input('expand', ''),
                 [],
@@ -572,7 +608,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
             $event = $this->service->updateEvent($summit, $event_id, HTMLCleaner::cleanData($payload, $fields));
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($event)->serialize(
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($event, $this->getSerializerType())->serialize(
                 Request::input('expand', ''),
                 [],
                 [],

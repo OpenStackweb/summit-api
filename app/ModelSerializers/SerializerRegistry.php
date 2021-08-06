@@ -192,7 +192,7 @@ final class SerializerRegistry
 
         $this->registry['SummitEvent'] = [
             self::SerializerType_Public => SummitEventSerializer::class,
-            self::SerializerType_Private => SummitEventSerializer::class,
+            self::SerializerType_Private => AdminSummitEventSerializer::class,
             self::SerializerType_CSV => AdminSummitEventCSVSerializer::class
         ];
 

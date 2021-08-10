@@ -627,7 +627,7 @@ final class MemberService
             if(is_null($member) || !$member instanceof Member) return;
 
             // associate orders
-            $orders = $this->order_repository->getAllByOwnerEmail($member->getEmail());
+            $orders = $this->order_repository->getAllByOwnerEmailAndOwnerNotSet($member->getEmail());
             if(!is_null($orders)) {
                 foreach ($orders as $order) {
                     if (!$order instanceof SummitOrder) continue;
@@ -637,7 +637,7 @@ final class MemberService
             }
 
             // associate attendees/tickets
-            $attendees = $this->attendee_repository->getByEmail($member->getEmail());
+            $attendees = $this->attendee_repository->getByEmailAndMemberNotSet($member->getEmail());
             if(!is_null($attendees)) {
                 foreach ($attendees as $attendee) {
                     if (!$attendee instanceof SummitAttendee) continue;

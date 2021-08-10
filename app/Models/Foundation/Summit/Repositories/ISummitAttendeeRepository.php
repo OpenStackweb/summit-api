@@ -61,4 +61,10 @@ interface ISummitAttendeeRepository extends IBaseRepository
      * @return mixed
      */
     public function getByEmail(string $email);
+
+    /**
+     * @param string $email
+     * @return mixed
+     */
+    public function getByEmailAndMemberNotSet(string $email);
 }

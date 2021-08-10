@@ -245,6 +245,22 @@ SQL
     }
 
     /**
+     * @param string $email
+     * @return mixed
+     */
+    public function getByEmailAndMemberNotSet(string $email)
+    {
+        $query  = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->where("e.email = :email")
+            ->andWhere("e.member is null")
+            ->setParameter("email", strtolower(trim($email)));
+        return $query->getQuery()->getResult();
+    }
+
+    /**
      * @param Summit $summit
      * @param string $email
      * @param null|string $first_name

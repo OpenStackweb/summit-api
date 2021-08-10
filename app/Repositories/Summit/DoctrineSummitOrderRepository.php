@@ -171,6 +171,26 @@ SQL
     }
 
     /**
+     * @param string $email
+     * @return mixed
+     */
+    public function getAllByOwnerEmailAndOwnerNotSet(string $email){
+
+        $query = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->where("e.owner_email = :owner_email")
+            ->andWhere("e.owner is null");
+
+        $query->setParameter("owner_email", trim($email));
+        return $query->getQuery()
+            ->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE)
+            ->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)
+            ->getResult();
+    }
+
+    /**
      * @param int $minutes
      * @param int $max
      * @return mixed

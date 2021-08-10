@@ -55,6 +55,12 @@ interface ISummitOrderRepository extends IBaseRepository
     public function getAllByOwnerEmail(string $email);
 
     /**
+     * @param string $email
+     * @return mixed
+     */
+    public function getAllByOwnerEmailAndOwnerNotSet(string $email);
+
+    /**
      * @param int $minutes
      * @param int $max
      * @return mixed

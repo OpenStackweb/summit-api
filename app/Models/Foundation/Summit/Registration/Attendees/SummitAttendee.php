@@ -16,6 +16,7 @@ use App\Jobs\Emails\RevocationTicketEmail;
 use App\Jobs\Emails\SummitAttendeeTicketEmail;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\ArrayCollection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use models\exceptions\ValidationException;
@@ -367,20 +368,26 @@ class SummitAttendee extends SilverstripeBaseModel
      * @param bool $overrideTicketOwnerIsSameAsOrderOwnerRule
      */
     public function sendInvitationEmail(SummitAttendeeTicket $ticket, bool $overrideTicketOwnerIsSameAsOrderOwnerRule = false){
-        Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s", $this->getEmail()));
+        $email = $this->getEmail();
+        $key = md5($email);
+        Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s", $email));
         if($ticket->getOwnerEmail() != $this->getEmail()) return;
         if(!$ticket->isActive()){
-            Log::warning(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket is not active", $this->getEmail()));
+            Log::warning(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket is not active", $email));
             return;
         }
         $this->updateStatus();
         $ticket->generateHash();
         if($this->isComplete()) {
-            Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s is complete", $this->getEmail()));
-            SummitAttendeeTicketEmail::dispatch($ticket)->delay(now()->addMinutes(5));
+            Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s is complete", $email));
+            // adds a threshold of 10 minutes to avoid duplicates emails
+            if(Cache::add($key,true, 600 ))
+            {
+                SummitAttendeeTicketEmail::dispatch($ticket)->delay(now()->addMinutes(5));
+            }
             return;
         }
-        Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s is not complete", $this->getEmail()));
+        Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s is not complete", $email));
         $order = $ticket->getOrder();
         // if order owner is ticket owner then dont sent this email
         // buyer is presented the option to fill in the details during the checkout process. Second, buyer will
@@ -388,7 +395,10 @@ class SummitAttendee extends SilverstripeBaseModel
         // they bought a ticket for themselves.
         if($order->getOwnerEmail() !== $ticket->getOwnerEmail() || $overrideTicketOwnerIsSameAsOrderOwnerRule) {
             // no delay
-            InviteAttendeeTicketEditionMail::dispatch($ticket);
+            // adds a threshold of 10 minutes to avoid duplicates emails
+            if(Cache::add($key,true, 600 )) {
+                InviteAttendeeTicketEditionMail::dispatch($ticket);
+            }
         }
     }
 

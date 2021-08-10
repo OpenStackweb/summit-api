@@ -15,6 +15,7 @@
 use App\Events\NewMember;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Main\Repositories\ILegalDocumentRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\Services\Apis\IExternalUserApi;
 use App\Services\Model\dto\ExternalUserDTO;
 use DateTime;
@@ -34,6 +35,9 @@ use models\main\LegalAgreement;
 use models\main\Member;
 use models\main\Organization;
 use models\summit\ISpeakerRegistrationRequestRepository;
+use models\summit\ISummitAttendeeRepository;
+use models\summit\SummitAttendee;
+use models\summit\SummitOrder;
 
 /**
  * Class MemberService
@@ -87,6 +91,16 @@ final class MemberService
     private $legal_document_repository;
 
     /**
+     * @var ISummitOrderRepository
+     */
+    private $order_repository;
+
+    /**
+     * @var ISummitAttendeeRepository
+     */
+    private $attendee_repository;
+
+    /**
      * MemberService constructor.
      * @param IMemberRepository $member_repository
      * @param IOrganizationRepository $organization_repository
@@ -96,6 +110,8 @@ final class MemberService
      * @param IExternalUserApi $external_user_api
      * @param ISpeakerRegistrationRequestRepository $speaker_registration_request_repository
      * @param ILegalDocumentRepository $legal_document_repository
+     * @param ISummitOrderRepository $order_repository
+     * @param ISummitAttendeeRepository $attendee_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -108,6 +124,8 @@ final class MemberService
         IExternalUserApi $external_user_api,
         ISpeakerRegistrationRequestRepository $speaker_registration_request_repository,
         ILegalDocumentRepository $legal_document_repository,
+        ISummitOrderRepository $order_repository,
+        ISummitAttendeeRepository $attendee_repository,
         ITransactionService $tx_service
     )
     {
@@ -120,6 +138,8 @@ final class MemberService
         $this->external_user_api = $external_user_api;
         $this->speaker_registration_request_repository = $speaker_registration_request_repository;
         $this->legal_document_repository = $legal_document_repository;
+        $this->order_repository = $order_repository;
+        $this->attendee_repository = $attendee_repository;
     }
 
     /**
@@ -595,6 +615,36 @@ final class MemberService
             $member->resignMembership();
 
             $this->member_repository->delete($member);
+
+        });
+    }
+
+    public function assocSummitOrders(int $member_id):void{
+
+        $this->tx_service->transaction(function() use($member_id){
+            Log::debug(sprintf("MemberService::assocSummitOrders trying to get member id %s", $member_id));
+            $member = $this->member_repository->getById($member_id);
+            if(is_null($member) || !$member instanceof Member) return;
+
+            // associate orders
+            $orders = $this->order_repository->getAllByOwnerEmail($member->getEmail());
+            if(!is_null($orders)) {
+                foreach ($orders as $order) {
+                    if (!$order instanceof SummitOrder) continue;
+                    Log::debug(sprintf("MemberService::assocSummitOrders got order %s for member %s", $order->getNumber(), $member_id));
+                    $member->addSummitRegistrationOrder($order);
+                }
+            }
+
+            // associate attendees/tickets
+            $attendees = $this->attendee_repository->getByEmail($member->getEmail());
+            if(!is_null($attendees)) {
+                foreach ($attendees as $attendee) {
+                    if (!$attendee instanceof SummitAttendee) continue;
+                    Log::debug(sprintf("MemberService::assocSummitOrders got attendee %s for member %s", $attendee->getId(), $member_id));
+                    $attendee->setMember($member);
+                }
+            }
 
         });
     }

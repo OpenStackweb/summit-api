@@ -12,11 +12,11 @@
  * limitations under the License.
  **/
 
+use App\Jobs\MemberAssocSummitOrders;
 use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Model\IMemberService;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
-use models\main\IGroupRepository;
 use models\main\IMemberRepository;
 use models\main\Member;
 
@@ -242,7 +242,7 @@ final class ResourceServerContext implements IResourceServerContext
 
             $member->setUserExternalId($user_external_id);
             $member->setEmailVerified($user_email_verified);
-
+            MemberAssocSummitOrders::dispatch($member->getId());
             return $synch_groups ? $this->checkGroups($member) : $member;
         });
     }

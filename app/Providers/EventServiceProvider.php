@@ -55,7 +55,7 @@ use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundAccepted;
 use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestAdmin;
 use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestOwner;
 use App\Jobs\Emails\RevocationTicketEmail;
-use App\Jobs\NewMemberAssocSummitOrders;
+use App\Jobs\MemberAssocSummitOrders;
 use App\Jobs\ProcessOrderRefundRequest;
 use App\Jobs\ProcessSummitOrderPaymentConfirmation;
 use App\Jobs\ProcessTicketRefundRequest;
@@ -465,13 +465,13 @@ final class EventServiceProvider extends ServiceProvider
             if(!$event instanceof PaymentSummitRegistrationOrderConfirmed) return;
             $order_id = $event->getOrderId();
             Log::debug(sprintf("EventServiceProvider::PaymentSummitRegistrationOrderConfirmed: firing ProcessSummitOrderPaymentConfirmation for order id %s", $order_id));
-            ProcessSummitOrderPaymentConfirmation::dispatch($order_id)->delay(now()->addSecond(10));
+            ProcessSummitOrderPaymentConfirmation::dispatch($order_id);
         });
 
         Event::listen(NewMember::class, function($event){
             if(!$event instanceof NewMember) return;
             Log::debug(sprintf("EventServiceProvider::NewMember - firing NewMemberAssocSummitOrders member id %s", $event->getMemberId()));
-            NewMemberAssocSummitOrders::dispatchNow($event->getMemberId());
+            MemberAssocSummitOrders::dispatch($event->getMemberId());
         });
 
         Event::Listen(RequestedSummitOrderRefund::class, function($event){

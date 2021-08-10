@@ -116,4 +116,9 @@ interface IMemberService
      * @return void
      */
     public function resignMembership(Member $member);
+
+    /**
+     * @param int $member_id
+     */
+    public function assocSummitOrders(int $member_id):void;
 }

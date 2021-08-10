@@ -13,6 +13,7 @@
  **/
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use libs\utils\FormatUtils;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitRegistrationDiscountCode;
 /**
@@ -87,12 +88,12 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
         $payload['edit_ticket_link'] = sprintf($edit_ticket_link, $base_url, $payload['hash']);
         $payload['ticket_number'] = $ticket->getNumber();
         $payload['ticket_type_name'] = $ticket->getTicketType()->getName();
-        $payload['ticket_raw_amount'] = $ticket->getRawCost();
+        $payload['ticket_raw_amount'] = FormatUtils::getNiceFloat($ticket->getRawCost());
         $payload['ticket_currency'] = $ticket->getCurrency();
-        $payload['ticket_currency_symbol'] = '$';
-        $payload['ticket_discount'] = $ticket->getDiscount();
-        $payload['ticket_taxes'] = $ticket->getTaxesAmount();
-        $payload['ticket_amount'] = $ticket->getFinalAmount();
+        $payload['ticket_currency_symbol'] = $ticket->getCurrencySymbol();
+        $payload['ticket_discount'] = FormatUtils::getNiceFloat($ticket->getDiscount());
+        $payload['ticket_taxes'] = FormatUtils::getNiceFloat($ticket->getTaxesAmount());
+        $payload['ticket_amount'] = FormatUtils::getNiceFloat($ticket->getFinalAmount();)
         $payload['need_details'] = $owner->needToFillDetails();
 
         $promo_code = $ticket->hasPromoCode() ? $ticket->getPromoCode() : null;
@@ -102,7 +103,7 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
 
             if ($promo_code instanceof SummitRegistrationDiscountCode) {
                 $payload['promo_code_discount_rate'] = $promo_code->getRate();
-                $payload['promo_code_discount_amount'] = $promo_code->getAmount();
+                $payload['promo_code_discount_amount'] = FormatUtils::getNiceFloat($promo_code->getAmount());
             }
         }
 

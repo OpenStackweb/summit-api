@@ -74,19 +74,19 @@ class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer
             foreach ($exp_expand as $relation) {
                 switch (trim($relation)) {
                     case 'ticket_type': {
-                        if(!$ticket->hasTicketType()) continue;
+                        if(!$ticket->hasTicketType()) break;
                         unset($values['ticket_type_id']);
                         $values['ticket_type'] = SerializerRegistry::getInstance()->getSerializer($ticket->getTicketType())->serialize(AbstractSerializer::getExpandForPrefix('ticket_type', $expand));
                     }
                         break;
                     case 'badge': {
-                        if(!$ticket->hasBadge()) continue;
+                        if(!$ticket->hasBadge()) break;
                         unset($values['badge_id']);
                         $values['badge'] = SerializerRegistry::getInstance()->getSerializer($ticket->getBadge())->serialize(AbstractSerializer::getExpandForPrefix('badge', $expand));
                     }
                         break;
                     case 'promo_code': {
-                        if(!$ticket->hasPromoCode()) continue;
+                        if(!$ticket->hasPromoCode()) break;
                         unset($values['promo_code_id']);
                         $values['promo_code'] = SerializerRegistry::getInstance()->getSerializer($ticket->getPromoCode())->serialize(AbstractSerializer::getExpandForPrefix('promo_code', $expand));
                     }
@@ -103,7 +103,7 @@ class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer
                     }
                     break;
                     case 'owner': {
-                        if(!$ticket->hasOwner()) continue;
+                        if(!$ticket->hasOwner()) break;
                         unset($values['owner_id']);
                         $values['owner'] = SerializerRegistry::getInstance()->getSerializer($ticket->getOwner())->serialize(AbstractSerializer::getExpandForPrefix('owner', $expand));
                     }

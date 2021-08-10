@@ -13,6 +13,7 @@
  **/
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use libs\utils\FormatUtils;
 use models\summit\SummitOrder;
 use models\summit\SummitRegistrationDiscountCode;
 /**
@@ -40,12 +41,12 @@ class RegisteredMemberOrderPaidMail extends AbstractEmailJob
         }
 
         $summit = $order->getSummit();
-        $payload['order_raw_amount'] = round($order->getRawAmount(),2);
-        $payload['order_amount'] = round($order->getFinalAmount(),2);
+        $payload['order_raw_amount'] = FormatUtils::getNiceFloat($order->getRawAmount());
+        $payload['order_amount'] = FormatUtils::getNiceFloat($order->getFinalAmount());
         $payload['order_currency'] = $order->getCurrency();
-        $payload['order_currency_symbol'] = '$';
-        $payload['order_taxes'] = $order->getTaxesAmount();
-        $payload['order_discount'] = $order->getDiscountAmount();
+        $payload['order_currency_symbol'] = $order->getCurrencySymbol();
+        $payload['order_taxes'] = FormatUtils::getNiceFloat($order->getTaxesAmount());
+        $payload['order_discount'] = FormatUtils::getNiceFloat($order->getDiscountAmount());
         $payload['order_number'] = $order->getNumber();
         $payload['order_qr_value'] = $order->getQRCode();
         $payload['summit_name'] = $summit->getName();
@@ -79,9 +80,9 @@ class RegisteredMemberOrderPaidMail extends AbstractEmailJob
                 'number' => $ticket->getNumber(),
                 'ticket_type_name' => $ticket->getTicketType()->getName(),
                 'has_owner' => false,
-                'price' => round($ticket->getFinalAmount(),2),
-                'currency' => $ticket->getCurrency(),
-                'currency_symbol' => '$',
+                'price' => FormatUtils::getNiceFloat($ticket->getFinalAmount()),
+                'currency' => $ticket->getCurrencySymbol(),
+                'currency_symbol' => $ticket->getCurrencySymbol(),
                 'need_details' => false,
             ];
 
@@ -94,7 +95,7 @@ class RegisteredMemberOrderPaidMail extends AbstractEmailJob
 
                 if ($promo_code instanceof SummitRegistrationDiscountCode) {
                     $promo_code_dto['is_discount'] = true;
-                    $promo_code_dto['discount_amount'] = round($promo_code->getAmount(),2);
+                    $promo_code_dto['discount_amount'] = FormatUtils::getNiceFloat($promo_code->getAmount());
                     $promo_code_dto['discount_rate'] = $promo_code->getRate();
                 }
 

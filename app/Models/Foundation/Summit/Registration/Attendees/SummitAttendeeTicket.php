@@ -270,6 +270,14 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     }
 
     /**
+     * @return string
+     */
+    public function getCurrencySymbol(): ?string
+    {
+        return "$";
+    }
+
+    /**
      * @param string $currency
      */
     public function setCurrency(string $currency): void

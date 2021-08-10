@@ -190,9 +190,9 @@ CSV;
      * @param string $number
      * @return mixed
      */
-    public function testGetTicketByNumber($summit_id = 27, $number = 'SHANGHAI2019_TICKET_5D658DE87978A699249976'){
+    public function testGetTicketByNumber($summit_id = 31, $number = 6107){
         $params = [
-            'summit_id' => $summit_id,
+            'id' => $summit_id,
             'ticket_id' => $number,
             'expand'   => 'order'
         ];

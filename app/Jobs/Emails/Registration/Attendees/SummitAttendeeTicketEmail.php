@@ -14,6 +14,7 @@
 use App\Http\Renderers\SummitAttendeeTicketPDFRenderer;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use libs\utils\FormatUtils;
 use models\summit\SummitAttendeeTicket;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 /**
@@ -73,9 +74,9 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
 
         $payload['ticket_number'] = $ticket->getNumber();
         $payload['ticket_type_name'] = $ticket->getTicketType()->getName();
-        $payload['ticket_amount'] = $ticket->getFinalAmount();
+        $payload['ticket_amount'] = FormatUtils::getNiceFloat($ticket->getFinalAmount());
         $payload['ticket_currency'] = $ticket->getCurrency();
-        $payload['ticket_currency_symbol'] = '$';
+        $payload['ticket_currency_symbol'] = $ticket->getCurrencySymbol();
         $owner_email = $attendee->getEmail();
         $payload['owner_email'] = $owner_email;
         $payload['owner_first_name'] = $attendee->getFirstName();

@@ -14,6 +14,7 @@
 
 use App\Jobs\Emails\AbstractEmailJob;
 use Illuminate\Support\Facades\Config;
+use libs\utils\FormatUtils;
 use models\summit\SummitAttendeeTicket;
 
 /**
@@ -52,8 +53,8 @@ class SummitTicketRefundRequestOwner extends AbstractEmailJob
         $payload['ticket_number'] = $ticket->getNumber();
         $payload['ticket_type_name'] = $ticket->getTicketType()->getName();
         $payload['ticket_currency'] = $ticket->getCurrency();
-        $payload['ticket_amount'] = round($ticket->getFinalAmount(),2);
-        $payload['ticket_currency_symbol'] = '$';
+        $payload['ticket_amount'] = FormatUtils::getNiceFloat($ticket->getFinalAmount());
+        $payload['ticket_currency_symbol'] = $ticket->getCurrencySymbol();
 
         $payload['ticket_promo_code'] = '';
         if ($ticket->hasPromoCode()) {

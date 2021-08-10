@@ -28,3 +28,4 @@ routes.txt
 /storage/logs/
 /ss.sql
 phpunit.xml
+.phpunit.result.cache

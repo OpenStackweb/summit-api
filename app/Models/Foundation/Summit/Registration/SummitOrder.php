@@ -902,6 +902,11 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         return $ticket->getCurrency();
     }
 
+    public function getCurrencySymbol():string{
+        $ticket = $this->tickets->first();
+        return $ticket->getCurrencySymbol();
+    }
+
     /**
      * @return string
      */

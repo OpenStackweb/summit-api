@@ -14,6 +14,7 @@
 
 use App\Jobs\Emails\AbstractEmailJob;
 use Illuminate\Support\Facades\Config;
+use libs\utils\FormatUtils;
 use models\summit\SummitOrder;
 use models\summit\SummitRegistrationDiscountCode;
 
@@ -47,9 +48,9 @@ class SummitOrderRefundRequestOwner extends AbstractEmailJob
         $payload['summit_logo'] = $summit->getLogoUrl();
         $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
         $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
-        $payload['order_amount'] = round($order->getFinalAmount(),2);
+        $payload['order_amount'] = FormatUtils::getNiceFloat($order->getFinalAmount());
         $payload['order_currency'] = $order->getCurrency();
-        $payload['order_currency_symbol'] = "$";
+        $payload['order_currency_symbol'] = $order->getCurrencySymbol();
         $payload['tickets'] = [];
 
         $tickets = [];
@@ -58,9 +59,9 @@ class SummitOrderRefundRequestOwner extends AbstractEmailJob
                 'number' => $ticket->getNumber(),
                 'ticket_type_name' => $ticket->getTicketType()->getName(),
                 'has_owner' => false,
-                'price' => round($ticket->getFinalAmount(),2),
+                'price' => FormatUtils::getNiceFloat($ticket->getFinalAmount()),
                 'currency' => $ticket->getCurrency(),
-                'currency_symbol' => '$',
+                'currency_symbol' => $ticket->getCurrencySymbol(),
                 'need_details' => false,
             ];
             if ($ticket->hasPromoCode()) {
@@ -72,7 +73,7 @@ class SummitOrderRefundRequestOwner extends AbstractEmailJob
 
                 if ($promo_code instanceof SummitRegistrationDiscountCode) {
                     $promo_code_dto['is_discount'] = true;
-                    $promo_code_dto['discount_amount'] = round($promo_code->getAmount(),2);
+                    $promo_code_dto['discount_amount'] = FormatUtils::getNiceFloat($promo_code->getAmount());
                     $promo_code_dto['discount_rate'] = $promo_code->getRate();
                 }
 

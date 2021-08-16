@@ -44,7 +44,20 @@ final class TrackChairPresentationCSVSerializer extends TrackChairPresentationSe
         'public_comments',
         'links',
         'videos',
-        'media_uploads'
+        'media_uploads',
+        'likers',
+        'viewers',
+        'passers',
+        'avg_feedback_rate',
+        'is_published',
+        'head_count',
+        'rsvp_link',
+        'rsvp_template_id',
+        'rsvp_max_user_number',
+        'rsvp_max_user_wait_list_number',
+        'rsvp_regular_count',
+        'rsvp_wait_count',
+        'rsvp_external'
     ];
 
     /**

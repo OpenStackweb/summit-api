@@ -13,6 +13,7 @@
  **/
 use Doctrine\ORM\QueryBuilder;
 use models\main\Member;
+use models\summit\IOrderConstants;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
@@ -74,11 +75,11 @@ final class DoctrineSummitAttendeeRepository
             'has_tickets' => new DoctrineSwitchFilterMapping([
                     'true' => new DoctrineCaseFilterMapping(
                         'true',
-                        sprintf("EXISTS (select t1 from %s t1 where t1.owner = e)", SummitAttendeeTicket::class)
+                        sprintf("EXISTS (select t1 from %s t1 where t1.owner = e and t1.status = '%s')", SummitAttendeeTicket::class, IOrderConstants::PaidStatus)
                     ),
                     'false' => new DoctrineCaseFilterMapping(
                         'false',
-                        sprintf("not EXISTS (select t1 from %s t1 where t1.owner = e)", SummitAttendeeTicket::class)
+                        sprintf("not EXISTS (select t1 from %s t1 where t1.owner = e and t1.status = '%s')", SummitAttendeeTicket::class, IOrderConstants::PaidStatus)
                     ),
                 ]
             ),

@@ -209,7 +209,7 @@ SQL
 
         $query->setParameter("eol", $eol);
         $query->setParameter("status1", IOrderConstants::ReservedStatus);
-        $query->setParameter("status1", IOrderConstants::ErrorStatus);
+        $query->setParameter("status2", IOrderConstants::ErrorStatus);
         return $query->getQuery()->setMaxResults($max)->getResult();
 
     }

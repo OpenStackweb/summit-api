@@ -554,6 +554,8 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 },
                 function () {
                     return [
+                        'start_date' => new EpochCellFormatter(),
+                        'end_date' => new EpochCellFormatter(),
                         'created' => new EpochCellFormatter(),
                         'last_edited' => new EpochCellFormatter(),
                     ];

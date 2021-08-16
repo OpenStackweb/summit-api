@@ -14,12 +14,38 @@
 
 use models\main\Member;
 use models\summit\Presentation;
+
 /**
  * Class TrackChairPresentationCSVSerializer
  * @package ModelSerializers
  */
 final class TrackChairPresentationCSVSerializer extends TrackChairPresentationSerializer
 {
+    protected static $array_mappings = [
+        'SelectorsCount' => 'votes_thumbs_up:json_int',
+        'LikersCount' => 'votes_interested:json_int',
+        'PassersCount' => 'votes_thumbs_down:json_int',
+    ];
+
+    protected static $allowed_fields = [
+        'votes_thumbs_up',
+        'votes_interested',
+        'votes_thumbs_down',
+    ];
+
+    const FieldsToRemove = [
+        'sponsors',
+        'tags',
+        'feedback',
+        'current_attendance',
+        'type',
+        'speakers',
+        'slides',
+        'public_comments',
+        'links',
+        'videos',
+        'media_uploads'
+    ];
 
     /**
      * @param null $expand
@@ -28,19 +54,20 @@ final class TrackChairPresentationCSVSerializer extends TrackChairPresentationSe
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $values = parent::serialize($expand, $fields, $relations, $params);
         $presentation = $this->object;
-        if(!$presentation instanceof Presentation) return $values;
+        if (!$presentation instanceof Presentation) return $values;
 
-        if(isset($values['description'])){
+        if (isset($values['description'])) {
             $values['description'] = strip_tags($values['description']);
         }
-        if(isset($values['attendees_expected_learnt'])){
+        if (isset($values['attendees_expected_learnt'])) {
             $values['attendees_expected_learnt'] = strip_tags($values['attendees_expected_learnt']);
         }
-
+        foreach (self::FieldsToRemove as $field)
+            unset($values[$field]);
         // moderator data
 
         $values['moderator_id'] = "";
@@ -49,10 +76,10 @@ final class TrackChairPresentationCSVSerializer extends TrackChairPresentationSe
         $values['moderator_title'] = "";
         $values['moderator_company'] = "";
 
-        if(isset($values['moderator_speaker_id']))
+        if (isset($values['moderator_speaker_id']))
             unset($values['moderator_speaker_id']);
 
-        if($presentation->hasModerator()){
+        if ($presentation->hasModerator()) {
             $values['moderator_id'] = $presentation->getModerator()->getId();
             $values['moderator_full_name'] = $presentation->getModerator()->getFullName();
             $values['moderator_email'] = $presentation->getModerator()->getEmail();
@@ -68,8 +95,7 @@ final class TrackChairPresentationCSVSerializer extends TrackChairPresentationSe
         $values['speaker_titles'] = "";
         $values['speaker_companies'] = "";
 
-
-        if($presentation->getSpeakers()->count() > 0){
+        if ($presentation->getSpeakers()->count() > 0) {
 
             $speaker_ids = [];
             $speaker_fullnames = [];
@@ -100,9 +126,9 @@ final class TrackChairPresentationCSVSerializer extends TrackChairPresentationSe
         $values['submitter_title'] = "";
         $values['submitter_company'] = "";
 
-        if($presentation->hasCreatedBy()){
+        if ($presentation->hasCreatedBy()) {
             $creator = $presentation->getCreatedBy();
-            if($creator->hasSpeaker()){
+            if ($creator->hasSpeaker()) {
                 $submitter = $creator->getSpeaker();
                 $values['submitter_id'] = $submitter->getId();
                 $values['submitter_full_name'] = $submitter->getFullName();
@@ -115,22 +141,22 @@ final class TrackChairPresentationCSVSerializer extends TrackChairPresentationSe
         // extra questions
 
         $values['extra_questions'] = '';
-        foreach ($presentation->getExtraQuestionAnswers() as $answer){
-            if(!empty($values['extra_questions']))
+        foreach ($presentation->getExtraQuestionAnswers() as $answer) {
+            if (!empty($values['extra_questions']))
                 $values['extra_questions'] = $values['extra_questions'] . '|';
-            $values['extra_questions'] =  $values['extra_questions'] . str_replace(",", "", (string)$answer);
+            $values['extra_questions'] = $values['extra_questions'] . str_replace(",", "", (string)$answer);
         }
 
-        if($presentation->hasCategory()){
+        if ($presentation->hasCategory()) {
             $values['track'] = $presentation->getCategory()->getTitle();
         }
 
         // presentation flags
         $values['presentation_flags'] = '';
-        foreach($presentation->getPresentationActions() as $action){
-            if(!empty($values['presentation_flags']))
+        foreach ($presentation->getPresentationActions() as $action) {
+            if (!empty($values['presentation_flags']))
                 $values['presentation_flags'] = $values['presentation_flags'] . '|';
-            $values['presentation_flags'] =  $values['presentation_flags'] . str_replace(",", "", (string)$action);
+            $values['presentation_flags'] = $values['presentation_flags'] . str_replace(",", "", (string)$action);
         }
 
         return $values;

@@ -1583,6 +1583,7 @@ final class SummitOrderService
      */
     public function revokeReservedOrdersOlderThanNMinutes(int $minutes, int $max = 100): void
     {
+        Log::debug(sprintf("revokeReservedOrdersOlderThanNMinutes minutes %s max %s", $minutes, $max));
         // done in this way to avoid db lock contention
         $orders = $this->tx_service->transaction(function () use ($minutes, $max) {
             return $this->order_repository->getAllReservedOlderThanXMinutes($minutes, $max);
@@ -1597,6 +1598,7 @@ final class SummitOrderService
                     $order = $this->order_repository->getByIdExclusiveLock($order->getId());
                     if (!$order instanceof SummitOrder) return;
                     $summit = $order->getSummit();
+                    Log::debug(sprintf("SummitOrderService::revokeReservedOrdersOlderThanNMinutes processing order %s summit %s", $order->getId(), $summit->getId()));
                     $payment_gateway = $summit->getPaymentGateWayPerApp
                     (
                         IPaymentConstants::ApplicationTypeRegistration,

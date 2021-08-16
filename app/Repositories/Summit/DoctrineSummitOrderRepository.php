@@ -205,11 +205,11 @@ SQL
             ->select("e")
             ->from($this->getBaseEntity(), "e")
             ->where("e.created <= :eol")
-            ->andWhere("e.status = :status");
+            ->andWhere("(e.status = :status1 or e.status = :status2)");
 
         $query->setParameter("eol", $eol);
-        $query->setParameter("status", IOrderConstants::ReservedStatus);
-
+        $query->setParameter("status1", IOrderConstants::ReservedStatus);
+        $query->setParameter("status1", IOrderConstants::ErrorStatus);
         return $query->getQuery()->setMaxResults($max)->getResult();
 
     }

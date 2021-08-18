@@ -114,7 +114,9 @@ final class DoctrineSummitAttendeeRepository
             'id'                => 'e.id',
             'first_name'        => 'e.first_name',
             'last_name'         => 'e.surname',
-            "full_name"         => "LOWER(CONCAT(e.first_name, ' ', e.surname))",
+            "full_name"         => <<<SQL
+COALESCE(LOWER(CONCAT(e.first_name, ' ', e.surname)), LOWER(CONCAT(m.first_name, ' ', m.last_name)))
+SQL,
             'external_order_id' => 't.external_order_id',
             'company'           => 'e.company_name',
             'member_id'         => 'm.id',

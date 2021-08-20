@@ -13,6 +13,7 @@
  **/
 use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
+use libs\utils\JsonUtils;
 use models\main\Member;
 use models\summit\Presentation;
 /**
@@ -40,6 +41,9 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
             $serializerType = SerializerRegistry::SerializerType_Private;
         }
 
+        // local dates
+        $values['start_date'] = $presentation->getLocalStartDate()->getTimestamp();
+        $values['end_date'] = $presentation->getLocalEndDate()->getTimestamp();
         // moderator data
 
         $values['moderator_id'] = "";

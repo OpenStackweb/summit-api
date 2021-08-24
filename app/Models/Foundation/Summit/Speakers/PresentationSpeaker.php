@@ -320,7 +320,8 @@ class PresentationSpeaker extends SilverstripeBaseModel
         $this->irc_handle = $irc_handle;
     }
 
-    private static function parseTwitterUsername(string $username):string{
+    private static function parseTwitterUsername(?string $username):?string{
+        if(empty($username)) return $username;
         if(preg_match('/https:\/\/twitter\.com\/(.*)/', $username, $matches)){
             $username = '@'.$matches[count($matches) - 1];
         }
@@ -1671,14 +1672,23 @@ SQL;
         if(empty($photoUrl)  && $this->hasMember() && $this->member->hasPhoto() && $photo = $this->member->getPhoto()){
             $photoUrl =  $photo->getUrl();
         }
-        if(empty($photoUrl) && !empty($this->getTwitterName()) ){
-            $twitterName = $this->getTwitterName();
-            $photoUrl = sprintf("https://avatars.io/twitter/%s", trim(trim($twitterName, '@')));
+        if(empty($photoUrl) && !empty($this->getEmail()) ){
+            $photoUrl = $this->getGravatarUrl();
         }
         if(empty($photoUrl)){
             $photoUrl = File::getCloudLinkForImages("generic-speaker-icon.png");
         }
         return $photoUrl;
+    }
+
+    /**
+     * Get either a Gravatar URL or complete image tag for a specified email address.
+     */
+    private function getGravatarUrl(): string
+    {
+        $url = 'https://www.gravatar.com/avatar/';
+        $url .= md5(strtolower(trim($this->getEmail())));
+        return $url;
     }
 
     /**

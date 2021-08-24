@@ -116,7 +116,6 @@ class SponsoredProject extends SilverstripeBaseModel
      */
     private $sponsorship_types;
 
-
     /**
      * SponsoredProject constructor.
      */

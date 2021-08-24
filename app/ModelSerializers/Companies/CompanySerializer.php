@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use models\main\Company;
+use Libs\ModelSerializers\AbstractSerializer;
 /**
  * Class CompanySerializer
  * @package ModelSerializers
@@ -41,6 +42,11 @@ final class CompanySerializer extends SilverStripeSerializer
         'Color' => 'color:json_color',
     ];
 
+    protected static $allowed_relations = [
+        'sponsorships',
+        'project_sponsorships',
+    ];
+
     /**
      * @param null $expand
      * @param array $fields
@@ -53,6 +59,51 @@ final class CompanySerializer extends SilverStripeSerializer
         $values = parent::serialize($expand, $fields, $relations, $params);
         $company = $this->object;
         if(!$company instanceof Company) return $values;
+
+        if (in_array('sponsorships', $relations)) {
+            $sponsorships = [];
+            foreach ($company->getSponsorships() as $s) {
+                $sponsorships[] = $s->getId();
+            }
+            $values['sponsorships'] = $sponsorships;
+        }
+
+        if (in_array('sponsorships', $relations)) {
+            $project_sponsorships = [];
+            foreach ($company->getProjectSponsorships() as $ps) {
+                $project_sponsorships[] = $ps->getId();
+            }
+            $values['project_sponsorships'] = $project_sponsorships;
+        }
+
+        if (!empty($expand)) {
+            foreach (explode(',', $expand) as $relation) {
+                $relation = trim($relation);
+                switch ($relation) {
+                    case 'sponsorships':
+                    {
+                        $sponsorships = [];
+                        foreach ($company->getSponsorships() as $s) {
+                            $sponsorships[] = SerializerRegistry::getInstance()->getSerializer($s)
+                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $values['sponsorships'] = $sponsorships;
+                    }
+                    break;
+                    case 'project_sponsorships':
+                    {
+                        $project_sponsorships = [];
+                        foreach ($company->getProjectSponsorships() as $ps) {
+                            $project_sponsorships[] = SerializerRegistry::getInstance()->getSerializer($ps)
+                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $values['project_sponsorships'] = $project_sponsorships;
+                    }
+                    break;
+                  }
+            }
+        }
+
         return $values;
     }
 }

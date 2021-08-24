@@ -148,6 +148,13 @@ class Company extends SilverstripeBaseModel
     private $sponsorships;
 
     /**
+     * @ORM\OneToMany(targetEntity="SupportingCompany", mappedBy="company", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OrderBy({"order" = "ASC"})
+     * @var SupportingCompany[]
+     */
+    private $project_sponsorships;
+
+    /**
      * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist", "remove"})
      * @ORM\JoinColumn(name="LogoID", referencedColumnName="ID")
      * @var File
@@ -168,6 +175,7 @@ class Company extends SilverstripeBaseModel
     {
         parent::__construct();
         $this->sponsorships = new ArrayCollection();
+        $this->project_sponsorships = new ArrayCollection();
         $this->featured = false;
         $this->display_on_site = false;
         $this->is_deleted = false;
@@ -599,4 +607,21 @@ class Company extends SilverstripeBaseModel
     }
 
 
+    /**
+     * @return array|ProjectSponsorshipType[]
+     */
+    public function getProjectSponsorships(){
+        $res = [];
+        foreach ($this->project_sponsorships as $supporting_company){
+            $res[] = $supporting_company->getSponsorshipType();
+        }
+        return $res;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getSponsorships(){
+        return $this->sponsorships;
+    }
 }

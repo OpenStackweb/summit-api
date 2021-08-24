@@ -36,7 +36,7 @@ class SupportingCompany extends BaseEntity implements IOrderable
     ];
 
     /**
-     * @ORM\ManyToOne(targetEntity="Company", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="Company", fetch="EXTRA_LAZY", inversedBy="project_sponsorships")
      * @ORM\JoinColumn(name="CompanyID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Company
      */

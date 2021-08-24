@@ -320,20 +320,29 @@ class PresentationSpeaker extends SilverstripeBaseModel
         $this->irc_handle = $irc_handle;
     }
 
+    private static function parseTwitterUsername(string $username):string{
+        if(preg_match('/https:\/\/twitter\.com\/(.*)/', $username, $matches)){
+            $username = '@'.$matches[count($matches) - 1];
+        }
+        if(strpos( $username,'@') === false)
+            $username = '@'.$username;
+        return $username;
+    }
+
     /**
      * @return string
      */
     public function getTwitterName()
     {
-        return urlencode($this->twitter_name);
+        return self::parseTwitterUsername($this->twitter_name);
     }
 
     /**
      * @param string $twitter_name
      */
-    public function setTwitterName($twitter_name)
+    public function setTwitterName(string $twitter_name)
     {
-        $this->twitter_name = $twitter_name;
+        $this->twitter_name = self::parseTwitterUsername($twitter_name);
     }
 
     public function __construct()

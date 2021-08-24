@@ -42,8 +42,14 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
         }
 
         // local dates
-        $values['start_date'] = $presentation->getLocalStartDate()->getTimestamp();
-        $values['end_date'] = $presentation->getLocalEndDate()->getTimestamp();
+        $localStartDate = $presentation->getLocalStartDate();
+        if(!is_null($localStartDate))
+            $values['start_date'] = $localStartDate->getTimestamp();
+
+        $localEndDate = $presentation->getLocalEndDate();
+        if(!is_null($localEndDate))
+            $values['end_date'] = $localEndDate->getTimestamp();
+
         // moderator data
 
         $values['moderator_id'] = "";

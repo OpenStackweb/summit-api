@@ -38,68 +38,9 @@ SQL;
         $this->addSql($sql);
 
         $sql = <<<SQL
-alter table SummitOrderExtraQuestionType
-drop column ClassName;
-SQL;
-        $this->addSql($sql);
-
-        $sql = <<<SQL
-alter table SummitOrderExtraQuestionType
-drop column Created;
-SQL;
-        $this->addSql($sql);
-
-        $sql = <<<SQL
-alter table SummitOrderExtraQuestionType
-drop column LastEdited;
-SQL;
-        $this->addSql($sql);
-
-        $sql = <<<SQL
-alter table SummitOrderExtraQuestionType
-drop column Name;
-SQL;
-        $this->addSql($sql);
-
-        $sql = <<<SQL
-alter table SummitOrderExtraQuestionType
-drop column Type;
-SQL;
-        $this->addSql($sql);
-
-        $sql = <<<SQL
-alter table SummitOrderExtraQuestionType
-drop column Label;
-SQL;
-        $this->addSql($sql);
-
-        $sql = <<<SQL
-alter table SummitOrderExtraQuestionType
-drop column `Order`;
-SQL;
-        $this->addSql($sql);
-
-        $sql = <<<SQL
-alter table SummitOrderExtraQuestionType
-drop column Mandatory;
-SQL;
-        $this->addSql($sql);
-
-        $sql = <<<SQL
-alter table SummitOrderExtraQuestionType
-drop column Placeholder;
-SQL;
-        $this->addSql($sql);
-
-        $sql = <<<SQL
 INSERT INTO ExtraQuestionTypeValue (ID,ClassName,LastEdited,Created,Value,Label,`Order`,QuestionID)
 SELECT ID,'ExtraQuestionTypeValue',LastEdited,Created,Value,Label,`Order`,QuestionID
 FROM SummitOrderExtraQuestionValue;
-SQL;
-        $this->addSql($sql);
-
-        $sql = <<<SQL
-DROP TABLE SummitOrderExtraQuestionValue;
 SQL;
         $this->addSql($sql);
 
@@ -108,36 +49,6 @@ INSERT INTO ExtraQuestionAnswer
 (ID, Created,LastEdited,ClassName,Value,QuestionID)
 SELECT ID,Created,LastEdited,'SummitOrderExtraQuestionAnswer',Value,QuestionID
 FROM SummitOrderExtraQuestionAnswer;
-SQL;
-        $this->addSql($sql);
-
-        $sql = <<<SQL
-ALTER TABLE SummitOrderExtraQuestionAnswer
-DROP COLUMN ClassName;
-SQL;
-        $this->addSql($sql);
-
-        $sql = <<<SQL
-ALTER TABLE SummitOrderExtraQuestionAnswer
-DROP COLUMN LastEdited;
-SQL;
-        $this->addSql($sql);
-
-        $sql = <<<SQL
-ALTER TABLE SummitOrderExtraQuestionAnswer
-DROP COLUMN Created;
-SQL;
-        $this->addSql($sql);
-
-        $sql = <<<SQL
-ALTER TABLE SummitOrderExtraQuestionAnswer
-DROP COLUMN Value;
-SQL;
-        $this->addSql($sql);
-
-        $sql = <<<SQL
-ALTER TABLE SummitOrderExtraQuestionAnswer
-DROP COLUMN QuestionID;
 SQL;
         $this->addSql($sql);
 

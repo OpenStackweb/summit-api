@@ -82,15 +82,6 @@ final class TrackChairPresentationCSVSerializer extends TrackChairPresentationSe
         foreach (self::FieldsToRemove as $field)
             unset($values[$field]);
 
-        // local dates
-        $localStartDate = $presentation->getLocalStartDate();
-        if(!is_null($localStartDate))
-            $values['start_date'] = $localStartDate->getTimestamp();
-
-        $localEndDate = $presentation->getLocalEndDate();
-        if(!is_null($localEndDate))
-            $values['end_date'] = $localEndDate->getTimestamp();
-
         // moderator data
 
         $values['moderator_id'] = "";

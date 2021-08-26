@@ -58,6 +58,7 @@ final class CompanySerializer extends SilverStripeSerializer
     {
         $values = parent::serialize($expand, $fields, $relations, $params);
         $company = $this->object;
+        if(!count($relations)) $relations = $this->getAllowedRelations();
         if(!$company instanceof Company) return $values;
 
         if (in_array('sponsorships', $relations)) {

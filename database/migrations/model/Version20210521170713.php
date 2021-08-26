@@ -24,7 +24,7 @@ class Version20210521170713 extends AbstractMigration
      */
     public function up(Schema $schema):void
     {
-
+/*
 
         $sql = <<<SQL
 insert into ExtraQuestionType(ID,ClassName,Created,LastEdited,Name,Type,Label,`Order`, Mandatory, Placeholder)
@@ -169,6 +169,7 @@ FOREIGN KEY (ID) REFERENCES ExtraQuestionAnswer (ID) ON DELETE CASCADE;
 SQL;
         $this->addSql($sql);
 
+*/
     }
 
     /**

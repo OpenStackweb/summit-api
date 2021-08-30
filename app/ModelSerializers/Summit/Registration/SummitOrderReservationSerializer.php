@@ -28,5 +28,6 @@ class SummitOrderReservationSerializer extends SummitOrderBaseSerializer
         'PaymentGatewayCartId'      => 'payment_gateway_cart_id:json_string',
         'Hash'                      => 'hash:json_string',
         'HashCreationDate'          => 'hash_creation_date:datetime_epoch',
+        'RefundedAmount'            => 'refunded_amount:json_float',
     ];
 }

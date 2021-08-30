@@ -146,6 +146,8 @@ abstract class RetrieveSummitEventsStrategy
             'selection_status' => ['=='],
             'id'               => ['=='],
             'selection_plan_id' => ['=='],
+            'created_by_fullname'  => ['=@', '=='],
+            'created_by_email'  => ['=@', '=='],
         ];
     }
 
@@ -172,6 +174,8 @@ abstract class RetrieveSummitEventsStrategy
             'location_id'     => 'sometimes|integer',
             'id'              => 'sometimes|integer',
             'selection_plan_id' => 'sometimes|integer',
+            'created_by_fullname'  => 'sometimes|string',
+            'created_by_email'  => 'sometimes|string',
         ];
     }
 }

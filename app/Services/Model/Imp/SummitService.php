@@ -700,7 +700,6 @@ final class SummitService extends AbstractService implements ISummitService
             }
 
             $event_type = null;
-
             if (isset($data['type_id'])) {
                 $event_type = $summit->getEventType(intval($data['type_id']));
                 if (is_null($event_type)) {
@@ -709,7 +708,6 @@ final class SummitService extends AbstractService implements ISummitService
             }
 
             $track = null;
-
             if (isset($data['track_id'])) {
                 $track = $summit->getPresentationCategory(intval($data['track_id']));
                 if (is_null($track)) {
@@ -768,6 +766,17 @@ final class SummitService extends AbstractService implements ISummitService
                     $event->setType($event_type);
                 SummitEventFactory::populate($event, $data);
             }
+
+            $created_by = null;
+            if (isset($data['created_by_id'])) {
+                $created_by = $this->member_repository->getById(intval($data['created_by_id']));
+                if (is_null($created_by) && intval($data['created_by_id']) > 0) {
+                    throw new EntityNotFoundException(sprintf("member id %s does not exists!", $data['created_by_id']));
+                }
+            }
+
+            if(!is_null($created_by)) // override
+                $event->setCreatedBy($created_by);
 
             $event->setUpdatedBy($current_member);
 

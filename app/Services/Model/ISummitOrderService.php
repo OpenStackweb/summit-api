@@ -100,7 +100,7 @@ interface ISummitOrderService extends IProcessPaymentService
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function addTicket(Summit $summit, int $order_id, array $payload):SummitAttendeeTicket;
+    public function addTickets(Summit $summit, int $order_id, array $payload):SummitOrder;
 
     /**
      * @param Summit $summit
@@ -213,7 +213,7 @@ interface ISummitOrderService extends IProcessPaymentService
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function createOrderSingleTicket(Summit $summit, array $payload):SummitOrder;
+    public function createOfflineOrder(Summit $summit, array $payload):SummitOrder;
 
     /**
      * @param Summit $summit

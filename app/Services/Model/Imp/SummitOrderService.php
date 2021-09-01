@@ -1772,31 +1772,31 @@ final class SummitOrderService
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function createOrderSingleTicket(Summit $summit, array $payload): SummitOrder
+    public function createOfflineOrder(Summit $summit, array $payload): SummitOrder
     {
         $order = $this->tx_service->transaction(function () use ($summit, $payload) {
-            Log::debug(sprintf("SummitOrderService::createOrderSingleTicket summit %s payload %s", $summit->getId(), json_encode($payload)));
+            Log::debug(sprintf("SummitOrderService::createOfflineOrder summit %s payload %s", $summit->getId(), json_encode($payload)));
             // lock ticket type stock
             $owner = null;
             $ticket_type = $this->ticket_type_repository->getByIdExclusiveLock(intval($payload['ticket_type_id']));
 
             if (is_null($ticket_type) || !$ticket_type instanceof SummitTicketType || $ticket_type->getSummitId() != $summit->getId()) {
-                Log::warning("SummitOrderService::createOrderSingleTicket ticket type not found");
+                Log::warning("SummitOrderService::createOfflineOrder ticket type not found");
                 throw new EntityNotFoundException("ticket type not found");
             }
 
             // check owner
             if (isset($payload['owner_id'])) {
-                Log::debug(sprintf("SummitOrderService::createOrderSingleTicket trying to get member by id %s", $payload['owner_id']));
+                Log::debug(sprintf("SummitOrderService::createOfflineOrder trying to get member by id %s", $payload['owner_id']));
                 $owner = $this->member_repository->getById(intval($payload['owner_id']));
                 if (is_null($owner)) {
-                    Log::warning("SummitOrderService::createOrderSingleTicket owner not found");
+                    Log::warning("SummitOrderService::createOfflineOrder owner not found");
                     throw new EntityNotFoundException("owner not found");
                 }
             }
 
             if (is_null($owner) && isset($payload['owner_email'])) {
-                Log::debug(sprintf("SummitOrderService::createOrderSingleTicket trying to get member by email %s", $payload['owner_email']));
+                Log::debug(sprintf("SummitOrderService::createOfflineOrder trying to get member by email %s", $payload['owner_email']));
                 // if not try by email
                 $owner = $this->member_repository->getByEmail(trim($payload['owner_email']));
             }
@@ -1805,7 +1805,7 @@ final class SummitOrderService
             $attendee = !is_null($owner) ? $summit->getAttendeeByMember($owner) : null;
 
             if (is_null($attendee) && isset($payload['owner_email'])) {
-                Log::debug(sprintf("SummitOrderService::createOrderSingleTicket trying to get attendee by email %s", $payload['owner_email']));
+                Log::debug(sprintf("SummitOrderService::createOfflineOrder trying to get attendee by email %s", $payload['owner_email']));
                 $attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($payload['owner_email']));
             }
 
@@ -1815,19 +1815,19 @@ final class SummitOrderService
 
             if (is_null($attendee)) {
                 // create it
-                Log::debug(sprintf("SummitOrderService::createOrderSingleTicket attendee is null"));
+                Log::debug(sprintf("SummitOrderService::createOfflineOrder attendee is null"));
                 //first name
                 $first_name = isset($payload['owner_first_name']) ? trim($payload['owner_first_name']) : null;
                 if (empty($first_name) && !is_null($owner) && !is_null($owner->getFirstName())) $first_name = $owner->getFirstName();
                 if (empty($first_name)) {
-                    Log::warning("SummitOrderService::createOrderSingleTicket owner firstname is null");
+                    Log::warning("SummitOrderService::createOfflineOrder owner firstname is null");
                     throw new ValidationException("you must provide an owner_first_name or a valid owner_id");
                 }
                 // surname
                 $surname = isset($payload['owner_last_name']) ? trim($payload['owner_last_name']) : null;
                 if (empty($surname) && !is_null($owner) && !is_null($owner->getLastName())) $surname = $owner->getLastName();
                 if (empty($surname)) {
-                    Log::warning("SummitOrderService::createOrderSingleTicket owner surname is null");
+                    Log::warning("SummitOrderService::createOfflineOrder owner surname is null");
                     throw new ValidationException("you must provide an owner_last_name or a valid owner_id");
                 }
                 // mail
@@ -1837,7 +1837,7 @@ final class SummitOrderService
 
                 if (empty($email) && !is_null($owner)) $email = $owner->getEmail();
                 if (empty($email)) {
-                    Log::warning("SummitOrderService::createOrderSingleTicket owner email is null");
+                    Log::warning("SummitOrderService::createOfflineOrder owner email is null");
                     throw new ValidationException("you must provide an owner_email or a valid owner_id");
                 }
 
@@ -1859,52 +1859,20 @@ final class SummitOrderService
                 $order->generateNumber();
             } while (1);
 
-            Log::debug(sprintf("SummitOrderService::createOrderSingleTicket order number %s", $order->getNumber()));
-            $default_badge_type = $summit->getDefaultBadgeType();
-
-            if (is_null($default_badge_type)) {
-                Log::warning("SummitOrderService::createOrderSingleTicket default_badge_type is null");
-                throw new ValidationException(sprintf("summit %s does not has a default badge type", $summit->getId()));
-            }
+            Log::debug(sprintf("SummitOrderService::createOfflineOrder order number %s", $order->getNumber()));
 
             $order->setPaymentMethodOffline();
 
-            // create ticket
+            // create tickets
+            $ticket_qty = isset($payload["ticket_qty"]) ? intval($payload["ticket_qty"]) : 1;
 
-            $ticket = new SummitAttendeeTicket();
-            $ticket->setOrder($order);
-            $ticket->setOwner($attendee);
-            $ticket->setTicketType($ticket_type);
-            $ticket->generateNumber();
-            $ticket_type->sell(1);
+            Log::debug(sprintf("SummitOrderService::createOfflineOrder ticket_qty %s", $ticket_qty));
 
-            do {
-                if (!$this->ticket_repository->existNumber($ticket->getNumber()))
-                    break;
-                $ticket->generateNumber();
-            } while (1);
+            $order = $this->createTicketsForOrder($order, $ticket_type, $ticket_qty , $attendee);
 
-            Log::debug(sprintf("SummitOrderService::createOrderSingleTicket ticket number %s", $ticket->getNumber()));
-
-            if (!$ticket->hasBadge()) {
-                $ticket->setBadge(SummitBadgeType::buildBadgeFromType($default_badge_type));
-            }
-
-            // promo code usage
-            $promo_code = isset($payload['promo_code']) ? $this->promo_code_repository->getByValueExclusiveLock($summit, trim($payload['promo_code'])) : null;
-            if (!is_null($promo_code)) {
-                $promo_code->addUsage(1);
-                $promo_code->applyTo($ticket);
-            }
-
-            $ticket->applyTaxes($summit->getTaxTypes()->toArray());
-            $order->addTicket($ticket);
             if (!is_null($owner)) {
                 $owner->addSummitRegistrationOrder($order);
             }
-
-            $ticket->generateHash();
-            $ticket->generateQRCode();
 
             $summit->addAttendee($attendee);
             $summit->addOrder($order);
@@ -1916,7 +1884,75 @@ final class SummitOrderService
 
         return $this->tx_service->transaction(function () use ($order) {
             $order->setPaid();
-            Log::debug(sprintf("SummitOrderService::createOrderSingleTicket order number %s mark as paid", $order->getNumber()));
+            Log::debug(sprintf("SummitOrderService::createOfflineOrder order number %s mark as paid", $order->getNumber()));
+            return $order;
+        });
+    }
+
+    /**
+     * @param SummitOrder $order
+     * @param SummitTicketType $ticket_type
+     * @param int $ticket_qty
+     * @param SummitAttendee|null $attendee
+     * @return SummitOrder
+     * @throws \Exception
+     */
+    private function createTicketsForOrder
+    (
+        SummitOrder $order,
+        SummitTicketType $ticket_type,
+        int $ticket_qty = 1,
+        SummitAttendee $attendee = null
+    ):SummitOrder{
+
+        return $this->tx_service->transaction(function () use ($order, $ticket_type, $ticket_qty, $attendee) {
+
+            $summit = $order->getSummit();
+
+            $default_badge_type = $summit->getDefaultBadgeType();
+
+            if (is_null($default_badge_type)) {
+                Log::warning("SummitOrderService::createTicketsForOrder default_badge_type is null");
+                throw new ValidationException(sprintf("summit %s does not has a default badge type", $summit->getId()));
+            }
+
+            for ($i = 0; $i < $ticket_qty; $i++) {
+
+                $ticket = new SummitAttendeeTicket();
+                $ticket->setOrder($order);
+
+                if ($ticket_qty == 1 && !is_null($attendee))
+                    $ticket->setOwner($attendee);
+
+                $ticket->setTicketType($ticket_type);
+                $ticket->generateNumber();
+                $ticket_type->sell(1);
+
+                do {
+                    if (!$this->ticket_repository->existNumber($ticket->getNumber()))
+                        break;
+                    $ticket->generateNumber();
+                } while (1);
+
+                Log::debug(sprintf("SummitOrderService::createTicketsForOrder ticket number %s", $ticket->getNumber()));
+
+                if (!$ticket->hasBadge()) {
+                    $ticket->setBadge(SummitBadgeType::buildBadgeFromType($default_badge_type));
+                }
+
+                // promo code usage
+                $promo_code = isset($payload['promo_code']) ? $this->promo_code_repository->getByValueExclusiveLock($summit, trim($payload['promo_code'])) : null;
+                if (!is_null($promo_code)) {
+                    $promo_code->addUsage(1);
+                    $promo_code->applyTo($ticket);
+                }
+
+                $ticket->applyTaxes($summit->getTaxTypes()->toArray());
+                $order->addTicket($ticket);
+                $ticket->generateHash();
+                $ticket->generateQRCode();
+            }
+
             return $order;
         });
     }
@@ -2416,14 +2452,32 @@ final class SummitOrderService
      * @param Summit $summit
      * @param int $order_id
      * @param array $payload
-     * @return SummitAttendeeTicket
+     * @return SummitOrder
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function addTicket(Summit $summit, int $order_id, array $payload): SummitAttendeeTicket
+    public function addTickets(Summit $summit, int $order_id, array $payload): SummitOrder
     {
         return $this->tx_service->transaction(function () use ($summit, $order_id, $payload) {
+            $order = $this->order_repository->getByIdExclusiveLock($order_id);
+            if (is_null($order) || !$order instanceof SummitOrder)
+                throw new EntityNotFoundException("order not found");
 
+            if($summit->getId() != $order->getSummitId())
+                throw new EntityNotFoundException("order not found");
+
+            $ticket_type = $this->ticket_type_repository->getByIdExclusiveLock(intval($payload['ticket_type_id']));
+
+            if (is_null($ticket_type) || !$ticket_type instanceof SummitTicketType || $ticket_type->getSummitId() != $summit->getId()) {
+                Log::warning("SummitOrderService::addTicket ticket type not found");
+                throw new EntityNotFoundException("ticket type not found");
+            }
+
+            $ticket_qty = isset($payload["ticket_qty"]) ? intval($payload["ticket_qty"]) : 1;
+
+            $order = $this->createTicketsForOrder($order, $ticket_type, $ticket_qty);
+
+            return $order;
         });
     }
 
@@ -2897,7 +2951,7 @@ final class SummitOrderService
                             return;
                         }
 
-                        $order = $this->createOrderSingleTicket($summit,
+                        $order = $this->createOfflineOrder($summit,
                             [
                                 'ticket_type_id' => $ticket_type->getId(),
                                 'attendee' => $attendee,

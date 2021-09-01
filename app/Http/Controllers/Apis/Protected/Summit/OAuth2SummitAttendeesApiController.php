@@ -685,7 +685,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             if ($attendee->hasMember())
                 $payload['owner_id'] = $attendee->getMemberId();
 
-            $ticket = $this->summit_order_service->createOrderSingleTicket($summit, $payload);
+            $ticket = $this->summit_order_service->createOfflineOrder($summit, $payload);
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize
             (

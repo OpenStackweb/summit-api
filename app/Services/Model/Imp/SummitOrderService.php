@@ -1868,7 +1868,7 @@ final class SummitOrderService
 
             Log::debug(sprintf("SummitOrderService::createOfflineOrder ticket_qty %s", $ticket_qty));
 
-            $order = $this->createTicketsForOrder($order, $ticket_type, $ticket_qty , $attendee);
+            $order = $this->createTicketsForOrder($order, $ticket_type, $ticket_qty , $payload['promo_code'] ?? null, $attendee);
 
             if (!is_null($owner)) {
                 $owner->addSummitRegistrationOrder($order);
@@ -1893,6 +1893,7 @@ final class SummitOrderService
      * @param SummitOrder $order
      * @param SummitTicketType $ticket_type
      * @param int $ticket_qty
+     * @param string|null $promo_code
      * @param SummitAttendee|null $attendee
      * @return SummitOrder
      * @throws \Exception
@@ -1902,10 +1903,11 @@ final class SummitOrderService
         SummitOrder $order,
         SummitTicketType $ticket_type,
         int $ticket_qty = 1,
-        SummitAttendee $attendee = null
+        ?string $promo_code = null,
+        ?SummitAttendee $attendee = null
     ):SummitOrder{
 
-        return $this->tx_service->transaction(function () use ($order, $ticket_type, $ticket_qty, $attendee) {
+        return $this->tx_service->transaction(function () use ($order, $ticket_type, $ticket_qty, $promo_code, $attendee) {
 
             $summit = $order->getSummit();
 
@@ -1941,11 +1943,14 @@ final class SummitOrderService
                 }
 
                 // promo code usage
-                $promo_code = isset($payload['promo_code']) ? $this->promo_code_repository->getByValueExclusiveLock($summit, trim($payload['promo_code'])) : null;
-                if (!is_null($promo_code)) {
-                    Log::debug(sprintf("SummitOrderService::createTicketsForOrder applying promo code %s", $promo_code->getCode()));
-                    $promo_code->addUsage(1);
-                    $promo_code->applyTo($ticket);
+                if (!empty($promo_code)) {
+                    $pc = $this->promo_code_repository->getByValueExclusiveLock($summit, trim($promo_code));
+                    if(is_null($pc)){
+                        throw new EntityNotFoundException(sprintf("Promo code %s not found.", $promo_code));
+                    }
+                    Log::debug(sprintf("SummitOrderService::createTicketsForOrder applying promo code %s", $pc->getCode()));
+                    $pc->addUsage(1);
+                    $pc->applyTo($ticket);
                 }
 
                 $ticket->applyTaxes($summit->getTaxTypes()->toArray());
@@ -2476,7 +2481,7 @@ final class SummitOrderService
 
             $ticket_qty = isset($payload["ticket_qty"]) ? intval($payload["ticket_qty"]) : 1;
 
-            $order = $this->createTicketsForOrder($order, $ticket_type, $ticket_qty);
+            $order = $this->createTicketsForOrder($order, $ticket_type, $ticket_qty, $payload['promo_code'] ?? null);
 
             return $order;
         });

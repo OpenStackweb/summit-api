@@ -285,9 +285,9 @@ final class DoctrineSummitEventRepository
             ),
             'created_by_fullname' => new DoctrineFilterMapping
              (
-                "concat(c.first_name, ' ', c.last_name) :operator :value "
+                "concat(cb.first_name, ' ', cb.last_name) :operator :value "
              ),
-            'created_by_email' => 'c.email',
+            'created_by_email' => 'cb.email',
         ];
     }
 
@@ -339,7 +339,7 @@ final class DoctrineSummitEventRepository
             ->from($this->getBaseEntity(), "e")
             ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')
             ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
-            ->leftJoin("e.created_by", 'c', Join::LEFT_JOIN)
+            ->leftJoin("e.created_by", 'cb', Join::LEFT_JOIN)
             ->leftJoin("e.category", 'cc', Join::LEFT_JOIN)
             ->leftJoin("e.sponsors", "sprs", Join::LEFT_JOIN)
             ->leftJoin("p.speakers", "sp", Join::LEFT_JOIN)

@@ -1943,6 +1943,7 @@ final class SummitOrderService
                 // promo code usage
                 $promo_code = isset($payload['promo_code']) ? $this->promo_code_repository->getByValueExclusiveLock($summit, trim($payload['promo_code'])) : null;
                 if (!is_null($promo_code)) {
+                    Log::debug(sprintf("SummitOrderService::createTicketsForOrder applying promo code %s", $promo_code->getCode()));
                     $promo_code->addUsage(1);
                     $promo_code->applyTo($ticket);
                 }

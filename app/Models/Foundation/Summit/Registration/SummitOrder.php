@@ -454,10 +454,13 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getOwnerFirstName(): ?string
     {
+        $res = '';
         if($this->hasOwner()){
-            return $this->owner->getFirstName();
+            $res = $this->owner->getFirstName();
         }
-        return $this->owner_first_name;
+        if(empty($res))
+            $res = $this->owner_first_name;
+        return $res;
     }
 
     /**
@@ -473,10 +476,13 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getOwnerSurname(): ?string
     {
+        $res = '';
         if($this->hasOwner()){
-            return $this->owner->getLastName();
+            $res = $this->owner->getLastName();
         }
-        return $this->owner_surname;
+        if(empty($res))
+            $res = $this->owner_surname;
+        return $res;
     }
 
     /**

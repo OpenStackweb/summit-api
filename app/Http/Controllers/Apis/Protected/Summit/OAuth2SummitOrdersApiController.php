@@ -764,23 +764,26 @@ final class OAuth2SummitOrdersApiController
      */
     public function addTicket($summit_id, $order_id){
         try {
+
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $payload = $this->getJsonPayload([
                 'ticket_type_id'      => 'required|integer',
+                'ticket_qty'          => 'required|integer|min:1',
+                'promo_code'          => 'sometimes|string',
                 'badge_type_id'       => 'nullable|integer',
                 'attendee_first_name' => 'nullable|string|max:255',
                 'attendee_last_name'  => 'nullable|string|max:255',
-                'attendee_email'      => 'required|string|max:255|email',
+                'attendee_email'      => 'sometimes|string|max:255|email',
                 'attendee_company'    => 'nullable|string|max:255',
                 'disclaimer_accepted' => 'nullable|boolean',
                 'extra_questions'     => 'sometimes|extra_question_dto_array'
             ]);
 
-            $ticket = $this->service->addTicket($summit, intval($order_id), $payload);
+            $order = $this->service->addTickets($summit, intval($order_id), $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize( Request::input('expand', '')));
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($order)->serialize(Request::input('expand', '')));
 
         }
         catch(\InvalidArgumentException $ex){
@@ -1112,8 +1115,9 @@ final class OAuth2SummitOrdersApiController
             'owner_last_name'           => 'required_without:owner_id|string|max:255',
             'owner_email'               => 'required_without:owner_id|string|max:255|email',
             'owner_id'                  => 'required_without:owner_first_name,owner_last_name,owner_email|int',
-            'ticket_type_id'            => 'required|int',
+            'ticket_type_id'            => 'required|integer',
             'promo_code'                => 'sometimes|string',
+            'ticket_qty'                => 'required|integer|min:1',
             'extra_questions'           => 'sometimes|extra_question_dto_array',
             'owner_company'             => 'required|string|max:255',
             'billing_address_1'         => 'sometimes|string|max:255',
@@ -1132,7 +1136,7 @@ final class OAuth2SummitOrdersApiController
      */
     protected function addChild(Summit $summit, array $payload): IEntity
     {
-       return $this->service->createOrderSingleTicket($summit, $payload);
+       return $this->service->createOfflineOrder($summit, $payload);
     }
 
     protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity

@@ -20,12 +20,15 @@ use models\exceptions\ValidationException;
  */
 final class SummitEventFactory
 {
+
     /**
      * @param SummitEventType $type
      * @param Summit $summit
+     * @param array $payload
      * @return SummitEvent
+     * @throws ValidationException
      */
-    static public function build(SummitEventType $type, Summit $summit, array $payload)
+    static public function build(SummitEventType $type, Summit $summit, array $payload = [])
     {
         $event = new SummitEvent();
 

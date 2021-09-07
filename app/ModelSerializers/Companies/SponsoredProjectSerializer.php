@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 use Libs\ModelSerializers\Many2OneExpandSerializer;
-use models\oauth2\IResourceServerContext;
 /**
  * Class SponsoredProjectSerializer
  * @package ModelSerializers
@@ -27,14 +26,11 @@ final class SponsoredProjectSerializer extends SilverStripeSerializer
         'SponsorshipTypesIds' => 'sponsorship_types',
     ];
 
-    public function __construct($object, IResourceServerContext $resource_server_context)
-    {
-        parent::__construct($object, $resource_server_context);
+    protected static $expand_mappings = [
+        'sponsorship_types' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getSponsorshipTypes',
+        ]
+    ];
 
-        $this->expand_mappings = [
-            'sponsorship_types' => new Many2OneExpandSerializer('sponsorship_types', function () use ($object) {
-                return $object->getSponsorshipTypes();
-            }, "sponsorship_types"),
-        ];
-    }
 }

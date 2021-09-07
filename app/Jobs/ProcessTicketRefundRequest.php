@@ -20,6 +20,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
+use models\exceptions\ValidationException;
 use models\summit\IPaymentConstants;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\SummitAttendeeTicket;
@@ -67,50 +68,111 @@ class ProcessTicketRefundRequest implements ShouldQueue
         ITransactionService $tx_service
     )
     {
-        $tx_service->transaction(function () use ($default_payment_gateway_strategy, $repository) {
+        try {
+            $tx_service->transaction(function () use ($default_payment_gateway_strategy, $repository) {
+                Log::debug(sprintf("ProcessTicketRefundRequest::handle processing ticket %s", $this->ticket_id));
+                $ticket = $repository->getByIdExclusiveLock($this->ticket_id);
 
-            $ticket = $repository->getByIdExclusiveLock($this->ticket_id);
+                if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket || !$ticket->isRefundRequested()) return;
 
-            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket || !$ticket->isRefundRequested()) return;
+                $order = $ticket->getOrder();
+                $summit = $order->getSummit();
+                Log::debug(sprintf("ProcessTicketRefundRequest::handle got ticket %s", $ticket->getNumber()));
 
+                $policy = $summit->getRefundPolicyForRefundRequest($this->requested_n_days_before_summit);
+                if (is_null($policy)) return;
 
-            $order = $ticket->getOrder();
-            $summit = $order->getSummit();
-            $payment_gateway = $summit->getPaymentGateWayPerApp
-            (
-                IPaymentConstants::ApplicationTypeRegistration,
-                $default_payment_gateway_strategy
-            );
+                $rate = $policy->getRefundRate();
 
-            if (is_null($payment_gateway)) {
-                Log::warning(sprintf("Payment configuration is not set for summit %s", $summit->getId()));
-                return;
-            }
-
-            $policy = $summit->getRefundPolicyForRefundRequest($this->requested_n_days_before_summit);
-            if (is_null($policy)) return;
-            $rate = $policy->getRefundRate();
-            if ($rate <= 0) return;
-            $amount_2_refund = ($rate / 100.00) * $ticket->getFinalAmount();
-
-            if (!$order->hasPaymentInfo()) {
-                Log::warning(sprintf("order %s has not payment info ", $order->getId()));
-                return;
-            }
-
-            try {
-                $payment_gateway->refundPayment(
-                    $order->getPaymentGatewayCartId(),
-                    $amount_2_refund,
-                    $ticket->getCurrency()
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "ProcessTicketRefundRequest::handle got ticket %s and policy %s rate %s",
+                        $ticket->getNumber(),
+                        $policy->getId(),
+                        $rate
+                    )
                 );
-            } catch (\Exception $ex) {
-                Log::warning($ex);
-                return;
-            }
 
-            $ticket->refund($amount_2_refund);
+                if ($rate <= 0) return;
+                $amount_2_refund = ($rate / 100.00) * $ticket->getFinalAmount();
 
-        });
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "ProcessTicketRefundRequest::handle trying to refund ticket %s amount %s",
+                        $ticket->getNumber(),
+                        $amount_2_refund
+                    )
+                );
+
+                if (!$ticket->canRefund($amount_2_refund)) {
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "ProcessTicketRefundRequest::handle Can not request a refund on Ticket %s.",
+                            $ticket->getNumber()
+                        )
+                    );
+                }
+
+                $paymentGatewayRes = null;
+
+                $paymentGatewayRes = null;
+                if ($order->hasPaymentInfo()){
+                    try {
+
+                        $payment_gateway = $summit->getPaymentGateWayPerApp
+                        (
+                            IPaymentConstants::ApplicationTypeRegistration,
+                            $default_payment_gateway_strategy
+                        );
+
+                        if (is_null($payment_gateway)) {
+                            Log::warning(sprintf("Payment configuration is not set for summit %s", $summit->getId()));
+                            return;
+                        }
+
+
+                        Log::debug
+                        (
+                            sprintf
+                            (
+                                "ProcessTicketRefundRequest::handle trying to refund on payment gateway cart id %s",
+                                $order->getPaymentGatewayCartId()
+                            )
+                        );
+                        $paymentGatewayRes = $payment_gateway->refundPayment
+                        (
+                            $order->getPaymentGatewayCartId(),
+                            $amount_2_refund,
+                            $ticket->getCurrency()
+                        );
+
+                        Log::debug
+                        (
+                            sprintf
+                            (
+                                "SummitOrderService::refundTicket refunded payment gateway cart id %s payment gateway response %s",
+                                $order->getPaymentGatewayCartId(),
+                                $paymentGatewayRes
+                            )
+                        );
+
+                    } catch (\Exception $ex) {
+                        Log::warning($ex);
+                        throw new ValidationException($ex->getMessage());
+                    }
+                }
+                $ticket->refund(null, $amount_2_refund, $paymentGatewayRes, sprintf("* AUTOMATIC REFUND FROM POLICY %s.", $policy->getId()));
+
+            });
+        }
+        catch (\Exception $ex){
+            Log::error($ex);
+        }
     }
 }

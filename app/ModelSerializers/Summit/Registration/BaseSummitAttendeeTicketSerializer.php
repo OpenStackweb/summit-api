@@ -14,6 +14,8 @@
 
 use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
+use Libs\ModelSerializers\Many2OneExpandSerializer;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 use models\summit\SummitAttendeeTicket;
 /**
  * Class BaseSummitAttendeeTicketSerializer
@@ -37,13 +39,49 @@ class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer
         'Discount'           => 'discount:json_float',
         'RefundedAmount'     => 'refunded_amount:json_float',
         'Currency'           => 'currency:json_string',
+        'TaxesAmount'        => 'taxes_amount:json_float',
         'Active'             => 'is_active:json_bool',
     ];
 
     protected static $allowed_relations = [
         'applied_taxes',
+        'refund_requests',
     ];
 
+    protected static $expand_mappings = [
+        'ticket_type' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'ticket_type_id',
+            'getter' => 'getTicketType',
+            'has' => 'hasTicketType'
+        ],
+        'badge' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'badge_id',
+            'getter' => 'getBadge',
+            'has' => 'hasBadge'
+        ],
+        'promo_code' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'promo_code_id',
+            'getter' => 'getPromoCode',
+            'has' => 'hasPromoCode'
+        ],
+        'owner' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'owner_id',
+            'getter' => 'getOwner',
+            'has' => 'hasOwner'
+        ],
+        'refund_requests' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getRefundedRequests',
+        ],
+        'applied_taxes' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getAppliedTaxes',
+        ],
+    ];
     /**
      * @param null $expand
      * @param array $fields
@@ -55,13 +93,11 @@ class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer
     {
         $ticket = $this->object;
         if (!$ticket instanceof SummitAttendeeTicket) return [];
-        $values   = parent::serialize($expand, $fields, $relations, $params);
+        $values = parent::serialize($expand, $fields, $relations, $params);
 
         if (!count($relations)) $relations = $this->getAllowedRelations();
 
-        Log::debug(sprintf("BaseSummitAttendeeTicketSerializer::serialize  expand %s", $expand));
-
-        if (in_array('applied_taxes', $relations)) {
+        if (in_array('applied_taxes', $relations) && !isset($values['applied_taxes'])) {
             $applied_taxes = [];
             foreach ($ticket->getAppliedTaxes() as $tax) {
                 $applied_taxes[] = $tax->getId();
@@ -69,49 +105,14 @@ class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer
             $values['applied_taxes'] = $applied_taxes;
         }
 
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-                    case 'ticket_type': {
-                        if(!$ticket->hasTicketType()) break;
-                        unset($values['ticket_type_id']);
-                        $values['ticket_type'] = SerializerRegistry::getInstance()->getSerializer($ticket->getTicketType())->serialize(AbstractSerializer::getExpandForPrefix('ticket_type', $expand));
-                    }
-                        break;
-                    case 'badge': {
-                        if(!$ticket->hasBadge()) break;
-                        unset($values['badge_id']);
-                        $values['badge'] = SerializerRegistry::getInstance()->getSerializer($ticket->getBadge())->serialize(AbstractSerializer::getExpandForPrefix('badge', $expand));
-                    }
-                        break;
-                    case 'promo_code': {
-                        if(!$ticket->hasPromoCode()) break;
-                        unset($values['promo_code_id']);
-                        $values['promo_code'] = SerializerRegistry::getInstance()->getSerializer($ticket->getPromoCode())->serialize(AbstractSerializer::getExpandForPrefix('promo_code', $expand));
-                    }
-                        break;
-                    case 'applied_taxes': {
-                        if (in_array('applied_taxes', $relations)) {
-                            unset( $values['applied_taxes']);
-                            $applied_taxes = [];
-                            foreach ($ticket->getAppliedTaxes() as $tax) {
-                                $applied_taxes[] = SerializerRegistry::getInstance()->getSerializer($tax)->serialize(AbstractSerializer::getExpandForPrefix('applied_taxes', $expand));
-                            }
-                            $values['applied_taxes'] = $applied_taxes;
-                        }
-                    }
-                    break;
-                    case 'owner': {
-                        if(!$ticket->hasOwner()) break;
-                        unset($values['owner_id']);
-                        $values['owner'] = SerializerRegistry::getInstance()->getSerializer($ticket->getOwner())->serialize(AbstractSerializer::getExpandForPrefix('owner', $expand));
-                    }
-                        break;
-                }
-
+        if (in_array('refund_requests', $relations) && !isset($values['refund_requests'])) {
+            $refund_requests = [];
+            foreach ($ticket->getRefundedRequests() as $request) {
+                $refund_requests[] = $request->getId();
             }
+            $values['refund_requests'] = $refund_requests;
         }
+
         return $values;
     }
 }

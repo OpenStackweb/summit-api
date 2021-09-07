@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Database\Seeders\TestSeeder;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Redis;
 use Laravel\BrowserKitTesting\TestCase as BaseTestCase;
@@ -54,6 +56,6 @@ abstract class BrowserKitTestCase extends BaseTestCase
         Artisan::call('doctrine:migrations:migrate', ["--connection" => 'config', '--force'=> '']);
         Artisan::call('doctrine:migrations:migrate', ["--connection" => 'model', '--force'=> '']);
         //Mail::pretend(true);
-        $this->seed('TestSeeder');
+        $this->seed(TestSeeder::class);
     }
 }

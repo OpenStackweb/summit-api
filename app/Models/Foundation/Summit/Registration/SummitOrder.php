@@ -12,9 +12,7 @@
  * limitations under the License.
  **/
 use App\Events\PaymentSummitRegistrationOrderConfirmed;
-use App\Events\RequestedSummitOrderRefund;
 use App\Events\SummitOrderCanceled;
-use App\Events\SummitOrderRefundAccepted;
 use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
@@ -194,12 +192,6 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     private $extra_question_answers;
 
     /**
-     * @ORM\Column(name="RefundedAmount", type="float")
-     * @var float
-     */
-    private $refunded_amount;
-
-    /**
      * @var \DateTime
      */
     private $disclaimer_accepted_date;
@@ -220,9 +212,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         $this->extra_question_answers = new ArrayCollection();
         $this->status                 = IOrderConstants::ReservedStatus;
         $this->payment_method         = IOrderConstants::OnlinePaymentMethod;
-        $this->refunded_amount        = 0.0;
     }
-
 
     public function setPaymentMethodOffline(){
         $this->payment_method = IOrderConstants::OfflinePaymentMethod;
@@ -352,12 +342,13 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      * @return array
      */
     public function calculateTicketsAndPromoCodesToReturn():array {
+
         $tickets_to_return = [];
         $promo_codes_to_return = [];
 
         foreach($this->tickets as $ticket){
             if($ticket->isCancelled()) continue;
-            if($ticket->isRefunded()) continue;
+            if(!$ticket->isActive()) continue;
             if(!isset($tickets_to_return[$ticket->getTicketTypeId()]))
                 $tickets_to_return[$ticket->getTicketTypeId()] = 0;
             $tickets_to_return[$ticket->getTicketTypeId()] += 1;
@@ -370,61 +361,6 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         return [$tickets_to_return, $promo_codes_to_return];
     }
 
-    /**
-     * @throws ValidationException
-     */
-    public function requestRefund():void{
-        $summit = $this->getSummit();
-
-        $begin_date = $summit->getBeginDate();
-        if(is_null($begin_date)) return;
-
-        // check tickets badge printings
-
-        if($this->getRawAmount() == 0 )
-
-        foreach ($this->tickets as $ticket){
-            if($ticket->isBadgePrinted()){
-                throw new ValidationException(sprintf( "You can not request a refund for this ticket %s (badge already printed).", $ticket->getNumber()));
-            }
-        }
-
-        $now = new \DateTime('now', new \DateTimeZone('UTC'));
-
-        if($now > $begin_date){
-            Log::debug("SummitOrder::requestRefund: now is greater than Summit.BeginDate");
-            throw new ValidationException("You can not request a refund after summit started.");
-        }
-
-        $interval = $begin_date->diff($now);
-
-        $days_before_event_starts = intval($interval->format('%a'));
-
-        Log::debug(sprintf("SummitOrder::requestRefund: days_before_event_starts %s", $days_before_event_starts));
-
-        if($this->status != IOrderConstants::PaidStatus){
-            throw new ValidationException("You can not request a refund on this order.");
-        }
-
-        $this->status = IOrderConstants::RefundRequestedStatus;
-
-        foreach ($this->tickets as $ticket){
-            $ticket->setRefundRequests();
-        }
-
-        Event::dispatch(new RequestedSummitOrderRefund($this->getId(), $days_before_event_starts));
-    }
-
-    function cancelRefundRequest():void {
-        if(!$this->isRefundRequested())
-            throw new ValidationException(sprintf("You can not cancel any refund on this order"));
-
-        $this->status = IOrderConstants::PaidStatus;
-
-        foreach ($this->tickets as $ticket){
-            $ticket->setPaid(false);
-        }
-    }
     /**
      * @return string
      */
@@ -873,7 +809,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      * @return bool
      */
     public function hasPaymentInfo():bool{
-        return empty($this->payment_gateway_cart_id) || empty($this->payment_gateway_client_token);
+        return !empty($this->payment_gateway_cart_id) || !empty($this->payment_gateway_client_token);
     }
 
     /**
@@ -931,97 +867,6 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function isPaid():bool {
         return $this->status == IOrderConstants::PaidStatus;
-    }
-
-    /**
-     * @return bool
-     */
-    public function canRefund():bool{
-        $validStatuses = [IOrderConstants::RefundRequestedStatus, IOrderConstants::PaidStatus];
-        if(!in_array($this->status, $validStatuses)){
-            return false;
-        }
-        if($this->isFree()){
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * @param float $amount
-     * @throws ValidationException
-     */
-    public function refund(float $amount)
-    {
-        if (!$this->canRefund())
-            throw new ValidationException
-            (
-                sprintf
-                (
-                    "can not request a refund on a %s order",
-                    $this->status
-                )
-            );
-
-        $this->status = IOrderConstants::RefundedStatus;
-        $this->refunded_amount = $amount;
-        list($tickets_to_return, $promo_codes_to_return) = $this->calculateTicketsAndPromoCodesToReturn();
-
-        foreach ($this->tickets as $ticket){
-            $ticket->setRefunded();
-        }
-
-        Event::dispatch(new SummitOrderRefundAccepted($this->getId(), $tickets_to_return, $promo_codes_to_return));
-    }
-
-    /**
-     * @return string
-     * - if tixs in an order are all in a combination of status refund requested or refunded, show order as refund requested.
-     * - if all tix in an order are in status refund requested, show order as refund requested.
-     * - if all tix in an order are in status refunded, show order as refunded.
-     */
-    public function recalculateOrderStatus():string {
-        Log::debug(sprintf("SummitOrder::recalculateOrderStatus current status %s", $this->status));
-        $request_refund_count = 0;
-        $refund_count         = 0;
-
-        foreach ($this->tickets as $ticket){
-            $ticket_status = $ticket->getStatus();
-            Log::debug(sprintf("SummitOrder::recalculateOrderStatus ticket_id %s ticket_status %s", $ticket->getId(), $ticket_status));
-            if($ticket_status == IOrderConstants::RefundRequestedStatus)
-                ++$request_refund_count;
-            if($ticket_status == IOrderConstants::RefundedStatus)
-                ++$refund_count;
-        }
-
-        $tickets_count = $this->tickets->count();
-
-        Log::debug(sprintf("SummitOrder::recalculateOrderStatus tickets_count %s request_refund_count %s refund_count %s", $tickets_count, $request_refund_count, $refund_count));
-
-        if(($request_refund_count == $tickets_count || ( $refund_count > 0 && $request_refund_count > 0 && ($refund_count + $request_refund_count) == $tickets_count)))
-            $this->status = IOrderConstants::RefundRequestedStatus;
-
-        if($refund_count == $tickets_count)
-            $this->status = IOrderConstants::RefundedStatus;
-
-        Log::debug(sprintf("SummitOrder::recalculateOrderStatus recalculated status %s", $this->status));
-
-        return $this->status;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isRefundRequested():bool {
-        return $this->status == IOrderConstants::RefundRequestedStatus;
-    }
-
-    /**
-     * @return float
-     */
-    public function getRefundedAmount(): float
-    {
-        return $this->refunded_amount;
     }
 
     /**
@@ -1088,4 +933,14 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         $this->external_id = $external_id;
     }
 
+    /**
+     * @return float
+     */
+    public function getRefundedAmount():float{
+        $totalRefundedAmount = 0.0;
+        foreach($this->tickets as $ticket){
+            $totalRefundedAmount += $ticket->getRefundedAmount();
+        }
+        return $totalRefundedAmount;
+    }
 }

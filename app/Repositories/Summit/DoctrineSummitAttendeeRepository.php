@@ -77,21 +77,19 @@ final class DoctrineSummitAttendeeRepository
                         'true',
                         sprintf
                         (
-                            "EXISTS (select t1 from %s t1 where t1.owner = e  and (t1.status = '%s' or t1.status = '%s') and t1.is_active = 1)",
+                            "EXISTS (select t1 from %s t1 where t1.owner = e  and (t1.status = '%s') and t1.is_active = 1)",
                             SummitAttendeeTicket::class,
                             IOrderConstants::PaidStatus,
-                            IOrderConstants::RefundRequestedStatus
                         )
                     ),
                     'false' => new DoctrineCaseFilterMapping(
                         'false',
                         sprintf
                         (
-                            "NOT EXISTS (select t1 from %s t1 where t1.owner = e and (t1.status = '%s' or t1.status = '%s') and t1.is_active = 1)"
+                            "NOT EXISTS (select t1 from %s t1 where t1.owner = e and (t1.status = '%s') and t1.is_active = 1)"
                             ,
                             SummitAttendeeTicket::class,
                             IOrderConstants::PaidStatus,
-                            IOrderConstants::RefundRequestedStatus
                         )
                     ),
                 ]

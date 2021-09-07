@@ -16,6 +16,7 @@ use App\Jobs\Emails\AbstractEmailJob;
 use Illuminate\Support\Facades\Config;
 use libs\utils\FormatUtils;
 use models\summit\SummitAttendeeTicket;
+use models\summit\SummitAttendeeTicketRefundRequest;
 
 /**
  * Class SummitTicketRefundRequestOwner
@@ -36,8 +37,9 @@ class SummitTicketRefundRequestOwner extends AbstractEmailJob
     /**
      * SummitTicketRefundRequestOwner constructor.
      * @param SummitAttendeeTicket $ticket
+     * @param SummitAttendeeTicketRefundRequest $request
      */
-    public function __construct(SummitAttendeeTicket $ticket)
+    public function __construct(SummitAttendeeTicket $ticket, SummitAttendeeTicketRefundRequest $request = null)
     {
         $payload = [];
         $order = $ticket->getOrder();
@@ -55,7 +57,8 @@ class SummitTicketRefundRequestOwner extends AbstractEmailJob
         $payload['ticket_currency'] = $ticket->getCurrency();
         $payload['ticket_amount'] = FormatUtils::getNiceFloat($ticket->getFinalAmount());
         $payload['ticket_currency_symbol'] = $ticket->getCurrencySymbol();
-
+        $payload['ticket_refund_amount'] = !is_null($request)? FormatUtils::getNiceFloat($request->getRefundedAmount()):'';
+        $payload['ticket_refund_status'] = !is_null($request)? $request->getStatus(): '';
         $payload['ticket_promo_code'] = '';
         if ($ticket->hasPromoCode()) {
             $payload['ticket_promo_code'] = $ticket->getPromoCode()->getCode();

@@ -19,7 +19,6 @@ use App\Jobs\IngestSummitExternalRegistrationData;
 use App\Jobs\Emails\RegisteredMemberOrderPaidMail;
 use App\Jobs\Emails\Registration\Reminders\SummitOrderReminderEmail;
 use App\Jobs\Emails\Registration\Reminders\SummitTicketReminderEmail;
-use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
 use App\Jobs\Emails\UnregisteredMemberOrderPaidMail;
 use App\Jobs\ProcessTicketDataImport;
 use App\Models\Foundation\Summit\Factories\SummitOrderFactory;
@@ -32,7 +31,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -40,7 +38,6 @@ use models\exceptions\ValidationException;
 use models\main\IMemberRepository;
 use models\main\Member;
 use models\summit\factories\SummitAttendeeFactory;
-use models\summit\IOrderConstants;
 use models\summit\IPaymentConstants;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitAttendeeTicketRepository;
@@ -1366,70 +1363,27 @@ final class SummitOrderService
     }
 
     /**
-     * @param Member $current_user ,
-     * @param int $order_id
-     * @return SummitOrder
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function requestRefundOrder(Member $current_user, int $order_id): SummitOrder
-    {
-        return $this->tx_service->transaction(function () use ($current_user, $order_id) {
-            $order = $current_user->getSummitRegistrationOrderById($order_id);
-            if (is_null($order))
-                throw new EntityNotFoundException('order not found');
-            if ($order->isFree()) {
-                throw new ValidationException("you can not request a refund because order is free");
-            }
-            $order->requestRefund();
-
-            // recalculate order status
-            $order->recalculateOrderStatus();
-
-            return $order;
-        });
-    }
-
-    /**
-     * @param int $order_id
-     * @return SummitOrder
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function cancelRequestRefundOrder(int $order_id): SummitOrder
-    {
-        return $this->tx_service->transaction(function () use ($order_id) {
-            $order = $this->order_repository->getById($order_id);
-            if (is_null($order) || !$order instanceof SummitOrder)
-                throw new EntityNotFoundException('order not found');
-
-            $order->cancelRefundRequest();
-
-            return $order;
-        });
-    }
-
-    /**
      * @param int $order_id
      * @param int $ticket_id
+     * @param Member $currentUser
+     * @param string|null $notes
      * @return SummitAttendeeTicket
-     * @throws EntityNotFoundException
-     * @throws ValidationException
+     * @throws \Exception
      */
-    public function cancelRequestRefundTicket(int $order_id, int $ticket_id): SummitAttendeeTicket
+    public function cancelRequestRefundTicket(int $order_id, int $ticket_id, Member $currentUser, ?string $notes = null): SummitAttendeeTicket
     {
-        return $this->tx_service->transaction(function () use ($order_id, $ticket_id) {
+        return $this->tx_service->transaction(function () use ($order_id, $ticket_id, $currentUser, $notes) {
 
             $order = $this->order_repository->getById($order_id);
             if (is_null($order) || !$order instanceof SummitOrder)
-                throw new EntityNotFoundException('order not found');
+                throw new EntityNotFoundException('Order not found.');
 
             $ticket = $order->getTicketById($ticket_id);
 
             if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
-                throw new EntityNotFoundException('ticket not found');
+                throw new EntityNotFoundException('Ticket not found.');
 
-            $ticket->cancelRefundRequest();
+            $ticket->cancelRefundRequest($currentUser, $notes);
 
             return $ticket;
         });
@@ -1446,22 +1400,139 @@ final class SummitOrderService
     public function requestRefundTicket(Member $current_user, int $order_id, int $ticket_id): SummitAttendeeTicket
     {
         return $this->tx_service->transaction(function () use ($current_user, $order_id, $ticket_id) {
+
+            // only owner of the order could request a refund on a ticket
             $order = $current_user->getSummitRegistrationOrderById($order_id);
             if (is_null($order))
-                throw new EntityNotFoundException('order not found');
+                throw new EntityNotFoundException('Order not found.');
 
             $ticket = $order->getTicketById($ticket_id);
             if (is_null($ticket))
-                throw new EntityNotFoundException('ticket not found');
+                throw new EntityNotFoundException('Ticket not found.');
 
             if ($ticket->isFree()) {
-                throw new ValidationException("you can not request a refund because ticket is free");
+                throw new ValidationException("You can not request a refund because ticket is free.");
             }
 
-            $ticket->requestRefund();
+            $ticket->requestRefund($current_user);
 
-            // recalculate order status
-            $order->recalculateOrderStatus();
+            return $ticket;
+        });
+    }
+
+    /**
+     * @param Member $current_user
+     * @param int $order_id
+     * @return SummitOrder
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function requestRefundOrder(Member $current_user, int $order_id): SummitOrder{
+        return $this->tx_service->transaction(function () use ($current_user, $order_id) {
+
+            // only owner of the order could request a refund on a ticket
+            $order = $current_user->getSummitRegistrationOrderById($order_id);
+            if (is_null($order))
+                throw new EntityNotFoundException('Order not found.');
+
+            foreach ($order->getTickets() as $ticket){
+                if(!$ticket->isPaid()) continue;
+                if(!$ticket->isActive()) continue;
+                $this->requestRefundTicket($current_user, $order_id, $ticket->getId());
+            }
+
+            return $order;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param Member $currentUser
+     * @param int|string $ticket_id
+     * @param float $amount
+     * @param string|null $notes
+     * @return SummitAttendeeTicket
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function refundTicket(Summit $summit, Member $currentUser, $ticket_id, float $amount, ?string $notes): SummitAttendeeTicket
+    {
+        return $this->tx_service->transaction(function () use ($summit, $currentUser, $ticket_id, $amount, $notes) {
+
+            $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
+
+            if (is_null($ticket))
+                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
+
+            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
+                throw new EntityNotFoundException('ticket not found');
+
+            if ($amount <= 0.0) {
+                throw new ValidationException("can not refund an amount lower than zero!");
+            }
+
+            if(!$ticket->canRefund($amount)){
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Can not request a refund on Ticket %s.",
+                        $ticket->getNumber()
+                    )
+                );
+            }
+
+            $order = $ticket->getOrder();
+
+            if ($order->getSummitId() != $summit->getId())
+                throw new EntityNotFoundException('ticket not found');
+
+            $paymentGatewayRes = null;
+
+            if ($order->hasPaymentInfo()){
+
+                try {
+                    $payment_gateway = $summit->getPaymentGateWayPerApp
+                    (
+                        IPaymentConstants::ApplicationTypeRegistration,
+                        $this->default_payment_gateway_strategy
+                    );
+
+                    if (is_null($payment_gateway)) {
+                        throw new ValidationException(sprintf("Payment configuration is not set for summit %s", $summit->getId()));
+                    }
+
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitOrderService::refundTicket trying to refund on payment gateway cart id %s",
+                            $order->getPaymentGatewayCartId()
+                        )
+                    );
+                    $paymentGatewayRes = $payment_gateway->refundPayment
+                    (
+                        $order->getPaymentGatewayCartId(),
+                        $amount,
+                        $ticket->getCurrency()
+                    );
+
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitOrderService::refundTicket refunded payment gateway cart id %s payment gateway response %s",
+                            $order->getPaymentGatewayCartId(),
+                            $paymentGatewayRes
+                        )
+                    );
+                } catch (\Exception $ex) {
+                    Log::warning($ex);
+                    throw new ValidationException($ex->getMessage());
+                }
+            }
+
+            $ticket->refund($currentUser, $amount, $paymentGatewayRes, $notes);
 
             return $ticket;
         });
@@ -2021,68 +2092,6 @@ final class SummitOrderService
 
     /**
      * @param Summit $summit
-     * @param int $order_id
-     * @param float $amount
-     * @return SummitOrder
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function refundOrder(Summit $summit, int $order_id, float $amount): SummitOrder
-    {
-        return $this->tx_service->transaction(function () use ($summit, $order_id, $amount) {
-            $order = $this->order_repository->getByIdExclusiveLock($order_id);
-            if (is_null($order) || !$order instanceof SummitOrder)
-                throw new EntityNotFoundException('order not found');
-
-            if ($amount <= 0.0) {
-                throw new ValidationException("can not refund an amount lower than zero!");
-            }
-
-            if ($amount > intval($order->getFinalAmount())) {
-                throw new ValidationException("can not refund an amount greater than paid one!");
-            }
-
-            if (!$order->canRefund())
-                throw new ValidationException
-                (
-                    sprintf
-                    (
-                        "can not emit a refund on order %s",
-                        $order->getId()
-                    )
-                );
-
-            $summit = $order->getSummit();
-            $payment_gateway = $summit->getPaymentGateWayPerApp
-            (
-                IPaymentConstants::ApplicationTypeRegistration,
-                $this->default_payment_gateway_strategy
-            );
-            if (is_null($payment_gateway)) {
-                throw new ValidationException(sprintf("Payment configuration is not set for summit %s", $summit->getId()));
-            }
-
-            $cart_id = $order->getPaymentGatewayCartId();
-
-            if (!empty($cart_id)) {
-                try {
-                    $payment_gateway->refundPayment($order->getPaymentGatewayCartId(), $amount, $order->getCurrency());
-                } catch (\Exception $ex) {
-                    throw new ValidationException($ex->getMessage());
-                }
-            }
-
-            $order->refund($amount);
-
-            // recalculate order status
-            $order->recalculateOrderStatus();
-
-            return $order;
-        });
-    }
-
-    /**
-     * @param Summit $summit
      * @param $ticket_id
      * @return SummitAttendeeTicket
      * @throws \Exception
@@ -2119,77 +2128,6 @@ final class SummitOrderService
             if ($ticket->getOrder()->getSummitId() != $summit->getId()) {
                 throw new ValidationException("ticket does not belong to summit");
             }
-            return $ticket;
-        });
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int|string $ticket_id
-     * @param float $amount
-     * @return SummitAttendeeTicket
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function refundTicket(Summit $summit, $ticket_id, float $amount): SummitAttendeeTicket
-    {
-        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $amount) {
-
-            $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
-
-            if (is_null($ticket))
-                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
-
-            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
-                throw new EntityNotFoundException('ticket not found');
-
-            if ($amount <= 0.0) {
-                throw new ValidationException("can not refund an amount lower than zero!");
-            }
-
-            if ($amount > intval($ticket->getFinalAmount())) {
-                throw new ValidationException("can not refund an amount greater than paid one!");
-            }
-
-            $order = $ticket->getOrder();
-
-            if ($order->getSummitId() != $summit->getId())
-                throw new EntityNotFoundException('ticket not found');
-
-            if (!$ticket->canRefund())
-                throw new ValidationException
-                (
-                    sprintf
-                    (
-                        "can not emit a refund on ticket %s",
-                        $ticket->getId()
-                    )
-                );
-
-            $cart_id = $order->getPaymentGatewayCartId();
-
-            $payment_gateway = $summit->getPaymentGateWayPerApp
-            (
-                IPaymentConstants::ApplicationTypeRegistration,
-                $this->default_payment_gateway_strategy
-            );
-            if (is_null($payment_gateway)) {
-                throw new ValidationException(sprintf("Payment configuration is not set for summit %s", $summit->getId()));
-            }
-
-            if (!empty($cart_id)) {
-                try {
-                    $payment_gateway->refundPayment($cart_id, $amount, $ticket->getOrder()->getCurrency());
-                } catch (\Exception $ex) {
-                    throw new ValidationException($ex->getMessage());
-                }
-            }
-
-            $ticket->refund($amount);
-
-            // recalculate order status
-            $order->recalculateOrderStatus();
-
             return $ticket;
         });
     }
@@ -3567,6 +3505,8 @@ final class SummitOrderService
 
             $ticket->activate();
 
+            $ticket->getOwner()->sendInvitationEmail($ticket);
+
             return $ticket;
         });
     }
@@ -3589,6 +3529,8 @@ final class SummitOrderService
                 throw new EntityNotFoundException("ticket not found");
 
             $ticket->deActivate();
+
+            $ticket->getOwner()->sendRevocationTicketEmail($ticket);
 
             return $ticket;
         });

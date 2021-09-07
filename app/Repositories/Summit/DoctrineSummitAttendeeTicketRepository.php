@@ -15,13 +15,18 @@ use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\QueryBuilder;
 use models\summit\IOrderConstants;
 use models\summit\ISummitAttendeeTicketRepository;
+use models\summit\ISummitRefundRequestConstants;
 use models\summit\Summit;
 use models\summit\SummitAttendeeTicket;
 use App\Repositories\SilverStripeDoctrineRepository;
+use models\summit\SummitAttendeeTicketRefundRequest;
 use models\utils\IEntity;
+use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineJoinFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
+use utils\DoctrineSwitchFilterMapping;
+
 /**
  * Class DoctrineSummitAttendeeTicketRepository
  * @package App\Repositories\Summit
@@ -57,6 +62,28 @@ final class DoctrineSummitAttendeeTicketRepository
             'member_id'           => 'm.id:json_int',
             'order_id'            => 'o.id:json_int',
             'status'              => 'e.status:json_string',
+            'has_requested_refund_requests' => new DoctrineSwitchFilterMapping([
+                    '1' => new DoctrineCaseFilterMapping(
+                        'true',
+                        sprintf
+                        (
+                            "EXISTS (select rr1 from %s rr1 where rr1.ticket = e and rr1.status = '%s')",
+                            SummitAttendeeTicketRefundRequest::class,
+                            ISummitRefundRequestConstants::RefundRequestedStatus
+                        )
+                    ),
+                    '0' => new DoctrineCaseFilterMapping(
+                        'false',
+                        sprintf
+                        (
+                            "NOT EXISTS (select rr1 from %s rr1 where rr1.ticket = e and rr1.status = '%s')"
+                            ,
+                            SummitAttendeeTicketRefundRequest::class,
+                            ISummitRefundRequestConstants::RefundRequestedStatus
+                        )
+                    ),
+                ]
+            ),
         ];
     }
 

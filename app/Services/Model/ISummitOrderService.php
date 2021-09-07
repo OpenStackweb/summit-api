@@ -132,14 +132,6 @@ interface ISummitOrderService extends IProcessPaymentService
      * @throws ValidationException
      */
     public function deActivateTicket(Summit $summit, int $order_id, int $ticket_id):SummitAttendeeTicket;
-    /**
-     * @param Member $current_user
-     * @param int $order_id
-     * @return SummitOrder
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function requestRefundOrder(Member $current_user, int $order_id):SummitOrder;
 
     /**
      * @param Member $current_user
@@ -150,6 +142,15 @@ interface ISummitOrderService extends IProcessPaymentService
      * @throws ValidationException
      */
     public function requestRefundTicket(Member $current_user, int $order_id, int $ticket_id): SummitAttendeeTicket;
+
+    /**
+     * @param Member $current_user
+     * @param int $order_id
+     * @return SummitOrder
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function requestRefundOrder(Member $current_user, int $order_id): SummitOrder;
 
     /**
      * @param int $minutes
@@ -234,24 +235,15 @@ interface ISummitOrderService extends IProcessPaymentService
 
     /**
      * @param Summit $summit
-     * @param int $order_id
-     * @param float $amount
-     * @return SummitOrder
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function refundOrder(Summit $summit, int $order_id, float $amount):SummitOrder;
-
-    /**
-     * @param Summit $summit
+     * @param Member $currentUser
      * @param int|string $ticket_id
      * @param float $amount
+     * @param string|null $notes
      * @return SummitAttendeeTicket
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function refundTicket(Summit $summit, $ticket_id, float $amount):SummitAttendeeTicket;
-
+    public function refundTicket(Summit $summit, Member $currentUser, $ticket_id, float $amount, ?string $notes): SummitAttendeeTicket;
 
     /**
      * @param Summit $summit
@@ -401,19 +393,12 @@ interface ISummitOrderService extends IProcessPaymentService
 
     /**
      * @param int $order_id
-     * @return SummitOrder
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function cancelRequestRefundOrder(int $order_id): SummitOrder;
-
-    /**
-     * @param int $order_id
      * @param int $ticket_id
+     * @param Member $currentUser
+     * @param string|null $notes
      * @return SummitAttendeeTicket
-     * @throws EntityNotFoundException
-     * @throws ValidationException
+     * @throws \Exception
      */
-    public function cancelRequestRefundTicket(int $order_id, int $ticket_id): SummitAttendeeTicket;
+    public function cancelRequestRefundTicket(int $order_id, int $ticket_id, Member $currentUser, ?string $notes = null): SummitAttendeeTicket;
 
 }

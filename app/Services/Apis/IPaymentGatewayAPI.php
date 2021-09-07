@@ -55,9 +55,10 @@ interface IPaymentGatewayAPI
      * @param string $cart_id
      * @param float $amount
      * @param string $currency
-     * @throws \InvalidArgumentException
+     * @param string $reason
+     * @return string|null
      */
-    public function refundPayment(string $cart_id, float $amount,  string $currency): void;
+    public function refundPayment(string $cart_id, float $amount, string $currency, string $reason = 'requested_by_customer'): ?string;
 
     /**
      * @param string $cart_id

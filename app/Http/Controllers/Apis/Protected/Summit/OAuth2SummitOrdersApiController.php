@@ -483,69 +483,24 @@ final class OAuth2SummitOrdersApiController
         }
     }
 
-    /**
-     * @param $order_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
-    public function requestRefundMyOrder($order_id){
-        try {
-            $current_user = $this->getResourceServerContext()->getCurrentUser();
-
-            $order = $this->service->requestRefundOrder($current_user, intval($order_id));
-
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($order)->serialize( Request::input('expand', '')));
-
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
 
     /**
      * @param $order_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
-    public function cancelRefundRequestOrder($order_id){
-        try {
-
-            $order = $this->service->cancelRequestRefundOrder(intval($order_id));
-
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($order)->serialize(Request::input('expand', '')));
-
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
-
-    /**
-     * @param $order_id
+     * @param $ticket_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function cancelRefundRequestTicket($order_id , $ticket_id){
         try {
 
-            $ticket = $this->service->cancelRequestRefundTicket(intval($order_id), intval($ticket_id));
+            $current_user = $this->getResourceServerContext()->getCurrentUser();
+            if(is_null($current_user))
+                return $this->error403();
+
+            $payload = $this->getJsonPayload([
+                'notes' => 'sometimes|string|max:255',
+            ]);
+
+            $ticket = $this->service->cancelRequestRefundTicket(intval($order_id), intval($ticket_id), $current_user, trim($payload['notes'] ?? ''));
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize( Request::input('expand', '')));
 
@@ -572,11 +527,42 @@ final class OAuth2SummitOrdersApiController
      */
     public function requestRefundMyTicket($order_id, $ticket_id){
         try {
+
             $current_user = $this->getResourceServerContext()->getCurrentUser();
+            if(is_null($current_user))
+                return $this->error403();
 
             $ticket = $this->service->requestRefundTicket($current_user, intval($order_id), intval($ticket_id));
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize( Request::input('expand', '')));
+
+        }
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
+        }
+        catch(EntityNotFoundException $ex)
+        {
+            Log::warning($ex);
+            return $this->error404(array('message'=> $ex->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $order_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function requestRefundMyOrder($order_id){
+        try {
+            $current_user = $this->getResourceServerContext()->getCurrentUser();
+
+            $order = $this->service->requestRefundOrder($current_user, intval($order_id));
+
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($order)->serialize( Request::input('expand', '')));
 
         }
         catch (ValidationException $ex) {
@@ -1190,44 +1176,6 @@ final class OAuth2SummitOrdersApiController
     protected function deleteChild(Summit $summit, $child_id): void
     {
         $this->service->deleteOrder($summit, intval($child_id));
-    }
-
-    /**
-     * @param $summit_id
-     * @param $order_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
-    public function refundOrder($summit_id, $order_id){
-        try {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $payload = $this->getJsonPayload([
-                'amount' => 'required|numeric|greater_than:0',
-            ]);
-
-            $order = $this->service->refundOrder($summit, intval($order_id), floatval($payload['amount']));
-
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($order)->serialize( Request::input('expand', '')));
-        }
-        catch(\InvalidArgumentException $ex){
-            Log::warning($ex);
-            return $this->error400();
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
     }
 
     /**

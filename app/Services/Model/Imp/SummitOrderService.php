@@ -1926,6 +1926,9 @@ final class SummitOrderService
                 if ($ticket_qty == 1 && !is_null($attendee))
                     $ticket->setOwner($attendee);
 
+                if($order->isPaid())
+                    $ticket->setPaid();
+
                 $ticket->setTicketType($ticket_type);
                 $ticket->generateNumber();
                 $ticket_type->sell(1);

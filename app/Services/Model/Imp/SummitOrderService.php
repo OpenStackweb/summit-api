@@ -1667,7 +1667,7 @@ final class SummitOrderService
 
                 if (is_null($ticket)) {
                     $ticket = $this->ticket_repository->getByFormerHashExclusiveLock(strval($ticket_id));
-                    if (!is_null($ticket))
+                    if (is_null($ticket))
                         throw new ValidationException("ticket hash is not valid");
                 }
 

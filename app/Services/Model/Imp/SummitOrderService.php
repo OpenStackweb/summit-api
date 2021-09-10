@@ -1665,6 +1665,12 @@ final class SummitOrderService
                 Log::debug(sprintf("SummitOrderService::renderTicketByFormat trying to get ticket by hash %s", $ticket_id));
                 $ticket = $this->ticket_repository->getByHashExclusiveLock(strval($ticket_id));
 
+                if (is_null($ticket)) {
+                    $ticket = $this->ticket_repository->getByFormerHashExclusiveLock(strval($ticket_id));
+                    if (!is_null($ticket))
+                        throw new ValidationException("ticket hash is not valid");
+                }
+
                 if (is_null($ticket) || !$ticket->hasOwner())
                     throw new EntityNotFoundException("ticket not found");
 

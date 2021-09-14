@@ -132,12 +132,10 @@ final class OAuth2SummitOrdersApiController
             $payload = $this->getJsonPayload($validation_rules);
 
             if(!is_null($owner)){
-                $payload_ex = [
-                    'owner_first_name' => !empty($owner->getFirstName()) ? $owner->getFirstName() : $payload['owner_first_name'],
-                    'owner_last_name'  => !empty($owner->getLastName()) ? $owner->getLastName() : $payload['owner_last_name'],
-                    'owner_email'      => $owner->getEmail(),
-                ];
-                $payload = array_merge($payload, $payload_ex);
+                // if we have owner then set up the email
+                $payload = array_merge($payload,  [
+                    'owner_email' => $owner->getEmail(),
+                ]);
             }
 
             $order = $this->service->reserve($owner, $summit, $payload);

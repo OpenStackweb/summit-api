@@ -903,7 +903,7 @@ final class SummitOrderService
                 Log::debug(sprintf("SummitOrderService::reserve trying to get member %s", $owner->getId()));
 
                 $owner = $this->member_repository->getByIdExclusiveLock($owner->getId());
-
+                // if we have an owner check if his name is empty amd set with what is on the payload
                 if (empty($owner->getFirstName())) {
                     $owner->setFirstName(trim($payload['owner_first_name']));
                 }

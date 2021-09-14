@@ -690,4 +690,37 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             return $this->error500($ex);
         }
     }
+
+    /**
+     * @param $summit_id
+     * @param $ticket_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function canPrintAttendeeBadge($summit_id, $ticket_id){
+        try {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $badge = $this->service->canPrintAttendeeBadge($summit, $ticket_id, $current_member);
+
+            return $this->ok
+            (
+                SerializerRegistry::getInstance()->getSerializer($badge)->serialize( Request::input('expand', ''))
+            );
+
+        } catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
+        } catch (EntityNotFoundException $ex) {
+            Log::warning($ex);
+            return $this->error404(array('message' => $ex->getMessage()));
+        } catch (\Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
 }

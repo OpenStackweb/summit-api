@@ -2309,15 +2309,44 @@ final class SummitOrderService
     }
 
     /**
-     * @param Summit $summit
-     * @param int|string $ticket_id
      * @param Member $requestor
-     * @return SummitAttendeeBadge
-     * @throws EntityNotFoundException
+     * @param SummitAttendeeBadge $badge
+     * @return bool
      * @throws ValidationException
      */
-    public function printAttendeeBadge(Summit $summit, $ticket_id, Member $requestor): SummitAttendeeBadge
-    {
+    private function checkPrintingRights(Member $requestor, SummitAttendeeBadge $badge):bool{
+        // check rules
+
+        if (!$requestor->isAdmin()) {
+
+            $rules = $this->print_rules_repository->getByGroupsSlugs($requestor->getGroupsCodes());
+            if (count($rules) == 0)
+                throw new ValidationException("Your user has no rights to print badges.");
+
+            $canPrint = false;
+
+            foreach ($rules as $rule) {
+                if (!$rule instanceof SummitAttendeeBadgePrintRule) continue;
+                $canPrint = $rule->canPrintBadge($badge);
+                if ($canPrint)
+                    break;
+            }
+
+            if (!$canPrint) {
+                throw new ValidationException("This badge has already been printed.");
+            }
+        }
+        return true;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param $ticket_id
+     * @param Member $requestor
+     * @return SummitAttendeeBadge|null
+     * @throws \Exception
+     */
+    private function getAttendeeBadge(Summit $summit, $ticket_id, Member $requestor):?SummitAttendeeBadge{
         return $this->tx_service->transaction(function () use ($summit, $ticket_id, $requestor) {
             $ticket = null;
             // check by numeric id
@@ -2332,52 +2361,69 @@ final class SummitOrderService
                     $ticket = $this->ticket_repository->getByExternalAttendeeIdExclusiveLock($summit, strval($ticket_id));
             }
 
-            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
-                throw new EntityNotFoundException('ticket not found');
+            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket || !$ticket->isActive())
+                throw new EntityNotFoundException('Ticket not found.');
 
             $order = $ticket->getOrder();
             $summit = $order->getSummit();
 
             if ($order->getSummitId() != $summit->getId())
-                throw new EntityNotFoundException('ticket not found');
+                throw new EntityNotFoundException('Ticket not found.');
 
             if (!$ticket->hasBadge())
-                throw new EntityNotFoundException('badge not found');
+                throw new EntityNotFoundException('Badge not found.');
 
             $badge = $this->badge_repository->getByIdExclusiveLock($ticket->getBadgeId());
 
             if (is_null($badge) && !$badge instanceof SummitAttendeeBadge)
-                throw new EntityNotFoundException('badge not found');
+                throw new EntityNotFoundException('Badge not found.');
 
-            // check rules
+            return $badge;
+        });
+    }
+    /**
+     * @param Summit $summit
+     * @param int|string $ticket_id
+     * @param Member $requestor
+     * @return SummitAttendeeBadge
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function printAttendeeBadge(Summit $summit, $ticket_id, Member $requestor): SummitAttendeeBadge
+    {
+        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $requestor) {
 
-            if (!$requestor->isAdmin()) {
+            $badge = $this->getAttendeeBadge($summit, $ticket_id, $requestor);
 
-                $rules = $this->print_rules_repository->getByGroupsSlugs($requestor->getGroupsCodes());
-                if (count($rules) == 0)
-                    throw new ValidationException("Your user has no rights to print badges.");
-
-                $canPrint = false;
-
-                foreach ($rules as $rule) {
-                    if (!$rule instanceof SummitAttendeeBadgePrintRule) continue;
-                    $canPrint = $rule->canPrintBadge($badge);
-                    if ($canPrint)
-                        break;
-                }
-
-                if (!$canPrint) {
-                    throw new ValidationException("This badge has already been printed.");
-                }
-            }
+            $this->checkPrintingRights($requestor, $badge);
 
             $badge->printIt($requestor);
 
             // do checkin on print
-            $attendee = $ticket->getOwner();
+            $attendee = $badge->getTicket()->getOwner();
             if (!$attendee->hasCheckedIn()) {
                 $attendee->setSummitHallCheckedIn(true);
             }
+
+            return $badge;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int|string $ticket_id
+     * @param Member $requestor
+     * @return SummitAttendeeBadge
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function canPrintAttendeeBadge(Summit $summit, $ticket_id, Member $requestor): SummitAttendeeBadge
+    {
+        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $requestor) {
+            $badge = $this->getAttendeeBadge($summit, $ticket_id, $requestor);
+
+            $this->checkPrintingRights($requestor, $badge);
+
             return $badge;
         });
     }

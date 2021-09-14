@@ -945,6 +945,7 @@ Route::group(array('prefix' => 'summits'), function () {
                     Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@getAttendeeBadge']);
                     Route::group(['prefix' => 'current'], function () {
                         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@deleteAttendeeBadge']);
+                        Route::get('print', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@canPrintAttendeeBadge']);
                         Route::put('print', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@printAttendeeBadge']);
                         Route::group(['prefix' => 'features'], function () {
                             Route::group(['prefix' => '{feature_id}'], function () {

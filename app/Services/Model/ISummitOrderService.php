@@ -291,6 +291,16 @@ interface ISummitOrderService extends IProcessPaymentService
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
+    public function canPrintAttendeeBadge(Summit $summit, $ticket_id, Member $requestor): SummitAttendeeBadge;
+
+    /**
+     * @param Summit $summit
+     * @param int|string $ticket_id
+     * @param Member $requestor
+     * @return SummitAttendeeBadge
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
     public function printAttendeeBadge(Summit $summit, $ticket_id, Member $requestor):SummitAttendeeBadge;
 
     /**

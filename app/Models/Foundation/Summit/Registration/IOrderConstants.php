@@ -20,8 +20,6 @@ interface IOrderConstants
 {
     const ReservedStatus        = 'Reserved';
     const CancelledStatus       = 'Cancelled';
-    const RefundRequestedStatus = 'RefundRequested';
-    const RefundedStatus        = 'Refunded';
     const ConfirmedStatus       = 'Confirmed';
     const PaidStatus            = 'Paid';
     const ErrorStatus           = 'Error';
@@ -32,8 +30,6 @@ interface IOrderConstants
     const ValidStatus = [
         self::ReservedStatus,
         self::CancelledStatus,
-        self::RefundRequestedStatus,
-        self::RefundedStatus,
         self::ConfirmedStatus,
         self::PaidStatus,
         self::ErrorStatus

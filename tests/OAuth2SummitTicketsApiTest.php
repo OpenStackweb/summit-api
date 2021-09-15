@@ -11,7 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use Illuminate\Http\UploadedFile;
+use models\summit\IPaymentConstants;
+use models\summit\PaymentGatewayProfileFactory;
 
 /**
  * Class OAuth2SummitTicketsApiTest
@@ -19,25 +22,454 @@ use Illuminate\Http\UploadedFile;
 final class OAuth2SummitTicketsApiTest extends ProtectedApiTest
 {
 
-    public function setUp():void
+    /**
+     * @var string
+     */
+    protected static $test_secret_key;
+
+    /**
+     * @var string
+     */
+    protected static $test_public_key;
+
+    /**
+     * @var string
+     */
+    protected static $live_secret_key;
+
+    /**
+     * @var string
+     */
+    protected static $live_public_key;
+
+    /**
+     * @var \models\summit\SummitTicketType
+     */
+    protected static $ticketType;
+
+    /**
+     * @var \models\summit\PaymentGatewayProfile|null
+     */
+    protected static $profile;
+
+    use InsertSummitTestData;
+
+    use InsertOrdersTestData;
+
+    protected function setUp(): void
     {
         parent::setUp();
+        self::$test_secret_key = env('TEST_STRIPE_SECRET_KEY');
+        self::$test_public_key = env('TEST_STRIPE_PUBLISHABLE_KEY');
+        self::$live_secret_key = env('LIVE_STRIPE_SECRET_KEY');
+        self::$live_public_key = env('LIVE_STRIPE_PUBLISHABLE_KEY');
+
+        self::insertTestData();
+        self::InsertOrdersTestData();
+        // build payment profile and attach to summit
+        self::$profile = PaymentGatewayProfileFactory::build(IPaymentConstants::ProviderStripe, [
+            'application_type' => IPaymentConstants::ApplicationTypeRegistration,
+            'is_test_mode' => true,
+            'test_publishable_key' => self::$test_public_key,
+            'test_secret_key' => self::$test_secret_key,
+            'is_active' => false,
+        ]);
+
+        self::$summit->addPaymentProfile(self::$profile);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
     }
-  /**
-      * @return mixed
-     */
-    public function testGetAllTickets($summit_id = 8){
+
+    protected function tearDown(): void
+    {
+        self::clearTestData();
+        parent::tearDown();
+    }
+
+    public function testRequestRefundTicket()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $order = $ticket->getOrder();
+        $order->setOwner(self::$member);
+        self::$member->addSummitRegistrationOrder($order);
+        self::$em->persist($order);
+        self::$em->flush();
         $params = [
-            'summit_id' => $summit_id,
-            'page'     => 1,
-            'per_page' => 10,
-            'order'    => '+id',
-            'expand'   => 'owner,order,ticket_type,badge,promo_code'
+            'order_id' => $order->getId(),
+            'ticket_id' => $ticket->getId(),
+            'expand' => 'order,refund_requests'
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitOrdersApiController@requestRefundMyTicket",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $ticket = json_decode($content);
+        $this->assertTrue(!is_null($ticket));
+        $this->assertTrue($ticket->refunded_amount == 0);
+        $this->assertTrue(count($ticket->refund_requests) == 1);
+        $this->assertTrue($ticket->refund_requests[0]->refunded_amount == 0);
+        $this->assertTrue($ticket->refund_requests[0]->status == 'Requested');
+    }
+
+    public function testRequestRefundTicketTwice()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $order = $ticket->getOrder();
+        $order->setOwner(self::$member);
+        self::$member->addSummitRegistrationOrder($order);
+        self::$em->persist($order);
+        self::$em->flush();
+
+        $params = [
+            'order_id' => $order->getId(),
+            'ticket_id' => $ticket->getId(),
+            'expand' => 'order,refund_requests'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitOrdersApiController@requestRefundMyTicket",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $ticket1 = json_decode($content);
+        $this->assertTrue(!is_null($ticket));
+        $this->assertTrue($ticket1->refunded_amount == 0);
+        $this->assertTrue(count($ticket1->refund_requests) == 1);
+        $this->assertTrue($ticket1->refund_requests[0]->refunded_amount == 0);
+        $this->assertTrue($ticket1->refund_requests[0]->status == 'Requested');
+
+        $params = [
+            'order_id' => $order->getId(),
+            'ticket_id' => $ticket->getId(),
+            'expand' => 'order,refund_requests'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitOrdersApiController@requestRefundMyTicket",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(412);
+    }
+
+    public function testRefundTicketWithNote()
+    {
+
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'ticket_id' => $ticket->getId(),
+            'expand' => 'order,refund_requests,refund_requests.requested_by,refund_requests.ticket,refund_requests.ticket.ticket_type,refund_requests.ticket.refund_requests'
+        ];
+
+        $data = [
+            'amount' => 1.5,
+            'notes' => 'Courtesy refund'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitTicketApiController@refundTicket",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $ticket = json_decode($content);
+        $this->assertTrue(!is_null($ticket));
+        $this->assertTrue($ticket->refunded_amount == 1.5);
+        $this->assertTrue(count($ticket->refund_requests) == 1);
+        $this->assertTrue($ticket->refund_requests[0]->refunded_amount == 1.5);
+    }
+
+    public function testRejectRefund(){
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $order = $ticket->getOrder();
+        $order->setOwner(self::$member);
+        self::$member->addSummitRegistrationOrder($order);
+        self::$em->persist($order);
+        self::$em->flush();
+
+        $params = [
+            'order_id' => $order->getId(),
+            'ticket_id' => $ticket->getId(),
+            'expand' => 'order,refund_requests'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitOrdersApiController@requestRefundMyTicket",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $ticket = json_decode($content);
+        $this->assertTrue(!is_null($ticket));
+        $this->assertTrue($ticket->refunded_amount == 0);
+        $this->assertTrue(count($ticket->refund_requests) == 1);
+        $this->assertTrue($ticket->refund_requests[0]->refunded_amount == 0);
+        $this->assertTrue($ticket->refund_requests[0]->status == 'Requested');
+
+        $data = [
+            'notes' => 'OUT OF TIME'
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitOrdersApiController@cancelRefundRequestTicket",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(201);
+        $content = $response->getContent();
+        $ticket = json_decode($content);
+        $this->assertTrue($ticket->refunded_amount == 0);
+        $this->assertTrue(count($ticket->refund_requests) == 1);
+        $this->assertTrue($ticket->refund_requests[0]->refunded_amount == 0);
+        $this->assertTrue($ticket->refund_requests[0]->status == 'Rejected');
+        $this->assertTrue($ticket->refund_requests[0]->notes == 'OUT OF TIME');
+    }
+
+    public function testFullRefundTicketWithNote()
+    {
+
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'ticket_id' => self::$summit_orders[0]->getFirstTicket()->getId(),
+            'expand' => 'refund_requests'
+        ];
+
+        $data = [
+            'amount' => $ticket->getFinalAmount(),
+            'notes' => 'Courtesy refund'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitTicketApiController@refundTicket",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $ticket1 = json_decode($content);
+        $this->assertTrue(!is_null($ticket1));
+        $this->assertTrue($ticket1->refunded_amount == $ticket->getFinalAmount());
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'ticket_id' => $ticket->getNumber(),
+            'expand' => 'order, refund_requests'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitTicketApiController@get",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $ticket2 = json_decode($content);
+        $this->assertTrue(!is_null($ticket2));
+    }
+
+    public function testRequestRefundRequestAndGetTickets()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $order = $ticket->getOrder();
+        $order->setOwner(self::$member);
+        self::$member->addSummitRegistrationOrder($order);
+        self::$em->persist($order);
+        self::$em->flush();
+
+        $params = [
+            'order_id' => $order->getId(),
+            'ticket_id' => $ticket->getId(),
+            'expand' => 'order,refund_requests'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitOrdersApiController@requestRefundMyTicket",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $ticket1 = json_decode($content);
+        $this->assertTrue(!is_null($ticket));
+        $this->assertTrue($ticket1->refunded_amount == 0);
+        $this->assertTrue(count($ticket1->refund_requests) == 1);
+        $this->assertTrue($ticket1->refund_requests[0]->refunded_amount == 0);
+        $this->assertTrue($ticket1->refund_requests[0]->status == 'Requested');
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'expand' => 'order, refund_requests',
+            'filter' => 'has_requested_refund_requests==1'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitTicketApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $tickets = json_decode($content);
+        $this->assertTrue(!is_null($tickets));
+        $this->assertTrue($tickets->total==1);
+    }
+
+    public function testRefundTicketGreaterThanCost()
+    {
+
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $params = [
+            'id' => self::$summit->getId(),
+            'ticket_id' => $ticket->getId()
+        ];
+
+        $data = [
+            'amount' => $ticket->getFinalAmount() + 10.0,
+            'notes' => 'Courtesy refund'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitTicketApiController@refundTicket",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(412);
+    }
+
+    public function testGetAllTickets()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+            'page' => 1,
+            'per_page' => 10,
+            'order' => '+id',
+            'expand' => 'owner,order,ticket_type,badge,promo_code'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -57,19 +489,16 @@ final class OAuth2SummitTicketsApiTest extends ProtectedApiTest
         return $tickets;
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testGetAllTicketsCSV($summit_id = 4){
+    public function testGetAllTicketsCSV()
+    {
 
         $params = [
-            'summit_id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -88,15 +517,16 @@ final class OAuth2SummitTicketsApiTest extends ProtectedApiTest
         return $csv;
     }
 
-    public function testGetTicketImportTemplate($summit_id = 3){
+    public function testGetTicketImportTemplate()
+    {
 
         $params = [
-            'summit_id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -115,7 +545,8 @@ final class OAuth2SummitTicketsApiTest extends ProtectedApiTest
         return $csv;
     }
 
-    public function testIngestTicketData($summit_id = 21){
+    public function testIngestTicketData()
+    {
         $csv_content = <<<CSV
 attendee_email,attendee_first_name,attendee_last_name,ticket_type_name,badge_type_name,Bloomreach Connect Summit - Day 1,User Group - Day 2,Tech Track - Day 3,Partner Summit - Day 4
 smarcet+json12@gmail.com,Jason12,Marcet,General Admission,General Admission,1,1,1,1
@@ -127,7 +558,7 @@ CSV;
         $file = new UploadedFile($path, "tickets.csv", 'text/csv', null, true);
 
         $params = [
-            'summit_id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $headers = [
@@ -150,7 +581,8 @@ CSV;
         $this->assertResponseStatus(200);
     }
 
-    public function testIngestTicketData2($summit_id = 1){
+    public function testIngestTicketData2()
+    {
         $csv_content = <<<CSV
 id,number,attendee_email,attendee_first_name,attendee_last_name,attendee_company,ticket_type_name,ticket_type_id,badge_type_id,badge_type_name,Commander,VIP Access
 ,REGISTRATIONDEVSUMMIT2019_TICKET_5D7BD99A36008622282877,xmarcet+4@gmail.com,,,,,,,,1,1
@@ -162,7 +594,7 @@ CSV;
         $file = new UploadedFile($path, "tickets.csv", 'text/csv', null, true);
 
         $params = [
-            'summit_id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $headers = [
@@ -185,21 +617,19 @@ CSV;
         $this->assertResponseStatus(200);
     }
 
-    /**
-     * @param int $summit_id
-     * @param string $number
-     * @return mixed
-     */
-    public function testGetTicketByNumber($summit_id = 31, $number = 6107){
+
+    public function testGetTicketByNumber()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
         $params = [
-            'id' => $summit_id,
-            'ticket_id' => $number,
-            'expand'   => 'order'
+            'id' => self::$summit->getId(),
+            'ticket_id' => $ticket->getNumber(),
+            'expand' => 'order'
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -221,24 +651,73 @@ CSV;
 
     // badges endpoints
 
-    /**
-     * @param int $summit_id
-     * @param string $number
-     * @return mixed
-     */
-    public function testCreateAttendeeBadge($summit_id = 27, $number = 'SHANGHAI2019_TICKET_5D658F4EF058F555164878'){
+
+    public function testCreateAttendeeBadge()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
         $params = [
-            'id' => $summit_id,
-            'ticket_id' => $number
+            'id' => self::$summit->getId(),
+            'ticket_id' => $ticket->getId(),
         ];
+
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitTicketApiController@deleteAttendeeBadge",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
         $data = [
-            'badge_type_id' => 2,
-            'features' => [1, 2]
+            'badge_type_id' => self::$badge_type_2->getId(),
+            'features' => [self::$badge_features[0]->getId(), self::$badge_features[1]->getId()]
+        ];
+
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitTicketApiController@createAttendeeBadge",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $badge = json_decode($content);
+        $this->assertTrue(!is_null($badge));
+        $this->assertTrue(count($badge->features) == 2);
+        return $badge;
+    }
+
+    public function testRemoveAttendeeBadgeFeature()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'ticket_id' => $ticket->getId(),
+        ];
+
+        $data = [
+            'badge_type_id' => self::$badge_type_2->getId(),
+            'features' => [self::$badge_features[0]->getId(), self::$badge_features[1]->getId()]
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -256,19 +735,17 @@ CSV;
         $this->assertResponseStatus(201);
         $badge = json_decode($content);
         $this->assertTrue(!is_null($badge));
-        return $badge;
-    }
+        $this->assertTrue(count($badge->features) == 2);
 
-    public function testRemoveAttendeeBadgeFeature($summit_id = 27, $number = 'SHANGHAI2019_TICKET_5D658F4EF058F555164878', $feature_id = 1){
         $params = [
-            'id' => $summit_id,
-            'ticket_id' => $number,
-            'feature_id' => $feature_id,
+            'id' => self::$summit->getId(),
+            'ticket_id' => $ticket->getId(),
+            'feature_id' => self::$badge_features[0]->getId(),
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -285,19 +762,24 @@ CSV;
         $this->assertResponseStatus(201);
         $badge = json_decode($content);
         $this->assertTrue(!is_null($badge));
+        $this->assertTrue(count($badge->features) == 1);
         return $badge;
     }
 
-    public function testAddAttendeeBadgeFeature($summit_id = 27, $number = 'SHANGHAI2019_TICKET_5D658F4EF058F555164878', $feature_id = 1){
+    public function testAddAttendeeBadgeFeature()
+    {
+
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+
         $params = [
-            'id' => $summit_id,
-            'ticket_id' => $number,
-            'feature_id' => $feature_id,
+            'id' => self::$summit->getId(),
+            'ticket_id' => $ticket->getId(),
+            'feature_id' => self::$badge_features[0]->getId(),
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -314,25 +796,25 @@ CSV;
         $this->assertResponseStatus(201);
         $badge = json_decode($content);
         $this->assertTrue(!is_null($badge));
+        $this->assertTrue(count($badge->features) == 1);
         return $badge;
     }
 
-    /**
-     * @param int $summit_id
-     * @param string $number
-     * @param int $type
-     * @return mixed
-     */
-    function testUpdateAttendeeBadgeType($summit_id = 27, $number = 'SHANGHAI2019_TICKET_5D658F4EF058F555164878', $type = 1){
+
+    public function testUpdateAttendeeBadgeType()
+    {
+
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+
         $params = [
-            'id' => $summit_id,
-            'ticket_id' => $number,
-            'type_id' => $type,
+            'id' => self::$summit->getId(),
+            'ticket_id' => $ticket->getId(),
+            'type_id' => self::$badge_type_2->getId(),
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -351,20 +833,19 @@ CSV;
         $this->assertTrue(!is_null($badge));
         return $badge;
     }
-    /**
-     * @param int $summit_id
-     * @param string $number
-     * @return mixed
-     */
-    public function testDeleteAttendeeBadge($summit_id = 27, $number = 'SHANGHAI2019_TICKET_5D658F4EF058F555164878'){
+
+    public function testDeleteAttendeeBadge()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+
         $params = [
-            'id' => $summit_id,
-            'ticket_id' => $number
+            'id' => self::$summit->getId(),
+            'ticket_id' => $ticket->getId(),
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -382,21 +863,18 @@ CSV;
     }
 
 
-    /**
-     * @param int $summit_id
-     * @param string $number
-     * @return mixed
-     */
-    function testPrintAttendeeBadge($summit_id = 1, $number = 'REGISTRATIONDEVSUMMIT2019_TICKET_5D7BE0E518E8C161661586'){
+    function testPrintAttendeeBadge()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+
         $params = [
-            'id' => $summit_id,
-            'ticket_id' => $number,
-            'expand' => 'features',
+            'id' => self::$summit->getId(),
+            'ticket_id' => $ticket->getId(),
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -410,9 +888,6 @@ CSV;
         );
 
         $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $badge = json_decode($content);
-        $this->assertTrue(!is_null($badge));
-        return $badge;
+        $this->assertResponseStatus(412);
     }
 }

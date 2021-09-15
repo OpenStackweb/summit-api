@@ -1,8 +1,4 @@
 <?php namespace ModelSerializers;
-use Libs\ModelSerializers\Many2OneExpandSerializer;
-use Libs\ModelSerializers\One2ManyExpandSerializer;
-use models\oauth2\IResourceServerContext;
-
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +11,8 @@ use models\oauth2\IResourceServerContext;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use Libs\ModelSerializers\Many2OneExpandSerializer;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 /**
  * Class ProjectSponsorshipTypeSerializer
  * @package ModelSerializers
@@ -31,16 +28,16 @@ class ProjectSponsorshipTypeSerializer extends SilverStripeSerializer
         'SupportingCompaniesIds' => 'supporting_companies',
     ];
 
-    public function __construct($object, IResourceServerContext $resource_server_context)
-    {
-        parent::__construct($object, $resource_server_context);
-        $this->expand_mappings = [
-            'sponsored_project' => new One2ManyExpandSerializer('sponsored_project', function () use ($object) {
-                return $object->getSponsoredProject();
-            }, "sponsored_project_id"),
-            'supporting_companies' => new Many2OneExpandSerializer('supporting_companies', function () use ($object) {
-                return $object->getSupportingCompanies();
-            }, "supporting_companies"),
-        ];
-    }
+    protected static $expand_mappings = [
+        'sponsored_project' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'sponsored_project_id',
+            'getter' => 'getSponsoredProject',
+            'has' => 'hasSponsoredProject'
+        ],
+        'supporting_companies' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getSupportingCompanies',
+        ]
+    ];
 }

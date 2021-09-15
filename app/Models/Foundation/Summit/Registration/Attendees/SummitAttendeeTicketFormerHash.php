@@ -11,14 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Illuminate\Support\Facades\Event;
-use App\Events\RequestedSummitAttendeeTicketRefund;
-use App\Events\SummitAttendeeTicketRefundAccepted;
-use App\Models\Foundation\Summit\AllowedCurrencies;
-use Illuminate\Support\Facades\Config;
-use Doctrine\Common\Collections\ArrayCollection;
-use Illuminate\Support\Facades\Log;
-use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**

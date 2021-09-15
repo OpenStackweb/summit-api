@@ -17,7 +17,7 @@ use App\Services\Apis\IPaymentGatewayAPI;
 use Illuminate\Http\Request as LaravelRequest;
 use models\exceptions\ValidationException;
 use Stripe\Charge;
-use Stripe\Exception\ApiErrorException;
+use Exception;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Event;
 use Stripe\Refund;
@@ -218,12 +218,15 @@ final class StripeApi implements IPaymentGatewayAPI
 
             throw new ValidationException(sprintf("event type %s not handled!", $event->type));
         } catch (\UnexpectedValueException $e) {
+            Log::warning($e);
             // Invalid payload
             throw $e;
         } catch (SignatureVerificationException $e) {
+            Log::warning($e);
             // Invalid signature
             throw $e;
         } catch (\Exception $e) {
+            Log::warning($e);
             throw $e;
         }
     }
@@ -260,9 +263,11 @@ final class StripeApi implements IPaymentGatewayAPI
      * @param string $cart_id
      * @param float $amount
      * @param string $currency
-     * @throws \InvalidArgumentException
+     * @param string $reason
+     * @return string|null
+     * @throws \Exception
      */
-    public function refundPayment(string $cart_id, float $amount, string $currency): void
+    public function refundPayment(string $cart_id, float $amount, string $currency, string $reason = 'requested_by_customer'): ?string
     {
         try {
 
@@ -285,7 +290,7 @@ final class StripeApi implements IPaymentGatewayAPI
                 throw new \InvalidArgumentException();
             $params = [
                 'charge' => $charge->id,
-                'reason' => 'requested_by_customer'
+                'reason' => $reason
             ];
             if ($amount > 0) {
                 if (!self::isZeroDecimalCurrency($currency)) {
@@ -303,10 +308,11 @@ final class StripeApi implements IPaymentGatewayAPI
             // $charge->refund($params);
             // @see https://github.com/stripe/stripe-php/wiki/Migration-guide-for-v7
             $refund = Refund::create($params);
-
-            Log::debug(sprintf("StripeApi::refundPayment refund requested for cart_id %s amount %s response %s", $cart_id, $amount, $refund->toJSON()));
+            $res = $refund->toJSON();
+            Log::debug(sprintf("StripeApi::refundPayment refund requested for cart_id %s amount %s response %s", $cart_id, $amount, $res));
+            return $res;
         }
-        catch (\Exception $ex){
+        catch (Exception $ex){
             Log::error($ex);
             throw $ex;
         }
@@ -389,7 +395,7 @@ final class StripeApi implements IPaymentGatewayAPI
 
             return $intent->status;
         }
-        catch(ApiErrorException $ex){
+        catch(Exception $ex){
             Log::warning(sprintf("StripeApi::getCartStatus cart_id %s code %s message %s", $cart_id, $ex->getCode(), $ex->getMessage()));
             return null;
         }
@@ -437,7 +443,7 @@ final class StripeApi implements IPaymentGatewayAPI
 
             return WebhookEndpoint::retrieve($id);
         }
-        catch (\Exception $ex){
+        catch (Exception $ex){
             Log::error($ex);
             throw $ex;
         }
@@ -453,7 +459,7 @@ final class StripeApi implements IPaymentGatewayAPI
             if (!$webhook) return;
             $webhook->delete();
         }
-        catch (\Exception $ex){
+        catch (Exception $ex){
             Log::error($ex);
             throw $ex;
         }

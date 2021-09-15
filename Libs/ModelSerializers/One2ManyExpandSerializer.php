@@ -12,12 +12,11 @@
  * limitations under the License.
  **/
 use ModelSerializers\SerializerRegistry;
-use Closure;
 /**
  * Class One2ManyExpandSerializer
  * @package Libs\ModelSerializers
  */
-class One2ManyExpandSerializer
+class One2ManyExpandSerializer implements IExpandSerializer
 {
     /**
      * @var string
@@ -27,29 +26,33 @@ class One2ManyExpandSerializer
     /**
      * @var string
      */
-    protected $attribute_name;
+    protected $attribute;
 
     /**
-     * @var Closure
+     * @var string
      */
-    protected $getRelationFn;
+    protected $getter;
+
+    /**
+     * @var string
+     */
+    protected $has;
 
     /**
      * One2ManyExpandSerializer constructor.
-     * @param string $attribute_name
-     * @param Closure $getRelationFn
-     * @param string|null $original_attribute
+     * @param string $original_attribute
+     * @param string $attribute
+     * @param string $getter
+     * @param string|null $has
      */
-    public function __construct(
-        string $attribute_name,
-        Closure $getRelationFn,
-        string $original_attribute = null
-    )
+    public function __construct(string $original_attribute, string $attribute, string $getter, ?string $has = null)
     {
-        $this->attribute_name = $attribute_name;
-        $this->getRelationFn = $getRelationFn;
         $this->original_attribute = $original_attribute;
+        $this->attribute = $attribute;
+        $this->getter = $getter;
+        $this->has = $has;
     }
+
 
     /**
      * @param array $values
@@ -63,15 +66,21 @@ class One2ManyExpandSerializer
     }
 
     /**
+     * @param mixed $entity
      * @param array $values
      * @param string $expand
      * @return array
      */
-    public function serialize(array $values, string $expand): array
+    public function serialize($entity, array $values, string $expand): array
     {
-        $values = $this->unsetOriginalAttribute($values);
-        $callback = $this->getRelationFn;
-        $values[$this->attribute_name] = SerializerRegistry::getInstance()->getSerializer($callback($this))->serialize(AbstractSerializer::filterExpandByPrefix($expand, $this->attribute_name));
+        $res = $entity->{$this->has}();
+        if(boolval($res)){
+            $values = $this->unsetOriginalAttribute($values);
+            $values[$this->attribute] = SerializerRegistry::getInstance()->getSerializer
+            (
+                $entity->{$this->getter}()
+            )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $this->attribute));
+        }
         return $values;
     }
 

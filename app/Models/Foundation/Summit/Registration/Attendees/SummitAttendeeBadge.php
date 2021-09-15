@@ -289,6 +289,7 @@ SQL;
                 'group_id' => $group->getId(),
             ]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {
 

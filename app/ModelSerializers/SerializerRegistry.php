@@ -62,6 +62,7 @@ use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackLiteralContentQ
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackMultiValueQuestionTemplateSerializer;
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackQuestionValueTemplateSerializer;
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackSingleValueTemplateQuestionSerializer;
+use App\ModelSerializers\Summit\Registration\Refunds\SummitAttendeeTicketRefundRequestSerializer;
 use App\ModelSerializers\Summit\Registration\SummitAttendeeCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitAttendeeTicketCSVSerializer;
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPDropDownQuestionTemplateSerializer;
@@ -83,6 +84,7 @@ use App\ModelSerializers\Summit\TrackTagGroups\TrackTagGroupSerializer;
 use Illuminate\Support\Facades\App;
 use Libs\ModelSerializers\IModelSerializer;
 use models\oauth2\IResourceServerContext;
+use models\summit\SummitAttendeeTicketRefundRequest;
 use ModelSerializers\ChatTeams\ChatTeamInvitationSerializer;
 use ModelSerializers\ChatTeams\ChatTeamMemberSerializer;
 use ModelSerializers\ChatTeams\ChatTeamPushNotificationMessageSerializer;
@@ -335,6 +337,8 @@ final class SerializerRegistry
             ISummitAttendeeTicketSerializerTypes::GuestEdition => GuestEditionSummitAttendeeTicketSerializer::class,
             self::SerializerType_CSV => SummitAttendeeTicketCSVSerializer::class,
         ];
+
+        $this->registry['SummitAttendeeTicketRefundRequest'] = SummitAttendeeTicketRefundRequestSerializer::class;
 
         $this->registry['SummitAttendeeBadge'] = SummitAttendeeBadgeSerializer::class;
 

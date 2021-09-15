@@ -19,19 +19,21 @@ use ModelSerializers\SerializerRegistry;
 class Many2OneExpandSerializer extends One2ManyExpandSerializer
 {
     /**
+     * @param mixed $entity
      * @param array $values
      * @param string $expand
      * @return array
      */
-    public function serialize(array $values, string $expand): array
+    public function serialize($entity, array $values, string $expand): array
     {
         $values = $this->unsetOriginalAttribute($values);
-        $callback = $this->getRelationFn;
         $res = [];
-        foreach ($callback($this) as $item){
-            $res[] = SerializerRegistry::getInstance()->getSerializer($item)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $this->attribute_name));
+        foreach ($entity->{$this->getter}() as $item){
+            $res[] = SerializerRegistry::getInstance()->getSerializer($item)
+                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $this->attribute));
         }
-        $values[$this->attribute_name] = $res;
+        $values[$this->attribute] = $res;
+
         return $values;
     }
 }

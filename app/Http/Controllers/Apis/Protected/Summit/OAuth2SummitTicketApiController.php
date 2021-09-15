@@ -97,6 +97,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'owner_id'            => ['=='],
                     'order_id'            => ['=='],
                     'status'              => ['==','<>'],
+                    'is_active'           => ['=='],
+                    'has_requested_refund_requests' => ['=='],
                 ];
             },
             function(){
@@ -112,6 +114,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'summit_id'             => 'sometimes|integer',
                     'owner_id'              => 'sometimes|integer',
                     'order_id'              => 'sometimes|integer',
+                    'is_active'           => 'sometimes|boolean',
+                    'has_requested_refund_requests' => 'sometimes|boolean',
                 ];
             },
             function()
@@ -156,6 +160,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'owner_id'            => ['=='],
                     'order_id'            => ['=='],
                     'status'              => ['=='],
+                    'is_active'           => ['=='],
+                    'has_requested_refund_requests' => ['=='],
                 ];
             },
             function(){
@@ -171,6 +177,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'summit_id'        => 'sometimes|integer',
                     'owner_id'         => 'sometimes|integer',
                     'order_id'         => 'sometimes|integer',
+                    'is_active'           => 'sometimes|boolean',
+                    'has_requested_refund_requests' => 'sometimes|boolean',
                 ];
             },
             function()
@@ -473,14 +481,29 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         try {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
+            $current_user = $this->getResourceServerContext()->getCurrentUser();
+            if(is_null($current_user))
+                return $this->error403();
 
             $payload = $this->getJsonPayload([
                 'amount' => 'required|numeric|greater_than:0',
+                'notes' => 'sometimes|string|max:255',
             ]);
 
-            $ticket = $this->service->refundTicket($summit, $ticket_id, floatval($payload['amount']));
+            $ticket = $this->service->refundTicket
+            (
+                $summit,
+                $current_user,
+                $ticket_id,
+                floatval($payload['amount']),
+                trim($payload['notes'] ?? '')
+            );
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize( Request::input('expand', '')));
+            return $this->updated
+            (
+                SerializerRegistry::getInstance()
+                    ->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::AdminType)
+                    ->serialize( Request::input('expand', '')));
         }
         catch(\InvalidArgumentException $ex){
             Log::warning($ex);

@@ -45,4 +45,5 @@ return [
         ]
     ],
     'send_ticket_attachments' => env('REGISTRATION_SEND_TICKET_ATTACHMENTS', false),
+    'admin_ticket_edit_url' => env('REGISTRATION_ADMIN_TICKET_EDIT_URL', null)
 ];

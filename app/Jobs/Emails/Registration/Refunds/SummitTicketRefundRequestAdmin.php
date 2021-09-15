@@ -46,10 +46,16 @@ class SummitTicketRefundRequestAdmin extends AbstractEmailJob
         $payload['owner_email'] = $order->getOwnerEmail();
         $payload['owner_company'] = $order->getOwnerCompany();
         $payload['ticket_number'] = $ticket->getNumber();
+        $payload['ticket_id'] = $ticket->getId();
+        $payload['order_id'] = $order->getId();
+        $payload['order_number'] = $order->getNumber();
         $payload['summit_name'] = $summit->getName();
         $payload['summit_logo'] = $summit->getLogoUrl();
         $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
         $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
+        $admin_ticket_edit_url = Config::get("registration.admin_ticket_edit_url", null);
+        $payload['admin_ticket_edit_url'] = !empty($admin_ticket_edit_url) ?
+            sprintf($admin_ticket_edit_url, $summit->getId(), $order->getId(), $ticket->getId()) : '';
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 

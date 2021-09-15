@@ -30,6 +30,7 @@ use App\Jobs\Emails\Registration\Refunds\SummitOrderRefundAccepted;
 use App\Jobs\Emails\Registration\Refunds\SummitOrderRefundRequestAdmin;
 use App\Jobs\Emails\Registration\Refunds\SummitOrderRefundRequestOwner;
 use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundAccepted;
+use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRejected;
 use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestAdmin;
 use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestOwner;
 use App\Jobs\Emails\Registration\MemberPromoCodeEmail;
@@ -148,6 +149,11 @@ final class SummitEmailFlowTypeSeeder extends Seeder
                 'name' => SummitTicketRefundAccepted::EVENT_NAME,
                 'slug' => SummitTicketRefundAccepted::EVENT_SLUG,
                 'default_email_template' => SummitTicketRefundAccepted::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => SummitTicketRefundRejected::EVENT_NAME,
+                'slug' => SummitTicketRefundRejected::EVENT_SLUG,
+                'default_email_template' => SummitTicketRefundRejected::DEFAULT_TEMPLATE
             ],
             [
                 'name' => SummitTicketRefundRequestAdmin::EVENT_NAME,

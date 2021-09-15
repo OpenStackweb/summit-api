@@ -13,7 +13,6 @@
  **/
 
 use App\Models\Foundation\Summit\TrackTagGroup;
-use App\Models\Foundation\Summit\TrackTagGroupAllowedTag;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\main\Tag;
@@ -21,7 +20,7 @@ use models\summit\PresentationCategoryGroup;
 use models\utils\SilverstripeBaseModel;
 use models\summit\SummitVenue;
 use models\summit\Summit;
-use Doctrine\Persistence\ObjectRepository;
+use Doctrine\Common\Persistence\ObjectRepository;
 use models\summit\PresentationCategory;
 use models\summit\SummitEventType;
 use models\summit\PresentationType;
@@ -33,6 +32,7 @@ use models\main\SummitAdministratorPermissionGroup;
 use DateTimeZone;
 use DateTime;
 use DateInterval;
+use Exception;
 /**
  * Trait InsertSummitTestData
  * @package Tests
@@ -131,6 +131,8 @@ trait InsertSummitTestData
         self::$summit->setTimeZoneId("America/Chicago");
         $time_zone = new DateTimeZone("America/Chicago");
         $begin_date = new DateTime("now", $time_zone);
+        $begin_date = $begin_date->add(new DateInterval("P1D"));
+
         self::$summit->setBeginDate($begin_date);
         self::$summit->setEndDate((clone $begin_date)->add(new DateInterval("P30D")));
         self::$summit->setRegistrationBeginDate($begin_date);

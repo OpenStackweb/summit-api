@@ -1,6 +1,6 @@
-<?php namespace ModelSerializers;
+<?php namespace App\ModelSerializers\Summit\Registration\Refunds;
 /**
- * Copyright 2018 OpenStack Foundation
+ * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,18 +13,21 @@
  **/
 use Libs\ModelSerializers\One2ManyExpandSerializer;
 /**
- * Class SummitAttendeeTicketSerializer
- * @package ModelSerializers
+ * Class SummitAttendeeTicketRefundRequestSerializer
+ * @package App\ModelSerializers\Summit\Registration\Refunds
  */
-class SummitAttendeeTicketSerializer extends BaseSummitAttendeeTicketSerializer
+final class SummitAttendeeTicketRefundRequestSerializer extends SummitRefundRequestSerializer
 {
+    protected static $array_mappings = [
+        'TicketId' => 'ticket_id:json_int',
+    ];
 
     protected static $expand_mappings = [
-        'order' => [
+        'ticket' => [
             'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'order_id',
-            'getter' => 'getOrder',
-            'has' => 'hasOrder'
+            'original_attribute' => 'ticket_id',
+            'getter' => 'getTicket',
+            'has' => 'hasTicket'
         ],
     ];
 

@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 use Libs\ModelSerializers\One2ManyExpandSerializer;
-use models\oauth2\IResourceServerContext;
 /**
  * Class SupportingCompanySerializer
  * @package ModelSerializers
@@ -25,23 +24,19 @@ final class SupportingCompanySerializer extends SilverStripeSerializer
         'Order' => 'order:json_int',
     ];
 
-    /***
-     * SupportingCompanySerializer constructor.
-     * @param $object
-     * @param IResourceServerContext $resource_server_context
-     */
-    public function __construct($object, IResourceServerContext $resource_server_context)
-    {
-        parent::__construct($object, $resource_server_context);
-
-        $this->expand_mappings = [
-            'company' => new One2ManyExpandSerializer('company', function () use ($object) {
-                return $object->getCompany();
-            }, "company_id"),
-            'sponsorship_type' => new One2ManyExpandSerializer('sponsorship_type', function () use ($object) {
-                return $object->getSponsorshipType();
-            }, "sponsorship_type_id"),
-        ];
-    }
+    protected static $expand_mappings = [
+        'company' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'company_id',
+            'getter' => 'getCompany',
+            'has' => 'hasCompany'
+        ],
+        'sponsorship_type' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'sponsorship_type_id',
+            'getter' => 'getSponsorshipType',
+            'has' => 'hasSponsorshipType'
+        ]
+    ];
 
 }

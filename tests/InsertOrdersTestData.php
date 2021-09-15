@@ -14,10 +14,11 @@
 
 use Illuminate\Support\Facades\DB;
 use models\summit\SummitAttendeeTicket;
+use models\summit\SummitBadgeFeatureType;
 use models\summit\SummitBadgeType;
 use models\summit\SummitOrder;
 use models\summit\SummitTicketType;
-
+use Exception;
 /**
  * Trait InsertOrdersTestData
  */
@@ -35,9 +36,20 @@ trait InsertOrdersTestData
     static $default_badge_type;
 
     /**
+     * @var SummitBadgeType
+     */
+    static $badge_type_2;
+
+    /**
      * @var SummitOrder[]
      */
     static $summit_orders = [];
+
+    /**
+     * @var SummitBadgeFeatureType[]
+     */
+    static $badge_features = [];
+
 
     /**
      * @throws Exception
@@ -52,6 +64,22 @@ trait InsertOrdersTestData
         self::$default_badge_type->setDescription("BADGE TYPE1 DESCRIPTION");
         self::$summit->addBadgeType(self::$default_badge_type);
 
+        self::$badge_type_2 = new SummitBadgeType();
+        self::$badge_type_2->setName("BADGE TYPE2");
+        self::$badge_type_2->setIsDefault(false);
+        self::$badge_type_2->setDescription("BADGE TYPE2 DESCRIPTION");
+        self::$summit->addBadgeType(self::$badge_type_2);
+
+        // features
+        self::$badge_features = [];
+        for($i = 1 ; $i <= 10; $i++) {
+            $f = new SummitBadgeFeatureType();
+            $f->setName(sprintf("FEATURE %s", $i));
+            $f->setDescription(sprintf("FEATURE %s", $i));
+            self::$summit->addFeatureType($f);
+            self::$badge_features[] = $f;
+        }
+
         self::$default_ticket_type = new SummitTicketType();
         self::$default_ticket_type->setCost(100);
         self::$default_ticket_type->setCurrency("USD");
@@ -59,6 +87,10 @@ trait InsertOrdersTestData
         self::$default_ticket_type->setQuantity2Sell(100);
         self::$default_ticket_type->setBadgeType(self::$default_badge_type);
         self::$summit->addTicketType(self::$default_ticket_type);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        self::$summit_orders = [];
 
         for($i = 1 ; $i <= 10; $i++) {
             $order = new SummitOrder();
@@ -81,8 +113,8 @@ trait InsertOrdersTestData
             $ticket->generateQRCode();
             $order->generateHash();
             $order->generateQRCode();
-            $order->setPaid();
             $order->addTicket($ticket);
+            $order->setPaid();
             self::$summit_orders[] = $order;
         }
 

@@ -1,6 +1,6 @@
-<?php namespace ModelSerializers;
+<?php namespace models\summit;
 /**
- * Copyright 2018 OpenStack Foundation
+ * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,21 +11,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Libs\ModelSerializers\One2ManyExpandSerializer;
+
 /**
- * Class SummitAttendeeTicketSerializer
- * @package ModelSerializers
+ * Interface ISummitRefundRequestConstants
+ * @package models\summit
  */
-class SummitAttendeeTicketSerializer extends BaseSummitAttendeeTicketSerializer
+interface ISummitRefundRequestConstants
 {
+    const RefundRequestedStatus = 'Requested';
+    const ApprovedStatus        = 'Approved';
+    const RejectedStatus        = 'Rejected';
 
-    protected static $expand_mappings = [
-        'order' => [
-            'type' => One2ManyExpandSerializer::class,
-            'original_attribute' => 'order_id',
-            'getter' => 'getOrder',
-            'has' => 'hasOrder'
-        ],
+    const ValidStatus = [
+        self::RefundRequestedStatus,
+        self::ApprovedStatus,
+        self::RejectedStatus,
     ];
-
 }

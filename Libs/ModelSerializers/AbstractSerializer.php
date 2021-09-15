@@ -12,11 +12,13 @@
  * limitations under the License.
  **/
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use libs\utils\JsonUtils;
 use models\oauth2\IResourceServerContext;
 use models\utils\IEntity;
-use ModelSerializers\SerializerRegistry;
+use ReflectionClass;
+use Exception;
 
 /**
  * Class AbstractSerializer
@@ -40,102 +42,196 @@ abstract class AbstractSerializer implements IModelSerializer
      * @param $object
      * @param IResourceServerContext $resource_server_context
      */
-    public function __construct($object, IResourceServerContext $resource_server_context){
+    public function __construct($object, IResourceServerContext $resource_server_context)
+    {
         $this->object = $object;
         $this->resource_server_context = $resource_server_context;
     }
 
-    protected static $array_mappings    = [];
+    protected static $array_mappings = [];
 
-    protected static $allowed_fields    = [];
+    protected static $allowed_fields = [];
 
     protected static $allowed_relations = [];
 
+    protected static $expand_mappings = [];
+
     /**
      * @return array
      */
-    protected function getAllowedFields()
+    protected function getAllowedFields():array
     {
-        $mappings  = [];
-        $hierarchy = $this->getClassHierarchy();
+        try {
+            $allowed_fields = [];
+            $hierarchy = $this->getClassHierarchy();
+            $cur_class = get_class($this);
+            $cache_key = $cur_class . '.allowed_fields';
 
-        foreach($hierarchy as $class_name){
-            if($class_name === 'Libs\ModelSerializers\AbstractSerializer') continue;
-            $class    = new $class_name($this->object, $this->resource_server_context);
-            $mappings = array_merge($mappings, $class->getSelfAllowedFields());
+            if (Cache::has($cache_key)) {
+                $res = Cache::get($cache_key);
+                if(!empty($res))
+                    return json_decode($res, true);
+            }
+
+            foreach ($hierarchy as $class_name) {
+                if ($class_name === AbstractSerializer::class) continue;
+                $refClass = new ReflectionClass($class_name);
+                if ($refClass->hasProperty("allowed_fields")) {
+                    $prop = $refClass->getProperty("allowed_fields");
+                    $prop->setAccessible(true);
+                    $allowed_fields = array_merge($allowed_fields, $prop->getValue());
+                }
+            }
+
+            $allowed_fields = array_merge($allowed_fields, static::$allowed_fields);
+            Cache::put($cache_key, json_encode($allowed_fields));
+            return $allowed_fields;
         }
-        $mappings  = array_merge($mappings, $this->getSelfAllowedFields());
-        return $mappings;
-    }
-
-    private function getSelfAllowedFields(){
-        return static::$allowed_fields;
+        catch (Exception $ex){
+            Log::error($ex);
+            return [];
+        }
     }
 
     /**
      * @return array
      */
-    protected function getAllowedRelations()
+    protected function getExpandsMappings():array
     {
-        $mappings  = array();
-        $hierarchy = $this->getClassHierarchy();
+        try {
+            $expands = [];
+            $hierarchy = $this->getClassHierarchy();
+            $cur_class = get_class($this);
+            $cache_key = $cur_class . '.expand_mappings';
 
-        foreach($hierarchy as $class_name){
-            if($class_name === 'Libs\ModelSerializers\AbstractSerializer') continue;
-            $class    = new $class_name($this->object, $this->resource_server_context);
-            $mappings = array_merge($mappings, $class->getSelfAllowedRelations());
+            if (Cache::has($cache_key)) {
+                $res = Cache::get($cache_key);
+                if(!empty($res))
+                    return json_decode($res, true);
+            }
+
+            foreach ($hierarchy as $class_name) {
+                if ($class_name === AbstractSerializer::class) continue;
+                $refClass = new ReflectionClass($class_name);
+                if ($refClass->hasProperty("expand_mappings")) {
+                    $prop = $refClass->getProperty("expand_mappings");
+                    $prop->setAccessible(true);
+                    $expands = array_merge($expands, $prop->getValue());
+                }
+            }
+            $expands = array_merge($expands, static::$expand_mappings);
+            Cache::put($cache_key, json_encode($expands));
+            return $expands;
         }
-        $mappings  = array_merge($mappings, $this->getSelfAllowedRelations());
-        return $mappings;
-    }
-
-    private function getSelfAllowedRelations(){
-        return static::$allowed_relations;
+        catch (Exception $ex){
+            Log::error($ex);
+            return [];
+        }
     }
 
     /**
      * @return array
      */
-    private function getAttributeMappings()
+    protected function getAllowedRelations():array
     {
-        $mappings  = [];
-        $hierarchy = $this->getClassHierarchy();
+        try {
+            $relations = [];
+            $hierarchy = $this->getClassHierarchy();
+            $cur_class = get_class($this);
+            $cache_key = $cur_class . '.relations';
 
-        foreach($hierarchy as $class_name){
-            if($class_name === 'Libs\ModelSerializers\AbstractSerializer') continue;
-            $class    = new $class_name($this->object, $this->resource_server_context);
-            $mappings = array_merge($mappings, $class->getSelfMappings());
+            if (Cache::has($cache_key)) {
+                $res = Cache::get($cache_key);
+                if(!empty($res))
+                    return json_decode($res, true);
+            }
+
+            foreach ($hierarchy as $class_name) {
+                if ($class_name === AbstractSerializer::class) continue;
+                $refClass = new ReflectionClass($class_name);
+                if ($refClass->hasProperty("allowed_relations")) {
+                    $prop = $refClass->getProperty("allowed_relations");
+                    $prop->setAccessible(true);
+                    $relations = array_merge($relations, $prop->getValue());
+                }
+            }
+
+            $relations = array_merge($relations, static::$allowed_relations);
+            Cache::put($cache_key, json_encode($relations));
+            return $relations;
         }
-        $mappings  = array_merge($mappings, $this->getSelfMappings());
-        return $mappings;
-    }
-
-    private function getSelfMappings(){
-        return static::$array_mappings;
+        catch (Exception $ex){
+            Log::error($ex);
+            return [];
+        }
     }
 
     /**
      * @return array
      */
-    private function getClassHierarchy(){
+    private function getAttributeMappings():array
+    {
+        try {
+            $mappings = [];
+            $hierarchy = $this->getClassHierarchy();
+            $cur_class = get_class($this);
+            $cache_key = $cur_class . '.mappings';
+
+            if (Cache::has($cache_key)) {
+                $res = Cache::get($cache_key);
+                if(!empty($res))
+                    return json_decode($res, true);
+            }
+
+            foreach ($hierarchy as $class_name) {
+
+                if ($class_name === AbstractSerializer::class) continue;
+                $refClass = new ReflectionClass($class_name);
+                if ($refClass->hasProperty("array_mappings")) {
+                    $prop = $refClass->getProperty("array_mappings");
+                    $prop->setAccessible(true);
+                    $mappings = array_merge($mappings, $prop->getValue());
+                }
+            }
+
+            $mappings = array_merge($mappings, static::$array_mappings);
+            Cache::put($cache_key, json_encode($mappings));
+
+            return $mappings;
+        }
+        catch (Exception $ex){
+            Log::error($ex);
+            return [];
+        }
+    }
+
+    /**
+     * @return array
+     */
+    private function getClassHierarchy():array
+    {
         return array_reverse($this->get_class_lineage($this));
     }
 
-    private function get_class_lineage($object)
+    /**
+     * @param $object
+     * @return array
+     */
+    private function get_class_lineage($object):array
     {
         $class_name = get_class($object);
         $parents = array_values(class_parents($class_name));
         return array_merge(array($class_name), $parents);
     }
 
-    const BoolType            = 'json_boolean';
-    const EpochType           = 'datetime_epoch';
-    const StringType          = 'json_string';
-    const IntType             = 'json_int';
-    const FloatType           = 'json_float';
+    const BoolType = 'json_boolean';
+    const EpochType = 'datetime_epoch';
+    const StringType = 'json_string';
+    const IntType = 'json_int';
+    const FloatType = 'json_float';
     const ObfuscatedEmailType = 'json_obfuscated_email';
-    const UrlType             = 'json_url';
-    const ColorType           = 'json_color';
+    const UrlType = 'json_url';
+    const ColorType = 'json_color';
 
     const ValidTypes = [
         self::BoolType,
@@ -153,13 +249,12 @@ abstract class AbstractSerializer implements IModelSerializer
      * @param string $type
      * @return string
      */
-    public static function buildMapping(string $field, string $type):string {
-        if(!in_array($type, self::ValidTypes))
+    public static function buildMapping(string $field, string $type): string
+    {
+        if (!in_array($type, self::ValidTypes))
             throw new \InvalidArgumentException();
         return sprintf("%s:%s", $field, $type);
     }
-
-    protected $expand_mappings = [];
 
     /**
      * @param null $expand
@@ -170,63 +265,59 @@ abstract class AbstractSerializer implements IModelSerializer
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        $values          = [];
-        $method_prefix   = ['get', 'is'];
-        if(!count($fields)) $fields       = $this->getAllowedFields();
-        $mappings                         = $this->getAttributeMappings();
+        $values = [];
+        $method_prefix = ['get', 'is'];
+        if (!count($fields)) $fields = $this->getAllowedFields();
+        $mappings = $this->getAttributeMappings();
         if (count($mappings)) {
             $new_values = [];
             foreach ($mappings as $attribute => $mapping) {
                 $mapping = preg_split('/:/', $mapping);
-                if(count($fields) > 0 && !in_array($mapping[0], $fields)) continue;
-                $value        = null;
+                if (count($fields) > 0 && !in_array($mapping[0], $fields)) continue;
+                $value = null;
                 $method_found = false;
-                foreach($method_prefix as $prefix){
-                    if(method_exists($this->object, $prefix.$attribute)){
+                foreach ($method_prefix as $prefix) {
+                    if (method_exists($this->object, $prefix . $attribute)) {
                         try {
                             $value = call_user_func([$this->object, $prefix . $attribute]);
                             $method_found = true;
                             break;
-                        }
-                        catch (\Exception $ex){
+                        } catch (\Exception $ex) {
                             Log::warning($ex);
                             $value = null;
                         }
                     }
                 }
 
-                if(!$method_found){
+                if (!$method_found) {
                     try {
                         //try dynamic one
-                        $value = call_user_func([$this->object, 'get'.$attribute ]);
-                    }
-                    catch (\Exception $ex){
+                        $value = call_user_func([$this->object, 'get' . $attribute]);
+                    } catch (\Exception $ex) {
                         Log::warning($ex);
                         $value = null;
                     }
                 }
 
-                if(count($mapping) > 1)
-                {
+                if (count($mapping) > 1) {
                     //we have a formatter ...
-                    switch(strtolower($mapping[1]))
-                    {
+                    switch (strtolower($mapping[1])) {
                         case 'datetime_epoch':
-                        {
-                            if(!is_null($value)) {
-                                 $value = $value->getTimestamp();
+                            {
+                                if (!is_null($value)) {
+                                    $value = $value->getTimestamp();
+                                }
                             }
-                        }
                             break;
                         case 'json_string':
-                        {
-                            $value = JsonUtils::toJsonString($value);
-                        }
+                            {
+                                $value = JsonUtils::toJsonString($value);
+                            }
                             break;
                         case 'json_boolean':
-                        {
-                            $value = JsonUtils::toJsonBoolean($value);
-                        }
+                            {
+                                $value = JsonUtils::toJsonBoolean($value);
+                            }
                             break;
                         case 'json_color':
                             {
@@ -234,23 +325,24 @@ abstract class AbstractSerializer implements IModelSerializer
                             }
                             break;
                         case 'json_int':
-                        {
-                            $value = JsonUtils::toJsonInt($value);
-                        }
+                            {
+                                $value = JsonUtils::toJsonInt($value);
+                            }
                             break;
                         case 'json_float':
-                        {
-                            $value = JsonUtils::toJsonFloat($value);
-                        }
+                            {
+                                $value = JsonUtils::toJsonFloat($value);
+                            }
                             break;
                         case 'json_obfuscated_email':
                         {
                             $value = JsonUtils::toObfuscatedEmail($value);
                         }
-                        case 'json_url':{
-                            $value = JsonUtils::encodeUrl($value);
-                        }
-                        break;
+                        case 'json_url':
+                            {
+                                $value = JsonUtils::encodeUrl($value);
+                            }
+                            break;
                     }
                 }
                 $new_values[$mapping[0]] = $value;
@@ -258,14 +350,33 @@ abstract class AbstractSerializer implements IModelSerializer
             $values = $new_values;
         }
 
-        // expand logic
-        if (!empty($expand)) {
+        return $this->_expand($values, $expand);
+    }
+
+    /**
+     * @param array $values
+     * @param string|null $expand
+     * @return array
+     */
+    protected function _expand(array $values, ?string $expand): array
+    {
+        $mappings = $this->getExpandsMappings();
+
+        if (!empty($expand) && count($mappings) > 0) {
             $exp_expand = explode(',', $expand);
             foreach ($exp_expand as $relation) {
                 $relation = trim($relation);
-                if(isset($this->expand_mappings[$relation])){
-                    $values = $this->expand_mappings[$relation]->serialize($values, $expand);
-                }
+                $serializerSpec = $mappings[$relation] ?? null;
+                if (is_null($serializerSpec)) continue;
+                $serializerClass = $serializerSpec['type'] ?? null;
+                if(empty($serializerClass)) continue;
+                $original_attribute = $serializerSpec['original_attribute'] ?? $relation;
+                $attribute = $serializerSpec['attribute'] ?? $relation;
+                $getter = $serializerSpec['getter'] ?? null;
+                if(empty($getter)) continue;
+                $has = $serializerSpec['has'] ?? null;
+                $serializer = new $serializerClass($original_attribute, $attribute, $getter, $has);
+                $values = $serializer->serialize($this->object, $values, $expand);
             }
         }
 
@@ -273,37 +384,38 @@ abstract class AbstractSerializer implements IModelSerializer
     }
 
     /**
-     * @param string $expand_str
+     * @param string|null $expand_str
      * @param string $prefix
      * @return string
      */
-    public static function filterExpandByPrefix($expand_str, $prefix){
-
-        $expand_to    = explode(',', $expand_str);
-        $filtered_expand  = array_filter($expand_to, function($element) use($prefix){
+    public static function filterExpandByPrefix(?string $expand_str, string $prefix):?string
+    {
+        if(empty($expand_str)) return '';
+        $expand_to = explode(',', $expand_str);
+        $filtered_expand = array_filter($expand_to, function ($element) use ($prefix) {
             return preg_match('/^' . preg_quote($prefix, '/') . '\./', strtolower(trim($element))) > 0;
         });
         $res = '';
-        foreach($filtered_expand as $filtered_expand_elem){
-            if(strlen($res) > 0) $res .= ',';
-            $res .= str_replace_first($prefix.".","", strtolower(trim($filtered_expand_elem)));
+        foreach ($filtered_expand as $filtered_expand_elem) {
+            if (strlen($res) > 0) $res .= ',';
+            $res .= str_replace_first($prefix . ".", "", strtolower(trim($filtered_expand_elem)));
         }
         return $res;
     }
 
     /**
-     * @param string $prefix
+     * @param string|null $prefix
      * @param string $expand
      * @return string
      */
-    protected static function getExpandForPrefix(string $prefix, string $expand):string {
+    protected static function getExpandForPrefix(?string $prefix, string $expand): string
+    {
 
-        Log::debug(sprintf("AbstractSerializer::getExpandForPrefix prefix %s expand %s", $prefix, $expand));
-
+        if(empty($prefix)) return '';
         $prefix_expand = [];
-        foreach(explode(',', $expand) as $e){
-            if(strstr($e, $prefix.".")!==false)
-                $prefix_expand[] =  str_replace($prefix.".","", $e);
+        foreach (explode(',', $expand) as $e) {
+            if (strstr($e, $prefix . ".") !== false)
+                $prefix_expand[] = str_replace($prefix . ".", "", $e);
         }
 
         return implode(',', $prefix_expand);

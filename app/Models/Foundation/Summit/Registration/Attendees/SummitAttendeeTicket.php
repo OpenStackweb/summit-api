@@ -12,10 +12,13 @@
  * limitations under the License.
  **/
 
+use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundAccepted;
+use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRejected;
+use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestAdmin;
+use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestOwner;
 use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
-use Illuminate\Support\Facades\Event;
-use App\Events\RequestedSummitAttendeeTicketRefund;
-use App\Events\SummitAttendeeTicketRefundAccepted;
+use App\Jobs\ProcessTicketRefundRequest;
+use Doctrine\Common\Collections\Criteria;
 use App\Models\Foundation\Summit\AllowedCurrencies;
 use Illuminate\Support\Facades\Config;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -87,6 +90,12 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     private $applied_taxes;
 
     /**
+     * @ORM\OneToMany(targetEntity="SummitAttendeeTicketRefundRequest", mappedBy="ticket", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SummitAttendeeTicketRefundRequest[]
+     */
+    private $refund_requests;
+
+    /**
      * @ORM\ManyToOne(targetEntity="models\summit\SummitRegistrationPromoCode")
      * @ORM\JoinColumn(name="PromoCodeID", referencedColumnName="ID", nullable=true)
      * @var SummitRegistrationPromoCode
@@ -130,12 +139,6 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     private $discount;
 
     /**
-     * @ORM\Column(name="RefundedAmount", type="float")
-     * @var float
-     */
-    private $refunded_amount;
-
-    /**
      * @ORM\Column(name="Currency", type="string")
      * @var string
      */
@@ -175,9 +178,9 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         $this->currency = AllowedCurrencies::USD;
         $this->applied_taxes = new ArrayCollection();
         $this->former_hashes = new ArrayCollection();
+        $this->refund_requests = new ArrayCollection();
         $this->raw_cost = 0.0;
         $this->discount = 0.0;
-        $this->refunded_amount = 0.0;
         $this->is_active = true;
     }
 
@@ -243,22 +246,6 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     public function setRawCost(float $raw_cost): void
     {
         $this->raw_cost = $raw_cost;
-    }
-
-    /**
-     * @return float
-     */
-    public function getRefundedAmount(): ?float
-    {
-        return $this->refunded_amount;
-    }
-
-    /**
-     * @param float $refunded_amount
-     */
-    public function setRefundedAmount(float $refunded_amount): void
-    {
-        $this->refunded_amount = $refunded_amount;
     }
 
     /**
@@ -602,74 +589,10 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
             $this->bought_date = new \DateTime('now', new \DateTimeZone('UTC'));
     }
 
-
     public function setCancelled()
     {
         if ($this->status == IOrderConstants::PaidStatus) return;
         $this->status = IOrderConstants::CancelledStatus;
-    }
-
-    function cancelRefundRequest():void {
-        if(!$this->isRefundRequested())
-            throw new ValidationException(sprintf("You can not cancel any refund on this ticket"));
-        $this->status = IOrderConstants::PaidStatus;
-    }
-
-    public function setRefunded()
-    {
-        $this->status = IOrderConstants::RefundedStatus;
-    }
-
-    public function setRefundRequests()
-    {
-        $this->status = IOrderConstants::RefundRequestedStatus;
-    }
-
-    /**
-     * @return bool
-     */
-    public function canRefund():bool{
-        $validStatuses = [IOrderConstants::RefundRequestedStatus, IOrderConstants::PaidStatus];
-        if(!in_array($this->status, $validStatuses)){
-            return false;
-        }
-        if($this->isFree()){
-            return false;
-        }
-        return true;
-    }
-    /**
-     * @param float $amount
-     * @throws ValidationException
-     */
-    public function refund(float $amount)
-    {
-        if (!$this->canRefund())
-            throw new ValidationException
-            (
-                sprintf
-                (
-                    "can not request a refund on a %s ticket",
-                    $this->status
-                )
-            );
-
-        $this->status          = IOrderConstants::RefundedStatus;
-        $this->refunded_amount = $amount;
-
-        $tickets_to_return = [];
-        $promo_codes_to_return = [];
-
-        if(!isset($tickets_to_return[$this->getTicketTypeId()]))
-            $tickets_to_return[$this->getTicketTypeId()] = 0;
-        $tickets_to_return[$this->getTicketTypeId()] += 1;
-        if($this->hasPromoCode()){
-            if(!isset($promo_codes_to_return[$this->getPromoCode()->getCode()]))
-                $promo_codes_to_return[$this->getPromoCode()->getCode()] = 0;
-            $promo_codes_to_return[$this->getPromoCode()->getCode()] +=1;
-        }
-
-        Event::dispatch(new SummitAttendeeTicketRefundAccepted($this->getId(), $tickets_to_return, $promo_codes_to_return));
     }
 
     /**
@@ -713,14 +636,53 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      * @return bool
      */
     public function isRefundRequested():bool{
-        return $this->status == IOrderConstants::RefundRequestedStatus;
+        return $this->hasPendingRefundRequests();
     }
 
     /**
-     * @return bool
+     * @param Member|null $rejectedBy
+     * @param string|null $notes
+     * @throws ValidationException
      */
-    public function isRefunded():bool{
-        return $this->status == IOrderConstants::RefundedStatus;
+    function cancelRefundRequest(?Member $rejectedBy = null, ?string $notes = null):SummitAttendeeTicketRefundRequest {
+        if(!$this->hasPendingRefundRequests())
+            throw new ValidationException(sprintf("You can not cancel any refund on this ticket"));
+        $request = $this->getPendingRefundRequest();
+
+        $request->reject($rejectedBy, $notes);
+        SummitTicketRefundRejected::dispatch($this, $request);
+        return $request;
+    }
+
+    /**
+     * @return float
+     */
+    public function getRefundedAmount():float{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('status', ISummitRefundRequestConstants::ApprovedStatus));
+        $totalRefundedAmount = 0.0;
+        foreach($this->refund_requests->matching($criteria) as $request){
+            $totalRefundedAmount += $request->getRefundedAmount();
+        }
+        return $totalRefundedAmount;
+    }
+
+    /**
+     * @param float $amount
+     * @return bool
+     * @throws ValidationException
+     */
+    public function canRefund(float $amount):bool{
+
+        if($this->isFree()){
+            throw new ValidationException("Can not refund a Free Ticket.");
+        }
+
+        if($this->getFinalAmount() < ($this->getRefundedAmount() + $amount) ){
+            throw new ValidationException("Can not refund an amount greater than Amount Paid.");
+        }
+
+        return true;
     }
 
     /**
@@ -733,39 +695,113 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         }
         return false;
     }
+
     /**
-     * @param bool $refund_entire_order
+     * @param Member|null $requestedBy
+     * @return SummitAttendeeTicketRefundRequest|null
      * @throws ValidationException
      */
-    public function requestRefund($refund_entire_order = false): void
+    public function requestRefund(?Member $requestedBy = null): ?SummitAttendeeTicketRefundRequest
     {
         if ($this->status != IOrderConstants::PaidStatus)
-            throw new ValidationException(sprintf( "you can not request a refund for this ticket %s ( invalid status %s)", $this->number, $this->status));
+            throw new ValidationException(sprintf( "You can not request a refund for this ticket %s ( invalid status %s).", $this->number, $this->status));
 
         $summit = $this->getOrder()->getSummit();
         $begin_date = $summit->getBeginDate();
-        if(is_null($begin_date)) return;
+        if(is_null($begin_date))
+            throw new ValidationException(sprintf( "You can not request a refund for this ticket %s ( summit has not begin date).", $this->number));
 
         if($this->isBadgePrinted())
-            throw new ValidationException(sprintf( "you can not request a refund for this ticket %s ( badge already printed)", $this->number));
+            throw new ValidationException(sprintf( "You can not request a refund for this ticket %s ( badge already printed).", $this->number));
 
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
 
         if($now > $begin_date){
             Log::debug("SummitAttendeeTicket::requestRefund: now is greater than Summit.BeginDate");
-            throw new ValidationException("you can not request a refund after summit started");
+            throw new ValidationException("You can not request a refund after summit started.");
+        }
+
+        if($this->hasPendingRefundRequests()){
+            throw new ValidationException("A refund on a Ticket its already being processed.");
         }
 
         $interval = $begin_date->diff($now);
 
         $days_before_event_starts = intval($interval->format('%a'));
+        $request = new SummitAttendeeTicketRefundRequest($requestedBy);
+        $request->setTicket($this);
+        $this->refund_requests->add($request);
 
         Log::debug(sprintf("SummitAttendeeTicket::requestRefund: days_before_event_starts %s", $days_before_event_starts));
 
-        $this->status = IOrderConstants::RefundRequestedStatus;
+        SummitTicketRefundRequestAdmin::dispatch($this);
+        SummitTicketRefundRequestOwner::dispatch($this, $request);
 
-        if (!$refund_entire_order)
-            Event::dispatch(new RequestedSummitAttendeeTicketRefund($this->getId(), $days_before_event_starts));
+        ProcessTicketRefundRequest::dispatch($this->getId(), $days_before_event_starts);
+
+        return $request;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasPendingRefundRequests():bool{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('status', ISummitRefundRequestConstants::RefundRequestedStatus));
+        return $this->refund_requests->matching($criteria)->count() > 0;
+    }
+
+    /**
+     * @return SummitAttendeeTicketRefundRequest|null
+     */
+    public function getPendingRefundRequest():?SummitAttendeeTicketRefundRequest{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('status', ISummitRefundRequestConstants::RefundRequestedStatus));
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('status', ISummitRefundRequestConstants::RefundRequestedStatus));
+        $res = $this->refund_requests->matching($criteria)->first();
+        return $res == false ? null : $res;
+    }
+
+    /**
+     * @param Member|null $approvedBy
+     * @param float $amount
+     * @param string|null $paymentGatewayRes
+     * @param string|null $notes
+     * @return SummitAttendeeTicketRefundRequest
+     * @throws ValidationException
+     */
+    public function refund
+    (
+        ?Member $approvedBy,
+        float $amount,
+        string $paymentGatewayRes = null,
+        string $notes = null
+    ):SummitAttendeeTicketRefundRequest
+    {
+        if (!$this->canRefund($amount))
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Can not request a refund on Ticket %s.",
+                   $this->id
+                )
+            );
+
+        $request = $this->getPendingRefundRequest();
+
+        if(is_null($request)){
+            $request = new SummitAttendeeTicketRefundRequest($approvedBy);
+            $request->setTicket($this);
+            $this->refund_requests->add($request);
+        }
+
+        $request->approve($approvedBy, $amount, $paymentGatewayRes, $notes);
+
+        SummitTicketRefundAccepted::dispatch($this, $request);
+
+        return $request;
     }
 
     /**
@@ -986,4 +1022,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         $this->is_active = false;
     }
 
+    public function getRefundedRequests(){
+        return $this->refund_requests;
+    }
 }

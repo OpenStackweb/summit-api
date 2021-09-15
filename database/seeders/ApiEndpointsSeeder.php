@@ -419,21 +419,6 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitRegistrationAdmins
                 ]
             ],
-            [
-                'name'        => 'refund-registration-order',
-                'route'       => '/api/v1/summits/{id}/orders/{order_id}/refund',
-                'http_method' => 'DELETE',
-                'scopes'      => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
-                ],
-                'authz_groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                    IGroup::SummitRegistrationAdmins
-                ]
-            ],
             // buy flow
             [
                 'name'        => 'reserve-registration-order',
@@ -508,29 +493,6 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
-                'name'        => 'refund-my-order',
-                'route'       => '/api/v1/summits/all/orders/{order_id}/refund',
-                'http_method' => 'DELETE',
-                'scopes'      => [
-                    sprintf(SummitScopes::UpdateMyRegistrationOrders, $current_realm),
-                ],
-            ],
-            [
-                'name'        => 'cancel-order-refund',
-                'route'       => '/api/v1/summits/all/orders/{order_id}/refund/cancel',
-                'http_method' => 'DELETE',
-                'scopes'      => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
-                ],
-                'authz_groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                    IGroup::SummitRegistrationAdmins
-                ]
-            ],
-            [
                 'name'        => 'resend-order',
                 'route'       => '/api/v1/summits/all/orders/{order_id}/resend',
                 'http_method' => 'PUT',
@@ -572,8 +534,16 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
-                'name'        => 'refund-my-order-ticket',
+                'name'        => 'request-refund-ticket',
                 'route'       => '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}/refund',
+                'http_method' => 'DELETE',
+                'scopes'      => [
+                    sprintf(SummitScopes::UpdateMyRegistrationOrders, $current_realm),
+                ],
+            ],
+            [
+                'name'        => 'request-refund-order',
+                'route'       => '/api/v1/summits/all/orders/{order_id}/refund',
                 'http_method' => 'DELETE',
                 'scopes'      => [
                     sprintf(SummitScopes::UpdateMyRegistrationOrders, $current_realm),

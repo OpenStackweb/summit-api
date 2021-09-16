@@ -3530,7 +3530,10 @@ final class SummitOrderService
 
             $ticket->deActivate();
 
-            $ticket->getOwner()->sendRevocationTicketEmail($ticket);
+            $owner = $ticket->getOwner();
+
+            if(!is_null($owner))
+                $owner->sendRevocationTicketEmail($ticket);
 
             return $ticket;
         });

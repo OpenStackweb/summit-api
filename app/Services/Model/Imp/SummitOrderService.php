@@ -2527,7 +2527,7 @@ final class SummitOrderService
                 if (is_null($ticket_type))
                     throw new EntityNotFoundException("ticket type not found");
 
-                $ticket_type->applyTo($ticket);
+                $ticket->upgradeTicketType($ticket_type);
             }
 
             if (isset($payload['badge_type_id'])) {

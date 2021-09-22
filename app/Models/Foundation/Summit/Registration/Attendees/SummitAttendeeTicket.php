@@ -445,14 +445,23 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     }
 
     /**
-     * @param $ticket_type
+     * @param SummitTicketType $ticket_type
      * @return $this
      */
-    public function setTicketType($ticket_type)
+    public function setTicketType(SummitTicketType $ticket_type)
     {
         $this->ticket_type = $ticket_type;
         $this->raw_cost    = $this->ticket_type->getCost();
         $this->currency    = $this->ticket_type->getCurrency();
+        return $this->ticket_type->applyTo($this);
+    }
+
+    /**
+     * @param SummitTicketType $ticket_type
+     * @return SummitAttendeeTicket
+     */
+    public function upgradeTicketType(SummitTicketType $ticket_type){
+        $this->ticket_type = $ticket_type;
         return $this->ticket_type->applyTo($this);
     }
 

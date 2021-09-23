@@ -463,7 +463,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     public function upgradeTicketType(SummitTicketType $ticket_type){
         if(is_null($this->ticket_type))
             throw new ValidationException("Ticket has not a previous ticket type set.");
-        if($this->raw_cost < $ticket_type->getCost())
+        if($this->raw_cost > $ticket_type->getCost())
             throw new ValidationException("Can not assign a ticket type of less value (Downgrade)");
         $this->ticket_type = $ticket_type;
         return $this->ticket_type->applyTo($this);

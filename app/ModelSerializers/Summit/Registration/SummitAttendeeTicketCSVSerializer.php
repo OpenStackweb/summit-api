@@ -39,14 +39,15 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
         'BadgeId' => 'badge_id:json_int',
         'PromoCodeId' => 'promo_code_id:json_int',
         'PromoCodeValue' => 'promo_code:json_string',
-        'RawCost' => 'raw_cost:json_float',
-        'FinalAmount' => 'final_amount:json_float',
-        'Discount' => 'discount:json_float',
-        'RefundedAmount' => 'refunded_amount:json_float',
-        'Currency' => 'currency:json_string',
         'BadgeTypeId' => 'badge_type_id:json_int',
         'BadgeTypeName' => 'badge_type_name:json_string',
         'Active'    => 'is_active:json_bool',
+        'Currency' => 'currency:json_string',
+        'RawCost' => 'raw_cost:json_float',
+        'Discount' => 'discounted_amount:json_float',
+        'FinalAmount' => 'amount_paid:json_float',
+        'RefundedAmount' => 'refunded_amount:json_float',
+        'FinalAmountAdjusted' => 'amount_paid_adjusted:json_float',
     ];
 
     /**

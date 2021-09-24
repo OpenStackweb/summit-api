@@ -41,12 +41,16 @@ class RegisteredMemberOrderPaidMail extends AbstractEmailJob
         }
 
         $summit = $order->getSummit();
-        $payload['order_raw_amount'] = FormatUtils::getNiceFloat($order->getRawAmount());
-        $payload['order_amount'] = FormatUtils::getNiceFloat($order->getFinalAmount());
+
         $payload['order_currency'] = $order->getCurrency();
         $payload['order_currency_symbol'] = $order->getCurrencySymbol();
+        $payload['order_raw_amount'] = FormatUtils::getNiceFloat($order->getRawAmount());
+        $payload['order_amount'] = FormatUtils::getNiceFloat($order->getFinalAmount());
         $payload['order_taxes'] = FormatUtils::getNiceFloat($order->getTaxesAmount());
         $payload['order_discount'] = FormatUtils::getNiceFloat($order->getDiscountAmount());
+        $payload['order_refunded_amount'] = FormatUtils::getNiceFloat($order->getRefundedAmount());
+        $payload['order_amount_adjusted'] = FormatUtils::getNiceFloat($order->getFinalAmountAdjusted());
+
         $payload['order_number'] = $order->getNumber();
         $payload['order_qr_value'] = $order->getQRCode();
         $payload['summit_name'] = $summit->getName();

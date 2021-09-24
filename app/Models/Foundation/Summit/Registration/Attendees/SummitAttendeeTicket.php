@@ -459,6 +459,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     /**
      * @param SummitTicketType $ticket_type
      * @return SummitAttendeeTicket
+     * @throws ValidationException
      */
     public function upgradeTicketType(SummitTicketType $ticket_type){
         if(is_null($this->ticket_type))
@@ -846,6 +847,13 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
             $amount += $tax->getAmount();
         }
         return $amount;
+    }
+
+    /**
+     * @return float
+     */
+    public function getFinalAmountAdjusted(): float{
+        return $this->getFinalAmount() - $this->getRefundedAmount();
     }
 
     /**

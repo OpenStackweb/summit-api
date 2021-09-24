@@ -799,6 +799,13 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     }
 
     /**
+     * @return float
+     */
+    public function getFinalAmountAdjusted(): float{
+        return $this->getFinalAmount() - $this->getRefundedAmount();
+    }
+
+    /**
      * @return bool
      */
     public function isFree():bool {

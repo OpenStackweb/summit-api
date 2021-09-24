@@ -852,6 +852,18 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     /**
      * @return float
      */
+    public function getTicketTypeCost():float{
+        try {
+            return $this->ticket_type->getCost();
+        }
+        catch (\Exception $ex){
+            return 0.0;
+        }
+    }
+
+    /**
+     * @return float
+     */
     public function getFinalAmountAdjusted(): float{
         return $this->getFinalAmount() - $this->getRefundedAmount();
     }

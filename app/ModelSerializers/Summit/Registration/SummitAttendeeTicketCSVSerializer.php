@@ -84,6 +84,13 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
             }
         }
 
+        // extra fields
+
+        if($ticket->hasOwner()) {
+            $values['attendee_notes'] = $ticket->getOwner()->getAdminNotes();
+            $values['attendee_checked_in'] = $ticket->getOwner()->hasCheckedIn();
+        }
+
         return $values;
     }
 }

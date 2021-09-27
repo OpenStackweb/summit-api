@@ -47,9 +47,18 @@ class RevocationTicketEmail extends AbstractEmailJob
         $payload['owner_first_name'] = $attendee->getFirstName();
         $payload['owner_last_name'] = $attendee->getSurname();
         $payload['owner_company'] = $attendee->getCompanyName();
+        if(empty($payload['owner_full_name'])){
+            $payload['owner_full_name'] = $payload['owner_email'];
+        }
+
         $payload['order_owner_full_name'] = $order->getOwnerFullName();
         $payload['order_owner_email'] = $order->getOwnerEmail();
         $payload['order_owner_company'] = $order->getOwnerCompany();
+        if(empty($payload['order_owner_full_name'])){
+            $payload['order_owner_full_name'] = $payload['order_owner_email'];
+        }
+
+
         $payload['ticket_number'] = $ticket->getNumber();
 
         $payload['summit_name'] = $summit->getName();

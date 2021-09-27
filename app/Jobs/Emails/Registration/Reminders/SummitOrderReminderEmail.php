@@ -37,6 +37,11 @@ class SummitOrderReminderEmail extends AbstractEmailJob
         $payload['owner_full_name'] = $order->getOwnerFullName();
         $payload['owner_email'] = $order->getOwnerEmail();
         $payload['owner_company'] = $order->getOwnerCompany();
+
+        if(empty($payload['owner_full_name'])){
+            $payload['owner_full_name'] = $payload['owner_email'];
+        }
+
         $summit_reassign_ticket_till_date = $summit->getReassignTicketTillDateLocal();
         $payload['summit_reassign_ticket_till_date'] = '';
         if(!is_null($summit_reassign_ticket_till_date)) {

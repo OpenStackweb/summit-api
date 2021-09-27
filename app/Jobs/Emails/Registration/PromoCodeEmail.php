@@ -38,8 +38,13 @@ abstract class PromoCodeEmail extends AbstractEmailJob
         $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
         $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
         $payload['promo_code'] = $promo_code->getCode();
+
         $payload['owner_email'] = $promo_code->getOwnerEmail();
         $payload['owner_fullname'] = $promo_code->getOwnerFullname();
+        if(empty($payload['owner_fullname'])){
+            $payload['owner_fullname'] = $payload['owner_email'];
+        }
+
         $payload['registration_url'] = Config::get("registration.dashboard_base_url", null);
         if(empty($payload['registration_url']))
             throw new \InvalidArgumentException("missing dashboard_base_url value");

@@ -37,12 +37,23 @@ class SummitTicketReminderEmail extends AbstractEmailJob
         if(!is_null($summit_reassign_ticket_till_date)) {
             $payload['summit_reassign_ticket_till_date'] = $summit_reassign_ticket_till_date->format("l j F Y h:i A T");
         }
+
         $payload['order_owner_full_name'] = $order->getOwnerFullName();
         $payload['order_owner_company'] = $order->getOwnerCompany();
         $payload['order_owner_email'] = $order->getOwnerEmail();
+
+        if(empty($payload['order_owner_full_name'])){
+            $payload['order_owner_full_name'] = $payload['order_owner_email'];
+        }
+
         $payload['owner_full_name'] = $attendee->getFullName();
         $payload['owner_email'] = $attendee->getEmail();
         $payload['owner_company'] = $attendee->getCompanyName();
+
+        if(empty($payload['owner_full_name'])){
+            $payload['owner_full_name'] = $payload['owner_email'];
+        }
+
         $support_email = $summit->getSupportEmail();
         $payload['support_email'] = !empty($support_email) ? $support_email: Config::get("registration.support_email", null);
         $payload['summit_name'] = $summit->getName();

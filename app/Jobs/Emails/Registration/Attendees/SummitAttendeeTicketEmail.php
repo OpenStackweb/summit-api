@@ -59,6 +59,10 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         $payload['order_owner_full_name'] = $order->getOwnerFullName();
         $payload['order_owner_company'] = $order->getOwnerCompany();
         $payload['order_owner_email'] = $order->getOwnerEmail();
+        if(empty($payload['order_owner_full_name'])){
+            $payload['order_owner_full_name'] = $payload['order_owner_email'];
+        }
+
         $payload['summit_name'] = $summit->getName();
         $payload['summit_logo'] = $summit->getLogoUrl();
 

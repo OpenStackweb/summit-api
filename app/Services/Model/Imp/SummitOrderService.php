@@ -3509,7 +3509,10 @@ final class SummitOrderService
 
             $ticket->activate();
 
-            $ticket->getOwner()->sendInvitationEmail($ticket);
+            $owner = $ticket->getOwner();
+
+            if(!is_null($owner))
+                $owner->sendInvitationEmail($ticket);
 
             return $ticket;
         });

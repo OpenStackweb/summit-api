@@ -38,6 +38,7 @@ use models\exceptions\ValidationException;
 use models\main\IMemberRepository;
 use models\main\Member;
 use models\summit\factories\SummitAttendeeFactory;
+use models\summit\factories\SummitAttendeeTicketFactory;
 use models\summit\IPaymentConstants;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitAttendeeTicketRepository;
@@ -2496,33 +2497,29 @@ final class SummitOrderService
     public function updateTicket(Summit $summit, int $order_id, int $ticket_id, array $payload): SummitAttendeeTicket
     {
         return $this->tx_service->transaction(function () use ($summit, $order_id, $ticket_id, $payload) {
-            $ticket = $this->_assignTicket($order_id, $ticket_id, $payload,
-                function (array $payload) {
-                    $first_name = $payload['attendee_first_name'] ?? null;
-                    $last_name = $payload['attendee_last_name'] ?? null;
-                    $company = $payload['attendee_company'] ?? null;
-                    $extra_questions = $payload['extra_questions'] ?? [];
+            // lock and get the order
+            $order = $this->order_repository->getByIdExclusiveLock($order_id);
 
-                    $basic_payload = [
-                        'extra_questions' => $extra_questions
-                    ];
+            if (is_null($order) || !$order instanceof SummitOrder)
+                throw new EntityNotFoundException("order not found");
 
-                    if (!is_null($first_name))
-                        $basic_payload['first_name'] = trim($first_name);
+            if ($order->getSummitId() != $summit->getId()) {
+                throw new EntityNotFoundException("order not found");
+            }
 
-                    if (!is_null($last_name))
-                        $basic_payload['last_name'] = trim($last_name);
+            $summit = $order->getSummit();
+            $ticket = $order->getTicketById($ticket_id);
 
-                    if (!is_null($company))
-                        $basic_payload['company'] = trim($company);
+            if (is_null($ticket))
+                throw new EntityNotFoundException("ticket not found");
 
-                    return array_merge($payload, $basic_payload);
-                },
-                function (SummitOrder $order) use ($summit) {
-                    if ($order->getSummitId() != $summit->getId()) {
-                        throw new EntityNotFoundException("order not found");
-                    }
-                });
+            if (!$ticket->isPaid())
+                throw new ValidationException("ticket is not paid");
+
+            $ticket->generateQRCode();
+            $ticket->generateHash();
+
+            $attendee = $ticket->getOwner();
 
             if (isset($payload['ticket_type_id'])) {
                 // set ticket type
@@ -2532,6 +2529,9 @@ final class SummitOrderService
                     throw new EntityNotFoundException("ticket type not found");
 
                 $ticket->upgradeTicketType($ticket_type);
+
+                if(!is_null($attendee))
+                    $attendee->sendInvitationEmail($ticket);
             }
 
             if (isset($payload['badge_type_id'])) {
@@ -2540,6 +2540,7 @@ final class SummitOrderService
                 $badge_type = $summit->getBadgeTypeById($badge_type_id);
                 if (is_null($badge_type))
                     throw new EntityNotFoundException("badge type not found");
+
                 $badge = $ticket->hasBadge() ? $ticket->getBadge() : new SummitAttendeeBadge();
                 $badge->setType($badge_type);
                 $ticket->setBadge($badge);

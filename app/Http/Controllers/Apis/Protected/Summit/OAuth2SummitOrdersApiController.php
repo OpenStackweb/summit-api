@@ -710,7 +710,7 @@ final class OAuth2SummitOrdersApiController
                 'badge_type_id'       => 'nullable|integer',
                 'attendee_first_name' => 'nullable|string|max:255',
                 'attendee_last_name'  => 'nullable|string|max:255',
-                'attendee_email'      => 'required|string|max:255|email',
+                'attendee_email'      => 'nullable|string|max:255|email',
                 'attendee_company'    => 'nullable|string|max:255',
                 'disclaimer_accepted' => 'nullable|boolean',
                 'extra_questions'     => 'sometimes|extra_question_dto_array'

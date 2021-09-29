@@ -59,6 +59,9 @@ use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeaker
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationModeratorNotificationEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationNotificationToSubmitterEMail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationNotificationToModeratorEMail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationNotificationToSpeakerEMail;
 // Presentation Selections
 use App\Jobs\Emails\PresentationSelections\PresentationCategoryChangeRequestCreatedEmail;
 use App\Jobs\Emails\PresentationSelections\PresentationCategoryChangeRequestResolvedEmail;
@@ -308,7 +311,21 @@ final class SummitEmailFlowTypeSeeder extends Seeder
                 'slug' => ImportEventSpeakerEmail::EVENT_SLUG,
                 'default_email_template' => ImportEventSpeakerEmail::DEFAULT_TEMPLATE
             ],
-
+            [
+                'name' => PresentationNotificationToSpeakerEMail::EVENT_NAME,
+                'slug' => PresentationNotificationToSpeakerEMail::EVENT_SLUG,
+                'default_email_template' => PresentationNotificationToSpeakerEMail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => PresentationNotificationToModeratorEMail::EVENT_NAME,
+                'slug' => PresentationNotificationToModeratorEMail::EVENT_SLUG,
+                'default_email_template' => PresentationNotificationToModeratorEMail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => PresentationNotificationToSubmitterEMail::EVENT_NAME,
+                'slug' => PresentationNotificationToSubmitterEMail::EVENT_SLUG,
+                'default_email_template' => PresentationNotificationToSubmitterEMail::DEFAULT_TEMPLATE
+            ],
         ], $flow);
 
         $em->persist($flow);

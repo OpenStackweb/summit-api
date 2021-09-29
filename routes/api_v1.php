@@ -260,6 +260,7 @@ Route::group(array('prefix' => 'summits'), function () {
                     Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@getSelectionPlanPresentations']);
                     Route::get('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@getSelectionPlanPresentationsCSV']);
                     Route::group(['prefix' => 'all'], function () {
+                        Route::put('notify', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@sendPresentationNotifications']);
                         // category-change-requests
                         Route::group(['prefix' => 'category-change-requests'], function () {
                             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@getAllPresentationCategoryChangeRequest']);

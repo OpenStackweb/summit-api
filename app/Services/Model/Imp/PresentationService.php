@@ -20,6 +20,9 @@ use App\Http\Utils\FileUploadInfo;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationNotificationToModeratorEMail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationNotificationToSpeakerEMail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationNotificationToSubmitterEMail;
 use App\Models\Foundation\Summit\Factories\PresentationFactory;
 use App\Models\Foundation\Summit\Factories\PresentationLinkFactory;
 use App\Models\Foundation\Summit\Factories\PresentationMediaUploadFactory;
@@ -1148,6 +1151,67 @@ final class PresentationService
             }
 
             $presentation->removeMediaUpload($mediaUpload);
+        });
+    }
+
+    /**
+     * @param int $presentation_id
+     * @param bool $dry_run
+     * @throws \Exception
+     */
+    public function processPresentationNotification(int $presentation_id, bool $dry_run):void{
+        $this->tx_service->transaction(function() use($presentation_id, $dry_run){
+            Log::debug(sprintf("PresentationService::processPresentationNotification processing presentation %s", $presentation_id));
+            $presentation = $this->presentation_repository->getById($presentation_id);
+            $recipients = [];
+            if(is_null($presentation) || !$presentation instanceof Presentation)
+                throw new EntityNotFoundException("Presentation not found.");
+
+            if($presentation->hasCreatedBy()) {
+                $creator = $presentation->getCreatedBy();
+                if (!is_null($creator)) {
+                    $recipients[] = $creator->getEmail();
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "PresentationService::processPresentationNotification sending PresentationNotificationToSubmitterEMail to %s",
+                            $creator->getEmail()
+                        )
+                    );
+                    PresentationNotificationToSubmitterEMail::dispatch($presentation, $creator, $dry_run);
+                }
+            }
+
+            if($presentation->hasModerator()) {
+                $moderator = $presentation->getModerator();
+                if (!is_null($moderator) && !in_array($moderator->getEmail(), $recipients)) {
+                    $recipients[] = $moderator->getEmail();
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "PresentationService::processPresentationNotification sending PresentationNotificationToModeratorEMail to %s",
+                            $moderator->getEmail()
+                        )
+                    );
+                    PresentationNotificationToModeratorEMail::dispatch($presentation, $moderator, $dry_run);
+                }
+            }
+
+            foreach ($presentation->getSpeakers() as $speaker) {
+                if(in_array($speaker->getEmail(), $recipients)) continue;
+                $recipients[] = $speaker->getEmail();
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "PresentationService::processPresentationNotification sending PresentationNotificationToSpeakerEMail to %s",
+                        $speaker->getEmail()
+                    )
+                );
+                PresentationNotificationToSpeakerEMail::dispatch($presentation, $speaker, $dry_run);
+            }
         });
     }
 }

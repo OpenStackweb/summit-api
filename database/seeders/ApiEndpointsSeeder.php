@@ -5319,6 +5319,18 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'send-selection-plan-presentation-notifications',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/all/notify',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                ]
+            ],
+            [
                 'name' => 'get-selection-plan-presentations-csv',
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/csv',
                 'http_method' => 'GET',

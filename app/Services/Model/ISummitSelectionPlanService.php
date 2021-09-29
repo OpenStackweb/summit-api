@@ -48,8 +48,8 @@ interface ISummitSelectionPlanService
     /**
      * @param Summit $summit
      * @param int $selection_plan_id
-     * @throws EntityNotFoundException
      * @return void
+     * @throws EntityNotFoundException
      */
     public function deleteSelectionPlan(Summit $summit, $selection_plan_id);
 
@@ -57,9 +57,9 @@ interface ISummitSelectionPlanService
      * @param Summit $summit
      * @param int $selection_plan_id
      * @param int $track_group_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
      * @return void
+     * @throws ValidationException
+     * @throws EntityNotFoundException
      */
     public function addTrackGroupToSelectionPlan(Summit $summit, $selection_plan_id, $track_group_id);
 
@@ -67,9 +67,9 @@ interface ISummitSelectionPlanService
      * @param Summit $summit
      * @param int $selection_plan_id
      * @param int $track_group_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
      * @return void
+     * @throws ValidationException
+     * @throws EntityNotFoundException
      */
     public function deleteTrackGroupToSelectionPlan(Summit $summit, $selection_plan_id, $track_group_id);
 
@@ -90,7 +90,7 @@ interface ISummitSelectionPlanService
      * @throws ValidationException
      * @throws AuthzException
      */
-    public function markPresentationAsViewed(Summit $summit, int $selection_plan_id, int $presentation_id):Presentation;
+    public function markPresentationAsViewed(Summit $summit, int $selection_plan_id, int $presentation_id): Presentation;
 
     /**
      * @param Summit $summit
@@ -102,7 +102,7 @@ interface ISummitSelectionPlanService
      * @throws ValidationException
      * @throws AuthzException
      */
-    public function addPresentationComment(Summit $summit, int $selection_plan_id, int $presentation_id, array $payload):SummitPresentationComment;
+    public function addPresentationComment(Summit $summit, int $selection_plan_id, int $presentation_id, array $payload): SummitPresentationComment;
 
     /**
      * @param Summit $summit
@@ -114,7 +114,7 @@ interface ISummitSelectionPlanService
      * @throws ValidationException
      * @throws AuthzException
      */
-    public function createPresentationCategoryChangeRequest(Summit $summit, int $selection_plan_id, int $presentation_id, int $new_category_id):?SummitCategoryChange;
+    public function createPresentationCategoryChangeRequest(Summit $summit, int $selection_plan_id, int $presentation_id, int $new_category_id): ?SummitCategoryChange;
 
     /**
      * @param Summit $summit
@@ -127,5 +127,23 @@ interface ISummitSelectionPlanService
      * @throws ValidationException
      * @throws AuthzException
      */
-    public function resolvePresentationCategoryChangeRequest(Summit $summit, int $selection_plan_id, int $presentation_id, int $category_change_request_id, array $payload):?SummitCategoryChange;
+    public function resolvePresentationCategoryChangeRequest(Summit $summit, int $selection_plan_id, int $presentation_id, int $category_change_request_id, array $payload): ?SummitCategoryChange;
+
+    /**
+     * @param Summit $summit
+     * @param int $selection_plan_id
+     * @param array $payload
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function sendPresentationNotifications(Summit $summit, int $selection_plan_id, array $payload): void;
+
+    /**
+     * @param int $summit_id
+     * @param int $selection_plan_id
+     * @param bool $dry_run
+     * @throws EntityNotFoundException
+     */
+    public function processPresentationNotifications(int $summit_id, int $selection_plan_id, bool $dry_run): void;
+
 }

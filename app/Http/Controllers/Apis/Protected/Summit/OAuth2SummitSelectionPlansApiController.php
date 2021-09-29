@@ -16,6 +16,7 @@ use App\Http\Utils\EpochCellFormatter;
 use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\Repositories\ISummitCategoryChangeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSelectionPlanExtraQuestionTypeRepository;
+use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISelectionPlanExtraQuestionTypeService;
 use App\Services\Model\ISummitSelectionPlanService;
 use Illuminate\Support\Facades\Log;
@@ -28,6 +29,7 @@ use models\oauth2\IResourceServerContext;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
 use Exception;
+use models\summit\SummitAttendee;
 use ModelSerializers\IPresentationSerializerTypes;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
@@ -40,6 +42,8 @@ use utils\PagingInfo;
  */
 final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedController
 {
+    use GetAndValidateJsonPayload;
+
     /**
      * @var ISummitRepository
      */
@@ -1200,5 +1204,38 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
             $this->selection_plan_extra_questions_service->deleteExtraQuestionValue($selection_plan, $question_id, $value_id);
         }
         , ...$args);
+    }
+
+    public function sendPresentationNotifications($summit_id, $selection_plan_id){
+
+        try {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
+            if (is_null($selection_plan)) return $this->error404();
+
+            $payload = $this->getJsonPayload([
+                'submitter_notification_template' => 'required|string|max:255',
+                'speaker_notification_template' => 'required|string|max:255',
+                'moderator_notification_template' => 'required|string|max:255',
+                'dry_run' => 'required|boolean',
+            ]);
+
+            $this->selection_plan_service->sendPresentationNotifications($summit, $selection_plan->getId(), $payload);
+
+            return $this->updated();
+
+        } catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return $this->error412($ex1->getMessages());
+        } catch (EntityNotFoundException $ex2) {
+            Log::warning($ex2);
+            return $this->error404($ex2->getMessage());
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
     }
 }

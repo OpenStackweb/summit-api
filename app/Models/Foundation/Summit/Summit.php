@@ -30,6 +30,8 @@ use Cocur\Slugify\Slugify;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
@@ -4619,6 +4621,31 @@ SQL;
      */
     public function getAllEmailFlowsEvents(){
         return $this->seedDefaultEmailFlowEvents();
+    }
+
+    /**
+     * @param string $slug
+     * @return SummitEmailEventFlow|null
+     * @throws \Doctrine\ORM\NoResultException
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function getEmailEventFlowByTypeSlug(string $slug):?SummitEmailEventFlow{
+        try {
+            $event_type = $this->createQueryBuilder()
+                ->select('eft')
+                ->from('App\Models\Foundation\Summit\EmailFlowsSummitEmailEventFlowType', 'eft')
+                ->where("eft.slug = :slug")->setParameter("slug", trim($slug))
+                ->getQuery()
+                ->getSingleResult();
+            if (is_null($event_type)) return null;
+            return $this->getEmailEventByType($event_type);
+        }
+        catch (NoResultException $ex1) {
+            return null;
+        } catch (NonUniqueResultException $ex2) {
+            // should never happen
+            return null;
+        }
     }
 
     public function seedDefaultEmailFlowEvents(){

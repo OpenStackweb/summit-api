@@ -14,9 +14,14 @@
 
 use App\Jobs\Emails\PresentationSelections\PresentationCategoryChangeRequestCreatedEmail;
 use App\Jobs\Emails\PresentationSelections\PresentationCategoryChangeRequestResolvedEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationNotificationToModeratorEMail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationNotificationToSpeakerEMail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationNotificationToSubmitterEMail;
+use App\Jobs\SendPresentationNotificationsBySelectionPlan;
 use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\Factories\SummitSelectionPlanFactory;
 use App\Models\Foundation\Summit\SelectionPlan;
+use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -26,6 +31,7 @@ use models\summit\Presentation;
 use models\summit\Summit;
 use models\summit\SummitCategoryChange;
 use models\summit\SummitPresentationComment;
+use services\model\IPresentationService;
 
 /**
  * Class SummitSelectionPlanService
@@ -46,20 +52,28 @@ final class SummitSelectionPlanService
     private $resource_server_ctx;
 
     /**
+     * @var IPresentationService
+     */
+    private $presentation_service;
+
+    /**
      * SummitSelectionPlanService constructor.
      * @param ISummitRepository $summit_repository
      * @param IResourceServerContext $resource_server_ctx
+     * @param IPresentationService $presentation_service
      * @param ITransactionService $tx_service
      */
     public function __construct
     (
         ISummitRepository $summit_repository,
         IResourceServerContext $resource_server_ctx,
+        IPresentationService $presentation_service,
         ITransactionService $tx_service
     )
     {
         $this->summit_repository = $summit_repository;
         parent::__construct($tx_service);
+        $this->presentation_service = $presentation_service;
         $this->resource_server_ctx = $resource_server_ctx;
     }
 
@@ -492,6 +506,86 @@ final class SummitSelectionPlanService
 
             return $change_request;
 
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $selection_plan_id
+     * @param array $payload
+     * @throws \Exception
+     */
+    public function sendPresentationNotifications(Summit $summit, int $selection_plan_id, array $payload): void
+    {
+        $this->tx_service->transaction(function() use($summit, $selection_plan_id, $payload){
+
+            $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
+
+            if(is_null($selection_plan)){
+                throw new EntityNotFoundException("Selection Plan not found.");
+            }
+
+            $templates = [
+                PresentationNotificationToSubmitterEMail::EVENT_SLUG => $payload['submitter_notification_template'],
+                PresentationNotificationToSpeakerEMail::EVENT_SLUG => $payload['speaker_notification_template'],
+                PresentationNotificationToModeratorEMail::EVENT_SLUG => $payload['moderator_notification_template']
+            ];
+
+            // updates event with new templates templates
+            foreach ($templates as $slug => $template_id) {
+                Log::debug(sprintf("SummitSelectionPlanService::sendPresentationNotifications trying to retrieve email event by type %s", $slug));
+                $event = $summit->getEmailEventFlowByTypeSlug($slug);
+                if (is_null($event))
+                    throw new EntityNotFoundException("Email Event not found");
+                $event->setEmailTemplateIdentifier($template_id);
+                Log::debug(sprintf("SummitSelectionPlanService::sendPresentationNotifications updated email event %s with template %s", $event->getId(), $template_id));
+            }
+        });
+
+        SendPresentationNotificationsBySelectionPlan::dispatch($summit, $selection_plan_id, $payload['dry_run']);
+
+    }
+
+    /**
+     * @param int $summit_id
+     * @param int $selection_plan_id
+     * @param bool $dry_run
+     * @throws \Exception
+     */
+    public function processPresentationNotifications(int $summit_id, int $selection_plan_id, bool $dry_run):void {
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitSelectionPlanService::processPresentationNotifications summit id %s selection plan id %s dry run %b",
+                $summit_id,
+                $selection_plan_id,
+                $dry_run
+            )
+        );
+
+        $this->tx_service->transaction(function() use($summit_id, $selection_plan_id, $dry_run){
+
+            $summit = $this->summit_repository->getById($summit_id);
+            if(is_null($summit) || !$summit instanceof Summit)
+                throw new EntityNotFoundException("Summit not found.");
+
+            $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
+
+            if(is_null($selection_plan) || !$selection_plan instanceof SelectionPlan){
+                throw new EntityNotFoundException("Selection Plan not found.");
+            }
+
+            foreach ($selection_plan->getPresentations() as $presentation){
+                try {
+                    Log::debug(sprintf("SummitSelectionPlanService::processPresentationNotifications processing presentation %s", $presentation->getId()));
+                    $this->presentation_service->processPresentationNotification($presentation->getId(), $dry_run);
+                }
+                catch (\Exception $ex){
+                    Log::error($ex);
+                }
+            }
         });
     }
 }

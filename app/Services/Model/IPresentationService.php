@@ -197,4 +197,11 @@ interface IPresentationService
      * @throws EntityNotFoundException
      */
     public function deleteMediaUpload(Summit $summit, int $presentation_id, int $media_upload_id): void;
+
+    /**
+     * @param int $presentation_id
+     * @param bool $dry_run
+     * @throws EntityNotFoundException
+     */
+    public function processPresentationNotification(int $presentation_id, bool $dry_run):void;
 }

@@ -112,4 +112,5 @@ return [
     'service_client_id' => env('MAIL_API_OAUTH2_CLIENT_ID'),
     'service_client_secret' => env('MAIL_API_OAUTH2_CLIENT_SECRET'),
     'service_client_scopes' => env('MAIL_API_OAUTH2_CLIENT_SCOPES'),
+    'to_dry_run' => env('MAIL_TO_DRY_RUN', null)
 ];

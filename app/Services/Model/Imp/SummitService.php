@@ -886,18 +886,20 @@ final class SummitService extends AbstractService implements ISummitService
         // speakers
 
         if ($event_type instanceof PresentationType && $event_type->isUseSpeakers()) {
-            $shouldClearSpeakers =  isset($data['speakers']) && count($data['speakers']) == 0;
+
+            $shouldClearSpeakers = isset($data['speakers']) && count($data['speakers']) == 0;
             $speakers = $data['speakers'] ?? [];
 
-            if ($event_type->isAreSpeakersMandatory() && count($speakers) == 0) {
-                throw new ValidationException('Speakers are mandatory.');
+            if ($event_type->isAreSpeakersMandatory()) {
+                if($shouldClearSpeakers || ($event->isNew() && count($speakers) == 0))
+                    throw new ValidationException('Speakers are mandatory.');
             }
 
             if($shouldClearSpeakers){
                 $event->clearSpeakers();
             }
 
-            if (count($speakers) > 0 && $event instanceof Presentation) {
+            if (count($speakers) > 0) {
                 $event->clearSpeakers();
                 foreach ($speakers as $speaker_id) {
                     $speaker = $this->speaker_repository->getById(intval($speaker_id));
@@ -911,21 +913,21 @@ final class SummitService extends AbstractService implements ISummitService
         // moderator
 
         if ($event_type instanceof PresentationType && $event_type->isUseModerator()) {
+            $shouldClearModerator = isset($data['moderator_speaker_id']) && intval($data['moderator_speaker_id']) == 0;
             $moderator_id = isset($data['moderator_speaker_id']) ? intval($data['moderator_speaker_id']) : 0;
 
-            if ($event_type->isModeratorMandatory() && $moderator_id == 0) {
+            if ($event_type->isModeratorMandatory()) {
+                if($shouldClearModerator || ($event->isNew() && $moderator_id == 0))
                 throw new ValidationException('moderator_speaker_id is mandatory.');
             }
 
+            if ($shouldClearModerator) $event->unsetModerator();
+
             if ($moderator_id > 0) {
-                $speaker_id = intval($data['moderator_speaker_id']);
-                if ($speaker_id === 0) $event->unsetModerator();
-                else {
-                    $moderator = $this->speaker_repository->getById($speaker_id);
-                    if (is_null($moderator) || !$moderator instanceof PresentationSpeaker)
-                        throw new EntityNotFoundException(sprintf('speaker id %s', $speaker_id));
-                    $event->setModerator($moderator);
-                }
+                $moderator = $this->speaker_repository->getById($moderator_id);
+                if (is_null($moderator) || !$moderator instanceof PresentationSpeaker)
+                    throw new EntityNotFoundException(sprintf('Moderator %s not found', $moderator_id));
+                $event->setModerator($moderator);
             }
         }
 

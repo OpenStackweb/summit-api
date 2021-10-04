@@ -110,8 +110,8 @@ class AppServiceProvider extends ServiceProvider
     static $event_dto_validation_rules = [
         // summit event rules
         'id'                        => 'required|integer',
-        'title'                     => 'sometimes|string|max:100',
-        'description'               => 'sometimes|string',
+        'title'                     => 'sometimes|string|max:255',
+        'description'               => 'sometimes|string|max:1100',
         'rsvp_link'                 => 'sometimes|url',
         'head_count'                => 'sometimes|integer',
         'social_description'        => 'sometimes|string|max:100',
@@ -124,7 +124,7 @@ class AppServiceProvider extends ServiceProvider
         'tags'                      => 'sometimes|string_array',
         'sponsors'                  => 'sometimes|int_array',
         // presentation rules
-        'attendees_expected_learnt' =>  'sometimes|string|max:100',
+        'attendees_expected_learnt' =>  'sometimes|string|max:1100',
         'feature_cloud'             =>  'sometimes|boolean',
         'to_record'                 =>  'sometimes|boolean',
         'speakers'                  =>  'sometimes|int_array',

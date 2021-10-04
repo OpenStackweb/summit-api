@@ -521,6 +521,10 @@ class SummitAttendee extends SilverstripeBaseModel
         $this->disclaimer_accepted_date = $disclaimer_accepted_date;
     }
 
+    public function clearDisclaimerAcceptedDate():void{
+        $this->disclaimer_accepted_date = null;
+    }
+
     /**
      * @return SummitOrderExtraQuestionAnswer[]
      */

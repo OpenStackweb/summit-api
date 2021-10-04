@@ -30,6 +30,10 @@ class SummitAccessLevelType extends SilverstripeBaseModel
 {
     use SummitOwned;
 
+    const IN_PERSON = 'IN_PERSON';
+    const VIRTUAL = 'VIRTUAL';
+    const CHAT = 'CHAT';
+
     /**
      * @ORM\Column(name="Name", type="string")
      * @var string

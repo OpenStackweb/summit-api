@@ -27,6 +27,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRuleRepos
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Utils\CSVReader;
+use Google\Service\AccessContextManager\AccessLevel;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
@@ -46,6 +47,7 @@ use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitRepository;
 use models\summit\ISummitTicketTypeRepository;
 use models\summit\Summit;
+use models\summit\SummitAccessLevelType;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeBadgePrintRule;
@@ -2255,6 +2257,10 @@ final class SummitOrderService
      */
     private function checkPrintingRights(Member $requestor, SummitAttendeeBadge $badge):bool{
         // check rules
+
+        $al = $badge->getType()->getAccessLevelByName(SummitAccessLevelType::IN_PERSON);
+        if(is_null($al))
+            throw new ValidationException(sprintf("access level %s not present.", SummitAccessLevelType::IN_PERSON));
 
         if (!$requestor->isAdmin()) {
 

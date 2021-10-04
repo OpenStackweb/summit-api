@@ -84,6 +84,7 @@ final class DoctrineSummitAttendeeTicketRepository
                     ),
                 ]
             ),
+            'access_level_type_name' => 'al.name :operator :value'
         ];
     }
 
@@ -95,6 +96,9 @@ final class DoctrineSummitAttendeeTicketRepository
         $query->join("e.order","o");
         $query->join("o.summit","s");
         $query->leftJoin("e.owner","a");
+        $query->leftJoin("e.badge","b");
+        $query->leftJoin("b.type","bt");
+        $query->leftJoin("bt.access_levels","al");
         $query->leftJoin("a.member","m");
         return $query;
     }

@@ -99,6 +99,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'status'              => ['==','<>'],
                     'is_active'           => ['=='],
                     'has_requested_refund_requests' => ['=='],
+                    'access_level_type_name' => ['=='],
                 ];
             },
             function(){
@@ -116,6 +117,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'order_id'              => 'sometimes|integer',
                     'is_active'           => 'sometimes|boolean',
                     'has_requested_refund_requests' => 'sometimes|boolean',
+                    'access_level_type_name' => 'sometimes|string',
                 ];
             },
             function()
@@ -162,6 +164,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'status'              => ['=='],
                     'is_active'           => ['=='],
                     'has_requested_refund_requests' => ['=='],
+                    'access_level_type_name' => ['=='],
                 ];
             },
             function(){
@@ -179,6 +182,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'order_id'         => 'sometimes|integer',
                     'is_active'           => 'sometimes|boolean',
                     'has_requested_refund_requests' => 'sometimes|boolean',
+                    'access_level_type_name' => 'sometimes|string',
                 ];
             },
             function()

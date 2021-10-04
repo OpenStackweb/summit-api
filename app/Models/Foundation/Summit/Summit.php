@@ -4653,15 +4653,15 @@ SQL;
 
         $defaults = [
             [
-                'name' => 'CHAT',
+                'name' => SummitAccessLevelType::CHAT,
                 'description'=> 'Enables Chat Feature.'
             ],
             [
-                'name' => 'IN_PERSON',
+                'name' => SummitAccessLevelType::IN_PERSON,
                 'description'=> 'Allows in person show access.'
             ],
             [
-                'name' => 'VIRTUAL',
+                'name' => SummitAccessLevelType::VIRTUAL,
                 'description'=> 'Allows virtual show access.'
             ]
         ];

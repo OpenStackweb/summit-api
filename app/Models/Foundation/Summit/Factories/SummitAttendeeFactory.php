@@ -105,6 +105,9 @@ final class SummitAttendeeFactory
                     new \DateTime('now', new \DateTimeZone('UTC'))
                 );
             }
+            if(!$disclaimer_accepted){
+                $attendee->clearDisclaimerAcceptedDate();
+            }
         }
 
         // extra questions

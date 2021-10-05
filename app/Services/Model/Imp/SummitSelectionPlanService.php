@@ -329,7 +329,7 @@ final class SummitSelectionPlanService
             $isAuth = $summit->isTrackChairAdmin($current_member) || $summit->isTrackChair($current_member, $category);
 
             if(!$isAuth)
-                throw new AuthzException(sprintf("User %s is not authorized to perform this action.", $current_member->getId()));
+                throw new ValidationException(sprintf("User %s is not track chair for track %s.", $current_member->getId(), $category->getTitle()));
 
             return $presentation->addTrackChairComment($current_member, trim($payload['body']), boolval($payload['is_public']));
         });

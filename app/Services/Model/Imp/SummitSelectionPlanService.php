@@ -284,7 +284,7 @@ final class SummitSelectionPlanService
             $isAuth = $summit->isTrackChairAdmin($current_member) || $summit->isTrackChair($current_member, $category);
 
             if(!$isAuth)
-                throw new ValidationException(sprintf("User %s is not track chair for track %s.", $current_member->getId(), $category->getTitle()));
+                throw new ValidationException(sprintf("Presentation %s has changed to track %s", $presentation->getTitle(), $category->getTitle()));
 
             $presentation->addTrackChairView($current_member);
 
@@ -329,7 +329,7 @@ final class SummitSelectionPlanService
             $isAuth = $summit->isTrackChairAdmin($current_member) || $summit->isTrackChair($current_member, $category);
 
             if(!$isAuth)
-                throw new ValidationException(sprintf("User %s is not track chair for track %s.", $current_member->getId(), $category->getTitle()));
+                throw new ValidationException(sprintf("Presentation %s has changed to track %s", $presentation->getTitle(), $category->getTitle()));
 
             return $presentation->addTrackChairComment($current_member, trim($payload['body']), boolval($payload['is_public']));
         });

@@ -235,17 +235,29 @@ class SummitEvent extends SilverstripeBaseModel
      */
     protected $streaming_url;
 
+
+    const STREAMING_TYPE_LIVE = 'LIVE';
+    const STREAMING_TYPE_VOD = 'VOD';
+
+    const ValidStreamingTypes = [self::STREAMING_TYPE_LIVE, self::STREAMING_TYPE_VOD];
+
     /**
-     * @ORM\Column(name="MuxAssetID", type="string")
+     * @ORM\Column(name="StreamingType", type="string")
      * @var string
      */
-    protected $mux_asset_id;
+    protected $streaming_type;
 
     /**
      * @ORM\Column(name="MuxPlaybackID", type="string")
      * @var string
      */
     protected $mux_playback_id;
+
+    /**
+     * @ORM\Column(name="MuxAssetID", type="string")
+     * @var string
+     */
+    protected $mux_asset_id;
 
     /**
      * @ORM\Column(name="EtherpadLink", type="string")
@@ -301,12 +313,14 @@ class SummitEvent extends SilverstripeBaseModel
         $this->head_count = 0;
         $this->rsvp_max_user_number = 0;
         $this->rsvp_max_user_wait_list_number = 0;
+        $this->streaming_type = SummitEvent::STREAMING_TYPE_LIVE;
 
         $this->tags = new ArrayCollection();
         $this->feedback = new ArrayCollection();
         $this->sponsors = new ArrayCollection();
         $this->rsvp = new ArrayCollection();
         $this->attendance_metrics = new ArrayCollection();
+
     }
 
     use SummitOwned;
@@ -1327,6 +1341,18 @@ class SummitEvent extends SilverstripeBaseModel
         $this->updated_by = $updated_by;
     }
 
+    public function getStreamingType():?string{
+        return $this->streaming_type;
+    }
 
+    /**
+     * @param string $streaming_type
+     * @throws ValidationException
+     */
+    public function setStreamingType(string $streaming_type):void{
+        if(!in_array($streaming_type, self::ValidStreamingTypes))
+            throw new ValidationException(sprintf("%s is not a valid streaming type", $streaming_type));
+        $this->streaming_type = $streaming_type;
+    }
 
 }

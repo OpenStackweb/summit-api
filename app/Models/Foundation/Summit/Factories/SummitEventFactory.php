@@ -1,6 +1,4 @@
 <?php namespace models\summit;
-use models\exceptions\ValidationException;
-
 /**
  * Copyright 2015 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +11,7 @@ use models\exceptions\ValidationException;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use models\exceptions\ValidationException;
 /**
  * Class SummitEventFactory
  * @package models\summit
@@ -81,6 +79,10 @@ final class SummitEventFactory
 
         if (isset($payload['streaming_url'])) {
             $event->setStreamingUrl(html_entity_decode(trim($payload['streaming_url'])));
+        }
+
+        if (isset($payload['streaming_type'])) {
+            $event->setStreamingType(trim($payload['streaming_type']));
         }
 
         if (isset($payload['etherpad_link'])) {

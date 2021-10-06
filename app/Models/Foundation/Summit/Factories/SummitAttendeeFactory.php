@@ -85,7 +85,7 @@ final class SummitAttendeeFactory
         if (isset($payload['shared_contact_info']))
             $attendee->setShareContactInfo(boolval($payload['shared_contact_info']));
 
-        if (isset($payload['summit_hall_checked_in']) && !empty($payload['summit_hall_checked_in'])) {
+        if (isset($payload['summit_hall_checked_in'])) {
             $attendee->setSummitHallCheckedIn(boolval($payload['summit_hall_checked_in']));
         }
 

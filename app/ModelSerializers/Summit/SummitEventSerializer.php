@@ -80,6 +80,7 @@ class SummitEventSerializer extends SilverStripeSerializer
         'rsvp_regular_count',
         'rsvp_wait_count',
         'streaming_url',
+        'streaming_type',
         'etherpad_link',
         'meeting_url',
         'attendance_count',
@@ -150,6 +151,7 @@ class SummitEventSerializer extends SilverStripeSerializer
 
         if ($event->hasAccess($params['current_user'] ?? null)) {
             $values['streaming_url'] = $event->getStreamingUrl();
+            $values['streaming_type'] = $event->getStreamingType();
             $values['etherpad_link'] = $event->getEtherpadLink();
         }
 

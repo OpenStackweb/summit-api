@@ -182,6 +182,60 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
     }
 
     /**
+     * @param $member_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getById($member_id){
+        try{
+            $member = $this->repository->getById(intval($member_id));
+            if(is_null($member))
+                throw new EntityNotFoundException();
+
+            $fields    = Request::input('fields', '');
+            $fields    = !empty($fields) ? explode(',', $fields) : [];
+            $relations = Request::input('relations', '');
+            $relations = !empty($relations) ? explode(',', $relations) : [];
+            $current_member = $this->resource_server_context->getCurrentUser();
+            $serializer_type = SerializerRegistry::SerializerType_Public;
+
+            if(!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin() ||  $current_member->isTrackChairAdmin())){
+                $serializer_type = SerializerRegistry::SerializerType_Admin;
+            }
+
+            return $this->ok
+            (
+                SerializerRegistry::getInstance()
+                    ->getSerializer($member, $serializer_type)
+                    ->serialize
+                    (
+                        Request::input('expand', ''),
+                        $fields,
+                        $relations,
+                        [],
+                    )
+            );
+
+
+        }
+        catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        }
+        catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412($ex2->getMessages());
+        }
+        catch(FilterParserException $ex3){
+            Log::warning($ex3);
+            return $this->error412($ex3->getMessages());
+        }
+        catch (\Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
      * @return mixed
      */
     public function getMyMember(){

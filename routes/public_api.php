@@ -42,6 +42,9 @@ Route::group(['prefix' => 'files'], function () {
 // members
 Route::group(['prefix' => 'members'], function () {
     Route::get('', 'OAuth2MembersApiController@getAll');
+    Route::group(['prefix' => '{member_id}'], function () {
+        Route::get('', 'OAuth2MembersApiController@getById');
+    });
 });
 
 // members

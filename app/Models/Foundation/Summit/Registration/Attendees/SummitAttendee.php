@@ -135,9 +135,9 @@ class SummitAttendee extends SilverstripeBaseModel
     private $admin_notes;
 
     /**
-     * @return \DateTime
+     * @return \DateTime|null
      */
-    public function getSummitHallCheckedInDate(){
+    public function getSummitHallCheckedInDate():?\DateTime{
         return $this->summit_hall_checked_in_date;
     }
 
@@ -151,22 +151,14 @@ class SummitAttendee extends SilverstripeBaseModel
     /**
      * @param bool $summit_hall_checked_in
      */
-    public function setSummitHallCheckedIn($summit_hall_checked_in){
+    public function setSummitHallCheckedIn(bool $summit_hall_checked_in):void{
         $this->summit_hall_checked_in = $summit_hall_checked_in;
-        $this->summit_hall_checked_in_date =   new \DateTime('now', new \DateTimeZone('UTC'));
+        $this->summit_hall_checked_in_date = $summit_hall_checked_in? new \DateTime('now', new \DateTimeZone('UTC')):null;
     }
 
     public function hasCheckedIn():bool{
         return (bool)$this->summit_hall_checked_in;
     }
-
-    /**
-     * @param \DateTime $summit_hall_checked_in_date
-     */
-    public function setSummitHallCheckedInDate(\DateTime $summit_hall_checked_in_date){
-        $this->summit_hall_checked_in_date = $summit_hall_checked_in_date;
-    }
-
     /**
      * @return boolean
      */

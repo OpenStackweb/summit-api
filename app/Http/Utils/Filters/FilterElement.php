@@ -80,7 +80,7 @@ class FilterElement extends AbstractFilterElement
                 }
                 return  empty($this->value) ? '' : "%".$this->value."%";
                 break;
-            case 'slike':
+            case 'start_like':
                 if(is_array($this->value)){
                     $res = [];
                     foreach ($this->value as $val){
@@ -137,7 +137,7 @@ class FilterElement extends AbstractFilterElement
 
     public static function makeLikeStart($field, $value, $same_field_op = null)
     {
-        return new self($field, $value, 'slike', $same_field_op);
+        return new self($field, $value, 'start_like', $same_field_op);
     }
 
     public function __toString():string

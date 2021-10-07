@@ -57,6 +57,7 @@ class AdminPresentationSerializer extends PresentationSerializer
 
         // always set
         $values['streaming_url'] = $presentation->getStreamingUrl();
+        $values['streaming_type'] = $presentation->getStreamingType();
         $values['etherpad_link'] = $presentation->getEtherpadLink();
 
         return $values;

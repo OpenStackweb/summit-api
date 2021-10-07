@@ -37,6 +37,7 @@ class AdminSummitEventSerializer extends SummitEventSerializer
 
         // always set
         $values['streaming_url'] = $event->getStreamingUrl();
+        $values['streaming_type'] = $event->getStreamingType();
         $values['etherpad_link'] = $event->getEtherpadLink();
 
         return $values;

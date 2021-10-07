@@ -1230,7 +1230,8 @@ class SummitEvent extends SilverstripeBaseModel
      */
     public function hasAccess(?Member $member):bool{
         if($this->summit->isPubliclyOpen()) return true;
-        if(is_null($member)) return false;
+        // user is anonymous
+        if(is_null($member)) return true;
         if($member->isAdmin()) return true;
         if($member->hasPaidTicketOnSummit($this->summit)) return true;
         return false;

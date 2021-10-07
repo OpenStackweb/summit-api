@@ -29,6 +29,7 @@ final class SponsorBadgeScanSerializer extends SilverStripeSerializer
         'SponsorId'    => 'sponsor_id:json_int',
         'UserId'       => 'scanned_by_id:json_int',
         'BadgeId'      => 'badge_id:json_int',
+        'Notes'        => 'notes:json_string',
     ];
 
     /**

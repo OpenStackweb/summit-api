@@ -24,6 +24,7 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
     protected static $array_mappings = [
         'ScanDate'     => 'scan_date:datetime_epoch',
         'QRCode'       => 'qr_code:json_string',
+        'Notes'        => 'notes:json_string',
         'SponsorId'    => 'sponsor_id:json_int',
         'UserId'       => 'scanned_by_id:json_int',
         'BadgeId'      => 'badge_id:json_int',

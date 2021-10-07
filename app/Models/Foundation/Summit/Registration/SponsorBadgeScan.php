@@ -47,7 +47,7 @@ class SponsorBadgeScan extends SponsorUserInfoGrant
      * @var \DateTime
      * @ORM\Column(name="ScanDate", type="datetime")
      */
-    protected $scan_date;
+    private $scan_date;
 
     /**
      * @ORM\ManyToOne(targetEntity="models\main\Member")
@@ -62,6 +62,12 @@ class SponsorBadgeScan extends SponsorUserInfoGrant
      * @var SummitAttendeeBadge
      */
     private $badge;
+
+    /**
+     * @ORM\Column(name="Notes", type="string")
+     * @var string
+     */
+    private $notes;
 
     /**
      * @return string
@@ -161,6 +167,22 @@ class SponsorBadgeScan extends SponsorUserInfoGrant
     public function getAttendeeCompany():?string{
         $attendee = $this->getBadge()->getTicket()->getOwner();
         return $attendee->getCompanyName();
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getNotes(): ?string
+    {
+        return $this->notes;
+    }
+
+    /**
+     * @param string $notes
+     */
+    public function setNotes(string $notes): void
+    {
+        $this->notes = $notes;
     }
 
 }

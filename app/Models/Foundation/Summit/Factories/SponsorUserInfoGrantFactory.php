@@ -48,7 +48,6 @@ final class SponsorUserInfoGrantFactory
             case SponsorUserInfoGrant::ClassName:
                 break;
             case SponsorBadgeScan::ClassName:
-
                 break;
         }
         return $grant;

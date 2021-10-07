@@ -148,7 +148,7 @@ final class FilterParser
                 return FilterElement::makeLike($field, $value, $same_field_op);
                 break;
             case '@@':
-                return FilterElement::makeLike($field, $value, $same_field_op);
+                return FilterElement::makeLikeStart($field, $value, $same_field_op);
                 break;
             case '>':
                 return FilterElement::makeGreather($field, $value, $same_field_op);

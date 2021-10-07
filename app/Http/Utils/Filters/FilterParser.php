@@ -117,7 +117,7 @@ final class FilterParser
      */
     public static function filterExpresion(string $exp){
 
-        preg_match('/[=<>][=>@]{0,1}/', $exp, $matches);
+        preg_match('/[@=<>][=>@]{0,1}/', $exp, $matches);
 
         if (count($matches) != 1)
             throw new FilterParserException(sprintf("invalid OR filter format %s (should be [:FIELD_NAME:OPERAND:VALUE])", $exp));
@@ -145,6 +145,9 @@ final class FilterParser
                 return FilterElement::makeEqual($field, $value, $same_field_op);
                 break;
             case '=@':
+                return FilterElement::makeLike($field, $value, $same_field_op);
+                break;
+            case '@@':
                 return FilterElement::makeLike($field, $value, $same_field_op);
                 break;
             case '>':

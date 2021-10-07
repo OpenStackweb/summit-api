@@ -1003,9 +1003,22 @@ class Presentation extends SummitEvent
      * @param PresentationSpeaker $speaker
      * @return bool
      */
-    public function canEdit(PresentationSpeaker $speaker)
+    public function canEdit(PresentationSpeaker $speaker):bool
     {
         if ($this->getCreatedById() == $speaker->getMemberId()) return true;
+        if ($this->getModeratorId() == $speaker->getId()) return true;
+        if ($this->isSpeaker($speaker)) return true;
+        return false;
+    }
+
+    /**
+     * @param Member $member
+     * @return bool
+     */
+    public function memberCanEdit(Member $member):bool{
+        if ($this->getCreatedById() == $member->getId()) return true;
+        if(!$member->hasSpeaker()) return false;
+        $speaker = $member->getSpeaker();
         if ($this->getModeratorId() == $speaker->getId()) return true;
         if ($this->isSpeaker($speaker)) return true;
         return false;

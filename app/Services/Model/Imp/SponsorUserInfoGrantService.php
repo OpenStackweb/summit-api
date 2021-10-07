@@ -143,7 +143,7 @@ final class SponsorUserInfoGrantService
             $scan->setQRCode($qr_code);
             $scan->setUser($current_member);
             $scan->setBadge($badge);
-
+            $scan->setNotes(isset($data['notes'])? trim($data['notes']): "");
             $sponsor->addUserInfoGrant($scan);
 
             return $scan;

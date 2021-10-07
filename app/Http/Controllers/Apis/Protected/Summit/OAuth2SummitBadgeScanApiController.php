@@ -26,6 +26,7 @@ use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterElement;
+use Exception;
 /**
  * Class OAuth2SummitBadgeScanApiController
  * @package App\Http\Controllers
@@ -75,6 +76,7 @@ final class OAuth2SummitBadgeScanApiController
         return [
             'qr_code'   => 'required|string',
             'scan_date' => 'required|date_format:U',
+            'notes' => 'sometimes|string|max:255',
         ];
     }
 

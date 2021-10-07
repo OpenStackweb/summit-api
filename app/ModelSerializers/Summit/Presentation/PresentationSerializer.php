@@ -68,7 +68,8 @@ class PresentationSerializer extends SummitEventSerializer
     protected function getMediaUploadsSerializerType():string{
         $serializerType = SerializerRegistry::SerializerType_Public;
         $currentUser = $this->resource_server_context->getCurrentUser();
-        if(!is_null($currentUser) && $currentUser->isAdmin()){
+        $presentation = $this->object;
+        if(!is_null($currentUser) && ( $currentUser->isAdmin() || $presentation->memberCanEdit($currentUser))){
             $serializerType = SerializerRegistry::SerializerType_Private;
         }
         return $serializerType;

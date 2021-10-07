@@ -31,7 +31,7 @@ class Version20211007161147 extends AbstractMigration
         $builder = new Builder($schema);
         if($schema->hasTable("SponsorBadgeScan") && !$builder->hasColumn("SponsorBadgeScan", "Notes")) {
             $builder->table('SponsorBadgeScan', function (Table $table) {
-                $table->string("Notes")->setNotnull(false);
+                $table->string("Notes",1024)->setNotnull(false);
             });
         }
     }

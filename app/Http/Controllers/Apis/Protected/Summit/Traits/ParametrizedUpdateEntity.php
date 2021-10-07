@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Validator;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use ModelSerializers\SerializerRegistry;
+use Exception;
 /**
  * Trait ParametrizedUpdateEntity
  * @package App\Http\Controllers

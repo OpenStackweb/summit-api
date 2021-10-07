@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Security\ElectionScopes;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Config;
 use App\Models\ResourceServer\ApiEndpoint;
@@ -47,6 +49,7 @@ class ApiEndpointsSeeder extends Seeder
         $this->seedAttendeeBadgesEndpoints();
         $this->seedSummitAdministratorGroupsEndpoints();
         $this->seedSummitMediaFileTypeEndpoints();
+        $this->seedElectionsEndpoints();
     }
 
     private function seedAttendeeBadgesEndpoints(){
@@ -6965,6 +6968,29 @@ class ApiEndpointsSeeder extends Seeder
                     'scopes' => [
                         sprintf(SummitScopes::LeaveEvent, $current_realm),
                         sprintf(SummitScopes::WriteMetrics, $current_realm)
+                    ],
+                ],
+            ]
+        );
+    }
+
+    public function seedElectionsEndpoints(){
+
+        $this->seedApiEndpoints('elections', [
+                [
+                    'name' => 'update-my-candidate-profile',
+                    'route' => '/api/v1/elections/current/candidates/me',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        ElectionScopes::WriteMyCandidateProfile
+                    ],
+                ],
+                [
+                    'name' => 'nominate-candidate',
+                    'route' => '/api/v1/elections/current/candidates/{candidate_id}',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        ElectionScopes::NominatesCandidates
                     ],
                 ],
             ]

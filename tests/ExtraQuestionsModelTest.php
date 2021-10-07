@@ -23,11 +23,11 @@ use App\Models\Foundation\Summit\Factories\SummitSelectionPlanExtraQuestionTypeF
  */
 class ExtraQuestionsModelTest extends BrowserKitTestCase
 {
-    use \InsertSummitTestData;
+    use InsertSummitTestData;
 
-    use \InsertMemberTestData;
+    use InsertMemberTestData;
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
         self::insertTestData();
@@ -38,7 +38,7 @@ class ExtraQuestionsModelTest extends BrowserKitTestCase
         self::$em->flush();
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
         self::clearMemberTestData();
         self::clearTestData();

@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Security\ElectionScopes;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Config;;
 use App\Models\ResourceServer\ApiScope;
@@ -42,6 +44,7 @@ final class ApiScopesSeeder extends Seeder
         $this->seedOrganizationScopes();
         $this->seedSummitAdminGroupScopes();
         $this->seedSummitMediaFileTypes();
+        $this->seedElectionsScopes();
     }
 
     private function seedSummitScopes()
@@ -658,6 +661,37 @@ final class ApiScopesSeeder extends Seeder
                 'name' => sprintf(SummitScopes::WriteSummitMediaFileTypes, $current_realm),
                 'short_description' => 'Write Summit Media File Types Data',
                 'description' => 'Grants write access to Summit Media File Types Data',
+            ],
+        ];
+
+        foreach ($scopes as $scope_info) {
+            $scope = new ApiScope();
+            $scope->setName($scope_info['name']);
+            $scope->setShortDescription($scope_info['short_description']);
+            $scope->setDescription($scope_info['description']);
+            $scope->setActive(true);
+            $scope->setDefault(false);
+            $scope->setApi($api);
+            EntityManager::persist($scope);
+        }
+
+        EntityManager::flush();
+    }
+
+    private function seedElectionsScopes(){
+
+        $api           = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'elections']);
+
+        $scopes = [
+            [
+                'name' => ElectionScopes::WriteMyCandidateProfile,
+                'short_description' => 'Writes my candidate profile',
+                'description' => 'Writes my candidate profile',
+            ],
+            [
+                'name' => ElectionScopes::NominatesCandidates,
+                'short_description' => 'Allows to nominate candidates on current election',
+                'description' => 'Allows to nominate candidates on current election',
             ],
         ];
 

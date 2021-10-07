@@ -12,8 +12,9 @@
  * limitations under the License.
  **/
 
+use Libs\ModelSerializers\Many2OneExpandSerializer;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 use models\main\Member;
-use Illuminate\Support\Facades\Config;
 
 /**
  * Class AbstractMemberSerializer
@@ -22,7 +23,6 @@ use Illuminate\Support\Facades\Config;
 class AbstractMemberSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
-
         'FirstName'       => 'first_name:json_string',
         'LastName'        => 'last_name:json_string',
         'Gender'          => 'gender:json_string',
@@ -37,12 +37,14 @@ class AbstractMemberSerializer extends SilverStripeSerializer
         'EmailVerified'   => 'email_verified:json_boolean',
         'ProfilePhotoUrl' => 'pic:json_url',
         'MembershipType' => 'membership_type:json_string',
+        'LatestCandidateProfileId' => 'candidate_profile_id:json_int',
     ];
 
     protected static $allowed_relations = [
         'groups',
         'affiliations',
         'ccla_teams',
+        'election_applications'
     ];
 
     /**
@@ -61,13 +63,13 @@ class AbstractMemberSerializer extends SilverStripeSerializer
 
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if(in_array('groups', $relations))
+        if(in_array('groups', $relations) && !isset($values['groups']))
             $values['groups'] = $member->getGroupsIds();
 
-        if(in_array('ccla_teams', $relations))
+        if(in_array('ccla_teams', $relations) && !isset($values['ccla_teams']))
             $values['ccla_teams'] = $member->getCCLATeamsIds();
 
-        if(in_array('affiliations', $relations)){
+        if(in_array('affiliations', $relations) && !isset($values['affiliations'])){
             $res = [];
             foreach ($member->getCurrentAffiliations() as $affiliation){
                 $res[] = SerializerRegistry::getInstance()
@@ -77,44 +79,35 @@ class AbstractMemberSerializer extends SilverStripeSerializer
             $values['affiliations'] = $res;
         }
 
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-                   case 'groups': {
-                        if(!in_array('groups', $relations)) break;
-                        $groups = [];
-                        unset($values['groups']);
-                        foreach ($member->getGroups() as $g) {
-                            $groups[] = SerializerRegistry::getInstance()->getSerializer($g)->serialize(null, [], ['none']);
-                        }
-                        $values['groups'] = $groups;
-                    }
-                    break;
-                    case 'ccla_teams': {
-                        if(!in_array('ccla_teams', $relations)) break;
-                        $teams = [];
-                        unset($values['ccla_teams']);
-                        foreach ($member->getCCLATeams() as $t) {
-                            $teams[] = SerializerRegistry::getInstance()->getSerializer($t)->serialize('company', [], ['none']);
-                        }
-                        $values['ccla_teams'] = $teams;
-                    }
-                    break;
-                    case 'all_affiliations':
-                    {
-                        $res = [];
-                        foreach ($member->getAllAffiliations() as $affiliation){
-                            $res[] = SerializerRegistry::getInstance()
-                                ->getSerializer($affiliation)
-                                ->serialize('organization');
-                        }
-                        $values['affiliations'] = $res;
-                    }
-                    break;
-                }
-            }
-        }
         return $values;
     }
+
+    protected static $expand_mappings = [
+        'groups' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getGroups',
+        ],
+        'ccla_teams' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getCCLATeams',
+        ],
+        'all_affiliations' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getAllAffiliations',
+        ],
+        'candidate_profile' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'candidate_profile_id',
+            'getter' => 'getLatestCandidateProfile',
+            'has' => 'hasLatestCandidateProfile'
+        ],
+        'election_applications' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getLatestElectionApplications',
+        ],
+        'election_nominations' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getLatestElectionNominations',
+        ],
+    ];
 }

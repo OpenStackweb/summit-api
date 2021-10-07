@@ -151,5 +151,16 @@ final class ApiSeeder extends Seeder
 
         EntityManager::flush();
 
+        // Elections
+
+        $api = new Api();
+        $api->setName('elections');
+        $api->setActive(true);
+        $api->setDescription('Elections API');
+
+        EntityManager::persist($api);
+
+        EntityManager::flush();
+
     }
 }

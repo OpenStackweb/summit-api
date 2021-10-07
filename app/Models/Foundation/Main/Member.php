@@ -11,7 +11,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Elections\Candidate;
+use App\Models\Foundation\Elections\Election;
+use App\Models\Foundation\Elections\Nomination;
 use App\Models\Foundation\Main\IGroup;
+use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\SummitMetric;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
@@ -303,6 +308,24 @@ class Member extends SilverstripeBaseModel
     private $track_chairs;
 
     /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Elections\Nomination", mappedBy="candidate", cascade={"persist"}, orphanRemoval=true)
+     * @var Nomination[]
+     */
+    private $election_applications;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Elections\Nomination", mappedBy="nominator", cascade={"persist"}, orphanRemoval=true)
+     * @var Nomination[]
+     */
+    private $election_nominations;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Elections\Candidate", mappedBy="member", cascade={"persist"}, orphanRemoval=true)
+     * @var Candidate[]
+     */
+    private $candidate_profiles;
+
+    /**
      * Member constructor.
      */
     public function __construct()
@@ -330,6 +353,9 @@ class Member extends SilverstripeBaseModel
         $this->summit_attendance_metrics = new ArrayCollection();
         $this->legal_agreements = new ArrayCollection();
         $this->track_chairs =  new ArrayCollection();
+        $this->election_applications = new ArrayCollection();
+        $this->election_nominations = new ArrayCollection();
+        $this->candidate_profiles = new  ArrayCollection();
     }
 
     /**
@@ -345,6 +371,15 @@ class Member extends SilverstripeBaseModel
      */
     public function getLegalAgreements(){
         return $this->legal_agreements;
+    }
+
+    /**
+     * @param LegalAgreement $legalAgreement
+     */
+    public function addLegalAgreement(LegalAgreement $legalAgreement){
+        if($this->legal_agreements->contains($legalAgreement)) return;
+        $this->legal_agreements->add($legalAgreement);
+        $legalAgreement->setOwner($this);
     }
 
     /**
@@ -375,7 +410,7 @@ class Member extends SilverstripeBaseModel
     }
 
     /**
-     * @return Affiliation[]
+     * @return ArrayCollection|\Doctrine\Common\Collections\Collection
      */
     public function getAllAffiliations()
     {
@@ -1957,4 +1992,172 @@ SQL;
     public function getTrackChairs(){
         return $this->track_chairs;
     }
+
+    /**
+     * @param Nomination $application
+     */
+    public function addElectionApplication(Nomination $application){
+        if($this->election_applications->contains($application)) return;
+        $this->election_applications->add($application);
+    }
+
+    /**
+     * @return Candidate[]|ArrayCollection
+     */
+    public function getElectionApplications(){
+        return $this->election_applications;
+    }
+
+    /**
+     * @return array|mixed[]
+     */
+    public function getLatestElectionApplications(){
+        $election_repository = EntityManager::getRepository(Election::class);
+        $currentElection = $election_repository->getCurrent();
+        if(is_null($currentElection)) return [];
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq("election", $currentElection));
+        return $this->election_applications->matching($criteria)->toArray();
+    }
+
+    /**
+     * @return array|mixed[]
+     */
+    public function getLatestElectionNominations(){
+        $election_repository = EntityManager::getRepository(Election::class);
+        $currentElection = $election_repository->getCurrent();
+        if(is_null($currentElection)) return [];
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq("election", $currentElection));
+        return $this->election_nominations->matching($criteria)->toArray();
+    }
+
+    /**
+     * @param Member $candidate
+     * @param Election $election
+     * @return Nomination
+     * @throws ValidationException
+     */
+    public function nominateCandidate(Member $candidate, Election $election):Nomination{
+
+        if(!$this->isFoundationMember())
+            throw new ValidationException("You are not a valid Voter.");
+
+        if(!$election->isNominationsOpen())
+            throw new ValidationException("Nomination Period is closed for election.");
+
+        if(!$candidate->isFoundationMember())
+            throw new ValidationException("Candidate is not valid.");
+
+        $criteria = Criteria::create()->where(Criteria::expr()->eq("candidate", $candidate));
+
+        if($this->election_nominations->matching($criteria)->count() > 0){
+            throw new ValidationException(sprintf("You have already nominated %s.", $candidate->getFullName()));
+        }
+
+        // check max nominations
+        if($election->getNominationCountFor($candidate) >= Election::NominationLimit ){
+            throw new ValidationException(sprintf("That's all the nominations that are required to appear on the election ballot. You may want to nominate someone else who you think would be a good candidate."));
+        }
+
+        $newNomination = new Nomination($this, $candidate, $election);
+        $this->election_nominations->add($newNomination);
+        $election->addNomination($newNomination);
+        $candidate->addElectionApplication($newNomination);
+
+        // check if exist a candidate profile for proposed candidate on current election
+
+        if(!$election->isCandidate($candidate))
+        {
+            $election->createCandidancy($candidate);
+        }
+
+        return $newNomination;
+    }
+
+    /**
+     * @param Election $election
+     * @return ArrayCollection|\Doctrine\Common\Collections\Collection
+     */
+    public function getElectionNominationsFor(Election $election){
+
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq("election", $election));
+
+        return $this->election_nominations->matching($criteria);
+    }
+
+    /**
+     * @param Election $election
+     * @return int
+     */
+    public function getElectionNominationsCountFor(Election $election):int{
+
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq("election", $election));
+
+        return $this->election_nominations->matching($criteria)->count();
+    }
+
+    /**
+     * @param Election $election
+     * @return int
+     */
+    public function getElectionApplicationsCountFor(Election $election):int{
+
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq("election", $election));
+
+        return $this->election_applications->matching($criteria)->count();
+    }
+
+    /**
+     * @param Candidate $candidate
+     */
+    public function addCandidateProfile(Candidate $candidate):void{
+        if($this->candidate_profiles->contains($candidate)) return;
+        $this->candidate_profiles->add($candidate);
+        $candidate->setMember($this);
+    }
+
+    /**
+     * @return Candidate[]|ArrayCollection
+     */
+    public function getCandidateProfiles(){
+        return $this->candidate_profiles;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLatestCandidateProfileId():int{
+        $res = $this->getLatestCandidateProfile();
+        return $res ? $res->getId() : 0;
+    }
+
+    /**
+     * @return Candidate|null
+     */
+    public function getLatestCandidateProfile():?Candidate{
+        $election_repository = EntityManager::getRepository(Election::class);
+        $currentElection = $election_repository->getCurrent();
+        if(is_null($currentElection)) return null;
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq("election", $currentElection));
+        $res = $this->candidate_profiles->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasLatestCandidateProfile():bool{
+        $election_repository = EntityManager::getRepository(Election::class);
+        $currentElection = $election_repository->getCurrent();
+        if(is_null($currentElection)) return false;
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq("election", $currentElection));
+        return $this->candidate_profiles->matching($criteria)->count() > 0;
+    }
+
 }

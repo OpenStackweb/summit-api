@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Log;
 use ModelSerializers\SerializerRegistry;
 /**
  * Class One2ManyExpandSerializer
@@ -69,9 +71,12 @@ class One2ManyExpandSerializer implements IExpandSerializer
      * @param mixed $entity
      * @param array $values
      * @param string $expand
+     * @param array $fields
+     * @param array $relations
+     * @param array $params
      * @return array
      */
-    public function serialize($entity, array $values, string $expand): array
+    public function serialize($entity, array $values, string $expand, array $fields = [], array $relations = [], array $params = []): array
     {
         $res = $entity->{$this->has}();
         if(boolval($res)){
@@ -79,7 +84,13 @@ class One2ManyExpandSerializer implements IExpandSerializer
             $values[$this->attribute] = SerializerRegistry::getInstance()->getSerializer
             (
                 $entity->{$this->getter}()
-            )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $this->attribute));
+            )->serialize
+            (
+                AbstractSerializer::filterExpandByPrefix($expand, $this->attribute),
+                AbstractSerializer::filterFieldsByPrefix($fields, $this->attribute),
+                AbstractSerializer::filterFieldsByPrefix($relations, $this->attribute),
+                $params
+            );
         }
         return $values;
     }

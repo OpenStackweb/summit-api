@@ -93,6 +93,30 @@ final class OAuth2SummitBadgeScanApiController
         return $this->service->addBadgeScan($summit, $current_member, $payload);
     }
 
+    use UpdateSummitChildElement;
+
+    function getUpdateValidationRules(array $payload): array{
+        return [
+            'notes' => 'sometimes|string|max:1024',
+        ];
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $child_id
+     * @param array $payload
+     * @return IEntity
+     * @throws EntityNotFoundException
+     * @throws HTTP403ForbiddenException
+     * @throws ValidationException
+     */
+    protected function updateChild(Summit $summit,int $child_id, array $payload):IEntity{
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if (is_null($current_member)) throw new HTTP403ForbiddenException();
+
+        return $this->service->updateBadgeScan($summit, $current_member, $child_id, $payload);
+    }
+
     /**
      * @param $summit_id
      * @param $sponsor_id

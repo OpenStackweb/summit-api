@@ -6586,6 +6586,14 @@ class ApiEndpointsSeeder extends Seeder
                     ],
                 ],
                 [
+                    'name' => 'update-badge-scan',
+                    'route' => '/api/v1/summits/{id}/badge-scans/{scan_id}',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteBadgeScan, $current_realm)
+                    ],
+                ],
+                [
                     'name' => 'get-my-badge-scans',
                     'route' => '/api/v1/summits/{id}/badge-scans/me',
                     'http_method' => 'GET',

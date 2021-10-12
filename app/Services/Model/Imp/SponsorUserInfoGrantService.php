@@ -149,4 +149,34 @@ final class SponsorUserInfoGrantService
             return $scan;
         });
     }
+
+    /**
+     * @param Summit $summit
+     * @param Member $current_member
+     * @param int $scan_id
+     * @param array $data
+     * @return SponsorBadgeScan
+     * @throws \Exception
+     */
+    public function updateBadgeScan(Summit $summit, Member $current_member, int $scan_id, array $data): SponsorBadgeScan
+    {
+        return $this->tx_service->transaction(function() use($summit, $current_member, $scan_id, $data){
+            $sponsor = $current_member->getSponsorBySummit($summit);
+
+            if(is_null($sponsor))
+                throw new ValidationException("Current member does not belongs to any summit sponsor.");
+
+            $scan = $sponsor->getUserInfoGrantById($scan_id);
+
+            if(is_null($scan) || !$scan instanceof SponsorBadgeScan){
+                throw new EntityNotFoundException("Scan not found.");
+            }
+
+            if(isset($data['notes'])){
+                $scan->setNotes(trim($data['notes']));
+            }
+
+            return $scan;
+        });
+    }
 }

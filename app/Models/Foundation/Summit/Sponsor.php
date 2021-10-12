@@ -178,6 +178,17 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     }
 
     /**
+     * @param int $grant_id
+     * @return SponsorUserInfoGrant|null
+     */
+    public function getUserInfoGrantById(int $grant_id):?SponsorUserInfoGrant{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $grant_id));
+        $grant = $this->user_info_grants->matching($criteria)->first();
+        return $grant === false ? null : $grant;
+    }
+
+    /**
      * @param Member $member
      * @return bool
      */

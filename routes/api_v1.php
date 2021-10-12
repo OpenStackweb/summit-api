@@ -861,6 +861,9 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::get('', 'OAuth2SummitBadgeScanApiController@getAllBySummit');
             Route::get('csv', 'OAuth2SummitBadgeScanApiController@getAllBySummitCSV');
             Route::post('', "OAuth2SummitBadgeScanApiController@add");
+            Route::group(['prefix' => 'badge-scans'], function () {
+                Route::put('{scan_id}', "OAuth2SummitBadgeScanApiController@update");
+            });
         });
 
         // badge-types

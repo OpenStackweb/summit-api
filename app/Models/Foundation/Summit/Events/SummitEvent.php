@@ -301,6 +301,12 @@ class SummitEvent extends SilverstripeBaseModel
     protected $updated_by = null;
 
     /**
+     * @ORM\Column(name="ShowSponsors", type="boolean")
+     * @var bool
+     */
+    protected $show_sponsors;
+
+    /**
      * SummitEvent constructor.
      */
     public function __construct()
@@ -309,6 +315,7 @@ class SummitEvent extends SilverstripeBaseModel
 
         $this->allow_feedback = false;
         $this->published = false;
+        $this->show_sponsors = true;
         $this->avg_feedback = 0;
         $this->head_count = 0;
         $this->rsvp_max_user_number = 0;
@@ -1354,6 +1361,22 @@ class SummitEvent extends SilverstripeBaseModel
         if(!in_array($streaming_type, self::ValidStreamingTypes))
             throw new ValidationException(sprintf("%s is not a valid streaming type", $streaming_type));
         $this->streaming_type = $streaming_type;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isShowSponsors(): bool
+    {
+        return $this->show_sponsors;
+    }
+
+    /**
+     * @param bool $show_sponsors
+     */
+    public function setShowSponsors(bool $show_sponsors): void
+    {
+        $this->show_sponsors = $show_sponsors;
     }
 
 }

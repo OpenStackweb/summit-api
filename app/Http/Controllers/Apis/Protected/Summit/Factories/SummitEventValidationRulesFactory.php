@@ -65,6 +65,7 @@ final class SummitEventValidationRulesFactory
                 'selection_plan_id' => 'sometimes|integer',
                 'disclaimer_accepted' => 'sometimes|boolean',
                 'created_by_id' => 'sometimes|integer',
+                'show_sponsors' => 'sometimes|boolean',
             ];
         }
 
@@ -103,6 +104,7 @@ final class SummitEventValidationRulesFactory
             'selection_plan_id' => 'sometimes|integer',
             'disclaimer_accepted' => 'sometimes|boolean',
             'created_by_id' => 'sometimes|integer',
+            'show_sponsors' => 'sometimes|boolean',
         ];
     }
 

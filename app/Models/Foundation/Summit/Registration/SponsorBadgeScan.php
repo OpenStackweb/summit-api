@@ -30,11 +30,15 @@ class SponsorBadgeScan extends SponsorUserInfoGrant
     protected $getIdMappings = [
         'getUserId'    => 'user',
         'getBadgeId'   => 'badge',
+        'getSponsorId' => 'sponsor',
+        'getAllowedUserId'    => 'allowed_user',
     ];
 
     protected $hasPropertyMappings = [
         'hasUser'    => 'user',
         'hasBadge'   => 'badge',
+        'hasSponsor' => 'sponsor',
+        'hasAllowedUser' => 'allowed_user',
     ];
 
     /**
@@ -83,22 +87,6 @@ class SponsorBadgeScan extends SponsorUserInfoGrant
     public function setQRCode(string $qr_code): void
     {
         $this->qr_code = $qr_code;
-    }
-
-    /**
-     * @return Sponsor
-     */
-    public function getSponsor(): Sponsor
-    {
-        return $this->sponsor;
-    }
-
-    /**
-     * @param Sponsor $sponsor
-     */
-    public function setSponsor(Sponsor $sponsor): void
-    {
-        $this->sponsor = $sponsor;
     }
 
     /**

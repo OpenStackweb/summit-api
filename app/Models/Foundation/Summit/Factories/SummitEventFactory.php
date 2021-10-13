@@ -103,6 +103,10 @@ final class SummitEventFactory
             filter_var($payload['allow_feedback'], FILTER_VALIDATE_BOOLEAN) :
             false);
 
+        if(isset($payload['show_sponsors'])) {
+            $event->setShowSponsors(filter_var($payload['show_sponsors'], FILTER_VALIDATE_BOOLEAN));
+        }
+
         return $event;
     }
 }

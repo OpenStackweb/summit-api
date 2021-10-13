@@ -54,6 +54,7 @@ class SummitEventSerializer extends SilverStripeSerializer
         'Level' => 'level',
         'CreatedById' => 'created_by_id:json_int',
         'UpdatedById' => 'updated_by_id:json_int',
+        'ShowSponsors' => 'show_sponsors:json_boolean',
     ];
 
     protected static $allowed_fields = [
@@ -90,6 +91,7 @@ class SummitEventSerializer extends SilverStripeSerializer
         'level',
         'created_by_id',
         'updated_by_id',
+        'show_sponsors',
     ];
 
     protected static $allowed_relations = [

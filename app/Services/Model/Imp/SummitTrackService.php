@@ -116,6 +116,18 @@ final class SummitTrackService
                 }
             }
 
+            if(isset($data['allowed_access_levels'])){
+                foreach($data['allowed_access_levels'] as $access_level_id) {
+                    $access_level = $summit->getBadgeAccessLevelTypeById(intval($access_level_id));
+                    if(is_null($access_level)){
+                        throw new EntityNotFoundException(
+                            sprintf("allowed_access_levels : access level %s does not exists.", $access_level_id)
+                        );
+                    }
+                    $track->addAllowedAccessLevel($access_level);
+                }
+            }
+
             $summit->addPresentationCategory($track);
 
             return $track;
@@ -170,6 +182,19 @@ final class SummitTrackService
                         );
                     }
                     $track->addAllowedTag($tackTagGroupAllowedTag->getTag());
+                }
+            }
+
+            if(isset($data['allowed_access_levels'])){
+                $track->clearAllowedAccessLevels();
+                foreach($data['allowed_access_levels'] as $access_level_id) {
+                    $access_level = $summit->getBadgeAccessLevelTypeById(intval($access_level_id));
+                    if(is_null($access_level)){
+                        throw new EntityNotFoundException(
+                            sprintf("allowed_access_levels : access level %s does not exists.", $access_level_id)
+                        );
+                    }
+                    $track->addAllowedAccessLevel($access_level);
                 }
             }
 

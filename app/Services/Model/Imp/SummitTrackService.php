@@ -21,6 +21,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
 use App\Models\Foundation\Summit\Repositories\ITrackQuestionTemplateRepository;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -148,6 +149,7 @@ final class SummitTrackService
      */
     public function updateTrack(Summit $summit, $track_id, array $data)
     {
+        Log::debug(sprintf("SummitTrackService::UpdateTrack %s ", $track_id));
         return $this->tx_service->transaction(function () use ($summit, $track_id, $data) {
 
             $track = $summit->getPresentationCategory($track_id);
@@ -188,6 +190,7 @@ final class SummitTrackService
             if(isset($data['allowed_access_levels'])){
                 $track->clearAllowedAccessLevels();
                 foreach($data['allowed_access_levels'] as $access_level_id) {
+                    Log::debug(sprintf("SummitTrackService::UpdateTrack %s trying to add access level %s", $track_id, $access_level_id));
                     $access_level = $summit->getBadgeAccessLevelTypeById(intval($access_level_id));
                     if(is_null($access_level)){
                         throw new EntityNotFoundException(
@@ -195,6 +198,7 @@ final class SummitTrackService
                         );
                     }
                     $track->addAllowedAccessLevel($access_level);
+                    Log::debug(sprintf("SummitTrackService::UpdateTrack %s added access level %s", $track_id, $access_level_id));
                 }
             }
 

@@ -2501,8 +2501,8 @@ final class SummitOrderService
      */
     public function updateTicket(Summit $summit, int $order_id, int $ticket_id, array $payload): SummitAttendeeTicket
     {
-        return $this->tx_service->transaction(function () use ($summit, $order_id, $ticket_id, $payload) {
-            // lock and get the order
+        list($ticket, $shouldSendInvitationEmail) = $this->tx_service->transaction(function () use ($summit, $order_id, $ticket_id, $payload) {
+             // lock and get the order
             $order = $this->order_repository->getByIdExclusiveLock($order_id);
 
             if (is_null($order) || !$order instanceof SummitOrder)
@@ -2611,11 +2611,13 @@ final class SummitOrderService
                 $ticket->setBadge($badge);
             }
 
-            if($shouldSendInvitationEmail)
-                $ticket->getOwner()->sendInvitationEmail($ticket);
-
-            return $ticket;
+            return [$ticket, $shouldSendInvitationEmail];
         });
+
+        if($shouldSendInvitationEmail && $ticket->hasOwner())
+            $ticket->getOwner()->sendInvitationEmail($ticket);
+
+        return $ticket;
     }
 
 

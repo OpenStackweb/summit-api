@@ -2633,7 +2633,7 @@ final class SummitOrderService
 
             $ticket = $this->ticket_repository->getByHashExclusiveLock($hash);
 
-            if (is_null($ticket) && !$ticket->isActive())
+            if (is_null($ticket) || !$ticket->isActive())
                 throw new EntityNotFoundException("ticket not found");
 
             if (!$ticket->isPaid())

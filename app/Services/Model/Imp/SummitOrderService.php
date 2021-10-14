@@ -2370,9 +2370,8 @@ final class SummitOrderService
     {
         return $this->tx_service->transaction(function () use ($summit, $ticket_id, $requestor) {
             $badge = $this->getAttendeeBadge($summit, $ticket_id, $requestor);
-
+            $badge->generateQRCode();
             $this->checkPrintingRights($requestor, $badge);
-
             return $badge;
         });
     }

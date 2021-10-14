@@ -315,7 +315,7 @@ class SummitEvent extends SilverstripeBaseModel
 
         $this->allow_feedback = false;
         $this->published = false;
-        $this->show_sponsors = true;
+        $this->show_sponsors = false;
         $this->avg_feedback = 0;
         $this->head_count = 0;
         $this->rsvp_max_user_number = 0;

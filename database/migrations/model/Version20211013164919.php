@@ -30,7 +30,7 @@ class Version20211013164919 extends AbstractMigration
         $builder = new Builder($schema);
         if($schema->hasTable("SummitEvent") && !$builder->hasColumn("SummitEvent", "ShowSponsors")) {
             $builder->table('SummitEvent', function (Table $table) {
-                $table->boolean('ShowSponsors')->setNotnull(true)->setDefault(true);
+                $table->boolean('ShowSponsors')->setNotnull(true)->setDefault(false);
             });
         }
     }

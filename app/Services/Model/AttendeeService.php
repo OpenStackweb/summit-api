@@ -357,9 +357,9 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             SummitAttendeeFactory::populate($summit, $new_owner , $attendee_payload);
 
             $attendee->sendRevocationTicketEmail($ticket);
-
             $attendee->removeTicket($ticket);
             $attendee->updateStatus();
+
             $new_owner->addTicket($ticket);
 
             $ticket->generateQRCode();

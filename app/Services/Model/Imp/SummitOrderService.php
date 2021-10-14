@@ -2524,7 +2524,68 @@ final class SummitOrderService
             $ticket->generateQRCode();
             $ticket->generateHash();
 
-            $attendee = $ticket->getOwner();
+            $owner = $ticket->getOwner();
+
+            // check if we are doing a assign / re assign
+            $attendee_email = $payload['attendee_email'] ?? null;
+            $new_owner = null;
+
+            if(!empty($attendee_email)) {
+
+                // first try to get the new owner by email
+
+                $new_owner = $this->attendee_repository->getBySummitAndEmail($summit, $attendee_email);
+
+                if (is_null($new_owner)) {
+                    Log::debug(sprintf("attendee %s does no exists .. creating it ", $attendee_email));
+                    $attendee_payload = [
+                        'email' => $attendee_email
+                    ];
+
+                    $new_owner = SummitAttendeeFactory::build
+                    (
+                        $summit,
+                        $attendee_payload,
+                        $this->member_repository->getByEmail($attendee_email)
+                    );
+
+                    $this->attendee_repository->add($new_owner);
+                }
+
+                // populate the new owner with ectra data
+                $attendee_payload = [];
+
+                if(isset($payload['attendee_first_name']))
+                    $attendee_payload['first_name'] = $payload['attendee_first_name'];
+
+                if(isset($payload['attendee_last_name']))
+                    $attendee_payload['last_name'] = $payload['attendee_last_name'];
+
+                if(isset($payload['attendee_company']))
+                    $attendee_payload['company'] = $payload['attendee_company'];
+
+                if(isset($payload['extra_questions']))
+                    $attendee_payload['extra_questions'] = $payload['extra_questions'];
+
+                SummitAttendeeFactory::populate($summit, $new_owner , $attendee_payload);
+            }
+
+            $shouldSendInvitationEmail = false;
+            // we are doing a reassignment from owner to new owner
+            if(!is_null($owner) && !is_null($new_owner) && $owner->getId() !== $new_owner->getId()) {
+                $owner->sendRevocationTicketEmail($ticket);
+                $owner->removeTicket($ticket);
+                $owner->updateStatus();
+            }
+
+            // if we have a new owner set the ticket
+            if(!is_null($new_owner)) {
+                $new_owner->addTicket($ticket);
+                $ticket->generateQRCode();
+                $ticket->generateHash();
+                $new_owner->updateStatus();
+                $shouldSendInvitationEmail = true;
+            }
 
             if (isset($payload['ticket_type_id'])) {
                 // set ticket type
@@ -2535,8 +2596,7 @@ final class SummitOrderService
 
                 $ticket->upgradeTicketType($ticket_type);
 
-                if(!is_null($attendee))
-                    $attendee->sendInvitationEmail($ticket);
+                $shouldSendInvitationEmail = true;
             }
 
             if (isset($payload['badge_type_id'])) {
@@ -2550,6 +2610,9 @@ final class SummitOrderService
                 $badge->setType($badge_type);
                 $ticket->setBadge($badge);
             }
+
+            if($shouldSendInvitationEmail)
+                $ticket->getOwner()->sendInvitationEmail($ticket);
 
             return $ticket;
         });

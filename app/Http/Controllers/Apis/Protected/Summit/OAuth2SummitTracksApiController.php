@@ -462,6 +462,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                 'voting_visible'            => 'sometimes|boolean',
                 'chair_visible'             => 'sometimes|boolean',
                 'allowed_tags'              => 'sometimes|string_array',
+                'allowed_access_levels'     => 'sometimes|int_array',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -562,6 +563,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                 'voting_visible'            => 'sometimes|boolean',
                 'chair_visible'             => 'sometimes|boolean',
                 'allowed_tags'              => 'sometimes|string_array',
+                'allowed_access_levels'     => 'sometimes|int_array',
             ];
 
             // Creates a Validator instance and validates the data.

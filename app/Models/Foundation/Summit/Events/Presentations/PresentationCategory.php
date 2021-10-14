@@ -101,6 +101,15 @@ class PresentationCategory extends SilverstripeBaseModel
     private $chair_visible;
 
     /**
+     * @ORM\ManyToMany(targetEntity="models\summit\SummitAccessLevelType", fetch="EXTRA_LAZY")
+     * @ORM\JoinTable(name="PresentationCategory_SummitAccessLevelType",
+     *      joinColumns={@ORM\JoinColumn(name="PresentationCategoryID", referencedColumnName="ID", onDelete="CASCADE")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitAccessLevelTypeID", referencedColumnName="ID", onDelete="CASCADE")}
+     *      )
+     */
+    protected $allowed_access_levels;
+
+    /**
      * @ORM\Column(name="Color", type="string")
      * @var string
      */
@@ -266,6 +275,7 @@ class PresentationCategory extends SilverstripeBaseModel
         $this->extra_questions           = new ArrayCollection;
         $this->track_chairs              = new ArrayCollection;
         $this->selection_lists           = new ArrayCollection();
+        $this->allowed_access_levels     = new ArrayCollection();
         $this->session_count             = 0;
         $this->alternate_count           = 0;
         $this->lightning_alternate_count = 0;
@@ -707,5 +717,24 @@ SQL;
             $this->addSelectionList($team_selection_list);
         }
         return $team_selection_list;
+    }
+
+    /**
+     * @param SummitAccessLevelType $access_level
+     */
+    public function addAllowedAccessLevel(SummitAccessLevelType $access_level):void{
+        if($this->allowed_access_levels->contains($access_level)) return;
+        $this->allowed_access_levels->add($access_level);
+    }
+
+    public function clearAllowedAccessLevels():void{
+        $this->allowed_access_levels->clear();
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getAllowedAccessLevels(){
+        return $this->allowed_access_levels;
     }
 }

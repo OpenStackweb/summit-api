@@ -51,6 +51,7 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
         if (!$category instanceof PresentationCategory) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
         $groups = [];
+        $allowed_access_levels = [];
         $allowed_tag = [];
         $extra_questions = [];
         $selection_lists = [];
@@ -72,11 +73,15 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
             $selection_lists[] = intval($list->getId());
         }
 
+        foreach ($category->getAllowedAccessLevels() as $access_level) {
+            $allowed_access_levels[] = intval($access_level->getId());
+        }
 
         $values['track_groups'] = $groups;
         $values['allowed_tags'] = $allowed_tag;
         $values['extra_questions'] = $extra_questions;
         $values['selection_lists'] = $selection_lists;
+        $values['allowed_access_levels'] = $allowed_access_levels;
 
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);
@@ -109,13 +114,24 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
                             $values['allowed_tags'] = $allowed_tags;
                         }
                         break;
-
+                    case 'allowed_access_levels':
+                        {
+                            $allowed_access_levels = [];
+                            unset($values['allowed_access_levels']);
+                            foreach ($category->getAllowedAccessLevels() as $access_level) {
+                                $allowed_access_levels[] = SerializerRegistry::getInstance()
+                                    ->getSerializer($access_level)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            }
+                            $values['allowed_access_levels'] = $allowed_access_levels;
+                        }
+                        break;
                     case 'extra_questions':
                         {
                             $extra_questions = [];
                             unset($values['extra_questions']);
                             foreach ($category->getExtraQuestions() as $question) {
-                                $extra_questions[] = SerializerRegistry::getInstance()->getSerializer($question)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $extra_questions[] = SerializerRegistry::getInstance()
+                                    ->getSerializer($question)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
                             $values['extra_questions'] = $extra_questions;
                         }

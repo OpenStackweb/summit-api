@@ -938,7 +938,12 @@ final class SummitOrderService
         } catch (ValidationException $ex) {
             Log::warning($ex);
             throw $ex;
-        } catch (\Exception $ex) {
+        }
+        catch (EntityNotFoundException $ex) {
+            Log::warning($ex);
+            throw $ex;
+        }
+        catch (\Exception $ex) {
             Log::error($ex);
             throw $ex;
         }

@@ -5374,7 +5374,7 @@ SQL;
         try {
             $sql = <<<SQL
      select COUNT(SummitAttendeeTicket.ID) FROM SummitAttendeeTicket
-INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderI
+INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.
 WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 1;
 SQL;
@@ -5455,7 +5455,7 @@ SQL;
     public function getActiveTicketsCountPerTicketType():array{
         try {
             $sql = <<<SQL
-select SummitTicketType.Name, COUNT(SummitAttendeeTicket.ID) FROM SummitAttendeeTicket
+select SummitTicketType.Name AS type, COUNT(SummitAttendeeTicket.ID) as qty FROM SummitAttendeeTicket
 INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 INNER JOIN SummitTicketType ON SummitAttendeeTicket.TicketTypeID = SummitTicketType.ID
 WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 1
@@ -5477,7 +5477,7 @@ SQL;
     public function getActiveBadgesCountPerBadgeType():array{
         try {
             $sql = <<<SQL
-select SummitBadgeType.Name, COUNT(SummitAttendeeBadge.ID) FROM SummitAttendeeBadge
+select SummitBadgeType.Name as type, COUNT(SummitAttendeeBadge.ID) as qty FROM SummitAttendeeBadge
 INNER JOIN SummitBadgeType ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType.ID
 INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
 INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID

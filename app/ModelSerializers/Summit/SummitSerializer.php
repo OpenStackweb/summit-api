@@ -461,7 +461,7 @@ class SummitSerializer extends SilverStripeSerializer
                             }
                         }
                         break;
-                    case 'registration':{
+                    case 'registration_stats':{
                         $values['total_active_tickets'] = $summit->getActiveTicketsCount();
                         $values['total_inactive_tickets'] = $summit->getInactiveicketsCount();
                         $values['total_orders'] = $summit->getTotalOrdersCount();

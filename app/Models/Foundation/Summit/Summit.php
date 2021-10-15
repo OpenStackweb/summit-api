@@ -5373,10 +5373,10 @@ SQL;
     public function getActiveAssignedTicketsCount():int{
         try {
             $sql = <<<SQL
-     select COUNT(SummitAttendeeTicket.ID) FROM SummitAttendeeTicket
+SELECT COUNT(SummitAttendeeTicket.ID) FROM SummitAttendeeTicket
 INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
-INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.
-WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 1;
+INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
+WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 1
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -5463,7 +5463,7 @@ GROUP BY SummitTicketType.Name;
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->fetchAll();
             return count($res) > 1 ? $res: [];
         } catch (\Exception $ex) {
 
@@ -5486,7 +5486,7 @@ WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 1 GR
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
-            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = $stmt->fetchAll();
             return count($res) > 1 ? $res: [];
         } catch (\Exception $ex) {
 

@@ -15,6 +15,7 @@ use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Security\SummitScopes;
 use Illuminate\Support\Facades\Config;
 use Libs\ModelSerializers\AbstractSerializer;
+use libs\utils\JsonUtils;
 use models\summit\IPaymentConstants;
 use models\summit\Summit;
 use DateTime;
@@ -460,6 +461,20 @@ class SummitSerializer extends SilverStripeSerializer
                             }
                         }
                         break;
+                    case 'registration':{
+                        $values['total_active_tickets'] = $summit->getActiveTicketsCount();
+                        $values['total_inactive_tickets'] = $summit->getInactiveicketsCount();
+                        $values['total_orders'] = $summit->getTotalOrdersCount();
+                        $values['total_active_assigned_tickets'] = $summit->getActiveAssignedTicketsCount();
+                        $values['total_payment_amount_collected'] = JsonUtils::toJsonFloat($summit->getTotalPaymentAmountCollected());
+                        $values['total_refund_amount_emitted'] = JsonUtils::toJsonFloat($summit->getTotalRefundAmountEmitted());
+                        $values['total_tickets_per_type'] = $summit->getActiveTicketsCountPerTicketType();
+                        $values['total_badges_per_type'] = $summit->getActiveBadgesCountPerBadgeType();
+                        $values['total_checked_in_attendees'] = $summit->getCheckedInAttendeesCount();
+                        $values['total_non_checked_in_attendees'] = $summit->getNonCheckedInAttendeesCount();
+                        $values['total_virtual_attendees'] = $summit->getVirtualAttendeesCount();
+                    }
+                    break;
                 }
             }
         }

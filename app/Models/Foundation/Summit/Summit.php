@@ -5322,4 +5322,231 @@ SQL;
     public function synchPresentationAction(Presentation $presentation):void{
         $presentation->initializeActions();
     }
+
+    /**
+     * Registration statistics
+     */
+
+    /**
+     * @return int
+     */
+    public function getActiveTicketsCount():int{
+        try {
+            $sql = <<<SQL
+          select COUNT(SummitAttendeeTicket.ID) FROM SummitAttendeeTicket
+INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
+WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 1;
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            return count($res) > 0 ? $res[0] : 0;
+        } catch (\Exception $ex) {
+
+        }
+        return 0;
+    }
+
+    /**
+     * @return int
+     */
+    public function getInactiveicketsCount():int{
+        try {
+            $sql = <<<SQL
+          select COUNT(SummitAttendeeTicket.ID) FROM SummitAttendeeTicket
+INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
+WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 0;
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            return count($res) > 0 ? $res[0] : 0;
+        } catch (\Exception $ex) {
+
+        }
+        return 0;
+    }
+
+    /**
+     * @return int
+     */
+    public function getActiveAssignedTicketsCount():int{
+        try {
+            $sql = <<<SQL
+     select COUNT(SummitAttendeeTicket.ID) FROM SummitAttendeeTicket
+INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderI
+INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.
+WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 1;
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            return count($res) > 0 ? $res[0] : 0;
+        } catch (\Exception $ex) {
+
+        }
+        return 0;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTotalOrdersCount():int{
+        try {
+            $sql = <<<SQL
+    select COUNT(SummitOrder.ID) FROM SummitOrder
+WHERE SummitOrder.SummitID = :summit_id;
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            return count($res) > 0 ? $res[0] : 0;
+        } catch (\Exception $ex) {
+
+        }
+        return 0;
+    }
+
+    /**
+     * @return float
+     */
+    public function getTotalPaymentAmountCollected():float{
+        try {
+            $sql = <<<SQL
+         select SUM(SummitAttendeeTicket.RawCost) FROM SummitAttendeeTicket
+INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
+WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 1;
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            return count($res) > 0 ? $res[0] : 0;
+        } catch (\Exception $ex) {
+
+        }
+        return 0;
+    }
+
+    /**
+     * @return float
+     */
+    public function getTotalRefundAmountEmitted():float{
+        try {
+            $sql = <<<SQL
+      SELECT SUM(SummitRefundRequest.RefundedAmount) FROM `SummitRefundRequest`
+inner join SummitAttendeeTicketRefundRequest on SummitAttendeeTicketRefundRequest.ID = SummitRefundRequest.ID
+inner join SummitAttendeeTicket on SummitAttendeeTicket.ID = SummitAttendeeTicketRefundRequest.TicketID
+inner join SummitOrder on SummitOrder.ID = SummitAttendeeTicket.OrderID
+where SummitRefundRequest.Status='Approved' and SummitOrder.SummitID = :summit_id;
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            return count($res) > 0 ? $res[0] : 0;
+        } catch (\Exception $ex) {
+
+        }
+        return 0;
+    }
+
+    /**
+     * @return array
+     */
+    public function getActiveTicketsCountPerTicketType():array{
+        try {
+            $sql = <<<SQL
+select SummitTicketType.Name, COUNT(SummitAttendeeTicket.ID) FROM SummitAttendeeTicket
+INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
+INNER JOIN SummitTicketType ON SummitAttendeeTicket.TicketTypeID = SummitTicketType.ID
+WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 1
+GROUP BY SummitTicketType.Name;
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            return count($res) > 1 ? $res: [];
+        } catch (\Exception $ex) {
+
+        }
+        return [];
+    }
+
+    /**
+     * @return array
+     */
+    public function getActiveBadgesCountPerBadgeType():array{
+        try {
+            $sql = <<<SQL
+select SummitBadgeType.Name, COUNT(SummitAttendeeBadge.ID) FROM SummitAttendeeBadge
+INNER JOIN SummitBadgeType ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType.ID
+INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
+INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
+INNER JOIN SummitTicketType ON SummitAttendeeTicket.TicketTypeID = SummitTicketType.ID
+WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 1 GROUP BY SummitBadgeType.ID
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            return count($res) > 1 ? $res: [];
+        } catch (\Exception $ex) {
+
+        }
+        return [];
+    }
+
+    /**
+     * @return int
+     */
+    public function getCheckedInAttendeesCount():int{
+        try {
+            $sql = <<<SQL
+ SELECT COUNT(SummitAttendee.ID) FROM SummitAttendee
+WHERE SummitAttendee.SummitID = :summit_id AND
+EXISTS (SELECT SummitAttendeeTicket.ID FROM SummitAttendeeTicket WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID) AND
+EXISTS (SELECT SummitAttendeeBadgePrint.ID FROM SummitAttendeeBadgePrint 
+        INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.ID = SummitAttendeeBadgePrint.BadgeID 
+        INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID 
+        WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID)
+
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            return count($res) > 0 ? $res[0] : 0;
+        } catch (\Exception $ex) {
+
+        }
+        return 0;
+    }
+
+    /**
+     * @return int
+     */
+    public function getNonCheckedInAttendeesCount():int{
+        try {
+            $sql = <<<SQL
+ SELECT COUNT(SummitAttendee.ID) FROM SummitAttendee
+WHERE SummitAttendee.SummitID = :summit_id AND
+EXISTS (SELECT SummitAttendeeTicket.ID FROM SummitAttendeeTicket WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID) AND
+NOT EXISTS (SELECT SummitAttendeeBadgePrint.ID FROM SummitAttendeeBadgePrint 
+        INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.ID = SummitAttendeeBadgePrint.BadgeID 
+        INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID 
+        WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID)
+
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            return count($res) > 0 ? $res[0] : 0;
+        } catch (\Exception $ex) {
+
+        }
+        return 0;
+    }
+
+    public function getVirtualAttendeesCount():int{
+        // @todo:implement
+        return 0;
+    }
+
 }

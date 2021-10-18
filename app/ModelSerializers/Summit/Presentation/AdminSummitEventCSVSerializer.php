@@ -34,10 +34,6 @@ class AdminSummitEventCSVSerializer extends SummitEventSerializer
             $values['description'] = strip_tags($values['description']);
         }
 
-        // local dates
-        $values['start_date'] = $summit_event->getLocalStartDate()->getTimestamp();
-        $values['end_date'] = $summit_event->getLocalEndDate()->getTimestamp();
-
         if($summit_event->hasCategory()){
             $values['track'] = $summit_event->getCategory()->getTitle();
         }

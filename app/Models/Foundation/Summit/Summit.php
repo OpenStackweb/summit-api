@@ -5482,7 +5482,7 @@ INNER JOIN SummitBadgeType ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType.
 INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
 INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 INNER JOIN SummitTicketType ON SummitAttendeeTicket.TicketTypeID = SummitTicketType.ID
-WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 1 GROUP BY SummitBadgeType.ID
+WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 1 GROUP BY SummitBadgeType.ID;
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -5506,8 +5506,7 @@ EXISTS (SELECT SummitAttendeeTicket.ID FROM SummitAttendeeTicket WHERE SummitAtt
 EXISTS (SELECT SummitAttendeeBadgePrint.ID FROM SummitAttendeeBadgePrint 
         INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.ID = SummitAttendeeBadgePrint.BadgeID 
         INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID 
-        WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID)
-
+        WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID);
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -5531,8 +5530,7 @@ EXISTS (SELECT SummitAttendeeTicket.ID FROM SummitAttendeeTicket WHERE SummitAtt
 NOT EXISTS (SELECT SummitAttendeeBadgePrint.ID FROM SummitAttendeeBadgePrint 
         INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.ID = SummitAttendeeBadgePrint.BadgeID 
         INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID 
-        WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID)
-
+        WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID);
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -5545,7 +5543,17 @@ SQL;
     }
 
     public function getVirtualAttendeesCount():int{
-        // @todo:implement
+        try {
+            $sql = <<<SQL
+         SELECT COUNT(ID) FROM `SummitAttendee` where SummitVirtualCheckedInDate is not null and SummitID = :summit_id;
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            return count($res) > 0 ? $res[0] : 0;
+        } catch (\Exception $ex) {
+
+        }
         return 0;
     }
 

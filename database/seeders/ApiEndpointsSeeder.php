@@ -1939,7 +1939,7 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'PUT',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::Me, $current_realm),
+                    sprintf(SummitScopes::DoVirtualCheckIn, $current_realm),
                 ],
             ],
             [

@@ -769,6 +769,9 @@ class SummitAttendee extends SilverstripeBaseModel
     public function doVirtualChecking():void{
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
         if(is_null($this->summit_virtual_checked_in_date)){
+            if(!$this->summit->isOpen()){
+                throw new ValidationException("Is not show time yet.");
+            }
             if(!$this->hasAccessLevel(SummitAccessLevelType::VIRTUAL)){
                 throw new ValidationException("Attendee does not posses VIRTUAL access level.");
             }

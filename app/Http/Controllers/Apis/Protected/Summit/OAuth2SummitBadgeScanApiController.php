@@ -398,4 +398,18 @@ final class OAuth2SummitBadgeScanApiController
             'attendees-badge-scans-'
         );
     }
+
+    use GetSummitChildElementById;
+
+    /**
+     * @inheritDoc
+     */
+    protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity
+    {
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if (is_null($current_member)) throw new HTTP403ForbiddenException();
+
+        return $this->service->getBadgeScan($summit, $current_member, $child_id);
+    }
+
 }

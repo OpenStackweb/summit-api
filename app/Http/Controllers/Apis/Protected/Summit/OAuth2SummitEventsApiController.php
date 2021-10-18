@@ -1468,4 +1468,69 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         }
     }
 
+    /**
+     * @param $summit_id
+     * @param $event_id
+     * @return mixed
+     */
+    public function updateEventLiveInfo($summit_id, $event_id)
+    {
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            if(!Request::isJson()) return $this->error400();
+            $data = Request::json();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $payload = $data->all();
+            // Creates a Validator instance and validates the data.
+            $validation = Validator::make($payload, [
+                'streaming_url' => 'required||url',
+                'streaming_type' => 'required|string|in:VOD,LIVE',
+            ]);
+
+            if ($validation->fails()) {
+                $messages = $validation->messages()->toArray();
+
+                return $this->error412
+                (
+                    $messages
+                );
+            }
+
+
+            $event = $this->service->updateEvent($summit, $event_id,
+                [
+                    'streaming_url' => $payload['streaming_url'],
+                    'streaming_type' => $payload['streaming_type'],
+                ]);
+
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($event, $this->getSerializerType())->serialize(
+                Request::input('expand', ''),
+                [],
+                [],
+                [
+                    'current_user' => $this->resource_server_context->getCurrentUser(true)
+                ]
+            ));
+
+        }
+        catch (ValidationException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message'=> $ex2->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
 }

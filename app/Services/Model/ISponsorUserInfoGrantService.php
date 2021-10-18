@@ -55,4 +55,14 @@ interface ISponsorUserInfoGrantService
      */
     public function updateBadgeScan(Summit $summit, Member $current_member, int $scan_id, array $data):SponsorBadgeScan;
 
+    /**
+     * @param Summit $summit
+     * @param Member $current_member
+     * @param int $scan_id
+     * @return SponsorBadgeScan
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function getBadgeScan(Summit $summit, Member $current_member, int $scan_id):SponsorBadgeScan;
+
 }

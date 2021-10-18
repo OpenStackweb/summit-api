@@ -22,6 +22,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
     protected static $array_mappings = [
         'SummitHallCheckedIn'     => 'summit_hall_checked_in:json_boolean',
         'SummitHallCheckedInDate' => 'summit_hall_checked_in_date:datetime_epoch',
+        'SummitVirtualCheckedInDate' => 'summit_virtual_checked_in_date:datetime_epoch',
         'SharedContactInfo'       => 'shared_contact_info:json_boolean',
         'MemberId'                => 'member_id:json_int',
         'SummitId'                => 'summit_id:json_int',

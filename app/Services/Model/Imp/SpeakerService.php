@@ -252,8 +252,8 @@ final class SpeakerService
             $this->speaker_repository->add($this->updateSpeakerRelations($speaker, $data));
 
             // only send the email if we dont have a former registration request
-            if(is_null($formerRegistrationRequest) && $send_email)
-                SpeakerCreationEmail::dispatch($speaker);
+            //if(is_null($formerRegistrationRequest) && $send_email)
+            //    SpeakerCreationEmail::dispatch($speaker);
 
             if(!is_null($formerRegistrationRequest)){
                 $formerRegistrationRequest->confirm();

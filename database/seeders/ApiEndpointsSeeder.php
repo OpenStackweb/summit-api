@@ -2491,6 +2491,12 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'update-event-live-info',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/live-info',
+                'http_method' => 'PUT',
+                'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
+            ],
+            [
                 'name' => 'add-event-image',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/image',
                 'http_method' => 'POST',
@@ -6600,6 +6606,16 @@ class ApiEndpointsSeeder extends Seeder
                     'http_method' => 'PUT',
                     'scopes' => [
                         sprintf(SummitScopes::WriteBadgeScan, $current_realm)
+                    ],
+                ],
+                [
+                    'name' => 'get-badge-scan',
+                    'route' => '/api/v1/summits/{id}/badge-scans/{scan_id}',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                        sprintf(SummitScopes::ReadBadgeScan, $current_realm),
+                        sprintf(SummitScopes::ReadMyBadgeScan, $current_realm)
                     ],
                 ],
                 [

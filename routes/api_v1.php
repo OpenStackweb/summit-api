@@ -409,6 +409,7 @@ Route::group(array('prefix' => 'summits'), function () {
                 });
 
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@updateEvent']);
+                Route::put('live-info', [ 'uses' => 'OAuth2SummitEventsApiController@updateEventLiveInfo']);
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@deleteEvent']);
                 Route::put('/publish', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@publishEvent']);
                 Route::delete('/publish', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@unPublishEvent']);
@@ -861,7 +862,10 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::get('', 'OAuth2SummitBadgeScanApiController@getAllBySummit');
             Route::get('csv', 'OAuth2SummitBadgeScanApiController@getAllBySummitCSV');
             Route::post('', "OAuth2SummitBadgeScanApiController@add");
-            Route::put('{scan_id}', "OAuth2SummitBadgeScanApiController@update");
+            Route::group(['prefix' => '{scan_id}'], function () {
+                Route::put('', "OAuth2SummitBadgeScanApiController@update");
+                Route::get('', "OAuth2SummitBadgeScanApiController@get");
+            });
         });
 
         // badge-types

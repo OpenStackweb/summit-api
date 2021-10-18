@@ -4068,6 +4068,13 @@ SQL;
         return $end_date < $utc_now;
     }
 
+    /**
+     * @return bool
+     * @throws \Exception
+     */
+    public function isOpen():bool{
+        return $this->dayIsOnSummitPeriod(new DateTime('now', new \DateTimeZone('UTC'), false));
+    }
 
     /**
      * @param DateTime $day

@@ -79,6 +79,12 @@ class SummitAttendee extends SilverstripeBaseModel
     private $summit_hall_checked_in_date;
 
     /**
+     * @ORM\Column(name="SummitVirtualCheckedInDate", type="datetime")
+     * @var \DateTime
+     */
+    private $summit_virtual_checked_in_date;
+
+    /**
      * @ORM\Column(name="LastReminderEmailSentDate", type="datetime")
      * @var \DateTime
      */
@@ -244,6 +250,7 @@ class SummitAttendee extends SilverstripeBaseModel
         $this->tickets                  = new ArrayCollection();
         $this->extra_question_answers   = new ArrayCollection();
         $this->disclaimer_accepted_date = null;
+        $this->summit_virtual_checked_in_date = null;
         $this->status                   = self::StatusIncomplete;
     }
 
@@ -732,6 +739,41 @@ class SummitAttendee extends SilverstripeBaseModel
     public function setAdminNotes(string $admin_notes): void
     {
         $this->admin_notes = $admin_notes;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getSummitVirtualCheckedInDate(): ?\DateTime
+    {
+        return $this->summit_virtual_checked_in_date;
+    }
+
+    /**
+     * @param string $access_level
+     * @return bool
+     */
+    public function hasAccessLevel(string $access_level):bool{
+        foreach($this->tickets as $ticket){
+            if(!$ticket->isActive()) continue;
+            if(!$ticket->hasBadge()) continue;
+            $al = $ticket->getBadge()->getType()->getAccessLevelByName($access_level);
+            if(!is_null($al)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function doVirtualChecking():void{
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        if(is_null($this->summit_virtual_checked_in_date)){
+            if(!$this->hasAccessLevel(SummitAccessLevelType::VIRTUAL)){
+                throw new ValidationException("Attendee does not posses VIRTUAL access level.");
+            }
+            $this->summit_virtual_checked_in_date = $now;
+        }
     }
 
 }

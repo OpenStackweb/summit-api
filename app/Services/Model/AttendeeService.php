@@ -443,4 +443,18 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             }
         });
     }
+
+    public function doVirtualCheckin(Summit $summit, int $attendee_id): ?SummitAttendee
+    {
+        return $this->tx_service->transaction(function() use($summit, $attendee_id){
+
+            $attendee = $summit->getAttendeeById($attendee_id);
+            if(is_null($attendee))
+                throw new EntityNotFoundException(sprintf("Attendee does not belongs to summit id %s.", $summit->getId()));
+
+            $attendee->doVirtualChecking();
+
+            return $attendee;
+        });
+    }
 }

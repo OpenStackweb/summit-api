@@ -918,4 +918,34 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             return $this->error500($ex);
         }
     }
+
+    /**
+     * @param int $summit_id
+     * @param int $attendee_id
+     * @return mixed
+     */
+    public function doVirtualCheckin($summit_id, $attendee_id)
+    {
+        try {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $attendee = $this->repository->getById($attendee_id);
+            if (is_null($attendee)) return $this->error404();
+            $attendee = $this->attendee_service->doVirtualCheckin($summit, $attendee_id);
+
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($attendee)->serialize());
+        } catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return $this->error412($ex1->getMessages());
+        } catch (EntityNotFoundException $ex2) {
+            Log::warning($ex2);
+            return $this->error404($ex2->getMessage());
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
 }

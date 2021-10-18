@@ -978,6 +978,7 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::group(array('prefix' => '{attendee_id}'), function () {
                 Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@getAttendee']);
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@updateAttendee']);
+                Route::put('virtual-check-in', ['uses' => 'OAuth2SummitAttendeesApiController@doVirtualCheckin']);
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@deleteAttendee']);
                 // attendee schedule
                 Route::group(array('prefix' => 'schedule'), function () {

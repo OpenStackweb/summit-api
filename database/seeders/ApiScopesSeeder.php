@@ -367,6 +367,11 @@ final class ApiScopesSeeder extends Seeder
                 'short_description' => 'read my summit registration invitation',
                 'description' => 'read my summit registration invitation',
             ],
+            [
+                'name' => sprintf(SummitScopes::DoVirtualCheckIn, $current_realm),
+                'short_description' => 'Allow virtual Check In',
+                'description' => 'Allow virtual Check In',
+            ],
         ];
 
         foreach ($scopes as $scope_info) {

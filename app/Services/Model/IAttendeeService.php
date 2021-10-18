@@ -107,4 +107,13 @@ interface IAttendeeService
      * @param int $summit_id
      */
     public function recalculateAttendeeStatus(int $summit_id):void;
+
+    /**
+     * @param Summit $summit_id
+     * @param int $attendee_id
+     * @return SummitAttendee|null
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function doVirtualCheckin(Summit $summit, int $attendee_id):?SummitAttendee;
 }

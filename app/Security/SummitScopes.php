@@ -60,6 +60,7 @@ final class SummitScopes
     const WriteRegistrationInvitations        = '%s/summits/registration-invitations/write';
     const ReadRegistrationInvitations         = '%s/summits/registration-invitations/read';
     const ReadMyRegistrationInvitations       = '%s/summits/registration-invitations/read/me';
+    const DoVirtualCheckIn                    = '%s/summits/registration/virtual-checkin';
     // bookable rooms
     const ReadBookableRoomsData               = '%s/bookable-rooms/read';
     const WriteMyBookableRoomsReservationData = '%s/bookable-rooms/my-reservations/write';

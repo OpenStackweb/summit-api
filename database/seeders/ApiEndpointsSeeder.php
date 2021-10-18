@@ -1934,6 +1934,15 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'attendee-virtual-check-in',
+                'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/virtual-check-in',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::Me, $current_realm),
+                ],
+            ],
+            [
                 'name' => 'get-attendee-schedule',
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/schedule',
                 'http_method' => 'GET',

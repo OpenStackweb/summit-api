@@ -1202,7 +1202,7 @@ SQL;
         $query = $this->createQuery("SELECT s from models\main\SummitMemberSchedule s
         JOIN s.member m
         JOIN s.event e 
-        JOIN e.summit su WHERE su.id = :summit_id and m.id = :member_id ");
+        JOIN e.summit su WHERE su.id = :summit_id and m.id = :member_id and e.published = 1 ");
 
         return $query
             ->setParameter('member_id', $this->getId())
@@ -1219,7 +1219,7 @@ SQL;
         $query = $this->createQuery("SELECT f from models\main\SummitMemberFavorite f
         JOIN f.member m
         JOIN f.event e 
-        JOIN e.summit su WHERE su.id = :summit_id and m.id = :member_id ");
+        JOIN e.summit su WHERE su.id = :summit_id and m.id = :member_id and e.published = 1 ");
 
         return $query
             ->setParameter('member_id', $this->getId())

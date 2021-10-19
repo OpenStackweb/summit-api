@@ -57,7 +57,7 @@ interface ISummitEventRepository extends IBaseRepository
     /**
      * @param int $event_id
      */
-    public function cleanupScheduleAndFavoritesForEvent($event_id);
+    public function cleanupScheduleAndFavoritesForEvent(int $event_id):void;
 
     /**
      * @param Summit $summit

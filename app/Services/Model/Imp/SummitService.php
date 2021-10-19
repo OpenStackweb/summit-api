@@ -1091,6 +1091,8 @@ final class SummitService extends AbstractService implements ISummitService
 
             $event->setUpdatedBy(ResourceServerContext::getCurrentUser(false));
 
+            $this->event_repository->cleanupScheduleAndFavoritesForEvent($event_id);
+
             return $event;
         });
     }
@@ -1120,6 +1122,7 @@ final class SummitService extends AbstractService implements ISummitService
 
             $this->event_repository->delete($event);
 
+            $this->event_repository->cleanupScheduleAndFavoritesForEvent($event_id);
             return true;
         });
     }

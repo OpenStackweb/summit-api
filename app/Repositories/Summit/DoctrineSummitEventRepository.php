@@ -405,13 +405,13 @@ final class DoctrineSummitEventRepository
     /**
      * @param int $event_id
      */
-    public function cleanupScheduleAndFavoritesForEvent($event_id){
+    public function cleanupScheduleAndFavoritesForEvent(int $event_id):void{
 
         $query = "DELETE Member_Schedule FROM Member_Schedule WHERE SummitEventID = {$event_id};";
-        $this->getEntityManager()->getConnection()->executeUpdate($query);
+        $this->getEntityManager()->getConnection()->executeStatement($query);
 
         $query = "DELETE `Member_FavoriteSummitEvents` FROM `Member_FavoriteSummitEvents` WHERE SummitEventID = {$event_id};";
-        $this->getEntityManager()->getConnection()->executeUpdate($query);
+        $this->getEntityManager()->getConnection()->executeStatement($query);
     }
 
     /**

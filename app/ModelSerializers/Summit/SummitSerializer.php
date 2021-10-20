@@ -473,6 +473,29 @@ class SummitSerializer extends SilverStripeSerializer
                         $values['total_checked_in_attendees'] = $summit->getCheckedInAttendeesCount();
                         $values['total_non_checked_in_attendees'] = $summit->getNonCheckedInAttendeesCount();
                         $values['total_virtual_attendees'] = $summit->getVirtualAttendeesCount();
+
+                        $res  = [];
+                        $res1 = $summit->getActiveTicketsPerBadgeFeatureType();
+                        $res2 = $summit->getAttendeesCheckinPerBadgeFeatureType();
+                        foreach($summit->getBadgeFeaturesTypes() as $f){
+
+                            $type = $f->getName();
+                            $col1 = array_column($res1, 'type');
+                            $col2 = array_column($res2, 'type');
+                            $key1 = array_search($type, $col1);
+                            $key2 = array_search($type, $col2);
+                            $tickets_qty = $key1 !== false ? $res1[$key1]: 0;
+                            $checkin_qty = $key2 !== false ? $res2[$key2]: 0;
+
+                            $res[] = [
+                                'type' => $type,
+                                'tickets_qty' => intval($tickets_qty),
+                                'checkin_qty' => intval($checkin_qty),
+                            ];
+                        }
+
+                        $values['total_tickets_per_badge_feature'] = $res;
+
                     }
                     break;
                 }

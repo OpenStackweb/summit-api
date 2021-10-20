@@ -5564,4 +5564,55 @@ SQL;
         return 0;
     }
 
+    public function getActiveTicketsPerBadgeFeatureType():array{
+        try {
+            $sql = <<<SQL
+SELECT SummitBadgeFeatureType.Name as type, 
+       COUNT(DISTINCT(SummitAttendeeTicket.ID)) as qty
+FROM SummitBadgeFeatureType
+INNER JOIN SummitBadgeType_BadgeFeatures ON SummitBadgeType_BadgeFeatures.SummitBadgeFeatureTypeID = SummitBadgeFeatureType.ID
+INNER JOIN SummitBadgeType ON SummitBadgeType.ID = SummitBadgeType_BadgeFeatures.SummitBadgeTypeID
+INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType.ID
+INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
+WHERE
+SummitBadgeFeatureType.SummitID = :summit_id AND
+SummitAttendeeTicket.IsActive = 1
+GROUP BY SummitBadgeFeatureType.Name
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll();
+            return count($res) > 1 ? $res: [];
+        } catch (\Exception $ex) {
+
+        }
+        return [];
+    }
+
+    public function getAttendeesCheckinPerBadgeFeatureType():array{
+        try {
+            $sql = <<<SQL
+SELECT SummitBadgeFeatureType.Name as type, 
+       COUNT(DISTINCT(SummitAttendeeTicket.ID)) as qty  
+FROM SummitBadgeFeatureType
+INNER JOIN SummitBadgeType_BadgeFeatures ON SummitBadgeType_BadgeFeatures.SummitBadgeFeatureTypeID = SummitBadgeFeatureType.ID
+INNER JOIN SummitBadgeType ON SummitBadgeType.ID = SummitBadgeType_BadgeFeatures.SummitBadgeTypeID
+INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType.ID
+INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
+INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
+WHERE
+SummitBadgeFeatureType.SummitID = :summit_uid AND
+SummitAttendeeTicket.IsActive = 1 AND
+SummitAttendee.SummitHallCheckedInDate IS NOT NULL
+GROUP BY SummitBadgeFeatureType.Name
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll();
+            return count($res) > 1 ? $res: [];
+        } catch (\Exception $ex) {
+
+        }
+        return [];
+    }
 }

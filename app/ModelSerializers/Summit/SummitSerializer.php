@@ -482,12 +482,13 @@ class SummitSerializer extends SilverStripeSerializer
                         foreach($summit->getBadgeFeaturesTypes() as $f){
 
                             $type = $f->getName();
+                            Log::debug(sprintf("SummitSerializer::serialize feature type % res1 %s res2 %s", $type, json_encode($res1), json_encode($res2)));
                             $col1 = array_column($res1, 'type');
                             $col2 = array_column($res2, 'type');
-                            Log::debug(sprintf("col1 %s col2 %s", json_encode($col1), json_encode($col2)));
+                            Log::debug(sprintf("SummitSerializer::serialize col1 %s col2 %s", json_encode($col1), json_encode($col2)));
                             $key1 = array_search($type, $col1);
                             $key2 = array_search($type, $col2);
-                            Log::debug(sprintf("key1 %s key2 %s", $key1, $key2));
+                            Log::debug(sprintf("SummitSerializer::serialize key1 %s key2 %s", $key1, $key2));
                             $tickets_qty = $key1 !== false ? $res1[$key1]['qty']: 0;
                             $checkin_qty = $key2 !== false ? $res2[$key2]['qty']: 0;
 

@@ -484,8 +484,8 @@ class SummitSerializer extends SilverStripeSerializer
                             $col2 = array_column($res2, 'type');
                             $key1 = array_search($type, $col1);
                             $key2 = array_search($type, $col2);
-                            $tickets_qty = $key1 !== false ? $res1[$key1]: 0;
-                            $checkin_qty = $key2 !== false ? $res2[$key2]: 0;
+                            $tickets_qty = $key1 !== false ? $res1[$key1]['qty']: 0;
+                            $checkin_qty = $key2 !== false ? $res2[$key2]['qty']: 0;
 
                             $res[] = [
                                 'type' => $type,

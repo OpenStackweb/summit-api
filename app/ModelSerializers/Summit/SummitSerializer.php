@@ -13,7 +13,9 @@
  **/
 use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Security\SummitScopes;
+use Google\Service\ServiceUsage\LogDescriptor;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
 use libs\utils\JsonUtils;
 use models\summit\IPaymentConstants;
@@ -482,8 +484,10 @@ class SummitSerializer extends SilverStripeSerializer
                             $type = $f->getName();
                             $col1 = array_column($res1, 'type');
                             $col2 = array_column($res2, 'type');
+                            Log::debug(sprintf("col1 %s col2 %s", json_encode($col1), json_encode($col2)));
                             $key1 = array_search($type, $col1);
                             $key2 = array_search($type, $col2);
+                            Log::debug(sprintf("key1 %s key2 %s", $key1, $key2));
                             $tickets_qty = $key1 !== false ? $res1[$key1]['qty']: 0;
                             $checkin_qty = $key2 !== false ? $res2[$key2]['qty']: 0;
 

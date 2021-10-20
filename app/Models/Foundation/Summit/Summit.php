@@ -5601,7 +5601,7 @@ INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeT
 INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
 INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
 WHERE
-SummitBadgeFeatureType.SummitID = :summit_uid AND
+SummitBadgeFeatureType.SummitID = :summit_id AND
 SummitAttendeeTicket.IsActive = 1 AND
 SummitAttendee.SummitHallCheckedInDate IS NOT NULL
 GROUP BY SummitBadgeFeatureType.Name

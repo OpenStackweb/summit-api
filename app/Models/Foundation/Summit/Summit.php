@@ -5471,7 +5471,7 @@ SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll();
-            return count($res) > 1 ? $res: [];
+            return count($res) > 0 ? $res: [];
         } catch (\Exception $ex) {
 
         }
@@ -5494,7 +5494,7 @@ SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll();
-            return count($res) > 1 ? $res: [];
+            return count($res) > 0 ? $res: [];
         } catch (\Exception $ex) {
 
         }
@@ -5582,7 +5582,7 @@ SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll();
-            return count($res) > 1 ? $res: [];
+            return count($res) > 0 ? $res: [];
         } catch (\Exception $ex) {
 
         }
@@ -5609,7 +5609,7 @@ SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll();
-            return count($res) > 1 ? $res: [];
+            return count($res) > 0 ? $res: [];
         } catch (\Exception $ex) {
 
         }

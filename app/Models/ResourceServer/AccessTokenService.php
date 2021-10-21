@@ -14,6 +14,8 @@
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\HandlerStack;
+use GuzzleRetry\GuzzleRetryMiddleware;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use libs\oauth2\InvalidGrantTypeException;
@@ -184,7 +186,10 @@ final class AccessTokenService implements IAccessTokenService
     {
 
         try {
+            $stack = HandlerStack::create();
+            $stack->push(GuzzleRetryMiddleware::factory());
             $client = new Client([
+                'handler'         => $stack,
                 'timeout'         => Config::get('curl.timeout', 60),
                 'allow_redirects' => Config::get('curl.allow_redirects', false),
                 'verify'          => Config::get('curl.verify_ssl_cert', true)
@@ -248,7 +253,7 @@ final class AccessTokenService implements IAccessTokenService
                 throw new InvalidGrantTypeException($body['error']);
             }
             if($code == 503 ){
-                // service went online temporally ... revoke token
+                // service went offline temporally ... revoke token
                 $this->cache_service->setSingleValue(md5($token_value).'.revoked', md5($token_value));
                 throw new InvalidGrantTypeException(OAuth2Protocol::OAuth2Protocol_Error_InvalidToken);
             }

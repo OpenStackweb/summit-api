@@ -11,9 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use GuzzleHttp\Exception\RequestException;
 use models\exceptions\ValidationException;
 use libs\utils\ICacheService;
 use GuzzleHttp\Client;
+use GuzzleHttp\HandlerStack;
+use GuzzleRetry\GuzzleRetryMiddleware;
 use GuzzleHttp\RequestOptions;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -43,8 +47,11 @@ final class ExternalUserApi extends AbstractOAuth2Api
     public function __construct(ICacheService $cacheService)
     {
         parent::__construct($cacheService);
+        $stack = HandlerStack::create();
+        $stack->push(GuzzleRetryMiddleware::factory());
 
         $this->client = new Client([
+            'handler'         => $stack,
             'base_uri'        => Config::get('idp.base_url') ?? '',
             'timeout'         => Config::get('curl.timeout', 60),
             'allow_redirects' => Config::get('curl.allow_redirects', false),
@@ -82,6 +89,16 @@ final class ExternalUserApi extends AbstractOAuth2Api
             $data = json_decode($response->getBody()->getContents(), true);
 
             return intval($data['total']) > 0 ? $data['data'][0] : null;
+        }
+        catch (RequestException $ex) {
+            Log::warning($ex);
+            $this->cleanAccessToken();
+            $response  = $ex->getResponse();
+            $code = $response->getStatusCode();
+            if($code == 403){
+                // retry
+                return $this->getUserByEmail($email);
+            }
         }
         catch (Exception $ex) {
             $this->cleanAccessToken();
@@ -126,7 +143,18 @@ final class ExternalUserApi extends AbstractOAuth2Api
             );
 
             return json_decode($response->getBody()->getContents(), true);
-        } catch (Exception $ex) {
+        }
+        catch (RequestException $ex) {
+            Log::warning($ex);
+            $this->cleanAccessToken();
+            $response  = $ex->getResponse();
+            $code = $response->getStatusCode();
+            if($code == 403){
+                // retry
+                return $this->registerUser($email, $first_name, $last_name);
+            }
+        }
+        catch (Exception $ex) {
             $this->cleanAccessToken();
             Log::error($ex);
             throw $ex;
@@ -175,6 +203,16 @@ final class ExternalUserApi extends AbstractOAuth2Api
             );
 
             return json_decode($response->getBody()->getContents(), true);
+        }
+        catch (RequestException $ex) {
+            Log::warning($ex);
+            $this->cleanAccessToken();
+            $response  = $ex->getResponse();
+            $code = $response->getStatusCode();
+            if($code == 403){
+                // retry
+                return $this->getUserById($id);
+            }
         }
         catch (Exception $ex) {
             $this->cleanAccessToken();

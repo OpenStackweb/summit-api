@@ -15,6 +15,8 @@ use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use League\OAuth2\Client\Provider\GenericProvider;
+use GuzzleHttp\HandlerStack;
+use GuzzleRetry\GuzzleRetryMiddleware;
 /**
  * Class OAuth2ClientFactory
  * @package App\Services\Auth
@@ -47,8 +49,12 @@ final class OAuth2ClientFactory
             'scopes'                  => $scopes,
         ]);
 
+        $stack = HandlerStack::create();
+        $stack->push(GuzzleRetryMiddleware::factory());
+
         $provider->setHttpClient(
             new Client([
+                'handler'         => $stack,
                 'timeout'         => Config::get('curl.timeout', 60),
                 'allow_redirects' => Config::get('curl.allow_redirects', false),
                 'verify'          => Config::get('curl.verify_ssl_cert', true),

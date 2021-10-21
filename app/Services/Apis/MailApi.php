@@ -12,6 +12,9 @@
  * limitations under the License.
  **/
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\HandlerStack;
+use GuzzleRetry\GuzzleRetryMiddleware;
 use GuzzleHttp\RequestOptions;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -52,8 +55,11 @@ final class MailApi extends AbstractOAuth2Api implements IMailApi
     public function __construct(ICacheService $cacheService)
     {
         parent::__construct($cacheService);
+        $stack = HandlerStack::create();
+        $stack->push(GuzzleRetryMiddleware::factory());
 
         $this->client = new Client([
+            'handler'         => $stack,
             'base_uri'        => Config::get('mail.service_base_url') ?? '',
             'timeout'         => Config::get('curl.timeout', 60),
             'allow_redirects' => Config::get('curl.allow_redirects', false),
@@ -128,8 +134,18 @@ final class MailApi extends AbstractOAuth2Api implements IMailApi
                 )
             );
             return json_decode($body, true);
-
-        } catch (\Exception $ex) {
+        }
+        catch (RequestException $ex) {
+            Log::warning($ex);
+            $this->cleanAccessToken();
+            $response  = $ex->getResponse();
+            $code = $response->getStatusCode();
+            if($code == 403){
+                // retry
+                return $this->sendEmail($payload,  $template_identifier,  $to_email,  $subject);
+            }
+        }
+        catch (\Exception $ex) {
             $this->cleanAccessToken();
             Log::error($ex);
             throw $ex;

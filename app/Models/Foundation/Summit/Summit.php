@@ -5347,7 +5347,8 @@ SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-            return count($res) > 0 ? $res[0] : 0;
+            $res = count($res) > 0 ? $res[0] : 0;
+            return !is_null($res) ? $res:0;
         } catch (\Exception $ex) {
 
         }
@@ -5367,7 +5368,8 @@ SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-            return count($res) > 0 ? $res[0] : 0;
+            $res = count($res) > 0 ? $res[0] : 0;
+            return !is_null($res) ? $res:0;
         } catch (\Exception $ex) {
 
         }
@@ -5388,7 +5390,8 @@ SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-            return count($res) > 0 ? $res[0] : 0;
+            $res = count($res) > 0 ? $res[0] : 0;
+            return !is_null($res) ? $res:0;
         } catch (\Exception $ex) {
 
         }
@@ -5407,7 +5410,8 @@ SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-            return count($res) > 0 ? $res[0] : 0;
+            $res = count($res) > 0 ? $res[0] : 0;
+            return !is_null($res) ? $res:0;
         } catch (\Exception $ex) {
 
         }
@@ -5427,7 +5431,8 @@ SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-            return count($res) > 0 ? $res[0] : 0;
+            $res = count($res) > 0 ? $res[0] : 0;
+            return !is_null($res) ? $res:0;
         } catch (\Exception $ex) {
 
         }
@@ -5449,9 +5454,9 @@ SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-            return count($res) > 0 ? $res[0] : 0;
+            $res = count($res) > 0 ? $res[0] : 0;
+            return !is_null($res) ? $res:0;
         } catch (\Exception $ex) {
-
         }
         return 0;
     }
@@ -5518,7 +5523,8 @@ SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-            return count($res) > 0 ? $res[0] : 0;
+            $res = count($res) > 0 ? $res[0] : 0;
+            return !is_null($res) ? $res:0;
         } catch (\Exception $ex) {
 
         }
@@ -5542,7 +5548,8 @@ SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-            return count($res) > 0 ? $res[0] : 0;
+            $res = count($res) > 0 ? $res[0] : 0;
+            return !is_null($res) ? $res:0;
         } catch (\Exception $ex) {
 
         }
@@ -5557,7 +5564,8 @@ SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-            return count($res) > 0 ? $res[0] : 0;
+            $res = count($res) > 0 ? $res[0] : 0;
+            return !is_null($res) ? $res:0;
         } catch (\Exception $ex) {
 
         }

@@ -38,7 +38,7 @@ abstract class AbstractOAuth2Api
         $this->cacheService = $cacheService;
     }
 
-    const SkewTime            = 60;
+    const SkewTime            = 120;
     const AccessTokenCacheKey = '%s_OAUTH2_ACCESS_TOKEN';
 
     public abstract function getAppName():string;

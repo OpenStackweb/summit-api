@@ -130,6 +130,7 @@ final class MailApi extends AbstractOAuth2Api implements IMailApi
             return json_decode($body, true);
 
         } catch (\Exception $ex) {
+            $this->cleanAccessToken();
             Log::error($ex);
             throw $ex;
         }

@@ -111,4 +111,8 @@ abstract class AbstractOAuth2Api
         }
         return $token;
     }
+
+    protected function cleanAccessToken():void{
+        $this->cacheService->delete($this->getAccessTokenCacheKey());
+    }
 }

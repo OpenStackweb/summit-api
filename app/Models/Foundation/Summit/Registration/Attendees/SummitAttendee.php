@@ -544,6 +544,29 @@ class SummitAttendee extends SilverstripeBaseModel
         return $answer ? $answer : null;
     }
 
+    /**
+     * @param SummitOrderExtraQuestionType $question
+     * @return string|null
+     */
+    public function getExtraQuestionAnswerValueByQuestion(SummitOrderExtraQuestionType $question):?string{
+        try {
+            $sql = <<<SQL
+SELECT ExtraQuestionAnswer.Value FROM `SummitOrderExtraQuestionAnswer`
+INNER JOIN ExtraQuestionAnswer ON ExtraQuestionAnswer.ID = SummitOrderExtraQuestionAnswer.ID
+WHERE SummitOrderExtraQuestionAnswer.SummitAttendeeID = :owner_id AND ExtraQuestionAnswer.QuestionID = :question_id
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['owner_id' => $this->id]);
+            $stmt->execute(['question_id' => $question->id]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = count($res) > 0 ? $res[0] : null;
+            return !is_null($res) ? $res : null;
+        } catch (\Exception $ex) {
+
+        }
+        return null;
+    }
+
     public function clearExtraQuestionAnswers()
     {
         return $this->extra_question_answers->clear();

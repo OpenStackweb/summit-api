@@ -556,13 +556,17 @@ INNER JOIN ExtraQuestionAnswer ON ExtraQuestionAnswer.ID = SummitOrderExtraQuest
 WHERE SummitOrderExtraQuestionAnswer.SummitAttendeeID = :owner_id AND ExtraQuestionAnswer.QuestionID = :question_id
 SQL;
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['owner_id' => $this->id]);
-            $stmt->execute(['question_id' => $question->id]);
+            $stmt->execute(
+                [
+                    'owner_id' => $this->getId(),
+                    'question_id' => $question->getId()
+                ]
+            );
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
             $res = count($res) > 0 ? $res[0] : null;
             return !is_null($res) ? $res : null;
         } catch (\Exception $ex) {
-
+            Log::debug($ex);
         }
         return null;
     }

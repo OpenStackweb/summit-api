@@ -79,6 +79,7 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
                 $values[$question->getLabel()] = '';
                 if (!is_null($ticket_owner)) {
                     $value = $ticket_owner->getExtraQuestionAnswerValueByQuestion($question);
+                    Log::debug(sprintf("SummitAttendeeTicketCSVSerializer::serialize question %s value %s", $question->getId(), $value));
                     if(is_null($value)) continue;
                     $values[$question->getLabel()] = $question->getNiceValue($value);
                 }

@@ -15,6 +15,8 @@
 use App\Models\Foundation\Main\IOrderable;
 use App\Models\Foundation\Main\OrderableChilds;
 use Doctrine\Common\Collections\Criteria;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -295,14 +297,21 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
      * @return string|null
      */
     public function getNiceValue(string $value):?string {
-        if($this->values->count() == 0) return $value;
-
-        $value      = explode(',' , $value);
-        $dict       = [];
+        $cacheKey = sprintf("nice_values_question_%s", $this->id);
+        if ($this->values->count() == 0) return $value;
         $niceValues = [];
+        $dict = Cache::get($cacheKey);
+        $value = explode(',', $value);
 
-        foreach ($this->values as $questionValue){
-            $dict[$questionValue->getId()] = $questionValue->getLabel();
+        if(!empty($dict))
+            $dict = json_decode($dict, true);
+
+        if(empty($dict)) {
+            foreach ($this->values as $questionValue) {
+                $dict[$questionValue->getId()] = $questionValue->getLabel();
+            }
+           // sore it for 600 secs
+           Cache::add($cacheKey, json_encode($dict), 600);
         }
 
         foreach($value as $v){

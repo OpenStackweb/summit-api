@@ -11,39 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Services\FileSystem\IFileDownloadStrategy;
-use Illuminate\Support\Facades\Storage;
+
+use App\Services\FileSystem\AbstractFileDownloadStrategy;
 /**
  * Class SwiftStorageFileDownloadStrategy
  * @package App\Services\FileSystem\Swift
  */
-class SwiftStorageFileDownloadStrategy implements IFileDownloadStrategy
+class SwiftStorageFileDownloadStrategy  extends AbstractFileDownloadStrategy
 {
-    /**
-     * @inheritDoc
-     */
-    public function download(string $path, string $name, array $options = [])
-    {
-        return Storage::disk('swift')->download(
-            $path,
-            $name,
-            $options
-        );
-    }
+    const Driver = "swift";
 
-    /**
-     * @inheritDoc
-     */
-    public function getUrl(string $relativeFileName): ?string
+    protected function getDriver(): string
     {
-        return Storage::disk('swift')->url($relativeFileName);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function delete(string $relativeFileName)
-    {
-        return Storage::disk('swift')->delete($relativeFileName);
+        return self::Driver;
     }
 }

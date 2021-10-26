@@ -11,40 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Services\FileSystem\IFileDownloadStrategy;
-use Illuminate\Support\Facades\Storage;
+
+use App\Services\FileSystem\AbstractFileDownloadStrategy;
 /**
  * Class DropboxStorageFileDownloadStrategy
  * @package App\Services\FileSystem\Dropbox
  */
-final class DropboxStorageFileDownloadStrategy implements IFileDownloadStrategy
+final class DropboxStorageFileDownloadStrategy extends AbstractFileDownloadStrategy
 {
+    const Driver = 'dropbox';
 
-    /**
-     * @inheritDoc
-     */
-    public function download(string $path, string $name, array $options = [])
+    protected function getDriver(): string
     {
-        return Storage::disk('dropbox')->download(
-            $path,
-            $name,
-            $options
-        );
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getUrl(string $relativeFileName): ?string
-    {
-        return Storage::disk('dropbox')->url($relativeFileName);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function delete(string $relativeFileName)
-    {
-        return Storage::disk('dropbox')->delete($relativeFileName);
+        return self::Driver;
     }
 }

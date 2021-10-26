@@ -37,4 +37,18 @@ interface IFileDownloadStrategy
      * @return mixed
      */
     public function delete(string $relativeFileName);
+
+    /**
+     * @param string $path
+     * @return string
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function get(string $path):string;
+
+    /**
+     * @param string $path
+     * @return resource|null
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function readStream(string $path);
 }

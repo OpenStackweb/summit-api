@@ -15,5 +15,6 @@
 return  [
     // in Bytes
     'slides_max_file_size' => env('MEDIA_UPLOAD_SLIDES_MAX_FILE_SIZE', 524288000),
+    'private_mounting_folder' => env('MEDIA_UPLOAD_PRIVATE_MOUNTING_FOLDER','PresentationMediaUploads'),
     'mounting_folder' => env('MEDIA_UPLOAD_MOUNTING_FOLDER','PresentationMediaUploads')
 ];

@@ -46,6 +46,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\RecalculateAttendeesStatusCommand::class,
         \App\Console\Commands\EnableMP4SupportAtMUXCommand::class,
         \App\Console\Commands\SummitSyncAllPresentationActions::class,
+        \App\Console\Commands\SummitMediaUploadMigratePrivateToPublicStorage::class,
     ];
 
     /**

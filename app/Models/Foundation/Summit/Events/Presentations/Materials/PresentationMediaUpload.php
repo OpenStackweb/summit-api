@@ -45,7 +45,7 @@ class PresentationMediaUpload extends PresentationMaterial
     private $legacy_path_format;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitMediaUploadType")
+     * @ORM\ManyToOne(targetEntity="models\summit\SummitMediaUploadType",  inversedBy="media_uploads")
      * @ORM\JoinColumn(name="SummitMediaUploadTypeID", referencedColumnName="ID")
      * @var SummitMediaUploadType
      */
@@ -129,8 +129,12 @@ class PresentationMediaUpload extends PresentationMaterial
      */
     public function getPath(string $storageType = IStorageTypesConstants::PublicType, ?string $mountingFolder = null): string {
 
-        if(empty($mountingFolder))
-            $mountingFolder = Config::get('mediaupload.mounting_folder');
+        if(empty($mountingFolder)) {
+
+            $mountingFolder = $storageType == IStorageTypesConstants::PrivateType ?
+                Config::get('mediaupload.private_mounting_folder'):
+                Config::get('mediaupload.mounting_folder');
+        }
 
         Log::debug(sprintf("PresentationMediaUpload::getPath storageType %s mountingFolder %s", $storageType, $mountingFolder));
 

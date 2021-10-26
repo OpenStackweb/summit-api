@@ -33,4 +33,12 @@ interface IFileUploadStrategy
      * @return mixed
      */
     public function markAsDeleted(string $path, ?string $filename = null);
+
+    /**
+     * @param resource $fp
+     * @param string $path
+     * @param mixed $options
+     * @return bool
+     */
+    public function saveFromStream($fp,  string $path, $options = []):bool;
 }

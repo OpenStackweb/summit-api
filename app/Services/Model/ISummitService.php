@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Utils\IStorageTypesConstants;
 use Illuminate\Http\UploadedFile;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -509,4 +511,14 @@ interface ISummitService
      * @throws EntityNotFoundException
      */
     public function removeFeaturedSpeaker(int $summit_id, int $speaker_id):void;
+
+    /**
+     * @param int $summit_id
+     * @param int $media_upload_type_id
+     * @param string $default_public_storage
+     * @return int
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function migratePrivateStorage2PublicStorage(int $summit_id, int $media_upload_type_id, string $default_public_storage = IStorageTypesConstants::S3):int;
 }

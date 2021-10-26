@@ -11,40 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Services\FileSystem\IFileDownloadStrategy;
-use Illuminate\Support\Facades\Storage;
+
+use App\Services\FileSystem\AbstractFileDownloadStrategy;
 /**
  * Class S3StorageFileDownloadStrategy
  * @package App\Services\FileSystem\S3
  */
-final class S3StorageFileDownloadStrategy  implements IFileDownloadStrategy
+final class S3StorageFileDownloadStrategy extends AbstractFileDownloadStrategy
 {
+    const Driver = "s3";
 
-    /**
-     * @inheritDoc
-     */
-    public function download(string $path, string $name, array $options = [])
+    protected function getDriver(): string
     {
-        return Storage::disk('s3')->download(
-            $path,
-            $name,
-            $options
-        );
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getUrl(string $relativeFileName): ?string
-    {
-        return Storage::disk('s3')->url($relativeFileName);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function delete(string $relativeFileName)
-    {
-        return Storage::disk('s3')->delete($relativeFileName);
+        return self::Driver;
     }
 }

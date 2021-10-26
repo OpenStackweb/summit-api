@@ -99,7 +99,6 @@ return [
     */
 
     'failed' => [
-        'connection' => env('QUEUE_CONN', ''),
         'database' => env('QUEUE_CONN', ''),
         'table'   => 'queue_failed_jobs',
     ],

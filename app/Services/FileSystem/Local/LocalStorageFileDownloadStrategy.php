@@ -11,37 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Services\FileSystem\IFileDownloadStrategy;
-use Illuminate\Support\Facades\Storage;
+
+use App\Services\FileSystem\AbstractFileDownloadStrategy;
 /**
  * Class LocalStorageFileDownloadStrategy
  * @package App\Services\FileSystem\Local
  */
-final class LocalStorageFileDownloadStrategy implements IFileDownloadStrategy
+final class LocalStorageFileDownloadStrategy  extends AbstractFileDownloadStrategy
 {
+    const Driver = 'local';
 
-
-    /**
-     * @inheritDoc
-     */
-    public function download(string $path, string $name, array $options = [])
+    protected function getDriver(): string
     {
-        return Storage::disk('local')->download($path, $name, $options);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getUrl(string $relativeFileName): ?string
-    {
-        return Storage::disk('local')->url($relativeFileName);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function delete(string $relativeFileName)
-    {
-        return Storage::disk('local')->delete($relativeFileName);
+        return self::Driver;
     }
 }

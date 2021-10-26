@@ -89,6 +89,11 @@ class SummitMediaUploadType extends SilverstripeBaseModel
     private $presentation_types;
 
     /**
+     * @ORM\OneToMany(targetEntity="models\summit\PresentationMediaUpload", mappedBy="media_upload_type", cascade={"persist","remove"}, orphanRemoval=true)
+     */
+    private $media_uploads;
+
+    /**
      * SummitMediaUploadType constructor.
      */
     public function __construct()
@@ -291,8 +296,24 @@ class SummitMediaUploadType extends SilverstripeBaseModel
         return  ($this->private_storage_type != IStorageTypesConstants::None ||  $this->public_storage_type != IStorageTypesConstants::None);
     }
 
+    /**
+     * @return bool
+     */
+    public function hasPublicStorageSet():bool{
+        return $this->public_storage_type != IStorageTypesConstants::None;
+    }
+
     public function isVideo():bool{
         return str_contains(strtolower($this->getType()->getName()), "video");
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getMediaUploadsToDisplayOnSite(){
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('display_on_site', true));
+        return $this->media_uploads->matching($criteria);
     }
 
 }

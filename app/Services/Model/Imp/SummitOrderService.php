@@ -2273,20 +2273,8 @@ final class SummitOrderService
             if (count($rules) == 0)
                 throw new ValidationException("Your user has no rights to print badges.");
 
-            if($badge->getTicket()->getOwner()->hasCheckedIn()){
-                throw new ValidationException("This badge has already been printed.");
-            }
-
-            $canPrint = false;
-
-            foreach ($rules as $rule) {
-                if (!$rule instanceof SummitAttendeeBadgePrintRule) continue;
-                $canPrint = $rule->canPrintBadge($badge);
-                if ($canPrint)
-                    break;
-            }
-
-            if (!$canPrint) {
+            $inPersonCheckedIn = $badge->getTicket()->getOwner()->hasCheckedIn();
+            if($inPersonCheckedIn){
                 throw new ValidationException("This badge has already been printed.");
             }
         }

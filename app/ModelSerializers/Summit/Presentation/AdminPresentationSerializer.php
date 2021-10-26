@@ -37,13 +37,11 @@ class AdminPresentationSerializer extends PresentationSerializer
     protected function getSpeakersSerializerType():string{
         return SerializerRegistry::SerializerType_Private;
     }
-
-    /**
-     * @return string
-     */
+    /*
     protected function getMediaUploadsSerializerType():string{
         return SerializerRegistry::SerializerType_Private;
     }
+    */
 
     /**
      * @param null $expand

@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 /**
@@ -60,7 +62,13 @@ abstract class AbstractFileDownloadStrategy implements IFileDownloadStrategy
      */
     public function getUrl(string $relativeFileName): ?string
     {
-        return Storage::disk($this->getDriver())->url($relativeFileName);
+        $key = sprintf("%s/%s", $this->getDriver(), $relativeFileName);
+        $res = Cache::get($key);
+        if(!empty($res)) return $res;
+        $res = Storage::disk($this->getDriver())->url($relativeFileName);
+        if(!empty($res))
+            Cache::add($key, $res, intval(Config::get('cache_api_response.file_url_lifetime', 3600)));
+        return $res;
     }
 
     /**

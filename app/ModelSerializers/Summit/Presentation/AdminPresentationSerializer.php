@@ -39,6 +39,13 @@ class AdminPresentationSerializer extends PresentationSerializer
     }
 
     /**
+     * @return string
+     */
+    protected function getMediaUploadsSerializerType():string{
+        return SerializerRegistry::SerializerType_Private;
+    }
+
+    /**
      * @param null $expand
      * @param array $fields
      * @param array $relations

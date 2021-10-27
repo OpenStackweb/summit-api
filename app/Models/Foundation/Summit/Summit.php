@@ -4208,7 +4208,7 @@ SQL;
      */
     public function isOpen(): bool
     {
-        return $this->dayIsOnSummitPeriod(new DateTime('now', new \DateTimeZone('UTC'), false));
+        return $this->dayIsOnSummitPeriod(new DateTime('now', new \DateTimeZone('UTC')), false);
     }
 
     /**

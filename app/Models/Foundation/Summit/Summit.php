@@ -5689,7 +5689,7 @@ SQL;
     {
         $key = sprintf("%s_getActiveTicketsCountPerTicketType", $this->id);
         $res = Cache::get($key);
-        if(empty($res)) return json_decode($res, true);
+        if(!empty($res)) return json_decode($res, true);
 
         try {
             $sql = <<<SQL
@@ -5718,7 +5718,7 @@ SQL;
     {
         $key = sprintf("%s_getActiveBadgesCountPerBadgeType", $this->id);
         $res = Cache::get($key);
-        if(empty($res)) return json_decode($res, true);
+        if(!empty($res)) return json_decode($res, true);
 
         try {
             $sql = <<<SQL
@@ -5806,6 +5806,9 @@ SQL;
         return 0;
     }
 
+    /**
+     * @return int
+     */
     public function getVirtualAttendeesCount(): int
     {
         $key = sprintf("%s_getVirtualAttendeesCount", $this->id);
@@ -5837,7 +5840,7 @@ SQL;
     {
         $key = sprintf("%s_getActiveTicketsPerBadgeFeatureType", $this->id);
         $res = Cache::get($key);
-        if(empty($res)) return json_decode($res, true);
+        if(!empty($res)) return json_decode($res, true);
 
         try {
             $sql = <<<SQL
@@ -5865,11 +5868,14 @@ SQL;
         return [];
     }
 
+    /**
+     * @return array
+     */
     public function getAttendeesCheckinPerBadgeFeatureType(): array
     {
         $key = sprintf("%s_getAttendeesCheckinPerBadgeFeatureType", $this->id);
         $res = Cache::get($key);
-        if(empty($res)) return json_decode($res, true);
+        if(!empty($res)) return json_decode($res, true);
 
         try {
             $sql = <<<SQL

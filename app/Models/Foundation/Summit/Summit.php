@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Http\Utils\DateUtils;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Main\OrderableChilds;
@@ -30,6 +31,7 @@ use Cocur\Slugify\Slugify;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
@@ -41,7 +43,8 @@ use models\main\SummitAdministratorPermissionGroup;
 use models\main\Tag;
 use models\utils\SilverstripeBaseModel;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlow;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
+
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitRepository")
  * @ORM\Table(name="Summit")
@@ -711,7 +714,7 @@ class Summit extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getExternalSummitId():?string
+    public function getExternalSummitId(): ?string
     {
         return $this->external_summit_id;
     }
@@ -748,14 +751,15 @@ class Summit extends SilverstripeBaseModel
         $this->schedule_default_start_date = $schedule_default_start_date;
     }
 
-    public function clearScheduleDefaultStartDate(){
+    public function clearScheduleDefaultStartDate()
+    {
         $this->schedule_default_start_date = null;
     }
 
     /**
      * @return DateTime|null
      */
-    public function getBeginDate():?DateTime
+    public function getBeginDate(): ?DateTime
     {
         return $this->begin_date;
     }
@@ -765,17 +769,19 @@ class Summit extends SilverstripeBaseModel
      */
     public function setBeginDate($begin_date)
     {
-       $this->begin_date = $this->convertDateFromTimeZone2UTC($begin_date);
+        $this->begin_date = $this->convertDateFromTimeZone2UTC($begin_date);
     }
 
-    public function setRawBeginDate($begin_date){
+    public function setRawBeginDate($begin_date)
+    {
         $this->begin_date = $begin_date;
     }
 
     /**
      * @return $this
      */
-    public function clearBeginEndDates(){
+    public function clearBeginEndDates()
+    {
         $this->begin_date = $this->end_date = null;
         return $this;
     }
@@ -783,7 +789,7 @@ class Summit extends SilverstripeBaseModel
     /**
      * @return \DateTime|null
      */
-    public function getEndDate():?\DateTime
+    public function getEndDate(): ?\DateTime
     {
         return $this->end_date;
     }
@@ -796,7 +802,8 @@ class Summit extends SilverstripeBaseModel
         $this->end_date = $this->convertDateFromTimeZone2UTC($end_date);
     }
 
-    public function setRawEndDate($end_date){
+    public function setRawEndDate($end_date)
+    {
         $this->end_date = $end_date;
     }
 
@@ -840,11 +847,13 @@ class Summit extends SilverstripeBaseModel
         $this->start_showing_venues_date = $start_showing_venues_date;
     }
 
-    public function clearStartShowingVenuesDate(){
+    public function clearStartShowingVenuesDate()
+    {
         $this->start_showing_venues_date = null;
     }
 
-    public function clearReassignTicketTillDate(){
+    public function clearReassignTicketTillDate()
+    {
         $this->reassign_ticket_till_date = null;
     }
 
@@ -922,6 +931,7 @@ class Summit extends SilverstripeBaseModel
 
 
     const DefaultMaxSubmissionAllowedPerUser = 3;
+
     /**
      * Summit constructor.
      */
@@ -929,7 +939,7 @@ class Summit extends SilverstripeBaseModel
     {
         parent::__construct();
         // default values
-        $this->active  = false;
+        $this->active = false;
         $this->available_on_api = false;
         $this->max_submission_allowed_per_user = self::DefaultMaxSubmissionAllowedPerUser;
         $this->meeting_room_booking_slot_length = 60;
@@ -958,7 +968,7 @@ class Summit extends SilverstripeBaseModel
         $this->tax_types = new ArrayCollection();
         $this->badge_features_types = new ArrayCollection();
         $this->badge_types = new ArrayCollection();
-        $this->summit_sponsors =  new ArrayCollection();
+        $this->summit_sponsors = new ArrayCollection();
         $this->refund_policies = new ArrayCollection();
         $this->order_extra_questions = new ArrayCollection();
         $this->payment_profiles = new ArrayCollection();
@@ -999,7 +1009,7 @@ class Summit extends SilverstripeBaseModel
     /**
      * @return DateTime|null
      */
-    public function getLocalBeginDate():?DateTime
+    public function getLocalBeginDate(): ?DateTime
     {
         return $this->convertDateFromUTC2TimeZone($this->begin_date);
     }
@@ -1008,18 +1018,18 @@ class Summit extends SilverstripeBaseModel
     /**
      * @return DateTime|null
      */
-    public function getLocalBeginAllowBookingDate():?DateTime
+    public function getLocalBeginAllowBookingDate(): ?DateTime
     {
-        if(is_null($this->begin_allow_booking_date)) return null;
+        if (is_null($this->begin_allow_booking_date)) return null;
         return $this->convertDateFromUTC2TimeZone($this->begin_allow_booking_date);
     }
 
     /**
      * @return DateTime|null
      */
-    public function getLocalEndAllowBookingDate():?DateTime
+    public function getLocalEndAllowBookingDate(): ?DateTime
     {
-        if(is_null($this->end_allow_booking_date)) return null;
+        if (is_null($this->end_allow_booking_date)) return null;
         return $this->convertDateFromUTC2TimeZone($this->end_allow_booking_date);
     }
 
@@ -1038,7 +1048,7 @@ class Summit extends SilverstripeBaseModel
      */
     public function addLocation(SummitAbstractLocation $location)
     {
-        if($this->locations->contains($location)) return;
+        if ($this->locations->contains($location)) return;
         $location->setOrder($this->getLocationMaxOrder() + 1);
         $this->locations->add($location);
         $location->setSummit($this);
@@ -1048,7 +1058,8 @@ class Summit extends SilverstripeBaseModel
     /**
      * @return int
      */
-    private function getLocationMaxOrder(){
+    private function getLocationMaxOrder()
+    {
         $criteria = Criteria::create();
         $criteria->orderBy(['order' => 'DESC']);
         $location = $this->locations->matching($criteria)->first();
@@ -1087,7 +1098,8 @@ class Summit extends SilverstripeBaseModel
      * @param string $name
      * @return SummitAbstractLocation|null
      */
-    public function getLocationByName($name){
+    public function getLocationByName($name)
+    {
 
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('name', trim($name)));
@@ -1148,7 +1160,8 @@ class Summit extends SilverstripeBaseModel
      * @param string $externalId
      * @return SummitEvent|null
      */
-    public function getEventByExternalId(string $externalId):?SummitEvent{
+    public function getEventByExternalId(string $externalId): ?SummitEvent
+    {
 
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('external_id', trim($externalId)));
@@ -1160,7 +1173,8 @@ class Summit extends SilverstripeBaseModel
      * @param int $id
      * @return SummitEvent|null
      */
-    public function getEventById(int $id):?SummitEvent{
+    public function getEventById(int $id): ?SummitEvent
+    {
 
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $id));
@@ -1173,13 +1187,14 @@ class Summit extends SilverstripeBaseModel
      */
     public function addEvent(SummitEvent $event)
     {
-        if($this->events->contains($event)) return;
+        if ($this->events->contains($event)) return;
         $this->events->add($event);
         $event->setSummit($this);
     }
 
-    public function removeEvent(SummitEvent $event){
-        if(!$this->events->contains($event)) return;
+    public function removeEvent(SummitEvent $event)
+    {
+        if (!$this->events->contains($event)) return;
         $this->events->removeElement($event);
         $event->clearSummit();
     }
@@ -1195,11 +1210,13 @@ class Summit extends SilverstripeBaseModel
     /**
      * @param File $logo
      */
-    public function setLogo(File $logo):void{
+    public function setLogo(File $logo): void
+    {
         $this->logo = $logo;
     }
 
-    public function clearLogo():void{
+    public function clearLogo(): void
+    {
         $this->logo = null;
     }
 
@@ -1239,7 +1256,8 @@ class Summit extends SilverstripeBaseModel
      * @param SummitAbstractLocation $location
      * @return bool
      */
-    static public function isPrimaryLocation(SummitAbstractLocation $location){
+    static public function isPrimaryLocation(SummitAbstractLocation $location)
+    {
         return ($location instanceof SummitVenue
             || $location instanceof SummitHotel
             || $location instanceof SummitAirport
@@ -1382,9 +1400,10 @@ class Summit extends SilverstripeBaseModel
      * @param SelectionPlan|null $selectionPlan
      * @return array
      */
-    public function getModeratedPresentationsBy(PresentationSpeaker $speaker, SelectionPlan $selectionPlan = null){
+    public function getModeratedPresentationsBy(PresentationSpeaker $speaker, SelectionPlan $selectionPlan = null)
+    {
         $selection_plan_cond = "";
-        if(!is_null($selectionPlan)){
+        if (!is_null($selectionPlan)) {
             $selection_plan_cond = " and sp.id = :selection_plan_id";
         }
 
@@ -1392,13 +1411,13 @@ class Summit extends SilverstripeBaseModel
         JOIN p.summit s
         JOIN p.moderator m 
         JOIN p.selection_plan sp
-        WHERE s.id = :summit_id and m.id = :moderator_id".$selection_plan_cond);
+        WHERE s.id = :summit_id and m.id = :moderator_id" . $selection_plan_cond);
 
         $query = $query
             ->setParameter('summit_id', $this->getIdentifier())
             ->setParameter('moderator_id', $speaker->getIdentifier());
 
-        if(!is_null($selectionPlan)){
+        if (!is_null($selectionPlan)) {
             $query = $query->setParameter('selection_plan_id', $selectionPlan->getIdentifier());
         }
         return $query->getResult();
@@ -1409,10 +1428,11 @@ class Summit extends SilverstripeBaseModel
      * @param SelectionPlan|null $selectionPlan
      * @return array
      */
-    public function getCreatedPresentations(PresentationSpeaker $speaker, SelectionPlan $selectionPlan = null){
+    public function getCreatedPresentations(PresentationSpeaker $speaker, SelectionPlan $selectionPlan = null)
+    {
         $selection_plan_cond = "";
 
-        if(!is_null($selectionPlan)){
+        if (!is_null($selectionPlan)) {
             $selection_plan_cond = " and sp.id = :selection_plan_id";
         }
 
@@ -1420,13 +1440,13 @@ class Summit extends SilverstripeBaseModel
         JOIN p.summit s
         JOIN p.created_by c 
         JOIN p.selection_plan sp
-        WHERE s.id = :summit_id and c.id = :creator_id".$selection_plan_cond);
+        WHERE s.id = :summit_id and c.id = :creator_id" . $selection_plan_cond);
 
-        $query =  $query
+        $query = $query
             ->setParameter('summit_id', $this->getIdentifier())
             ->setParameter('creator_id', $speaker->getMemberId());
 
-        if(!is_null($selectionPlan)){
+        if (!is_null($selectionPlan)) {
             $query = $query->setParameter('selection_plan_id', $selectionPlan->getIdentifier());
         }
 
@@ -1536,8 +1556,9 @@ class Summit extends SilverstripeBaseModel
     /**
      * @param PresentationCategoryGroup $track_group
      */
-    public function addCategoryGroup(PresentationCategoryGroup $track_group){
-        if($this->category_groups->contains($track_group)) return;
+    public function addCategoryGroup(PresentationCategoryGroup $track_group)
+    {
+        if ($this->category_groups->contains($track_group)) return;
         $this->category_groups->add($track_group);
         $track_group->setSummit($this);
     }
@@ -1545,8 +1566,9 @@ class Summit extends SilverstripeBaseModel
     /**
      * @param PresentationCategoryGroup $track_group
      */
-    public function removeCategoryGroup(PresentationCategoryGroup $track_group){
-        if(!$this->category_groups->contains($track_group)) return;
+    public function removeCategoryGroup(PresentationCategoryGroup $track_group)
+    {
+        if (!$this->category_groups->contains($track_group)) return;
         $this->category_groups->removeElement($track_group);
         $track_group->clearSummit();
     }
@@ -1555,7 +1577,7 @@ class Summit extends SilverstripeBaseModel
      * @param int $member_id
      * @return SummitAttendee|null
      */
-    public function getAttendeeByMemberId($member_id):?SummitAttendee
+    public function getAttendeeByMemberId($member_id): ?SummitAttendee
     {
         $builder = $this->createQueryBuilder();
         $members = $builder
@@ -1574,7 +1596,7 @@ class Summit extends SilverstripeBaseModel
      * @param Member $member
      * @return SummitAttendee|null
      */
-    public function getAttendeeByMember(Member $member):?SummitAttendee
+    public function getAttendeeByMember(Member $member): ?SummitAttendee
     {
         return $this->getAttendeeByMemberId($member->getId());
     }
@@ -1582,8 +1604,9 @@ class Summit extends SilverstripeBaseModel
     /**
      * @param SummitAttendee $attendee
      */
-    public function addAttendee(SummitAttendee $attendee){
-        if($this->attendees->contains($attendee)) return;
+    public function addAttendee(SummitAttendee $attendee)
+    {
+        if ($this->attendees->contains($attendee)) return;
         $this->attendees->add($attendee);
         $attendee->setSummit($this);
     }
@@ -1592,7 +1615,7 @@ class Summit extends SilverstripeBaseModel
      * @param int $attendee_id
      * @return SummitAttendee|null
      */
-    public function getAttendeeById($attendee_id):?SummitAttendee
+    public function getAttendeeById($attendee_id): ?SummitAttendee
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($attendee_id)));
@@ -1604,7 +1627,7 @@ class Summit extends SilverstripeBaseModel
      * @param string $email
      * @return SummitAttendee|null
      */
-    public function getAttendeeByEmail(string $email):?SummitAttendee
+    public function getAttendeeByEmail(string $email): ?SummitAttendee
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('email', strtolower(trim($email))));
@@ -1639,7 +1662,7 @@ class Summit extends SilverstripeBaseModel
      * @param DateTime $end_date
      * @return bool
      */
-    public function isTimeFrameInsideSummitDuration(DateTime $start_date, DateTime $end_date )
+    public function isTimeFrameInsideSummitDuration(DateTime $start_date, DateTime $end_date)
     {
         $summit_start_date = $this->getLocalBeginDate();
         $summit_end_date = $this->getLocalEndDate();
@@ -1653,10 +1676,10 @@ class Summit extends SilverstripeBaseModel
      * @param DateTime $end_date
      * @return bool
      */
-    public function isTimeFrameOnBookingPeriod(DateTime $start_date, DateTime $end_date):bool
+    public function isTimeFrameOnBookingPeriod(DateTime $start_date, DateTime $end_date): bool
     {
-        if(is_null($this->begin_allow_booking_date)) return false;
-        if(is_null($this->end_allow_booking_date)) return false;
+        if (is_null($this->begin_allow_booking_date)) return false;
+        if (is_null($this->end_allow_booking_date)) return false;
 
         return $start_date >= $this->convertDateFromUTC2TimeZone($this->begin_allow_booking_date) && $start_date <= $this->convertDateFromUTC2TimeZone($this->end_allow_booking_date) &&
             $end_date <= $this->convertDateFromUTC2TimeZone($this->end_allow_booking_date) && $end_date >= $start_date;
@@ -1838,7 +1861,7 @@ class Summit extends SilverstripeBaseModel
     public function getMainPage()
     {
         $path = $this->getSchedulePage();
-        if(empty($path)) return '';
+        if (empty($path)) return '';
         $paths = explode("/", $path);
         array_pop($paths);
         return join("/", $paths);
@@ -1860,12 +1883,12 @@ SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll();
-            if(count($res) == 0 ) return '';
+            if (count($res) == 0) return '';
             $segment = $res[0]['URLSegment'];
             $parent_id = intval($res[0]['ParentID']);
 
-            $paths[]  = $segment;
-            do{
+            $paths[] = $segment;
+            do {
                 $sql = <<<SQL
     SELECT URLSegment,ParentID FROM SiteTree
     WHERE ID = :parent_id;
@@ -1873,11 +1896,11 @@ SQL;
                 $stmt = $this->prepareRawSQL($sql);
                 $stmt->execute(['parent_id' => $parent_id]);
                 $res = $stmt->fetchAll();
-                if(count($res) == 0 ) break;
+                if (count($res) == 0) break;
                 $segment = $res[0]['URLSegment'];
                 $parent_id = intval($res[0]['ParentID']);
-                $paths[]  = $segment;
-            } while($parent_id > 0);
+                $paths[] = $segment;
+            } while ($parent_id > 0);
 
         } catch (\Exception $ex) {
             return '';
@@ -1909,7 +1932,7 @@ SQL;
         if ($summit_event instanceof SummitGroupEvent) {
 
             $member_groups_code = [];
-            $event_groups_code  = [];
+            $event_groups_code = [];
 
             foreach ($member->getGroups() as $member_group) {
                 $member_groups_code[] = $member_group->getCode();
@@ -1952,11 +1975,11 @@ SQL;
      * @param string $suffix
      * @return string
      */
-    public function getSlug($suffix='-summit')
+    public function getSlug($suffix = '-summit')
     {
-        $res =  $this->name;
+        $res = $this->name;
 
-        if(!is_null($this->begin_date)) {
+        if (!is_null($this->begin_date)) {
             $res .= $this->begin_date->format('Y') . $suffix;
         }
 
@@ -1964,16 +1987,19 @@ SQL;
     }
 
 
-    public function generateRegistrationSlugPrefix():void{
+    public function generateRegistrationSlugPrefix(): void
+    {
         $newSlug = $this->getSlug("");
-        if(empty($this->registration_slug_prefix) || $this->registration_slug_prefix != $newSlug){
+        if (empty($this->registration_slug_prefix) || $this->registration_slug_prefix != $newSlug) {
             $this->registration_slug_prefix = $newSlug;
         }
     }
+
     /**
      * @return string
      */
-    public function getRegistrationSlugPrefix():string{
+    public function getRegistrationSlugPrefix(): string
+    {
         $this->generateRegistrationSlugPrefix();
         return $this->registration_slug_prefix;
     }
@@ -1981,22 +2007,25 @@ SQL;
     /**
      * @return string
      */
-    public function getOrderQRPrefix():string{
-        return strtoupper('ORDER_'.$this->getRegistrationSlugPrefix());
+    public function getOrderQRPrefix(): string
+    {
+        return strtoupper('ORDER_' . $this->getRegistrationSlugPrefix());
     }
 
     /**
      * @return string
      */
-    public function getTicketQRPrefix():string{
-        return strtoupper('TICKET_'.$this->getRegistrationSlugPrefix());
+    public function getTicketQRPrefix(): string
+    {
+        return strtoupper('TICKET_' . $this->getRegistrationSlugPrefix());
     }
 
     /**
      * @return string
      */
-    public function getBadgeQRPrefix():string{
-        return strtoupper('BADGE_'.$this->getRegistrationSlugPrefix());
+    public function getBadgeQRPrefix(): string
+    {
+        return strtoupper('BADGE_' . $this->getRegistrationSlugPrefix());
     }
 
     /**
@@ -2004,7 +2033,7 @@ SQL;
      */
     public function getPresentationVotesCount()
     {
-      try {
+        try {
             $sql = <<<SQL
             SELECT COUNT(DISTINCT(Vote.ID)) AS vote_count
             FROM PresentationVote AS Vote
@@ -2051,21 +2080,24 @@ SQL;
         return $this->attendees->count();
     }
 
-    public function getAttendees(){
+    public function getAttendees()
+    {
         return $this->attendees;
     }
 
     /**
      * @return int
      */
-    public function getPaidTicketsCount():int{
+    public function getPaidTicketsCount(): int
+    {
         return $this->geTicketsCountByStatus(IOrderConstants::PaidStatus);
     }
+
     /**
      * @param string $status
      * @return int
      */
-    public function geTicketsCountByStatus(string $status):int
+    public function geTicketsCountByStatus(string $status): int
     {
         try {
             $sql = <<<SQL
@@ -2322,14 +2354,16 @@ SQL;
     /**
      * @return int
      */
-    public function getTicketTypesCount():int{
+    public function getTicketTypesCount(): int
+    {
         return $this->ticket_types->count();
     }
 
     /**
      * @return bool
      */
-    public function hasTicketTypes():bool {
+    public function hasTicketTypes(): bool
+    {
         return $this->getTicketTypesCount() > 0;
     }
 
@@ -2338,17 +2372,22 @@ SQL;
      * @return null|string
      * @throws ValidationException
      */
-    public function getDefaultTicketTypeCurrency():?string{
+    public function getDefaultTicketTypeCurrency(): ?string
+    {
         $default_currency = null;
-        foreach ($this->ticket_types as $ticket_type){
+        foreach ($this->ticket_types as $ticket_type) {
             $ticket_type_currency = $ticket_type->getCurrency();
-            if(empty($ticket_type_currency)) continue;
-            if(empty($default_currency)) { $default_currency = $ticket_type_currency; continue;}
-            if($ticket_type_currency != $default_currency)
+            if (empty($ticket_type_currency)) continue;
+            if (empty($default_currency)) {
+                $default_currency = $ticket_type_currency;
+                continue;
+            }
+            if ($ticket_type_currency != $default_currency)
                 throw new ValidationException(sprintf("all ticket types for summit %s should have same currency", $this->getId()));
         }
         return $default_currency;
     }
+
     /**
      * @param SummitTicketType $ticket_type
      * @return $this
@@ -2364,7 +2403,8 @@ SQL;
      * @param string $name
      * @return SummitTicketType|null
      */
-    public function getTicketTypeByName($name){
+    public function getTicketTypeByName($name)
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('name', trim($name)));
         $res = $this->ticket_types->matching($criteria)->first();
@@ -2376,7 +2416,8 @@ SQL;
      * @param int $id
      * @return SummitTicketType|null
      */
-    public function getTicketTypeById($id){
+    public function getTicketTypeById($id)
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($id)));
         $res = $this->ticket_types->matching($criteria)->first();
@@ -2387,7 +2428,8 @@ SQL;
      * @param int $rsvp_template_id
      * @return RSVPTemplate|null
      */
-    public function getRSVPTemplateById($rsvp_template_id){
+    public function getRSVPTemplateById($rsvp_template_id)
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($rsvp_template_id)));
         $rsvp_template = $this->rsvp_templates->matching($criteria)->first();
@@ -2398,7 +2440,8 @@ SQL;
      * @param string $rsvp_template_title
      * @return RSVPTemplate|null
      */
-    public function getRSVPTemplateByTitle($rsvp_template_title){
+    public function getRSVPTemplateByTitle($rsvp_template_title)
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('title', trim($rsvp_template_title)));
         $rsvp_template = $this->rsvp_templates->matching($criteria)->first();
@@ -2409,8 +2452,9 @@ SQL;
      * @param RSVPTemplate $template
      * @return $this
      */
-    public function addRSVPTemplate(RSVPTemplate $template){
-        if($this->rsvp_templates->contains($template)) return;
+    public function addRSVPTemplate(RSVPTemplate $template)
+    {
+        if ($this->rsvp_templates->contains($template)) return;
         $this->rsvp_templates->add($template);
         $template->setSummit($this);
         return $this;
@@ -2420,8 +2464,9 @@ SQL;
      * @param RSVPTemplate $template
      * @return $this
      */
-    public function removeRSVPTemplate(RSVPTemplate $template){
-        if(!$this->rsvp_templates->contains($template)) return;
+    public function removeRSVPTemplate(RSVPTemplate $template)
+    {
+        if (!$this->rsvp_templates->contains($template)) return;
         $this->rsvp_templates->removeElement($template);
         $template->clearSummit();
         return $this;
@@ -2434,14 +2479,15 @@ SQL;
      * @param int $new_order
      * @throws ValidationException
      */
-    public function recalculateLocationOrder(SummitAbstractLocation $location, $new_order){
+    public function recalculateLocationOrder(SummitAbstractLocation $location, $new_order)
+    {
 
-        $criteria     = Criteria::create();
-        $criteria->orderBy(['order'=> 'ASC']);
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'ASC']);
         $filtered_locations = [];
 
-        foreach($this->locations->matching($criteria)->toArray() as $l){
-            if(Summit::isPrimaryLocation($l))
+        foreach ($this->locations->matching($criteria)->toArray() as $l) {
+            if (Summit::isPrimaryLocation($l))
                 $filtered_locations[] = $l;
         }
 
@@ -2451,7 +2497,8 @@ SQL;
     /**
      * @return int[]
      */
-    public function getScheduleEventsIds():array{
+    public function getScheduleEventsIds(): array
+    {
         $query = <<<SQL
 SELECT e.id  
 FROM  models\summit\SummitEvent e
@@ -2471,7 +2518,8 @@ SQL;
      * @param SummitAbstractLocation $location
      * @return int[]
      */
-    public function getScheduleEventsIdsPerLocation(SummitAbstractLocation $location){
+    public function getScheduleEventsIdsPerLocation(SummitAbstractLocation $location)
+    {
         $query = <<<SQL
 SELECT e.id  
 FROM  models\summit\SummitEvent e
@@ -2486,7 +2534,7 @@ SQL;
         $native_query->setParameter("summit", $this);
         $native_query->setParameter("location", $location);
 
-        $res =  $native_query->getResult();
+        $res = $native_query->getResult();
 
         return $res;
     }
@@ -2495,7 +2543,8 @@ SQL;
      * @param SummitAbstractLocation $location
      * @return $this
      */
-    public function removeLocation(SummitAbstractLocation $location){
+    public function removeLocation(SummitAbstractLocation $location)
+    {
         $this->locations->removeElement($location);
         $location->setSummit(null);
         return $this;
@@ -2569,7 +2618,8 @@ SQL;
      * @param SummitPushNotification $notification
      * @return $this
      */
-    public function addNotification(SummitPushNotification $notification){
+    public function addNotification(SummitPushNotification $notification)
+    {
         $this->notifications->add($notification);
         $notification->setSummit($this);
         return $this;
@@ -2627,7 +2677,8 @@ SQL;
      * @param int $notification_id
      * @return SummitPushNotification|null
      */
-    public function getNotificationById($notification_id){
+    public function getNotificationById($notification_id)
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($notification_id)));
         $notification = $this->notifications->matching($criteria)->first();
@@ -2638,7 +2689,8 @@ SQL;
      * @param SummitPushNotification $notification
      * @return $this
      */
-    public function removeNotification(SummitPushNotification $notification){
+    public function removeNotification(SummitPushNotification $notification)
+    {
         $this->notifications->removeElement($notification);
         $notification->clearSummit();
         return $this;
@@ -2663,7 +2715,7 @@ SQL;
     /**
      * @return DateTime
      */
-    public function getRegistrationBeginDate():?DateTime
+    public function getRegistrationBeginDate(): ?DateTime
     {
         return $this->registration_begin_date;
     }
@@ -2672,7 +2724,8 @@ SQL;
      * @return bool
      * @throws \Exception
      */
-    public function isRegistrationPeriodOpen():bool {
+    public function isRegistrationPeriodOpen(): bool
+    {
         return $this->isDateOnRegistrationPeriod(new \DateTime('now', new \DateTimeZone('UTC')));
     }
 
@@ -2680,36 +2733,42 @@ SQL;
      * @param DateTime $date
      * @return bool
      */
-    public function isDateOnRegistrationPeriod(DateTime $date):bool{
+    public function isDateOnRegistrationPeriod(DateTime $date): bool
+    {
         if (!is_null($this->registration_begin_date) && !is_null($this->registration_end_date)) {
             return $date >= $this->registration_begin_date && $date <= $this->registration_end_date;
         }
         return false;
     }
 
-    public function isRegistrationPeriodDefined():bool{
+    public function isRegistrationPeriodDefined(): bool
+    {
         return !is_null($this->registration_begin_date) && !is_null($this->registration_end_date);
     }
 
     /**
      * @param DateTime $registration_begin_date
      */
-    public function setRegistrationBeginDate(DateTime $registration_begin_date){
+    public function setRegistrationBeginDate(DateTime $registration_begin_date)
+    {
         $this->registration_begin_date = $this->convertDateFromTimeZone2UTC($registration_begin_date);
     }
 
-    public function setRawRegistrationBeginDate(DateTime $registration_begin_date){
+    public function setRawRegistrationBeginDate(DateTime $registration_begin_date)
+    {
         $this->registration_begin_date = $registration_begin_date;
     }
 
-    public function setRawRegistrationEndDate(DateTime $registration_end_date){
+    public function setRawRegistrationEndDate(DateTime $registration_end_date)
+    {
         $this->registration_end_date = $registration_end_date;
     }
 
     /**
      * @return $this
      */
-    public function clearRegistrationDates(){
+    public function clearRegistrationDates()
+    {
         $this->registration_begin_date = $this->registration_end_date = null;
         return $this;
     }
@@ -2717,7 +2776,7 @@ SQL;
     /**
      * @return DateTime
      */
-    public function getRegistrationEndDate():?DateTime
+    public function getRegistrationEndDate(): ?DateTime
     {
         return $this->registration_end_date;
     }
@@ -2725,7 +2784,8 @@ SQL;
     /**
      * @param DateTime $registration_end_date
      */
-    public function setRegistrationEndDate(DateTime $registration_end_date){
+    public function setRegistrationEndDate(DateTime $registration_end_date)
+    {
         $this->registration_end_date = $this->convertDateFromTimeZone2UTC($registration_end_date);
     }
 
@@ -2739,22 +2799,23 @@ SQL;
 
     /**
      * @param SelectionPlan $selection_plan
-     * @throws ValidationException
      * @return bool
+     * @throws ValidationException
      */
-    public function checkSelectionPlanConflicts(SelectionPlan $selection_plan){
-        if(!$selection_plan->IsEnabled()) return true;
-        foreach ($this->selection_plans as $sp){
-            if(!$sp->IsEnabled()) continue;
-            if($sp->getId() == $selection_plan->getId()) continue;
+    public function checkSelectionPlanConflicts(SelectionPlan $selection_plan)
+    {
+        if (!$selection_plan->IsEnabled()) return true;
+        foreach ($this->selection_plans as $sp) {
+            if (!$sp->IsEnabled()) continue;
+            if ($sp->getId() == $selection_plan->getId()) continue;
 
             $start1 = $selection_plan->getSelectionBeginDate();
-            $end1   = $selection_plan->getSelectionEndDate();
+            $end1 = $selection_plan->getSelectionEndDate();
             $start2 = $sp->getSelectionBeginDate();
-            $end2   = $sp->getSelectionEndDate();
+            $end2 = $sp->getSelectionEndDate();
 
-            if(!is_null($start1) && !is_null($end1) &&
-               !is_null($start2) && !is_null($end2)
+            if (!is_null($start1) && !is_null($end1) &&
+                !is_null($start2) && !is_null($end2)
                 && DateUtils::checkTimeFramesOverlap
                 (
                     $start1,
@@ -2772,11 +2833,11 @@ SQL;
                 ));
 
             $start1 = $selection_plan->getSubmissionBeginDate();
-            $end1   = $selection_plan->getSubmissionEndDate();
+            $end1 = $selection_plan->getSubmissionEndDate();
             $start2 = $sp->getSubmissionBeginDate();
-            $end2   = $sp->getSubmissionEndDate();
+            $end2 = $sp->getSubmissionEndDate();
 
-            if(!is_null($start1) && !is_null($end1) &&
+            if (!is_null($start1) && !is_null($end1) &&
                 !is_null($start2) && !is_null($end2) &&
                 DateUtils::checkTimeFramesOverlap
                 (
@@ -2796,11 +2857,11 @@ SQL;
                 ));
 
             $start1 = $selection_plan->getVotingBeginDate();
-            $end1   = $selection_plan->getVotingEndDate();
+            $end1 = $selection_plan->getVotingEndDate();
             $start2 = $sp->getVotingBeginDate();
-            $end2   = $sp->getVotingEndDate();
+            $end2 = $sp->getVotingEndDate();
 
-            if(!is_null($start1) && !is_null($end1) &&
+            if (!is_null($start1) && !is_null($end1) &&
                 !is_null($start2) && !is_null($end2) &&
                 DateUtils::checkTimeFramesOverlap
                 (
@@ -2826,7 +2887,8 @@ SQL;
      * @param string $name
      * @return null|SelectionPlan
      */
-    public function getSelectionPlanByName($name){
+    public function getSelectionPlanByName($name)
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('name', trim($name)));
         $selection_plan = $this->selection_plans->matching($criteria)->first();
@@ -2837,22 +2899,26 @@ SQL;
      * @param string $status
      * @return null|SelectionPlan
      */
-    public function getCurrentSelectionPlanByStatus($status){
+    public function getCurrentSelectionPlanByStatus($status)
+    {
         $now_utc = new \DateTime('now', new \DateTimeZone('UTC'));
         $criteria = Criteria::create();
-        switch (strtoupper($status)){
-            case SelectionPlan::STATUS_SUBMISSION:{
-                $criteria->where(Criteria::expr()->lte('submission_begin_date', $now_utc))->andWhere(Criteria::expr()->gte('submission_end_date', $now_utc));
-            }
-            break;
-            case SelectionPlan::STATUS_VOTING:{
-                $criteria->where(Criteria::expr()->lte('voting_begin_date', $now_utc))->andWhere(Criteria::expr()->gte('voting_end_date', $now_utc));
-            }
-            break;
-            case SelectionPlan::STATUS_SELECTION:{
-                $criteria->where(Criteria::expr()->lte('selection_begin_date', $now_utc))->andWhere(Criteria::expr()->gte('selection_end_date', $now_utc));
-            }
-            break;
+        switch (strtoupper($status)) {
+            case SelectionPlan::STATUS_SUBMISSION:
+                {
+                    $criteria->where(Criteria::expr()->lte('submission_begin_date', $now_utc))->andWhere(Criteria::expr()->gte('submission_end_date', $now_utc));
+                }
+                break;
+            case SelectionPlan::STATUS_VOTING:
+                {
+                    $criteria->where(Criteria::expr()->lte('voting_begin_date', $now_utc))->andWhere(Criteria::expr()->gte('voting_end_date', $now_utc));
+                }
+                break;
+            case SelectionPlan::STATUS_SELECTION:
+                {
+                    $criteria->where(Criteria::expr()->lte('selection_begin_date', $now_utc))->andWhere(Criteria::expr()->gte('selection_end_date', $now_utc));
+                }
+                break;
         }
         $selection_plan = $this->selection_plans->matching($criteria)->first();
         return $selection_plan === false ? null : $selection_plan;
@@ -2862,7 +2928,8 @@ SQL;
      * @param int $id
      * @return null|SelectionPlan
      */
-    public function getSelectionPlanById($id):?SelectionPlan{
+    public function getSelectionPlanById($id): ?SelectionPlan
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($id)));
         $selection_plan = $this->selection_plans->matching($criteria)->first();
@@ -2873,7 +2940,8 @@ SQL;
      * @param SelectionPlan $selection_plan
      * @return $this
      */
-    public function addSelectionPlan(SelectionPlan $selection_plan){
+    public function addSelectionPlan(SelectionPlan $selection_plan)
+    {
         $this->selection_plans->add($selection_plan);
         $selection_plan->setSummit($this);
         return $this;
@@ -2883,7 +2951,8 @@ SQL;
      * @param SelectionPlan $selection_plan
      * @return $this
      */
-    public function removeSelectionSelectionPlan(SelectionPlan $selection_plan){
+    public function removeSelectionSelectionPlan(SelectionPlan $selection_plan)
+    {
         $this->selection_plans->removeElement($selection_plan);
         $selection_plan->clearSummit();
         return $this;
@@ -2892,8 +2961,11 @@ SQL;
     /**
      * @return SelectionPlan[]
      */
-    public function getActiveSelectionPlans() {
-        return $this->selection_plans->filter(function ($e){ return $e->IsEnabled();} )->toArray();
+    public function getActiveSelectionPlans()
+    {
+        return $this->selection_plans->filter(function ($e) {
+            return $e->IsEnabled();
+        })->toArray();
     }
 
     /**
@@ -2937,7 +3009,8 @@ SQL;
      * @param Tag $tag
      * @return TrackTagGroup|null
      */
-    public function getTrackTagGroupForTag(Tag $tag){
+    public function getTrackTagGroupForTag(Tag $tag)
+    {
         $query = <<<SQL
 SELECT tg  
 FROM  App\Models\Foundation\Summit\TrackTagGroup tg
@@ -2952,7 +3025,7 @@ SQL;
         $native_query->setParameter("summit", $this);
         $native_query->setParameter("tag", $tag);
 
-        $res =  $native_query->getResult();
+        $res = $native_query->getResult();
         return count($res) > 0 ? $res[0] : null;
     }
 
@@ -2962,7 +3035,8 @@ SQL;
      * @throws \Doctrine\ORM\NoResultException
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    public function isTagValueAllowedOnTrackTagGroups($tag_value){
+    public function isTagValueAllowedOnTrackTagGroups($tag_value)
+    {
         $query = <<<SQL
 SELECT COUNT(tg.id) 
 FROM  App\Models\Foundation\Summit\TrackTagGroup tg
@@ -2978,7 +3052,7 @@ SQL;
         $native_query->setParameter("summit", $this);
         $native_query->setParameter("tag_value", $tag_value);
 
-        $res =  $native_query->getSingleScalarResult();
+        $res = $native_query->getSingleScalarResult();
         return $res > 0;
     }
 
@@ -2986,7 +3060,8 @@ SQL;
      * @param string $tag_value
      * @return null|TrackTagGroupAllowedTag
      */
-    public function getAllowedTagOnTagTrackGroup($tag_value){
+    public function getAllowedTagOnTagTrackGroup($tag_value)
+    {
         $query = <<<SQL
 SELECT allowed_tag 
 FROM   App\Models\Foundation\Summit\TrackTagGroupAllowedTag allowed_tag
@@ -3002,7 +3077,7 @@ SQL;
         $native_query->setParameter("summit", $this);
         $native_query->setParameter("tag_value", $tag_value);
 
-        $res =  $native_query->getResult();
+        $res = $native_query->getResult();
         return count($res) > 0 ? $res[0] : null;
     }
 
@@ -3010,7 +3085,8 @@ SQL;
      * @param int $tag_id
      * @return TrackTagGroup|null
      */
-    public function getTrackTagGroupForTagId($tag_id){
+    public function getTrackTagGroupForTagId($tag_id)
+    {
         $query = <<<SQL
 SELECT tg  
 FROM  App\Models\Foundation\Summit\TrackTagGroup tg
@@ -3026,7 +3102,7 @@ SQL;
         $native_query->setParameter("summit", $this);
         $native_query->setParameter("tag_id", $tag_id);
 
-        $res =  $native_query->getResult();
+        $res = $native_query->getResult();
         return count($res) > 0 ? $res[0] : null;
     }
 
@@ -3034,7 +3110,8 @@ SQL;
      * @param string $name
      * @return null|TrackTagGroup
      */
-    public function getTrackTagGroupByName($name){
+    public function getTrackTagGroupByName($name)
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('name', $name));
         $track_tag_group = $this->track_tag_groups->matching($criteria)->first();
@@ -3044,7 +3121,8 @@ SQL;
     /**
      * @return TrackTagGroup[]|ArrayCollection
      */
-    public function getTrackTagGroups(){
+    public function getTrackTagGroups()
+    {
         return $this->track_tag_groups;
     }
 
@@ -3052,11 +3130,12 @@ SQL;
      * @param string $label
      * @return null|TrackTagGroup
      */
-    public function getTrackTagGroupByLabel($label){
+    public function getTrackTagGroupByLabel($label)
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('label', $label));
         $track_tag_group = $this->track_tag_groups->matching($criteria)->first();
-        return !$track_tag_group ? null :  $track_tag_group;
+        return !$track_tag_group ? null : $track_tag_group;
     }
 
     /**
@@ -3065,7 +3144,7 @@ SQL;
      */
     public function addTrackTagGroup(TrackTagGroup $track_tag_group)
     {
-        if($this->track_tag_groups->contains($track_tag_group)) return $this;
+        if ($this->track_tag_groups->contains($track_tag_group)) return $this;
         $track_tag_group->setOrder($this->getTrackTagGroupMaxOrder() + 1);
         $this->track_tag_groups->add($track_tag_group);
         $track_tag_group->setSummit($this);
@@ -3076,8 +3155,9 @@ SQL;
      * @param TrackTagGroup $track_tag_group
      * @return $this
      */
-    public function removeTrackTagGroup(TrackTagGroup $track_tag_group){
-        if(!$this->track_tag_groups->contains($track_tag_group)) return $this;
+    public function removeTrackTagGroup(TrackTagGroup $track_tag_group)
+    {
+        if (!$this->track_tag_groups->contains($track_tag_group)) return $this;
         $this->track_tag_groups->removeElement($track_tag_group);
         return $this;
     }
@@ -3085,7 +3165,8 @@ SQL;
     /**
      * @return int
      */
-    private function getTrackTagGroupMaxOrder(){
+    private function getTrackTagGroupMaxOrder()
+    {
         $criteria = Criteria::create();
         $criteria->orderBy(['order' => 'DESC']);
         $group = $this->track_tag_groups->matching($criteria)->first();
@@ -3097,7 +3178,8 @@ SQL;
      * @param int $new_order
      * @throws ValidationException
      */
-    public function recalculateTrackTagGroupOrder(TrackTagGroup $track_tag_group, $new_order){
+    public function recalculateTrackTagGroupOrder(TrackTagGroup $track_tag_group, $new_order)
+    {
         self::recalculateOrderForSelectable($this->track_tag_groups, $track_tag_group, $new_order);
     }
 
@@ -3116,21 +3198,24 @@ SQL;
     /**
      * @return string|null
      */
-    public function getRawSlug():?string{
+    public function getRawSlug(): ?string
+    {
         return $this->slug;
     }
 
     /**
      * @param string $slug
      */
-    public function setRawSlug(string $slug):void {
-        $slugify    = new Slugify();
+    public function setRawSlug(string $slug): void
+    {
+        $slugify = new Slugify();
         $this->slug = $slugify->slugify($slug);
     }
+
     /**
      * @return DateTime
      */
-    public function getMeetingRoomBookingStartTime():?DateTime
+    public function getMeetingRoomBookingStartTime(): ?DateTime
     {
         return $this->meeting_room_booking_start_time;
     }
@@ -3146,7 +3231,7 @@ SQL;
     /**
      * @return DateTime
      */
-    public function getMeetingRoomBookingEndTime():?DateTime
+    public function getMeetingRoomBookingEndTime(): ?DateTime
     {
         return $this->meeting_room_booking_end_time;
     }
@@ -3172,10 +3257,10 @@ SQL;
      */
     public function setMeetingRoomBookingSlotLength(int $meeting_room_booking_slot_length): void
     {
-        if($meeting_room_booking_slot_length <= 0)
+        if ($meeting_room_booking_slot_length <= 0)
             throw new ValidationException("meeting_room_booking_slot_length should be greather than zero");
 
-        if($this->meeting_room_booking_slot_length != $meeting_room_booking_slot_length){
+        if ($this->meeting_room_booking_slot_length != $meeting_room_booking_slot_length) {
             // only allow to change if we dont have any reservation
             $sql = <<<SQL
 select COUNT(SummitRoomReservation.ID) from SummitRoomReservation
@@ -3196,8 +3281,7 @@ SQL;
             );
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
             $reservation_count = count($res) > 0 ? $res[0] : 0;
-            if($reservation_count > 0)
-            {
+            if ($reservation_count > 0) {
                 throw new ValidationException("summit already has reservations with that slot len!");
             }
         }
@@ -3232,8 +3316,9 @@ SQL;
     /**
      * @param SummitBookableVenueRoomAttributeType $type
      */
-    public function addMeetingBookingRoomAllowedAttribute(SummitBookableVenueRoomAttributeType $type){
-        if($this->meeting_booking_room_allowed_attributes->contains($type)) return;
+    public function addMeetingBookingRoomAllowedAttribute(SummitBookableVenueRoomAttributeType $type)
+    {
+        if ($this->meeting_booking_room_allowed_attributes->contains($type)) return;
         $this->meeting_booking_room_allowed_attributes->add($type);
         $type->setSummit($this);
     }
@@ -3241,8 +3326,9 @@ SQL;
     /**
      * @param SummitBookableVenueRoomAttributeType $type
      */
-    public function removeMeetingBookingRoomAllowedAttribute(SummitBookableVenueRoomAttributeType $type){
-        if(!$this->meeting_booking_room_allowed_attributes->contains($type)) return;
+    public function removeMeetingBookingRoomAllowedAttribute(SummitBookableVenueRoomAttributeType $type)
+    {
+        if (!$this->meeting_booking_room_allowed_attributes->contains($type)) return;
         $this->meeting_booking_room_allowed_attributes->removeElement($type);
     }
 
@@ -3250,7 +3336,7 @@ SQL;
      * @param int $id
      * @return SummitBookableVenueRoomAttributeType|null
      */
-    public function getBookableAttributeTypeById(int $id):?SummitBookableVenueRoomAttributeType
+    public function getBookableAttributeTypeById(int $id): ?SummitBookableVenueRoomAttributeType
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($id)));
@@ -3262,7 +3348,7 @@ SQL;
      * @param string $type
      * @return SummitBookableVenueRoomAttributeType|null
      */
-    public function getBookableAttributeTypeByTypeName(string $type):?SummitBookableVenueRoomAttributeType
+    public function getBookableAttributeTypeByTypeName(string $type): ?SummitBookableVenueRoomAttributeType
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('type', trim($type)));
@@ -3270,22 +3356,24 @@ SQL;
         return $attr === false ? null : $attr;
     }
 
-    public function getMaxReservationsPerDay():int {
-        $interval = $this->meeting_room_booking_end_time->diff( $this->meeting_room_booking_start_time);
-        $minutes  = $interval->days * 24 * 60;
-        $minutes  += $interval->h * 60;
-        $minutes  += $interval->i;
-        return intval ($minutes / $this->meeting_room_booking_slot_length);
+    public function getMaxReservationsPerDay(): int
+    {
+        $interval = $this->meeting_room_booking_end_time->diff($this->meeting_room_booking_start_time);
+        $minutes = $interval->days * 24 * 60;
+        $minutes += $interval->h * 60;
+        $minutes += $interval->i;
+        return intval($minutes / $this->meeting_room_booking_slot_length);
     }
 
     /**
      * @param int $id
      * @return SummitBookableVenueRoomAttributeValue|null
      */
-    public function getMeetingBookingRoomAllowedAttributeValueById(int $id):?SummitBookableVenueRoomAttributeValue{
-        foreach($this->meeting_booking_room_allowed_attributes as $attribute_type){
+    public function getMeetingBookingRoomAllowedAttributeValueById(int $id): ?SummitBookableVenueRoomAttributeValue
+    {
+        foreach ($this->meeting_booking_room_allowed_attributes as $attribute_type) {
             $value = $attribute_type->getValueById($id);
-            if(!is_null($value)) return $value;
+            if (!is_null($value)) return $value;
         }
         return null;
     }
@@ -3305,7 +3393,7 @@ SQL;
      */
     public function setApiFeedType(string $api_feed_type): void
     {
-        if(!empty($api_feed_type) && !in_array($api_feed_type, ISummitExternalScheduleFeedType::ValidFeedTypes))
+        if (!empty($api_feed_type) && !in_array($api_feed_type, ISummitExternalScheduleFeedType::ValidFeedTypes))
             throw new ValidationException(sprintf("feed type %s is not valid!", $api_feed_type));
         $this->api_feed_type = $api_feed_type;
     }
@@ -3355,7 +3443,7 @@ SQL;
      */
     public function setBeginAllowBookingDate(DateTime $begin_allow_booking_date): void
     {
-        $this->begin_allow_booking_date =  $this->convertDateFromTimeZone2UTC($begin_allow_booking_date);
+        $this->begin_allow_booking_date = $this->convertDateFromTimeZone2UTC($begin_allow_booking_date);
     }
 
     /**
@@ -3363,7 +3451,7 @@ SQL;
      */
     public function setRawBeginAllowBookingDate(DateTime $begin_allow_booking_date): void
     {
-        $this->begin_allow_booking_date =  $begin_allow_booking_date;
+        $this->begin_allow_booking_date = $begin_allow_booking_date;
     }
 
     /*
@@ -3377,8 +3465,9 @@ SQL;
     /**
      * @param SummitAccessLevelType $access_level
      */
-    public function addBadgeAccessLevelType(SummitAccessLevelType $access_level):void{
-        if($this->badge_access_level_types->contains($access_level)) return;
+    public function addBadgeAccessLevelType(SummitAccessLevelType $access_level): void
+    {
+        if ($this->badge_access_level_types->contains($access_level)) return;
         $this->badge_access_level_types->add($access_level);
         $access_level->setSummit($this);
     }
@@ -3386,8 +3475,9 @@ SQL;
     /**
      * @param SummitAccessLevelType $access_level
      */
-    public function removeBadgeAccessLevelType(SummitAccessLevelType $access_level):void{
-        if(!$this->badge_access_level_types->contains($access_level)) return;
+    public function removeBadgeAccessLevelType(SummitAccessLevelType $access_level): void
+    {
+        if (!$this->badge_access_level_types->contains($access_level)) return;
         $this->badge_access_level_types->removeElement($access_level);
         $access_level->clearSummit();
     }
@@ -3396,7 +3486,8 @@ SQL;
      * @param int $levelId
      * @return SummitAccessLevelType|null
      */
-    public function getBadgeAccessLevelTypeById(int $levelId):?SummitAccessLevelType{
+    public function getBadgeAccessLevelTypeById(int $levelId): ?SummitAccessLevelType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($levelId)));
         $attr = $this->badge_access_level_types->matching($criteria)->first();
@@ -3404,8 +3495,8 @@ SQL;
     }
 
 
-
-    public function getDefaultBadgeAccessLevelTypes(){
+    public function getDefaultBadgeAccessLevelTypes()
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('is_default', true));
         return $this->badge_access_level_types->matching($criteria);
@@ -3415,7 +3506,8 @@ SQL;
      * @param string $level_name
      * @return SummitAccessLevelType|null
      */
-    public function getBadgeAccessLevelTypeByName(string $level_name):?SummitAccessLevelType{
+    public function getBadgeAccessLevelTypeByName(string $level_name): ?SummitAccessLevelType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('name', trim($level_name)));
         $attr = $this->badge_access_level_types->matching($criteria)->first();
@@ -3433,8 +3525,9 @@ SQL;
     /**
      * @param SummitTaxType $tax_type
      */
-    public function addTaxType(SummitTaxType $tax_type):void{
-        if($this->tax_types->contains($tax_type)) return;
+    public function addTaxType(SummitTaxType $tax_type): void
+    {
+        if ($this->tax_types->contains($tax_type)) return;
         $this->tax_types->add($tax_type);
         $tax_type->setSummit($this);
     }
@@ -3442,8 +3535,9 @@ SQL;
     /**
      * @param SummitTaxType $tax_type
      */
-    public function removeTaxType(SummitTaxType $tax_type):void{
-        if(!$this->tax_types->contains($tax_type)) return;
+    public function removeTaxType(SummitTaxType $tax_type): void
+    {
+        if (!$this->tax_types->contains($tax_type)) return;
         $this->tax_types->removeElement($tax_type);
         $tax_type->clearSummit();
     }
@@ -3452,7 +3546,8 @@ SQL;
      * @param int $tax_id
      * @return SummitTaxType|null
      */
-    public function getTaxTypeById(int $tax_id):?SummitTaxType{
+    public function getTaxTypeById(int $tax_id): ?SummitTaxType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($tax_id)));
         $attr = $this->tax_types->matching($criteria)->first();
@@ -3463,7 +3558,8 @@ SQL;
      * @param string $tax_name
      * @return SummitTaxType|null
      */
-    public function getTaxTypeByName(string $tax_name):?SummitTaxType{
+    public function getTaxTypeByName(string $tax_name): ?SummitTaxType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('name', trim($tax_name)));
         $attr = $this->tax_types->matching($criteria)->first();
@@ -3481,8 +3577,9 @@ SQL;
     /**
      * @param SummitBadgeFeatureType $feature_type
      */
-    public function addFeatureType(SummitBadgeFeatureType $feature_type):void{
-        if($this->badge_features_types->contains($feature_type)) return;
+    public function addFeatureType(SummitBadgeFeatureType $feature_type): void
+    {
+        if ($this->badge_features_types->contains($feature_type)) return;
         $this->badge_features_types->add($feature_type);
         $feature_type->setSummit($this);
     }
@@ -3490,8 +3587,9 @@ SQL;
     /**
      * @param SummitBadgeFeatureType $feature_type
      */
-    public function removeFeatureType(SummitBadgeFeatureType $feature_type):void{
-        if(!$this->badge_features_types->contains($feature_type)) return;
+    public function removeFeatureType(SummitBadgeFeatureType $feature_type): void
+    {
+        if (!$this->badge_features_types->contains($feature_type)) return;
         $this->badge_features_types->removeElement($feature_type);
         $feature_type->clearSummit();
     }
@@ -3501,7 +3599,8 @@ SQL;
      * @param int $feature_id
      * @return SummitBadgeFeatureType|null
      */
-    public function getFeatureTypeById(int $feature_id):?SummitBadgeFeatureType{
+    public function getFeatureTypeById(int $feature_id): ?SummitBadgeFeatureType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($feature_id)));
         $feature = $this->badge_features_types->matching($criteria)->first();
@@ -3512,7 +3611,8 @@ SQL;
      * @param string $feature_name
      * @return SummitBadgeFeatureType|null
      */
-    public function getFeatureTypeByName(string $feature_name):?SummitBadgeFeatureType{
+    public function getFeatureTypeByName(string $feature_name): ?SummitBadgeFeatureType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('name', trim($feature_name)));
         $feature = $this->badge_features_types->matching($criteria)->first();
@@ -3530,8 +3630,9 @@ SQL;
     /**
      * @param SummitBadgeType $badge_type
      */
-    public function addBadgeType(SummitBadgeType $badge_type){
-        if($this->badge_types->contains($badge_type)) return;
+    public function addBadgeType(SummitBadgeType $badge_type)
+    {
+        if ($this->badge_types->contains($badge_type)) return;
         $this->badge_types->add($badge_type);
         $badge_type->setSummit($this);
     }
@@ -3539,8 +3640,9 @@ SQL;
     /**
      * @param SummitBadgeType $badge_type
      */
-    public function removeBadgeType(SummitBadgeType $badge_type):void{
-        if(!$this->badge_types->contains($badge_type)) return;
+    public function removeBadgeType(SummitBadgeType $badge_type): void
+    {
+        if (!$this->badge_types->contains($badge_type)) return;
         $this->badge_types->removeElement($badge_type);
         $badge_type->clearSummit();
     }
@@ -3572,7 +3674,8 @@ SQL;
     /**
      * @return bool
      */
-    public function hasDefaultBadgeType():bool {
+    public function hasDefaultBadgeType(): bool
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('default', true));
         return $this->badge_types->matching($criteria)->count() > 0;
@@ -3581,7 +3684,8 @@ SQL;
     /**
      * @return bool
      */
-    public function getDefaultBadgeType():?SummitBadgeType {
+    public function getDefaultBadgeType(): ?SummitBadgeType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('default', true));
         $badge_type = $this->badge_types->matching($criteria)->first();
@@ -3612,14 +3716,15 @@ SQL;
         $this->end_allow_booking_date = $end_allow_booking_date;
     }
 
-    public function clearAllowBookingDates():void{
+    public function clearAllowBookingDates(): void
+    {
         $this->begin_allow_booking_date = $this->end_allow_booking_date = null;
     }
 
     /**
      * @return bool
      */
-    public function isBookingPeriodOpen():bool
+    public function isBookingPeriodOpen(): bool
     {
         $now_utc = new \DateTime('now', new \DateTimeZone('UTC'));
         if (!is_null($this->begin_allow_booking_date) && !is_null($this->end_allow_booking_date)) {
@@ -3629,14 +3734,16 @@ SQL;
         return false;
     }
 
-    public function getMonthYear():?string{
-        if(is_null($this->end_date)) return "";
+    public function getMonthYear(): ?string
+    {
+        if (is_null($this->end_date)) return "";
         return $this->convertDateFromUTC2TimeZone($this->end_date)->format("M Y");
     }
+
     /**
      * @return string
      */
-    public function getLogoUrl():?string
+    public function getLogoUrl(): ?string
     {
         $logoUrl = null;
         if ($this->hasLogo() && $logo = $this->getLogo()) {
@@ -3659,7 +3766,8 @@ SQL;
     /**
      * @return bool
      */
-    public function hasReassignTicketLimit():bool {
+    public function hasReassignTicketLimit(): bool
+    {
         return !is_null($this->reassign_ticket_till_date);
     }
 
@@ -3668,7 +3776,7 @@ SQL;
      */
     public function setReassignTicketTillDate(DateTime $reassign_ticket_till_date): void
     {
-        $this->reassign_ticket_till_date =  $this->convertDateFromTimeZone2UTC($reassign_ticket_till_date);
+        $this->reassign_ticket_till_date = $this->convertDateFromTimeZone2UTC($reassign_ticket_till_date);
     }
 
     /**
@@ -3676,7 +3784,7 @@ SQL;
      */
     public function setRawReassignTicketTillDate(DateTime $reassign_ticket_till_date): void
     {
-        $this->reassign_ticket_till_date =  $reassign_ticket_till_date;
+        $this->reassign_ticket_till_date = $reassign_ticket_till_date;
     }
 
     /**
@@ -3714,14 +3822,16 @@ SQL;
     /**
      * @return array
      */
-    public function getSupportedCurrencies():array{
+    public function getSupportedCurrencies(): array
+    {
         return [AllowedCurrencies::USD, AllowedCurrencies::GBP, AllowedCurrencies::EUR];
     }
 
     /**
      * @return Sponsor[]
      */
-    public function getSummitSponsors(){
+    public function getSummitSponsors()
+    {
         return $this->summit_sponsors;
     }
 
@@ -3729,7 +3839,8 @@ SQL;
      * @param Company $company
      * @return Sponsor|null
      */
-    public function getSummitSponsorByCompany(Company $company):?Sponsor{
+    public function getSummitSponsorByCompany(Company $company): ?Sponsor
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('company', $company));
         $sponsor = $this->summit_sponsors->matching($criteria)->first();
@@ -3751,9 +3862,10 @@ SQL;
     /**
      * @param Sponsor $sponsor
      */
-    public function addSummitSponsor(Sponsor $sponsor){
-        if($this->summit_sponsors->contains($sponsor)) return;
-        $sponsor->setOrder($this->getSummitSponsorMaxOrder()+1);
+    public function addSummitSponsor(Sponsor $sponsor)
+    {
+        if ($this->summit_sponsors->contains($sponsor)) return;
+        $sponsor->setOrder($this->getSummitSponsorMaxOrder() + 1);
         $this->summit_sponsors->add($sponsor);
         $sponsor->setSummit($this);
 
@@ -3762,7 +3874,8 @@ SQL;
     /**
      * @return int
      */
-    private function getSummitSponsorMaxOrder(){
+    private function getSummitSponsorMaxOrder()
+    {
         $criteria = Criteria::create();
         $criteria->orderBy(['order' => 'DESC']);
         $sponsor = $this->summit_sponsors->matching($criteria)->first();
@@ -3774,8 +3887,9 @@ SQL;
     /**
      * @param Sponsor $sponsor
      */
-    public function removeSummitSponsor(Sponsor $sponsor){
-        if(!$this->summit_sponsors->contains($sponsor)) return;
+    public function removeSummitSponsor(Sponsor $sponsor)
+    {
+        if (!$this->summit_sponsors->contains($sponsor)) return;
         $this->summit_sponsors->removeElement($sponsor);
         $sponsor->clearSummit();
     }
@@ -3791,8 +3905,9 @@ SQL;
     /**
      * @param SummitRefundPolicyType $policy
      */
-    public function addRefundPolicy(SummitRefundPolicyType $policy){
-        if($this->refund_policies->contains($policy)) return;
+    public function addRefundPolicy(SummitRefundPolicyType $policy)
+    {
+        if ($this->refund_policies->contains($policy)) return;
         $this->refund_policies->add($policy);
         $policy->setSummit($this);
     }
@@ -3800,8 +3915,9 @@ SQL;
     /**
      * @param SummitRefundPolicyType $policy
      */
-    public function removeRefundPolicy(SummitRefundPolicyType $policy){
-        if(!$this->refund_policies->contains($policy)) return;
+    public function removeRefundPolicy(SummitRefundPolicyType $policy)
+    {
+        if (!$this->refund_policies->contains($policy)) return;
         $this->refund_policies->removeElement($policy);
         $policy->clearSummit();
     }
@@ -3834,7 +3950,8 @@ SQL;
      * @param int $performed_n_days_before_event_starts
      * @return SummitRefundPolicyType|null
      */
-    public function getRefundPolicyForRefundRequest(int $performed_n_days_before_event_starts):?SummitRefundPolicyType{
+    public function getRefundPolicyForRefundRequest(int $performed_n_days_before_event_starts): ?SummitRefundPolicyType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->lte('until_x_days_before_event_starts', intval($performed_n_days_before_event_starts)));
         $criteria->orderBy(['until_x_days_before_event_starts' => 'DESC']);
@@ -3866,7 +3983,8 @@ SQL;
      * @param string $usage
      * @return ArrayCollection|\Doctrine\Common\Collections\Collection
      */
-    public function getMandatoryOrderExtraQuestionsByUsage(string $usage){
+    public function getMandatoryOrderExtraQuestionsByUsage(string $usage)
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('mandatory', true));
         $criteria->andWhere(Criteria::expr()->in('usage', [$usage, SummitOrderExtraQuestionTypeConstants::BothQuestionUsage]));
@@ -3877,7 +3995,8 @@ SQL;
      * @param string $usage
      * @return ArrayCollection|\Doctrine\Common\Collections\Collection
      */
-    public function getOrderExtraQuestionsByUsage(string $usage){
+    public function getOrderExtraQuestionsByUsage(string $usage)
+    {
         $criteria = Criteria::create();
         $criteria->andWhere(Criteria::expr()->in('usage', [$usage, SummitOrderExtraQuestionTypeConstants::BothQuestionUsage]));
         return $this->order_extra_questions->matching($criteria);
@@ -3887,7 +4006,8 @@ SQL;
      * @param int $question_id
      * @return SummitOrderExtraQuestionType|null
      */
-    public function getOrderExtraQuestionById(int $question_id):?SummitOrderExtraQuestionType{
+    public function getOrderExtraQuestionById(int $question_id): ?SummitOrderExtraQuestionType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $question_id));
         $question = $this->order_extra_questions->matching($criteria)->first();
@@ -3898,7 +4018,8 @@ SQL;
      * @param string $name
      * @return SummitOrderExtraQuestionType|null
      */
-    public function getOrderExtraQuestionByName(string $name):?SummitOrderExtraQuestionType{
+    public function getOrderExtraQuestionByName(string $name): ?SummitOrderExtraQuestionType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('name', trim($name)));
         $question = $this->order_extra_questions->matching($criteria)->first();
@@ -3909,7 +4030,8 @@ SQL;
      * @param string $label
      * @return SummitOrderExtraQuestionType|null
      */
-    public function getOrderExtraQuestionByLabel(string $label):?SummitOrderExtraQuestionType{
+    public function getOrderExtraQuestionByLabel(string $label): ?SummitOrderExtraQuestionType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('label', trim($label)));
         $question = $this->order_extra_questions->matching($criteria)->first();
@@ -3919,7 +4041,8 @@ SQL;
     /**
      * @return int
      */
-    private function getOrderExtraQuestionMaxOrder():int{
+    private function getOrderExtraQuestionMaxOrder(): int
+    {
         $criteria = Criteria::create();
         $criteria->orderBy(['order' => 'DESC']);
         $question = $this->order_extra_questions->matching($criteria)->first();
@@ -3929,10 +4052,11 @@ SQL;
     /**
      * @param SummitOrderExtraQuestionType $extra_question
      */
-    public function addOrderExtraQuestion(SummitOrderExtraQuestionType $extra_question){
+    public function addOrderExtraQuestion(SummitOrderExtraQuestionType $extra_question)
+    {
 
-        if($this->order_extra_questions->contains($extra_question)) return;
-        $extra_question->setOrder($this->getOrderExtraQuestionMaxOrder() +1);
+        if ($this->order_extra_questions->contains($extra_question)) return;
+        $extra_question->setOrder($this->getOrderExtraQuestionMaxOrder() + 1);
         $this->order_extra_questions->add($extra_question);
         $extra_question->setSummit($this);
     }
@@ -3940,9 +4064,10 @@ SQL;
     /**
      * @param SummitOrderExtraQuestionType $extra_question
      */
-    public function removeOrderExtraQuestion(SummitOrderExtraQuestionType $extra_question){
+    public function removeOrderExtraQuestion(SummitOrderExtraQuestionType $extra_question)
+    {
 
-        if(!$this->order_extra_questions->contains($extra_question)) return;
+        if (!$this->order_extra_questions->contains($extra_question)) return;
         $this->order_extra_questions->removeElement($extra_question);
         $extra_question->clearSummit();
     }
@@ -3952,7 +4077,8 @@ SQL;
      * @param int $new_order
      * @throws ValidationException
      */
-    public function recalculateQuestionOrder(SummitOrderExtraQuestionType $question, $new_order){
+    public function recalculateQuestionOrder(SummitOrderExtraQuestionType $question, $new_order)
+    {
         self::recalculateOrderForSelectable($this->order_extra_questions, $question, $new_order);
     }
 
@@ -3961,7 +4087,8 @@ SQL;
      * @param int $new_order
      * @throws ValidationException
      */
-    public function recalculateSummitSponsorOrder(Sponsor $sponsor, $new_order){
+    public function recalculateSummitSponsorOrder(Sponsor $sponsor, $new_order)
+    {
         self::recalculateOrderForSelectable($this->summit_sponsors, $sponsor, $new_order);
     }
 
@@ -3977,7 +4104,8 @@ SQL;
      * @param int $id
      * @return SummitOrder|null
      */
-    public function getOrderById(int $id):?SummitOrder{
+    public function getOrderById(int $id): ?SummitOrder
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($id)));
         $order = $this->orders->matching($criteria)->first();
@@ -3987,8 +4115,9 @@ SQL;
     /**
      * @param SummitOrder $order
      */
-    public function addOrder(SummitOrder $order){
-        if($this->orders->contains($order)) return;
+    public function addOrder(SummitOrder $order)
+    {
+        if ($this->orders->contains($order)) return;
         $this->orders->add($order);
         $order->setSummit($this);
     }
@@ -3996,8 +4125,9 @@ SQL;
     /**
      * @param SummitOrder $order
      */
-    public function removeOrder(SummitOrder $order){
-        if(!$this->orders->contains($order)) return;
+    public function removeOrder(SummitOrder $order)
+    {
+        if (!$this->orders->contains($order)) return;
         $this->orders->removeElement($order);
         $order->clearSummit();
     }
@@ -4006,7 +4136,7 @@ SQL;
      * @param string $number
      * @return bool
      */
-    public function existOrderNumber(string $number):bool
+    public function existOrderNumber(string $number): bool
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('number', trim($number)));
@@ -4018,21 +4148,24 @@ SQL;
      */
     private $mark_as_deleted;
 
-    public function markAsDeleted(){
+    public function markAsDeleted()
+    {
         $this->mark_as_deleted = true;
     }
 
     /**
      * @return bool
      */
-    public function isDeleting():bool{
+    public function isDeleting(): bool
+    {
         return is_null($this->mark_as_deleted) ? false : $this->mark_as_deleted;
     }
 
     /**
      * @return string
      */
-    public function getQRRegistryFieldDelimiter():string {
+    public function getQRRegistryFieldDelimiter(): string
+    {
         return IQREntity::QRRegistryFieldDelimiterChar;
     }
 
@@ -4061,10 +4194,11 @@ SQL;
     /**
      * @return bool
      */
-    public function isEnded():bool{
-        $utc_now  = new \DateTime('now', new \DateTimeZone('UTC'));
+    public function isEnded(): bool
+    {
+        $utc_now = new \DateTime('now', new \DateTimeZone('UTC'));
         $end_date = $this->getEndDate();
-        if(is_null($end_date)) return false;
+        if (is_null($end_date)) return false;
         return $end_date < $utc_now;
     }
 
@@ -4072,7 +4206,8 @@ SQL;
      * @return bool
      * @throws \Exception
      */
-    public function isOpen():bool{
+    public function isOpen(): bool
+    {
         return $this->dayIsOnSummitPeriod(new DateTime('now', new \DateTimeZone('UTC'), false));
     }
 
@@ -4081,31 +4216,32 @@ SQL;
      * @param bool $omit_time_check
      * @return bool
      */
-    public function dayIsOnSummitPeriod(\DateTime $day, $omit_time_check = true):bool{
-        if(is_null($this->begin_date)) return false;
-        if(is_null($this->end_date)) return false;
+    public function dayIsOnSummitPeriod(\DateTime $day, $omit_time_check = true): bool
+    {
+        if (is_null($this->begin_date)) return false;
+        if (is_null($this->end_date)) return false;
 
-        $dt  = clone $day;
-        $dt  = $dt->setTimezone(new \DateTimeZone('UTC'));
+        $dt = clone $day;
+        $dt = $dt->setTimezone(new \DateTimeZone('UTC'));
 
-        if($omit_time_check)
-            $dt= $dt->setTime(0, 0,0);
+        if ($omit_time_check)
+            $dt = $dt->setTime(0, 0, 0);
 
         $dt = $dt->getTimestamp();
 
         $bd = clone $this->begin_date;
 
-        if($omit_time_check)
-            $bd  = $bd->setTime(0,0,0,0);
+        if ($omit_time_check)
+            $bd = $bd->setTime(0, 0, 0, 0);
 
         $bd = $bd->getTimestamp();
 
         $ed = clone $this->end_date;
 
-        if($omit_time_check)
-            $ed  = $ed->setTime(0,0,0,0);
+        if ($omit_time_check)
+            $ed = $ed->setTime(0, 0, 0, 0);
 
-        $ed  = $ed->getTimestamp();
+        $ed = $ed->getTimestamp();
 
         return $bd <= $dt && $dt <= $ed;
     }
@@ -4132,7 +4268,7 @@ SQL;
      */
     public function setExternalRegistrationFeedType(string $external_registration_feed_type): void
     {
-        if(!empty($external_registration_feed_type) && !in_array($external_registration_feed_type, ISummitExternalRegistrationFeedType::ValidFeedTypes))
+        if (!empty($external_registration_feed_type) && !in_array($external_registration_feed_type, ISummitExternalRegistrationFeedType::ValidFeedTypes))
             throw new ValidationException(sprintf("feed type %s is not valid!", $external_registration_feed_type));
         $this->external_registration_feed_type = $external_registration_feed_type;
     }
@@ -4177,7 +4313,7 @@ SQL;
      */
     public function setScheduleDefaultEventDetailUrl(string $schedule_default_event_detail_url): void
     {
-        if(!empty($schedule_default_event_detail_url) && !str_contains($schedule_default_event_detail_url,':event_id')){
+        if (!empty($schedule_default_event_detail_url) && !str_contains($schedule_default_event_detail_url, ':event_id')) {
             throw new ValidationException("Property schedule_default_event_detail_url must contains at least replacement variable :event_id.");
         }
 
@@ -4205,7 +4341,7 @@ SQL;
      */
     public function getScheduleOgImageUrl(): ?string
     {
-        return self::_get($this->schedule_og_image_url,"schedule.og_image_url");
+        return self::_get($this->schedule_og_image_url, "schedule.og_image_url");
     }
 
     /**
@@ -4221,7 +4357,7 @@ SQL;
      */
     public function getScheduleOgImageSecureUrl(): ?string
     {
-        return self::_get($this->schedule_og_image_secure_url,"schedule.og_image_secure_url");
+        return self::_get($this->schedule_og_image_secure_url, "schedule.og_image_secure_url");
     }
 
     /**
@@ -4237,7 +4373,7 @@ SQL;
      */
     public function getScheduleOgImageWidth(): int
     {
-        return self::_get($this->schedule_og_image_width,"schedule.og_image_width");
+        return self::_get($this->schedule_og_image_width, "schedule.og_image_width");
     }
 
     /**
@@ -4253,7 +4389,7 @@ SQL;
      */
     public function getScheduleOgImageHeight(): int
     {
-        return self::_get($this->schedule_og_image_height,"schedule.og_image_height");
+        return self::_get($this->schedule_og_image_height, "schedule.og_image_height");
     }
 
     /**
@@ -4269,7 +4405,7 @@ SQL;
      */
     public function getScheduleFacebookAppId(): ?string
     {
-        return self::_get($this->schedule_facebook_app_id,"schedule.facebook_app_id");
+        return self::_get($this->schedule_facebook_app_id, "schedule.facebook_app_id");
     }
 
     /**
@@ -4285,7 +4421,7 @@ SQL;
      */
     public function getScheduleIosAppName(): ?string
     {
-        return self::_get($this->schedule_ios_app_name,"schedule.ios_app_name");
+        return self::_get($this->schedule_ios_app_name, "schedule.ios_app_name");
     }
 
     /**
@@ -4301,7 +4437,7 @@ SQL;
      */
     public function getScheduleIosAppStoreId(): ?string
     {
-        return self::_get($this->schedule_ios_app_store_id,"schedule.ios_app_store_id");
+        return self::_get($this->schedule_ios_app_store_id, "schedule.ios_app_store_id");
     }
 
     /**
@@ -4317,7 +4453,7 @@ SQL;
      */
     public function getScheduleIosAppCustomSchema(): ?string
     {
-        return self::_get($this->schedule_ios_app_custom_schema,"schedule.ios_app_custom_schema");
+        return self::_get($this->schedule_ios_app_custom_schema, "schedule.ios_app_custom_schema");
     }
 
     /**
@@ -4333,7 +4469,7 @@ SQL;
      */
     public function getScheduleAndroidAppName(): ?string
     {
-        return self::_get($this->schedule_android_app_name,"schedule.android_app_name");
+        return self::_get($this->schedule_android_app_name, "schedule.android_app_name");
     }
 
     /**
@@ -4349,7 +4485,7 @@ SQL;
      */
     public function getScheduleAndroidAppPackage(): ?string
     {
-        return self::_get($this->schedule_android_app_package,"schedule.android_app_package");
+        return self::_get($this->schedule_android_app_package, "schedule.android_app_package");
     }
 
     /**
@@ -4365,7 +4501,7 @@ SQL;
      */
     public function getScheduleAndroidCustomSchema(): ?string
     {
-        return self::_get($this->schedule_android_custom_schema,"schedule.android_custom_schema");
+        return self::_get($this->schedule_android_custom_schema, "schedule.android_custom_schema");
     }
 
     /**
@@ -4381,7 +4517,7 @@ SQL;
      */
     public function getScheduleTwitterAppName(): ?string
     {
-        return self::_get($this->schedule_twitter_app_name,"schedule.twitter_app_name");
+        return self::_get($this->schedule_twitter_app_name, "schedule.twitter_app_name");
     }
 
     /**
@@ -4397,7 +4533,7 @@ SQL;
      */
     public function getScheduleTwitterText(): ?string
     {
-        return self::_get($this->schedule_twitter_text,"schedule.twitter_text");
+        return self::_get($this->schedule_twitter_text, "schedule.twitter_text");
     }
 
     /**
@@ -4412,7 +4548,8 @@ SQL;
      * @param string $sid
      * @return PersonalCalendarShareInfo|null
      */
-    public function getScheduleShareableLinkById(string $sid):?PersonalCalendarShareInfo{
+    public function getScheduleShareableLinkById(string $sid): ?PersonalCalendarShareInfo
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('cid', trim($sid)));
         $criteria->andWhere(Criteria::expr()->eq('revoked', 0));
@@ -4423,8 +4560,9 @@ SQL;
     /**
      * @param PersonalCalendarShareInfo $link
      */
-    public function addScheduleShareableLink(PersonalCalendarShareInfo $link){
-        if($this->schedule_shareable_links->contains($link)) return;
+    public function addScheduleShareableLink(PersonalCalendarShareInfo $link)
+    {
+        if ($this->schedule_shareable_links->contains($link)) return;
         $this->schedule_shareable_links->add($link);
         $link->setSummit($this);
     }
@@ -4442,8 +4580,9 @@ SQL;
     /**
      * @param PaymentGatewayProfile $payment_profile
      */
-    public function addPaymentProfile(PaymentGatewayProfile $payment_profile){
-        if($this->payment_profiles->contains($payment_profile))
+    public function addPaymentProfile(PaymentGatewayProfile $payment_profile)
+    {
+        if ($this->payment_profiles->contains($payment_profile))
             return;
         $this->payment_profiles->add($payment_profile);
         $payment_profile->setSummit($this);
@@ -4452,8 +4591,9 @@ SQL;
     /**
      * @param PaymentGatewayProfile $payment_profile
      */
-    public function removePaymentProfile(PaymentGatewayProfile $payment_profile){
-        if(!$this->payment_profiles->contains($payment_profile))
+    public function removePaymentProfile(PaymentGatewayProfile $payment_profile)
+    {
+        if (!$this->payment_profiles->contains($payment_profile))
             return;
         $this->payment_profiles->removeElement($payment_profile);
         $payment_profile->clearSummit();
@@ -4467,13 +4607,14 @@ SQL;
      */
     public function getPaymentGateWayPerApp
     (
-        string $application_type,
+        string                                      $application_type,
         ?IBuildDefaultPaymentGatewayProfileStrategy $build_default_payment_gateway_profile_strategy = null
-    ):?IPaymentGatewayAPI {
+    ): ?IPaymentGatewayAPI
+    {
 
         Log::debug(sprintf("Summit::getPaymentGateWayPerApp id %s application_type %s", $this->id, $application_type));
 
-        if(!in_array($application_type, IPaymentConstants::ValidApplicationTypes))
+        if (!in_array($application_type, IPaymentConstants::ValidApplicationTypes))
             throw new ValidationException(sprintf("Application Type %s is not valid.", $application_type));
 
         $criteria = Criteria::create();
@@ -4481,13 +4622,13 @@ SQL;
         $criteria->andWhere(Criteria::expr()->eq('application_type', trim($application_type)));
         $payment_profile = $this->payment_profiles->matching($criteria)->first();
 
-        if(!$payment_profile && !is_null($build_default_payment_gateway_profile_strategy)){
+        if (!$payment_profile && !is_null($build_default_payment_gateway_profile_strategy)) {
             // try to build default one
             Log::debug(sprintf("Summit::getPaymentGateWayPerApp id %s application_type %s trying to get default settings", $this->id, $application_type));
             $payment_profile = $build_default_payment_gateway_profile_strategy->build($application_type);
         }
 
-        if(!$payment_profile) return null;
+        if (!$payment_profile) return null;
 
         return $payment_profile->buildPaymentGatewayApi();
     }
@@ -4496,7 +4637,8 @@ SQL;
     /**
      * @return ArrayCollection|\Doctrine\Common\Collections\Collection
      */
-    public function getActivePaymentGateWayProfiles(){
+    public function getActivePaymentGateWayProfiles()
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('active', true));
         return $this->payment_profiles->matching($criteria);
@@ -4507,9 +4649,10 @@ SQL;
      * @return PaymentGatewayProfile|null
      * @throws ValidationException
      */
-    public function getPaymentGateWayProfilePerApp(string $application_type):?PaymentGatewayProfile {
+    public function getPaymentGateWayProfilePerApp(string $application_type): ?PaymentGatewayProfile
+    {
 
-        if(!in_array($application_type, IPaymentConstants::ValidApplicationTypes))
+        if (!in_array($application_type, IPaymentConstants::ValidApplicationTypes))
             throw new ValidationException(sprintf("Application Type %s is not valid.", $application_type));
 
         $criteria = Criteria::create();
@@ -4524,25 +4667,29 @@ SQL;
      * @param int $profileId
      * @return PaymentGatewayProfile|null
      */
-    public function getPaymentProfileById(int $profileId):?PaymentGatewayProfile{
+    public function getPaymentProfileById(int $profileId): ?PaymentGatewayProfile
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($profileId)));
         $profile = $this->payment_profiles->matching($criteria)->first();
         return $profile === false ? null : $profile;
     }
 
-    public function addEmailEventFlow(SummitEmailEventFlow $email_event_flow){
-        if($this->email_flows_events->contains($email_event_flow)) return;
+    public function addEmailEventFlow(SummitEmailEventFlow $email_event_flow)
+    {
+        if ($this->email_flows_events->contains($email_event_flow)) return;
         $this->email_flows_events->add($email_event_flow);
         $email_event_flow->setSummit($this);
     }
 
-    public function removeEmailEventFlow(SummitEmailEventFlow $email_event_flow){
-        if(!$this->email_flows_events->contains($email_event_flow)) return;
+    public function removeEmailEventFlow(SummitEmailEventFlow $email_event_flow)
+    {
+        if (!$this->email_flows_events->contains($email_event_flow)) return;
         $this->email_flows_events->removeElement($email_event_flow);
     }
 
-    public function clearEmailEventFlow(){
+    public function clearEmailEventFlow()
+    {
         $this->email_flows_events->clear();
     }
 
@@ -4550,7 +4697,8 @@ SQL;
      * @param string $eventSlug
      * @return string|null
      */
-    public function getEmailIdentifierPerEmailEventFlowSlug(string $eventSlug):?string{
+    public function getEmailIdentifierPerEmailEventFlowSlug(string $eventSlug): ?string
+    {
         Log::debug(sprintf("Summit::getEmailIdentifierPerEmailEventFlowSlug id %s slug %s", $this->id, $eventSlug));
         // first check if we have an override
         $email_event = $this->createQueryBuilder()
@@ -4568,7 +4716,7 @@ SQL;
             ->useQueryCache(false)
             ->getOneOrNullResult();
 
-        if(!is_null($email_event) && $email_event instanceof SummitEmailEventFlow) {
+        if (!is_null($email_event) && $email_event instanceof SummitEmailEventFlow) {
             Log::debug
             (
                 sprintf
@@ -4597,7 +4745,7 @@ SQL;
             ->useQueryCache(false)
             ->getOneOrNullResult();
 
-        if(!is_null($email_event_type) && $email_event_type instanceof SummitEmailEventFlowType)
+        if (!is_null($email_event_type) && $email_event_type instanceof SummitEmailEventFlowType)
             return $email_event_type->getDefaultEmailTemplate();
 
         return null;
@@ -4607,14 +4755,16 @@ SQL;
      * @param SummitEmailEventFlowType $type
      * @return SummitEmailEventFlow|null
      */
-    public function getEmailEventByType(SummitEmailEventFlowType $type):?SummitEmailEventFlow{
+    public function getEmailEventByType(SummitEmailEventFlowType $type): ?SummitEmailEventFlow
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('event_type', $type));
         $event = $this->email_flows_events->matching($criteria)->first();
         return $event === false ? null : $event;
     }
 
-    public function getEmailEventById(int $id):?SummitEmailEventFlow {
+    public function getEmailEventById(int $id): ?SummitEmailEventFlow
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $id));
         $event = $this->email_flows_events->matching($criteria)->first();
@@ -4624,11 +4774,13 @@ SQL;
     /**
      * @return array|SummitEmailEventFlow[]
      */
-    public function getAllEmailFlowsEvents(){
+    public function getAllEmailFlowsEvents()
+    {
         return $this->seedDefaultEmailFlowEvents();
     }
 
-    public function seedDefaultEmailFlowEvents(){
+    public function seedDefaultEmailFlowEvents()
+    {
         $builder = $this->createQueryBuilder()
             ->select('distinct ft')
             ->from('App\Models\Foundation\Summit\EmailFlows\SummitEmailFlowType', 'ft')
@@ -4636,11 +4788,11 @@ SQL;
 
         $res = $builder->getQuery()->getResult();
         $list = [];
-        foreach($res as $flow_type){
-            foreach ($flow_type->getEventTypes() as $event_type){
+        foreach ($res as $flow_type) {
+            foreach ($flow_type->getEventTypes() as $event_type) {
                 // check if we have an override
                 $email_event_flow = $this->getEmailEventByType($event_type);
-                if(is_null($email_event_flow)){
+                if (is_null($email_event_flow)) {
                     $email_event_flow = new SummitEmailEventFlow();
                     $email_event_flow->setEventType($event_type);
                     $email_event_flow->setEmailTemplateIdentifier($event_type->getDefaultEmailTemplate());
@@ -4656,25 +4808,26 @@ SQL;
      * this define the default access level types
      * that need to be seeded when a new show is created
      */
-    public function seedDefaultAccessLevelTypes():void{
+    public function seedDefaultAccessLevelTypes(): void
+    {
 
         $defaults = [
             [
                 'name' => SummitAccessLevelType::CHAT,
-                'description'=> 'Enables Chat Feature.'
+                'description' => 'Enables Chat Feature.'
             ],
             [
                 'name' => SummitAccessLevelType::IN_PERSON,
-                'description'=> 'Allows in person show access.'
+                'description' => 'Allows in person show access.'
             ],
             [
                 'name' => SummitAccessLevelType::VIRTUAL,
-                'description'=> 'Allows virtual show access.'
+                'description' => 'Allows virtual show access.'
             ]
         ];
 
-        foreach($defaults as $default) {
-            if(!is_null($this->getBadgeAccessLevelTypeByName($default['name']))) continue;
+        foreach ($defaults as $default) {
+            if (!is_null($this->getBadgeAccessLevelTypeByName($default['name']))) continue;
             $a = new SummitAccessLevelType();
             $a->setName($default['name']);
             $a->setDescription($default['description']);
@@ -4715,15 +4868,17 @@ SQL;
         $this->speaker_confirmation_default_page_url = $speaker_confirmation_default_page_url;
     }
 
-    public function getSummitDocuments(){
+    public function getSummitDocuments()
+    {
         return $this->summit_documents;
     }
 
     /**
      * @param SummitDocument $doc
      */
-    public function addSummitDocument(SummitDocument $doc){
-        if($this->summit_documents->contains($doc)) return;
+    public function addSummitDocument(SummitDocument $doc)
+    {
+        if ($this->summit_documents->contains($doc)) return;
         $this->summit_documents->add($doc);
         $doc->setSummit($this);
     }
@@ -4731,13 +4886,15 @@ SQL;
     /**
      * @param SummitDocument $doc
      */
-    public function removeSummitDocument(SummitDocument $doc){
-        if(!$this->summit_documents->contains($doc)) return;
+    public function removeSummitDocument(SummitDocument $doc)
+    {
+        if (!$this->summit_documents->contains($doc)) return;
         $this->summit_documents->removeElement($doc);
         $doc->clearSummit();
     }
 
-    public function clearSummitDocuments(){
+    public function clearSummitDocuments()
+    {
         $this->summit_documents->clear();
     }
 
@@ -4745,7 +4902,8 @@ SQL;
      * @param int $document_id
      * @return SummitDocument|null
      */
-    public function getSummitDocumentById(int $document_id):?SummitDocument{
+    public function getSummitDocumentById(int $document_id): ?SummitDocument
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($document_id)));
         $document = $this->summit_documents->matching($criteria)->first();
@@ -4756,7 +4914,8 @@ SQL;
      * @param string $name
      * @return SummitDocument|null
      */
-    public function getSummitDocumentByName(string $name):?SummitDocument{
+    public function getSummitDocumentByName(string $name): ?SummitDocument
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('name', trim($name)));
         $document = $this->summit_documents->matching($criteria)->first();
@@ -4767,7 +4926,8 @@ SQL;
      * @param string $label
      * @return SummitDocument|null
      */
-    public function getSummitDocumentByLabel(string $label):?SummitDocument{
+    public function getSummitDocumentByLabel(string $label): ?SummitDocument
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('label', trim($label)));
         $document = $this->summit_documents->matching($criteria)->first();
@@ -4778,7 +4938,8 @@ SQL;
      * @param string $email
      * @return SummitRegistrationInvitation|null
      */
-    public function getSummitRegistrationInvitationByEmail(string $email):?SummitRegistrationInvitation{
+    public function getSummitRegistrationInvitationByEmail(string $email): ?SummitRegistrationInvitation
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('email', trim($email)));
         $invitation = $this->registration_invitations->matching($criteria)->first();
@@ -4789,7 +4950,8 @@ SQL;
      * @param int $invitation_id
      * @return SummitRegistrationInvitation|null
      */
-    public function getSummitRegistrationInvitationById(int $invitation_id):?SummitRegistrationInvitation{
+    public function getSummitRegistrationInvitationById(int $invitation_id): ?SummitRegistrationInvitation
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($invitation_id)));
         $invitation = $this->registration_invitations->matching($criteria)->first();
@@ -4800,7 +4962,8 @@ SQL;
      * @param string $hash
      * @return SummitRegistrationInvitation|null
      */
-    public function getSummitRegistrationInvitationByHash(string $hash):?SummitRegistrationInvitation{
+    public function getSummitRegistrationInvitationByHash(string $hash): ?SummitRegistrationInvitation
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('hash', trim($hash)));
         $invitation = $this->registration_invitations->matching($criteria)->first();
@@ -4810,24 +4973,27 @@ SQL;
     /**
      * @return bool
      */
-    public function isInviteOnlyRegistration():bool{
-        return  $this->registration_invitations->count() > 0;
+    public function isInviteOnlyRegistration(): bool
+    {
+        return $this->registration_invitations->count() > 0;
     }
 
     /**
      * @param string $email
      * @return bool
      */
-    public function canBuyRegistrationTickets(string $email):bool {
-        if(!$this->isInviteOnlyRegistration()) return true;
+    public function canBuyRegistrationTickets(string $email): bool
+    {
+        if (!$this->isInviteOnlyRegistration()) return true;
         return $this->getSummitRegistrationInvitationByEmail($email) !== null;
     }
 
     /**
      * @param SummitRegistrationInvitation $invitation
      */
-    public function addRegistrationInvitation(SummitRegistrationInvitation $invitation){
-        if($this->registration_invitations->contains($invitation)) return;
+    public function addRegistrationInvitation(SummitRegistrationInvitation $invitation)
+    {
+        if ($this->registration_invitations->contains($invitation)) return;
         $this->registration_invitations->add($invitation);
         $invitation->setSummit($this);
     }
@@ -4835,8 +5001,9 @@ SQL;
     /**
      * @param SummitRegistrationInvitation $invitation
      */
-    public function removeRegistrationInvitation(SummitRegistrationInvitation $invitation){
-        if(!$this->registration_invitations->contains($invitation)) return;
+    public function removeRegistrationInvitation(SummitRegistrationInvitation $invitation)
+    {
+        if (!$this->registration_invitations->contains($invitation)) return;
         $this->registration_invitations->removeElement($invitation);
         $invitation->clearSummit();
     }
@@ -4844,36 +5011,42 @@ SQL;
     /**
      * @return ArrayCollection|SummitRegistrationInvitation[]
      */
-    public function getRegistrationInvitations(){
+    public function getRegistrationInvitations()
+    {
         return $this->registration_invitations;
     }
 
-    public function clearRegistrationInvitations():void{
+    public function clearRegistrationInvitations(): void
+    {
         $this->registration_invitations->clear();
     }
 
     /**
      * @param SummitAdministratorPermissionGroup $group
      */
-    public function add2SummitAdministratorPermissionGroup(SummitAdministratorPermissionGroup $group){
-        if($this->permission_groups->contains($group)) return;
+    public function add2SummitAdministratorPermissionGroup(SummitAdministratorPermissionGroup $group)
+    {
+        if ($this->permission_groups->contains($group)) return;
         $this->permission_groups->add($group);
     }
 
-    public function removeFromSummitAdministratorPermissionGroup(SummitAdministratorPermissionGroup $group){
-        if(!$this->permission_groups->contains($group)) return;
+    public function removeFromSummitAdministratorPermissionGroup(SummitAdministratorPermissionGroup $group)
+    {
+        if (!$this->permission_groups->contains($group)) return;
         $this->permission_groups->removeElement($group);
     }
 
-    public function getSummitAdministratorPermissionGroup(){
+    public function getSummitAdministratorPermissionGroup()
+    {
         return $this->permission_groups;
     }
 
     /**
      * @param SummitMediaUploadType $type
      */
-    public function addMediaUploadType(SummitMediaUploadType $type){
-        if($this->media_upload_types->contains($type)) return;
+    public function addMediaUploadType(SummitMediaUploadType $type)
+    {
+        if ($this->media_upload_types->contains($type)) return;
         $this->media_upload_types->add($type);
         $type->setSummit($this);
     }
@@ -4881,17 +5054,20 @@ SQL;
     /**
      * @param SummitMediaUploadType $type
      */
-    public function removeMediaUploadType(SummitMediaUploadType $type){
-        if(!$this->media_upload_types->contains($type)) return;
+    public function removeMediaUploadType(SummitMediaUploadType $type)
+    {
+        if (!$this->media_upload_types->contains($type)) return;
         $this->media_upload_types->removeElement($type);
         $type->clearSummit();
     }
 
-    public function clearMediaUploadType(){
+    public function clearMediaUploadType()
+    {
         $this->media_upload_types->clear();
     }
 
-    public function getMediaUploadTypes(){
+    public function getMediaUploadTypes()
+    {
         return $this->media_upload_types;
     }
 
@@ -4899,7 +5075,8 @@ SQL;
      * @param int $id
      * @return SummitMediaUploadType|null
      */
-    public function getMediaUploadTypeById(int $id):?SummitMediaUploadType{
+    public function getMediaUploadTypeById(int $id): ?SummitMediaUploadType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($id)));
         $type = $this->media_upload_types->matching($criteria)->first();
@@ -4907,7 +5084,8 @@ SQL;
     }
 
 
-    public function getMediaUploadsMandatoryCount():int {
+    public function getMediaUploadsMandatoryCount(): int
+    {
         try {
             $sql = <<<SQL
             SELECT COUNT(SummitMediaUploadType.ID) AS QTY
@@ -4933,7 +5111,8 @@ SQL;
      * @param string $name
      * @return SummitMediaUploadType|null
      */
-    public function getMediaUploadTypeByName(string $name):?SummitMediaUploadType{
+    public function getMediaUploadTypeByName(string $name): ?SummitMediaUploadType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('name', trim($name)));
         $type = $this->media_upload_types->matching($criteria)->first();
@@ -5023,43 +5202,48 @@ SQL;
     /**
      * @return ArrayCollection|PresentationSpeaker[]
      */
-    public function getFeaturesSpeakers(){
+    public function getFeaturesSpeakers()
+    {
         return $this->featured_speakers;
     }
 
-    public function clearFeaturedSpeakers(){
+    public function clearFeaturedSpeakers()
+    {
         $this->featured_speakers->clear();
     }
 
     /**
      * @param PresentationSpeaker $speaker
      */
-    public function addFeaturedSpeaker(PresentationSpeaker $speaker){
-        if($this->featured_speakers->contains($speaker)) return;
+    public function addFeaturedSpeaker(PresentationSpeaker $speaker)
+    {
+        if ($this->featured_speakers->contains($speaker)) return;
         $this->featured_speakers->add($speaker);
     }
 
     /**
      * @param PresentationSpeaker $speaker
      */
-    public function removeFeaturedSpeaker(PresentationSpeaker $speaker){
-        if(!$this->featured_speakers->contains($speaker)) return;
+    public function removeFeaturedSpeaker(PresentationSpeaker $speaker)
+    {
+        if (!$this->featured_speakers->contains($speaker)) return;
         $this->featured_speakers->removeElement($speaker);
     }
 
     /**
      * @return array|DateTime[]
      */
-    public function getSummitDays():array {
+    public function getSummitDays(): array
+    {
         $beginDate = $this->getLocalBeginDate();
         $endDate = $this->getLocalEndDate();
-        if(is_null($beginDate)) return [];
-        if(is_null($endDate)) return [];
-        $beginDate = $beginDate->setTime(0,0,0);
-        $endDate = $endDate->setTime(0,0,0);
+        if (is_null($beginDate)) return [];
+        if (is_null($endDate)) return [];
+        $beginDate = $beginDate->setTime(0, 0, 0);
+        $endDate = $endDate->setTime(0, 0, 0);
         $res = [];
         $res[] = clone $beginDate;
-        while($beginDate < $endDate){
+        while ($beginDate < $endDate) {
             $res[] = clone($beginDate->modify('+1 day'));
         }
         return $res;
@@ -5068,15 +5252,16 @@ SQL;
     /**
      * @return array|DateTime[]
      */
-    public function getSummitDaysWithEvents():array {
+    public function getSummitDaysWithEvents(): array
+    {
         $days = $this->getSummitDays();
         $list = [];
-        foreach ($days as $day){
+        foreach ($days as $day) {
             Log::debug(sprintf("Summit::getSummitDaysWithEvents day %s", $day->format('Y-m-d H:i:s')));
             $begin = clone($day);
-            $begin = $begin->setTime(0,0,0)->setTimezone(new \DateTimeZone('UTC'));
-            $end   = clone($day);
-            $end = $end->setTime(23,59,59)->setTimezone(new \DateTimeZone('UTC'));
+            $begin = $begin->setTime(0, 0, 0)->setTimezone(new \DateTimeZone('UTC'));
+            $end = clone($day);
+            $end = $end->setTime(23, 59, 59)->setTimezone(new \DateTimeZone('UTC'));
             Log::debug(sprintf("Summit::getSummitDaysWithEvents UTC begin date %s UTC end date %s", $begin->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s')));
             $count = 0;
             try {
@@ -5101,7 +5286,7 @@ SQL;
                 Log::debug($ex);
                 $count = 0;
             }
-            if($count > 0){
+            if ($count > 0) {
                 $list[] = $day;
             }
         }
@@ -5120,13 +5305,15 @@ SQL;
     /**
      * @param SummitMetric $metric
      */
-    public function addMetric(SummitMetric $metric){
-        if($this->metrics->contains($metric)) return;
+    public function addMetric(SummitMetric $metric)
+    {
+        if ($this->metrics->contains($metric)) return;
         $this->metrics->add($metric);
         $metric->setSummit($this);
     }
 
-    public function isPubliclyOpen():bool{
+    public function isPubliclyOpen(): bool
+    {
         return $this->ticket_types->count() == 0;
     }
 
@@ -5142,7 +5329,8 @@ SQL;
      * @param Member $member
      * @return SummitTrackChair|null
      */
-    public function getTrackChairByMember(Member $member):?SummitTrackChair{
+    public function getTrackChairByMember(Member $member): ?SummitTrackChair
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('member', $member));
         $res = $this->track_chairs->matching($criteria)->first();
@@ -5153,7 +5341,8 @@ SQL;
      * @param int $id
      * @return SummitTrackChair|null
      */
-    public function getTrackChair(int $id):?SummitTrackChair{
+    public function getTrackChair(int $id): ?SummitTrackChair
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $id));
         $res = $this->track_chairs->matching($criteria)->first();
@@ -5166,9 +5355,10 @@ SQL;
      * @return SummitTrackChair|null
      * @throws ValidationException
      */
-    public function addTrackChair(Member $member, array $categories):?SummitTrackChair{
+    public function addTrackChair(Member $member, array $categories): ?SummitTrackChair
+    {
 
-        if(!$member->isOnGroup(IGroup::TrackChairs)){
+        if (!$member->isOnGroup(IGroup::TrackChairs)) {
             throw new ValidationException(sprintf("Member %s does not belong to group %s", $member->getId(), IGroup::TrackChairs));
         }
 
@@ -5176,7 +5366,7 @@ SQL;
         $criteria->where(Criteria::expr()->eq('member', $member));
         $trackChair = $this->track_chairs->matching($criteria)->first();
 
-        if(!$trackChair) {
+        if (!$trackChair) {
             $trackChair = new SummitTrackChair();
             $member->addTrackChair($trackChair);
             $trackChair->setSummit($this);
@@ -5184,7 +5374,7 @@ SQL;
 
         foreach ($categories as $category) {
 
-            if(!$category->isChairVisible())
+            if (!$category->isChairVisible())
                 throw new ValidationException
                 (
                     sprintf("Category %s is not visible for track chairs.", $category->getId())
@@ -5199,7 +5389,7 @@ SQL;
             $trackChair->addCategory($category);
         }
 
-        if($this->track_chairs->contains($trackChair)) return null;
+        if ($this->track_chairs->contains($trackChair)) return null;
         $this->track_chairs->add($trackChair);
 
         return $trackChair;
@@ -5208,8 +5398,9 @@ SQL;
     /**
      * @param SummitTrackChair $trackChair
      */
-    public function removeTrackChair(SummitTrackChair $trackChair){
-        if(!$this->track_chairs->contains($trackChair)) return;
+    public function removeTrackChair(SummitTrackChair $trackChair)
+    {
+        if (!$this->track_chairs->contains($trackChair)) return;
         $this->track_chairs->removeElement($trackChair);
     }
 
@@ -5218,36 +5409,39 @@ SQL;
      * @param PresentationCategory|null $category
      * @return bool
      */
-    public function isTrackChair(Member $member, PresentationCategory $category = null):bool{
-        if($member->isAdmin()) return true;
+    public function isTrackChair(Member $member, PresentationCategory $category = null): bool
+    {
+        if ($member->isAdmin()) return true;
 
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('member', $member));
         $isOnGroup = $member->isOnGroup(IGroup::TrackChairs);
-        $isTrackChair =  $this->track_chairs->matching($criteria)->count() > 0;
-        if(!is_null($category)){
-            $isTrackChair = $this->track_chairs->matching($criteria)->filter(function($track_chair) use ($category){
-                return $track_chair->isCategoryAllowed($category);
-            })->count() > 0;
+        $isTrackChair = $this->track_chairs->matching($criteria)->count() > 0;
+        if (!is_null($category)) {
+            $isTrackChair = $this->track_chairs->matching($criteria)->filter(function ($track_chair) use ($category) {
+                    return $track_chair->isCategoryAllowed($category);
+                })->count() > 0;
         }
 
         return ($isOnGroup && $isTrackChair);
     }
 
-    public function hasPermissionOnSummit(Member $member):bool{
-       return $this->permission_groups->filter(function($group) use ($member){
-            if(!$group instanceof SummitAdministratorPermissionGroup) return false;
-            return $group->hasMember($member);
-        })->count() > 0;
+    public function hasPermissionOnSummit(Member $member): bool
+    {
+        return $this->permission_groups->filter(function ($group) use ($member) {
+                if (!$group instanceof SummitAdministratorPermissionGroup) return false;
+                return $group->hasMember($member);
+            })->count() > 0;
     }
 
     /**
      * @param Member $member
      * @return bool
      */
-    public function isTrackChairAdmin(Member $member):bool{
-        if($member->isAdmin()) return true;
-        if($this->isSummitAdmin($member)) return true;
+    public function isTrackChairAdmin(Member $member): bool
+    {
+        if ($member->isAdmin()) return true;
+        if ($this->isSummitAdmin($member)) return true;
         return $this->hasPermissionOnSummit($member) && $member->isOnGroup(IGroup::TrackChairsAdmins);
     }
 
@@ -5255,8 +5449,9 @@ SQL;
      * @param Member $member
      * @return bool
      */
-    public function isSummitAdmin(Member $member):bool{
-        if($member->isAdmin()) return true;
+    public function isSummitAdmin(Member $member): bool
+    {
+        if ($member->isAdmin()) return true;
         return $this->hasPermissionOnSummit($member) && $member->isOnGroup(IGroup::SummitAdministrators);
     }
 
@@ -5266,7 +5461,7 @@ SQL;
      */
     public function addPresentationActionType(PresentationActionType $presentation_action_type)
     {
-        if($this->presentation_action_types->contains($presentation_action_type)) return $this;
+        if ($this->presentation_action_types->contains($presentation_action_type)) return $this;
         $presentation_action_type->setOrder($this->getPresentationActionTypeMaxOrder() + 1);
         $this->presentation_action_types->add($presentation_action_type);
         $presentation_action_type->setSummit($this);
@@ -5276,7 +5471,8 @@ SQL;
     /**
      * @return int
      */
-    public function getPresentationActionTypeMaxOrder():int{
+    public function getPresentationActionTypeMaxOrder(): int
+    {
         $criteria = Criteria::create();
         $criteria->orderBy(['order' => 'DESC']);
         $action = $this->presentation_action_types->matching($criteria)->first();
@@ -5286,9 +5482,10 @@ SQL;
     /**
      * @return ArrayCollection|\Doctrine\Common\Collections\Collection
      */
-    public function getPresentationActionTypes(){
+    public function getPresentationActionTypes()
+    {
         $criteria = Criteria::create();
-        $criteria->orderBy(["order" => Criteria::ASC ]);
+        $criteria->orderBy(["order" => Criteria::ASC]);
         return $this->presentation_action_types->matching($criteria);
     }
 
@@ -5296,8 +5493,9 @@ SQL;
      * @param PresentationActionType $presentation_action_type
      * @return $this
      */
-    public function removePresentationActionType(PresentationActionType $presentation_action_type){
-        if(!$this->presentation_action_types->contains($presentation_action_type)) return $this;
+    public function removePresentationActionType(PresentationActionType $presentation_action_type)
+    {
+        if (!$this->presentation_action_types->contains($presentation_action_type)) return $this;
         $this->presentation_action_types->removeElement($presentation_action_type);
         $presentation_action_type->setSummit(null);
         return $this;
@@ -5307,26 +5505,30 @@ SQL;
      * @param int $action_id
      * @return PresentationActionType|null
      */
-    public function getPresentationActionTypeById(int $action_id):?PresentationActionType{
+    public function getPresentationActionTypeById(int $action_id): ?PresentationActionType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $action_id));
         $action = $this->presentation_action_types->matching($criteria)->first();
-        return $action === false ? null: $action;
+        return $action === false ? null : $action;
     }
 
-    public function synchAllPresentationActions():void{
-        foreach ($this->getPresentations() as $presentation){
+    public function synchAllPresentationActions(): void
+    {
+        foreach ($this->getPresentations() as $presentation) {
             $presentation->initializeActions();
         }
     }
 
-    public function synchAllAttendeesStatus():void{
-        foreach($this->attendees as $attendee){
+    public function synchAllAttendeesStatus(): void
+    {
+        foreach ($this->attendees as $attendee) {
             $attendee->updateStatus();
         }
     }
 
-    public function synchPresentationAction(Presentation $presentation):void{
+    public function synchPresentationAction(Presentation $presentation): void
+    {
         $presentation->initializeActions();
     }
 
@@ -5337,7 +5539,8 @@ SQL;
     /**
      * @return int
      */
-    public function getActiveTicketsCount():int{
+    public function getActiveTicketsCount(): int
+    {
         try {
             $sql = <<<SQL
           select COUNT(SummitAttendeeTicket.ID) FROM SummitAttendeeTicket
@@ -5348,7 +5551,7 @@ SQL;
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
             $res = count($res) > 0 ? $res[0] : 0;
-            return !is_null($res) ? $res:0;
+            return !is_null($res) ? $res : 0;
         } catch (\Exception $ex) {
 
         }
@@ -5358,7 +5561,8 @@ SQL;
     /**
      * @return int
      */
-    public function getInactiveicketsCount():int{
+    public function getInactiveicketsCount(): int
+    {
         try {
             $sql = <<<SQL
           select COUNT(SummitAttendeeTicket.ID) FROM SummitAttendeeTicket
@@ -5369,7 +5573,7 @@ SQL;
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
             $res = count($res) > 0 ? $res[0] : 0;
-            return !is_null($res) ? $res:0;
+            return !is_null($res) ? $res : 0;
         } catch (\Exception $ex) {
 
         }
@@ -5379,7 +5583,8 @@ SQL;
     /**
      * @return int
      */
-    public function getActiveAssignedTicketsCount():int{
+    public function getActiveAssignedTicketsCount(): int
+    {
         try {
             $sql = <<<SQL
 SELECT COUNT(SummitAttendeeTicket.ID) FROM SummitAttendeeTicket
@@ -5391,7 +5596,7 @@ SQL;
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
             $res = count($res) > 0 ? $res[0] : 0;
-            return !is_null($res) ? $res:0;
+            return !is_null($res) ? $res : 0;
         } catch (\Exception $ex) {
 
         }
@@ -5401,7 +5606,8 @@ SQL;
     /**
      * @return int
      */
-    public function getTotalOrdersCount():int{
+    public function getTotalOrdersCount(): int
+    {
         try {
             $sql = <<<SQL
     select COUNT(SummitOrder.ID) FROM SummitOrder
@@ -5411,7 +5617,7 @@ SQL;
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
             $res = count($res) > 0 ? $res[0] : 0;
-            return !is_null($res) ? $res:0;
+            return !is_null($res) ? $res : 0;
         } catch (\Exception $ex) {
 
         }
@@ -5421,28 +5627,41 @@ SQL;
     /**
      * @return float
      */
-    public function getTotalPaymentAmountCollected():float{
+    public function getTotalPaymentAmountCollected(): float
+    {
+        $key = sprintf("%s_getTotalPaymentAmountCollected", $this->id);
+        $res = floatval(Cache::get($key, 0.0));
+        if ($res > 0) return $res;
+
         try {
             $sql = <<<SQL
-         select SUM(SummitAttendeeTicket.RawCost) FROM SummitAttendeeTicket
+     SELECT SUM(SummitAttendeeTicket.RawCost - SummitAttendeeTicket.Discount)  FROM SummitAttendeeTicket
 INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
-WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 1;
+WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.Status = 'Paid'
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
             $res = count($res) > 0 ? $res[0] : 0;
-            return !is_null($res) ? $res:0;
+            $res = !is_null($res) ? $res : 0;
+            Cache::add($key, $res, 600);
+            return $res;
         } catch (\Exception $ex) {
 
         }
         return 0;
+
     }
 
     /**
      * @return float
      */
-    public function getTotalRefundAmountEmitted():float{
+    public function getTotalRefundAmountEmitted(): float
+    {
+        $key = sprintf("%s_getTotalRefundAmountEmitted", $this->id);
+        $res = floatval(Cache::get($key, 0.0));
+        if ($res > 0) return $res;
+
         try {
             $sql = <<<SQL
       SELECT SUM(SummitRefundRequest.RefundedAmount) FROM `SummitRefundRequest`
@@ -5455,7 +5674,9 @@ SQL;
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
             $res = count($res) > 0 ? $res[0] : 0;
-            return !is_null($res) ? $res:0;
+            $res =  !is_null($res) ? $res : 0;
+            Cache::add($key, $res, 600);
+            return $res;
         } catch (\Exception $ex) {
         }
         return 0;
@@ -5464,7 +5685,12 @@ SQL;
     /**
      * @return array
      */
-    public function getActiveTicketsCountPerTicketType():array{
+    public function getActiveTicketsCountPerTicketType(): array
+    {
+        $key = sprintf("%s_getActiveTicketsCountPerTicketType", $this->id);
+        $res = Cache::get($key);
+        if(empty($res)) return json_decode($res, true);
+
         try {
             $sql = <<<SQL
 select SummitTicketType.Name AS type, COUNT(SummitAttendeeTicket.ID) as qty FROM SummitAttendeeTicket
@@ -5476,7 +5702,9 @@ SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll();
-            return count($res) > 0 ? $res: [];
+            $res = count($res) > 0 ? $res : [];
+            Cache::add($key, json_encode($res), 600);
+            return $res;
         } catch (\Exception $ex) {
 
         }
@@ -5486,7 +5714,12 @@ SQL;
     /**
      * @return array
      */
-    public function getActiveBadgesCountPerBadgeType():array{
+    public function getActiveBadgesCountPerBadgeType(): array
+    {
+        $key = sprintf("%s_getActiveBadgesCountPerBadgeType", $this->id);
+        $res = Cache::get($key);
+        if(empty($res)) return json_decode($res, true);
+
         try {
             $sql = <<<SQL
 select SummitBadgeType.Name as type, COUNT(SummitAttendeeBadge.ID) as qty FROM SummitAttendeeBadge
@@ -5499,7 +5732,9 @@ SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll();
-            return count($res) > 0 ? $res: [];
+            $res = count($res) > 0 ? $res : [];
+            Cache::add($key, json_encode($res), 600);
+            return $res;
         } catch (\Exception $ex) {
 
         }
@@ -5509,7 +5744,12 @@ SQL;
     /**
      * @return int
      */
-    public function getCheckedInAttendeesCount():int{
+    public function getCheckedInAttendeesCount(): int
+    {
+        $key = sprintf("%s_getCheckedInAttendeesCount", $this->id);
+        $res = intval(Cache::get($key, 0));
+        if ($res > 0) return $res;
+
         try {
             $sql = <<<SQL
  SELECT COUNT(SummitAttendee.ID) FROM SummitAttendee
@@ -5524,7 +5764,9 @@ SQL;
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
             $res = count($res) > 0 ? $res[0] : 0;
-            return !is_null($res) ? $res:0;
+            $res = !is_null($res) ? $res : 0;
+            Cache::add($key, $res, 600);
+            return $res;
         } catch (\Exception $ex) {
 
         }
@@ -5534,7 +5776,12 @@ SQL;
     /**
      * @return int
      */
-    public function getNonCheckedInAttendeesCount():int{
+    public function getNonCheckedInAttendeesCount(): int
+    {
+        $key = sprintf("%s_getNonCheckedInAttendeesCount", $this->id);
+        $res = intval(Cache::get($key, 0));
+        if ($res > 0) return $res;
+
         try {
             $sql = <<<SQL
  SELECT COUNT(SummitAttendee.ID) FROM SummitAttendee
@@ -5549,14 +5796,22 @@ SQL;
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
             $res = count($res) > 0 ? $res[0] : 0;
-            return !is_null($res) ? $res:0;
+            $res = !is_null($res) ? $res : 0;
+            Cache::add($key, $res, 600);
+            return $res;
+
         } catch (\Exception $ex) {
 
         }
         return 0;
     }
 
-    public function getVirtualAttendeesCount():int{
+    public function getVirtualAttendeesCount(): int
+    {
+        $key = sprintf("%s_getVirtualAttendeesCount", $this->id);
+        $res = intval(Cache::get($key, 0));
+        if ($res > 0) return $res;
+
         try {
             $sql = <<<SQL
          SELECT COUNT(ID) FROM `SummitAttendee` where SummitVirtualCheckedInDate is not null and SummitID = :summit_id;
@@ -5565,14 +5820,25 @@ SQL;
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
             $res = count($res) > 0 ? $res[0] : 0;
-            return !is_null($res) ? $res:0;
+            $res = !is_null($res) ? $res : 0;
+            Cache::add($key, $res, 600);
+            return $res;
+
         } catch (\Exception $ex) {
 
         }
         return 0;
     }
 
-    public function getActiveTicketsPerBadgeFeatureType():array{
+    /**
+     * @return array
+     */
+    public function getActiveTicketsPerBadgeFeatureType(): array
+    {
+        $key = sprintf("%s_getActiveTicketsPerBadgeFeatureType", $this->id);
+        $res = Cache::get($key);
+        if(empty($res)) return json_decode($res, true);
+
         try {
             $sql = <<<SQL
 SELECT SummitBadgeFeatureType.Name as type, 
@@ -5590,14 +5856,21 @@ SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll();
-            return count($res) > 0 ? $res: [];
+            $res = count($res) > 0 ? $res : [];
+            Cache::add($key, json_encode($res), 600);
+            return $res;
         } catch (\Exception $ex) {
 
         }
         return [];
     }
 
-    public function getAttendeesCheckinPerBadgeFeatureType():array{
+    public function getAttendeesCheckinPerBadgeFeatureType(): array
+    {
+        $key = sprintf("%s_getAttendeesCheckinPerBadgeFeatureType", $this->id);
+        $res = Cache::get($key);
+        if(empty($res)) return json_decode($res, true);
+
         try {
             $sql = <<<SQL
 SELECT SummitBadgeFeatureType.Name as type, 
@@ -5617,7 +5890,9 @@ SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll();
-            return count($res) > 0 ? $res: [];
+            $res = count($res) > 0 ? $res : [];
+            Cache::add($key, json_encode($res), 600);
+            return $res;
         } catch (\Exception $ex) {
 
         }

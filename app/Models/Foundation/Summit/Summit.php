@@ -5707,7 +5707,7 @@ INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 INNER JOIN SummitTicketType ON SummitAttendeeTicket.TicketTypeID = SummitTicketType.ID
 WHERE SummitOrder.SummitID = :summit_id AND 
       SummitAttendeeTicket.IsActive = 1 AND 
-      SummitAttendeeTicket.Status = 'Paid';
+      SummitAttendeeTicket.Status = 'Paid'
 GROUP BY SummitTicketType.Name;
 SQL;
             $stmt = $this->prepareRawSQL($sql);
@@ -5740,7 +5740,7 @@ INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 INNER JOIN SummitTicketType ON SummitAttendeeTicket.TicketTypeID = SummitTicketType.ID
 WHERE SummitOrder.SummitID = :summit_id AND 
       SummitAttendeeTicket.IsActive = 1 AND 
-      SummitAttendeeTicket.Status = 'Paid';
+      SummitAttendeeTicket.Status = 'Paid'
 GROUP BY SummitBadgeType.ID;
 SQL;
             $stmt = $this->prepareRawSQL($sql);

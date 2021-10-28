@@ -5877,7 +5877,7 @@ OR SummitBadgeFeatureType.ID = SummitAttendeeBadge_Features.SummitBadgeFeatureTy
 WHERE
 SummitAttendeeTicket.IsActive = 1 AND
 SummitAttendeeTicket.Status = 'Paid' AND
-SummitOrder.SummitID = :sumit_id
+SummitOrder.SummitID = :summit_id
 GROUP BY SummitBadgeFeatureType.Name;
 SQL;
             $stmt = $this->prepareRawSQL($sql);

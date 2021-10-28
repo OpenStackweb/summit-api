@@ -5866,18 +5866,19 @@ SQL;
 
         try {
             $sql = <<<SQL
-SELECT SummitBadgeFeatureType.Name as type, 
-       COUNT(DISTINCT(SummitAttendeeTicket.ID)) as qty
-FROM SummitBadgeFeatureType
-INNER JOIN SummitBadgeType_BadgeFeatures ON SummitBadgeType_BadgeFeatures.SummitBadgeFeatureTypeID = SummitBadgeFeatureType.ID
-INNER JOIN SummitBadgeType ON SummitBadgeType.ID = SummitBadgeType_BadgeFeatures.SummitBadgeTypeID
-INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType.ID
-INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
+SELECT  SummitBadgeFeatureType.Name as type, COUNT(DISTINCT(SummitAttendeeTicket.ID)) as qty FROM SummitAttendeeTicket
+INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
+INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.TicketID = SummitAttendeeTicket.ID
+INNER JOIN SummitBadgeType ON SummitBadgeType.ID = SummitAttendeeBadge.BadgeTypeID
+LEFT JOIN SummitBadgeType_BadgeFeatures ON SummitBadgeType_BadgeFeatures.SummitBadgeTypeID = SummitBadgeType.ID
+LEFT JOIN SummitAttendeeBadge_Features ON SummitAttendeeBadge_Features.SummitAttendeeBadgeID = SummitAttendeeBadge.ID
+INNER JOIN SummitBadgeFeatureType ON SummitBadgeFeatureType.ID = SummitAttendeeBadge_Features.SummitBadgeFeatureTypeID
+OR SummitBadgeFeatureType.ID = SummitAttendeeBadge_Features.SummitBadgeFeatureTypeID
 WHERE
-SummitBadgeFeatureType.SummitID = :summit_id AND
-SummitAttendeeTicket.IsActive = 1 AND 
-SummitAttendeeTicket.Status = 'Paid'
-GROUP BY SummitBadgeFeatureType.Name
+SummitAttendeeTicket.IsActive = 1 AND
+SummitAttendeeTicket.Status = 'Paid' AND
+SummitOrder.SummitID = :sumit_id
+GROUP BY SummitBadgeFeatureType.Name;
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -5902,20 +5903,21 @@ SQL;
 
         try {
             $sql = <<<SQL
-SELECT SummitBadgeFeatureType.Name as type, 
-       COUNT(DISTINCT(SummitAttendeeTicket.ID)) as qty  
-FROM SummitBadgeFeatureType
-INNER JOIN SummitBadgeType_BadgeFeatures ON SummitBadgeType_BadgeFeatures.SummitBadgeFeatureTypeID = SummitBadgeFeatureType.ID
-INNER JOIN SummitBadgeType ON SummitBadgeType.ID = SummitBadgeType_BadgeFeatures.SummitBadgeTypeID
-INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType.ID
-INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
+SELECT  SummitBadgeFeatureType.Name as type, COUNT(DISTINCT(SummitAttendeeTicket.ID)) as qty FROM SummitAttendeeTicket
+INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
+INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.TicketID = SummitAttendeeTicket.ID
+INNER JOIN SummitBadgeType ON SummitBadgeType.ID = SummitAttendeeBadge.BadgeTypeID
+LEFT JOIN SummitBadgeType_BadgeFeatures ON SummitBadgeType_BadgeFeatures.SummitBadgeTypeID = SummitBadgeType.ID
+LEFT JOIN SummitAttendeeBadge_Features ON SummitAttendeeBadge_Features.SummitAttendeeBadgeID = SummitAttendeeBadge.ID
+INNER JOIN SummitBadgeFeatureType ON SummitBadgeFeatureType.ID = SummitAttendeeBadge_Features.SummitBadgeFeatureTypeID
+OR SummitBadgeFeatureType.ID = SummitAttendeeBadge_Features.SummitBadgeFeatureTypeID
 INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
 WHERE
-SummitBadgeFeatureType.SummitID = :summit_id AND
 SummitAttendeeTicket.IsActive = 1 AND
-SummitAttendee.SummitHallCheckedInDate IS NOT NULL AND 
-SummitAttendeeTicket.Status = 'Paid'
-GROUP BY SummitBadgeFeatureType.Name
+SummitAttendeeTicket.Status = 'Paid' AND
+SummitOrder.SummitID = :summit_id AND
+SummitAttendee.SummitHallCheckedInDate IS NOT NULL
+GROUP BY SummitBadgeFeatureType.Name;
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);

@@ -5545,7 +5545,9 @@ SQL;
             $sql = <<<SQL
           select COUNT(SummitAttendeeTicket.ID) FROM SummitAttendeeTicket
 INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
-WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 1;
+WHERE SummitOrder.SummitID = :summit_id AND 
+      SummitAttendeeTicket.IsActive = 1 AND 
+      SummitAttendeeTicket.Status = 'Paid';
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -5567,7 +5569,9 @@ SQL;
             $sql = <<<SQL
           select COUNT(SummitAttendeeTicket.ID) FROM SummitAttendeeTicket
 INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
-WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 0;
+WHERE SummitOrder.SummitID = :summit_id AND 
+      SummitAttendeeTicket.IsActive = 0 AND 
+      SummitAttendeeTicket.Status = 'Paid';
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -5590,7 +5594,9 @@ SQL;
 SELECT COUNT(SummitAttendeeTicket.ID) FROM SummitAttendeeTicket
 INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
-WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 1
+WHERE SummitOrder.SummitID = :summit_id AND 
+      SummitAttendeeTicket.IsActive = 1 AND 
+      SummitAttendeeTicket.Status = 'Paid';
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -5611,7 +5617,8 @@ SQL;
         try {
             $sql = <<<SQL
     select COUNT(SummitOrder.ID) FROM SummitOrder
-WHERE SummitOrder.SummitID = :summit_id;
+WHERE SummitOrder.SummitID = :summit_id AND 
+      SummitOrder.Status = 'Paid';
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -5637,7 +5644,8 @@ SQL;
             $sql = <<<SQL
      SELECT SUM(SummitAttendeeTicket.RawCost - SummitAttendeeTicket.Discount)  FROM SummitAttendeeTicket
 INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
-WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.Status = 'Paid'
+WHERE SummitOrder.SummitID = :summit_id AND 
+      SummitAttendeeTicket.Status = 'Paid';
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -5668,7 +5676,8 @@ SQL;
 inner join SummitAttendeeTicketRefundRequest on SummitAttendeeTicketRefundRequest.ID = SummitRefundRequest.ID
 inner join SummitAttendeeTicket on SummitAttendeeTicket.ID = SummitAttendeeTicketRefundRequest.TicketID
 inner join SummitOrder on SummitOrder.ID = SummitAttendeeTicket.OrderID
-where SummitRefundRequest.Status='Approved' and SummitOrder.SummitID = :summit_id;
+where SummitRefundRequest.Status='Approved' AND 
+      SummitOrder.SummitID = :summit_id;
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -5696,7 +5705,9 @@ SQL;
 select SummitTicketType.Name AS type, COUNT(SummitAttendeeTicket.ID) as qty FROM SummitAttendeeTicket
 INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 INNER JOIN SummitTicketType ON SummitAttendeeTicket.TicketTypeID = SummitTicketType.ID
-WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 1
+WHERE SummitOrder.SummitID = :summit_id AND 
+      SummitAttendeeTicket.IsActive = 1 AND 
+      SummitAttendeeTicket.Status = 'Paid';
 GROUP BY SummitTicketType.Name;
 SQL;
             $stmt = $this->prepareRawSQL($sql);
@@ -5727,7 +5738,10 @@ INNER JOIN SummitBadgeType ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType.
 INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
 INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 INNER JOIN SummitTicketType ON SummitAttendeeTicket.TicketTypeID = SummitTicketType.ID
-WHERE SummitOrder.SummitID = :summit_id AND SummitAttendeeTicket.IsActive = 1 GROUP BY SummitBadgeType.ID;
+WHERE SummitOrder.SummitID = :summit_id AND 
+      SummitAttendeeTicket.IsActive = 1 AND 
+      SummitAttendeeTicket.Status = 'Paid';
+GROUP BY SummitBadgeType.ID;
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -5752,13 +5766,18 @@ SQL;
 
         try {
             $sql = <<<SQL
- SELECT COUNT(SummitAttendee.ID) FROM SummitAttendee
+SELECT COUNT(SummitAttendee.ID) FROM SummitAttendee
 WHERE SummitAttendee.SummitID = :summit_id AND
-EXISTS (SELECT SummitAttendeeTicket.ID FROM SummitAttendeeTicket WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID) AND
-EXISTS (SELECT SummitAttendeeBadgePrint.ID FROM SummitAttendeeBadgePrint 
+EXISTS ( SELECT SummitAttendeeTicket.ID FROM SummitAttendeeTicket 
+        WHERE 
+              SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND 
+              SummitAttendeeTicket.Status = 'Paid') AND
+EXISTS ( SELECT SummitAttendeeBadgePrint.ID FROM SummitAttendeeBadgePrint 
         INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.ID = SummitAttendeeBadgePrint.BadgeID 
         INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID 
-        WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID);
+        WHERE 
+              SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND 
+              SummitAttendeeTicket.Status = 'Paid');
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -5786,11 +5805,14 @@ SQL;
             $sql = <<<SQL
  SELECT COUNT(SummitAttendee.ID) FROM SummitAttendee
 WHERE SummitAttendee.SummitID = :summit_id AND
-EXISTS (SELECT SummitAttendeeTicket.ID FROM SummitAttendeeTicket WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID) AND
+EXISTS ( SELECT SummitAttendeeTicket.ID FROM SummitAttendeeTicket 
+         WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND 
+         SummitAttendeeTicket.Status = 'Paid') AND
 NOT EXISTS (SELECT SummitAttendeeBadgePrint.ID FROM SummitAttendeeBadgePrint 
         INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.ID = SummitAttendeeBadgePrint.BadgeID 
         INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID 
-        WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID);
+        WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND 
+      SummitAttendeeTicket.Status = 'Paid');
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -5853,7 +5875,8 @@ INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeT
 INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
 WHERE
 SummitBadgeFeatureType.SummitID = :summit_id AND
-SummitAttendeeTicket.IsActive = 1
+SummitAttendeeTicket.IsActive = 1 AND 
+SummitAttendeeTicket.Status = 'Paid'
 GROUP BY SummitBadgeFeatureType.Name
 SQL;
             $stmt = $this->prepareRawSQL($sql);
@@ -5890,7 +5913,8 @@ INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
 WHERE
 SummitBadgeFeatureType.SummitID = :summit_id AND
 SummitAttendeeTicket.IsActive = 1 AND
-SummitAttendee.SummitHallCheckedInDate IS NOT NULL
+SummitAttendee.SummitHallCheckedInDate IS NOT NULL AND 
+SummitAttendeeTicket.Status = 'Paid'
 GROUP BY SummitBadgeFeatureType.Name
 SQL;
             $stmt = $this->prepareRawSQL($sql);

@@ -3253,7 +3253,7 @@ final class SummitService extends AbstractService implements ISummitService
 
             $processed = 0;
 
-            foreach ($media_upload_type->getMediaUploadsToDisplayOnSite() as $media_upload) {
+            foreach ($media_upload_type->getMediaUploads() as $media_upload) {
                 if (!$media_upload instanceof PresentationMediaUpload) continue;
                 try {
                     Log::debug(sprintf("SummitService::migratePrivateStorage2PublicStorage processing media upload %s file %s", $media_upload->getId(), $media_upload->getFilename()));

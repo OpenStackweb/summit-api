@@ -316,4 +316,11 @@ class SummitMediaUploadType extends SilverstripeBaseModel
         return $this->media_uploads->matching($criteria);
     }
 
+    /**
+     * @return mixed
+     */
+    public function getMediaUploads(){
+        return $this->media_uploads;
+    }
+
 }

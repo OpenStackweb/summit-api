@@ -131,8 +131,8 @@ final class SummitAttendeeFactory
 
                             $answer = new SummitOrderExtraQuestionAnswer();
                             $answer->setQuestion($question);
-                            $answer->setValue($value);
                             $attendee->addExtraQuestionAnswer($answer);
+                            $answer->setValue($value);
 
                             break;
                         }

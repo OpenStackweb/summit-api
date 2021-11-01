@@ -166,6 +166,9 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     {
         try
         {
+            $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
             $strategy = new RetrieveAllSummitEventsBySummitCSVStrategy
             (
                 $this->repository,
@@ -194,8 +197,8 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 [
                     'created'        => new EpochCellFormatter(),
                     'last_edited'    => new EpochCellFormatter(),
-                    'start_date'     => new EpochCellFormatter(),
-                    'end_date'       => new EpochCellFormatter(),
+                    'start_date'     => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
+                    'end_date'       => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
                     'allow_feedback' => new BooleanCellFormatter(),
                     'is_published'   => new BooleanCellFormatter(),
                     'rsvp_external'  => new BooleanCellFormatter(),

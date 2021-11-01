@@ -19,28 +19,37 @@ use DateTimeZone;
  */
 final class EpochCellFormatter implements ICellFormatter
 {
+    const DefaultFormat = 'Y-m-d H:i:s';
     /**
      * @var string
      */
     private $format;
 
     /**
-     * EpochCellFormatter constructor.
-     * @param string $format
+     * @var DateTimeZone
      */
-    public function __construct($format = 'Y-m-d H:i:s' )
+    private $dateTimeZone;
+
+    /**
+     * @param string $format
+     * @param DateTimeZone|null $dateTimeZone
+     */
+    public function __construct(string $format = EpochCellFormatter::DefaultFormat, DateTimeZone $dateTimeZone = null)
     {
         $this->format = $format;
+        $this->dateTimeZone = $dateTimeZone;
     }
 
     /**
      * @param string $val
      * @return string
      */
-    public function format($val)
+    public function format($val): string
     {
         if(empty($val)) return '';
         $date = new DateTime("@$val");
+        if(!is_null($this->dateTimeZone))
+            $date->setTimezone($this->dateTimeZone);
         return $date->format($this->format);
     }
 }

@@ -90,4 +90,14 @@ class SummitOrderExtraQuestionAnswer extends ExtraQuestionAnswer
         $this->attendee = null;
     }
 
+    /**
+     * @param string $value
+     */
+    public function setValue(string $value): void
+    {
+        parent::setValue($value);
+        if(!is_null($this->attendee))
+            $this->attendee->updateLastEdited();
+    }
+
 }

@@ -2765,6 +2765,7 @@ final class SummitOrderService
                 throw new ValidationException("order hash is not valid");
             }
 
+            $attendees_cache = [];
             foreach ($tickets as $ticket_payload) {
 
                 Log::debug
@@ -2817,6 +2818,11 @@ final class SummitOrderService
                     // try to create it
                     $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $email);
                     if (is_null($attendee)) {
+                        // check if we have in memory already
+                        $attendee = $attendees_cache[$email] ?? null;
+                    }
+
+                    if (is_null($attendee)) {
                         Log::debug(sprintf("SummitOrderService::updateTicketsByOrderHash creating new attendee for email %s", $email));
                         $attendee = new SummitAttendee();
                     }
@@ -2825,6 +2831,8 @@ final class SummitOrderService
                 if (!is_null($attendee)) {
                     // update it
                     SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
+                    // we store it on memory just in case that we have the case of multiple tickets for the same attendee
+                    $attendees_cache[$attendee->getEmail()] = $attendee;
                     $attendee->updateStatus();
                     $attendee->sendInvitationEmail($ticket);
                     $attendee->addTicket($ticket);

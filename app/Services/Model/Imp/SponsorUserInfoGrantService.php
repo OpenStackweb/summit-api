@@ -112,8 +112,10 @@ final class SponsorUserInfoGrantService
             $begin_date      = $summit->getBeginDate();
             $end_date        = $summit->getEndDate();
 
+            /*
             if(!($scan_date >= $begin_date && $scan_date <= $end_date))
                 throw new ValidationException("scan_date is does not belong to summit period.");
+            */
 
             if($summit->getBadgeQRPrefix() != $prefix)
                 throw new ValidationException

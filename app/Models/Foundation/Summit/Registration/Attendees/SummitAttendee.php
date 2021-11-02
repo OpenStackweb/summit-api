@@ -385,10 +385,10 @@ class SummitAttendee extends SilverstripeBaseModel
         $ticket->generateHash();
         if($this->isComplete()) {
             Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s is complete", $email));
-            // adds a threshold of 10 minutes to avoid duplicates emails
-            if(Cache::add(sprintf("%s_emit_ticket", $key),true, 600 ))
+            // adds a threshold of 1 minutes to avoid duplicates emails
+            if(Cache::add(sprintf("%s_emit_ticket", $key),true, 60 ))
             {
-                SummitAttendeeTicketEmail::dispatch($ticket)->delay(now()->addMinutes(5));
+                SummitAttendeeTicketEmail::dispatch($ticket);
             }
             return;
         }
@@ -400,8 +400,8 @@ class SummitAttendee extends SilverstripeBaseModel
         // they bought a ticket for themselves.
         if($order->getOwnerEmail() !== $ticket->getOwnerEmail() || $overrideTicketOwnerIsSameAsOrderOwnerRule) {
             // no delay
-            // adds a threshold of 10 minutes to avoid duplicates emails
-            if(Cache::add(sprintf("%s_edit_ticket", $key),true, 600 )) {
+            // adds a threshold of 1 minutes to avoid duplicates emails
+            if(Cache::add(sprintf("%s_edit_ticket", $key),true, 60 )) {
                 InviteAttendeeTicketEditionMail::dispatch($ticket);
             }
         }

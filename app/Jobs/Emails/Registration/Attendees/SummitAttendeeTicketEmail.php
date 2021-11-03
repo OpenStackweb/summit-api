@@ -39,6 +39,8 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
      */
     public function __construct(SummitAttendeeTicket $ticket)
     {
+        Log::debug("SummitAttendeeTicketEmail::__construct");
+
         $payload = [];
         $attendee = $ticket->getOwner();
         $summit = $attendee->getSummit();
@@ -142,6 +144,7 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         //}
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+        Log::debug(sprintf("SummitAttendeeTicketEmail::__construct payload %s template %s", json_encode($payload), $template_identifier));
         parent::__construct($payload, $template_identifier, $owner_email);
     }
 }

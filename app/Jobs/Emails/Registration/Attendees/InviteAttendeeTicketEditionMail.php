@@ -28,6 +28,9 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
      */
     public function __construct(SummitAttendeeTicket $ticket)
     {
+
+        Log::debug("InviteAttendeeTicketEditionMail::__construct");
+
         $owner = $ticket->getOwner();
         $order = $ticket->getOrder();
         $summit = $order->getSummit();
@@ -114,6 +117,8 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
             throw new \InvalidArgumentException("missing support_email value");
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+
+        Log::debug(sprintf("InviteAttendeeTicketEditionMail::__construct payload %s template %s", json_encode($payload), $template_identifier));
 
         parent::__construct($payload, $template_identifier,  $payload['owner_email'] );
     }

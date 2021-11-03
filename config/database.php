@@ -98,15 +98,43 @@ return [
     */
 
     'redis' => [
-        'client' => env('REDIS_CLIENT', 'predis'),
 
+        'client' => env('REDIS_CLIENT', 'predis'),
+        /*
+         * @see https://github.com/predis/predis/wiki/Connection-Parameters
+         */
         'cluster' => false,
 
         'default' => [
-            'host'     => env('REDIS_HOST'),
-            'port'     => env('REDIS_PORT'),
-            'database' => env('REDIS_DB'),
-            'password' => env('REDIS_PASSWORD','1qaz2wsx'),
+            'host'       => env('REDIS_HOST'),
+            'port'       => env('REDIS_PORT'),
+            'database'   => 0,
+            'password'   => env('REDIS_PASSWORD'),
+            'timeout'    => env('REDIS_TIMEOUT', 30.0)
+        ],
+
+        'cache' => [
+            'host'       => env('REDIS_HOST'),
+            'port'       => env('REDIS_PORT'),
+            'database'   => 0,
+            'password'   => env('REDIS_PASSWORD'),
+            'timeout'    => env('REDIS_TIMEOUT', 30.0)
+        ],
+
+        'session' => [
+            'host'       => env('REDIS_HOST'),
+            'port'       => env('REDIS_PORT'),
+            'database'   => 1,
+            'password'   => env('REDIS_PASSWORD'),
+            'timeout'    => env('REDIS_TIMEOUT', 30.0)
+        ],
+
+        'worker' => [
+            'host'       => env('REDIS_HOST'),
+            'port'       => env('REDIS_PORT'),
+            'database'   => 2,
+            'password'   => env('REDIS_PASSWORD'),
+            'timeout'    => env('REDIS_TIMEOUT', 30.0)
         ],
 
     ],

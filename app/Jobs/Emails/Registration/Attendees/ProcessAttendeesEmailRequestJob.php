@@ -50,7 +50,15 @@ final class ProcessAttendeesEmailRequestJob implements ShouldQueue
     }
 
     public function handle(IAttendeeService $service){
-        Log::debug(sprintf("ProcessAttendeesEmailRequestJob::handle summit id %s", $this->summit_id));
+        Log::debug
+        (
+            sprintf
+            (
+                "ProcessAttendeesEmailRequestJob::handle summit id %s payload %s",
+                $this->summit_id,
+                json_encode($this->payload)
+            )
+        );
 
         $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, [
             'first_name'           => ['=@', '=='],

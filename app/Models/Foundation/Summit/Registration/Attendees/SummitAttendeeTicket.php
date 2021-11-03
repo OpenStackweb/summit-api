@@ -309,6 +309,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         $this->generateHash();
 
         SummitAttendeeTicketRegenerateHashEmail::dispatch($this);
+        $this->getOwner()->markPublicEditionEmailSentDate();
     }
 
     /**

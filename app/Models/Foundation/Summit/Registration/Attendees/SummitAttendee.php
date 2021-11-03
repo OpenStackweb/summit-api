@@ -85,6 +85,18 @@ class SummitAttendee extends SilverstripeBaseModel
     private $summit_virtual_checked_in_date;
 
     /**
+     * @ORM\Column(name="InvitationEmailSentDate", type="datetime")
+     * @var \DateTime
+     */
+    private $invitation_email_sent_date;
+
+    /**
+     * @ORM\Column(name="PublicEditionEmailSentDate", type="datetime")
+     * @var \DateTime
+     */
+    private $public_edition_email_sent_date;
+
+    /**
      * @ORM\Column(name="LastReminderEmailSentDate", type="datetime")
      * @var \DateTime
      */
@@ -251,6 +263,8 @@ class SummitAttendee extends SilverstripeBaseModel
         $this->extra_question_answers   = new ArrayCollection();
         $this->disclaimer_accepted_date = null;
         $this->summit_virtual_checked_in_date = null;
+        $this->invitation_email_sent_date = null;
+        $this->public_edition_email_sent_date = null;
         $this->status                   = self::StatusIncomplete;
     }
 
@@ -383,6 +397,7 @@ class SummitAttendee extends SilverstripeBaseModel
         }
         $this->updateStatus();
         $ticket->generateHash();
+
         if($this->isComplete()) {
             Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s is complete", $email));
             // adds a threshold of 10 minutes to avoid duplicates emails
@@ -390,6 +405,7 @@ class SummitAttendee extends SilverstripeBaseModel
             {
                 Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s sending SummitAttendeeTicketEmail", $email));
                 SummitAttendeeTicketEmail::dispatch($ticket);
+                $ticket->getOwner()->markInvitationEmailSentDate();
             }
             return;
         }
@@ -405,6 +421,7 @@ class SummitAttendee extends SilverstripeBaseModel
             if(Cache::add(sprintf("%s_edit_ticket", $key),true, 10 )) {
                 Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s sending InviteAttendeeTicketEditionMail", $email));
                 InviteAttendeeTicketEditionMail::dispatch($ticket);
+                $ticket->getOwner()->markInvitationEmailSentDate();
             }
         }
     }
@@ -806,6 +823,26 @@ SQL;
             }
             $this->summit_virtual_checked_in_date = $now;
         }
+    }
+
+    /**
+     * @return \DateTime
+     * @throws \Exception
+     */
+    public function markInvitationEmailSentDate():\DateTime{
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        $this->invitation_email_sent_date = $now;
+        return $now;
+    }
+
+    /**
+     * @return \DateTime
+     * @throws \Exception
+     */
+    public function markPublicEditionEmailSentDate():\DateTime{
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        $this->public_edition_email_sent_date = $now;
+        return $now;
     }
 
 }

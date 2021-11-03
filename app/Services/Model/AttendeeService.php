@@ -413,7 +413,33 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
                     foreach ($attendee->getTickets() as $ticket) {
                         try {
-                            Log::debug(sprintf("AttendeeService::send processing attendee %s - ticket %s", $attendee->getEmail(), $ticket->getId()));
+                            $is_complete = $attendee->isComplete();
+                            $original_flow_event = $flow_event;
+                            Log::debug
+                            (
+                                sprintf
+                                (
+                                    "AttendeeService::send processing attendee %s - ticket %s - isComplete %b - original flow event %s",
+                                    $attendee->getEmail(),
+                                    $ticket->getId(),
+                                    $attendee->isComplete(),
+                                    $original_flow_event
+                                )
+                            );
+
+                            if($original_flow_event == SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG && $is_complete) {
+                                $flow_event = InviteAttendeeTicketEditionMail::EVENT_SLUG;
+                                Log::debug
+                                (
+                                    sprintf
+                                    (
+                                        "AttendeeService::send changing from %s to %s bc attendee is complete",
+                                        $original_flow_event,
+                                        $flow_event
+                                    )
+                                );
+                            }
+
                             // send email
                             if ($flow_event == SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG) {
                                 $ticket->sendPublicEditEmail();
@@ -422,6 +448,9 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                             if ($flow_event == InviteAttendeeTicketEditionMail::EVENT_SLUG) {
                                 $attendee->sendInvitationEmail($ticket, true);
                             }
+
+                            $flow_event = $original_flow_event;
+
                         } catch (\Exception $ex) {
                             Log::warning($ex);
                         }

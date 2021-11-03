@@ -64,6 +64,9 @@ final class ProcessAttendeesEmailRequestJob implements ShouldQueue
             'ticket_type'          => ['=@', '=='],
             'badge_type'           => ['=@', '=='],
             'status'               => ['=@', '=='],
+            'has_tickets'          => ['=='],
+            'has_member'           => ['=='],
+            'tickets_count'        => ['==','>','<','>='.'<=']
         ]) : null;
 
         $service->send($this->summit_id, $this->payload, $filter);

@@ -413,6 +413,8 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
                     foreach ($attendee->getTickets() as $ticket) {
                         try {
+                            if(!$ticket->isActive()) continue;
+                            if(!$ticket->isPaid()) continue;
                             $is_complete = $attendee->isComplete();
                             $original_flow_event = $flow_event;
                             Log::debug

@@ -18,6 +18,7 @@ use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestAdmin;
 use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestOwner;
 use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
 use App\Jobs\ProcessTicketRefundRequest;
+use App\Models\Foundation\Main\IGroup;
 use Doctrine\Common\Collections\Criteria;
 use App\Models\Foundation\Summit\AllowedCurrencies;
 use Illuminate\Support\Facades\Config;
@@ -1030,10 +1031,12 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      */
     public function canEditTicket(Member $member):bool{
         if($member->isAdmin()) return true;
+        if($member->isOnGroup(IGroup::BadgePrinters)) return true;
         // i am ticket owner
         if($this->hasOwner() && $this->owner->getEmail() == $member->getEmail()) return true;
         // i am order owner
         if($this->order->getOwnerEmail() == $member->getEmail()) return true;
+        return false;
     }
 
     /**

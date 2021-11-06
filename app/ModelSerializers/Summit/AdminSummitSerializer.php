@@ -49,6 +49,23 @@ final class AdminSummitSerializer extends SummitSerializer
         'MarketingSiteOAuth2ClientId' => 'marketing_site_oauth2_client_id:json_string',
     ];
 
+    protected static $allowed_relations = [
+        'ticket_types',
+        'locations',
+        'wifi_connections',
+        'selection_plans',
+        'meeting_booking_room_allowed_attributes',
+        'summit_sponsors',
+        'order_extra_questions',
+        'tax_types',
+        'payment_profiles',
+        'email_flows_events',
+        'summit_documents',
+        'featured_speakers',
+        'dates_with_events',
+        'presentation_action_types',
+    ];
+
     /**
      * @return string
      */

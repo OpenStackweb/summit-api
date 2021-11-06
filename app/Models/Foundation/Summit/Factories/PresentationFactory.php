@@ -63,8 +63,8 @@ final class PresentationFactory
         $presentation->setAttendingMedia(isset($payload['attending_media']) ?
             filter_var($payload['attending_media'], FILTER_VALIDATE_BOOLEAN) : 0);
 
-        $presentation->setToRecord(isset($data['to_record']) ?
-            filter_var($data['to_record'], FILTER_VALIDATE_BOOLEAN) : 0);
+        if (isset($payload['to_record']))
+            $presentation->setToRecord(boolval($payload['to_record']));
 
         if (isset($payload['disclaimer_accepted']) && !empty($payload['disclaimer_accepted'])) {
             $disclaimer_accepted = boolval($payload['disclaimer_accepted']);

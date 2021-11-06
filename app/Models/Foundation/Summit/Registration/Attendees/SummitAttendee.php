@@ -391,6 +391,10 @@ class SummitAttendee extends SilverstripeBaseModel
         Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s", $email));
 
         if($ticket->getOwnerEmail() != $this->getEmail()) return;
+        if(!$ticket->isPaid()){
+            Log::warning(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket is not paid", $email));
+            return;
+        }
         if(!$ticket->isActive()){
             Log::warning(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket is not active", $email));
             return;

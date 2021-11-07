@@ -2264,18 +2264,15 @@ final class SummitOrderService
         // check rules
 
         $al = $badge->getType()->getAccessLevelByName(SummitAccessLevelType::IN_PERSON);
-        if(is_null($al))
-            throw new ValidationException(sprintf("access level %s not present.", SummitAccessLevelType::IN_PERSON));
+        if(is_null($al)) {
+            throw new ValidationException("You have a Virtual only ticket.");
+        }
 
         if (!$requestor->isAdmin()) {
 
-            $rules = $this->print_rules_repository->getByGroupsSlugs($requestor->getGroupsCodes());
-            if (count($rules) == 0)
-                throw new ValidationException("Your user has no rights to print badges.");
-
             $inPersonCheckedIn = $badge->getTicket()->getOwner()->hasCheckedIn();
             if($inPersonCheckedIn){
-                throw new ValidationException("This badge has already been printed.");
+                throw new ValidationException("You are already checked in.");
             }
         }
         return true;

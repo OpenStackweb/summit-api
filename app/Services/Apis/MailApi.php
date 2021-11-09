@@ -55,11 +55,11 @@ final class MailApi extends AbstractOAuth2Api implements IMailApi
     public function __construct(ICacheService $cacheService)
     {
         parent::__construct($cacheService);
-        $stack = HandlerStack::create();
-        $stack->push(GuzzleRetryMiddleware::factory());
+       // $stack = HandlerStack::create();
+       // $stack->push(GuzzleRetryMiddleware::factory());
 
         $this->client = new Client([
-            'handler'         => $stack,
+         //   'handler'         => $stack,
             'base_uri'        => Config::get('mail.service_base_url') ?? '',
             'timeout'         => Config::get('curl.timeout', 60),
             'allow_redirects' => Config::get('curl.allow_redirects', false),

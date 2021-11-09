@@ -49,12 +49,12 @@ final class OAuth2ClientFactory
             'scopes'                  => $scopes,
         ]);
 
-        $stack = HandlerStack::create();
-        $stack->push(GuzzleRetryMiddleware::factory());
+        //$stack = HandlerStack::create();
+        //$stack->push(GuzzleRetryMiddleware::factory());
 
         $provider->setHttpClient(
             new Client([
-                'handler'         => $stack,
+          //      'handler'         => $stack,
                 'timeout'         => Config::get('curl.timeout', 60),
                 'allow_redirects' => Config::get('curl.allow_redirects', false),
                 'verify'          => Config::get('curl.verify_ssl_cert', true),

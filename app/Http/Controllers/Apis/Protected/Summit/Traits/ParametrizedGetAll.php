@@ -223,7 +223,7 @@ trait ParametrizedGetAll
         $values = Request::all();
         $rules = [
             'page' => 'integer|min:1',
-            'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::MinPageSize, PagingConstants::MaxPageSize),
+            'per_page' => sprintf('required_with:page|integer|min:%s', PagingConstants::MinPageSize),
         ];
 
         try {

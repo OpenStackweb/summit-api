@@ -140,7 +140,7 @@ final class SponsorUserInfoGrantService
             if(is_null($sponsor))
                 throw new ValidationException("Current member does not belongs to any summit sponsor.");
 
-            $scan = SponsorUserInfoGrantFactory::build(['class_name' => SponsorBadgeScan::ClassName]);
+            $scan = new SponsorBadgeScan();
             $scan->setScanDate($scan_date);
             $scan->setQRCode($qr_code);
             $scan->setUser($current_member);

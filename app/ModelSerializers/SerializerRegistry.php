@@ -63,6 +63,7 @@ use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackMultiValueQuest
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackQuestionValueTemplateSerializer;
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackSingleValueTemplateQuestionSerializer;
 use App\ModelSerializers\Summit\Registration\Refunds\SummitAttendeeTicketRefundRequestSerializer;
+use App\ModelSerializers\Summit\Registration\SponsorUserInfoGrantCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitAttendeeCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitAttendeeTicketCSVSerializer;
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPDropDownQuestionTemplateSerializer;
@@ -349,7 +350,7 @@ final class SerializerRegistry
 
         $this->registry['SponsorUserInfoGrant'] = [
             self::SerializerType_Public => SponsorUserInfoGrantSerializer::class,
-            self::SerializerType_CSV => SponsorUserInfoGrantSerializer::class,
+            self::SerializerType_CSV => SponsorUserInfoGrantCSVSerializer::class,
         ];
 
         $this->registry['SummitAttendeeTicketTax'] = SummitAttendeeTicketTaxSerializer::class;

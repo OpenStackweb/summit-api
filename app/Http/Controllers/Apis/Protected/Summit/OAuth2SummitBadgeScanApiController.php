@@ -380,7 +380,8 @@ final class OAuth2SummitBadgeScanApiController
                     'attendee_first_name',
                     'attendee_last_name',
                     'attendee_email',
-                    'attendee_company'
+                    'attendee_company',
+                    'notes'
                 ];
 
                 $columns_param = Request::input("columns", "");

@@ -29,7 +29,7 @@ class SynchAllAttendeesStatus implements ShouldQueue
 {
     public $tries = 2;
 
-    public $timeout = PHP_INT_MAX;
+    public $timeout = 0;
 
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 

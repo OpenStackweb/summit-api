@@ -2049,7 +2049,9 @@ SQL;
         if(!$candidate->isFoundationMember())
             throw new ValidationException("Candidate is not valid.");
 
-        $criteria = Criteria::create()->where(Criteria::expr()->eq("candidate", $candidate));
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq("candidate", $candidate))
+            ->andWhere(Criteria::expr()->eq("election", $election));
 
         if($this->election_nominations->matching($criteria)->count() > 0){
             throw new ValidationException(sprintf("You have already nominated %s.", $candidate->getFullName()));
@@ -2104,11 +2106,22 @@ SQL;
      * @return int
      */
     public function getElectionApplicationsCountFor(Election $election):int{
-
-        $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq("election", $election));
-
-        return $this->election_applications->matching($criteria)->count();
+        try {
+            $sql = <<<SQL
+            SELECT COUNT(DISTINCT(C.ID)) AS qty
+            FROM CandidateNomination AS C
+            WHERE C.ElectionID = :election_id AND 
+                  C.CandidateID = :candidate_id
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['election_id' => $election->getId()]);
+            $stmt->execute(['candidate_id' => $this->id]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            return count($res) > 0 ? $res[0] : 0;
+        } catch (\Exception $ex) {
+            Log::warning($ex);
+        }
+        return 0;
     }
 
     /**

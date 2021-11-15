@@ -22,6 +22,7 @@ use models\oauth2\IResourceServerContext;
 use App\Services\Model\ISponsorUserInfoGrantService;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
+use models\summit\SummitOrderExtraQuestionTypeConstants;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
@@ -369,7 +370,7 @@ final class OAuth2SummitBadgeScanApiController
                     'scan_date' => new EpochCellFormatter(),
                 ];
             },
-            function(){
+            function() use($summit) {
 
                 $allowed_columns = [
                     'scan_date',
@@ -384,6 +385,10 @@ final class OAuth2SummitBadgeScanApiController
                     'notes'
                 ];
 
+                foreach ($summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage) as $question){
+                    $allowed_columns[] = $question->getLabel();
+                }
+
                 $columns_param = Request::input("columns", "");
                 $columns = [];
                 if(!empty($columns_param))
@@ -396,7 +401,11 @@ final class OAuth2SummitBadgeScanApiController
                     $columns = $allowed_columns;
                 return $columns;
             },
-            'attendees-badge-scans-'
+            'attendees-badge-scans-',
+            [
+                'features_types'   => $summit->getBadgeFeaturesTypes(),
+                'ticket_questions' => $summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage)
+            ]
         );
     }
 

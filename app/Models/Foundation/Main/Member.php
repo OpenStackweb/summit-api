@@ -2114,8 +2114,10 @@ SQL;
                   C.CandidateID = :candidate_id
 SQL;
             $stmt = $this->prepareRawSQL($sql);
-            $stmt->execute(['election_id' => $election->getId()]);
-            $stmt->execute(['candidate_id' => $this->id]);
+            $stmt->execute([
+                'election_id' => $election->getId(),
+                'candidate_id' => $this->id
+            ]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
             return count($res) > 0 ? $res[0] : 0;
         } catch (\Exception $ex) {

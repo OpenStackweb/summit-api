@@ -14,7 +14,7 @@
 use App\Jobs\Emails\AbstractEmailJob;
 use App\Models\Foundation\Elections\Election;
 use models\main\Member;
-
+use Illuminate\Support\Facades\Log;
 /**
  * Class NominationEmail
  * @package App\Jobs\Emails\Elections
@@ -38,6 +38,7 @@ class NominationEmail extends AbstractEmailJob
      */
     public function __construct(Election  $election, Member $candidate)
     {
+        Log::debug(sprintf("NominationEmail::__construct election %s candidate %s", $election->getId(), $candidate->getId()));
         $payload = [];
         $payload['election_title'] = $election->getName();
         $payload['election_app_deadline'] = '';

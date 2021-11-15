@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Security\ElectionScopes;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use models\oauth2\AccessToken;
@@ -115,6 +117,8 @@ class AccessTokenServiceStub implements IAccessTokenService
             sprintf(SponsoredProjectScope::Read, $url),
             sprintf(SummitScopes::WriteMetrics, $url),
             sprintf(SummitScopes::ReadMetrics, $url),
+            ElectionScopes::NominatesCandidates,
+            ElectionScopes::WriteMyCandidateProfile,
         );
 
         return AccessToken::createFromParams(
@@ -214,6 +218,8 @@ class AccessTokenServiceStub2 implements IAccessTokenService
             sprintf(CompanyScopes::Read, $url),
             sprintf(SponsoredProjectScope::Write, $url),
             sprintf(SponsoredProjectScope::Read, $url),
+            ElectionScopes::NominatesCandidates,
+            ElectionScopes::WriteMyCandidateProfile,
         );
 
         return AccessToken::createFromParams(

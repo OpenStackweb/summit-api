@@ -271,9 +271,12 @@ abstract class AbstractSerializer implements IModelSerializer
         $mappings = $this->getAttributeMappings();
         if (count($mappings)) {
             $new_values = [];
+            $first_level_fields = array_filter($fields, function($elem) {
+                return !str_contains(trim($elem), ".");
+            });
             foreach ($mappings as $attribute => $mapping) {
                 $mapping = preg_split('/:/', $mapping);
-                if (count($fields) > 0 && !in_array($mapping[0], $fields)) continue;
+                if (count($first_level_fields) > 0 && !in_array($mapping[0], $first_level_fields)) continue;
                 $value = null;
                 $method_found = false;
                 foreach ($method_prefix as $prefix) {
@@ -350,15 +353,18 @@ abstract class AbstractSerializer implements IModelSerializer
             $values = $new_values;
         }
 
-        return $this->_expand($values, $expand);
+        return $this->_expand($values, $expand, $fields, $relations, $params);
     }
 
     /**
      * @param array $values
      * @param string|null $expand
+     * @param array $fields
+     * @param array $relations
+     * @param array $params
      * @return array
      */
-    protected function _expand(array $values, ?string $expand): array
+    protected function _expand(array $values, ?string $expand, array $fields = [], array $relations = [], array  $params = []): array
     {
         $mappings = $this->getExpandsMappings();
 
@@ -376,7 +382,7 @@ abstract class AbstractSerializer implements IModelSerializer
                 if(empty($getter)) continue;
                 $has = $serializerSpec['has'] ?? null;
                 $serializer = new $serializerClass($original_attribute, $attribute, $getter, $has);
-                $values = $serializer->serialize($this->object, $values, $expand);
+                $values = $serializer->serialize($this->object, $values, $expand, $fields, $relations, $params);
             }
         }
 
@@ -399,6 +405,23 @@ abstract class AbstractSerializer implements IModelSerializer
         foreach ($filtered_expand as $filtered_expand_elem) {
             if (strlen($res) > 0) $res .= ',';
             $res .= str_replace_first($prefix . ".", "", strtolower(trim($filtered_expand_elem)));
+        }
+        return $res;
+    }
+
+    /**
+     * @param array $fields
+     * @param string $prefix
+     * @return array
+     */
+    public static function filterFieldsByPrefix(array $fields, string $prefix):array{
+        if(!count($fields)) return [];
+        $filtered_fields = array_filter($fields, function ($element) use ($prefix) {
+            return preg_match('/^' . preg_quote($prefix, '/') . '\./', strtolower(trim($element))) > 0;
+        });
+        $res = [];
+        foreach ($filtered_fields as $filtered_field_elem) {
+            $res[] = str_replace_first($prefix . ".", "", strtolower(trim($filtered_field_elem)));
         }
         return $res;
     }

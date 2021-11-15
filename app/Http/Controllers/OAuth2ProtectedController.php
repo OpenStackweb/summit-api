@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Request;
 use models\oauth2\IResourceServerContext;
 use models\utils\IBaseRepository;
 /**
@@ -53,6 +55,29 @@ abstract class OAuth2ProtectedController extends JsonController
     protected function getRepository(): IBaseRepository
     {
         return $this->repository;
+    }
+
+    /**
+     * @return array|false|string[]
+     */
+    protected static function getFields(){
+        $fields    = Request::input('fields', '');
+        return !empty($fields) ? explode(',', $fields) : [];
+    }
+
+    /**
+     * @return array|false|string[]
+     */
+    protected static function getRelations(){
+        $relations = Request::input('relations', '');
+        return !empty($relations) ? explode(',', $relations) : [];
+    }
+
+    /**
+     * @return array|string|null
+     */
+    protected static function getExpands(){
+        return Request::input('expand', '');
     }
 
 }

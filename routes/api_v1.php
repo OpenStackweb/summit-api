@@ -1563,4 +1563,20 @@ Route::group(['prefix' => 'summit-administrator-groups'], function () {
     });
 });
 
+// elections
+
+Route::group(['prefix' => 'elections'], function () {
+    Route::group(['prefix' => 'current'], function () {
+        Route::group(['prefix' => 'candidates'], function () {
+            Route::group(['prefix' => 'me'], function () {
+                Route::put('', [ 'uses' => 'OAuth2ElectionsApiController@updateMyCandidateProfile']);
+            });
+            Route::group(['prefix' => '{candidate_id}'], function () {
+                Route::post('', [ 'uses' => 'OAuth2ElectionsApiController@nominateCandidate']);
+            });
+        });
+    });
+});
+
+
 

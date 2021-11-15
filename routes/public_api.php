@@ -34,6 +34,19 @@ Route::group(['prefix' => 'sponsored-projects'], function(){
     });
 });
 
+// elections
+Route::group(['prefix' => 'elections'], function(){
+    Route::group(['prefix'=>'current'], function(){
+        Route::get('',  [ 'uses' => 'OAuth2ElectionsApiController@getCurrent']);
+        Route::group(['prefix'=>'candidates'], function(){
+            Route::get('',  [ 'uses' => 'OAuth2ElectionsApiController@getCurrentCandidates']);
+            Route::group(['prefix'=>'gold'], function(){
+                Route::get('',  [ 'uses' => 'OAuth2ElectionsApiController@getCurrentGoldCandidates']);
+            });
+        });
+    });
+});
+
 // files
 Route::group(['prefix' => 'files'], function () {
     Route::post('upload', 'OAuth2ChunkedFilesApiController@uploadFile');

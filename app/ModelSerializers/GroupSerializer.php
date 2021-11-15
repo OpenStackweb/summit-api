@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\Many2OneExpandSerializer;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 use models\main\Group;
 
 /**
@@ -42,19 +45,13 @@ final class GroupSerializer extends SilverStripeSerializer
     {
         $group = $this->object;
         if(! $group instanceof Group) return [];
-        $values  = parent::serialize($expand, $fields, $relations, $params);
-
-        if(!count($relations)) $relations = $this->getAllowedRelations();
-
-        if(in_array('members', $relations)) {
-            $members = [];
-
-            foreach ($group->getMembers() as $member) {
-                $members[] = SerializerRegistry::getInstance()->getSerializer($member)->serialize();
-            }
-            $values['members'] = $members;
-        }
-
-        return $values;
+        return parent::serialize($expand, $fields, $relations, $params);
     }
+
+    protected static $expand_mappings = [
+        'members' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getMembers',
+        ],
+    ];
 }

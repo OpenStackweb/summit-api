@@ -24,9 +24,9 @@ abstract class AbstractFileUploadStrategy implements IFileUploadStrategy
     /**
      * @inheritDoc
      */
-    public function save(UploadedFile $file, string $path, string $filename)
+    public function save(UploadedFile $file, string $path, string $filename, $options = [])
     {
-        return Storage::disk($this->getDriver())->putFileAs($path, $file, $filename);
+        return Storage::disk($this->getDriver())->putFileAs($path, $file, $filename, $options);
     }
 
     /**

@@ -11,10 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SponsorBadgeScan;
-use ModelSerializers\SerializerRegistry;
-use ModelSerializers\SilverStripeSerializer;
+use models\summit\SummitOrderExtraQuestionType;
 /**
  * Class SponsorBadgeScanCSVSerializer
  * @package App\ModelSerializers\Summit
@@ -46,6 +47,24 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
         $scan = $this->object;
         if (!$scan instanceof SponsorBadgeScan) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
+
+        if (isset($params['ticket_questions'])) {
+            $ticket_owner = null;
+            $badge = $scan->getBadge();
+            if(!is_null($badge)) {
+                $ticket_owner = $badge->getTicket()->getOwner();
+            }
+            foreach ($params['ticket_questions'] as $question) {
+                if (!$question instanceof SummitOrderExtraQuestionType) continue;
+                $values[$question->getLabel()] = '';
+                if (!is_null($ticket_owner)) {
+                    $value = $ticket_owner->getExtraQuestionAnswerValueByQuestion($question);
+                    Log::debug(sprintf("SponsorBadgeScanCSVSerializer::serialize question %s value %s", $question->getId(), $value));
+                    if(is_null($value)) continue;
+                    $values[$question->getLabel()] = $question->getNiceValue($value);
+                }
+            }
+        }
         return $values;
     }
 }

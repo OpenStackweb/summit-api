@@ -12,8 +12,13 @@
  * limitations under the License.
  **/
 use App\ModelSerializers\Summit\SponsorUserInfoGrantSerializer;
+use Illuminate\Support\Facades\Log;
 use models\summit\SponsorUserInfoGrant;
-
+use models\summit\SummitOrderExtraQuestionType;
+/**
+ * Class SponsorUserInfoGrantCSVSerializer
+ * @package App\ModelSerializers\Summit\Registration
+ */
 class SponsorUserInfoGrantCSVSerializer extends SponsorUserInfoGrantSerializer
 {
     /**
@@ -25,10 +30,33 @@ class SponsorUserInfoGrantCSVSerializer extends SponsorUserInfoGrantSerializer
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        $grant= $this->object;
+        $grant = $this->object;
         if (!$grant instanceof SponsorUserInfoGrant) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
         $values['notes'] = 'VIRTUAL';
+
+        if (isset($params['ticket_questions'])) {
+
+            $ticket_owner = null;
+            $member = $grant->getAllowedUser();
+            $sponsor = $grant->getSponsor();
+            $summit = $sponsor->getSummit();
+            $tickets = $member->getPaidSummitTickets($summit);
+            if(count($tickets)) {
+                $ticket = $tickets[0];
+                $ticket_owner = $ticket->getOwner();
+            }
+            foreach ($params['ticket_questions'] as $question) {
+                if (!$question instanceof SummitOrderExtraQuestionType) continue;
+                $values[$question->getLabel()] = '';
+                if (!is_null($ticket_owner)) {
+                    $value = $ticket_owner->getExtraQuestionAnswerValueByQuestion($question);
+                    Log::debug(sprintf("SponsorBadgeScanCSVSerializer::serialize question %s value %s", $question->getId(), $value));
+                    if(is_null($value)) continue;
+                    $values[$question->getLabel()] = $question->getNiceValue($value);
+                }
+            }
+        }
         return $values;
     }
 }

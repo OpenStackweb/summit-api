@@ -140,10 +140,6 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             }
 
             $data      = $this->repository->getAllByPage(new PagingInfo($page, $per_page), $filter, $order);
-            $fields    = Request::input('fields', '');
-            $fields    = !empty($fields) ? explode(',', $fields) : [];
-            $relations = Request::input('relations', '');
-            $relations = !empty($relations) ? explode(',', $relations) : [];
             $current_member = $this->resource_server_context->getCurrentUser();
             $serializer_type = SerializerRegistry::SerializerType_Public;
 
@@ -155,9 +151,9 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             (
                 $data->toArray
                 (
-                    Request::input('expand', ''),
-                    $fields,
-                    $relations,
+                    self::getExpands(),
+                    self::getFields(),
+                    self::getRelations(),
                     [],
                     $serializer_type
                 )
@@ -182,6 +178,45 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
     }
 
     /**
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getMyMember(){
+        try{
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+
+            if(is_null($current_member))
+                throw new EntityNotFoundException();
+
+            $serializer_type = SerializerRegistry::SerializerType_Private;
+
+            return $this->ok
+            (
+                SerializerRegistry::getInstance()
+                    ->getSerializer($current_member, $serializer_type)
+                    ->serialize
+                    (
+                        self::getExpands(),
+                        self::getFields(),
+                        self::getRelations()
+                    )
+            );
+        }
+        catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        }
+        catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412($ex2->getMessages());
+        }
+        catch (\Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
      * @param $member_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
@@ -191,10 +226,6 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             if(is_null($member))
                 throw new EntityNotFoundException();
 
-            $fields    = Request::input('fields', '');
-            $fields    = !empty($fields) ? explode(',', $fields) : [];
-            $relations = Request::input('relations', '');
-            $relations = !empty($relations) ? explode(',', $relations) : [];
             $current_member = $this->resource_server_context->getCurrentUser();
             $serializer_type = SerializerRegistry::SerializerType_Public;
 
@@ -208,14 +239,11 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                     ->getSerializer($member, $serializer_type)
                     ->serialize
                     (
-                        Request::input('expand', ''),
-                        $fields,
-                        $relations,
-                        [],
+                        self::getExpands(),
+                        self::getFields(),
+                        self::getRelations()
                     )
             );
-
-
         }
         catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
@@ -233,29 +261,6 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             Log::error($ex);
             return $this->error500($ex);
         }
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getMyMember(){
-
-        $current_member = $this->resource_server_context->getCurrentUser();
-        if (is_null($current_member)) return $this->error404();
-
-        $fields    = Request::input('fields', null);
-        $relations = Request::input('relations', null);
-
-        return $this->ok
-        (
-            SerializerRegistry::getInstance()->getSerializer($current_member, SerializerRegistry::SerializerType_Private)
-                ->serialize
-                (
-                    Request::input('expand', ''),
-                    is_null($fields) ? [] : explode(',', $fields),
-                    is_null($relations) ? [] : explode(',', $relations)
-                )
-        );
     }
 
 

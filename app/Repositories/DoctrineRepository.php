@@ -343,4 +343,52 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
 
         return new LazyCriteriaCollection($persister, $criteria);
     }
+
+    /**
+     * @param QueryBuilder $query
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @param callable|null $filterMappings
+     * @param callable|null $orderMappings
+     * @return PagingResponse
+     */
+    protected function getAllAbstractByPage
+    (
+        QueryBuilder $query,
+        PagingInfo $paging_info,
+        Filter $filter = null,
+        Order $order = null,
+        array $filterMappings = [],
+        array $orderMappings = []
+    ):PagingResponse{
+
+        if(!is_null($filter) && count($filterMappings) > 0){
+            $filter->apply2Query($query, $filterMappings);
+        }
+
+        if(!is_null($order) && count($orderMappings) > 0 ){
+            $order->apply2Query($query, $orderMappings);
+        }
+
+        $query = $query
+            ->setFirstResult($paging_info->getOffset())
+            ->setMaxResults($paging_info->getPerPage());
+
+        $paginator = new Paginator($query, $fetchJoinCollection = true);
+        $total     = $paginator->count();
+        $data      = array();
+
+        foreach($paginator as $entity)
+            array_push($data, $entity);
+
+        return new PagingResponse
+        (
+            $total,
+            $paging_info->getPerPage(),
+            $paging_info->getCurrentPage(),
+            $paging_info->getLastPage($total),
+            $data
+        );
+    }
 }

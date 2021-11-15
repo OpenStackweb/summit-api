@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Elections\Election;
+use App\Models\Foundation\Elections\IElectionsRepository;
 use App\Models\Foundation\Main\Language;
 use App\Models\Foundation\Main\Repositories\ILanguageRepository;
 use App\Models\Foundation\Main\Repositories\ILegalDocumentRepository;
@@ -679,5 +681,13 @@ final class RepositoriesProvider extends ServiceProvider
                 return EntityManager::getRepository(SummitSelectionPlanExtraQuestionType::class);
             }
         );
+
+        App::singleton(
+            IElectionsRepository::class,
+            function(){
+                return EntityManager::getRepository(Election::class);
+            }
+        );
+
     }
 }

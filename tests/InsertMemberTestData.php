@@ -13,6 +13,7 @@
  **/
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use LaravelDoctrine\ORM\Facades\Registry;
+use models\main\LegalAgreement;
 use models\main\Member;
 use models\summit\PresentationSpeaker;
 use models\utils\SilverstripeBaseModel;
@@ -123,6 +124,11 @@ trait InsertMemberTestData
         self::$member->setUserExternalId(mt_rand());
         self::$member->add2Group(self::$group);
 
+        if($current_group_slug == IGroup::FoundationMembers){
+            $legal = new LegalAgreement();
+            self::$member->addLegalAgreement($legal);
+        }
+
         self::$member2 = new Member();
         self::$member2->setEmail("smarcet+{$prefix}_admin@gmail.com");
         self::$member2->setActive(true);
@@ -131,7 +137,6 @@ trait InsertMemberTestData
         self::$member2->setEmailVerified(true);
         self::$member2->setUserExternalId(mt_rand());
         self::$member2->add2Group(self::$group2);
-
 
         PresentationSpeaker::$bypass_events = true;
         self::$speaker = new PresentationSpeaker();

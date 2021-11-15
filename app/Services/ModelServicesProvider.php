@@ -21,9 +21,11 @@ use App\Services\Apis\ExternalScheduleFeeds\IExternalScheduleFeedFactory;
 use App\Services\Model\AttendeeService;
 use App\Services\Model\IAttendeeService;
 use App\Services\Model\ICompanyService;
+use App\Services\Model\IElectionService;
 use App\Services\Model\ILocationService;
 use App\Services\Model\IMemberService;
 use App\Services\Model\Imp\CompanyService;
+use App\Services\Model\Imp\ElectionService;
 use App\Services\Model\Imp\PaymentGatewayProfileService;
 use App\Services\Model\Imp\PresentationVideoMediaUploadProcessor;
 use App\Services\Model\Imp\RegistrationIngestionService;
@@ -383,6 +385,11 @@ final class ModelServicesProvider extends ServiceProvider
             ISelectionPlanExtraQuestionTypeService::class,
             SelectionPlanOrderExtraQuestionTypeService::class
         );
+
+        App::singleton(
+            IElectionService::class,
+            ElectionService::class
+        );
     }
 
     /**
@@ -441,6 +448,7 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitPresentationActionTypeService::class,
             ISummitPresentationActionService::class,
             ISelectionPlanExtraQuestionTypeService::class,
+            IElectionService::class,
         ];
     }
 }

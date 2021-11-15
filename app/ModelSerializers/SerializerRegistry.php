@@ -13,6 +13,9 @@
  **/
 
 use App\ModelSerializers\CCLA\TeamSerializer;
+use App\ModelSerializers\Elections\CandidateSerializer;
+use App\ModelSerializers\Elections\ElectionSerializer;
+use App\ModelSerializers\Elections\NominationSerializer;
 use App\ModelSerializers\FileSerializer;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
 use App\ModelSerializers\ISummitOrderSerializerTypes;
@@ -144,6 +147,12 @@ final class SerializerRegistry
         $this->registry['ApiEndpoint'] = ApiEndpointSerializer::class;
         $this->registry['ApiScope'] = ApiScopeSerializer::class;
         $this->registry['ApiEndpointAuthzGroup'] = ApiEndpointAuthzGroupSerializer::class;
+
+        // elections
+
+        $this->registry['Election'] = ElectionSerializer::class;
+        $this->registry['Candidate'] = CandidateSerializer::class;
+        $this->registry['Nomination'] = NominationSerializer::class;
 
         // extra questions base
         $this->registry['ExtraQuestionTypeValue'] = ExtraQuestionTypeValueSerializer::class;

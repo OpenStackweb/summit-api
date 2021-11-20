@@ -43,8 +43,11 @@ class AbstractMemberSerializer extends SilverStripeSerializer
     protected static $allowed_relations = [
         'groups',
         'affiliations',
+        'all_affiliations',
         'ccla_teams',
-        'election_applications'
+        'election_applications',
+        'candidate_profile',
+        'election_nominations',
     ];
 
     /**

@@ -2176,7 +2176,7 @@ SQL;
      * @param strign $type
      * @return int
      */
-    public function getSpeakerAnnouncementEmailCount($type)
+    public function getSpeakerAnnouncementEmailCount(string $type):int
     {
         try {
             $sql = <<<SQL
@@ -2197,7 +2197,7 @@ SQL;
     /**
      * @return int
      */
-    public function getSpeakerAnnouncementEmailAcceptedCount()
+    public function getSpeakerAnnouncementEmailAcceptedCount():int
     {
         return $this->getSpeakerAnnouncementEmailCount('ACCEPTED');
     }
@@ -2205,7 +2205,7 @@ SQL;
     /**
      * @return int
      */
-    public function getSpeakerAnnouncementEmailRejectedCount()
+    public function getSpeakerAnnouncementEmailRejectedCount():int
     {
         return $this->getSpeakerAnnouncementEmailCount('REJECTED');
     }
@@ -2213,7 +2213,7 @@ SQL;
     /**
      * @return int
      */
-    public function getSpeakerAnnouncementEmailAlternateCount()
+    public function getSpeakerAnnouncementEmailAlternateCount():int
     {
         return $this->getSpeakerAnnouncementEmailCount('ALTERNATE');
     }
@@ -2221,7 +2221,7 @@ SQL;
     /**
      * @return int
      */
-    public function getSpeakerAnnouncementEmailAcceptedAlternateCount()
+    public function getSpeakerAnnouncementEmailAcceptedAlternateCount():int
     {
         return $this->getSpeakerAnnouncementEmailCount('ACCEPTED_ALTERNATE');
     }
@@ -2229,7 +2229,7 @@ SQL;
     /**
      * @return int
      */
-    public function getSpeakerAnnouncementEmailAcceptedRejectedCount()
+    public function getSpeakerAnnouncementEmailAcceptedRejectedCount():int
     {
         return $this->getSpeakerAnnouncementEmailCount('ACCEPTED_REJECTED');
     }
@@ -2237,7 +2237,7 @@ SQL;
     /**
      * @return int
      */
-    public function getSpeakerAnnouncementEmailAlternateRejectedCount()
+    public function getSpeakerAnnouncementEmailAlternateRejectedCount():int
     {
         return $this->getSpeakerAnnouncementEmailCount('ALTERNATE_REJECTED');
     }
@@ -5733,7 +5733,7 @@ SQL;
 
         try {
             $sql = <<<SQL
-select SummitBadgeType.Name as type, COUNT(SummitAttendeeBadge.ID) as qty FROM SummitAttendeeBadge
+SELECT SummitBadgeType.Name as type, COUNT(DISTINCT(SummitAttendeeBadge.ID)) as qty FROM SummitAttendeeBadge
 INNER JOIN SummitBadgeType ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType.ID
 INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
 INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
@@ -5766,18 +5766,17 @@ SQL;
 
         try {
             $sql = <<<SQL
-SELECT COUNT(SummitAttendee.ID) FROM SummitAttendee
-WHERE SummitAttendee.SummitID = :summit_id AND
-EXISTS ( SELECT SummitAttendeeTicket.ID FROM SummitAttendeeTicket 
-        WHERE 
-              SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND 
-              SummitAttendeeTicket.Status = 'Paid') AND
-EXISTS ( SELECT SummitAttendeeBadgePrint.ID FROM SummitAttendeeBadgePrint 
-        INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.ID = SummitAttendeeBadgePrint.BadgeID 
-        INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID 
-        WHERE 
-              SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND 
-              SummitAttendeeTicket.Status = 'Paid');
+SELECT COUNT(DISTINCT(SummitAttendee.ID)) FROM SummitAttendee
+WHERE 
+SummitAttendee.SummitID = :summit_id AND
+EXISTS ( 
+    SELECT SummitAttendeeTicket.ID FROM SummitAttendeeTicket 
+    WHERE 
+    SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND 
+    SummitAttendeeTicket.Status = 'Paid' AND
+    SummitAttendeeTicket.IsActive = 1
+) AND
+SummitAttendee.SummitHallCheckedIn = 1;
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -5803,16 +5802,16 @@ SQL;
 
         try {
             $sql = <<<SQL
- SELECT COUNT(SummitAttendee.ID) FROM SummitAttendee
+SELECT COUNT(SummitAttendee.ID) FROM SummitAttendee
 WHERE SummitAttendee.SummitID = :summit_id AND
-EXISTS ( SELECT SummitAttendeeTicket.ID FROM SummitAttendeeTicket 
-         WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND 
-         SummitAttendeeTicket.Status = 'Paid') AND
-NOT EXISTS (SELECT SummitAttendeeBadgePrint.ID FROM SummitAttendeeBadgePrint 
-        INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.ID = SummitAttendeeBadgePrint.BadgeID 
-        INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID 
-        WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND 
-      SummitAttendeeTicket.Status = 'Paid');
+EXISTS ( 
+    SELECT SummitAttendeeTicket.ID FROM SummitAttendeeTicket 
+    WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND 
+    SummitAttendeeTicket.Status = 'Paid' AND 
+    SummitAttendeeTicket.IsActive = 1      
+)
+AND
+SummitAttendee.SummitHallCheckedIn = 0;
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -5839,7 +5838,16 @@ SQL;
 
         try {
             $sql = <<<SQL
-         SELECT COUNT(ID) FROM `SummitAttendee` where SummitVirtualCheckedInDate is not null and SummitID = :summit_id;
+SELECT COUNT(ID) FROM `SummitAttendee` 
+WHERE 
+EXISTS ( 
+    SELECT SummitAttendeeTicket.ID FROM SummitAttendeeTicket 
+    WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND 
+    SummitAttendeeTicket.Status = 'Paid' AND 
+    SummitAttendeeTicket.IsActive = 1      
+) AND      
+SummitVirtualCheckedInDate IS NOT NULL 
+AND SummitID = :summit_id;
 SQL;
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
@@ -5916,7 +5924,7 @@ WHERE
 SummitAttendeeTicket.IsActive = 1 AND
 SummitAttendeeTicket.Status = 'Paid' AND
 SummitOrder.SummitID = :summit_id AND
-SummitAttendee.SummitHallCheckedInDate IS NOT NULL
+SummitAttendee.SummitHallCheckedIn = 1
 GROUP BY SummitBadgeFeatureType.Name;
 SQL;
             $stmt = $this->prepareRawSQL($sql);

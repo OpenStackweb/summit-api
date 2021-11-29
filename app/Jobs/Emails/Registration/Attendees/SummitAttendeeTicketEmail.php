@@ -61,7 +61,7 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         $payload['order_owner_full_name'] = $order->getOwnerFullName();
         $payload['order_owner_company'] = $order->getOwnerCompany();
         $payload['order_owner_email'] = $order->getOwnerEmail();
-        if(empty($payload['order_owner_full_name'])){
+        if (empty($payload['order_owner_full_name'])) {
             $payload['order_owner_full_name'] = $payload['order_owner_email'];
         }
 
@@ -69,7 +69,7 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         $payload['summit_logo'] = $summit->getLogoUrl();
 
         $summit_reassign_ticket_till_date = $summit->getReassignTicketTillDateLocal();
-        if(!is_null($summit_reassign_ticket_till_date)) {
+        if (!is_null($summit_reassign_ticket_till_date)) {
             $payload['summit_reassign_ticket_till_date'] = $summit_reassign_ticket_till_date->format("l j F Y h:i A T");
         }
 
@@ -90,17 +90,17 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         $payload['owner_full_name'] = $attendee->getFullName();
         $payload['owner_company'] = $attendee->getCompanyName();
 
-        if(empty($payload['owner_full_name'])){
+        if (empty($payload['owner_full_name'])) {
             Log::warning(sprintf("SummitAttendeeTicketEmail owner_full_name is empty setting email"));
             $payload['owner_full_name'] = $payload['owner_email'];
         }
 
-        if(empty($payload['owner_first_name'])){
+        if (empty($payload['owner_first_name'])) {
             Log::warning(sprintf("SummitAttendeeTicketEmail owner_first_name is empty setting email"));
             $payload['owner_first_name'] = $payload['owner_email'];
         }
 
-        if(empty($payload['owner_last_name'])){
+        if (empty($payload['owner_last_name'])) {
             Log::warning(sprintf("SummitAttendeeTicketEmail owner_last_name is empty setting email"));
             $payload['owner_last_name'] = $payload['owner_email'];
         }
@@ -108,21 +108,15 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         $payload['promo_code'] = ($ticket->hasPromoCode()) ? $ticket->getPromoCode()->getCode() : '';
 
         $support_email = $summit->getSupportEmail();
-        $payload['support_email'] = !empty($support_email) ? $support_email: Config::get("registration.support_email", null);
+        $payload['support_email'] = !empty($support_email) ? $support_email : Config::get("registration.support_email", null);
 
         if (empty($payload['support_email']))
             throw new \InvalidArgumentException("missing support_email value");
 
-        $sendTicketAttachments  = Config::get("registration.send_ticket_attachments", false);
+        $attachments = [];
 
-        // @todo attachments are only meant for in person events
-        // we need on a future a way to determine if current summit is virtual or in person
-        // to included this attachments, for now , will be managed by managed by a environmental
-        // variable
-        // attachments
-        //if($sendTicketAttachments) {
-            $renderer = new SummitAttendeeTicketPDFRenderer($ticket);
-            $attachments = [];
+        if ($summit->isRegistrationSendQrAsImageAttachmentOnTicketEmail()) {
+            Log::debug(sprintf("SummitAttendeeTicketEmail::__construct adding QR as attachment for summit %s", $summit->getId()));
             $attachments[] = [
                 'name' => 'qr.png',
                 'content' => base64_encode(QrCode::format('png')->size(250, 250)->generate($ticket->getQRCode())),
@@ -130,18 +124,21 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
                 'disposition' => 'inline',
                 'content_id' => 'qrcid',
             ];
+        }
 
-            /* removing for now
+        if ($summit->isRegistrationSendTicketAsPdfAttachmentOnTicketEmail()){
+            Log::debug(sprintf("SummitAttendeeTicketEmail::__construct adding Ticket PDF as attachment for summit %s", $summit->getId()));
+            $renderer = new SummitAttendeeTicketPDFRenderer($ticket);
             $attachments[] = [
                 'name' => 'ticket_' . $ticket->getNumber() . '.pdf',
                 'content' => base64_encode($renderer->render()),
                 'type' => 'application/pdf',
                 'disposition' => 'attachment',
             ];
-            */
+        }
 
+        if(count($attachments) > 0)
             $payload['attachments'] = $attachments;
-        //}
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
         Log::debug(sprintf("SummitAttendeeTicketEmail::__construct payload %s template %s", json_encode($payload), $template_identifier));

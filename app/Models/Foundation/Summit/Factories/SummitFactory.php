@@ -51,6 +51,14 @@ final class SummitFactory
             $summit->setActive(boolval($data['active']));
         }
 
+        if(isset($data['registration_send_qr_as_image_attachment_on_ticket_email']) ){
+            $summit->setRegistrationSendQrAsImageAttachmentOnTicketEmail(boolval($data['registration_send_qr_as_image_attachment_on_ticket_email']));
+        }
+
+        if(isset($data['registration_send_ticket_as_pdf_attachment_on_ticket_email']) ){
+            $summit->setRegistrationSendTicketAsPdfAttachmentOnTicketEmail(boolval($data['registration_send_ticket_as_pdf_attachment_on_ticket_email']));
+        }
+
         if(isset($data['available_on_api']) ){
             $summit->setAvailableOnApi(boolval($data['available_on_api']));
         }

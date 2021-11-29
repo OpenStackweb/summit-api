@@ -125,6 +125,18 @@ class Summit extends SilverstripeBaseModel
     private $registration_disclaimer_mandatory;
 
     /**
+     * @ORM\Column(name="RegistrationSendQRAsImageAttachmentOnTicketEmail", type="boolean")
+     * @var bool
+     */
+    private $registration_send_qr_as_image_attachment_on_ticket_email;
+
+    /**
+     * @ORM\Column(name="RegistrationSendTicketAsPDFAttachmentOnTicketEmail", type="boolean")
+     * @var bool
+     */
+    private $registration_send_ticket_as_pdf_attachment_on_ticket_email;
+
+    /**
      * @ORM\Column(name="RegistrationBeginDate", type="datetime")
      * @var \DateTime
      */
@@ -992,6 +1004,8 @@ class Summit extends SilverstripeBaseModel
         $this->metrics = new ArrayCollection();
         $this->track_chairs = new ArrayCollection();
         $this->presentation_action_types = new ArrayCollection();
+        $this->registration_send_qr_as_image_attachment_on_ticket_email = false;
+        $this->registration_send_ticket_as_pdf_attachment_on_ticket_email = false;
     }
 
     /**
@@ -5938,4 +5952,38 @@ SQL;
         }
         return [];
     }
+
+    /**
+     * @return bool
+     */
+    public function isRegistrationSendQrAsImageAttachmentOnTicketEmail(): bool
+    {
+        return $this->registration_send_qr_as_image_attachment_on_ticket_email;
+    }
+
+    /**
+     * @param bool $registration_send_qr_as_image_attachment_on_ticket_email
+     */
+    public function setRegistrationSendQrAsImageAttachmentOnTicketEmail(bool $registration_send_qr_as_image_attachment_on_ticket_email): void
+    {
+        $this->registration_send_qr_as_image_attachment_on_ticket_email = $registration_send_qr_as_image_attachment_on_ticket_email;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRegistrationSendTicketAsPdfAttachmentOnTicketEmail(): bool
+    {
+        return $this->registration_send_ticket_as_pdf_attachment_on_ticket_email;
+    }
+
+    /**
+     * @param bool $registration_send_ticket_as_pdf_attachment_on_ticket_email
+     */
+    public function setRegistrationSendTicketAsPdfAttachmentOnTicketEmail(bool $registration_send_ticket_as_pdf_attachment_on_ticket_email): void
+    {
+        $this->registration_send_ticket_as_pdf_attachment_on_ticket_email = $registration_send_ticket_as_pdf_attachment_on_ticket_email;
+    }
+
+
 }

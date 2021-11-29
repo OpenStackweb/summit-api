@@ -83,6 +83,8 @@ final class SummitValidationRulesFactory
                 'virtual_site_oauth2_client_id' => 'nullable|string',
                 'marketing_site_oauth2_client_id' => 'nullable|string',
                 'support_email' => 'nullable|email',
+                'registration_send_qr_as_image_attachment_on_ticket_email' => 'sometimes|boolean',
+                'registration_send_ticket_as_pdf_attachment_on_ticket_email' => 'sometimes|boolean',
             ];
         }
 
@@ -146,6 +148,8 @@ final class SummitValidationRulesFactory
             'virtual_site_oauth2_client_id' => 'nullable|string',
             'marketing_site_oauth2_client_id' => 'nullable|string',
             'support_email' => 'nullable|email',
+            'registration_send_qr_as_image_attachment_on_ticket_email' => 'sometimes|boolean',
+            'registration_send_ticket_as_pdf_attachment_on_ticket_email' => 'sometimes|boolean',
         ];
     }
 }

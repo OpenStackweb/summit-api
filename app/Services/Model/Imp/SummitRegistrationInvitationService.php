@@ -132,7 +132,7 @@ final class SummitRegistrationInvitationService
             $this->tx_service->transaction(function () use ($summit, $reader, $row) {
                 try {
                     if(isset($row['allowed_ticket_types']) && is_string($row['allowed_ticket_types'])){
-                        $row['allowed_ticket_types'] = explode('|', $row['allowed_ticket_types']);
+                        $row['allowed_ticket_types'] = empty($row['allowed_ticket_types']) ? []:explode('|', $row['allowed_ticket_types']);
                     }
                     $this->add($summit, $row);
                 } catch (\Exception $ex) {
@@ -207,13 +207,13 @@ final class SummitRegistrationInvitationService
     {
         return $this->tx_service->transaction(function () use ($invitation, $email) {
             $member = $this->member_repository->getByEmail($email);
-            // try to get an user externally , user does not exits locally
+            // try to get an user externally , user does not exist locally
             if (is_null($member)) {
                 // check if user exists by email at idp
                 Log::debug(sprintf("SummitRegistrationInvitationService::setInvitationMember - trying to get member %s from user api", $email));
                 $user = $this->external_user_api->getUserByEmail($email);
                 // check if primary email is the same if not disregard
-                $primary_email = $user['email'] ?? null;
+                $primary_email = is_null($user) ? null: $user['email'] ?? null;
                 if (strcmp(strtolower($primary_email), strtolower($email)) !== 0) {
                     Log::debug
                     (

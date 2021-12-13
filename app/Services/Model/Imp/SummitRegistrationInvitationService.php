@@ -116,6 +116,7 @@ final class SummitRegistrationInvitationService
             * email (mandatory)
             * first_name (mandatory)
             * last_name (mandatory)
+            * allowed_ticket_types (optional)
          ***********************************************************/
 
         if(!$reader->hasColumn("email"))
@@ -160,12 +161,32 @@ final class SummitRegistrationInvitationService
     {
         return $this->tx_service->transaction(function() use($summit, $payload){
             $email = trim($payload['email']);
+            $allowed_ticket_types = $payload['allowed_ticket_types'] ?? '';
             $former_invitation  = $summit->getSummitRegistrationInvitationByEmail($email);
             if(!is_null($former_invitation)){
                 throw new ValidationException(sprintf("Email %s already has been invited for summit %s", $email, $summit->getId()));
             }
 
             $invitation = SummitRegistrationInvitationFactory::build($payload);
+
+            if(!empty($allowed_ticket_types)){
+                $allowed_ticket_types = explode('|', $allowed_ticket_types);
+                foreach ($allowed_ticket_types as $ticket_type_id){
+                    $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
+                    if(is_null($ticket_type)){
+                        throw new ValidationException
+                        (
+                            sprintf
+                            (
+                                "SummitRegistrationInvitationService::add ticket type %s does not exists on summit %s.",
+                                $ticket_type_id,
+                                $summit->getId()
+                            )
+                        );
+                    }
+                    $invitation->addTicketType($ticket_type);
+                }
+            }
 
             $invitation = $this->setInvitationMember($invitation, $email);
 
@@ -294,6 +315,28 @@ final class SummitRegistrationInvitationService
             if(isset($payload['email'])) {
                 $email = trim($payload['email']);
                 $invitation = $this->setInvitationMember($invitation, $email);
+            }
+
+            $allowed_ticket_types = $payload['allowed_ticket_types'] ?? '';
+
+            if(!empty($allowed_ticket_types)){
+                $invitation->clearTicketTypes();
+                $allowed_ticket_types = explode('|', $allowed_ticket_types);
+                foreach ($allowed_ticket_types as $ticket_type_id){
+                    $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
+                    if(is_null($ticket_type)){
+                        throw new ValidationException
+                        (
+                            sprintf
+                            (
+                                "SummitRegistrationInvitationService::add ticket type %s does not exists on summit %s.",
+                                $ticket_type_id,
+                                $summit->getId()
+                            )
+                        );
+                    }
+                    $invitation->addTicketType($ticket_type);
+                }
             }
 
             return $invitation;

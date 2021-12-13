@@ -302,6 +302,47 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
         return $order;
     }
 
+    public function testReserveWithSummit(){
+
+        $res = memory_get_peak_usage(true);
+        $params = [
+            'id' => 36,
+        ];
+
+        $data = [
+            "owner_email" => "smarcet@gmail.com",
+            "owner_first_name" => "Sebastian",
+            "owner_last_name" => "Marcet",
+            "owner_company"=>"Pumant",
+            "tickets" => [
+                ["type_id" => 51],
+            ]
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitOrdersApiController@reserve",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $order = json_decode($content);
+        $this->assertTrue(!is_null($order));
+        $res = memory_get_peak_usage(true);
+        return $order;
+    }
+
     public function testReserveWithActivePaymentProfile(){
 
         self::$profile->activate();

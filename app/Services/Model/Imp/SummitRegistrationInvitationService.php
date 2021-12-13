@@ -130,6 +130,7 @@ final class SummitRegistrationInvitationService
 
         foreach ($reader as $idx => $row) {
                 try {
+                    Log::debug(sprintf("SummitRegistrationInvitationService::importInvitationData processing row %s", json_encode($row)));
                     if(isset($row['allowed_ticket_types']) && is_string($row['allowed_ticket_types'])){
                         $row['allowed_ticket_types'] = empty($row['allowed_ticket_types']) ? []:explode('|', $row['allowed_ticket_types']);
                     }

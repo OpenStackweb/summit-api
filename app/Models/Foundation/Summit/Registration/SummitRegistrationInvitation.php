@@ -342,6 +342,7 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
      * @return bool
      */
     public function isTicketTypeAllowed(int $ticket_type_id):bool{
+        if(!$this->ticket_types->count()) return true;
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $ticket_type_id));
         $ticket_type = $this->ticket_types->matching($criteria)->first();

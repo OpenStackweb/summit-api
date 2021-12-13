@@ -5284,12 +5284,10 @@ SQL;
         $days = $this->getSummitDays();
         $list = [];
         foreach ($days as $day) {
-            Log::debug(sprintf("Summit::getSummitDaysWithEvents day %s", $day->format('Y-m-d H:i:s')));
             $begin = clone($day);
             $begin = $begin->setTime(0, 0, 0)->setTimezone(new \DateTimeZone('UTC'));
             $end = clone($day);
             $end = $end->setTime(23, 59, 59)->setTimezone(new \DateTimeZone('UTC'));
-            Log::debug(sprintf("Summit::getSummitDaysWithEvents UTC begin date %s UTC end date %s", $begin->format('Y-m-d H:i:s'), $end->format('Y-m-d H:i:s')));
             $count = 0;
             try {
                 $sql = <<<SQL
@@ -5308,7 +5306,6 @@ SQL;
                 ]);
                 $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
                 $count = count($res) > 0 ? $res[0] : 0;
-                Log::debug(sprintf("Summit::getSummitDaysWithEvents summit %s begin %s end %s count %s", $this->id, $begin->format("Y-m-d H:i:s"), $end->format('Y-m-d H:i:s'), $count));
             } catch (\Exception $ex) {
                 Log::debug($ex);
                 $count = 0;

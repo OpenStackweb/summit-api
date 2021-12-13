@@ -129,7 +129,6 @@ final class SummitRegistrationInvitationService
             throw new ValidationException("File is missing last_name column.");
 
         foreach ($reader as $idx => $row) {
-            $this->tx_service->transaction(function () use ($summit, $reader, $row) {
                 try {
                     if(isset($row['allowed_ticket_types']) && is_string($row['allowed_ticket_types'])){
                         $row['allowed_ticket_types'] = empty($row['allowed_ticket_types']) ? []:explode('|', $row['allowed_ticket_types']);
@@ -138,9 +137,7 @@ final class SummitRegistrationInvitationService
                 } catch (\Exception $ex) {
                     Log::warning($ex);
                 }
-            });
         }
-
     }
 
     /**

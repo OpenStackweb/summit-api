@@ -321,7 +321,6 @@ final class SummitRegistrationInvitationService
 
             $allowed_ticket_types = $payload['allowed_ticket_types'] ?? [];
             $invitation->clearTicketTypes();
-            $allowed_ticket_types = explode('|', $allowed_ticket_types);
             foreach ($allowed_ticket_types as $ticket_type_id) {
                 $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
                 if (is_null($ticket_type)) {

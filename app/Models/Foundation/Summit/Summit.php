@@ -5009,6 +5009,7 @@ SQL;
      */
     public function canBuyRegistrationTicketByType(string $email, SummitTicketType $ticketType):bool{
         if (!$this->isInviteOnlyRegistration()) return true;
+        if($ticketType->getSummitId() != $this->id) return false;
         $invitation = $this->getSummitRegistrationInvitationByEmail($email);
         if(is_null($invitation)) return false;
         return $invitation->isTicketTypeAllowed($ticketType->getId());

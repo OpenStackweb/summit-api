@@ -31,6 +31,7 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\IMemberRepository;
 use models\main\Member;
+use models\summit\ISummitRepository;
 use models\summit\Summit;
 use models\summit\SummitRegistrationInvitation;
 use utils\Filter;
@@ -67,11 +68,16 @@ final class SummitRegistrationInvitationService
     private $invitation_repository;
 
     /**
-     * SummitRegistrationInvitationService constructor.
+     * @var ISummitRepository
+     */
+    private $summit_repository;
+
+    /**
      * @param IExternalUserApi $external_user_api
      * @param IMemberService $member_service
      * @param ISummitRegistrationInvitationRepository $invitation_repository
      * @param IMemberRepository $member_repository
+     * @param ISummitRepository $summit_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -80,11 +86,13 @@ final class SummitRegistrationInvitationService
         IMemberService                          $member_service,
         ISummitRegistrationInvitationRepository $invitation_repository,
         IMemberRepository                       $member_repository,
+        ISummitRepository                       $summit_repository,
         ITransactionService                     $tx_service
     )
     {
         parent::__construct($tx_service);
         $this->member_repository = $member_repository;
+        $this->summit_repository = $summit_repository;
         $this->external_user_api = $external_user_api;
         $this->invitation_repository = $invitation_repository;
         $this->member_service = $member_service;
@@ -130,6 +138,7 @@ final class SummitRegistrationInvitationService
 
         foreach ($reader as $idx => $row) {
                 try {
+
                     Log::debug(sprintf("SummitRegistrationInvitationService::importInvitationData processing row %s", json_encode($row)));
                     if(isset($row['allowed_ticket_types']) && is_string($row['allowed_ticket_types'])){
                         $row['allowed_ticket_types'] = empty($row['allowed_ticket_types']) ? []:explode('|', $row['allowed_ticket_types']);
@@ -137,6 +146,7 @@ final class SummitRegistrationInvitationService
                     $this->add($summit, $row);
                 } catch (\Exception $ex) {
                     Log::warning($ex);
+                    $summit = $this->summit_repository->getById($summit->getId());
                 }
         }
     }
@@ -172,9 +182,9 @@ final class SummitRegistrationInvitationService
             }
 
             $invitation = SummitRegistrationInvitationFactory::build($payload);
-
             foreach ($allowed_ticket_types as $ticket_type_id) {
                 $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
+                Log::debug(sprintf("SummitRegistrationInvitationService::add trying to add ticket %s for invitation email %s", $ticket_type_id, $email));
                 if (is_null($ticket_type)) {
                     throw new ValidationException
                     (
@@ -190,7 +200,7 @@ final class SummitRegistrationInvitationService
             }
 
             $invitation = $this->setInvitationMember($invitation, $email);
-
+            Log::debug(sprintf("SummitRegistrationInvitationService::add adding invitation for email %s to summit %s", $email, $summit->getName()));
             $summit->addRegistrationInvitation($invitation);
 
             return $invitation;

@@ -5020,7 +5020,7 @@ SQL;
      */
     public function addRegistrationInvitation(SummitRegistrationInvitation $invitation)
     {
-        if ($this->registration_invitations->contains($invitation)) return;
+        if($this->registration_invitations->contains($invitation)) return;
         $this->registration_invitations->add($invitation);
         $invitation->setSummit($this);
     }

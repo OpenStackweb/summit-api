@@ -162,7 +162,9 @@ final class SummitRegistrationInvitationService
     public function add(Summit $summit, array $payload): SummitRegistrationInvitation
     {
         return $this->tx_service->transaction(function () use ($summit, $payload) {
+
             $email = trim($payload['email']);
+            Log::debug(sprintf("SummitRegistrationInvitationService::add trying to add email %s", $email));
             $allowed_ticket_types = $payload['allowed_ticket_types'] ?? [];
             $former_invitation = $summit->getSummitRegistrationInvitationByEmail($email);
             if (!is_null($former_invitation)) {

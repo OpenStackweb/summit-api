@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Jobs\Emails\Registration\Invitations\InviteSummitRegistrationEmail;
 use App\Jobs\Emails\Registration\Invitations\ProcessRegistrationInvitationsJob;
 use App\Jobs\Emails\Registration\Invitations\ReInviteSummitRegistrationEmail;
@@ -35,6 +36,7 @@ use models\summit\SummitRegistrationInvitation;
 use utils\Filter;
 use utils\FilterElement;
 use utils\PagingInfo;
+
 /**
  * Class SummitRegistrationInvitationService
  * @package App\Services\Model\Imp
@@ -74,11 +76,11 @@ final class SummitRegistrationInvitationService
      */
     public function __construct
     (
-        IExternalUserApi $external_user_api,
-        IMemberService $member_service,
+        IExternalUserApi                        $external_user_api,
+        IMemberService                          $member_service,
         ISummitRegistrationInvitationRepository $invitation_repository,
-        IMemberRepository $member_repository,
-        ITransactionService $tx_service
+        IMemberRepository                       $member_repository,
+        ITransactionService                     $tx_service
     )
     {
         parent::__construct($tx_service);
@@ -112,26 +114,28 @@ final class SummitRegistrationInvitationService
 
         // check needed columns (headers names)
         /***********************************************************
-            columns
-            * email (mandatory)
-            * first_name (mandatory)
-            * last_name (mandatory)
-            * allowed_ticket_types (optional)
+         * columns
+         * email (mandatory)
+         * first_name (mandatory)
+         * last_name (mandatory)
+         * allowed_ticket_types (optional)
          ***********************************************************/
 
-        if(!$reader->hasColumn("email"))
+        if (!$reader->hasColumn("email"))
             throw new ValidationException("File is missing email column.");
-        if(!$reader->hasColumn("first_name"))
+        if (!$reader->hasColumn("first_name"))
             throw new ValidationException("File is missing first_name column.");
-        if(!$reader->hasColumn("last_name"))
+        if (!$reader->hasColumn("last_name"))
             throw new ValidationException("File is missing last_name column.");
 
         foreach ($reader as $idx => $row) {
             $this->tx_service->transaction(function () use ($summit, $reader, $row) {
-                try{
+                try {
+                    if(isset($row['allowed_ticket_types']) && is_string($row['allowed_ticket_types'])){
+                        $row['allowed_ticket_types'] = explode('|', $row['allowed_ticket_types']);
+                    }
                     $this->add($summit, $row);
-                }
-                catch (\Exception $ex){
+                } catch (\Exception $ex) {
                     Log::warning($ex);
                 }
             });
@@ -144,14 +148,14 @@ final class SummitRegistrationInvitationService
      */
     public function delete(Summit $summit, int $invitation_id): void
     {
-       $this->tx_service->transaction(function() use($summit, $invitation_id){
-           $invitation = $summit->getSummitRegistrationInvitationById($invitation_id);
-           if(is_null($invitation)){
-               throw new EntityNotFoundException("Invitation not found.");
-           }
+        $this->tx_service->transaction(function () use ($summit, $invitation_id) {
+            $invitation = $summit->getSummitRegistrationInvitationById($invitation_id);
+            if (is_null($invitation)) {
+                throw new EntityNotFoundException("Invitation not found.");
+            }
 
-           $summit->removeRegistrationInvitation($invitation);
-       });
+            $summit->removeRegistrationInvitation($invitation);
+        });
     }
 
     /**
@@ -159,33 +163,30 @@ final class SummitRegistrationInvitationService
      */
     public function add(Summit $summit, array $payload): SummitRegistrationInvitation
     {
-        return $this->tx_service->transaction(function() use($summit, $payload){
+        return $this->tx_service->transaction(function () use ($summit, $payload) {
             $email = trim($payload['email']);
-            $allowed_ticket_types = $payload['allowed_ticket_types'] ?? '';
-            $former_invitation  = $summit->getSummitRegistrationInvitationByEmail($email);
-            if(!is_null($former_invitation)){
+            $allowed_ticket_types = $payload['allowed_ticket_types'] ?? [];
+            $former_invitation = $summit->getSummitRegistrationInvitationByEmail($email);
+            if (!is_null($former_invitation)) {
                 throw new ValidationException(sprintf("Email %s already has been invited for summit %s", $email, $summit->getId()));
             }
 
             $invitation = SummitRegistrationInvitationFactory::build($payload);
 
-            if(!empty($allowed_ticket_types)){
-                $allowed_ticket_types = explode('|', $allowed_ticket_types);
-                foreach ($allowed_ticket_types as $ticket_type_id){
-                    $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
-                    if(is_null($ticket_type)){
-                        throw new ValidationException
+            foreach ($allowed_ticket_types as $ticket_type_id) {
+                $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
+                if (is_null($ticket_type)) {
+                    throw new ValidationException
+                    (
+                        sprintf
                         (
-                            sprintf
-                            (
-                                "SummitRegistrationInvitationService::add ticket type %s does not exists on summit %s.",
-                                $ticket_type_id,
-                                $summit->getId()
-                            )
-                        );
-                    }
-                    $invitation->addTicketType($ticket_type);
+                            "SummitRegistrationInvitationService::add ticket type %s does not exists on summit %s.",
+                            $ticket_type_id,
+                            $summit->getId()
+                        )
+                    );
                 }
+                $invitation->addTicketType($ticket_type);
             }
 
             $invitation = $this->setInvitationMember($invitation, $email);
@@ -202,17 +203,18 @@ final class SummitRegistrationInvitationService
      * @return SummitRegistrationInvitation
      * @throws \Exception
      */
-    private function setInvitationMember(SummitRegistrationInvitation $invitation, string $email):SummitRegistrationInvitation {
-        return $this->tx_service->transaction(function() use($invitation, $email){
+    private function setInvitationMember(SummitRegistrationInvitation $invitation, string $email): SummitRegistrationInvitation
+    {
+        return $this->tx_service->transaction(function () use ($invitation, $email) {
             $member = $this->member_repository->getByEmail($email);
             // try to get an user externally , user does not exits locally
-            if(is_null($member)){
+            if (is_null($member)) {
                 // check if user exists by email at idp
                 Log::debug(sprintf("SummitRegistrationInvitationService::setInvitationMember - trying to get member %s from user api", $email));
                 $user = $this->external_user_api->getUserByEmail($email);
                 // check if primary email is the same if not disregard
-                $primary_email =  $user['email'] ?? null;
-                if(strcmp(strtolower($primary_email), strtolower($email)) !== 0){
+                $primary_email = $user['email'] ?? null;
+                if (strcmp(strtolower($primary_email), strtolower($email)) !== 0) {
                     Log::debug
                     (
                         sprintf
@@ -228,7 +230,7 @@ final class SummitRegistrationInvitationService
                     $user = null; // set null on user and proceed to emit a registration request.
                 }
 
-                if(is_null($user)){
+                if (is_null($user)) {
 
                     Log::debug
                     (
@@ -250,7 +252,7 @@ final class SummitRegistrationInvitationService
                     $invitation->setSetPasswordLink($user_registration_request['set_password_link']);
                 }
 
-                if(!is_null($user)) {
+                if (!is_null($user)) {
                     Log::debug
                     (
                         sprintf
@@ -259,7 +261,7 @@ final class SummitRegistrationInvitationService
                             $email
                         )
                     );
-                    $external_id =  $user['id'];
+                    $external_id = $user['id'];
                     try {
 
                         // we have an user on idp
@@ -276,8 +278,7 @@ final class SummitRegistrationInvitationService
                                 boolval($user['email_verified'])
                             )
                         );
-                    }
-                    catch (\Exception $ex){
+                    } catch (\Exception $ex) {
                         Log::warning($ex);
                         // race condition lost
                         $member = $this->member_repository->getByExternalIdExclusiveLock(intval($external_id));
@@ -286,23 +287,24 @@ final class SummitRegistrationInvitationService
                 }
             }
 
-            if(!is_null($member))
+            if (!is_null($member))
                 $invitation->setMember($member);
 
             return $invitation;
         });
     }
+
     /**
      * @inheritDoc
      */
     public function update(Summit $summit, int $invitation_id, array $payload): SummitRegistrationInvitation
     {
-        return $this->tx_service->transaction(function() use($summit, $payload, $invitation_id){
-           $invitation = $summit->getSummitRegistrationInvitationById($invitation_id);
-           if(is_null($invitation))
-               throw new EntityNotFoundException(sprintf("Invitation %s not found at Summit %s", $invitation_id, $summit->getId()));
+        return $this->tx_service->transaction(function () use ($summit, $payload, $invitation_id) {
+            $invitation = $summit->getSummitRegistrationInvitationById($invitation_id);
+            if (is_null($invitation))
+                throw new EntityNotFoundException(sprintf("Invitation %s not found at Summit %s", $invitation_id, $summit->getId()));
 
-            if(isset($payload['email'])) {
+            if (isset($payload['email'])) {
                 $email = trim($payload['email']);
                 $former_invitation = $summit->getSummitRegistrationInvitationByEmail($email);
                 if (!is_null($former_invitation) && $former_invitation->getId() !== $invitation_id) {
@@ -312,31 +314,28 @@ final class SummitRegistrationInvitationService
 
             $invitation = SummitRegistrationInvitationFactory::populate($invitation, $payload);
 
-            if(isset($payload['email'])) {
+            if (isset($payload['email'])) {
                 $email = trim($payload['email']);
                 $invitation = $this->setInvitationMember($invitation, $email);
             }
 
-            $allowed_ticket_types = $payload['allowed_ticket_types'] ?? '';
-
-            if(!empty($allowed_ticket_types)){
-                $invitation->clearTicketTypes();
-                $allowed_ticket_types = explode('|', $allowed_ticket_types);
-                foreach ($allowed_ticket_types as $ticket_type_id){
-                    $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
-                    if(is_null($ticket_type)){
-                        throw new ValidationException
+            $allowed_ticket_types = $payload['allowed_ticket_types'] ?? [];
+            $invitation->clearTicketTypes();
+            $allowed_ticket_types = explode('|', $allowed_ticket_types);
+            foreach ($allowed_ticket_types as $ticket_type_id) {
+                $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
+                if (is_null($ticket_type)) {
+                    throw new ValidationException
+                    (
+                        sprintf
                         (
-                            sprintf
-                            (
-                                "SummitRegistrationInvitationService::add ticket type %s does not exists on summit %s.",
-                                $ticket_type_id,
-                                $summit->getId()
-                            )
-                        );
-                    }
-                    $invitation->addTicketType($ticket_type);
+                            "SummitRegistrationInvitationService::add ticket type %s does not exists on summit %s.",
+                            $ticket_type_id,
+                            $summit->getId()
+                        )
+                    );
                 }
+                $invitation->addTicketType($ticket_type);
             }
 
             return $invitation;
@@ -355,15 +354,15 @@ final class SummitRegistrationInvitationService
 
             $invitation = $this->invitation_repository->getByHashExclusiveLock(SummitRegistrationInvitation::HashConfirmationToken($token));
 
-            if(is_null($invitation))
+            if (is_null($invitation))
                 throw new EntityNotFoundException("Invitation not found.");
             Log::debug(sprintf("got invitation %s for email %s", $invitation->getId(), $invitation->getEmail()));
-            if($invitation->getEmail() !== $current_member->getEmail())
+            if ($invitation->getEmail() !== $current_member->getEmail())
                 throw new ValidationException("Invitation belongs to another User.");
 
             $invitation->setMember($current_member);
 
-            if($invitation->isAccepted()){
+            if ($invitation->isAccepted()) {
                 throw new ValidationException("Invitation is already accepted.");
             }
 
@@ -377,10 +376,10 @@ final class SummitRegistrationInvitationService
      * @return SummitRegistrationInvitation|null
      * @throws \Exception
      */
-    public function getInvitationByEmail(Summit $summit, string $email):?SummitRegistrationInvitation
+    public function getInvitationByEmail(Summit $summit, string $email): ?SummitRegistrationInvitation
     {
         return $this->tx_service->transaction(function () use ($summit, $email) {
-            if(!$summit->isInviteOnlyRegistration())
+            if (!$summit->isInviteOnlyRegistration())
                 throw new ValidationException(sprintf("Summit %s is not invite only.", $summit->getId()));
 
             return $summit->getSummitRegistrationInvitationByEmail($email);
@@ -392,8 +391,8 @@ final class SummitRegistrationInvitationService
      */
     public function deleteAll(Summit $summit): void
     {
-        $this->tx_service->transaction(function() use($summit){
-           $summit->clearRegistrationInvitations();
+        $this->tx_service->transaction(function () use ($summit) {
+            $summit->clearRegistrationInvitations();
         });
     }
 
@@ -416,13 +415,13 @@ final class SummitRegistrationInvitationService
 
         Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s", $summit_id, $flow_event));
 
-        $ids = $this->tx_service->transaction(function() use($summit_id, $payload, $filter){
-            if(isset($payload['invitations_ids'])) {
+        $ids = $this->tx_service->transaction(function () use ($summit_id, $payload, $filter) {
+            if (isset($payload['invitations_ids'])) {
                 Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s invitations_ids %s", $summit_id, json_encode($payload['invitations_ids'])));
                 return $payload['invitations_ids'];
             }
             Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s getting by filter", $summit_id));
-            if(is_null($filter)){
+            if (is_null($filter)) {
                 $filter = new Filter();
             }
             $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
@@ -430,25 +429,25 @@ final class SummitRegistrationInvitationService
         });
 
         foreach ($ids as $invitation_id)
-            $this->tx_service->transaction(function() use($flow_event, $invitation_id){
+            $this->tx_service->transaction(function () use ($flow_event, $invitation_id) {
 
                 Log::debug(sprintf("SummitRegistrationInvitationService::send processing invitation id  %s", $invitation_id));
 
                 $invitation = $this->invitation_repository->getByIdExclusiveLock(intval($invitation_id));
-                if(is_null($invitation) || !$invitation instanceof SummitRegistrationInvitation) return;
+                if (is_null($invitation) || !$invitation instanceof SummitRegistrationInvitation) return;
 
                 $summit = $invitation->getSummit();
 
-                while(true) {
+                while (true) {
                     $invitation->generateConfirmationToken();
                     $former_invitation = $summit->getSummitRegistrationInvitationByHash($invitation->getHash());
-                    if(is_null($former_invitation) || $former_invitation->getId() == $invitation->getId()) break;
+                    if (is_null($former_invitation) || $former_invitation->getId() == $invitation->getId()) break;
                 }
 
                 // send email
-                if($flow_event == InviteSummitRegistrationEmail::EVENT_SLUG)
+                if ($flow_event == InviteSummitRegistrationEmail::EVENT_SLUG)
                     InviteSummitRegistrationEmail::dispatch($invitation);
-                if($flow_event == ReInviteSummitRegistrationEmail::EVENT_SLUG)
+                if ($flow_event == ReInviteSummitRegistrationEmail::EVENT_SLUG)
                     ReInviteSummitRegistrationEmail::dispatch($invitation);
 
             });

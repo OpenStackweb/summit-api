@@ -29,10 +29,14 @@ class SummitRegistrationInvitationSerializer extends SilverStripeSerializer
         'AcceptedDate' => 'accepted_date:datetime_epoch',
     ];
 
+    protected static $allowed_relations = [
+       'allowed_ticket_types',
+    ];
+
     /**
      * @param null $expand
      * @param array $fields
-     * @param array $relations
+     * @param array $relation
      * @param array $params
      * @return array
      */
@@ -44,12 +48,13 @@ class SummitRegistrationInvitationSerializer extends SilverStripeSerializer
         if (!count($relations)) $relations = $this->getAllowedRelations();
         $values  = parent::serialize($expand, $fields, $relations, $params);
 
-        $allowed_ticket_types = [];
-        foreach ($invitation->getTicketTypes() as $ticket_type){
-            $allowed_ticket_types[] = $ticket_type->getId();
+        if(in_array('allowed_ticket_types', $relations) && !isset($values['allowed_ticket_types'])){
+            $allowed_ticket_types = [];
+            foreach ($invitation->getTicketTypes() as $ticket_type){
+                $allowed_ticket_types[] = $ticket_type->getId();
+            }
+            $values['allowed_ticket_types'] = $allowed_ticket_types;
         }
-        $values['allowed_ticket_types'] = $allowed_ticket_types;
-
         return $values;
     }
 

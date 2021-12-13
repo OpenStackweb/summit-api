@@ -413,7 +413,7 @@ class Summit extends SilverstripeBaseModel
     private $support_email;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitEvent", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="SummitEvent", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      */
     private $events;
 
@@ -435,7 +435,7 @@ class Summit extends SilverstripeBaseModel
     private $track_tag_groups;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitRegistrationPromoCode", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="SummitRegistrationPromoCode", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitRegistrationPromoCode[]
      */
     private $promo_codes;
@@ -459,43 +459,43 @@ class Summit extends SilverstripeBaseModel
     private $badge_features_types;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitBadgeType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="SummitBadgeType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitBadgeType[]
      */
     private $badge_types;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitOrder", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="SummitOrder", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitOrder[]
      */
     private $orders;
 
     /**
-     * @ORM\OneToMany(targetEntity="Sponsor", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="Sponsor", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var Sponsor[]
      */
     private $summit_sponsors;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitTaxType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="SummitTaxType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitTaxType[]
      */
     private $tax_types;
 
     /**
-     * @ORM\OneToMany(targetEntity="PaymentGatewayProfile", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="PaymentGatewayProfile", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PaymentGatewayProfile[]
      */
     private $payment_profiles;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitOrderExtraQuestionType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="SummitOrderExtraQuestionType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitOrderExtraQuestionType[]
      */
     private $order_extra_questions;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitRefundPolicyType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="SummitRefundPolicyType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitRefundPolicyType[]
      */
     private $refund_policies;
@@ -634,7 +634,7 @@ class Summit extends SilverstripeBaseModel
     private $excluded_categories_for_upload_slide_decks;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\main\PersonalCalendarShareInfo", mappedBy="summit", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\main\PersonalCalendarShareInfo", mappedBy="summit", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PersonalCalendarShareInfo[]
      */
     private $schedule_shareable_links;
@@ -646,7 +646,7 @@ class Summit extends SilverstripeBaseModel
     private $email_flows_events;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitRegistrationInvitation", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\summit\SummitRegistrationInvitation", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitRegistrationInvitation[]
      */
     private $registration_invitations;
@@ -658,7 +658,7 @@ class Summit extends SilverstripeBaseModel
     private $permission_groups;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitMetric", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\summit\SummitMetric", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitMetric[]
      */
     private $metrics;
@@ -5000,6 +5000,18 @@ SQL;
     {
         if (!$this->isInviteOnlyRegistration()) return true;
         return $this->getSummitRegistrationInvitationByEmail($email) !== null;
+    }
+
+    /**
+     * @param string $email
+     * @param SummitTicketType $ticketType
+     * @return bool
+     */
+    public function canBuyRegistrationTicketByType(string $email, SummitTicketType $ticketType):bool{
+        if (!$this->isInviteOnlyRegistration()) return true;
+        $invitation = $this->getSummitRegistrationInvitationByEmail($email);
+        if(is_null($invitation)) return false;
+        return $invitation->isTicketTypeAllowed($ticketType->getId());
     }
 
     /**

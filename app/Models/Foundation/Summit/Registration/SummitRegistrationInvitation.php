@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use Doctrine\Common\Collections\Criteria;
 use models\main\Member;
 use models\utils\RandomGenerator;
 use models\utils\SilverstripeBaseModel;
@@ -83,6 +84,25 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
      * @var SummitOrder
      */
     private $order;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="SummitTicketType", fetch="EXTRA_LAZY")
+     * @ORM\JoinTable(name="SummitRegistrationInvitation_SummitTicketTypes",
+     *      joinColumns={@ORM\JoinColumn(name="SummitRegistrationInvitationID", referencedColumnName="ID")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitTicketTypeID", referencedColumnName="ID")}
+     *      )
+     * @var SummitTicketType[]
+     */
+    private $ticket_types;
+
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->ticket_types = new ArrayCollection();
+        $this->member = null;
+        $this->order = null;
+    }
 
     /**
      * @return string
@@ -289,4 +309,42 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         $this->order = null;
     }
 
+    /**
+     * @param SummitTicketType $ticketType
+     */
+    public function addTicketType(SummitTicketType $ticketType){
+        if($this->ticket_types->contains($ticketType)) return;
+        $this->ticket_types->add($ticketType);
+    }
+
+    /**
+     * @param SummitTicketType $ticketType
+     */
+    public function removeTicketType(SummitTicketType $ticketType){
+        if(!$this->ticket_types->contains($ticketType)) return;
+        $this->ticket_types->removeElement($ticketType);
+    }
+
+    /**
+     * @return SummitTicketType[]
+     */
+    public function getTicketTypes()
+    {
+        return $this->ticket_types;
+    }
+
+    public function clearTicketTypes():void{
+        $this->ticket_types->clear();
+    }
+
+    /**
+     * @param int $ticket_type_id
+     * @return bool
+     */
+    public function isTicketTypeAllowed(int $ticket_type_id):bool{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $ticket_type_id));
+        $ticket_type = $this->ticket_types->matching($criteria)->first();
+        return !($ticket_type === false);
+    }
 }

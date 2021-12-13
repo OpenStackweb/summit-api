@@ -352,6 +352,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
            'email' => 'required|email|max:255',
            'first_name' => 'required|string|max:255',
            'last_name' => 'required|string|max:255',
+           'allowed_ticket_types' => 'sometimes|int_array',
        ];
     }
 
@@ -366,6 +367,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             'email' => 'sometimes|email|max:255',
             'first_name' => 'sometimes|string|max:255',
             'last_name' => 'sometimes|string|max:255',
+            'allowed_ticket_types' => 'sometimes|int_array',
         ];
     }
 

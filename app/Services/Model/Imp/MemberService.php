@@ -334,6 +334,10 @@ final class MemberService
         return $this->tx_service->transaction(function () use ($user_external_id) {
             // get external user from IDP
             $user_data = $this->user_ext_api->getUserById($user_external_id);
+            if(is_null($user_data) || !isset($user_data['email'])){
+                Log::error(sprintf("MemberService::registerExternalUserById user_external_id %s does not exists.", $user_external_id));
+                throw new EntityNotFoundException(sprintf("MemberService::registerExternalUserById user_external_id %s does not exists.", $user_external_id));
+            }
             $email = trim($user_data['email']);
             // first by external id due email could be updated
             Log::debug(sprintf("MemberService::registerExternalUserById trying to get user by external id %s", $user_external_id));

@@ -714,16 +714,27 @@ final class PreOrderValidationTask extends AbstractTask
     private $payload;
 
     /**
-     * PreOrderValidationTask constructor.
+     * @var ISummitTicketTypeRepository
+     */
+    private $ticket_type_repository;
+
+    /**
      * @param Summit $summit
      * @param array $payload
+     * @param ISummitTicketTypeRepository $ticket_type_repository
      * @param ITransactionService $tx_service
      */
-    public function __construct(Summit $summit, array $payload, ITransactionService $tx_service)
+    public function __construct
+    (
+        Summit $summit, array $payload,
+        ISummitTicketTypeRepository $ticket_type_repository,
+        ITransactionService $tx_service
+    )
     {
         $this->tx_service = $tx_service;
         $this->summit = $summit;
         $this->payload = $payload;
+        $this->ticket_type_repository = $ticket_type_repository;
     }
 
     public function run(array $formerState): array
@@ -740,7 +751,15 @@ final class PreOrderValidationTask extends AbstractTask
             $owner_email = $this->payload['owner_email'];
 
             if (!$this->summit->canBuyRegistrationTickets($owner_email)) {
-                throw new ValidationException(sprintf("email %s can not buy registration tickets for summit %s", $owner_email, $this->summit->getId()));
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Email %s can not buy registration tickets for summit %s.",
+                        $owner_email,
+                        $this->summit->getName()
+                    )
+                );
             }
 
             // check extra question for order ( if they exists and if they are mandatory)
@@ -768,6 +787,32 @@ final class PreOrderValidationTask extends AbstractTask
                 }
             }
 
+            // check if we are allowed to buy ticket by type
+            $tickets = $this->payload['tickets'];
+
+            foreach ($tickets as $ticket_dto) {
+
+                if (!isset($ticket_dto['type_id']))
+                    throw new ValidationException('type_id is mandatory');
+
+                $type_id = intval($ticket_dto['type_id']);
+                $ticket_type = $this->ticket_type_repository->getById($type_id);
+                if(is_null($ticket_type) || !$ticket_type instanceof SummitTicketType)
+                    throw new EntityNotFoundException(sprintf("ticket type %s not found.", $type_id));
+
+                if (!$this->summit->canBuyRegistrationTicketByType($owner_email, $ticket_type)) {
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "Email %s can not buy registration tickets of type %s for summit %s.",
+                            $owner_email,
+                            $ticket_type->getName(),
+                            $this->summit->getId()
+                        )
+                    );
+                }
+            }
         });
         return [];
     }
@@ -916,7 +961,7 @@ final class SummitOrderService
             });
 
             $state = Saga::start()
-                ->addTask(new PreOrderValidationTask($summit, $payload, $this->tx_service))
+                ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))
                 ->addTask(new PreProcessReservationTask($payload))
                 ->addTask(new ReserveTicketsTask($summit, $this->ticket_type_repository, $this->tx_service))
                 ->addTask(new ApplyPromoCodeTask($summit, $payload, $this->promo_code_repository, $this->tx_service))

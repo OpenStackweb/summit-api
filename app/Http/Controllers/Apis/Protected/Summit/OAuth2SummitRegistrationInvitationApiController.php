@@ -304,6 +304,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'accepted_date',
                     'is_accepted',
                     'is_sent',
+                    'allowed_ticket_types',
                 ];
 
                 $columns_param = Request::input("columns", "");

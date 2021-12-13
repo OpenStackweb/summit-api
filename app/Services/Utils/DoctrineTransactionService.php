@@ -95,6 +95,7 @@ final class DoctrineTransactionService implements ITransactionService
                 if ($retry === self::MaxRetries) {
                     $em->close();
                     $con->rollBack();
+                    Registry::resetManager($this->manager_name);
                     throw $ex;
                 }
             } catch (Exception $ex) {
@@ -102,6 +103,7 @@ final class DoctrineTransactionService implements ITransactionService
                 Log::warning($ex);
                 $em->close();
                 $con->rollBack();
+                Registry::resetManager($this->manager_name);
                 throw $ex;
             }
         }

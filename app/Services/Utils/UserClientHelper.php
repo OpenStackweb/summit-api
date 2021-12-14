@@ -21,18 +21,23 @@ final class UserClientHelper
      * returns user current ip address
      * @return string
      */
-    public static function getUserIp()
+    public static function getUserIp(): ?string
     {
-        $ip = isset($_SERVER['HTTP_CLIENT_IP']) ? $_SERVER['HTTP_CLIENT_IP'] : isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'] ?? '';
-        return $ip;
+        return $_SERVER['HTTP_CLIENT_IP'] ?? ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? ($_SERVER['REMOTE_ADDR'] ?? ''));
     }
 
-    public static function getUserOrigin()
+    /**
+     * @return string|null
+     */
+    public static function getUserOrigin():?string
     {
         return $_SERVER['HTTP_REFERER']?? ($_SERVER['HTTP_ORIGIN'] ?? '');
     }
 
-    public static function getUserBrowser()
+    /**
+     * @return string|null
+     */
+    public static function getUserBrowser():?string
     {
         return $_SERVER['HTTP_USER_AGENT']??'';
     }

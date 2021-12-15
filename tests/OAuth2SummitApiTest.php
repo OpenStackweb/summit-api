@@ -32,14 +32,14 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
     public function tearDown():void
     {
        // self::clearTestData();
-        Mockery::close();
+        \Mockery::close();
     }
 
     public function createApplication()
     {
         $app = parent::createApplication();
 
-        $fileUploaderMock = Mockery::mock(\App\Http\Utils\IFileUploader::class)
+        $fileUploaderMock = \Mockery::mock(\App\Http\Utils\IFileUploader::class)
             ->shouldIgnoreMissing();
 
         $fileUploaderMock->shouldReceive('build')->andReturn(new \models\main\File());

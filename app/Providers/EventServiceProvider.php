@@ -20,6 +20,7 @@ use App\Events\PresentationActionTypeCreated;
 use App\Events\RSVPCreated;
 use App\Events\RSVPUpdated;
 use App\Events\SummitOrderCanceled;
+use App\Events\TicketUpdated;
 use App\Factories\EntityEvents\FloorActionEntityEventFactory;
 use App\Factories\EntityEvents\LocationActionEntityEventFactory;
 use App\Factories\EntityEvents\LocationImageActionEntityEventFactory;
@@ -55,6 +56,7 @@ use App\Jobs\Emails\Schedule\RSVPRegularSeatMail;
 use App\Jobs\Emails\Schedule\RSVPWaitListSeatMail;
 use App\Jobs\SynchAllPresentationActions;
 use App\Jobs\SynchPresentationActions;
+use App\Jobs\UpdateIDPMemberInfo;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
@@ -457,6 +459,14 @@ final class EventServiceProvider extends ServiceProvider
             $summit = $event->getActionType()->getSummit();
 
             SynchAllPresentationActions::dispatch($summit->getId());
+        });
+
+        Event::listen(TicketUpdated::class, function ($event) {
+
+            if (!$event instanceof TicketUpdated) return;
+
+            // publish profile changes to the IDP
+            //UpdateIDPMemberInfo::dispatch($event->getAttendee());
         });
     }
 }

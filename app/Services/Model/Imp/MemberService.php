@@ -650,4 +650,17 @@ final class MemberService
         });
     }
 
+    public function updateExternalUser(int $member_id, ?string $first_name, ?string $last_name, ?string $company_name):void {
+        Log::debug(sprintf("MemberService::updateExternalUser - sending new profile info to user api for member %s", $member_id));
+        $this->external_user_api->updateUser($member_id, $first_name, $last_name, $company_name);
+    }
+
+    public function updatePendingRegistrationRequest(string $email, bool $is_redeemed, ?string $first_name, ?string $last_name,
+                                                     ?string $company_name, ?string $country):void {
+        Log::debug(sprintf("MemberService::updatePendingRegistrationRequest - sending new profile info to user api for member %s", $email));
+        $res = $this->external_user_api->getUserRegistrationRequest($email, $first_name, $last_name, $is_redeemed);
+        if (!is_null($res)) {
+            $this->external_user_api->updateUserRegistrationRequest($res["id"], $first_name, $last_name, $company_name, $country);
+        }
+    }
 }

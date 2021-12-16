@@ -40,4 +40,34 @@ interface IExternalUserApi
      * @throws Exception
      */
     public function registerUser(string $email, ?string $first_name, ?string $last_name);
+
+    /**
+     * @param int $id
+     * @param string|null $first_name
+     * @param string|null $last_name
+     * @return mixed
+     * @throws Exception
+     */
+    public function updateUser(int $id, ?string $first_name, ?string $last_name, ?string $company_name);
+
+    /**
+     * @param string $email
+     * @param string $first_name
+     * @param string $last_name
+     * @param bool $is_redeemed
+     * @return mixed
+     * @throws Exception
+     */
+    public function getUserRegistrationRequest(string $email, string $first_name, string $last_name, bool $is_redeemed);
+
+    /**
+     * @param int $id
+     * @param string|null $first_name
+     * @param string|null $last_name
+     * @param string|null $company_name
+     * @param string|null $country
+     * @return mixed
+     * @throws Exception
+     */
+    public function updateUserRegistrationRequest(int $id, ?string $first_name, ?string $last_name, ?string $company_name, ?string $country);
 }

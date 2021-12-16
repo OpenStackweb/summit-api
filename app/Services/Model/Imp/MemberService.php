@@ -323,7 +323,6 @@ final class MemberService
         });
     }
 
-
     /**
      * @param $user_external_id
      * @return Member
@@ -555,13 +554,16 @@ final class MemberService
      * @throws \Exception
      */
     public function emitRegistrationRequest(string $email, string $first_name, string $last_name):array{
-      // user does not exists , emit a registration request
-      return $this->external_user_api->registerUser
-      (
-        $email,
-        $first_name,
-        $last_name
-      );
+          // user does not exists , emit a registration request
+          // if email == fname == lname => clean it
+          if($email == $first_name) $first_name = '';
+          if($email == $last_name) $last_name = '';
+          return $this->external_user_api->registerUser
+          (
+            $email,
+            $first_name,
+            $last_name
+          );
     }
 
     /**

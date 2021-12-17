@@ -90,10 +90,11 @@ interface IMemberService
      * @param string $email
      * @param string $first_name
      * @param string $last_name
+     * @param string $company
      * @return array
      * @throws \Exception
      */
-    public function emitRegistrationRequest(string $email, string $first_name, string $last_name):array;
+    public function emitRegistrationRequest(string $email, string $first_name, string $last_name, string $company = ''):array;
 
     /**
      * @param Member $member

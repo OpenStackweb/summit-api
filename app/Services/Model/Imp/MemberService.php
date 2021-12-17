@@ -550,19 +550,21 @@ final class MemberService
      * @param string $email
      * @param string $first_name
      * @param string $last_name
+     * @param string $company
      * @return array
      * @throws \Exception
      */
-    public function emitRegistrationRequest(string $email, string $first_name, string $last_name):array{
+    public function emitRegistrationRequest(string $email, string $first_name, string $last_name, string $company = ''):array{
           // user does not exists , emit a registration request
           // if email == fname == lname => clean it
           if($email == $first_name) $first_name = '';
           if($email == $last_name) $last_name = '';
           return $this->external_user_api->registerUser
           (
-            $email,
-            $first_name,
-            $last_name
+                $email,
+                $first_name,
+                $last_name,
+                $company
           );
     }
 

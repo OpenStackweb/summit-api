@@ -42,7 +42,8 @@ abstract class AbstractSummitAttendeeTicketEmail extends AbstractEmailJob
                 (
                     $email,
                     $this->payload['owner_first_name'],
-                    $this->payload['owner_last_name']
+                    $this->payload['owner_last_name'],
+                    $this->payload['owner_company'] ?? ''
                 );
 
                 $setPasswordLink = $userRegistrationRequest['set_password_link'];

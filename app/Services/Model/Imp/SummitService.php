@@ -3141,7 +3141,8 @@ final class SummitService extends AbstractService implements ISummitService
                                         (
                                             $speaker->getEmail(),
                                             $speaker->getFirstName(),
-                                            $speaker->getLastName()
+                                            $speaker->getLastName(),
+                                            $speaker->getCompany()
                                         );
 
                                         $setPasswordLink = $userRegistrationRequest['set_password_link'];

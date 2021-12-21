@@ -215,5 +215,147 @@ final class ExternalUserApi extends AbstractOAuth2Api
             throw $ex;
         }
     }
+
+    /**
+     * @param int $id
+     * @param string|null $first_name
+     * @param string|null $last_name
+     * @param string|null $company_name
+     * @return mixed
+     * @throws Exception
+     */
+    public function updateUser(int $id, ?string $first_name, ?string $last_name, ?string $company_name)
+    {
+        Log::debug(sprintf("ExternalUserApi::updateUser first_name %s last_name %s", $first_name, $last_name));
+
+        try {
+            $query = [
+                'access_token' => $this->getAccessToken()
+            ];
+
+            $response = $this->client->put(sprintf('/api/v1/users/%s', $id), [
+                    'query' => $query,
+                    RequestOptions::JSON => [
+                        'first_name'    => $first_name,
+                        'last_name'     => $last_name,
+                        'company_name'  => $company_name
+                    ]
+                ]
+            );
+
+            return json_decode($response->getBody()->getContents(), true);
+        }
+        catch (RequestException $ex) {
+            Log::warning($ex);
+            $this->cleanAccessToken();
+            $response  = $ex->getResponse();
+            $code = $response->getStatusCode();
+            if($code == 403){
+                // retry
+                return $this->updateUser($id, $first_name, $last_name, $company_name);
+            }
+        }
+        catch (Exception $ex) {
+            $this->cleanAccessToken();
+            Log::error($ex);
+            throw $ex;
+        }
+    }
+
+    /**
+     * @param string $email
+     * @param string $first_name
+     * @param string $last_name
+     * @param bool $is_redeemed
+     * @return mixed
+     * @throws Exception
+     */
+    public function getUserRegistrationRequest(string $email)
+    {
+        try {
+            Log::debug(sprintf("ExternalUserApi::getUserRegistrationRequest email %s", $email));
+
+            $query = [
+                'access_token' => $this->getAccessToken(),
+            ];
+
+            $params = [
+                'filter' => 'email==' . $email
+            ];
+
+            foreach ($params as $param => $value) {
+                $query[$param] = $value;
+            }
+
+            $response = $this->client->get('/api/v1/user-registration-requests', [
+                'query' => $query,
+            ]);
+
+            return json_decode($response->getBody()->getContents(), true);
+        }
+        catch (RequestException $ex) {
+            Log::warning($ex);
+            $this->cleanAccessToken();
+            $response  = $ex->getResponse();
+            $code = $response->getStatusCode();
+            if($code == 403){
+                // retry
+                return $this->getUserRegistrationRequest($email);
+            }
+        }
+        catch (Exception $ex) {
+            $this->cleanAccessToken();
+            Log::error($ex);
+            throw $ex;
+        }
+    }
+
+    /**
+     * @param int $id
+     * @param string|null $first_name
+     * @param string|null $last_name
+     * @param string|null $company_name
+     * @param string|null $country
+     * @return mixed
+     * @throws Exception
+     */
+    public function updateUserRegistrationRequest(
+        int $id, ?string $first_name, ?string $last_name, ?string $company_name, ?string $country)
+    {
+        Log::debug(sprintf("ExternalUserApi::updateUserRegistrationRequest id %s", $id));
+
+        try {
+            $query = [
+                'access_token' => $this->getAccessToken()
+            ];
+
+            $response = $this->client->put(sprintf('/api/v1/user-registration-requests/%s', $id), [
+                    'query' => $query,
+                    RequestOptions::JSON => [
+                        'first_name'    => $first_name,
+                        'last_name'     => $last_name,
+                        'company'       => $company_name,
+                        'country'       => $country
+                    ]
+                ]
+            );
+            return json_decode($response->getBody()->getContents(), true);
+        }
+        catch (RequestException $ex) {
+            Log::warning($ex);
+            $this->cleanAccessToken();
+            $response  = $ex->getResponse();
+            $code = $response->getStatusCode();
+            if($code == 403){
+                // retry
+                return $this->updateUserRegistrationRequest($id, $first_name, $last_name, $company_name, $country);
+            }
+        }
+        catch (Exception $ex) {
+            $this->cleanAccessToken();
+            Log::error($ex);
+            throw $ex;
+        }
+    }
 }
 

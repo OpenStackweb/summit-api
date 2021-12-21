@@ -14,6 +14,7 @@
 
 use App\Events\CreatedSummitRegistrationOrder;
 use App\Events\OrderDeleted;
+use App\Events\TicketUpdated;
 use App\Http\Renderers\SummitAttendeeTicketPDFRenderer;
 use App\Jobs\IngestSummitExternalRegistrationData;
 use App\Jobs\Emails\RegisteredMemberOrderPaidMail;
@@ -2711,6 +2712,8 @@ final class SummitOrderService
             SummitAttendeeFactory::populate($summit, $attendee, $reduced_payload);
             $attendee->updateStatus();
             $attendee->sendInvitationEmail($ticket);
+
+            Event::dispatch(new TicketUpdated($attendee));
 
             return $ticket;
         });

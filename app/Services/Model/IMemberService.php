@@ -122,4 +122,29 @@ interface IMemberService
      * @param int $member_id
      */
     public function assocSummitOrders(int $member_id):void;
+
+    /**
+     * @description Updates user's profile information in the IDP
+     * @param int $member_id
+     * @param string|null $first_name
+     * @param string|null $last_name
+     * @param string|null $company_name
+     * @return void
+     * @throws \Exception
+     */
+    public function updateExternalUser(int $member_id, ?string $first_name, ?string $last_name, ?string $company_name):void;
+
+    /**
+     * @description Updates an existing pending registration request in the IDP
+     * @param string $email
+     * @param bool $is_redeemed
+     * @param string|null $first_name
+     * @param string|null $last_name
+     * @param string|null $company_name
+     * @param string|null $country
+     * @return void
+     * @throws \Exception
+     */
+    public function updatePendingRegistrationRequest(string $email, bool $is_redeemed, ?string $first_name, ?string $last_name,
+                                                     ?string $company_name, ?string $country):void;
 }

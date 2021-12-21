@@ -275,7 +275,7 @@ final class ExternalUserApi extends AbstractOAuth2Api
      * @return mixed
      * @throws Exception
      */
-    public function getUserRegistrationRequest(string $email, string $first_name, string $last_name, bool $is_redeemed)
+    public function getUserRegistrationRequest(string $email)
     {
         try {
             Log::debug(sprintf("ExternalUserApi::getUserRegistrationRequest email %s", $email));
@@ -284,14 +284,16 @@ final class ExternalUserApi extends AbstractOAuth2Api
                 'access_token' => $this->getAccessToken(),
             ];
 
+            $params = [
+                'filter' => 'email==' . $email
+            ];
+
+            foreach ($params as $param => $value) {
+                $query[$param] = $value;
+            }
+
             $response = $this->client->get('/api/v1/user-registration-requests', [
                 'query' => $query,
-                RequestOptions::JSON => [
-                    'email'         => $email,
-                    'first_name'    => $first_name,
-                    'last_name'     => $last_name,
-                    'is_redeemed'   => $is_redeemed,
-                ]
             ]);
 
             return json_decode($response->getBody()->getContents(), true);
@@ -303,7 +305,7 @@ final class ExternalUserApi extends AbstractOAuth2Api
             $code = $response->getStatusCode();
             if($code == 403){
                 // retry
-                return $this->getUserRegistrationRequest($email, $first_name, $last_name, $is_redeemed);
+                return $this->getUserRegistrationRequest($email);
             }
         }
         catch (Exception $ex) {
@@ -322,7 +324,8 @@ final class ExternalUserApi extends AbstractOAuth2Api
      * @return mixed
      * @throws Exception
      */
-    public function updateUserRegistrationRequest(int $id, ?string $first_name, ?string $last_name, ?string $company_name, ?string $country)
+    public function updateUserRegistrationRequest(
+        int $id, ?string $first_name, ?string $last_name, ?string $company_name, ?string $country)
     {
         Log::debug(sprintf("ExternalUserApi::updateUserRegistrationRequest id %s", $id));
 

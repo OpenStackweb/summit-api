@@ -52,13 +52,10 @@ interface IExternalUserApi
 
     /**
      * @param string $email
-     * @param string $first_name
-     * @param string $last_name
-     * @param bool $is_redeemed
      * @return mixed
      * @throws Exception
      */
-    public function getUserRegistrationRequest(string $email, string $first_name, string $last_name, bool $is_redeemed);
+    public function getUserRegistrationRequest(string $email);
 
     /**
      * @param int $id

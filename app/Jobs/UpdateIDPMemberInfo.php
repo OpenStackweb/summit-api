@@ -50,7 +50,7 @@ class UpdateIDPMemberInfo implements ShouldQueue
      */
     public function handle(IMemberService $service)
     {
-        Log::debug(sprintf("UpdateIDPMemberInfo::handle user updated %s %s", $this->user_email));
+        Log::debug(sprintf("UpdateIDPMemberInfo::handle user updated %s", $this->user_email));
 
         try {
             //Check if user exists
@@ -59,12 +59,15 @@ class UpdateIDPMemberInfo implements ShouldQueue
             //If user exists => update it
             if (!is_null($user))
             {
-                $service->updateExternalUser($user);
+                $service->updateExternalUser(
+                    $user['id'], $this->user_first_name, $this->user_last_name, $this->user_company_name);
                 return;
             }
 
             //If user doesn't exist => check if there is a pending registration request, if so => update it
-            //...
+            $service->updatePendingRegistrationRequest(
+                $this->user_email, true, $this->user_first_name, $this->user_last_name,
+                $this->user_company_name, null);
         }
         catch (\Exception $ex){
             Log::error($ex);

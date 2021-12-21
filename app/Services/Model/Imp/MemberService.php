@@ -658,9 +658,9 @@ final class MemberService
     public function updatePendingRegistrationRequest(string $email, bool $is_redeemed, ?string $first_name, ?string $last_name,
                                                      ?string $company_name, ?string $country):void {
         Log::debug(sprintf("MemberService::updatePendingRegistrationRequest - sending new profile info to user api for member %s", $email));
-        $res = $this->external_user_api->getUserRegistrationRequest($email, $first_name, $last_name, $is_redeemed);
+        $res = $this->external_user_api->getUserRegistrationRequest($email);
         if (!is_null($res)) {
-            $this->external_user_api->updateUserRegistrationRequest($res["id"], $first_name, $last_name, $company_name, $country);
+            $this->external_user_api->updateUserRegistrationRequest($res['id'], $first_name, $last_name, $company_name, $country);
         }
     }
 }

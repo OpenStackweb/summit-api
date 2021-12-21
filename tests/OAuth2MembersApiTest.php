@@ -140,6 +140,7 @@ final class OAuth2MembersApiTest extends ProtectedApiTest
 
         $content = $response->getContent();
         $members = json_decode($content);
+
         $this->assertTrue(!is_null($members));
         $this->assertResponseStatus(200);
     }

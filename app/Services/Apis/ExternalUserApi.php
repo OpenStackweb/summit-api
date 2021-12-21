@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use GuzzleHttp\Exception\RequestException;
 use models\exceptions\ValidationException;
 use libs\utils\ICacheService;
@@ -111,10 +110,11 @@ final class ExternalUserApi extends AbstractOAuth2Api
      * @param string $email
      * @param string $first_name
      * @param string $last_name
+     * @param string $company
      * @return mixed
      * @throws Exception
      */
-    public function registerUser(string $email, ?string $first_name, ?string $last_name)
+    public function registerUser(string $email, ?string $first_name, ?string $last_name, ?string $company = '')
     {
         Log::debug(sprintf("ExternalUserApi::registerUser email %s first_name %s last_name %s", $email, $first_name, $last_name));
 
@@ -126,18 +126,13 @@ final class ExternalUserApi extends AbstractOAuth2Api
             if(empty($email))
                 throw new ValidationException("Email field es required.");
 
-            if(empty($first_name))
-                throw new ValidationException("First Name field es required.");
-
-            if(empty($last_name))
-                throw new ValidationException("Last Name field es required.");
-
             $response = $this->client->post('/api/v1/user-registration-requests', [
                     'query' => $query,
                     RequestOptions::JSON => [
                         'email'      => $email,
                         'first_name' => $first_name,
                         'last_name'  => $last_name,
+                        'company'    => $company
                     ]
                 ]
             );

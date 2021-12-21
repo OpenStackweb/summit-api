@@ -36,10 +36,11 @@ interface IExternalUserApi
      * @param string $email
      * @param string|null $first_name
      * @param string|null $last_name
+     * @param string|null $company
      * @return mixed
      * @throws Exception
      */
-    public function registerUser(string $email, ?string $first_name, ?string $last_name);
+    public function registerUser(string $email, ?string $first_name, ?string $last_name, ?string $company = '');
 
     /**
      * @param int $id

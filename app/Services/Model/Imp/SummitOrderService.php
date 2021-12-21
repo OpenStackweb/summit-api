@@ -1368,7 +1368,8 @@ final class SummitOrderService
                     (
                         $ownerEmail,
                         $order->getOwnerFirstName(),
-                        $order->getOwnerSurname()
+                        $order->getOwnerSurname(),
+                        $order->getCompany()
                     ));
 
                     return $order;
@@ -2708,11 +2709,11 @@ final class SummitOrderService
             }
 
             // update it
-//            SummitAttendeeFactory::populate($summit, $attendee, $reduced_payload);
-//            $attendee->updateStatus();
-//            $attendee->sendInvitationEmail($ticket);
+            SummitAttendeeFactory::populate($summit, $attendee, $reduced_payload);
+            $attendee->updateStatus();
+            $attendee->sendInvitationEmail($ticket);
 
-            //Event::dispatch(new TicketUpdated($attendee));
+            Event::dispatch(new TicketUpdated($attendee));
 
             return $ticket;
         });
@@ -3543,7 +3544,8 @@ final class SummitOrderService
                     (
                         $ownerEmail,
                         $order->getOwnerFirstName(),
-                        $order->getOwnerSurname()
+                        $order->getOwnerSurname(),
+                        $order->getCompany()
                     ));
 
                     $this->sendAttendeesInvitationEmail($order);

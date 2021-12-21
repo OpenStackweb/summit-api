@@ -466,7 +466,7 @@ final class EventServiceProvider extends ServiceProvider
             if (!$event instanceof TicketUpdated) return;
 
             // publish profile changes to the IDP
-            //UpdateIDPMemberInfo::dispatch($event->getAttendee());
+            UpdateIDPMemberInfo::dispatch($event->getAttendee());
         });
     }
 }

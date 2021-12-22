@@ -13,6 +13,8 @@
  **/
 
 use App\Events\CreatedSummitRegistrationOrder;
+use App\Events\MemberUpdated;
+use App\Events\NewMember;
 use App\Events\OrderDeleted;
 use App\Events\TicketUpdated;
 use App\Http\Renderers\SummitAttendeeTicketPDFRenderer;
@@ -943,20 +945,43 @@ final class SummitOrderService
     {
 
         try {
+            // update owner data
             $owner = $this->tx_service->transaction(function () use ($owner, $payload) {
                 if (is_null($owner)) return null;
 
                 Log::debug(sprintf("SummitOrderService::reserve trying to get member %s", $owner->getId()));
 
                 $owner = $this->member_repository->getByIdExclusiveLock($owner->getId());
+                if(!$owner instanceof Member) return null;
+                $first_name = null;
+                $last_name = null;
+                $company = null;
                 // if we have an owner check if his name is empty amd set with what is on the payload
-                if (empty($owner->getFirstName())) {
-                    $owner->setFirstName(trim($payload['owner_first_name']));
+                if (isset($payload['owner_first_name']) && !empty($payload['owner_first_name'])) {
+                    $first_name = trim($payload['owner_first_name']);
+                    $owner->setFirstName($first_name);
                 }
 
-                if (empty($owner->getLastName())) {
-                    $owner->setLastName(trim($payload['owner_last_name']));
+                if (isset($payload['owner_last_name']) && !empty($payload['owner_last_name'])) {
+                    $last_name = trim($payload['owner_last_name']);
+                    $owner->setLastName($last_name);
                 }
+
+                if(isset($payload['owner_company']) && !empty($payload['owner_company'])){
+                    $company = trim($payload['owner_company']);
+                }
+
+                Event::dispatch
+                (
+                    new MemberUpdated
+                    (
+                        $owner->getId(),
+                        $owner->getEmail(),
+                        $first_name,
+                        $last_name,
+                        $company
+                    )
+                );
 
                 return $owner;
             });

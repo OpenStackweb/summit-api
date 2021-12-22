@@ -20,6 +20,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Facades\Log;
 /**
  * Class PublishUserCreated
+ * RabbitMQ job
  * @package App\Jobs
  */
 class PublishUserCreated implements ShouldQueue

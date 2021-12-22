@@ -22,6 +22,7 @@ use models\exceptions\EntityNotFoundException;
 use Exception;
 /**
  * Class PublishUserDeleted
+ * RabbitMQ job
  * @package App\Jobs
  */
 class PublishUserDeleted implements ShouldQueue

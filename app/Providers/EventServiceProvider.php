@@ -13,6 +13,7 @@
  **/
 
 use App\EntityPersisters\EntityEventPersister;
+use App\Events\MemberUpdated;
 use App\Events\NewMember;
 use App\Events\OrderDeleted;
 use App\Events\PaymentSummitRegistrationOrderConfirmed;
@@ -417,6 +418,17 @@ final class EventServiceProvider extends ServiceProvider
             MemberAssocSummitOrders::dispatch($event->getMemberId());
         });
 
+        Event::listen(MemberUpdated::class, function($event){
+            if (!$event instanceof MemberUpdated) return;
+            Log::debug(sprintf("EventServiceProvider::MemberUpdated - firing NewMemberAssocSummitOrders member id %s", $event->getMemberId()));
+
+            UpdateIDPMemberInfo::dispatch(
+                $event->getEmail(),
+                $event->getFirstName(),
+                $event->getLastName(),
+                $event->getCompany()
+            );
+        });
 
         Event::listen(RSVPCreated::class, function ($event) {
             if (!$event instanceof RSVPCreated) return;
@@ -464,9 +476,12 @@ final class EventServiceProvider extends ServiceProvider
         Event::listen(TicketUpdated::class, function ($event) {
 
             if (!$event instanceof TicketUpdated) return;
-
             // publish profile changes to the IDP
-            UpdateIDPMemberInfo::dispatch($event->getAttendee());
+            $attendee = $event->getAttendee();
+            UpdateIDPMemberInfo::dispatch( $attendee->getEmail(),
+                $attendee->getFirstName(),
+                $attendee->getSurname(),
+                $attendee->getCompanyName());
         });
     }
 }

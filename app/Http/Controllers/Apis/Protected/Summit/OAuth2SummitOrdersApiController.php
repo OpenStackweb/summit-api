@@ -108,6 +108,8 @@ final class OAuth2SummitOrdersApiController
             ];
 
             if(is_null($owner)){
+                // if there is no current user ( public api )
+                // request owner data
                 $validation_rules = array_merge([
                     'owner_first_name' => 'required|string|max:255',
                     'owner_last_name'  => 'required|string|max:255',
@@ -115,14 +117,14 @@ final class OAuth2SummitOrdersApiController
                 ], $validation_rules);
             }
             else{
-
-                if(is_null($owner->getFirstName())){
+                // if current user exists but data is empty
+                if(empty($owner->getFirstName())){
                     $validation_rules = array_merge([
                         'owner_first_name' => 'required|string|max:255',
                     ], $validation_rules);
                 }
 
-                if(is_null($owner->getLastName())){
+                if(empty($owner->getLastName())){
                     $validation_rules = array_merge([
                         'owner_last_name' => 'required|string|max:255',
                     ], $validation_rules);

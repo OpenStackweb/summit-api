@@ -60,7 +60,7 @@ class UpdateIDPMemberInfo implements ShouldQueue
         $this->user_email = $user_email;
         $this->user_first_name = $user_first_name;
         $this->user_last_name = $user_last_name;
-        $this->user_company_name = $$user_company_name;
+        $this->user_company_name = $user_company_name;
     }
     /**
      * @param IMemberService $service

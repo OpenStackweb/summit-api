@@ -367,12 +367,16 @@ final class SummitRegistrationInvitationService
                 throw new EntityNotFoundException("Invitation not found.");
             Log::debug(sprintf("got invitation %s for email %s", $invitation->getId(), $invitation->getEmail()));
             if ($invitation->getEmail() !== $current_member->getEmail())
-                throw new ValidationException("Invitation belongs to another User.");
+                throw new ValidationException(sprintf(
+                    "This invitation was sent to %s but you logged in 
+                    as %s. Please log out, reaccept the invite, and log in with 
+                    the email address used for the invite."
+                ,$invitation->getEmail(), $current_member->getEmail()));
 
             $invitation->setMember($current_member);
 
             if ($invitation->isAccepted()) {
-                throw new ValidationException("Invitation is already accepted.");
+                throw new ValidationException("This Invitation is already accepted.");
             }
 
             return $invitation;

@@ -216,6 +216,7 @@ final class SummitRegistrationInvitationService
     private function setInvitationMember(SummitRegistrationInvitation $invitation, string $email): SummitRegistrationInvitation
     {
         return $this->tx_service->transaction(function () use ($invitation, $email) {
+            // try to get local user
             $member = $this->member_repository->getByEmail($email);
             // try to get an user externally , user does not exist locally
             if (is_null($member)) {
@@ -238,28 +239,6 @@ final class SummitRegistrationInvitationService
                     // email are not equals , then is not the user bc primary emails differs ( could be a
                     // match on a secondary email)
                     $user = null; // set null on user and proceed to emit a registration request.
-                }
-
-                if (is_null($user)) {
-
-                    Log::debug
-                    (
-                        sprintf
-                        (
-                            "SummitRegistrationInvitationService::setInvitationMember - user %s does not exist at IDP, emiting a registration request on idp",
-                            $email
-                        )
-                    );
-
-                    // user does not exists , emit a registration request
-                    $user_registration_request = $this->external_user_api->registerUser
-                    (
-                        $email,
-                        $invitation->getFirstName(),
-                        $invitation->getLastName()
-                    );
-
-                    $invitation->setSetPasswordLink($user_registration_request['set_password_link']);
                 }
 
                 if (!is_null($user)) {

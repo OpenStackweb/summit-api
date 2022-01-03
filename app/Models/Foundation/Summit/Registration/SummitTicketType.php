@@ -350,6 +350,25 @@ class SummitTicketType extends SilverstripeBaseModel
     }
 
     /**
+     * @return string
+     */
+    public function getCurrencySymbol(): ?string
+    {
+        return "$";
+    }
+
+    /**
+     * @return float
+     */
+    public function getFinalAmount(): float
+    {
+        $amount = $this->cost;
+        foreach ($this->applied_taxes as $tax) {
+            $amount += $tax->getAmount();
+        }
+        return $amount;
+    }
+    /**
      * @return bool
      */
     public function isSoldOut():bool{

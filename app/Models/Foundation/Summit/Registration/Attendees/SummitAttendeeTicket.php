@@ -262,7 +262,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      */
     public function getCurrencySymbol(): ?string
     {
-        return "$";
+        return $this->ticket_type->getCurrencySymbol();
     }
 
     /**

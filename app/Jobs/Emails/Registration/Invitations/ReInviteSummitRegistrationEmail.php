@@ -13,6 +13,7 @@
  **/
 use App\Jobs\Emails\AbstractEmailJob;
 use Illuminate\Support\Facades\Config;
+use libs\utils\FormatUtils;
 use models\summit\SummitRegistrationInvitation;
 
 /**
@@ -55,6 +56,22 @@ class ReInviteSummitRegistrationEmail extends AbstractEmailJob
                 urlencode($payload['invitation_form_url'])
             );
         }
+
+        $ticket_types = [];
+
+        foreach ($invitation->getTicketTypes() as $ticketType){
+            $ticket_type_dto = [
+                'name' => $ticketType->getName(),
+                'description' => $ticketType->getDescription(),
+                'price' => FormatUtils::getNiceFloat($ticketType->getFinalAmount()),
+                'currency' => $ticketType->getCurrency(),
+                'currency_symbol' => $ticketType->getCurrencySymbol(),
+            ];
+
+            $ticket_types[] = $ticket_type_dto;
+        }
+
+        $payload['ticket_types'] = $ticket_types;
 
         $support_email = $summit->getSupportEmail();
         $payload['support_email'] = !empty($support_email) ? $support_email: Config::get("registration.support_email", null);

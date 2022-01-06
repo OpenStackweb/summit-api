@@ -13,6 +13,7 @@
  **/
 use App\Jobs\Emails\AbstractEmailJob;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use libs\utils\FormatUtils;
 use models\summit\SummitRegistrationInvitation;
 /**
@@ -27,6 +28,17 @@ class InviteSummitRegistrationEmail extends AbstractEmailJob
      * @param SummitRegistrationInvitation $invitation
      */
     public function __construct(SummitRegistrationInvitation $invitation){
+        Log::debug
+        (
+            sprintf
+            (
+                "InviteSummitRegistrationEmail::____construct invitation %s token %s hash %s email %s",
+                $invitation->getId(),
+                $invitation->getToken(),
+                $invitation->getHash(),
+                $invitation->getEmail()
+            )
+        );
         $summit = $invitation->getSummit();
         $owner_email = $invitation->getEmail();
         $payload = [];

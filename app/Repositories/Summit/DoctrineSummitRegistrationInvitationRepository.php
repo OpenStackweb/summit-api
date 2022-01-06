@@ -14,6 +14,7 @@
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
+use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use models\summit\SummitRegistrationInvitation;
 use utils\DoctrineCaseFilterMapping;
@@ -113,5 +114,25 @@ class DoctrineSummitRegistrationInvitationRepository
             ->where('e.accepted_date is null')
             ->andWhere('s.id = :summit_id')->setParameter("summit_id", $summit->getId());
         return $query->getQuery()->getResult();
+    }
+
+    /**
+     * @param string $hash
+     * @param Summit $summit
+     * @return SummitRegistrationInvitation|null
+     */
+    public function getByHashAndSummit(string $hash, Summit $summit): ?SummitRegistrationInvitation
+    {
+        $query = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e.id")
+            ->from($this->getBaseEntity(), "e")
+            ->join("e.summit","s")
+            ->where('e.hash = :hash')
+            ->andWhere('s.id = :summit_id')
+            ->setParameter("summit_id", $summit->getId())
+            ->setParameter('hash', trim($hash));
+
+        return $query->getQuery()->getOneOrNullResult();
     }
 }

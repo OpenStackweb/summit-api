@@ -59,6 +59,10 @@ final class SummitFactory
             $summit->setRegistrationSendTicketAsPdfAttachmentOnTicketEmail(boolval($data['registration_send_ticket_as_pdf_attachment_on_ticket_email']));
         }
 
+        if(isset($data['registration_send_ticket_email_automatically']) ){
+            $summit->setRegistrationSendTicketEmailAutomatically(boolval($data['registration_send_ticket_email_automatically']));
+        }
+
         if(isset($data['available_on_api']) ){
             $summit->setAvailableOnApi(boolval($data['available_on_api']));
         }

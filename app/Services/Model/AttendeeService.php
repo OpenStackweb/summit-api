@@ -295,8 +295,8 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
             $ticket->generateQRCode();
             $ticket->generateHash();
-
-            $new_owner->sendInvitationEmail($ticket);
+            if($summit->isRegistrationSendTicketEmailAutomatically())
+                $new_owner->sendInvitationEmail($ticket);
 
             return $ticket;
         });
@@ -365,7 +365,8 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             $ticket->generateQRCode();
             $ticket->generateHash();
             $new_owner->updateStatus();
-            $new_owner->sendInvitationEmail($ticket);
+            if($summit->isRegistrationSendTicketEmailAutomatically())
+                $new_owner->sendInvitationEmail($ticket);
 
             return $ticket;
         });

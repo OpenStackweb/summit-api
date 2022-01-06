@@ -18,7 +18,6 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\ArrayCollection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use models\exceptions\ValidationException;
 use models\main\Company;
 use models\main\Member;

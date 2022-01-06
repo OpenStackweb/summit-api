@@ -31,4 +31,11 @@ interface ISummitRegistrationInvitationRepository extends IBaseRepository
      * @return array|int[]
      */
     public function getAllIdsNonAcceptedPerSummit(Summit $summit):array;
+
+    /**
+     * @param string $hash
+     * @param Summit $summit
+     * @return SummitRegistrationInvitation|null
+     */
+    public function getByHashAndSummit(string $hash, Summit $summit):?SummitRegistrationInvitation;
 }

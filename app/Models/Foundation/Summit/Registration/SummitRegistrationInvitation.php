@@ -13,6 +13,7 @@
  **/
 
 use Doctrine\Common\Collections\Criteria;
+use Illuminate\Support\Facades\Log;
 use models\main\Member;
 use models\utils\RandomGenerator;
 use models\utils\SilverstripeBaseModel;
@@ -94,7 +95,6 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
      * @var SummitTicketType[]
      */
     private $ticket_types;
-
 
     public function __construct()
     {
@@ -245,8 +245,9 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
     {
         $generator = new RandomGenerator();
         $this->accepted_date = null;
-        $this->token = $generator->randomToken();
+        $this->token = md5($this->first_name).'.'.md5($this->last_name).'.'.md5($this->email).'.'.$generator->randomToken();
         $this->hash = self::HashConfirmationToken($this->token);
+        Log::debug(sprintf("SummitRegistrationInvitation::generateConfirmationToken id %s token %s hash %s", $this->id, $this->token, $this->hash));
         return $this->token;
     }
 

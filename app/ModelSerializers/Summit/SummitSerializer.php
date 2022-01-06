@@ -104,6 +104,7 @@ class SummitSerializer extends SilverStripeSerializer
         'SupportEmail' => 'support_email:json_string',
         'RegistrationSendQrAsImageAttachmentOnTicketEmail' => 'registration_send_qr_as_image_attachment_on_ticket_email:json_boolean',
         'RegistrationSendTicketAsPdfAttachmentOnTicketEmail' => 'registration_send_ticket_as_pdf_attachment_on_ticket_email:json_boolean',
+        'RegistrationSendTicketEmailAutomatically' => 'registration_send_ticket_email_automatically:json_boolean',
     ];
 
     protected static $allowed_relations = [

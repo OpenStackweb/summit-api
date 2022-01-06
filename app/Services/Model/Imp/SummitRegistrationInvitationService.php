@@ -421,27 +421,29 @@ final class SummitRegistrationInvitationService
         });
 
         foreach ($ids as $invitation_id)
-            $this->tx_service->transaction(function () use ($flow_event, $invitation_id) {
+
+            $res = $this->tx_service->transaction(function () use ($flow_event, $invitation_id) {
 
                 Log::debug(sprintf("SummitRegistrationInvitationService::send processing invitation id  %s", $invitation_id));
 
                 $invitation = $this->invitation_repository->getByIdExclusiveLock(intval($invitation_id));
-                if (is_null($invitation) || !$invitation instanceof SummitRegistrationInvitation) return;
+                if (is_null($invitation) || !$invitation instanceof SummitRegistrationInvitation) return null;
 
                 $summit = $invitation->getSummit();
 
                 while (true) {
                     $invitation->generateConfirmationToken();
-                    $former_invitation = $summit->getSummitRegistrationInvitationByHash($invitation->getHash());
+                    $former_invitation = $this->invitation_repository->getByHashAndSummit($invitation->getHash(), $summit);
                     if (is_null($former_invitation) || $former_invitation->getId() == $invitation->getId()) break;
                 }
 
-                // send email
-                if ($flow_event == InviteSummitRegistrationEmail::EVENT_SLUG)
-                    InviteSummitRegistrationEmail::dispatch($invitation);
-                if ($flow_event == ReInviteSummitRegistrationEmail::EVENT_SLUG)
-                    ReInviteSummitRegistrationEmail::dispatch($invitation);
-
+                return $invitation;
             });
+
+            // send email
+            if ($flow_event == InviteSummitRegistrationEmail::EVENT_SLUG && !is_null($res))
+                InviteSummitRegistrationEmail::dispatch($res);
+            if ($flow_event == ReInviteSummitRegistrationEmail::EVENT_SLUG && !is_null($res))
+                ReInviteSummitRegistrationEmail::dispatch($res);
     }
 }

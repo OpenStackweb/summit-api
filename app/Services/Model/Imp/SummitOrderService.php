@@ -1288,7 +1288,8 @@ final class SummitOrderService
             $ticket->generateQRCode();
             $ticket->generateHash();
             $attendee->updateStatus();
-            $attendee->sendInvitationEmail($ticket);
+            if($summit->isRegistrationSendTicketEmailAutomatically())
+                $attendee->sendInvitationEmail($ticket);
 
             return $ticket;
 
@@ -2736,7 +2737,8 @@ final class SummitOrderService
             // update it
             SummitAttendeeFactory::populate($summit, $attendee, $reduced_payload);
             $attendee->updateStatus();
-            $attendee->sendInvitationEmail($ticket);
+            if($summit->isRegistrationSendTicketEmailAutomatically())
+                $attendee->sendInvitationEmail($ticket);
 
             Event::dispatch(new TicketUpdated($attendee));
 
@@ -2805,7 +2807,8 @@ final class SummitOrderService
                 SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
                 $attendee->addTicket($ticket);
                 $attendee->updateStatus();
-                $attendee->sendInvitationEmail($ticket);
+                if($summit->isRegistrationSendTicketEmailAutomatically())
+                    $attendee->sendInvitationEmail($ticket);
             }
 
             return $ticket;
@@ -2905,7 +2908,8 @@ final class SummitOrderService
                     // we store it on memory just in case that we have the case of multiple tickets for the same attendee
                     $attendees_cache[$attendee->getEmail()] = $attendee;
                     $attendee->updateStatus();
-                    $attendee->sendInvitationEmail($ticket);
+                    if($summit->isRegistrationSendTicketEmailAutomatically())
+                        $attendee->sendInvitationEmail($ticket);
                     $attendee->addTicket($ticket);
                 }
             }
@@ -3128,8 +3132,10 @@ final class SummitOrderService
                         $ticket->generateQRCode();
                         $ticket->generateHash();
 
-                        Log::debug(sprintf("SummitOrderService::processTicketData sending invitation email to attendee %s", $attendee->getEmail()));
-                        $attendee->sendInvitationEmail($ticket);
+                        if($summit->isRegistrationSendTicketEmailAutomatically()) {
+                            Log::debug(sprintf("SummitOrderService::processTicketData sending invitation email to attendee %s", $attendee->getEmail()));
+                            $attendee->sendInvitationEmail($ticket);
+                        }
                     }
                 }
 
@@ -3469,9 +3475,13 @@ final class SummitOrderService
     /**
      * @param SummitOrder $order
      */
-    private function sendAttendeesInvitationEmail(SummitOrder $order)
+    private function sendAttendeesInvitationEmail(SummitOrder $order):void
     {
         Log::debug(sprintf("SummitOrderService::sendAttendeesInvitationEmail order %s", $order->getId()));
+        if(!$order->getSummit()->isRegistrationSendTicketEmailAutomatically()){
+            Log::debug(sprintf("SummitOrderService::sendAttendeesInvitationEmail order %s tickets emails will not be send.", $order->getId()));
+            return;
+        }
         foreach ($order->getTickets() as $ticket) {
             try {
                 Log::debug(sprintf("SummitOrderService::sendAttendeesInvitationEmail order %s ticket %s", $order->getId(), $ticket->getNumber()));
@@ -3655,7 +3665,7 @@ final class SummitOrderService
 
             $owner = $ticket->getOwner();
 
-            if(!is_null($owner))
+            if(!is_null($owner) && $summit->isRegistrationSendTicketEmailAutomatically())
                 $owner->sendInvitationEmail($ticket);
 
             return $ticket;

@@ -420,7 +420,7 @@ final class SummitRegistrationInvitationService
             return $this->invitation_repository->getAllIdsByPage(new PagingInfo(1, PHP_INT_MAX), $filter);
         });
 
-        foreach ($ids as $invitation_id)
+        foreach ($ids as $invitation_id) {
 
             $res = $this->tx_service->transaction(function () use ($flow_event, $invitation_id) {
 
@@ -445,5 +445,6 @@ final class SummitRegistrationInvitationService
                 InviteSummitRegistrationEmail::dispatch($res);
             if ($flow_event == ReInviteSummitRegistrationEmail::EVENT_SLUG && !is_null($res))
                 ReInviteSummitRegistrationEmail::dispatch($res);
+        }
     }
 }

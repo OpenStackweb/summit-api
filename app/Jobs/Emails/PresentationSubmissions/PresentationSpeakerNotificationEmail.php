@@ -76,7 +76,7 @@ class PresentationSpeakerNotificationEmail extends AbstractEmailJob
         $submissionEndDateLocal = $selection_plan->getSubmissionEndDateLocal();
         $payload['until_date'] = !is_null($submissionEndDateLocal) ? $submissionEndDateLocal->format('F d, Y') : "";
 
-        $payload['selection_process_link'] = sprintf("%s/app/%s", $speaker_management_base_url, $summit->getRawSlug());
+        $payload['selection_process_link'] = sprintf("%s/app/%s/selection_process", $speaker_management_base_url, $summit->getRawSlug());
         $payload['speaker_management_link'] = sprintf("%s/app/%s", $speaker_management_base_url, $summit->getRawSlug());
         $payload['bio_edit_link'] = sprintf("%s/app/%s/profile", $speaker_management_base_url, $summit->getRawSlug());
         $payload['reset_password_link'] = sprintf("%s/auth/password/reset", $idp_base_url);

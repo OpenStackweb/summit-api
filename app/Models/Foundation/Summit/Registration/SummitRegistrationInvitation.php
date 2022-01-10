@@ -245,7 +245,16 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
     {
         $generator = new RandomGenerator();
         $this->accepted_date = null;
-        $this->token = md5($this->first_name).'.'.md5($this->last_name).'.'.md5($this->email).'.'.$generator->randomToken();
+        // build seed
+        $seed = '';
+        if(!is_null($this->first_name))
+            $seed .= $this->first_name;
+        if(!is_null($this->last_name))
+            $seed .= $this->last_name;
+        if(!is_null($this->email))
+            $seed .= $this->email;
+        $seed .= $generator->randomToken();
+        $this->token = md5($seed);
         $this->hash = self::HashConfirmationToken($this->token);
         Log::debug(sprintf("SummitRegistrationInvitation::generateConfirmationToken id %s token %s hash %s", $this->id, $this->token, $this->hash));
         return $this->token;

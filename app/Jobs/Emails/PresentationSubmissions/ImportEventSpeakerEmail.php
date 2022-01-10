@@ -73,7 +73,7 @@ class ImportEventSpeakerEmail extends AbstractEmailJob
         $payload['presentation_edit_link'] = $presentation->getEditLink();
         $payload['summit_date'] = $summit->getMonthYear();
         $payload['until_date'] =is_null($selection_plan) ? '' : $selection_plan->getSubmissionEndDate()->format('d F, Y');
-        $payload['selection_process_link'] = sprintf("%s/app/%s", $speaker_management_base_url, $summit->getRawSlug());
+        $payload['selection_process_link'] = sprintf("%s/app/%s/selection_process", $speaker_management_base_url, $summit->getRawSlug());
         $payload['speaker_management_link'] = sprintf("%s/app/%s", $speaker_management_base_url, $summit->getRawSlug());
         $payload['bio_edit_link'] = sprintf("%s/app/%s/profile", $speaker_management_base_url, $summit->getRawSlug());
         if(!empty($setPasswordLink)){

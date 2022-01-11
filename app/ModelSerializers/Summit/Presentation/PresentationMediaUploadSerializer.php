@@ -51,7 +51,12 @@ class PresentationMediaUploadSerializer extends PresentationMaterialSerializer
                 $values['description'] = $mediaUploadType->getDescription();
                 $strategy = FileDownloadStrategyFactory::build($mediaUploadType->getPublicStorageType());
                 if (!is_null($strategy)) {
-                    $values['public_url'] = $strategy->getUrl($mediaUpload->getRelativePath());
+                    $values['public_url'] = $strategy->getUrl
+                    (
+                        $mediaUpload->getRelativePath(),
+                        $mediaUploadType->isUseTemporaryLinksOnPublicStorage(),
+                        $mediaUploadType->getTemporaryLinksPublicStorageTtl()
+                    );
                 }
             }
             catch (\Exception $ex){

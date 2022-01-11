@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -58,16 +57,32 @@ abstract class AbstractFileDownloadStrategy implements IFileDownloadStrategy
     }
 
     /**
-     * @inheritDoc
+     * @param string $relativeFileName
+     * @param bool $useTemporaryUrl
+     * @param int $ttl
+     * @return string|null
      */
-    public function getUrl(string $relativeFileName): ?string
+    public function getUrl(string $relativeFileName, bool $useTemporaryUrl = false, int $ttl = 10): ?string
     {
-        $key = sprintf("%s/%s", $this->getDriver(), $relativeFileName);
+        Log::debug
+        (
+            sprintf
+            (
+                "AbstractFileDownloadStrategy::getUrl relativeFileName %s useTemporaryUrl %b ttl %s",
+                $relativeFileName,
+                $useTemporaryUrl,
+                $ttl
+            )
+        );
+
+        $key = sprintf("%s/%s_%b_%s", $this->getDriver(), $relativeFileName, $useTemporaryUrl, $ttl);
         $res = Cache::get($key);
         if(!empty($res)) return $res;
-        $res = Storage::disk($this->getDriver())->url($relativeFileName);
+        // @see https://laravel.com/docs/8.x/filesystem#temporary-urls
+        $res = $useTemporaryUrl ? Storage::disk($this->getDriver())->temporaryUrl($relativeFileName, now()->addMinutes($ttl))
+            : Storage::disk($this->getDriver())->url($relativeFileName);
         if(!empty($res))
-            Cache::add($key, $res, intval(Config::get('cache_api_response.file_url_lifetime', 3600)));
+            Cache::add($key, $res,$useTemporaryUrl? ($ttl - 1 ) :intval(Config::get('cache_api_response.file_url_lifetime', 3600)));
         return $res;
     }
 

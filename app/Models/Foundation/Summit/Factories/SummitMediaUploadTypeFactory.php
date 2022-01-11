@@ -45,6 +45,12 @@ final class SummitMediaUploadTypeFactory
         if(isset($data['private_storage_type']))
             $type->setPrivateStorageType(trim($data['private_storage_type']));
 
+        if(isset($data['temporary_links_public_storage_ttl']))
+            $type->setTemporaryLinksPublicStorageTtl(intval($data['temporary_links_public_storage_ttl']));
+
+        if(isset($data['use_temporary_links_on_public_storage']))
+            $type->setUseTemporaryLinksOnPublicStorage(boolval($data['use_temporary_links_on_public_storage']));
+
         if(isset($data['public_storage_type']))
             $type->setPublicStorageType(trim($data['public_storage_type']));
 

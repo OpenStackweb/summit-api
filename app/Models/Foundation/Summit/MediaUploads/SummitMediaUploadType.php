@@ -79,6 +79,20 @@ class SummitMediaUploadType extends SilverstripeBaseModel
     private $public_storage_type;
 
     /**
+     * @ORM\Column(name="UseTemporaryLinksOnPublicStorage", type="boolean")
+     * @var bool
+     */
+    private $use_temporary_links_on_public_storage;
+
+    /**
+     * @ORM\Column(name="TemporaryLinksOnPublicStorageTTL", type="integer")
+     * @var int
+     * in minutes
+     */
+    private $temporary_links_public_storage_ttl;
+
+
+    /**
      * @ORM\ManyToMany(targetEntity="models\summit\PresentationType", inversedBy="allowed_media_upload_types", cascade={"persist"})
      * @ORM\JoinTable(name="PresentationType_SummitMediaUploadType",
      *      joinColumns={@ORM\JoinColumn(name="SummitMediaUploadTypeID", referencedColumnName="ID")},
@@ -104,6 +118,8 @@ class SummitMediaUploadType extends SilverstripeBaseModel
         $this->presentation_types = new ArrayCollection();
         $this->public_storage_type = IStorageTypesConstants::None;
         $this->private_storage_type = IStorageTypesConstants::None;
+        $this->use_temporary_links_on_public_storage = false;
+        $this->temporary_links_public_storage_ttl = 10;
     }
 
     public function setType(SummitMediaFileType $type){
@@ -314,6 +330,38 @@ class SummitMediaUploadType extends SilverstripeBaseModel
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('display_on_site', true));
         return $this->media_uploads->matching($criteria);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isUseTemporaryLinksOnPublicStorage(): bool
+    {
+        return $this->use_temporary_links_on_public_storage;
+    }
+
+    /**
+     * @param bool $use_temporary_links_on_public_storage
+     */
+    public function setUseTemporaryLinksOnPublicStorage(bool $use_temporary_links_on_public_storage): void
+    {
+        $this->use_temporary_links_on_public_storage = $use_temporary_links_on_public_storage;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTemporaryLinksPublicStorageTtl(): int
+    {
+        return $this->temporary_links_public_storage_ttl;
+    }
+
+    /**
+     * @param int $temporary_links_public_storage_ttl
+     */
+    public function setTemporaryLinksPublicStorageTtl(int $temporary_links_public_storage_ttl): void
+    {
+        $this->temporary_links_public_storage_ttl = $temporary_links_public_storage_ttl;
     }
 
 }

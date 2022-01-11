@@ -103,7 +103,12 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $items = [];
             foreach ($videos as $i) {
                 if ($i instanceof IEntity) {
-                    $i = SerializerRegistry::getInstance()->getSerializer($i)->serialize();
+                    $i = SerializerRegistry::getInstance()->getSerializer($i)->serialize
+                    (
+                       self::getExpands(),
+                       self::getFields(),
+                       self::getRelations()
+                    );
                 }
                 $items[] = $i;
             }
@@ -136,7 +141,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             if (is_null($video)) return $this->error404();
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($video)->serialize());
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($video)->serialize(
+                self::getExpands(),
+                self::getFields(),
+                self::getRelations()
+            ));
 
         } catch (Exception $ex) {
             Log::error($ex);
@@ -178,7 +187,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $video = $this->presentation_service->addVideoTo($presentation_id, HTMLCleaner::cleanData($data, $fields));
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($video)->serialize());
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($video)->serialize(
+                self::getExpands(),
+                self::getFields(),
+                self::getRelations()
+            ));
         } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
@@ -226,7 +239,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $video = $this->presentation_service->updateVideo($presentation_id, $video_id, HTMLCleaner::cleanData($data, $fields));
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($video)->serialize());
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($video)->serialize(
+                self::getExpands(),
+                self::getFields(),
+                self::getRelations()
+            ));
         } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
@@ -304,7 +321,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $presentation = $this->presentation_service->submitPresentation($summit, HTMLCleaner::cleanData($data, $fields));
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize(Request::input('expand', '')));
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize(
+                self::getExpands(),
+                self::getFields(),
+                self::getRelations()
+            ));
         } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404(['message' => $ex1->getMessage()]);
@@ -360,7 +381,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 HTMLCleaner::cleanData($data, $fields)
             );
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize(Request::input('expand', '')));
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize(
+                self::getExpands(),
+                self::getFields(),
+                self::getRelations()
+            ));
         } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
@@ -394,7 +419,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 $presentation_id
             );
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize(Request::input('expand', '')));
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize(
+                self::getExpands(),
+                self::getFields(),
+                self::getRelations()
+            ));
         } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
@@ -461,7 +490,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $items = [];
             foreach ($slides as $i) {
                 if ($i instanceof IEntity) {
-                    $i = SerializerRegistry::getInstance()->getSerializer($i)->serialize();
+                    $i = SerializerRegistry::getInstance()->getSerializer($i)->serialize(
+                        self::getExpands(),
+                        self::getFields(),
+                        self::getRelations()
+                    );
                 }
                 $items[] = $i;
             }
@@ -500,7 +533,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             if (is_null($slide)) return $this->error404();
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($slide)->serialize());
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($slide)->serialize(
+                self::getExpands(),
+                self::getFields(),
+                self::getRelations()
+            ));
 
         } catch (Exception $ex) {
             Log::error($ex);
@@ -560,7 +597,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 intval(Config::get("mediaupload.slides_max_file_size"))
             );
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($slide)->serialize());
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($slide)->serialize(
+                self::getExpands(),
+                self::getFields(),
+                self::getRelations()
+            ));
         } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
@@ -628,7 +669,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 intval(Config::get("mediaupload.slides_max_file_size"))
             );
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($slide)->serialize());
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($slide)->serialize(
+                self::getExpands(),
+                self::getFields(),
+                self::getRelations()
+            ));
         } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
@@ -704,7 +749,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $items = [];
             foreach ($links as $i) {
                 if ($i instanceof IEntity) {
-                    $i = SerializerRegistry::getInstance()->getSerializer($i)->serialize();
+                    $i = SerializerRegistry::getInstance()->getSerializer($i)->serialize(
+                        self::getExpands(),
+                        self::getFields(),
+                        self::getRelations()
+                    );
                 }
                 $items[] = $i;
             }
@@ -743,7 +792,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             if (is_null($link)) return $this->error404();
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($link)->serialize());
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($link)->serialize(
+                self::getExpands(),
+                self::getFields(),
+                self::getRelations()
+            ));
 
         } catch (Exception $ex) {
             Log::error($ex);
@@ -797,7 +850,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $link = $this->presentation_service->addLinkTo($presentation_id, HTMLCleaner::cleanData($data, $fields));
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($link)->serialize());
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($link)->serialize(
+                self::getExpands(),
+                self::getFields(),
+                self::getRelations()
+            ));
         } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
@@ -857,7 +914,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $link = $this->presentation_service->updateLink($presentation_id, $link_id, HTMLCleaner::cleanData($data, $fields));
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($link)->serialize());
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($link)->serialize(
+                self::getExpands(),
+                self::getFields(),
+                self::getRelations()
+            ));
         } catch (EntityNotFoundException $ex1) {
             Log::warning($ex1);
             return $this->error404();
@@ -933,7 +994,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $items = [];
             foreach ($mediaUploads as $i) {
                 if ($i instanceof IEntity) {
-                    $i = SerializerRegistry::getInstance()->getSerializer($i)->serialize();
+                    $i = SerializerRegistry::getInstance()->getSerializer($i)->serialize(
+                        self::getExpands(),
+                        self::getFields(),
+                        self::getRelations()
+                    );
                 }
                 $items[] = $i;
             }
@@ -942,10 +1007,10 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
         } catch (ValidationException $ex1) {
             Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
+            return $this->error412($ex1->getMessage());
         } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
+            return $this->error404($ex2->getMessage());
         } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
@@ -972,7 +1037,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             if (is_null($mediaUpload)) return $this->error404();
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($mediaUpload)->serialize());
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($mediaUpload)->serialize(
+                self::getExpands(),
+                self::getFields(),
+                self::getRelations()
+            ));
 
         } catch (Exception $ex) {
             Log::error($ex);
@@ -1032,20 +1101,14 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 $data
             );
 
-            $fields = Request::input('fields', '');
-            $relations = Request::input('relations', '');
-
-            $relations = !empty($relations) ? explode(',', $relations) : [];
-            $fields = !empty($fields) ? explode(',', $fields) : [];
-
             return $this->created(SerializerRegistry::getInstance()->getSerializer
             (
                 $mediaUpload, $serializeType)
                 ->serialize
                 (
-                    Request::input('expand', ''),
-                    $fields,
-                    $relations
+                    self::getExpands(),
+                    self::getFields(),
+                    self::getRelations()
                 )
             );
         } catch (EntityNotFoundException $ex1) {
@@ -1113,20 +1176,14 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 $data
             );
 
-            $fields = Request::input('fields', '');
-            $relations = Request::input('relations', '');
-
-            $relations = !empty($relations) ? explode(',', $relations) : [];
-            $fields = !empty($fields) ? explode(',', $fields) : [];
-
             return $this->updated(SerializerRegistry::getInstance()->getSerializer
             (
                 $mediaUpload, $serializeType)
                 ->serialize
                 (
-                    Request::input('expand', ''),
-                    $fields,
-                    $relations
+                    self::getExpands(),
+                    self::getFields(),
+                    self::getRelations()
                 )
             );
         } catch (EntityNotFoundException $ex1) {

@@ -345,7 +345,7 @@ final class SummitRegistrationInvitationService
             if (is_null($invitation))
                 throw new EntityNotFoundException("Invitation not found.");
             Log::debug(sprintf("got invitation %s for email %s", $invitation->getId(), $invitation->getEmail()));
-            if ($invitation->getEmail() !== $current_member->getEmail())
+            if (strtolower($invitation->getEmail()) !== strtolower($current_member->getEmail()))
                 throw new ValidationException(sprintf(
                     "This invitation was sent to %s but you logged in 
                     as %s. Please log out, reaccept the invite, and log in with 

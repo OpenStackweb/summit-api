@@ -149,7 +149,7 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
      */
     public function setEmail(string $email): void
     {
-        $this->email = $email;
+        $this->email = strtolower($email);
     }
 
     /**

@@ -4962,7 +4962,7 @@ SQL;
     public function getSummitRegistrationInvitationByEmail(string $email): ?SummitRegistrationInvitation
     {
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('email', trim($email)));
+        $criteria->where(Criteria::expr()->eq('email', strtolower(trim($email))));
         $invitation = $this->registration_invitations->matching($criteria)->first();
         return $invitation === false ? null : $invitation;
     }

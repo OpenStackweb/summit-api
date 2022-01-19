@@ -347,10 +347,14 @@ final class SummitRegistrationInvitationService
             Log::debug(sprintf("got invitation %s for email %s", $invitation->getId(), $invitation->getEmail()));
             if (strtolower($invitation->getEmail()) !== strtolower($current_member->getEmail()))
                 throw new ValidationException(sprintf(
-                    "This invitation was sent to %s but you logged in 
-                    as %s. Please log out, reaccept the invite, and log in with 
-                    the email address used for the invite."
-                    , $invitation->getEmail(), $current_member->getEmail()));
+                    "This invitation was sent to %s but you logged in as %s."
+                    ."To be able to register for this event, sign out and then RSVP from the email invite and then log in with your primary email address."
+                    ."Email <a href='mailto:%s'>%s</a> for additional troubleshooting."
+                    ,
+                    $invitation->getEmail(),
+                    $current_member->getEmail(),
+                    $invitation->getSummit()->getSupportEmail(),
+                    $invitation->getSummit()->getSupportEmail()));
 
             $invitation->setMember($current_member);
 

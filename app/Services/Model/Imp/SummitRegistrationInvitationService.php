@@ -348,8 +348,8 @@ final class SummitRegistrationInvitationService
             if (strtolower($invitation->getEmail()) !== strtolower($current_member->getEmail()))
                 throw new ValidationException(sprintf(
                     "This invitation was sent to %s but you logged in as %s."
-                    ."To be able to register for this event, sign out and then RSVP from the email invite and then log in with your primary email address."
-                    ."Email <a href='mailto:%s'>%s</a> for additional troubleshooting."
+                    ." To be able to register for this event, sign out and then RSVP from the email invite and then log in with your primary email address."
+                    ." Email <a href='mailto:%s'>%s</a> for additional troubleshooting."
                     ,
                     $invitation->getEmail(),
                     $current_member->getEmail(),

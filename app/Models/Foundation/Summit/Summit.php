@@ -19,6 +19,7 @@ use App\Models\Foundation\Summit\AllowedCurrencies;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlowType;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 use App\Models\Foundation\Summit\ISummitExternalScheduleFeedType;
+use App\Models\Foundation\Summit\ISummitModality;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
 use App\Models\Foundation\Summit\SelectionPlan;
@@ -6018,4 +6019,28 @@ SQL;
         $this->registration_send_ticket_email_automatically = $registration_send_ticket_email_automatically;
     }
 
+    /**
+     * @return string
+     */
+    public function getModality():string{
+        $has_virtual = false;
+        $has_in_person = false;
+
+        foreach($this->badge_types as $badge_type){
+            foreach($badge_type->getAccessLevels() as $accessLevel){
+                if($accessLevel->getName() == SummitAccessLevelType::VIRTUAL)
+                    $has_virtual = true;
+                if($accessLevel->getName() == SummitAccessLevelType::IN_PERSON)
+                    $has_in_person = true;
+            }
+        }
+
+        if($has_virtual && $has_in_person)
+            return ISummitModality::Hybrid;
+        if($has_virtual)
+            return ISummitModality::Virtual;
+        if($has_in_person)
+            return ISummitModality::InPerson;
+        return ISummitModality::None;
+    }
 }

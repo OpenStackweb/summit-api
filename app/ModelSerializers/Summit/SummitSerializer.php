@@ -106,6 +106,7 @@ class SummitSerializer extends SilverStripeSerializer
         'RegistrationSendTicketAsPdfAttachmentOnTicketEmail' => 'registration_send_ticket_as_pdf_attachment_on_ticket_email:json_boolean',
         'RegistrationSendTicketEmailAutomatically' => 'registration_send_ticket_email_automatically:json_boolean',
         'Modality' => 'modality:json_string',
+        'AllowUpdateAttendeeExtraQuestions' => 'allow_update_attendee_extra_questions:json_boolean',
     ];
 
     protected static $allowed_relations = [

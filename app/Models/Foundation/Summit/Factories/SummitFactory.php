@@ -67,6 +67,10 @@ final class SummitFactory
             $summit->setAvailableOnApi(boolval($data['available_on_api']));
         }
 
+        if(isset($data['allow_update_attendee_extra_questions'])){
+            $summit->setAllowUpdateAttendeeExtraQuestions(boolval($data['allow_update_attendee_extra_questions']));
+        }
+
         if(isset($data['dates_label']) ){
             $summit->setDatesLabel(trim($data['dates_label']));
         }

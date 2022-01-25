@@ -420,6 +420,12 @@ class Summit extends SilverstripeBaseModel
     private $support_email;
 
     /**
+     * @ORM\Column(name="RegistrationAllowUpdateAttendeeExtraQuestions", type="boolean")
+     * @var bool
+     */
+    private $allow_update_attendee_extra_questions;
+
+    /**
      * @ORM\OneToMany(targetEntity="SummitEvent", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      */
     private $events;
@@ -6043,4 +6049,21 @@ SQL;
             return ISummitModality::InPerson;
         return ISummitModality::None;
     }
+
+    /**
+     * @return bool
+     */
+    public function isAllowUpdateAttendeeExtraQuestions(): bool
+    {
+        return $this->allow_update_attendee_extra_questions;
+    }
+
+    /**
+     * @param bool $allow_update_attendee_extra_questions
+     */
+    public function setAllowUpdateAttendeeExtraQuestions(bool $allow_update_attendee_extra_questions): void
+    {
+        $this->allow_update_attendee_extra_questions = $allow_update_attendee_extra_questions;
+    }
+
 }

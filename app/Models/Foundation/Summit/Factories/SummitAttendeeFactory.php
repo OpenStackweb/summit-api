@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use Illuminate\Support\Facades\Log;
+use Mockery\CountValidator\Exception;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\Summit;
@@ -114,12 +115,23 @@ final class SummitAttendeeFactory
             }
             $questions = $summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
             if ($questions->count() > 0) {
+                // save former answers ...
+                $formerAnswers = [];
+                foreach($attendee->getExtraQuestionAnswers() as $answer){
+                    $formerAnswers[$answer->getQuestion()->getName()] = $answer->getValue();
+                }
+
                 $attendee->clearExtraQuestionAnswers();
                 foreach ($questions as $question) {
                     if (!$question instanceof SummitOrderExtraQuestionType) continue;
                     foreach ($extra_questions as $question_answer) {
                         if (intval($question_answer['question_id']) == $question->getId()) {
                             $value = trim($question_answer['answer']);
+                            $formerValue = $formerAnswers[$question->getName()] ?? null;
+                            // check if we are allowed to change the answers that we already did
+                            if(!empty($formerValue) && $formerValue != $value && !$summit->isAllowUpdateAttendeeExtraQuestions()){
+                                throw new ValidationException("Answer can not be changed by this time.");
+                            }
 
                             if (empty($value) && $question->isMandatory())
                                 throw new ValidationException(sprintf('Question "%s" is mandatory', $question->getLabel()));

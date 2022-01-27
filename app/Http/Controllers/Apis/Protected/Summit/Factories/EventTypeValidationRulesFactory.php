@@ -49,15 +49,17 @@ final class EventTypeValidationRulesFactory
         }
 
         $base_rules = [
-            'name'                   => $name_rule,
-            'color'                  => 'sometimes|hex_color',
-            'black_out_times'        => 'sometimes|boolean',
-            'use_sponsors'           => 'sometimes|boolean',
-            'are_sponsors_mandatory' => 'sometimes|boolean|required_with:use_sponsors',
-            'allows_attachment'      => 'sometimes|boolean',
-            'allows_level'           => 'sometimes|boolean',
-            'is_private'             => 'sometimes|boolean',
-            'is_default'             => 'sometimes|boolean',
+            'name'                    => $name_rule,
+            'color'                   => 'sometimes|hex_color',
+            'black_out_times'         => 'sometimes|boolean',
+            'use_sponsors'            => 'sometimes|boolean',
+            'are_sponsors_mandatory'  => 'sometimes|boolean|required_with:use_sponsors',
+            'allows_attachment'       => 'sometimes|boolean',
+            'allows_level'            => 'sometimes|boolean',
+            'allows_location'         => 'sometimes|boolean',
+            'allows_publishing_dates' => 'sometimes|boolean',
+            'is_private'              => 'sometimes|boolean',
+            'is_default'              => 'sometimes|boolean',
         ];
 
         $specific_rules = [];
@@ -75,11 +77,12 @@ final class EventTypeValidationRulesFactory
                     'min_moderators'             => 'sometimes|integer|required_with:use_moderator',
                     'max_moderators'             => 'sometimes|integer|required_with:use_moderator|greater_than_field:min_moderators',
                     'should_be_available_on_cfp' => 'sometimes|boolean',
-                    'moderator_label'            => 'sometimes|string'
+                    'moderator_label'            => 'sometimes|string',
+                    'allow_custom_ordering'      => 'sometimes|boolean',
+                    'allow_attendee_vote'        => 'sometimes|boolean',
                 ];
             }
             break;
-
         }
         return array_merge($base_rules, $specific_rules);
     }

@@ -17,10 +17,23 @@
  */
 final class OAuth2EventTypesApiTest extends ProtectedApiTest
 {
+    use InsertSummitTestData;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        self::insertTestData();
+    }
+
+    protected function tearDown(): void
+    {
+        self::clearTestData();
+        parent::tearDown();
+    }
+
     public function testGetEventTypesByClassName(){
         $params = [
-
-            'id'       => 23,
+            'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 10,
             'filter'   => 'class_name==EVENT_TYPE',
@@ -51,8 +64,7 @@ final class OAuth2EventTypesApiTest extends ProtectedApiTest
 
     public function testGetEventTypesByClassNameCSV(){
         $params = [
-
-            'id'       => 23,
+            'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 10,
             'filter'   => 'class_name==EVENT_TYPE',
@@ -81,8 +93,7 @@ final class OAuth2EventTypesApiTest extends ProtectedApiTest
 
     public function testGetEventTypesDefaultOnes(){
         $params = [
-
-            'id'       => 23,
+            'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 10,
             'filter'   => 'is_default==1',
@@ -113,8 +124,7 @@ final class OAuth2EventTypesApiTest extends ProtectedApiTest
 
     public function testGetEventTypesNonDefaultOnes(){
         $params = [
-
-            'id'       => 23,
+            'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 10,
             'filter'   => 'is_default==0',
@@ -145,7 +155,7 @@ final class OAuth2EventTypesApiTest extends ProtectedApiTest
 
     public function testGetEventTypeAll(){
         $params = [
-            'id'       => 23,
+            'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 10,
             'order'    => '+name'
@@ -176,7 +186,7 @@ final class OAuth2EventTypesApiTest extends ProtectedApiTest
     public function testGetEventTypesByClassNamePresentationType(){
         $params = [
 
-            'id'       => 23,
+            'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 10,
             'filter'   => 'class_name==PRESENTATION_TYPE',
@@ -204,15 +214,17 @@ final class OAuth2EventTypesApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($event_types));
     }
 
-    public function testAddEventType($summit_id = 23){
+    public function testAddEventType(){
         $params = [
-            'id' => $summit_id,
+            'id'       => self::$summit->getId(),
         ];
 
         $name       = str_random(16).'_eventtype';
         $data = [
             'name'       => $name,
             'class_name' => \models\summit\SummitEventType::ClassName,
+            'allows_publishing_dates' => false,
+            'allows_location' => false,
         ];
 
         $headers = [
@@ -235,15 +247,17 @@ final class OAuth2EventTypesApiTest extends ProtectedApiTest
         $this->assertResponseStatus(201);
         $event_type = json_decode($content);
         $this->assertTrue(!is_null($event_type));
+        $this->assertTrue($event_type->allows_location == false);
+        $this->assertTrue($event_type->allows_location == false);
         return $event_type;
     }
 
-    public function testUpdateEventType($summit_id = 23){
+    public function testUpdateEventType(){
 
-        $new_event_type = $this->testAddEventType($summit_id);
+        $new_event_type = $this->testAddEventType();
 
         $params = [
-            'id'            => $summit_id,
+            'id'            => self::$summit->getId(),
             'event_type_id' => $new_event_type->id,
         ];
 
@@ -276,12 +290,12 @@ final class OAuth2EventTypesApiTest extends ProtectedApiTest
         return $event_type;
     }
 
-    public function testDeleteDefaultOne($summit_id = 23){
+    public function testDeleteDefaultOne(){
 
-        $event_types = $this->testGetEventTypesDefaultOnes($summit_id);
+        $event_types = $this->testGetEventTypesDefaultOnes();
 
         $params = [
-            'id'            => $summit_id,
+            'id'            =>  self::$summit->getId(),
             'event_type_id' => $event_types->data[0]->id,
         ];
 
@@ -301,16 +315,16 @@ final class OAuth2EventTypesApiTest extends ProtectedApiTest
         );
 
         $content = $response->getContent();
-        $this->assertResponseStatus(!empty($content));
+        $this->assertTrue(!empty($content));
         $this->assertResponseStatus(412);
     }
 
-    public function testDeleteNonDefaultOne($summit_id = 23){
+    public function testDeleteNonDefaultOne(){
 
-        $event_types = $this->testGetEventTypesNonDefaultOnes($summit_id);
+        $event_types = $this->testGetEventTypesNonDefaultOnes();
 
         $params = [
-            'id'            => $summit_id,
+            'id'            =>  self::$summit->getId(),
             'event_type_id' => $event_types->data[0]->id,
         ];
 
@@ -330,13 +344,13 @@ final class OAuth2EventTypesApiTest extends ProtectedApiTest
         );
 
         $content = $response->getContent();
-        $this->assertResponseStatus(empty($content));
+        $this->assertTrue(empty($content));
         $this->assertResponseStatus(204);
     }
 
-    public function testSeedDefaultEventTYpes($summit_id = 23){
+    public function testSeedDefaultEventTypes(){
         $params = [
-            'id' => $summit_id,
+            'id' =>  self::$summit->getId(),
         ];
 
         $headers = [

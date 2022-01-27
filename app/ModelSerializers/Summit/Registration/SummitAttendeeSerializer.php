@@ -38,6 +38,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
     protected static $allowed_relations = [
         'extra_questions',
         'tickets',
+        'presentation_votes'
     ];
 
     /**
@@ -83,6 +84,15 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
             $values['extra_questions'] = $extra_question_answers;
         }
 
+        if (in_array('presentation_votes', $relations)) {
+            $presentation_votes = [];
+
+            foreach ($attendee->getPresentationVotes() as $vote) {
+                $presentation_votes[] = $vote->getId();
+            }
+            $values['presentation_votes'] = $presentation_votes;
+        }
+
         if($attendee->hasMember())
         {
             $member               = $attendee->getMember();
@@ -119,6 +129,17 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                             $extra_question_answers[] = SerializerRegistry::getInstance()->getSerializer($answer)->serialize(AbstractSerializer::getExpandForPrefix('extra_questions', $expand));
                         }
                         $values['extra_questions'] = $extra_question_answers;
+                    }
+                        break;
+                    case 'presentation_votes': {
+                        if (!in_array('presentation_votes', $relations)) break;
+                        unset($values['presentation_votes']);
+                        $presentation_votes = [];
+                        foreach($attendee->getPresentationVotes() as $vote)
+                        {
+                            $presentation_votes[] = SerializerRegistry::getInstance()->getSerializer($vote)->serialize(AbstractSerializer::getExpandForPrefix('presentation_votes', $expand));
+                        }
+                        $values['presentation_votes'] = $presentation_votes;
                     }
                         break;
                     case 'speaker': {

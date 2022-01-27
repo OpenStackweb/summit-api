@@ -414,7 +414,7 @@ final class SummitRegistrationInvitationService
 
         do{
 
-            Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s processing page %s", $summit_id, $flow_event, $filter->__toString(), $page));
+            Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s processing page %s", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $page));
 
             $ids = $this->tx_service->transaction(function () use ($summit_id, $payload, $filter, $page) {
                 if (isset($payload['invitations_ids'])) {
@@ -430,7 +430,7 @@ final class SummitRegistrationInvitationService
                 return $this->invitation_repository->getAllIdsByPage(new PagingInfo($page, 100), $filter);
             });
 
-            Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s page %s got %s records", $summit_id, $flow_event, $filter->__toString(), $page, count($ids)));
+            Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s page %s got %s records", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $page, count($ids)));
             if (!count($ids)) {
                 // if we are processing a page , then break it
                 Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s page is empty, ending processing.", $summit_id));
@@ -474,6 +474,6 @@ final class SummitRegistrationInvitationService
 
         }while(!$done);
 
-        Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s had processed %s records", $summit_id, $flow_event, $filter->__toString(), $count));
+        Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s had processed %s records", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $count));
     }
 }

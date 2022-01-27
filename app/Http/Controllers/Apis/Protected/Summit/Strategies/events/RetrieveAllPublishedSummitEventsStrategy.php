@@ -27,7 +27,7 @@ final class RetrieveAllPublishedSummitEventsStrategy extends RetrieveAllSummitEv
     protected function getValidFilters()
     {
         $valid_filters = parent::getValidFilters();
-        $valid_filters['published'] = array('==');
+        $valid_filters['published'] = ['=='];
         return $valid_filters;
     }
 
@@ -38,6 +38,8 @@ final class RetrieveAllPublishedSummitEventsStrategy extends RetrieveAllSummitEv
     {
         $filter = parent::buildFilter();
         $filter->addFilterCondition(FilterParser::buildFilter('published','==','1'));
+        $filter->addFilterCondition(FilterParser::buildFilter('type_allows_publishing_dates','==','1'));
+        $filter->addFilterCondition(FilterParser::buildFilter('type_allows_location','==','1'));
         return $filter;
     }
 }

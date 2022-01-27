@@ -19,6 +19,7 @@ use App\Events\SummitEventUpdated;
 use App\Models\Utils\Traits\HasImageTrait;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
+use Google\Service\AdMob\Date;
 use models\exceptions\ValidationException;
 use models\main\Company;
 use models\main\File;
@@ -57,6 +58,8 @@ use Doctrine\ORM\Mapping AS ORM;
 class SummitEvent extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
+
+    const ClassName = 'SummitEvent';
 
     protected $getIdMappings = [
         'getCreatedById' => 'created_by',
@@ -443,9 +446,9 @@ class SummitEvent extends SilverstripeBaseModel
     }
 
     /**
-     * @return DateTime
+     * @return DateTime|null
      */
-    public function getPublishedDate()
+    public function getPublishedDate():?DateTime
     {
         return $this->published_date;
     }
@@ -604,10 +607,15 @@ class SummitEvent extends SilverstripeBaseModel
         return $this;
     }
 
+    public function clearPublishingDates():void{
+        $this->start_date = null;
+        $this->end_date = null;
+    }
+
     /**
-     * @return SummitAbstractLocation
+     * @return SummitAbstractLocation|null
      */
-    public function getLocation()
+    public function getLocation():?SummitAbstractLocation
     {
         return $this->location;
     }
@@ -615,9 +623,12 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @param SummitAbstractLocation $location
      * @return $this
+     * @throws ValidationException
      */
     public function setLocation(SummitAbstractLocation $location)
     {
+        if(!$this->type->isAllowsLocation())
+            throw new ValidationException("Event Type does not allows Location.");
         $this->location = $location;
         return $this;
     }
@@ -698,27 +709,30 @@ class SummitEvent extends SilverstripeBaseModel
     public function publish()
     {
         if ($this->isPublished())
-            throw new ValidationException('Already published Summit Event');
-
-        $start_date = $this->getStartDate();
-        $end_date = $this->getEndDate();
-
-        if ((is_null($start_date) || is_null($end_date)))
-            throw new ValidationException('To publish this event you must define a start/end datetime!');
+            throw new ValidationException('Already published Summit Event.');
 
         $summit = $this->getSummit();
 
         if (is_null($summit))
-            throw new ValidationException('To publish you must assign a summit');
+            throw new ValidationException('To publish you must assign a summit.');
 
-        $timezone = $summit->getTimeZoneId();
+        if($this->type->isAllowsPublishingDates()) {
 
-        if (empty($timezone)) {
-            throw new ValidationException('Invalid Summit TimeZone!');
+            $start_date = $this->getStartDate();
+            $end_date = $this->getEndDate();
+
+            if ((is_null($start_date) || is_null($end_date)))
+                throw new ValidationException('To publish this event you must define a start/end datetime.');
+
+            $timezone = $summit->getTimeZoneId();
+
+            if (empty($timezone)) {
+                throw new ValidationException('Invalid Summit TimeZone.');
+            }
+
+            if ($end_date < $start_date)
+                throw new ValidationException('start datetime must be greater or equal than end datetime.');
         }
-
-        if ($end_date < $start_date)
-            throw new ValidationException('start datetime must be greather or equal than end datetime!');
 
         $this->published = true;
         $this->published_date = new DateTime();
@@ -727,7 +741,7 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function isPublished()
+    public function isPublished():bool
     {
         return $this->getPublished();
     }
@@ -743,17 +757,22 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return \DateTime|null
      */
-    public function getStartDate()
+    public function getStartDate():?DateTime
     {
-        return $this->start_date;
+        $type = $this->type;
+        return  !is_null($type) && $type->isAllowsPublishingDates() ? $this->start_date: null;
     }
 
     /**
      * @param DateTime $value
      * @return $this
+     * @throws ValidationException
      */
     public function setStartDate(DateTime $value)
     {
+        if(!$this->type->isAllowsPublishingDates()){
+            throw new ValidationException("Type does not allows Publishing Period.");
+        }
         $summit = $this->getSummit();
         if (!is_null($summit)) {
             $value = $summit->convertDateFromTimeZone2UTC($value);
@@ -762,24 +781,36 @@ class SummitEvent extends SilverstripeBaseModel
         return $this;
     }
 
+    /**
+     * @param DateTime $value
+     * @throws ValidationException
+     */
     public function setRawStartDate(DateTime $value){
+        if(!$this->type->isAllowsPublishingDates()){
+            throw new ValidationException("Type does not allows Publishing Period.");
+        }
         $this->start_date = $value;
     }
 
     /**
      * @return \DateTime|null
      */
-    public function getEndDate()
+    public function getEndDate():?DateTime
     {
-        return $this->end_date;
+        $type = $this->type;
+        return  !is_null($type) && $type->isAllowsPublishingDates() ? $this->end_date: null;
     }
 
     /**
      * @param DateTime $value
      * @return $this
+     * @throws ValidationException
      */
     public function setEndDate(DateTime $value)
     {
+        if(!$this->type->isAllowsPublishingDates()){
+            throw new ValidationException("Type does not allows Publishing Period.");
+        }
         $summit = $this->getSummit();
         if (!is_null($summit)) {
             $value = $summit->convertDateFromTimeZone2UTC($value);
@@ -789,6 +820,9 @@ class SummitEvent extends SilverstripeBaseModel
     }
 
     public function setRawEndDate(DateTime $value){
+        if(!$this->type->isAllowsPublishingDates()){
+            throw new ValidationException("Type does not allows Publishing Period.");
+        }
         $this->end_date = $value;
     }
     /**

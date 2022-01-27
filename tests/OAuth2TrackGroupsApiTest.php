@@ -11,18 +11,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 final class OAuth2TrackGroupsApiTest extends ProtectedApiTest
 {
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testGetTrackGroups($summit_id = 23)
+    use InsertSummitTestData;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        self::insertTestData();
+    }
+
+    protected function tearDown(): void
+    {
+        self::clearTestData();
+        parent::tearDown();
+    }
+
+    public function testGetTrackGroups()
     {
 
         $params = [
-           'id'      => $summit_id,
+            'id'      => self::$summit->getId(),
             'expand' => 'tracks',
         ];
 
@@ -44,15 +53,11 @@ final class OAuth2TrackGroupsApiTest extends ProtectedApiTest
         return $track_groups;
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testGetTrackGroupsMetadata($summit_id = 23)
+    public function testGetTrackGroupsMetadata()
     {
 
         $params = [
-            'id'      => $summit_id,
+            'id'      => self::$summit->getId(),
         ];
 
         $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
@@ -73,25 +78,15 @@ final class OAuth2TrackGroupsApiTest extends ProtectedApiTest
         return $metadata;
     }
 
-
-    /**
-     * @param int $summit_id
-     */
-    public function testGetTrackGroupById($summit_id = 24){
-        $track_groups_response = $this->testGetTrackGroups($summit_id);
+    public function testGetTrackGroupById(){
+        $track_groups_response = $this->testGetTrackGroups();
 
         $track_groups = $track_groups_response->data;
 
-        $track_group  = null;
-        foreach($track_groups as $track_group_aux){
-            if($track_group_aux->class_name == \models\summit\PrivatePresentationCategoryGroup::ClassName){
-                $track_group = $track_group_aux;
-                break;
-            }
-        }
+        $track_group  = $track_groups[0];
 
         $params = [
-            'id'             => $summit_id,
+            'id'             => self::$summit->getId(),
             'track_group_id' => $track_group->id,
             'expand'         => 'tracks,allowed_groups',
         ];
@@ -143,20 +138,22 @@ final class OAuth2TrackGroupsApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testAddTrackGroup($summit_id = 24){
+    public function testAddTrackGroup(){
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
+        $start_date  = clone(self::$summit->getBeginDate());
+        $end_date    = clone($start_date);
+        $end_date =    $end_date->add(new \DateInterval("P1D"));
 
         $name       = str_random(16).'_track_group';
         $data = [
             'name'        => $name,
             'description' => 'test desc track group',
-            'class_name'  => \models\summit\PrivatePresentationCategoryGroup::ClassName
+            'class_name'  => \models\summit\PresentationCategoryGroup::ClassName,
+            "begin_attendee_voting_period_date" => $start_date->getTimestamp(),
+            "end_attendee_voting_period_date" => $end_date->getTimestamp(),
+            "max_attendee_votes" => 10,
         ];
 
         $headers = [
@@ -179,25 +176,28 @@ final class OAuth2TrackGroupsApiTest extends ProtectedApiTest
         $this->assertResponseStatus(201);
         $track_group = json_decode($content);
         $this->assertTrue(!is_null($track_group));
+        $this->assertTrue($track_group->max_attendee_votes == 10);
+        $this->assertTrue($track_group->begin_attendee_voting_period_date == $start_date->getTimestamp());
+        $this->assertTrue($track_group->end_attendee_voting_period_date == $end_date->getTimestamp());
         return $track_group;
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testUpdateTrackGroup($summit_id = 24){
+    public function testUpdateTrackGroup(){
 
-        $track_group = $this->testAddTrackGroup($summit_id);
+        $track_groups_response = $this->testGetTrackGroups();
+
+        $track_groups = $track_groups_response->data;
+
+        $track_group  = $track_groups[0];
 
         $params = [
-            'id'             => $summit_id,
+            'id'             => self::$summit->getId(),
             'track_group_id' => $track_group->id
         ];
 
         $data = [
             'description' => 'test desc track group update',
-            'class_name'  => \models\summit\PrivatePresentationCategoryGroup::ClassName
+            'class_name'  => \models\summit\PresentationCategoryGroup::ClassName
         ];
 
         $headers = [
@@ -256,14 +256,18 @@ final class OAuth2TrackGroupsApiTest extends ProtectedApiTest
 
     }
 
-    public function testAssociateTrack2TrackGroup($summit_id = 24){
+    public function testAssociateTrack2TrackGroup(){
 
-        $track_group = $this->testAddTrackGroup($summit_id);
+        $track_groups_response = $this->testGetTrackGroups();
+
+        $track_groups = $track_groups_response->data;
+
+        $track_group  = $track_groups[0];
 
         $params = [
-            'id'             => $summit_id,
+            'id'             => self::$summit->getId(),
             'track_group_id' => $track_group->id,
-            'track_id'       => 211
+            'track_id'       => self::$defaultTrack->getId()
         ];
 
         $headers = [
@@ -286,15 +290,12 @@ final class OAuth2TrackGroupsApiTest extends ProtectedApiTest
         $this->assertResponseStatus(201);
     }
 
-    /**
-     * @param int $summit_id
-     * @param int $track_group_id
-     */
-    public function testDeleteExistentTrackGroup($summit_id = 24, $track_group_id = 85){
+
+    public function testDeleteExistentTrackGroup(){
 
         $params = [
-            'id'             => $summit_id,
-            'track_group_id' => $track_group_id
+            'id'             => self::$summit->getId(),
+            'track_group_id' => self::$defaultTrackGroup->getId()
         ];
 
         $headers = [

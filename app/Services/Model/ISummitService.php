@@ -53,11 +53,11 @@ interface ISummitService
 
     /**
      * @param Summit $summit
-     * @param $event_id
+     * @param int $event_id
      * @param array $data
-     * @return mixed
+     * @return SummitEvent
      */
-    public function publishEvent(Summit $summit, $event_id, array $data);
+    public function publishEvent(Summit $summit, $event_id, array $data):SummitEvent;
 
     /**
      * @param Summit $summit

@@ -33,6 +33,8 @@ class PresentationSerializer extends SummitEventSerializer
         'SelectionStatus'         => 'selection_status:string',
         'DisclaimerAcceptedDate'  => 'disclaimer_accepted_date:datetime_epoch',
         'DisclaimerAccepted'      => 'disclaimer_accepted:json_boolean',
+        'CustomOrder'             => 'custom_order:json_int',
+        'AttendeeVotesCount'      => 'attendee_votes_count:json_int',
     ];
 
     protected static $allowed_fields = [
@@ -49,6 +51,8 @@ class PresentationSerializer extends SummitEventSerializer
         'selection_status',
         'disclaimer_accepted_date',
         'disclaimer_accepted',
+        'custom_order',
+        'attendee_votes_count',
     ];
 
     protected static $allowed_relations = [

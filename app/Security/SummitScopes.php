@@ -107,4 +107,6 @@ final class SummitScopes
 
     const ReadSummitMediaFileTypes            = '%s/summit-media-file-types/read';
     const WriteSummitMediaFileTypes           = '%s/summit-media-file-types/write';
+
+    const Allow2PresentationAttendeeVote      = '%s/presentations/attendee-vote';
 }

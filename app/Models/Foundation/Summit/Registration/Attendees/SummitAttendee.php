@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
 use App\Jobs\Emails\RevocationTicketEmail;
 use App\Jobs\Emails\SummitAttendeeTicketEmail;
@@ -23,7 +24,8 @@ use models\main\Company;
 use models\main\Member;
 use models\main\SummitMemberSchedule;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
+
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitAttendeeRepository")
  * @ORM\AssociationOverrides({
@@ -40,7 +42,7 @@ class SummitAttendee extends SilverstripeBaseModel
 {
 
     const StatusIncomplete = 'Incomplete';
-    const StatusComplete   = 'Complete';
+    const StatusComplete = 'Complete';
     /**
      * @ORM\Column(name="FirstName", type="string")
      * @var string
@@ -127,6 +129,12 @@ class SummitAttendee extends SilverstripeBaseModel
     private $extra_question_answers;
 
     /**
+     * @ORM\OneToMany(targetEntity="models\summit\PresentationAttendeeVote", mappedBy="voter", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var PresentationAttendeeVote[]
+     */
+    private $presentation_votes;
+
+    /**
      * @ORM\Column(name="Company", type="string")
      * @var string
      */
@@ -154,28 +162,33 @@ class SummitAttendee extends SilverstripeBaseModel
     /**
      * @return \DateTime|null
      */
-    public function getSummitHallCheckedInDate():?\DateTime{
+    public function getSummitHallCheckedInDate(): ?\DateTime
+    {
         return $this->summit_hall_checked_in_date;
     }
 
     /**
      * @return bool
      */
-    public function getSummitHallCheckedIn(){
+    public function getSummitHallCheckedIn()
+    {
         return (bool)$this->summit_hall_checked_in;
     }
 
     /**
      * @param bool $summit_hall_checked_in
      */
-    public function setSummitHallCheckedIn(bool $summit_hall_checked_in):void{
+    public function setSummitHallCheckedIn(bool $summit_hall_checked_in): void
+    {
         $this->summit_hall_checked_in = $summit_hall_checked_in;
-        $this->summit_hall_checked_in_date = $summit_hall_checked_in? new \DateTime('now', new \DateTimeZone('UTC')):null;
+        $this->summit_hall_checked_in_date = $summit_hall_checked_in ? new \DateTime('now', new \DateTimeZone('UTC')) : null;
     }
 
-    public function hasCheckedIn():bool{
+    public function hasCheckedIn(): bool
+    {
         return (bool)$this->summit_hall_checked_in;
     }
+
     /**
      * @return boolean
      */
@@ -195,11 +208,11 @@ class SummitAttendee extends SilverstripeBaseModel
     /**
      * @return int
      */
-    public function getMemberId(){
+    public function getMemberId()
+    {
         try {
             return is_null($this->member) ? 0 : $this->member->getId();
-        }
-        catch(\Exception $ex){
+        } catch (\Exception $ex) {
             return 0;
         }
     }
@@ -207,7 +220,8 @@ class SummitAttendee extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function hasMember(){
+    public function hasMember()
+    {
         return $this->getMemberId() > 0;
     }
 
@@ -220,15 +234,17 @@ class SummitAttendee extends SilverstripeBaseModel
     /**
      * @return SummitAttendeeTicket[]
      */
-    public function getTickets(){
+    public function getTickets()
+    {
         return $this->tickets;
     }
 
     /**
      * @param SummitAttendeeTicket $ticket
      */
-    public function addTicket(SummitAttendeeTicket $ticket){
-        if($this->tickets->contains($ticket)) return;
+    public function addTicket(SummitAttendeeTicket $ticket)
+    {
+        if ($this->tickets->contains($ticket)) return;
         $this->tickets->add($ticket);
         $ticket->setOwner($this);
     }
@@ -236,18 +252,21 @@ class SummitAttendee extends SilverstripeBaseModel
     /**
      * @return Member
      */
-    public function getMember():?Member{
+    public function getMember(): ?Member
+    {
         return $this->member;
     }
 
     /**
      * @param Member $member
      */
-    public function setMember(Member $member){
+    public function setMember(Member $member)
+    {
         $this->member = $member;
     }
 
-    public function clearMember(){
+    public function clearMember()
+    {
         $this->member = null;
     }
 
@@ -256,21 +275,23 @@ class SummitAttendee extends SilverstripeBaseModel
     public function __construct()
     {
         parent::__construct();
-        $this->share_contact_info       = false;
-        $this->summit_hall_checked_in   = false;
-        $this->tickets                  = new ArrayCollection();
-        $this->extra_question_answers   = new ArrayCollection();
+        $this->share_contact_info = false;
+        $this->summit_hall_checked_in = false;
+        $this->tickets = new ArrayCollection();
+        $this->extra_question_answers = new ArrayCollection();
         $this->disclaimer_accepted_date = null;
         $this->summit_virtual_checked_in_date = null;
         $this->invitation_email_sent_date = null;
         $this->public_edition_email_sent_date = null;
-        $this->status                   = self::StatusIncomplete;
+        $this->status = self::StatusIncomplete;
+        $this->presentation_votes = new ArrayCollection();
     }
 
     /**
      * @return SummitEventFeedback[]
      */
-    public function getEmittedFeedback(){
+    public function getEmittedFeedback()
+    {
 
         return $this->member->getFeedback()->matching
         (
@@ -295,7 +316,7 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     public function removeFromSchedule(SummitEvent $event)
     {
-       $this->member->removeFromSchedule($event);
+        $this->member->removeFromSchedule($event);
     }
 
     /**
@@ -313,7 +334,8 @@ class SummitAttendee extends SilverstripeBaseModel
      * @return null| SummitMemberSchedule
      * @deprecated use Member::getScheduleByEvent instead
      */
-    public function getScheduleByEvent(SummitEvent $event){
+    public function getScheduleByEvent(SummitEvent $event)
+    {
         return $this->member->getScheduleByEvent($event);
     }
 
@@ -321,7 +343,8 @@ class SummitAttendee extends SilverstripeBaseModel
      * @return SummitMemberSchedule[]
      * @deprecated use Member::getScheduleBySummit instead
      */
-    public function getSchedule(){
+    public function getSchedule()
+    {
         return $this->member->getScheduleBySummit($this->summit);
     }
 
@@ -329,7 +352,8 @@ class SummitAttendee extends SilverstripeBaseModel
      * @return int[]
      * @deprecated use Member::getScheduledEventsIds instead
      */
-    public function getScheduledEventsIds(){
+    public function getScheduledEventsIds()
+    {
         return $this->member->getScheduledEventsIds($this->summit);
     }
 
@@ -338,15 +362,17 @@ class SummitAttendee extends SilverstripeBaseModel
      * @return null|RSVP
      * @deprecated use Member::getRsvpByEvent instead
      */
-    public function getRsvpByEvent($event_id){
-       return $this->member->getRsvpByEvent($event_id);
+    public function getRsvpByEvent($event_id)
+    {
+        return $this->member->getRsvpByEvent($event_id);
     }
 
     /**
      * @param int $ticket_id
      * @return SummitAttendeeTicket
      */
-    public function getTicketById($ticket_id){
+    public function getTicketById($ticket_id)
+    {
         $ticket = $this->tickets->matching(
             $criteria = Criteria::create()
                 ->where(Criteria::expr()->eq("id", $ticket_id))
@@ -358,7 +384,8 @@ class SummitAttendee extends SilverstripeBaseModel
      * @param SummitAttendeeTicket $ticket
      * @return $this
      */
-    public function removeTicket(SummitAttendeeTicket $ticket){
+    public function removeTicket(SummitAttendeeTicket $ticket)
+    {
         $this->tickets->removeElement($ticket);
         $ticket->clearOwner();
         return $this;
@@ -367,13 +394,14 @@ class SummitAttendee extends SilverstripeBaseModel
     /**
      * @param SummitAttendeeTicket $ticket
      */
-    public function sendRevocationTicketEmail(SummitAttendeeTicket $ticket){
-        if(!$ticket->hasOwner()) return;
+    public function sendRevocationTicketEmail(SummitAttendeeTicket $ticket)
+    {
+        if (!$ticket->hasOwner()) return;
 
-        if($ticket->getOwner()->getId() != $this->getId()) return;
+        if ($ticket->getOwner()->getId() != $this->getId()) return;
         $email = $this->getEmail();
         $key = md5($email);
-        if(Cache::add(sprintf("%s_revoke_ticket", $key),true, 600 )) {
+        if (Cache::add(sprintf("%s_revoke_ticket", $key), true, 600)) {
             RevocationTicketEmail::dispatch($this, $ticket);
         }
     }
@@ -382,30 +410,30 @@ class SummitAttendee extends SilverstripeBaseModel
      * @param SummitAttendeeTicket $ticket
      * @param bool $overrideTicketOwnerIsSameAsOrderOwnerRule
      */
-    public function sendInvitationEmail(SummitAttendeeTicket $ticket, bool $overrideTicketOwnerIsSameAsOrderOwnerRule = false){
+    public function sendInvitationEmail(SummitAttendeeTicket $ticket, bool $overrideTicketOwnerIsSameAsOrderOwnerRule = false)
+    {
 
         $email = $this->getEmail();
         $key = md5($email);
 
         Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s", $email));
 
-        if($ticket->getOwnerEmail() != $this->getEmail()) return;
-        if(!$ticket->isPaid()){
+        if ($ticket->getOwnerEmail() != $this->getEmail()) return;
+        if (!$ticket->isPaid()) {
             Log::warning(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket is not paid", $email));
             return;
         }
-        if(!$ticket->isActive()){
+        if (!$ticket->isActive()) {
             Log::warning(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket is not active", $email));
             return;
         }
         $this->updateStatus();
         $ticket->generateHash();
 
-        if($this->isComplete()) {
+        if ($this->isComplete()) {
             Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s is complete", $email));
             // adds a threshold of 10 minutes to avoid duplicates emails
-            if(Cache::add(sprintf("%s_emit_ticket", $key),true, 10 ))
-            {
+            if (Cache::add(sprintf("%s_emit_ticket", $key), true, 10)) {
                 Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s sending SummitAttendeeTicketEmail", $email));
                 SummitAttendeeTicketEmail::dispatch($ticket);
                 $ticket->getOwner()->markInvitationEmailSentDate();
@@ -418,10 +446,10 @@ class SummitAttendee extends SilverstripeBaseModel
         // buyer is presented the option to fill in the details during the checkout process. Second, buyer will
         // receive daily reminder emails. So, I think that makes this email not really needed as the buyer already knows
         // they bought a ticket for themselves.
-        if($order->getOwnerEmail() !== $ticket->getOwnerEmail() || $overrideTicketOwnerIsSameAsOrderOwnerRule) {
+        if ($order->getOwnerEmail() !== $ticket->getOwnerEmail() || $overrideTicketOwnerIsSameAsOrderOwnerRule) {
             // no delay
             // adds a threshold of 10 minutes to avoid duplicates emails
-            if(Cache::add(sprintf("%s_edit_ticket", $key),true, 10 )) {
+            if (Cache::add(sprintf("%s_edit_ticket", $key), true, 10)) {
                 Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s sending InviteAttendeeTicketEditionMail", $email));
                 InviteAttendeeTicketEditionMail::dispatch($ticket);
                 $ticket->getOwner()->markInvitationEmailSentDate();
@@ -432,7 +460,8 @@ class SummitAttendee extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function hasTickets(){
+    public function hasTickets()
+    {
         return $this->tickets->count() > 0;
     }
 
@@ -442,10 +471,10 @@ class SummitAttendee extends SilverstripeBaseModel
     public function getFirstName(): ?string
     {
         $res = null;
-        if($this->hasMember()){
+        if ($this->hasMember()) {
             $res = $this->member->getFirstName();
         }
-        if(empty($res))
+        if (empty($res))
             $res = $this->first_name;
         return $res;
     }
@@ -464,10 +493,10 @@ class SummitAttendee extends SilverstripeBaseModel
     public function getSurname(): ?string
     {
         $res = null;
-        if($this->hasMember()){
+        if ($this->hasMember()) {
             $res = $this->member->getLastName();
         }
-        if(empty($res))
+        if (empty($res))
             $res = $this->surname;
         return $res;
     }
@@ -485,25 +514,26 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     public function getEmail(): string
     {
-        if($this->hasMember()){
+        if ($this->hasMember()) {
             return $this->member->getEmail();
         }
         return $this->email;
     }
 
-    public function getFullName():?string{
+    public function getFullName(): ?string
+    {
         Log::debug(sprintf("SummitAttendee::getFullName id %s", $this->id));
-        if($this->hasMember()){
+        if ($this->hasMember()) {
             Log::debug(sprintf("SummitAttendee::getFullName id %s hasMember", $this->id));
-            $fullname  = $this->member->getFullName();
+            $fullname = $this->member->getFullName();
             Log::debug(sprintf("SummitAttendee::getFullName id %s Member Full Name %s", $this->id, $fullname));
-            if(!empty($fullname))
+            if (!empty($fullname))
                 return $fullname;
         }
 
         $fullname = $this->first_name;
-        if(!empty($this->surname)){
-            if(!empty($fullname)) $fullname .= ' ';
+        if (!empty($this->surname)) {
+            if (!empty($fullname)) $fullname .= ' ';
             $fullname .= $this->surname;
         }
 
@@ -530,7 +560,8 @@ class SummitAttendee extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function isDisclaimerAccepted():bool{
+    public function isDisclaimerAccepted(): bool
+    {
         return !is_null($this->disclaimer_accepted_date);
     }
 
@@ -542,7 +573,8 @@ class SummitAttendee extends SilverstripeBaseModel
         $this->disclaimer_accepted_date = $disclaimer_accepted_date;
     }
 
-    public function clearDisclaimerAcceptedDate():void{
+    public function clearDisclaimerAcceptedDate(): void
+    {
         $this->disclaimer_accepted_date = null;
     }
 
@@ -558,7 +590,8 @@ class SummitAttendee extends SilverstripeBaseModel
      * @param SummitOrderExtraQuestionType $question
      * @return SummitOrderExtraQuestionAnswer|null
      */
-    public function getExtraQuestionAnswerByQuestion(SummitOrderExtraQuestionType $question):?SummitOrderExtraQuestionAnswer{
+    public function getExtraQuestionAnswerByQuestion(SummitOrderExtraQuestionType $question): ?SummitOrderExtraQuestionAnswer
+    {
         $answer = $this->extra_question_answers->matching(
             $criteria = Criteria::create()
                 ->where(Criteria::expr()->eq("question", $question))
@@ -570,7 +603,8 @@ class SummitAttendee extends SilverstripeBaseModel
      * @param SummitOrderExtraQuestionType $question
      * @return string|null
      */
-    public function getExtraQuestionAnswerValueByQuestion(SummitOrderExtraQuestionType $question):?string{
+    public function getExtraQuestionAnswerValueByQuestion(SummitOrderExtraQuestionType $question): ?string
+    {
         try {
             $sql = <<<SQL
 SELECT ExtraQuestionAnswer.Value FROM `SummitOrderExtraQuestionAnswer`
@@ -601,8 +635,9 @@ SQL;
     /**
      * @param SummitOrderExtraQuestionAnswer $answer
      */
-    public function addExtraQuestionAnswer(SummitOrderExtraQuestionAnswer $answer){
-        if($this->extra_question_answers->contains($answer)) return;
+    public function addExtraQuestionAnswer(SummitOrderExtraQuestionAnswer $answer)
+    {
+        if ($this->extra_question_answers->contains($answer)) return;
         $this->extra_question_answers->add($answer);
         $answer->setAttendee($this);
     }
@@ -610,8 +645,9 @@ SQL;
     /**
      * @param SummitOrderExtraQuestionAnswer $answer
      */
-    public function removeExtraQuestionAnswer(SummitOrderExtraQuestionAnswer $answer){
-        if(!$this->extra_question_answers->contains($answer)) return;
+    public function removeExtraQuestionAnswer(SummitOrderExtraQuestionAnswer $answer)
+    {
+        if (!$this->extra_question_answers->contains($answer)) return;
         $this->extra_question_answers->removeElement($answer);
         $answer->clearAttendee();
     }
@@ -651,49 +687,53 @@ SQL;
     /**
      * @return bool
      */
-    public function needToFillDetails():bool {
+    public function needToFillDetails(): bool
+    {
         return $this->getStatus() == self::StatusIncomplete;
     }
 
     /**
      * @return bool
      */
-    public function isComplete():bool{
+    public function isComplete(): bool
+    {
         return $this->getStatus() == self::StatusComplete;
     }
 
     /**
      * @return string
      */
-    public function getStatus():?string{
+    public function getStatus(): ?string
+    {
         return $this->status;
     }
 
-    public function updateStatus():string {
+    public function updateStatus(): string
+    {
 
         Log::debug(sprintf("SummitAttendee::updateStatus original status %s", $this->status));
         $is_disclaimer_mandatory = $this->summit->isRegistrationDisclaimerMandatory();
 
         // mandatory fields
-        if($is_disclaimer_mandatory && !$this->isDisclaimerAccepted()){
+        if ($is_disclaimer_mandatory && !$this->isDisclaimerAccepted()) {
             $this->status = self::StatusIncomplete;
             Log::debug(sprintf("SummitAttendee::updateStatus StatusIncomplete for attendee %s (disclaimer mandatory)", $this->id));
             return $this->status;
         }
 
-        if(empty($this->getFirstName())){
+        if (empty($this->getFirstName())) {
             $this->status = self::StatusIncomplete;
             Log::debug(sprintf("SummitAttendee::updateStatus StatusIncomplete for attendee %s (first name empty)", $this->id));
             return $this->status;
         }
 
-        if(empty($this->getSurname())){
+        if (empty($this->getSurname())) {
             $this->status = self::StatusIncomplete;
             Log::debug(sprintf("SummitAttendee::updateStatus StatusIncomplete for attendee %s (last name empty)", $this->id));
             return $this->status;
         }
 
-        if(empty($this->getEmail())){
+        if (empty($this->getEmail())) {
             $this->status = self::StatusIncomplete;
             Log::debug(sprintf("SummitAttendee::updateStatus StatusIncomplete for attendee %s (email empty)", $this->id));
             return $this->status;
@@ -702,20 +742,20 @@ SQL;
         // check mandatory questions
 
         // get mandatory question ids
-        $extra_questions_mandatory_questions     = $this->summit->getMandatoryOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+        $extra_questions_mandatory_questions = $this->summit->getMandatoryOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
         $extra_questions_mandatory_questions_ids = [];
 
-        foreach($extra_questions_mandatory_questions as $extra_mandatory_question){
+        foreach ($extra_questions_mandatory_questions as $extra_mandatory_question) {
             $extra_questions_mandatory_questions_ids[] = $extra_mandatory_question->getId();
         }
 
         // now check the answers
-        foreach($this->extra_question_answers as $extra_question_answer){
-            if(!$extra_question_answer->hasQuestion()) continue;
+        foreach ($this->extra_question_answers as $extra_question_answer) {
+            if (!$extra_question_answer->hasQuestion()) continue;
             $question_type = $extra_question_answer->getQuestion();
-            if(in_array($question_type->getId(), $extra_questions_mandatory_questions_ids)) {
+            if (in_array($question_type->getId(), $extra_questions_mandatory_questions_ids)) {
                 // is mandatory now check if we have value set
-                if(!$extra_question_answer->hasValue()) {
+                if (!$extra_question_answer->hasValue()) {
                     $this->status = self::StatusIncomplete;
                     Log::debug(sprintf("SummitAttendee::updateStatus StatusIncomplete for attendee %s ( mandatory extra question missing value )", $this->id));
                     return $this->status;
@@ -728,7 +768,7 @@ SQL;
         }
 
         // if we have mandatory questions without answer ...
-        if(count($extra_questions_mandatory_questions_ids) > 0 ){
+        if (count($extra_questions_mandatory_questions_ids) > 0) {
             $this->status = self::StatusIncomplete;
             Log::debug(sprintf("SummitAttendee::updateStatus StatusIncomplete for attendee %s ( mandatory extra questions )", $this->id));
             return $this->status;
@@ -802,12 +842,13 @@ SQL;
      * @param string $access_level
      * @return bool
      */
-    public function hasAccessLevel(string $access_level):bool{
-        foreach($this->tickets as $ticket){
-            if(!$ticket->isActive()) continue;
-            if(!$ticket->hasBadge()) continue;
+    public function hasAccessLevel(string $access_level): bool
+    {
+        foreach ($this->tickets as $ticket) {
+            if (!$ticket->isActive()) continue;
+            if (!$ticket->hasBadge()) continue;
             $al = $ticket->getBadge()->getType()->getAccessLevelByName($access_level);
-            if(!is_null($al)) return true;
+            if (!is_null($al)) return true;
         }
         return false;
     }
@@ -815,13 +856,14 @@ SQL;
     /**
      * @throws \Exception
      */
-    public function doVirtualChecking():void{
+    public function doVirtualChecking(): void
+    {
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
-        if(is_null($this->summit_virtual_checked_in_date)){
-            if(!$this->summit->isOpen()){
+        if (is_null($this->summit_virtual_checked_in_date)) {
+            if (!$this->summit->isOpen()) {
                 throw new ValidationException("Is not show time yet.");
             }
-            if(!$this->hasAccessLevel(SummitAccessLevelType::VIRTUAL)){
+            if (!$this->hasAccessLevel(SummitAccessLevelType::VIRTUAL)) {
                 throw new ValidationException("Attendee does not posses VIRTUAL access level.");
             }
             $this->summit_virtual_checked_in_date = $now;
@@ -832,7 +874,8 @@ SQL;
      * @return \DateTime
      * @throws \Exception
      */
-    public function markInvitationEmailSentDate():\DateTime{
+    public function markInvitationEmailSentDate(): \DateTime
+    {
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
         $this->invitation_email_sent_date = $now;
         return $now;
@@ -842,10 +885,25 @@ SQL;
      * @return \DateTime
      * @throws \Exception
      */
-    public function markPublicEditionEmailSentDate():\DateTime{
+    public function markPublicEditionEmailSentDate(): \DateTime
+    {
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
         $this->public_edition_email_sent_date = $now;
         return $now;
+    }
+
+    public function getPresentationVotes(){
+        return $this->presentation_votes;
+    }
+
+    public function addPresentationVote(PresentationAttendeeVote $vote){
+        if($this->presentation_votes->contains($vote)) return;
+        $this->addPresentationVote($vote);
+    }
+
+    public function removePresentationVote(PresentationAttendeeVote $vote){
+        if(!$this->presentation_votes->contains($vote)) return;
+        $this->presentation_votes->removeElement($vote);
     }
 
 }

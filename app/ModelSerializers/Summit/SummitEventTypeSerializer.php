@@ -23,16 +23,18 @@ use models\summit\SummitEventType;
 class SummitEventTypeSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
-        'Type'                 => 'name:json_string',
-        'ClassName'            => 'class_name:json_string',
-        'Color'                => 'color:json_color',
-        'BlackoutTimes'        => 'black_out_times:json_boolean',
-        'UseSponsors'          => 'use_sponsors:json_boolean',
-        'AreSponsorsMandatory' => 'are_sponsors_mandatory:json_boolean',
-        'AllowsAttachment'     => 'allows_attachment:json_boolean',
-        'AllowsLevel'          => 'allows_level:json_boolean',
-        'Default'              => 'is_default:json_boolean',
-        'SummitId'             => 'summit_id:json_int',
+        'Type'                  => 'name:json_string',
+        'ClassName'             => 'class_name:json_string',
+        'Color'                 => 'color:json_color',
+        'BlackoutTimes'         => 'black_out_times:json_boolean',
+        'UseSponsors'           => 'use_sponsors:json_boolean',
+        'AreSponsorsMandatory'  => 'are_sponsors_mandatory:json_boolean',
+        'AllowsAttachment'      => 'allows_attachment:json_boolean',
+        'AllowsLevel'           => 'allows_level:json_boolean',
+        'AllowsPublishingDates' => 'allows_publishing_dates:json_boolean',
+        'AllowsLocation'        => 'allows_location:json_boolean',
+        'Default'               => 'is_default:json_boolean',
+        'SummitId'              => 'summit_id:json_int',
     ];
 
     /**
@@ -76,6 +78,7 @@ class SummitEventTypeSerializer extends SilverStripeSerializer
                 }
             }
         }
+
         return $values;
     }
 }

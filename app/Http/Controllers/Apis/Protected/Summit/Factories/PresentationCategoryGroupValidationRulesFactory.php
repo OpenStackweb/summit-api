@@ -47,6 +47,9 @@ final class PresentationCategoryGroupValidationRulesFactory
             'name'        => 'required|string',
             'description' => 'sometimes|string',
             'color'       => 'sometimes|hex_color',
+            'max_attendee_votes' => 'sometimes|integer|min:0',
+            'begin_attendee_voting_period_date' => 'sometimes|date_format:U',
+            'end_attendee_voting_period_date' => 'sometimes|date_format:U|required_with:submission_begin_date|after:begin_attendee_voting_period_date',
         ];
 
         if($update){

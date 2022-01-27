@@ -85,17 +85,6 @@ class RetrieveAllSummitEventsBySummitStrategy extends RetrieveSummitEventsStrate
     }
 
     /**
-     * @return array
-     */
-    protected function getValidFilters()
-    {
-        $valid_filters = parent::getValidFilters();
-        $valid_filters['summit_id'] = ['=='];
-        $valid_filters['published'] = ['=='];
-        return $valid_filters;
-    }
-
-    /**
      * @return null|Filter
      */
     protected function buildFilter(){
@@ -116,7 +105,7 @@ class RetrieveAllSummitEventsBySummitStrategy extends RetrieveSummitEventsStrate
      * @param Order|null $order
      * @return PagingResponse
      */
-    public function retrieveEventsFromSource(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
+    public function retrieveEventsFromSource(PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse
     {
         return $this->events_repository->getAllByPage($paging_info, $filter, $order);
     }

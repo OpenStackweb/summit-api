@@ -45,6 +45,20 @@ final class Order
     }
 
     /**
+     * @param string $field
+     * @return bool
+     */
+    public function removeOrder(string $field):bool{
+        foreach ($this->ordering as $index => $order){
+            if ($order instanceof OrderElement && $order->getField() == $field) {
+                unset($this->ordering[$index]);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * @param QueryBuilder $query
      * @param array $mappings
      * @return $this

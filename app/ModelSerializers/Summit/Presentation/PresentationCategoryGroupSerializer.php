@@ -24,6 +24,9 @@ class PresentationCategoryGroupSerializer extends SilverStripeSerializer
         'Description' => 'description:json_string',
         'ClassName'   => 'class_name:json_string',
         'SummitId'    => 'summit_id:json_int',
+        'BeginAttendeeVotingPeriodDate' => 'begin_attendee_voting_period_date:datetime_epoch',
+        'EndAttendeeVotingPeriodDate' => 'end_attendee_voting_period_date:datetime_epoch',
+        'MaxAttendeeVotes' => 'max_attendee_votes:json_int'
     ];
 
     /**

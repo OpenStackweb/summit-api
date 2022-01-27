@@ -36,6 +36,8 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class Presentation extends SummitEvent
 {
+    const ClassName = 'Presentation';
+
     /**
      * SELECTION STATUS (TRACK CHAIRS LIST)
      */
@@ -139,6 +141,12 @@ class Presentation extends SummitEvent
     protected $disclaimer_accepted_date;
 
     /**
+     * @ORM\Column(name="CustomOrder", type="integer")
+     * @var integer
+     */
+    protected $custom_order;
+
+    /**
      * @ORM\ManyToOne(targetEntity="PresentationSpeaker", inversedBy="moderated_presentations", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="ModeratorID", referencedColumnName="ID", onDelete="SET NULL")
      * @var PresentationSpeaker
@@ -191,19 +199,25 @@ class Presentation extends SummitEvent
     protected $answers;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\PresentationTrackChairView", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\summit\PresentationTrackChairView", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationTrackChairView[]
      */
     private $track_chair_views;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\PresentationVote", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\summit\PresentationVote", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationVote[]
      */
     private $votes;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\SummitCategoryChange", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\summit\PresentationAttendeeVote", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var PresentationAttendeeVote[]
+     */
+    private $attendees_votes;
+
+    /**
+     * @ORM\OneToMany(targetEntity="models\summit\SummitCategoryChange", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitCategoryChange[]
      */
     private $category_changes_requests;
@@ -215,7 +229,7 @@ class Presentation extends SummitEvent
     private $actions;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\PresentationExtraQuestionAnswer", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="models\summit\PresentationExtraQuestionAnswer", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationExtraQuestionAnswer[]
      */
     private $extra_question_answers;
@@ -261,10 +275,12 @@ class Presentation extends SummitEvent
         $this->selected_presentations = new ArrayCollection();
         $this->actions = new ArrayCollection();
         $this->extra_question_answers = new ArrayCollection();
+        $this->attendees_votes = new ArrayCollection();
         $this->to_record = false;
         $this->attending_media = false;
         $this->will_all_speakers_attend = false;
         $this->disclaimer_accepted_date = null;
+        $this->custom_order = 0;
     }
 
     /**
@@ -1605,7 +1621,7 @@ class Presentation extends SummitEvent
      */
     public function getExtraQuestionAnswerByQuestion(SummitSelectionPlanExtraQuestionType $question):?PresentationExtraQuestionAnswer{
         $answer = $this->extra_question_answers->matching(
-            $criteria = Criteria::create()
+            Criteria::create()
                 ->where(Criteria::expr()->eq("question", $question))
         )->first();
         return $answer ? $answer : null;
@@ -1699,7 +1715,67 @@ class Presentation extends SummitEvent
                 Log::debug(sprintf("Presentation::clearMediaUploads as deleted path ( public ) %s.", $path));
                 $strategy->markAsDeleted($path);
             }
-
         }
+    }
+
+    /**
+     * @return int
+     */
+    public function getCustomOrder(): int
+    {
+        return $this->custom_order;
+    }
+
+    /**
+     * @param int $custom_order
+     */
+    public function setCustomOrder(int $custom_order): void
+    {
+        $this->custom_order = $custom_order;
+    }
+
+    /**
+     * @return int
+     */
+    public function getAttendeeVotesCount():int{
+        return $this->attendees_votes->count();
+    }
+
+    /**
+     * @param SummitAttendee $attendee
+     * @return PresentationAttendeeVote
+     * @throws ValidationException
+     */
+    public function castAttendeeVote(SummitAttendee $attendee):PresentationAttendeeVote{
+
+        // check that member did not vote yet...
+        if($this->attendees_votes->matching(Criteria::create()
+            ->where(Criteria::expr()->eq("voter", $attendee)))->count() > 0)
+            throw new ValidationException(sprintf("Attendee %s already vote on presentation %s", $attendee->getEmail(), $this->id));
+
+        $vote = new PresentationAttendeeVote($attendee, $this);
+
+        $this->attendees_votes->add($vote);
+        $attendee->addPresentationVote($vote);
+
+        return $vote;
+    }
+
+    /**
+     * @param SummitAttendee $attendee
+     * @throws ValidationException
+     */
+    public function unCastAttendeeVote(SummitAttendee $attendee):void{
+
+        $vote = $this->attendees_votes->matching(Criteria::create()
+            ->where(Criteria::expr()->eq("voter", $attendee)))->first();
+
+        if(!$vote)
+            throw new ValidationException(sprintf("Vote not found."));
+
+        $this->attendees_votes->removeElement($vote);
+        $attendee->removePresentationVote($vote);
+        $vote->clearVoter();
+        $vote->clearPresentation();
     }
 }

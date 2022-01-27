@@ -217,6 +217,10 @@ final class SerializerRegistry
             IPresentationSerializerTypes::TrackChairs_CSV => TrackChairPresentationCSVSerializer::class
         ];
 
+        $this->registry['PresentationAttendeeVoteSerializer'] = [
+            self::SerializerType_Public => PresentationAttendeeVoteSerializer::class,
+        ];
+
         $this->registry['SummitGroupEvent'] = SummitGroupEventSerializer::class;
         $this->registry['TrackTagGroup'] = TrackTagGroupSerializer::class;
 

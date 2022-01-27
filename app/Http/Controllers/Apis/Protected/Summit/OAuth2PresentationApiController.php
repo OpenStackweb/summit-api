@@ -1289,4 +1289,97 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         }
     }
 
+    /**
+     * Attendees Votes
+     */
+
+    /**
+     * @param $summit_id
+     * @param $presentation_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getAttendeeVotes($summit_id, $presentation_id){
+        try {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            return $this->ok();
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412($ex2->getMessages());
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $presentation_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function castAttendeeVote($summit_id, $presentation_id){
+        try {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $vote = $this->presentation_service->castAttendeeVote($summit, $current_member, intval($presentation_id));
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer
+            ($vote)
+            ->serialize
+                (
+                    self::getExpands(),
+                    self::getFields(),
+                    self::getRelations()
+                )
+            );
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412($ex2->getMessages());
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $presentation_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function unCastAttendeeVote($summit_id, $presentation_id){
+        try {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $this->presentation_service->unCastAttendeeVote($summit, $current_member, intval($presentation_id));
+
+            return $this->deleted();
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412($ex2->getMessages());
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
 }

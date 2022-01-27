@@ -1,6 +1,6 @@
-<?php namespace models\summit;
-/**
- * Copyright 2017 OpenStack Foundation
+<?php namespace ModelSerializers;
+/*
+ * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,20 +13,14 @@
  **/
 
 /**
- * Interface ISummitEventType
- * @package models\summit
+ * Class PresentationAttendeeVoteSerializer
+ * @package ModelSerializers
  */
-interface ISummitEventType
+class PresentationAttendeeVoteSerializer extends SilverStripeSerializer
 {
-    // default types
-
-    const HandonLabs = 'Hand-on Labs';
-    const Lunch_Breaks = 'Lunch & Breaks';
-    const EveningEvents = 'Evening Events';
-    const GroupsEvents = 'Groups Events';
-    const Lunch = 'Lunch';
-    const Breaks = 'Breaks';
-    const Breakfast = 'Breakfast';
-    const MarketplaceHours = 'Marketplace Hours';
+    protected static $array_mappings = [
+        'VoterId'        => 'voter_id:json_int',
+        'PresentationId' => 'presentation_id:json_int',
+     ];
 
 }

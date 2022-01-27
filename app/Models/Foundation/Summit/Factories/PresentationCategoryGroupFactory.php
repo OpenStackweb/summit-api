@@ -34,7 +34,7 @@ final class PresentationCategoryGroupFactory
         $track_group = null;
         switch($data['class_name']){
             case PresentationCategoryGroup::ClassName :{
-                $track_group = self::populatePresentationCategoryGroup(new PresentationCategoryGroup, $data);
+                $track_group = self::populatePresentationCategoryGroup($summit, new PresentationCategoryGroup, $data);
             }
             break;
             case PrivatePresentationCategoryGroup::ClassName :{
@@ -46,11 +46,18 @@ final class PresentationCategoryGroupFactory
 
 
     /**
+     * @param Summit $summit
      * @param PresentationCategoryGroup $track_group
      * @param array $data
      * @return PresentationCategoryGroup
      */
-    private static function populatePresentationCategoryGroup(PresentationCategoryGroup $track_group, array $data){
+    private static function populatePresentationCategoryGroup
+    (
+        Summit $summit,
+        PresentationCategoryGroup $track_group,
+        array $data
+    )
+    {
         if(isset($data['name']))
             $track_group->setName(trim($data['name']));
 
@@ -59,6 +66,23 @@ final class PresentationCategoryGroupFactory
 
         if(isset($data['color']))
             $track_group->setColor(trim($data['color']));
+
+        if(isset($data['begin_attendee_voting_period_date'])) {
+            $start_datetime = intval($data['begin_attendee_voting_period_date']);
+            $start_datetime = new \DateTime("@$start_datetime");
+            $start_datetime->setTimezone($summit->getTimeZone());
+            $track_group->setBeginAttendeeVotingPeriodDate($start_datetime);
+        }
+
+        if(isset($data['end_attendee_voting_period_date'])) {
+            $end_datetime = intval($data['end_attendee_voting_period_date']);
+            $end_datetime = new \DateTime("@$end_datetime");
+            $end_datetime->setTimezone($summit->getTimeZone());
+            $track_group->setEndAttendeeVotingPeriodDate($end_datetime);
+        }
+
+        if(isset($data['max_attendee_votes']))
+            $track_group->setMaxAttendeeVotes(intval($data['max_attendee_votes']));
 
         return $track_group;
     }
@@ -96,7 +120,7 @@ final class PresentationCategoryGroupFactory
         if(isset($data['max_submission_allowed_per_user']))
             $track_group->setMaxSubmissionAllowedPerUser(intval($data['max_submission_allowed_per_user']));
 
-        return self::populatePresentationCategoryGroup($track_group, $data);
+        return self::populatePresentationCategoryGroup($summit, $track_group, $data);
     }
 
     /**
@@ -110,7 +134,7 @@ final class PresentationCategoryGroupFactory
             return self::populatePrivatePresentationCategoryGroup($summit, $track_group, $data);
         }
         else if($track_group instanceof PresentationCategoryGroup){
-            return self::populatePresentationCategoryGroup($track_group, $data);
+            return self::populatePresentationCategoryGroup($summit, $track_group, $data);
         }
         return $track_group;
     }

@@ -2677,7 +2677,7 @@ final class SummitOrderService
             return [$ticket, $shouldSendInvitationEmail];
         });
 
-        if($shouldSendInvitationEmail && $ticket->hasOwner())
+        if($shouldSendInvitationEmail && $summit->isRegistrationSendTicketEmailAutomatically() && $ticket->hasOwner())
             $ticket->getOwner()->sendInvitationEmail($ticket);
 
         return $ticket;

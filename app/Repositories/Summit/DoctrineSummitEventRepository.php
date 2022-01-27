@@ -25,6 +25,7 @@ use models\summit\Presentation;
 use models\summit\PresentationType;
 use models\summit\Summit;
 use models\summit\SummitEvent;
+use models\summit\SummitEventType;
 use models\summit\SummitGroupEvent;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineCollectionFieldsFilterMapping;

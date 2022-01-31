@@ -257,7 +257,8 @@ class SummitSerializer extends SilverStripeSerializer
         if (in_array('meeting_booking_room_allowed_attributes', $relations)) {
             $meeting_booking_room_allowed_attributes = [];
             foreach ($summit->getMeetingBookingRoomAllowedAttributes() as $attr) {
-                $meeting_booking_room_allowed_attributes[] = SerializerRegistry::getInstance()->getSerializer($attr)->serialize($expand);
+                $meeting_booking_room_allowed_attributes[] = SerializerRegistry::getInstance()->getSerializer($attr)
+                    ->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'meeting_booking_room_allowed_attributes'));
             }
             $values['meeting_booking_room_allowed_attributes'] = $meeting_booking_room_allowed_attributes;
         }
@@ -266,7 +267,7 @@ class SummitSerializer extends SilverStripeSerializer
         if (in_array('summit_sponsors', $relations)) {
             $summit_sponsors = [];
             foreach ($summit->getSummitSponsors() as $sponsor) {
-                $summit_sponsors[] = SerializerRegistry::getInstance()->getSerializer($sponsor)->serialize($expand);
+                $summit_sponsors[] = SerializerRegistry::getInstance()->getSerializer($sponsor)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'summit_sponsors'));
             }
             $values['summit_sponsors'] = $summit_sponsors;
         }

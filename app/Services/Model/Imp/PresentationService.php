@@ -1005,7 +1005,14 @@ final class PresentationService
 
             $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
             if (!is_null($strategy)) {
-                $strategy->save($fileInfo->getFile(), $mediaUpload->getPath(IStorageTypesConstants::PublicType), $fileInfo->getFileName());
+                $options = $mediaUploadType->isUseTemporaryLinksOnPublicStorage() ? []: 'public';
+                $strategy->save
+                (
+                    $fileInfo->getFile(),
+                    $mediaUpload->getPath(IStorageTypesConstants::PublicType),
+                    $fileInfo->getFileName(),
+                    $options
+                );
             }
 
             $mediaUpload->setFilename($fileInfo->getFileName());
@@ -1099,7 +1106,14 @@ final class PresentationService
 
                 $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
                 if (!is_null($strategy)) {
-                    $strategy->save($fileInfo->getFile(), $mediaUpload->getPath(IStorageTypesConstants::PublicType), $fileInfo->getFileName());
+                    $options = $mediaUploadType->isUseTemporaryLinksOnPublicStorage() ? []: 'public';
+                    $strategy->save
+                    (
+                        $fileInfo->getFile(),
+                        $mediaUpload->getPath(IStorageTypesConstants::PublicType),
+                        $fileInfo->getFileName(),
+                        $options
+                    );
                 }
 
                 $payload['file_name'] = $fileInfo->getFileName();

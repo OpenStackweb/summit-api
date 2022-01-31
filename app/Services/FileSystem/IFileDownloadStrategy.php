@@ -28,9 +28,11 @@ interface IFileDownloadStrategy
 
     /**
      * @param string $relativeFileName
+     * @param boolean $useTemporaryUrl
+     * @param int $ttl time to live in minutes
      * @return string|null
      */
-    public function getUrl(string $relativeFileName):?string;
+    public function getUrl(string $relativeFileName, bool $useTemporaryUrl = false, int $ttl = 10):?string;
 
     /**
      * @param string $relativeFileName

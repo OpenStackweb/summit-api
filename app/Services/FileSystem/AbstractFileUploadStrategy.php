@@ -21,12 +21,18 @@ use Illuminate\Support\Facades\Storage;
 abstract class AbstractFileUploadStrategy implements IFileUploadStrategy
 {
     abstract protected function getDriver():string;
+
     /**
-     * @inheritDoc
+     * @param UploadedFile $file
+     * @param string $path
+     * @param string $filename
+     * @param mixed $options
+     * @return false|string
      */
-    public function save(UploadedFile $file, string $path, string $filename)
+    public function save(UploadedFile $file, string $path, string $filename, $options = [])
     {
-        return Storage::disk($this->getDriver())->putFileAs($path, $file, $filename);
+        Log::debug(sprintf("AbstractFileUploadStrategy::save path %s filename %s options %s", $path, $filename, json_encode($options)));
+        return Storage::disk($this->getDriver())->putFileAs($path, $file, $filename, $options);
     }
 
     /**

@@ -66,12 +66,14 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
         if(!$speaker instanceof PresentationSpeaker) return [];
 
         $values                            = parent::serialize($expand, $fields, $relations, $params);
+        $summit                            = isset($params['summit'])? $params['summit']:null;
         $summit_id                         = isset($params['summit_id'])? intval($params['summit_id']):null;
         $published                         = isset($params['published'])? intval($params['published']):true;
 
-        if(!is_null($summit_id)) {
-            $values['presentations']           = $speaker->getPresentationIds($summit_id, $published);
-            $values['moderated_presentations'] = $speaker->getModeratedPresentationIds($summit_id, $published);
+        if(!is_null($summit)) {
+            $values['featured']                = $summit->isFeaturedSpeaker($speaker);
+            $values['presentations']           = $speaker->getPresentationIds($summit->getId(), $published);
+            $values['moderated_presentations'] = $speaker->getModeratedPresentationIds($summit->getId(), $published);
         }
 
         if (in_array('member', $relations) && $speaker->hasMember())

@@ -5255,6 +5255,14 @@ SQL;
 
     /**
      * @param PresentationSpeaker $speaker
+     * @return bool
+     */
+    public function isFeaturedSpeaker(PresentationSpeaker  $speaker):bool{
+        return $this->featured_speakers->contains($speaker);
+    }
+
+    /**
+     * @param PresentationSpeaker $speaker
      */
     public function addFeaturedSpeaker(PresentationSpeaker $speaker)
     {

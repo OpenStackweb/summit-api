@@ -243,11 +243,15 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function canPubliclyEdit():bool {
         if(empty($this->hash) || is_null($this->hash_creation_date)) return false;
-        $ttl_minutes = Config::get("registration.order_public_edit_ttl", 10);
+        $ttl_minutes = intval(Config::get("registration.order_public_edit_ttl", 10));
+        Log::debug(sprintf("SummitOrder::canPubliclyEdit id %s ttl %s", $this->id, $ttl_minutes));
         $eol = new \DateTime('now', new \DateTimeZone('UTC'));
         $eol->sub(new \DateInterval('PT'.$ttl_minutes.'M'));
-        if($this->hash_creation_date <= $eol)
+        if($this->hash_creation_date <= $eol) {
+            Log::debug(sprintf("SummitOrder::canPubliclyEdit id %s ttl %s is void", $this->id, $ttl_minutes));
             return false;
+        }
+        Log::debug(sprintf("SummitOrder::canPubliclyEdit id %s ttl %s is valid", $this->id, $ttl_minutes));
         return true;
     }
 

@@ -442,6 +442,9 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
 
             if (Request::has('filter')) {
                 $filter = FilterParser::parse(Request::input('filter'), [
+                    'email' => ['=@', '=='],
+                    'first_name' => ['=@', '=='],
+                    'last_name' => ['=@', '=='],
                     'is_accepted' => ['=='],
                     'is_sent' => ['=='],
                 ]);
@@ -453,6 +456,9 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             $filter->validate([
                  'is_accepted' => 'sometimes|required|string|in:true,false',
                  'is_sent' => 'sometimes|required|string|in:true,false',
+                'email' => 'sometimes|required|string',
+                'first_name' => 'sometimes|required|string',
+                'last_name' => 'sometimes|required|string',
             ]);
 
             $this->service->triggerSend($summit, $payload, Request::input('filter'));

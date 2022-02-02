@@ -89,16 +89,6 @@ final class ExternalUserApi extends AbstractOAuth2Api
 
             return intval($data['total']) > 0 ? $data['data'][0] : null;
         }
-        catch (RequestException $ex) {
-            Log::warning($ex);
-            $this->cleanAccessToken();
-            $response  = $ex->getResponse();
-            $code = $response->getStatusCode();
-            if($code == 403){
-                // retry
-                return $this->getUserByEmail($email);
-            }
-        }
         catch (Exception $ex) {
             $this->cleanAccessToken();
             Log::error($ex);
@@ -138,16 +128,6 @@ final class ExternalUserApi extends AbstractOAuth2Api
             );
 
             return json_decode($response->getBody()->getContents(), true);
-        }
-        catch (RequestException $ex) {
-            Log::warning($ex);
-            $this->cleanAccessToken();
-            $response  = $ex->getResponse();
-            $code = $response->getStatusCode();
-            if($code == 403){
-                // retry
-                return $this->registerUser($email, $first_name, $last_name);
-            }
         }
         catch (Exception $ex) {
             $this->cleanAccessToken();
@@ -199,16 +179,6 @@ final class ExternalUserApi extends AbstractOAuth2Api
 
             return json_decode($response->getBody()->getContents(), true);
         }
-        catch (RequestException $ex) {
-            Log::warning($ex);
-            $this->cleanAccessToken();
-            $response  = $ex->getResponse();
-            $code = $response->getStatusCode();
-            if($code == 403){
-                // retry
-                return $this->getUserById($id);
-            }
-        }
         catch (Exception $ex) {
             $this->cleanAccessToken();
             Log::error($ex);
@@ -244,16 +214,6 @@ final class ExternalUserApi extends AbstractOAuth2Api
             );
 
             return json_decode($response->getBody()->getContents(), true);
-        }
-        catch (RequestException $ex) {
-            Log::warning($ex);
-            $this->cleanAccessToken();
-            $response  = $ex->getResponse();
-            $code = $response->getStatusCode();
-            if($code == 403){
-                // retry
-                return $this->updateUser($id, $first_name, $last_name, $company_name);
-            }
         }
         catch (Exception $ex) {
             $this->cleanAccessToken();
@@ -293,16 +253,6 @@ final class ExternalUserApi extends AbstractOAuth2Api
 
             return json_decode($response->getBody()->getContents(), true);
         }
-        catch (RequestException $ex) {
-            Log::warning($ex);
-            $this->cleanAccessToken();
-            $response  = $ex->getResponse();
-            $code = $response->getStatusCode();
-            if($code == 403){
-                // retry
-                return $this->getUserRegistrationRequest($email);
-            }
-        }
         catch (Exception $ex) {
             $this->cleanAccessToken();
             Log::error($ex);
@@ -340,16 +290,6 @@ final class ExternalUserApi extends AbstractOAuth2Api
                 ]
             );
             return json_decode($response->getBody()->getContents(), true);
-        }
-        catch (RequestException $ex) {
-            Log::warning($ex);
-            $this->cleanAccessToken();
-            $response  = $ex->getResponse();
-            $code = $response->getStatusCode();
-            if($code == 403){
-                // retry
-                return $this->updateUserRegistrationRequest($id, $first_name, $last_name, $company_name, $country);
-            }
         }
         catch (Exception $ex) {
             $this->cleanAccessToken();

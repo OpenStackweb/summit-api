@@ -881,6 +881,13 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     }
 
     /**
+     * @return bool
+     */
+    public function isCancelled():bool {
+        return $this->status == IOrderConstants::CancelledStatus;
+    }
+
+    /**
      * @return \DateTime
      */
     public function getLastReminderEmailSentDate(): ?\DateTime

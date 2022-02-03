@@ -76,7 +76,7 @@ class Kernel extends ConsoleKernel
 
         // bookable rooms
 
-        $schedule->command('summit:room-reservation-revocation')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
+        $schedule->command('summit:room-reservation-revocation')->everyMinute()->withoutOverlapping()->onOneServer();
         // external schedule ingestion task
 
         $schedule->command("summit:external-schedule-feed-ingestion-process")->everyFifteenMinutes()->withoutOverlapping()->onOneServer();

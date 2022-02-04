@@ -39,6 +39,10 @@ final class SummitFactory
             $summit->setName(trim($data['name']));
         }
 
+        if(isset($data['time_zone_label']) ){
+            $summit->setTimeZoneLabel(trim($data['time_zone_label']));
+        }
+
         if(isset($data['time_zone_id']) ){
             $summit->setTimeZoneId(trim($data['time_zone_id']));
         }

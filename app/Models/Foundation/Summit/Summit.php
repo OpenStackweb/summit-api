@@ -66,6 +66,12 @@ class Summit extends SilverstripeBaseModel
     private $name;
 
     /**
+     * @ORM\Column(name="TimeZoneLabel", type="string")
+     * @var string
+     */
+    private $time_zone_label;
+
+    /**
      * @ORM\Column(name="DateLabel", type="string")
      * @var string
      */
@@ -6072,6 +6078,22 @@ SQL;
     public function setAllowUpdateAttendeeExtraQuestions(bool $allow_update_attendee_extra_questions): void
     {
         $this->allow_update_attendee_extra_questions = $allow_update_attendee_extra_questions;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getTimeZoneLabel(): ?string
+    {
+        return $this->time_zone_label;
+    }
+
+    /**
+     * @param string $time_zone_label
+     */
+    public function setTimeZoneLabel(string $time_zone_label): void
+    {
+        $this->time_zone_label = $time_zone_label;
     }
 
 }

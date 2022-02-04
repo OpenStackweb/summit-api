@@ -107,6 +107,7 @@ class SummitSerializer extends SilverStripeSerializer
         'RegistrationSendTicketEmailAutomatically' => 'registration_send_ticket_email_automatically:json_boolean',
         'Modality' => 'modality:json_string',
         'AllowUpdateAttendeeExtraQuestions' => 'allow_update_attendee_extra_questions:json_boolean',
+        'TimeZoneLabel' => 'time_zone_label:json_string',
     ];
 
     protected static $allowed_relations = [

@@ -15,12 +15,11 @@ use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
 use LaravelDoctrine\Migrations\Schema\Builder;
 use LaravelDoctrine\Migrations\Schema\Table;
-
 /**
- * Class Version20220125200224
+ * Class Version20220204152158
  * @package Database\Migrations\Model
  */
-class Version20220125200224 extends AbstractMigration
+class Version20220204152158 extends AbstractMigration
 {
     /**
      * @param Schema $schema
@@ -28,9 +27,9 @@ class Version20220125200224 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $builder = new Builder($schema);
-        if($schema->hasTable("Summit") && !$builder->hasColumn("Summit", "RegistrationAllowUpdateAttendeeExtraQuestions")) {
+        if($schema->hasTable("Summit") && !$builder->hasColumn("Summit", "TimeZoneLabel")) {
             $builder->table('Summit', function (Table $table) {
-                $table->boolean('RegistrationAllowUpdateAttendeeExtraQuestions')->setNotnull(false)->setDefault(false);
+                $table->string('TimeZoneLabel')->setNotnull(false)->setDefault(null);
             });
         }
     }
@@ -41,9 +40,9 @@ class Version20220125200224 extends AbstractMigration
     public function down(Schema $schema): void
     {
         $builder = new Builder($schema);
-        if($schema->hasTable("Summit") && $builder->hasColumn("Summit", "RegistrationAllowUpdateAttendeeExtraQuestions")) {
+        if($schema->hasTable("Summit") && $builder->hasColumn("Summit", "TimeZoneLabel")) {
             $builder->table('Summit', function (Table $table) {
-                $table->dropColumn('RegistrationAllowUpdateAttendeeExtraQuestions');
+                $table->dropColumn('TimeZoneLabel');
             });
         }
     }

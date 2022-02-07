@@ -130,7 +130,7 @@ final class SummitAttendeeFactory
                             $formerValue = $formerAnswers[$question->getName()] ?? null;
                             // check if we are allowed to change the answers that we already did
                             if(!empty($formerValue) && $formerValue != $value && !$summit->isAllowUpdateAttendeeExtraQuestions()){
-                                throw new ValidationException("Answer can not be changed by this time.");
+                                throw new ValidationException(sprintf("Answer can not be changed by this time. Original answer is %s.", $formerValue));
                             }
 
                             if (empty($value) && $question->isMandatory())

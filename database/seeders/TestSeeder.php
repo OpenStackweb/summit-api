@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
+
 /**
  * Class TestSeeder
  */
@@ -25,6 +26,7 @@ final class TestSeeder extends Seeder
     {
         Model::unguard();
         DB::setDefaultConnection("model");
+        DB::table('SummitScheduleConfig')->delete();
         DB::table('Presentation')->delete();
         DB::table('SummitEvent')->delete();
         DB::table('Summit')->delete();

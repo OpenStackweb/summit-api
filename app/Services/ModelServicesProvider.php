@@ -41,6 +41,7 @@ use App\Services\Model\Imp\SummitMetricService;
 use App\Services\Model\Imp\SummitPresentationActionService;
 use App\Services\Model\Imp\SummitPresentationActionTypeService;
 use App\Services\Model\Imp\SummitRegistrationInvitationService;
+use App\Services\Model\Imp\SummitScheduleSettingsService;
 use App\Services\Model\Imp\SummitSelectedPresentationListService;
 use App\Services\Model\Imp\TrackChairService;
 use App\Services\Model\IOrganizationService;
@@ -71,6 +72,7 @@ use App\Services\Model\ISummitPresentationActionTypeService;
 use App\Services\Model\ISummitPushNotificationService;
 use App\Services\Model\ISummitRefundPolicyTypeService;
 use App\Services\Model\ISummitRegistrationInvitationService;
+use App\Services\Model\ISummitScheduleSettingsService;
 use App\Services\Model\ISummitSelectedPresentationListService;
 use App\Services\Model\ISummitSelectionPlanService;
 use App\Services\Model\ISummitTaxTypeService;
@@ -390,6 +392,11 @@ final class ModelServicesProvider extends ServiceProvider
             IElectionService::class,
             ElectionService::class
         );
+
+        App::singleton(
+            ISummitScheduleSettingsService::class,
+            SummitScheduleSettingsService::class
+        );
     }
 
     /**
@@ -449,6 +456,7 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitPresentationActionService::class,
             ISelectionPlanExtraQuestionTypeService::class,
             IElectionService::class,
+            ISummitScheduleSettingsService::class,
         ];
     }
 }

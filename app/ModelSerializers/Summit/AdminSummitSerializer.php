@@ -12,6 +12,9 @@
  * limitations under the License.
  **/
 
+use Libs\ModelSerializers\Many2OneExpandSerializer;
+use models\summit\Summit;
+use models\summit\SummitScheduleConfig;
 use ModelSerializers\SerializerRegistry;
 use ModelSerializers\SummitSerializer;
 
@@ -64,6 +67,7 @@ final class AdminSummitSerializer extends SummitSerializer
         'featured_speakers',
         'dates_with_events',
         'presentation_action_types',
+        'schedule_settings',
     ];
 
     /**
@@ -73,4 +77,38 @@ final class AdminSummitSerializer extends SummitSerializer
     {
         return SerializerRegistry::SerializerType_Private;
     }
+
+    /**
+     * @param null $expand
+     * @param array $fields
+     * @param array $relation
+     * @param array $params
+     * @return array
+     */
+    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    {
+        $summit = $this->object;
+        if (!$summit instanceof Summit) return [];
+
+        if (!count($relations)) $relations = $this->getAllowedRelations();
+        $values  = parent::serialize($expand, $fields, $relations, $params);
+
+        if(in_array('schedule_settings', $relations) && !isset($values['schedule_settings'])){
+            $schedule_settings = [];
+            foreach ($summit->getScheduleSettings() as $config){
+                if(!$config->isEnabled()) continue;
+                $schedule_settings[] = $config->getId();
+            }
+            $values['schedule_settings'] = $schedule_settings;
+        }
+
+        return $values;
+    }
+
+    protected static $expand_mappings = [
+        'schedule_settings' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getEnableScheduleSettings',
+        ]
+    ];
 }

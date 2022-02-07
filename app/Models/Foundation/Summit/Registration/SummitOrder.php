@@ -893,10 +893,10 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function isVoid():bool{
         $ttl_minutes =  intval(Config::get("registration.reservation_lifetime", 30));
-        $eol = new \DateTime('now', new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone));
+        $eol = new \DateTime('now', new \DateTimeZone('UTC'));
         $eol->sub(new \DateInterval('PT' . $ttl_minutes . 'M'));
-        return ($this->status == IOrderConstants::ErrorStatus || $this->status == IOrderConstants::ReservedStatus)
-            && $this->created <= $eol;
+        Log::debug(sprintf("SummitOrder::isVoid status %s created %s eol %s", $this->status, $this->getCreatedUTC()->format('Y-m-d H:i:s'), $eol->format("Y-m-d H:i:s")));
+        return (($this->status == IOrderConstants::ErrorStatus || $this->status == IOrderConstants::ReservedStatus)  && $this->getCreatedUTC() <= $eol);
     }
 
     /**

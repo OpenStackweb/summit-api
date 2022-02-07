@@ -888,6 +888,18 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     }
 
     /**
+     * @return bool
+     * @throws \Exception
+     */
+    public function isVoid():bool{
+        $ttl_minutes =  intval(Config::get("registration.reservation_lifetime", 30));
+        $eol = new \DateTime('now', new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone));
+        $eol->sub(new \DateInterval('PT' . $ttl_minutes . 'M'));
+        return ($this->status == IOrderConstants::ErrorStatus || $this->status == IOrderConstants::ReservedStatus)
+            && $this->created <= $eol;
+    }
+
+    /**
      * @return \DateTime
      */
     public function getLastReminderEmailSentDate(): ?\DateTime

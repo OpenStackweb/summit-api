@@ -12,11 +12,17 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\TrackTagGroup;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use LaravelDoctrine\ORM\Facades\Registry;
+use models\main\Member;
 use models\main\Tag;
 use models\summit\PresentationCategoryGroup;
+use models\summit\SummitAttendee;
+use models\summit\SummitAttendeeTicket;
+use models\summit\SummitBadgeType;
+use models\summit\SummitTicketType;
 use models\utils\SilverstripeBaseModel;
 use models\summit\SummitVenue;
 use models\summit\Summit;
@@ -39,7 +45,6 @@ use Exception;
  */
 trait InsertSummitTestData
 {
-
     /**
      * @var Summit
      */
@@ -81,6 +86,16 @@ trait InsertSummitTestData
     static $defaultEventType;
 
     /**
+     * @var SummitTicketType
+     */
+    static $default_ticket_type;
+
+    /**
+     * @var SummitBadgeType
+     */
+    static $default_badge_type;
+
+    /**
      * @var EntityManager
      */
     static $em;
@@ -116,6 +131,11 @@ trait InsertSummitTestData
     static $defaultTags = [];
 
     /**
+     * @var Member
+     */
+    static $defaultMember;
+
+    /**
      * @throws Exception
      */
     protected static function insertTestData(){
@@ -123,6 +143,19 @@ trait InsertSummitTestData
         //DB::table("Summit")->delete();
         self::$summit_repository = EntityManager::getRepository(Summit::class);
         self::$summit_permission_group_repository = EntityManager::getRepository(SummitAdministratorPermissionGroup::class);
+
+        self::$default_badge_type = new SummitBadgeType();
+        self::$default_badge_type->setName("BADGE TYPE1");
+        self::$default_badge_type->setIsDefault(true);
+        self::$default_badge_type->setDescription("BADGE TYPE1 DESCRIPTION");
+
+        self::$default_ticket_type = new SummitTicketType();
+        self::$default_ticket_type->setCost(100);
+        self::$default_ticket_type->setCurrency("USD");
+        self::$default_ticket_type->setName("TICKET TYPE 1");
+        self::$default_ticket_type->setQuantity2Sell(100);
+        self::$default_ticket_type->setBadgeType(self::$default_badge_type);
+
         self::$summit = new Summit();
         self::$summit->setActive(true);
         // set feed type (sched)
@@ -138,6 +171,12 @@ trait InsertSummitTestData
         self::$summit->setRegistrationBeginDate($begin_date);
         self::$summit->setRegistrationEndDate((clone $begin_date)->add(new DateInterval("P30D")));
         self::$summit->setName("TEST SUMMIT");
+        self::$summit->addBadgeType(self::$default_badge_type);
+        self::$summit->addTicketType(self::$default_ticket_type);
+
+        $defaultBadge = new SummitBadgeType();
+        $defaultBadge->setName("DEFAULT");
+        $defaultBadge->setIsDefault(true);
 
         $presentation_type = new PresentationType();
         $presentation_type->setType('TEST PRESENTATION TYPE');
@@ -152,6 +191,22 @@ trait InsertSummitTestData
         $presentation_type->setIsModeratorMandatory(false);
 
         self::$summit->addEventType($presentation_type);
+
+        if (self::$defaultMember != null) {
+            $attendee = new SummitAttendee();
+            $attendee->setMember(self::$defaultMember);
+            $attendee->setEmail(self::$defaultMember->getEmail());
+            $attendee->setFirstName(self::$defaultMember->getFirstName());
+            $attendee->setSurname(self::$defaultMember->getLastName());
+
+            $ticket = new SummitAttendeeTicket();
+            $ticket->setTicketType(self::$default_ticket_type);
+            $ticket->activate();
+            $ticket->setPaid(true);
+            $attendee->addTicket($ticket);
+
+            self::$summit->addAttendee($attendee);
+        }
 
         self::$summit2 = new Summit();
         self::$summit2->setActive(true);

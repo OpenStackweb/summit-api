@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
+use App\Models\Foundation\Main\IGroup;
 use App\Services\Model\IAttendeeService;
 use Illuminate\Support\Facades\App;
 /**
@@ -18,11 +21,54 @@ use Illuminate\Support\Facades\App;
  */
 final class AttendeeServiceTest extends TestCase
 {
+    use InsertSummitTestData;
+
+    use InsertMemberTestData;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        self::insertMemberTestData(IGroup::TrackChairs);
+        self::$defaultMember = self::$member;
+        self::insertTestData();
+    }
+
+    protected function tearDown(): void
+    {
+        self::clearTestData();
+        self::clearMemberTestData();
+        parent::tearDown();
+    }
+
     public function testRedeemPromoCodes(){
 
         $service = App::make(IAttendeeService::class);
         $repo   =  EntityManager::getRepository(\models\summit\Summit::class);
         $summit = $repo->getById(24);
         $service->updateRedeemedPromoCodes($summit);
+    }
+
+    public function testSendAllAttendeeTickets() {
+
+        $service = App::make(IAttendeeService::class);
+
+        $payload = [
+            "email_flow_event"  => SummitAttendeeAllTicketsEditionEmail::EVENT_SLUG,
+        ];
+
+        $service->send(self::$summit->getId(), $payload);
+    }
+
+    public function testSendAllAttendeeTicketsByAttendeeIds() {
+
+        $service = App::make(IAttendeeService::class);
+
+        $payload = [
+            "email_flow_event"  => SummitAttendeeAllTicketsEditionEmail::EVENT_SLUG,
+            "attendees_ids"     => [self::$summit->getAttendees()[0]->getId()],
+        ];
+
+        $service->send(self::$summit->getId(), $payload);
     }
 }

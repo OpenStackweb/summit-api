@@ -137,17 +137,17 @@ final class SummitRegistrationInvitationService
             throw new ValidationException("File is missing last_name column.");
 
         foreach ($reader as $idx => $row) {
-                try {
+            try {
 
-                    Log::debug(sprintf("SummitRegistrationInvitationService::importInvitationData processing row %s", json_encode($row)));
-                    if(isset($row['allowed_ticket_types']) && is_string($row['allowed_ticket_types'])){
-                        $row['allowed_ticket_types'] = empty($row['allowed_ticket_types']) ? []:explode('|', $row['allowed_ticket_types']);
-                    }
-                    $this->add($summit, $row);
-                } catch (\Exception $ex) {
-                    Log::warning($ex);
-                    $summit = $this->summit_repository->getById($summit->getId());
+                Log::debug(sprintf("SummitRegistrationInvitationService::importInvitationData processing row %s", json_encode($row)));
+                if (isset($row['allowed_ticket_types']) && is_string($row['allowed_ticket_types'])) {
+                    $row['allowed_ticket_types'] = empty($row['allowed_ticket_types']) ? [] : explode('|', $row['allowed_ticket_types']);
                 }
+                $this->add($summit, $row);
+            } catch (\Exception $ex) {
+                Log::warning($ex);
+                $summit = $this->summit_repository->getById($summit->getId());
+            }
         }
     }
 
@@ -224,7 +224,7 @@ final class SummitRegistrationInvitationService
                 Log::debug(sprintf("SummitRegistrationInvitationService::setInvitationMember - trying to get member %s from user api", $email));
                 $user = $this->external_user_api->getUserByEmail($email);
                 // check if primary email is the same if not disregard
-                $primary_email = is_null($user) ? null: $user['email'] ?? null;
+                $primary_email = is_null($user) ? null : $user['email'] ?? null;
                 if (strcmp(strtolower($primary_email), strtolower($email)) !== 0) {
                     Log::debug
                     (
@@ -347,6 +347,7 @@ final class SummitRegistrationInvitationService
             Log::debug(sprintf("got invitation %s for email %s", $invitation->getId(), $invitation->getEmail()));
             if (strtolower($invitation->getEmail()) !== strtolower($current_member->getEmail()))
                 throw new ValidationException(sprintf(
+
                     "This invitation was sent to %s but you logged in as %s."
                     ." To be able to register for this event, sign out and then RSVP from the email invite and then log in with your primary email address."
                     ." Email <a href='mailto:%s'>%s</a> for additional troubleshooting."
@@ -413,11 +414,234 @@ final class SummitRegistrationInvitationService
 
         $page = 1;
         $count = 0;
-        $to_exclude = [
 
+        $to_exclude = [
+            1120,
+            1121,
+            1123,
+            1124,
+            1125,
+            1126,
+            1127,
+            1129,
+            1130,
+            1134,
+            1136,
+            1137,
+            1140,
+            1145,
+            1146,
+            1151,
+            1152,
+            1153,
+            1154,
+            1155,
+            1156,
+            1157,
+            1158,
+            1159,
+            1160,
+            1161,
+            1163,
+            1164,
+            1165,
+            1166,
+            1168,
+            1170,
+            1171,
+            1172,
+            1173,
+            1174,
+            1175,
+            1177,
+            1178,
+            1179,
+            1181,
+            1182,
+            1184,
+            1185,
+            1186,
+            1187,
+            1188,
+            1190,
+            1191,
+            1192,
+            1195,
+            1196,
+            1197,
+            1199,
+            1200,
+            1201,
+            1202,
+            1203,
+            1204,
+            1205,
+            1206,
+            1207,
+            1208,
+            1209,
+            1210,
+            1211,
+            1213,
+            1214,
+            1215,
+            1217,
+            1218,
+            1219,
+            1220,
+            1221,
+            1222,
+            1223,
+            1225,
+            1226,
+            1227,
+            1228,
+            1229,
+            1230,
+            1231,
+            1232,
+            1235,
+            1236,
+            1237,
+            1238,
+            1239,
+            1240,
+            1241,
+            1242,
+            1243,
+            1244,
+            1245,
+            1246,
+            1247,
+            1249,
+            1250,
+            1252,
+            1253,
+            1256,
+            1257,
+            1258,
+            1259,
+            1260,
+            1262,
+            1263,
+            1265,
+            1266,
+            1270,
+            1272,
+            1273,
+            1274,
+            1275,
+            1276,
+            1277,
+            1278,
+            1279,
+            1281,
+            1282,
+            1283,
+            1285,
+            1286,
+            1287,
+            1288,
+            1289,
+            1290,
+            1291,
+            1292,
+            1293,
+            1294,
+            1295,
+            1296,
+            1297,
+            1298,
+            1299,
+            1300,
+            1301,
+            1302,
+            1304,
+            1305,
+            1306,
+            1307,
+            1309,
+            1310,
+            1311,
+            1314,
+            1315,
+            1317,
+            1318,
+            1319,
+            1322,
+            1323,
+            1324,
+            1325,
+            1326,
+            1327,
+            1328,
+            1329,
+            1330,
+            1331,
+            1333,
+            1334,
+            1335,
+            1337,
+            1338,
+            1339,
+            1340,
+            1342,
+            1343,
+            1344,
+            1345,
+            1346,
+            1347,
+            1348,
+            1349,
+            1350,
+            1351,
+            1352,
+            1354,
+            1356,
+            1357,
+            1358,
+            1359,
+            1360,
+            1361,
+            1362,
+            1363,
+            1364,
+            1365,
+            1366,
+            1368,
+            1369,
+            1370,
+            1372,
+            1373,
+            1375,
+            1376,
+            1377,
+            1378,
+            1379,
+            1380,
+            1381,
+            1382,
+            1383,
+            1385,
+            1386,
+            1388,
+            1390,
+            1391,
+            1392,
+            1393,
+            1394,
+            1395,
+            1397,
+            1399,
+            1400,
+            1401,
+            1402,
+            1403,
+            1404,
+            1405,
         ];
-        while(true)
-        {
+
+        while (true) {
             Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s processing page %s", $summit_id, $flow_event, $filter->__toString(), $page));
             $ids = $this->tx_service->transaction(function () use ($summit_id, $payload, $filter, $page) {
                 if (isset($payload['invitations_ids'])) {
@@ -428,18 +652,19 @@ final class SummitRegistrationInvitationService
                 if (is_null($filter)) {
                     $filter = new Filter();
                 }
-                $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
+                if (!$filter->hasFilter("summit_id"))
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
                 return $this->invitation_repository->getAllIdsByPage(new PagingInfo($page, 100), $filter);
             });
 
             Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s page %s got %s records", $summit_id, $flow_event, $filter->__toString(), $page, count($ids)));
-            if(!count($ids)){
+            if (!count($ids)) {
                 Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s page is empty, ending processing.", $summit_id));
                 break;
             }
             foreach ($ids as $invitation_id) {
 
-                if(in_array($invitation_id, $to_exclude)){
+                if (in_array($invitation_id, $to_exclude)) {
                     Log::debug(sprintf("SummitRegistrationInvitationService::send excluding id %s", $invitation_id));
                 }
 

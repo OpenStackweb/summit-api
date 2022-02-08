@@ -28,6 +28,9 @@ class ProcessRegistrationInvitationsJob implements ShouldQueue
 {
     public $tries = 1;
 
+    // no timeout
+    public $timeout = 0;
+
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private $summit_id;

@@ -405,46 +405,69 @@ final class SummitRegistrationInvitationService
     {
         $flow_event = trim($payload['email_flow_event']);
 
-        Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s", $summit_id, $flow_event));
+        Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s", $summit_id, $flow_event, $filter->__toString()));
 
-        $ids = $this->tx_service->transaction(function () use ($summit_id, $payload, $filter) {
-            if (isset($payload['invitations_ids'])) {
-                Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s invitations_ids %s", $summit_id, json_encode($payload['invitations_ids'])));
-                return $payload['invitations_ids'];
-            }
-            Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s getting by filter", $summit_id));
-            if (is_null($filter)) {
-                $filter = new Filter();
-            }
-            $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
-            return $this->invitation_repository->getAllIdsByPage(new PagingInfo(1, PHP_INT_MAX), $filter);
-        });
+        $page = 1;
+        $count = 0;
+        $to_exclude = [
 
-        foreach ($ids as $invitation_id) {
-
-            $res = $this->tx_service->transaction(function () use ($flow_event, $invitation_id) {
-
-                Log::debug(sprintf("SummitRegistrationInvitationService::send processing invitation id  %s", $invitation_id));
-
-                $invitation = $this->invitation_repository->getByIdExclusiveLock(intval($invitation_id));
-                if (is_null($invitation) || !$invitation instanceof SummitRegistrationInvitation) return null;
-
-                $summit = $invitation->getSummit();
-
-                while (true) {
-                    $invitation->generateConfirmationToken();
-                    $former_invitation = $this->invitation_repository->getByHashAndSummit($invitation->getHash(), $summit);
-                    if (is_null($former_invitation) || $former_invitation->getId() == $invitation->getId()) break;
+        ];
+        while(true)
+        {
+            Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s processing page %s", $summit_id, $flow_event, $filter->__toString(), $page));
+            $ids = $this->tx_service->transaction(function () use ($summit_id, $payload, $filter, $page) {
+                if (isset($payload['invitations_ids'])) {
+                    Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s invitations_ids %s", $summit_id, json_encode($payload['invitations_ids'])));
+                    return $payload['invitations_ids'];
                 }
-
-                return $invitation;
+                Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s getting by filter", $summit_id));
+                if (is_null($filter)) {
+                    $filter = new Filter();
+                }
+                $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
+                return $this->invitation_repository->getAllIdsByPage(new PagingInfo($page, 100), $filter);
             });
 
-            // send email
-            if ($flow_event == InviteSummitRegistrationEmail::EVENT_SLUG && !is_null($res))
-                InviteSummitRegistrationEmail::dispatch($res);
-            if ($flow_event == ReInviteSummitRegistrationEmail::EVENT_SLUG && !is_null($res))
-                ReInviteSummitRegistrationEmail::dispatch($res);
+            Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s page %s got %s records", $summit_id, $flow_event, $filter->__toString(), $page, count($ids)));
+            if(!count($ids)){
+                Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s page is empty, ending processing.", $summit_id));
+                break;
+            }
+            foreach ($ids as $invitation_id) {
+
+                if(in_array($invitation_id, $to_exclude)){
+                    Log::debug(sprintf("SummitRegistrationInvitationService::send excluding id %s", $invitation_id));
+                }
+
+                $res = $this->tx_service->transaction(function () use ($flow_event, $invitation_id) {
+
+                    Log::debug(sprintf("SummitRegistrationInvitationService::send processing invitation id  %s", $invitation_id));
+
+                    $invitation = $this->invitation_repository->getByIdExclusiveLock(intval($invitation_id));
+                    if (is_null($invitation) || !$invitation instanceof SummitRegistrationInvitation) return null;
+
+                    $summit = $invitation->getSummit();
+
+                    while (true) {
+                        $invitation->generateConfirmationToken();
+                        $former_invitation = $this->invitation_repository->getByHashAndSummit($invitation->getHash(), $summit);
+                        if (is_null($former_invitation) || $former_invitation->getId() == $invitation->getId()) break;
+                    }
+
+                    return $invitation;
+                });
+
+                // send email
+                if ($flow_event == InviteSummitRegistrationEmail::EVENT_SLUG && !is_null($res))
+                    InviteSummitRegistrationEmail::dispatch($res);
+                if ($flow_event == ReInviteSummitRegistrationEmail::EVENT_SLUG && !is_null($res))
+                    ReInviteSummitRegistrationEmail::dispatch($res);
+                $count++;
+            }
+
+            $page++;
         }
+
+        Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s had processed %s records", $summit_id, $flow_event, $filter->__toString(), $count));
     }
 }

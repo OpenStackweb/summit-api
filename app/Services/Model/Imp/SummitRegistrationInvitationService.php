@@ -404,17 +404,18 @@ final class SummitRegistrationInvitationService
     public function send(int $summit_id, array $payload, Filter $filter = null): void
     {
         $flow_event = trim($payload['email_flow_event']);
-
-        Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s", $summit_id, $flow_event, $filter->__toString()));
-
+        Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString()));
+        $done = isset($payload['invitations_ids']) && is_null($filter); // we have provided only ids and not a criteria
         $page = 1;
         $count = 0;
 
         $to_exclude = [
         ];
 
-        while (true) {
+        do{
+
             Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s processing page %s", $summit_id, $flow_event, $filter->__toString(), $page));
+
             $ids = $this->tx_service->transaction(function () use ($summit_id, $payload, $filter, $page) {
                 if (isset($payload['invitations_ids'])) {
                     Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s invitations_ids %s", $summit_id, json_encode($payload['invitations_ids'])));
@@ -431,9 +432,11 @@ final class SummitRegistrationInvitationService
 
             Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s page %s got %s records", $summit_id, $flow_event, $filter->__toString(), $page, count($ids)));
             if (!count($ids)) {
+                // if we are processing a page , then break it
                 Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s page is empty, ending processing.", $summit_id));
                 break;
             }
+
             foreach ($ids as $invitation_id) {
 
                 if (in_array($invitation_id, $to_exclude)) {
@@ -468,7 +471,8 @@ final class SummitRegistrationInvitationService
             }
 
             $page++;
-        }
+
+        }while(!$done);
 
         Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s had processed %s records", $summit_id, $flow_event, $filter->__toString(), $count));
     }

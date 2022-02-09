@@ -431,6 +431,7 @@ final class SummitRegistrationInvitationService
                 }
                 if (!$filter->hasFilter("summit_id"))
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
+                Log::debug(sprintf("SummitRegistrationInvitationService::send page %s", $page));
                 return $this->invitation_repository->getAllIdsByPage(new PagingInfo($page, $maxPageSize), $filter);
             });
 
@@ -443,7 +444,7 @@ final class SummitRegistrationInvitationService
 
             if(count($ids) == count($formerIds) && $ids[0] == $formerIds[0]){
                 // its the same page again
-                Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s page is empty, ending processing.", $summit_id));
+                Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s page is empty, ending processing ( same page).", $summit_id));
                 break;
             }
 

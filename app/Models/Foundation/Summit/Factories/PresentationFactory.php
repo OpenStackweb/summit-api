@@ -76,6 +76,10 @@ final class PresentationFactory
             }
         }
 
+        if(isset($payload['custom_order'])){
+            $presentation->setCustomOrder(intval($payload['custom_order']));
+        }
+
         // links
 
         if (isset($payload['links'])) {

@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use models\exceptions\ValidationException;
+use models\summit\Presentation;
+use models\summit\SummitEvent;
 use utils\Filter;
 use utils\Order;
 use utils\OrderParser;
@@ -106,6 +108,8 @@ abstract class RetrieveSummitEventsStrategy
                 'id',
                 'created',
                 'track',
+                'random',
+                'custom_order',
             ]);
         }
         return $order;
@@ -137,6 +141,7 @@ abstract class RetrieveSummitEventsStrategy
             'track_id'         => ['=='],
             'speaker_id'       => ['=='],
             'sponsor_id'       => ['=='],
+            'summit_id'        => ['=='],
             'sponsor'          => ['=@', '=='],
             'location_id'      => ['=='],
             'speaker'          => ['=@', '=='],
@@ -148,6 +153,12 @@ abstract class RetrieveSummitEventsStrategy
             'selection_plan_id' => ['=='],
             'created_by_fullname'  => ['=@', '=='],
             'created_by_email'  => ['=@', '=='],
+            'type_allows_publishing_dates' => ['=='],
+            'type_allows_location' => ['=='],
+            'type_allows_attendee_vote' => ['=='],
+            'type_allows_custom_ordering' => ['=='],
+            'published' => ['=='],
+            'class_name' => ['=='],
         ];
     }
 
@@ -170,12 +181,19 @@ abstract class RetrieveSummitEventsStrategy
             'summit_type_id'  => 'sometimes|integer',
             'event_type_id'   => 'sometimes|integer',
             'track_id'        => 'sometimes|integer',
+            'summit_id'       => 'sometimes|integer',
             'speaker_id'      => 'sometimes|integer',
             'location_id'     => 'sometimes|integer',
             'id'              => 'sometimes|integer',
             'selection_plan_id' => 'sometimes|integer',
             'created_by_fullname'  => 'sometimes|string',
             'created_by_email'  => 'sometimes|string',
+            'type_allows_publishing_dates' => 'sometimes|boolean',
+            'type_allows_location' => 'sometimes|boolean',
+            'type_allows_attendee_vote' => 'sometimes|boolean',
+            'type_allows_custom_ordering' => 'sometimes|boolean',
+            'published' => 'sometimes|boolean',
+            'class_name' => 'sometimes|string|in:'.implode(',',[ Presentation::ClassName, SummitEvent::ClassName])
         ];
     }
 }

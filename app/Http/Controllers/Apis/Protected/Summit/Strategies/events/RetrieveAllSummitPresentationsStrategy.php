@@ -1,6 +1,6 @@
 <?php namespace App\Http\Controllers;
-/**
- * Copyright 2015 OpenStack Foundation
+/*
+ * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,33 +12,23 @@
  * limitations under the License.
  **/
 
+use models\summit\Presentation;
 use utils\Filter;
 use utils\FilterParser;
 
 /**
- * Class RetrievePublishedSummitEventsBySummitStrategy
+ * Class RetrieveAllSummitPresentationsStrategy
  * @package App\Http\Controllers
  */
-final class RetrievePublishedSummitEventsBySummitStrategy extends RetrieveAllSummitEventsBySummitStrategy
+class RetrieveAllSummitPresentationsStrategy extends RetrieveAllSummitEventsBySummitStrategy
 {
-    /**
-     * @return array
-     */
-    protected function getValidFilters()
-    {
-        $valid_filters = parent::getValidFilters();
-        return $valid_filters;
-    }
-
     /**
      * @return null|Filter
      */
-    protected function buildFilter()
+    protected function buildFilter(): ?Filter
     {
         $filter = parent::buildFilter();
-        $filter->addFilterCondition(FilterParser::buildFilter('published','==','1'));
-        $filter->addFilterCondition(FilterParser::buildFilter('type_allows_publishing_dates','==','1'));
-        $filter->addFilterCondition(FilterParser::buildFilter('type_allows_location','==','1'));
+        $filter->addFilterCondition(FilterParser::buildFilter('class_name','==',Presentation::ClassName));
         return $filter;
     }
 }

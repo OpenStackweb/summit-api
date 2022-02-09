@@ -51,13 +51,4 @@ class RetrieveAllSummitEventsStrategy extends RetrieveSummitEventsStrategy
         return $this->event_repository->getAllByPage($paging_info, $filter, $order);
     }
 
-    /**
-     * @return array
-     */
-    protected function getValidFilters()
-    {
-        $valid_filters = parent::getValidFilters();
-        $valid_filters['summit_id'] = array('==');
-        return $valid_filters;
-    }
 }

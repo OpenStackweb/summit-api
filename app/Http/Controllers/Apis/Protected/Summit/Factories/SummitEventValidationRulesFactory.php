@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 
-
 /**
  * Class SummitEventValidationRulesFactory
  * @package App\Http\Controllers
@@ -66,6 +65,7 @@ final class SummitEventValidationRulesFactory
                 'disclaimer_accepted' => 'sometimes|boolean',
                 'created_by_id' => 'sometimes|integer',
                 'show_sponsors' => 'sometimes|boolean',
+                'custom_order' => 'sometimes|integer',
             ];
         }
 
@@ -99,6 +99,7 @@ final class SummitEventValidationRulesFactory
             'moderator_speaker_id' => 'sometimes|integer',
             'extra_questions' => 'sometimes|extra_question_dto_array',
             'links' => 'sometimes|url_array',
+            'custom_order' => 'sometimes|integer',
             // group event
             'groups' => 'sometimes|int_array',
             'selection_plan_id' => 'sometimes|integer',

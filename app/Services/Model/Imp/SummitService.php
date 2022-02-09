@@ -624,6 +624,14 @@ final class SummitService extends AbstractService implements ISummitService
     {
 
         if (isset($data['start_date']) && isset($data['end_date'])) {
+            if(!$event->hasType()){
+                throw new ValidationException("To be able to set schedule dates event type must be set First.");
+            }
+
+            $type = $event->getType();
+            if(!$type->isAllowsPublishingDates())
+                throw new ValidationException("Event Type does not allow schedule dates.");
+
             $event->setSummit($summit);
             $start_datetime = intval($data['start_date']);
             $start_datetime = new \DateTime("@$start_datetime");
@@ -754,7 +762,6 @@ final class SummitService extends AbstractService implements ISummitService
                 if (is_null($event_type)) $event_type = $old_event_type;
             }
 
-
             if (is_null($event_id) && is_null($event_type)) {
                 // is event is new one and we dont provide an event type ...
                 throw new ValidationException('type_id is mandatory!');
@@ -804,8 +811,14 @@ final class SummitService extends AbstractService implements ISummitService
                 $event->setCategory($track);
             }
 
-            if (!is_null($location))
+            if (!is_null($location)) {
+                if(!$event->hasType()){
+                    throw new ValidationException("To be able to set a location, event type must be set First.");
+                }
+                if(!$event_type->isAllowsLocation())
+                    throw new ValidationException("Event Type does not allow location.");
                 $event->setLocation($location);
+            }
 
             if (is_null($location) && isset($data['location_id'])) {
                 // clear location
@@ -843,6 +856,11 @@ final class SummitService extends AbstractService implements ISummitService
 
             $this->saveOrUpdatePresentationData($event, $event_type, $data);
             $this->saveOrUpdateSummitGroupEventData($event, $event_type, $data);
+
+            if(!$event_type->isAllowsLocation())
+                $event->clearLocation();
+            if(!$event_type->isAllowsPublishingDates())
+                $event->clearPublishingDates();
 
             if ($event->isPublished()) {
                 $this->validateBlackOutTimesAndTimes($event);
@@ -968,9 +986,8 @@ final class SummitService extends AbstractService implements ISummitService
      * @param array $data
      * @return SummitEvent
      */
-    public function publishEvent(Summit $summit, $event_id, array $data)
+    public function publishEvent(Summit $summit, $event_id, array $data):SummitEvent
     {
-
         return $this->tx_service->transaction(function () use ($summit, $data, $event_id) {
 
             $event = $this->event_repository->getById($event_id);
@@ -978,8 +995,10 @@ final class SummitService extends AbstractService implements ISummitService
             if (is_null($event) || !$event instanceof SummitEvent)
                 throw new EntityNotFoundException(sprintf("event id %s does not exists!", $event_id));
 
-            if (is_null($event->getType()))
+            if (!$event->hasType())
                 throw new EntityNotFoundException(sprintf("event type its not assigned to event id %s!", $event_id));
+
+            $type = $event->getType();
 
             if (is_null($event->getSummit()))
                 throw new EntityNotFoundException(sprintf("summit its not assigned to event id %s!", $event_id));
@@ -989,16 +1008,18 @@ final class SummitService extends AbstractService implements ISummitService
 
             $this->updateEventDates($data, $summit, $event);
 
-            $start_datetime = $event->getStartDate();
-            $end_datetime = $event->getEndDate();
+            if($type->isAllowsPublishingDates()) {
+                $start_datetime = $event->getStartDate();
+                $end_datetime = $event->getEndDate();
 
-            if (is_null($start_datetime))
-                throw new ValidationException(sprintf("start_date its not assigned to event id %s!", $event_id));
+                if (is_null($start_datetime))
+                    throw new ValidationException(sprintf("start_date its not assigned to event id %s!", $event_id));
 
-            if (is_null($end_datetime))
-                throw new ValidationException(sprintf("end_date its not assigned to event id %s!", $event_id));
+                if (is_null($end_datetime))
+                    throw new ValidationException(sprintf("end_date its not assigned to event id %s!", $event_id));
+            }
 
-            if (isset($data['location_id'])) {
+            if (isset($data['location_id']) && $type->isAllowsLocation()) {
                 $location_id = intval($data['location_id']);
                 $event->clearLocation();
                 if ($location_id > 0) {
@@ -1021,7 +1042,7 @@ final class SummitService extends AbstractService implements ISummitService
     private function validateBlackOutTimesAndTimes(SummitEvent $event)
     {
         $current_event_location = $event->getLocation();
-
+        if(!$event->getType()->isAllowsPublishingDates()) return;
         // validate blackout times
         $conflict_events = $this->event_repository->getPublishedOnSameTimeFrame($event);
         if (!is_null($conflict_events)) {
@@ -1069,7 +1090,6 @@ final class SummitService extends AbstractService implements ISummitService
                         }
                     }
                 }
-
             }
         }
     }

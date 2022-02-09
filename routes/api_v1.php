@@ -377,7 +377,6 @@ Route::group(array('prefix' => 'summits'), function () {
 
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@getEvents']);
 
-
             Route::group(['prefix' => 'csv'], function () {
                 Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@getEventsCSV']);
                 Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@importEventData']);
@@ -429,6 +428,8 @@ Route::group(array('prefix' => 'summits'), function () {
 
         // presentations
         Route::group(['prefix' => 'presentations'], function () {
+            Route::get('', [ 'uses' => 'OAuth2SummitEventsApiController@getAllPresentations']);
+            Route::get('voteable', [ 'uses' => 'OAuth2SummitEventsApiController@getAllVoteablePresentations']);
             // opened without role CFP - valid selection plan on CFP status
             Route::post('', 'OAuth2PresentationApiController@submitPresentation');
             // import from mux
@@ -486,6 +487,14 @@ Route::group(array('prefix' => 'summits'), function () {
                         Route::put('', 'OAuth2PresentationApiController@updatePresentationMediaUpload');
                         Route::delete('', 'OAuth2PresentationApiController@deletePresentationMediaUpload');
                     });
+                });
+
+                // attendees votes
+
+                Route::group(['prefix' => 'attendee-votes'], function(){
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@getAttendeeVotes']);
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@castAttendeeVote']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@unCastAttendeeVote']);
                 });
             });
         });

@@ -38,9 +38,11 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\IFolderRepository;
 use models\main\ITagRepository;
+use models\main\Member;
 use models\summit\ISpeakerRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\Presentation;
+use models\summit\PresentationAttendeeVote;
 use models\summit\PresentationLink;
 use models\summit\PresentationMediaUpload;
 use models\summit\PresentationSlide;
@@ -1162,6 +1164,72 @@ final class PresentationService
             }
 
             $presentation->removeMediaUpload($mediaUpload);
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param Member $member
+     * @param int $presentation_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function castAttendeeVote(Summit $summit, Member $member, int $presentation_id): PresentationAttendeeVote
+    {
+        return $this->tx_service->transaction(function () use($summit, $member, $presentation_id){
+            $presentation = $this->presentation_repository->getById($presentation_id);
+            if(is_null($presentation) || !$presentation instanceof Presentation)
+                throw new EntityNotFoundException("Presentation not found.");
+
+            if($presentation->getSummitId() !== $summit->getId())
+                throw new EntityNotFoundException("Presentation not found.");
+
+            $attendee = $summit->getAttendeeByMember($member);
+
+            if(is_null($attendee))
+                throw new ValidationException(sprintf("Current Member is not an attendee at Summit %s.", $summit->getId()));
+
+            $currentTrack = $presentation->getCategory();
+
+            foreach($currentTrack->getGroups() as $currentTrackGroup){
+                // check voting period
+                if(!$currentTrackGroup->isAttendeeVotingPeriodOpen())
+                    throw new ValidationException("Attendee Voting Period for track group %s is closed.", $currentTrackGroup->getName());
+
+                // check voting count
+
+                if(!$currentTrackGroup->canEmitAttendeeVote($attendee)){
+                    throw new ValidationException("You Reached the Max. allowed votes for Track Group (%s)", $currentTrackGroup->getMaxAttendeeVotes());
+                }
+            }
+
+            $presentation->castAttendeeVote($attendee);
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param Member $member
+     * @param int $presentation_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function unCastAttendeeVote(Summit $summit, Member $member, int $presentation_id): void
+    {
+        $this->tx_service->transaction(function () use($summit, $member, $presentation_id){
+            $presentation = $this->presentation_repository->getById($presentation_id);
+            if(is_null($presentation) || !$presentation instanceof Presentation)
+                throw new EntityNotFoundException("Presentation not found.");
+
+            if($presentation->getSummitId() !== $summit->getId())
+                throw new EntityNotFoundException("Presentation not found.");
+
+            $attendee = $summit->getAttendeeByMember($member);
+
+            if(is_null($attendee))
+                throw new ValidationException(sprintf("Current Member is not an attendee at Summit %s.", $summit->getId()));
+
+            $presentation->unCastAttendeeVote($attendee);
         });
     }
 }

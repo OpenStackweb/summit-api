@@ -409,13 +409,13 @@ final class SummitRegistrationInvitationService
     {
         $flow_event = trim($payload['email_flow_event']);
         Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString()));
-        $done = isset($payload['invitations_ids']) && is_null($filter); // we have provided only ids and not a criteria
+        $done = isset($payload['invitations_ids']); // we have provided only ids and not a criteria
         $page = 1;
         $count = 0;
         $to_exclude = [
         ];
         $maxPageSize = 100;
-        $formerIds = [];
+
         do{
 
             Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s processing page %s", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $page));
@@ -439,12 +439,6 @@ final class SummitRegistrationInvitationService
             if (!count($ids)) {
                 // if we are processing a page , then break it
                 Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s page is empty, ending processing.", $summit_id));
-                break;
-            }
-
-            if(count($ids) == count($formerIds) && $ids[0] == $formerIds[0]){
-                // its the same page again
-                Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s page is empty, ending processing ( same page).", $summit_id));
                 break;
             }
 
@@ -482,8 +476,6 @@ final class SummitRegistrationInvitationService
             }
 
             $page++;
-
-            $formerIds = $ids;
 
         }while(!$done);
 

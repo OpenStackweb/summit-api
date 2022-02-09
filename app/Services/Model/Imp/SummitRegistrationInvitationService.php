@@ -412,15 +412,15 @@ final class SummitRegistrationInvitationService
         $done = isset($payload['invitations_ids']) && is_null($filter); // we have provided only ids and not a criteria
         $page = 1;
         $count = 0;
-
         $to_exclude = [
         ];
-
+        $maxPageSize = 100;
+        $formerIds = [];
         do{
 
             Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s processing page %s", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $page));
 
-            $ids = $this->tx_service->transaction(function () use ($summit_id, $payload, $filter, $page) {
+            $ids = $this->tx_service->transaction(function () use ($summit_id, $payload, $filter, $page, $maxPageSize) {
                 if (isset($payload['invitations_ids'])) {
                     Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s invitations_ids %s", $summit_id, json_encode($payload['invitations_ids'])));
                     return $payload['invitations_ids'];
@@ -431,12 +431,18 @@ final class SummitRegistrationInvitationService
                 }
                 if (!$filter->hasFilter("summit_id"))
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
-                return $this->invitation_repository->getAllIdsByPage(new PagingInfo($page, 100), $filter);
+                return $this->invitation_repository->getAllIdsByPage(new PagingInfo($page, $maxPageSize), $filter);
             });
 
             Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s flow_event %s filter %s page %s got %s records", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $page, count($ids)));
             if (!count($ids)) {
                 // if we are processing a page , then break it
+                Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s page is empty, ending processing.", $summit_id));
+                break;
+            }
+
+            if(count($ids) == count($formerIds) && $ids[0] == $formerIds[0]){
+                // its the same page again
                 Log::debug(sprintf("SummitRegistrationInvitationService::send summit id %s page is empty, ending processing.", $summit_id));
                 break;
             }
@@ -475,6 +481,8 @@ final class SummitRegistrationInvitationService
             }
 
             $page++;
+
+            $formerIds = $ids;
 
         }while(!$done);
 

@@ -526,6 +526,12 @@ class Summit extends SilverstripeBaseModel
     private $media_upload_types;
 
     /**
+     * @ORM\OneToMany(targetEntity="SummitScheduleConfig", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var SummitScheduleConfig[]
+     */
+    private $schedule_settings;
+
+    /**
      * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
      * @ORM\JoinColumn(name="LogoID", referencedColumnName="ID")
      * @var File
@@ -1023,6 +1029,7 @@ class Summit extends SilverstripeBaseModel
         $this->metrics = new ArrayCollection();
         $this->track_chairs = new ArrayCollection();
         $this->presentation_action_types = new ArrayCollection();
+        $this->schedule_settings = new ArrayCollection();
         $this->registration_send_qr_as_image_attachment_on_ticket_email = false;
         $this->registration_send_ticket_as_pdf_attachment_on_ticket_email = false;
         $this->registration_send_ticket_email_automatically = true;
@@ -6096,4 +6103,53 @@ SQL;
         $this->time_zone_label = $time_zone_label;
     }
 
+    /**
+     * @return ArrayCollection|SummitScheduleConfig[]
+     */
+    public function getScheduleSettings()
+    {
+        return $this->schedule_settings;
+    }
+
+    /**
+     * @return ArrayCollection|SummitScheduleConfig[]
+     */
+    public function getEnableScheduleSettings()
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('is_enabled', true));
+        return $this->schedule_settings->matching($criteria);
+    }
+
+    /**
+     * @param SummitScheduleConfig $scheduleConfig
+     * @throws ValidationException
+     */
+    public function addScheduleSetting(SummitScheduleConfig $scheduleConfig){
+        if($this->schedule_settings->contains($scheduleConfig)) return;
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('key', trim($scheduleConfig->getKey())));
+        if($this->schedule_settings->matching($criteria)->count() > 0)
+            throw new ValidationException(sprintf("Key %s already exists", $scheduleConfig->getKey()));
+        $this->schedule_settings->add($scheduleConfig);
+        $scheduleConfig->setSummit($this);
+    }
+
+    public function removeScheduleSetting(SummitScheduleConfig $scheduleConfig){
+        if(!$this->schedule_settings->contains($scheduleConfig)) return;
+        $this->schedule_settings->removeElement($scheduleConfig);
+        $scheduleConfig->clearFilters();
+        $scheduleConfig->clearSummit();
+    }
+
+    /**
+     * @param int $id
+     * @return SummitScheduleConfig|null
+     */
+    public function getScheduleSettingById(int $id):?SummitScheduleConfig{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', intval($id)));
+        $res = $this->schedule_settings->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
 }

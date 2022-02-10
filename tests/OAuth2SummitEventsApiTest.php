@@ -1251,9 +1251,9 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             "GET",
             "OAuth2SummitEventsApiController@getEvents",
             $params,
-            array(),
-            array(),
-            array(),
+            [],
+            [],
+            [],
             $headers
         );
 

@@ -176,6 +176,9 @@ final class SerializerRegistry
                 self::SerializerType_Private => AdminSummitSerializer::class
             ];
 
+        $this->registry['SummitScheduleConfig'] = SummitScheduleConfigSerializer::class;
+        $this->registry['SummitScheduleFilterElementConfig'] = SummitScheduleFilterElementConfigSerializer::class;
+
         $this->registry['SummitDocument'] = SummitDocumentSerializer::class;
         $this->registry['SummitEmailEventFlow'] = SummitEmailEventFlowSerializer::class;
         $this->registry['SelectionPlan'] = SelectionPlanSerializer::class;

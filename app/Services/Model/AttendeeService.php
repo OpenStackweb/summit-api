@@ -12,9 +12,8 @@
  * limitations under the License.
  **/
 
-use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
 use App\Jobs\Emails\ProcessAttendeesEmailRequestJob;
-use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
+use App\Services\Model\Strategies\EmailActions\EmailActionsStrategyFactory;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -386,83 +385,62 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      */
     public function send(int $summit_id, array $payload, Filter $filter = null): void
     {
+        $emailActionsStrategyFactory = new EmailActionsStrategyFactory();
         $flow_event = trim($payload['email_flow_event']);
+        $done = isset($payload['attendees_ids']); // we have provided only ids and not a criteria
+        $page = 1;
+        $count = 0;
+        $maxPageSize = 100;
 
-        Log::debug(sprintf("AttendeeService::send summit id %s flow_event %s", $summit_id, $flow_event));
+        do {
+            Log::debug(sprintf("AttendeeService::send summit id %s flow_event %s", $summit_id, $flow_event));
 
-        $ids = $this->tx_service->transaction(function() use($summit_id, $payload, $filter){
-            if(isset($payload['attendees_ids'])) {
-                Log::debug(sprintf("AttendeeService::send summit id %s attendees_ids %s", $summit_id, json_encode($payload['attendees_ids'])));
-                return $payload['attendees_ids'];
+            $ids = $this->tx_service->transaction(function () use ($summit_id, $payload, $filter, $page, $maxPageSize) {
+                if (isset($payload['attendees_ids'])) {
+                    Log::debug(sprintf("AttendeeService::send summit id %s attendees_ids %s", $summit_id,
+                        json_encode($payload['attendees_ids'])));
+                    return $payload['attendees_ids'];
+                }
+                Log::debug(sprintf("AttendeeService::send summit id %s getting by filter", $summit_id));
+                if (is_null($filter)) {
+                    $filter = new Filter();
+                }
+                if (!$filter->hasFilter("summit_id"))
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
+                Log::debug(sprintf("AttendeeService::send page %s", $page));
+                return $this->attendee_repository->getAllIdsByPage(new PagingInfo($page, $maxPageSize), $filter);
+            });
+
+            if (!count($ids)) {
+                // if we are processing a page, then break it
+                Log::debug(sprintf("AttendeeService::send summit id %s page is empty, ending processing.", $summit_id));
+                break;
             }
-            Log::debug(sprintf("AttendeeService::send summit id %s getting by filter", $summit_id));
-            if(is_null($filter)){
-                $filter = new Filter();
-            }
-            $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
-            return $this->attendee_repository->getAllIdsByPage(new PagingInfo(1, PHP_INT_MAX), $filter);
-        });
 
-        foreach ($ids as $attendee_id)
-            try {
-                $this->tx_service->transaction(function () use ($flow_event, $attendee_id) {
+            foreach ($ids as $attendee_id) {
+                try {
+                    $this->tx_service->transaction(function () use ($flow_event, $attendee_id, $emailActionsStrategyFactory) {
 
-                    Log::debug(sprintf("AttendeeService::send processing attendee id  %s", $attendee_id));
+                        Log::debug(sprintf("AttendeeService::send processing attendee id  %s", $attendee_id));
 
-                    $attendee = $this->attendee_repository->getByIdExclusiveLock(intval($attendee_id));
-                    if (is_null($attendee) || !$attendee instanceof SummitAttendee) return;
+                        $attendee = $this->attendee_repository->getByIdExclusiveLock(intval($attendee_id));
+                        if (is_null($attendee) || !$attendee instanceof SummitAttendee) return;
 
-                    foreach ($attendee->getTickets() as $ticket) {
-                        try {
-                            if(!$ticket->isActive()) continue;
-                            if(!$ticket->isPaid()) continue;
-                            $is_complete = $attendee->isComplete();
-                            $original_flow_event = $flow_event;
-                            Log::debug
-                            (
-                                sprintf
-                                (
-                                    "AttendeeService::send processing attendee %s - ticket %s - isComplete %b - original flow event %s",
-                                    $attendee->getEmail(),
-                                    $ticket->getId(),
-                                    $attendee->isComplete(),
-                                    $original_flow_event
-                                )
-                            );
-
-                            if($original_flow_event == SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG && $is_complete) {
-                                $flow_event = InviteAttendeeTicketEditionMail::EVENT_SLUG;
-                                Log::debug
-                                (
-                                    sprintf
-                                    (
-                                        "AttendeeService::send changing from %s to %s bc attendee is complete",
-                                        $original_flow_event,
-                                        $flow_event
-                                    )
-                                );
-                            }
-
-                            // send email
-                            if ($flow_event == SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG) {
-                                $ticket->sendPublicEditEmail();
-                            }
-
-                            if ($flow_event == InviteAttendeeTicketEditionMail::EVENT_SLUG) {
-                                $attendee->sendInvitationEmail($ticket, true);
-                            }
-
-                            $flow_event = $original_flow_event;
-
-                        } catch (\Exception $ex) {
-                            Log::warning($ex);
+                        $strategy = $emailActionsStrategyFactory->build($flow_event);
+                        if ($strategy != null) {
+                            $strategy->process($attendee);
                         }
-                    }
-                });
+                    });
+                } catch (\Exception $ex) {
+                    Log::warning($ex);
+                }
+                $count++;
             }
-            catch (\Exception $ex) {
-                Log::warning($ex);
-            }
+            $page++;
+        } while(!$done);
+
+        Log::debug(sprintf("AttendeeService::send summit id %s flow_event %s filter %s had processed %s records",
+            $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $count));
     }
 
     public function recalculateAttendeeStatus(int $summit_id):void{

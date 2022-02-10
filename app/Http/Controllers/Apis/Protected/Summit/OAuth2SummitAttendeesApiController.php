@@ -14,6 +14,7 @@
 
 use App\Http\Utils\EpochCellFormatter;
 use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
+use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
 use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
 use App\Jobs\SynchAllAttendeesStatus;
 use App\ModelSerializers\SerializerUtils;
@@ -845,7 +846,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             $validation = Validator::make($payload, [
                 'email_flow_event' => 'required|string|in:' . join(',', [
                         SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG,
-                        InviteAttendeeTicketEditionMail::EVENT_SLUG
+                        InviteAttendeeTicketEditionMail::EVENT_SLUG,
+                        SummitAttendeeAllTicketsEditionEmail::EVENT_SLUG
                     ]),
                 'attendees_ids' => 'sometimes|int_array',
             ]);

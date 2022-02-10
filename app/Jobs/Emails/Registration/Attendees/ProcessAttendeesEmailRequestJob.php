@@ -26,6 +26,8 @@ use utils\FilterParser;
  */
 final class ProcessAttendeesEmailRequestJob implements ShouldQueue
 {
+    public $timeout = 0;
+
     public $tries = 1;
 
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;

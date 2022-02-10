@@ -75,11 +75,11 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
         return $config;
     }
 
-    public function testAddWithFilters()
+    public function testAddWithFiltersAndPrefilters()
     {
         $params = [
             'id' => self::$summit->getId(),
-            'expand' => 'filters',
+            'expand' => 'filters,pre_filters',
         ];
 
         $headers = [
@@ -101,13 +101,21 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_Tags,
                     'is_enabled' => true,
-                    'prefilter_values' => ['tag1','tag2', 'tag3']
                 ],
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_EventTypes,
                     'is_enabled' => true,
-                    'prefilter_values' => ['1','2', '3']
                 ]
+            ],
+            'pre_filters' => [
+                [
+                    'type' => SummitScheduleFilterElementConfig::Type_Tags,
+                    'values' => ['tag1','tag2', 'tag3']
+                ],
+                [
+                    'type' => SummitScheduleFilterElementConfig::Type_Company,
+                    'values' => ['1', '2']
+                ],
             ]
         ];
 
@@ -130,6 +138,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
         $this->assertTrue($config->summit_id == self::$summit->getId());
         $this->assertTrue($config->key == 'my-schedule-config');
         $this->assertTrue(count($config->filters) == 3);
+        $this->assertTrue(count($config->pre_filters) == 2);
 
         return $config;
     }
@@ -164,13 +173,21 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_Tags,
                     'is_enabled' => true,
-                    'prefilter_values' => ['tag1','tag2', 'tag3']
                 ],
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_EventTypes,
                     'is_enabled' => true,
-                    'prefilter_values' => ['1','2', '3']
                 ]
+            ],
+            'pre_filters' => [
+                [
+                    'type' => SummitScheduleFilterElementConfig::Type_Tags,
+                    'values' => ['tag1','tag2', 'tag3']
+                ],
+                [
+                    'type' => SummitScheduleFilterElementConfig::Type_Company,
+                    'values' => ['1', '2']
+                ],
             ]
         ];
 
@@ -255,13 +272,21 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_Tags,
                     'is_enabled' => true,
-                    'prefilter_values' => ['tag1','tag2', 'tag3']
                 ],
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_EventTypes,
                     'is_enabled' => true,
-                    'prefilter_values' => ['1','2', '3']
                 ]
+            ],
+            'pre_filters' => [
+                [
+                    'type' => SummitScheduleFilterElementConfig::Type_Tags,
+                    'values' => ['tag1','tag2', 'tag3']
+                ],
+                [
+                    'type' => SummitScheduleFilterElementConfig::Type_Company,
+                    'values' => ['1', '2']
+                ],
             ]
         ];
 
@@ -311,13 +336,21 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_Tags,
                     'is_enabled' => true,
-                    'prefilter_values' => ['tag1','tag2', 'tag3']
                 ],
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_EventTypes,
                     'is_enabled' => true,
-                    'prefilter_values' => ['1','2', '3']
                 ]
+            ],
+            'pre_filters' => [
+                [
+                    'type' => SummitScheduleFilterElementConfig::Type_Tags,
+                    'values' => ['tag1','tag2', 'tag3']
+                ],
+                [
+                    'type' => SummitScheduleFilterElementConfig::Type_Company,
+                    'values' => ['1', '2']
+                ],
             ]
         ];
 
@@ -350,7 +383,6 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
             "HTTP_Authorization" => " Bearer " . $this->access_token,
             "CONTENT_TYPE" => "application/json"
         ];
-
 
         $response = $this->action
         (
@@ -393,13 +425,21 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_Tags,
                     'is_enabled' => true,
-                    'prefilter_values' => ['tag1','tag2', 'tag3']
                 ],
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_EventTypes,
                     'is_enabled' => true,
-                    'prefilter_values' => ['1','2', '3']
                 ]
+            ],
+            'pre_filters' => [
+                [
+                    'type' => SummitScheduleFilterElementConfig::Type_Tags,
+                    'values' => ['tag1','tag2', 'tag3']
+                ],
+                [
+                    'type' => SummitScheduleFilterElementConfig::Type_Company,
+                    'values' => ['1', '2']
+                ],
             ]
         ];
 
@@ -445,13 +485,21 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_Tags,
                     'is_enabled' => true,
-                    'prefilter_values' => ['tag1','tag2', 'tag3']
                 ],
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_EventTypes,
                     'is_enabled' => true,
-                    'prefilter_values' => ['1','2', '3']
                 ]
+            ],
+            'pre_filters' => [
+                [
+                    'type' => SummitScheduleFilterElementConfig::Type_Tags,
+                    'values' => ['tag1','tag2', 'tag3']
+                ],
+                [
+                    'type' => SummitScheduleFilterElementConfig::Type_Company,
+                    'values' => ['1', '2']
+                ],
             ]
         ];
 

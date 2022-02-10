@@ -96,12 +96,6 @@ class SummitScheduleFilterElementConfig extends SilverstripeBaseModel
     private $is_enabled;
 
     /**
-     * @ORM\Column(name="PrefilterValues", type="string")
-     * @var string
-     */
-    private $prefilter_values;
-
-    /**
      * @ORM\ManyToOne(targetEntity="models\summit\SummitScheduleConfig", fetch="EXTRA_LAZY", inversedBy="filters")
      * @ORM\JoinColumn(name="SummitScheduleConfigID", referencedColumnName="ID")
      * @var SummitScheduleConfig
@@ -115,7 +109,6 @@ class SummitScheduleFilterElementConfig extends SilverstripeBaseModel
     {
         return $this->type;
     }
-
 
     /**
      * @param string $type
@@ -159,22 +152,6 @@ class SummitScheduleFilterElementConfig extends SilverstripeBaseModel
     public function setIsEnabled(bool $is_enabled): void
     {
         $this->is_enabled = $is_enabled;
-    }
-
-    /**
-     * @return array
-     */
-    public function getPrefilterValues(): array
-    {
-        return  explode(",", $this->prefilter_values);
-    }
-
-    /**
-     * @param array $values
-     */
-    public function setPrefilterValues(array $values): void
-    {
-        $this->prefilter_values = implode(',', $values);
     }
 
     /**

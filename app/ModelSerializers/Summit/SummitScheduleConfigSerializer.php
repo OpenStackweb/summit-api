@@ -31,6 +31,7 @@ final class SummitScheduleConfigSerializer extends SilverStripeSerializer
 
     protected static $allowed_relations = [
         'filters',
+        'pre_filters',
     ];
 
     /**
@@ -55,6 +56,13 @@ final class SummitScheduleConfigSerializer extends SilverStripeSerializer
             }
             $values['filters'] = $filters;
         }
+        if(in_array('pre_filters', $relations) && !isset($values['pre_filters'])){
+            $filters = [];
+            foreach ($config->getPreFilters() as $filter){
+                $filters[] = $filter->getId();
+            }
+            $values['pre_filters'] = $filters;
+        }
         return $values;
     }
 
@@ -62,6 +70,11 @@ final class SummitScheduleConfigSerializer extends SilverStripeSerializer
         'filters' => [
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getFilters',
+        ],
+        'pre_filters' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getPreFilters',
         ]
+
     ];
 }

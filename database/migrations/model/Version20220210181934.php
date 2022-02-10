@@ -16,10 +16,10 @@ use Doctrine\DBAL\Schema\Schema as Schema;
 use LaravelDoctrine\Migrations\Schema\Builder;
 use LaravelDoctrine\Migrations\Schema\Table;
 /**
- * Class Version20220207183947
+ * Class Version20220210181934
  * @package Database\Migrations\Model
  */
-class Version20220207183947 extends AbstractMigration
+class Version20220210181934 extends AbstractMigration
 {
     /**
      * @param Schema $schema
@@ -27,30 +27,8 @@ class Version20220207183947 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $builder = new Builder($schema);
-
-        if(!$schema->hasTable("SummitScheduleConfig")) {
-            $builder->create('SummitScheduleConfig', function (Table $table) {
-                $table->integer("ID", true, false);
-                $table->primary("ID");
-                $table->timestamp('Created');
-                $table->timestamp('LastEdited');
-                $table->string('ClassName')->setNotnull(true);
-                // fields
-                $table->string("Key")->setNotnull(true)->setDefault("Default");
-                $table->string("ColorSource")->setNotnull(true);
-                $table->boolean("IsEnabled")->setNotnull(true)->setDefault(true);
-                $table->boolean("IsMySchedule")->setNotnull(true)->setDefault(false);
-                $table->boolean("OnlyEventsWithAttendeeAccess")->setNotnull(true)->setDefault(false);
-                // relations
-                $table->integer("SummitID", false, false)->setNotnull(false)->setDefault('NULL');
-                $table->index("SummitID", "SummitID");
-                $table->foreign("Summit", "SummitID", "ID", ["onDelete" => "CASCADE"]);
-                $table->unique(['SummitID','Key'], "Summit_Key");
-            });
-        }
-
-        if(!$schema->hasTable("SummitScheduleFilterElementConfig")) {
-            $builder->create('SummitScheduleFilterElementConfig', function (Table $table) {
+        if(!$schema->hasTable("SummitSchedulePreFilterElementConfig")) {
+            $builder->create('SummitSchedulePreFilterElementConfig', function (Table $table) {
                 $table->integer("ID", true, false);
                 $table->primary("ID");
                 $table->timestamp('Created');
@@ -58,9 +36,7 @@ class Version20220207183947 extends AbstractMigration
                 $table->string('ClassName')->setNotnull(true);
                 // fields
                 $table->string("Type", 50)->setNotnull(true);
-                $table->string("Label", 255)->setNotnull(true);
-                $table->boolean("IsEnabled")->setNotnull(true)->setDefault(true);
-                $table->text("PrefilterValues")->setNotnull(false)->setDefault(null);
+                $table->text("Values")->setNotnull(false)->setDefault(null);
                 // relations
                 $table->integer("SummitScheduleConfigID", false, false)->setNotnull(false)->setDefault('NULL');
                 $table->index("SummitScheduleConfigID", "SummitScheduleConfigID");
@@ -76,7 +52,6 @@ class Version20220207183947 extends AbstractMigration
     public function down(Schema $schema): void
     {
         $builder = new Builder($schema);
-        $builder->dropIfExists("SummitScheduleFilterElementConfig");
-        $builder->dropIfExists("SummitScheduleConfig");
+        $builder->dropIfExists("SummitSchedulePreFilterElementConfig");
     }
 }

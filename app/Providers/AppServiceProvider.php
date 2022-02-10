@@ -34,13 +34,21 @@ class AppServiceProvider extends ServiceProvider
         'type',
         'label',
         'is_enabled',
-        'prefilter_values',
     ];
 
     static $summit_schedule_config_filter_dto_validation_rules = [
         'label' => 'sometimes|string|max:50',
         'is_enabled' => 'required|boolean',
-        'prefilter_values' => 'sometimes|string_array',
+        'type' => 'required|string|in:DATE,TRACK,TAGS,TRACK_GROUPS,COMPANY,LEVEL,SPEAKERS,VENUES,EVENT_TYPES,TITLE,CUSTOM_ORDER,ABSTRACT',
+    ];
+
+    static $summit_schedule_config_pre_filter_dto_fields = [
+        'type',
+        'values'
+    ];
+
+    static $summit_schedule_config_pre_filter_dto_validation_rules = [
+        'values' => 'sometimes|string_array',
         'type' => 'required|string|in:DATE,TRACK,TAGS,TRACK_GROUPS,COMPANY,LEVEL,SPEAKERS,VENUES,EVENT_TYPES,TITLE,CUSTOM_ORDER,ABSTRACT',
     ];
 
@@ -248,7 +256,7 @@ class AppServiceProvider extends ServiceProvider
             $validator->addReplacer('summit_schedule_config_filter_dto_array', function($message, $attribute, $rule, $parameters) use ($validator) {
                 return sprintf
                 (
-                    "%s should be an array of schedule config filter data {}",
+                    "%s should be an array of schedule config filter data",
                     $attribute
                 );
             });
@@ -261,6 +269,30 @@ class AppServiceProvider extends ServiceProvider
 
                 // Creates a Validator instance and validates the data.
                 $validation = Validator::make($element, self::$summit_schedule_config_filter_dto_validation_rules);
+
+                if($validation->fails()) return false;
+            }
+            return true;
+        });
+
+        Validator::extend('summit_schedule_config_pre_filter_dto_array', function($attribute, $value, $parameters, $validator)
+        {
+            $validator->addReplacer('summit_schedule_config_pre_filter_dto_array', function($message, $attribute, $rule, $parameters) use ($validator) {
+                return sprintf
+                (
+                    "%s should be an array of schedule config pre filter data",
+                    $attribute
+                );
+            });
+            if(!is_array($value)) return false;
+            foreach($value as $element)
+            {
+                foreach($element as $key => $element_val){
+                    if(!in_array($key, self::$summit_schedule_config_pre_filter_dto_fields)) return false;
+                }
+
+                // Creates a Validator instance and validates the data.
+                $validation = Validator::make($element, self::$summit_schedule_config_pre_filter_dto_validation_rules);
 
                 if($validation->fails()) return false;
             }

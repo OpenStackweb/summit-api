@@ -73,6 +73,12 @@ class SummitScheduleConfig extends SilverstripeBaseModel
      */
     private $filters;
 
+    /**
+     * @ORM\OneToMany(targetEntity="SummitSchedulePreFilterElementConfig", mappedBy="config", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var SummitSchedulePreFilterElementConfig[]
+     */
+    private $pre_filters;
+
     public function __construct()
     {
         parent::__construct();
@@ -81,6 +87,7 @@ class SummitScheduleConfig extends SilverstripeBaseModel
         $this->only_events_with_attendee_access = false;
         $this->color_source = self::ColorSource_EventType;
         $this->filters = new ArrayCollection();
+        $this->pre_filters = new ArrayCollection();
     }
 
     /**
@@ -197,6 +204,40 @@ class SummitScheduleConfig extends SilverstripeBaseModel
     public function removeFilter(SummitScheduleFilterElementConfig $filter){
         if(!$this->filters->contains($filter)) return;
         $this->filters->removeElement($filter);
+        $filter->clearConfig();
+    }
+
+    /**
+     * @return SummitSchedulePreFilterElementConfig[]
+     */
+    public function getPreFilters()
+    {
+        return $this->pre_filters;
+    }
+
+    public function clearPreFilters():void{
+        $this->pre_filters->clear();
+    }
+
+    /**
+     * @param SummitSchedulePreFilterElementConfig $filter
+     * @throws ValidationException
+     */
+    public function addPreFilter(SummitSchedulePreFilterElementConfig $filter){
+        if($this->pre_filters->contains($filter)) return;
+        // check type
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type', trim($filter->getType())));
+        if($this->pre_filters->matching($criteria)->count() > 0)
+            throw new ValidationException(sprintf("Type %s already exists", $filter->getType()));
+
+        $this->pre_filters->add($filter);
+        $filter->setConfig($this);
+    }
+
+    public function removePreFilter(SummitSchedulePreFilterElementConfig $filter){
+        if(!$this->pre_filters->contains($filter)) return;
+        $this->pre_filters->removeElement($filter);
         $filter->clearConfig();
     }
 

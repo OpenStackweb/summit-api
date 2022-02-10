@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 
-use models\summit\SummitScheduleFilterElementConfig;
 /**
  * Class SummitScheduleFilterElementConfigSerializer
  * @package ModelSerializers
@@ -26,28 +25,4 @@ final class SummitScheduleFilterElementConfigSerializer extends SilverStripeSeri
         'ConfigId' => 'config_id:json_int'
     ];
 
-    protected static $allowed_relations = [
-        'prefilter_values',
-    ];
-
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relation
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
-    {
-        $filter = $this->object;
-        if (!$filter instanceof SummitScheduleFilterElementConfig) return [];
-
-        if (!count($relations)) $relations = $this->getAllowedRelations();
-        $values  = parent::serialize($expand, $fields, $relations, $params);
-
-        if(in_array('prefilter_values', $relations) && !isset($values['prefilter_values'])){
-            $values['prefilter_values'] = $filter->getPrefilterValues();
-        }
-        return $values;
-    }
 }

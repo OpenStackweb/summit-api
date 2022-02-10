@@ -14,6 +14,8 @@
 use models\summit\SummitScheduleConfig;
 use models\summit\SummitScheduleFilterElementConfig;
 use \models\exceptions\ValidationException;
+use models\summit\SummitSchedulePreFilterElementConfig;
+
 /**
  * Class SummitScheduleConfigFactory
  * @package App\Models\Foundation\Summit\Factories
@@ -58,11 +60,19 @@ final class SummitScheduleConfigFactory
                     $filter->setType(trim($dto['type']));
                 if(isset($dto['is_enabled']))
                     $filter->setIsEnabled(boolval($dto['is_enabled']));
-                if(isset($dto['is_enabled']))
-                    $filter->setIsEnabled(boolval($dto['is_enabled']));
-                if(isset($dto['prefilter_values']))
-                    $filter->setPrefilterValues($dto['prefilter_values']);
                 $config->addFilter($filter);
+            }
+        }
+        if(isset($payload['pre_filters'])){
+            $pre_filters_dto = $payload['pre_filters'];
+            $config->clearPreFilters();;
+            foreach ($pre_filters_dto as $dto){
+                $filter = new SummitSchedulePreFilterElementConfig();
+                if(isset($dto['type']))
+                    $filter->setType(trim($dto['type']));
+                if(isset($dto['values']))
+                    $filter->setValues($dto['values']);
+                $config->addPreFilter($filter);
             }
         }
         return $config;

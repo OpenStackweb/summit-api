@@ -88,6 +88,18 @@ class PresentationType extends SummitEventType
     protected $allowed_media_upload_types;
 
     /**
+     * @ORM\Column(name="AllowAttendeeVote", type="boolean")
+     * @var bool
+     */
+    protected $allow_attendee_vote;
+
+    /**
+     * @ORM\Column(name="AllowCustomOrdering", type="boolean")
+     * @var bool
+     */
+    protected $allow_custom_ordering;
+
+    /**
      * @param Summit $summit
      * @param string $type
      * @return bool
@@ -302,6 +314,8 @@ SQL;
         $this->max_speakers = 0;
         $this->min_moderators = 0;
         $this->min_speakers = 0;
+        $this->allow_attendee_vote = false;
+        $this->allow_custom_ordering  = false;
     }
 
     public function addAllowedMediaUploadType(SummitMediaUploadType $type)
@@ -325,4 +339,37 @@ SQL;
     {
         return $this->allowed_media_upload_types;
     }
+
+    /**
+     * @return bool
+     */
+    public function isAllowAttendeeVote(): bool
+    {
+        return $this->allow_attendee_vote;
+    }
+
+    /**
+     * @param bool $allow_attendee_vote
+     */
+    public function setAllowAttendeeVote(bool $allow_attendee_vote): void
+    {
+        $this->allow_attendee_vote = $allow_attendee_vote;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAllowCustomOrdering(): bool
+    {
+        return $this->allow_custom_ordering;
+    }
+
+    /**
+     * @param bool $allow_custom_ordering
+     */
+    public function setAllowCustomOrdering(bool $allow_custom_ordering): void
+    {
+        $this->allow_custom_ordering = $allow_custom_ordering;
+    }
+
 }

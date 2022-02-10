@@ -28,6 +28,9 @@ class ProcessRegistrationInvitationsJob implements ShouldQueue
 {
     public $tries = 1;
 
+    // no timeout
+    public $timeout = 0;
+
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private $summit_id;
@@ -56,6 +59,7 @@ class ProcessRegistrationInvitationsJob implements ShouldQueue
     public function handle(ISummitRegistrationInvitationService $service){
 
         Log::debug(sprintf("ProcessRegistrationInvitationsJob::handle summit id %s", $this->summit_id));
+
         $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, [
             'is_accepted' => ['=='],
             'is_sent' => ['=='],
@@ -65,5 +69,8 @@ class ProcessRegistrationInvitationsJob implements ShouldQueue
         ]) : null;
 
         $service->send($this->summit_id, $this->payload, $filter);
+
+        Log::debug(sprintf("ProcessRegistrationInvitationsJob::handle summit id %s has finished", $this->summit_id));
+
     }
 }

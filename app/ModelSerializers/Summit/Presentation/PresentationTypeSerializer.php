@@ -30,6 +30,8 @@ final class PresentationTypeSerializer extends SummitEventTypeSerializer
         'ModeratorMandatory'       => 'is_moderator_mandatory:json_boolean',
         'ModeratorLabel'           => 'moderator_label:json_string',
         'ShouldBeAvailableOnCfp'   => 'should_be_available_on_cfp:json_boolean',
+        'AllowCustomOrdering'      => 'allow_custom_ordering:json_boolean',
+        'AllowAttendeeVote'        => 'allow_attendee_vote:json_boolean',
     ];
 
     /**

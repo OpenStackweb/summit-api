@@ -18,19 +18,20 @@ use LaravelDoctrine\ORM\Facades\EntityManager;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\main\Member;
 use models\main\Tag;
+use models\summit\ISummitEventType;
 use models\summit\PresentationCategoryGroup;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitBadgeType;
 use models\summit\SummitTicketType;
+use models\summit\SummitEvent;
 use models\utils\SilverstripeBaseModel;
 use models\summit\SummitVenue;
 use models\summit\Summit;
-use Doctrine\Common\Persistence\ObjectRepository;
+use Doctrine\Persistence\ObjectRepository;
 use models\summit\PresentationCategory;
 use models\summit\SummitEventType;
 use models\summit\PresentationType;
-use models\summit\IPresentationType;
 use App\Models\Foundation\Summit\SelectionPlan;
 use Illuminate\Support\Facades\DB;
 use models\summit\Presentation;
@@ -74,6 +75,16 @@ trait InsertSummitTestData
      * @var PresentationCategory
      */
     static $defaultTrack;
+
+    /**
+     * @var PresentationType
+     */
+    static $defaultPresentationType;
+
+    /**
+     * @var PresentationType
+     */
+    static $allow2VotePresentationType;
 
     /**
      * @var PresentationCategory
@@ -178,19 +189,42 @@ trait InsertSummitTestData
         $defaultBadge->setName("DEFAULT");
         $defaultBadge->setIsDefault(true);
 
-        $presentation_type = new PresentationType();
-        $presentation_type->setType('TEST PRESENTATION TYPE');
-        $presentation_type->setMinSpeakers(1);
-        $presentation_type->setMaxSpeakers(3);
-        $presentation_type->setMinModerators(0);
-        $presentation_type->setMaxModerators(0);
-        $presentation_type->setUseSpeakers(true);
-        $presentation_type->setShouldBeAvailableOnCfp(true);
-        $presentation_type->setAreSpeakersMandatory(false);
-        $presentation_type->setUseModerator(false);
-        $presentation_type->setIsModeratorMandatory(false);
+        self::$defaultPresentationType = new PresentationType();
+        self::$defaultPresentationType->setType('TEST PRESENTATION TYPE');
+        self::$defaultPresentationType->setAsDefault();
+        self::$defaultPresentationType->setMinSpeakers(1);
+        self::$defaultPresentationType->setMaxSpeakers(3);
+        self::$defaultPresentationType->setMinModerators(0);
+        self::$defaultPresentationType->setMaxModerators(0);
+        self::$defaultPresentationType->setUseSpeakers(true);
+        self::$defaultPresentationType->setShouldBeAvailableOnCfp(true);
+        self::$defaultPresentationType->setAreSpeakersMandatory(false);
+        self::$defaultPresentationType->setUseModerator(false);
+        self::$defaultPresentationType->setIsModeratorMandatory(false);
 
-        self::$summit->addEventType($presentation_type);
+        self::$summit->addEventType(self::$defaultPresentationType);
+
+        self::$allow2VotePresentationType = new PresentationType();
+        self::$allow2VotePresentationType->setType('TEST PRESENTATION TYPE VOTABLE');
+        self::$allow2VotePresentationType->setMinSpeakers(1);
+        self::$allow2VotePresentationType->setMaxSpeakers(3);
+        self::$allow2VotePresentationType->setMinModerators(0);
+        self::$allow2VotePresentationType->setMaxModerators(0);
+        self::$allow2VotePresentationType->setUseSpeakers(true);
+        self::$allow2VotePresentationType->setShouldBeAvailableOnCfp(true);
+        self::$allow2VotePresentationType->setAreSpeakersMandatory(false);
+        self::$allow2VotePresentationType->setUseModerator(false);
+        self::$allow2VotePresentationType->setIsModeratorMandatory(false);
+        self::$allow2VotePresentationType->setAllowAttendeeVote(true);
+        self::$allow2VotePresentationType->setAllowCustomOrdering(true);
+        self::$allow2VotePresentationType->setAllowsLocation(false);
+        self::$allow2VotePresentationType->setAllowsPublishingDates(false);
+
+        self::$defaultEventType = new SummitEventType();
+        self::$defaultEventType->setType(ISummitEventType::Breaks);
+        self::$summit->addEventType(self::$defaultEventType);
+
+        self::$summit->addEventType(self::$allow2VotePresentationType);
 
         if (self::$defaultMember != null) {
             $attendee = new SummitAttendee();
@@ -267,19 +301,6 @@ trait InsertSummitTestData
         self::$summit->addPresentationCategory(self::$secondaryTrack);
         self::$summit->addCategoryGroup(self::$defaultTrackGroup);
 
-        self::$defaultEventType = new PresentationType();
-        self::$defaultEventType->setType(IPresentationType::Presentation);
-        self::$defaultEventType->setMinSpeakers(1);
-        self::$defaultEventType->setMaxSpeakers(3);
-        self::$defaultEventType->setMinModerators(0);
-        self::$defaultEventType->setMaxModerators(0);
-        self::$defaultEventType->setUseSpeakers(true);
-        self::$defaultEventType->setShouldBeAvailableOnCfp(true);
-        self::$defaultEventType->setAreSpeakersMandatory(false);
-        self::$defaultEventType->setUseModerator(false);
-        self::$defaultEventType->setIsModeratorMandatory(false);
-        self::$summit->addEventType(self::$defaultEventType);
-
         self::$default_selection_plan = new SelectionPlan();
         self::$default_selection_plan->setName("TEST_SELECTION_PLAN");
         $submission_begin_date = new DateTime('now', self::$summit->getTimeZone());
@@ -302,6 +323,9 @@ trait InsertSummitTestData
 
         self::$presentations = [];
 
+        $start_date = clone($begin_date);
+        $end_date  = clone($start_date);
+        $end_date = $end_date->add(new DateInterval("P1D"));
         for($i = 0 ; $i < 20; $i++){
             $presentation = new Presentation();
             $presentation->setTitle(sprintf("Presentation Title %s %s", $i, str_random(16)));
@@ -309,10 +333,40 @@ trait InsertSummitTestData
             $presentation->setCategory(self::$defaultTrack);
             $presentation->setProgress(Presentation::PHASE_COMPLETE);
             $presentation->setStatus(Presentation::STATUS_RECEIVED);
-            $presentation->setType( self::$defaultEventType );
+            $presentation->setType( self::$defaultPresentationType );
+            $presentation->setStartDate($start_date);
+            $presentation->setEndDate($end_date);
             self::$default_selection_plan->addPresentation($presentation);
             self::$summit->addEvent($presentation);
             self::$presentations[] = $presentation;
+            $presentation->publish();
+            $start_date = clone($start_date);
+            $start_date = $start_date->add(new DateInterval("P1D"));
+            $end_date = clone($start_date);
+            $end_date = $end_date->add(new DateInterval("P1D"));
+        }
+
+        for($i = 0 ; $i < 20; $i++){
+            $presentation = new Presentation();
+            $presentation->setTitle(sprintf("Presentation Title %s %s Votable", $i, str_random(16)));
+            $presentation->setAbstract(sprintf("Presentation Abstract %s %s Votable", $i, str_random(16)));
+            $presentation->setCategory(self::$defaultTrack);
+            $presentation->setProgress(Presentation::PHASE_COMPLETE);
+            $presentation->setStatus(Presentation::STATUS_RECEIVED);
+            $presentation->setType( self::$allow2VotePresentationType );
+            self::$summit->addEvent($presentation);
+            self::$presentations[] = $presentation;
+            $presentation->publish();
+        }
+
+        for($i = 0 ; $i < 20; $i++){
+            $event = new SummitEvent();
+            $event->setTitle(sprintf("Raw Event Title %s %s", $i, str_random(16)));
+            $event->setAbstract(sprintf("Raw Event Abstract %s %s", $i, str_random(16)));
+            $event->setCategory(self::$defaultTrack);
+            $event->setType( self::$defaultEventType );
+            self::$summit->addEvent($event);
+            self::$presentations[] = $event;
         }
 
         self::$summit_permission_group = new SummitAdministratorPermissionGroup();

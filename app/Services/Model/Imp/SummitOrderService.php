@@ -1035,7 +1035,11 @@ final class SummitOrderService
 
             if (is_null($order) || !$order instanceof SummitOrder || $summit->getId() != $order->getSummitId())
                 throw new EntityNotFoundException("order not found.");
+
             if($order->isCancelled())
+                throw new ValidationException("order is canceled, please retry it.");
+
+            if($order->isVoid())
                 throw new ValidationException("order is canceled, please retry it.");
 
             SummitOrderFactory::populate($summit, $order, $payload);

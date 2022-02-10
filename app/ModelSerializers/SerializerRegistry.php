@@ -176,6 +176,10 @@ final class SerializerRegistry
                 self::SerializerType_Private => AdminSummitSerializer::class
             ];
 
+        $this->registry['SummitScheduleConfig'] = SummitScheduleConfigSerializer::class;
+        $this->registry['SummitScheduleFilterElementConfig'] = SummitScheduleFilterElementConfigSerializer::class;
+        $this->registry['SummitSchedulePreFilterElementConfig'] = SummitSchedulePreFilterElementConfigSerializer::class;
+
         $this->registry['SummitDocument'] = SummitDocumentSerializer::class;
         $this->registry['SummitEmailEventFlow'] = SummitEmailEventFlowSerializer::class;
         $this->registry['SelectionPlan'] = SelectionPlanSerializer::class;
@@ -215,6 +219,10 @@ final class SerializerRegistry
             self::SerializerType_CSV => AdminPresentationCSVSerializer::class,
             IPresentationSerializerTypes::TrackChairs => TrackChairPresentationSerializer::class,
             IPresentationSerializerTypes::TrackChairs_CSV => TrackChairPresentationCSVSerializer::class
+        ];
+
+        $this->registry['PresentationAttendeeVoteSerializer'] = [
+            self::SerializerType_Public => PresentationAttendeeVoteSerializer::class,
         ];
 
         $this->registry['SummitGroupEvent'] = SummitGroupEventSerializer::class;

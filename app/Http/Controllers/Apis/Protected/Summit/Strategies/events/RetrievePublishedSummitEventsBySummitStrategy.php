@@ -37,6 +37,8 @@ final class RetrievePublishedSummitEventsBySummitStrategy extends RetrieveAllSum
     {
         $filter = parent::buildFilter();
         $filter->addFilterCondition(FilterParser::buildFilter('published','==','1'));
+        $filter->addFilterCondition(FilterParser::buildFilter('type_allows_publishing_dates','==','1'));
+        $filter->addFilterCondition(FilterParser::buildFilter('type_allows_location','==','1'));
         return $filter;
     }
 }

@@ -15,6 +15,8 @@
 use App\Jobs\Emails\AbstractEmailJob;
 use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
+use models\exceptions\ValidationException;
 
 /**
  * Class SpeakerEditPermissionRequestedEmail
@@ -43,6 +45,10 @@ class SpeakerEditPermissionRequestedEmail extends AbstractEmailJob
         $payload['tenant_name'] = Config::get("app.tenant_name");
         $payload['requested_by_email'] = $request->getRequestedBy()->getEmail();
         $payload['speaker_email'] = $request->getSpeaker()->getEmail();
+        if(empty($payload['speaker_email'])){
+            Log::error(sprintf("SpeakerEditPermissionRequestedEmail::__construct speaker %s has no email set", $request->getSpeaker()->getId()));
+            throw new ValidationException(sprintf("SpeakerEditPermissionRequestedEmail::__construct speaker %s has no email set", $request->getSpeaker()->getId()));
+        }
         parent::__construct($payload, self::DEFAULT_TEMPLATE, $payload['speaker_email']);
     }
 

@@ -13,6 +13,8 @@
  **/
 use App\Jobs\Emails\AbstractEmailJob;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
+use models\exceptions\ValidationException;
 use models\summit\Presentation;
 use models\summit\PresentationSpeaker;
 /**
@@ -83,6 +85,11 @@ class PresentationSpeakerNotificationEmail extends AbstractEmailJob
         $payload['support_email'] = $support_email;
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+
+        if(empty($payload['speaker_email'])){
+            Log::error(sprintf("PresentationSpeakerNotificationEmail::__construct speaker %s has no email set", $speaker->getId()));
+            throw new ValidationException(sprintf("PresentationSpeakerNotificationEmail::__construct speaker %s has no email set", $speaker->getId()));
+        }
 
         parent::__construct($payload, $template_identifier, $payload['speaker_email']);
     }

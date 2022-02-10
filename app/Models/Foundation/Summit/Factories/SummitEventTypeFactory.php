@@ -94,6 +94,14 @@ final class SummitEventTypeFactory
                     if(isset($data['should_be_available_on_cfp'])) {
                         $event_type->setShouldBeAvailableOnCfp(boolval($data['should_be_available_on_cfp']));
                     }
+
+                    if(isset($data['allow_custom_ordering'])) {
+                        $event_type->setAllowCustomOrdering(boolval($data['allow_custom_ordering']));
+                    }
+
+                    if(isset($data['allow_attendee_vote'])) {
+                        $event_type->setAllowAttendeeVote(boolval($data['allow_attendee_vote']));
+                    }
                 }
             }
            break;
@@ -125,6 +133,12 @@ final class SummitEventTypeFactory
 
         if(isset($data['allows_level']))
             $event_type->setAllowsLevel(boolval($data['allows_level']));
+
+        if(isset($data['allows_publishing_dates']))
+            $event_type->setAllowsPublishingDates(boolval($data['allows_publishing_dates']));
+
+        if(isset($data['allows_location']))
+            $event_type->setAllowsLocation(boolval($data['allows_location']));
 
         $summit->addEventType($event_type);
         return $event_type;

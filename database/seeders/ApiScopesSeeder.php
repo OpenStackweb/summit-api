@@ -375,6 +375,11 @@ final class ApiScopesSeeder extends Seeder
                 'short_description' => 'Allow virtual Check In',
                 'description' => 'Allow virtual Check In',
             ],
+            [
+                'name' => sprintf(SummitScopes::Allow2PresentationAttendeeVote, $current_realm),
+                'short_description' => 'Allow Attendee Vote on Presentation',
+                'description' => 'Allow Attendee Vote on Presentation',
+            ],
         ];
 
         foreach ($scopes as $scope_info) {

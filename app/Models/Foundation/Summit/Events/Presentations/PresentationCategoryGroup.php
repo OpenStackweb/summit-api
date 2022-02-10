@@ -11,10 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use Doctrine\Common\Collections\Criteria;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
+
 /**
  * Class PresentationCategoryGroup
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrinePresentationCategoryGroupRepository")
@@ -49,17 +53,46 @@ class PresentationCategoryGroup extends SilverstripeBaseModel
     protected $description;
 
     /**
-     * @return mixed
+     * @ORM\Column(name="BeginAttendeeVotingPeriodDate", type="datetime")
+     * @var \DateTime
      */
-    public function getName()
+    protected $begin_attendee_voting_period_date;
+
+    /**
+     * @ORM\Column(name="EndAttendeeVotingPeriodDate", type="datetime")
+     * @var \DateTime
+     */
+    protected $end_attendee_voting_period_date;
+
+    /**
+     * @ORM\Column(name="MaxUniqueAttendeeVotes", type="integer")
+     * @var int
+     */
+    protected $max_attendee_votes;
+
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->begin_attendee_voting_period_date = null;
+        $this->end_attendee_voting_period_date = null;
+        $this->max_attendee_votes = 0;
+        $this->categories = new ArrayCollection;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getName(): string
     {
         return $this->name;
     }
 
     /**
-     * @param mixed $name
+     * @param string $name
      */
-    public function setName($name)
+    public function setName(string $name)
     {
         $this->name = $name;
     }
@@ -83,7 +116,7 @@ class PresentationCategoryGroup extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): ?string
     {
         return $this->description;
     }
@@ -91,7 +124,7 @@ class PresentationCategoryGroup extends SilverstripeBaseModel
     /**
      * @param string $description
      */
-    public function setDescription($description)
+    public function setDescription(string $description)
     {
         $this->description = $description;
     }
@@ -103,37 +136,34 @@ class PresentationCategoryGroup extends SilverstripeBaseModel
      */
     protected $summit;
 
-    public function setSummit($summit){
+    public function setSummit($summit)
+    {
         $this->summit = $summit;
     }
 
     /**
      * @return int
      */
-    public function getSummitId(){
+    public function getSummitId()
+    {
         try {
             return is_null($this->summit) ? 0 : $this->summit->getId();
-        }
-        catch(\Exception $ex){
+        } catch (\Exception $ex) {
             return 0;
         }
     }
 
-    public function clearSummit(){
+    public function clearSummit()
+    {
         $this->summit = null;
     }
 
     /**
      * @return Summit
      */
-    public function getSummit(){
-        return $this->summit;
-    }
-
-    public function __construct()
+    public function getSummit()
     {
-        parent::__construct();
-        $this->categories = new ArrayCollection;
+        return $this->summit;
     }
 
     /**
@@ -158,7 +188,8 @@ class PresentationCategoryGroup extends SilverstripeBaseModel
     /**
      * @param PresentationCategory $track
      */
-    public function addCategory(PresentationCategory $track){
+    public function addCategory(PresentationCategory $track)
+    {
         $track->addToGroup($this);
         $this->categories[] = $track;
     }
@@ -166,7 +197,8 @@ class PresentationCategoryGroup extends SilverstripeBaseModel
     /**
      * @param PresentationCategory $track
      */
-    public function removeCategory(PresentationCategory $track){
+    public function removeCategory(PresentationCategory $track)
+    {
         $track->removeFromGroup($this);
         $this->categories->removeElement($track);
     }
@@ -175,12 +207,13 @@ class PresentationCategoryGroup extends SilverstripeBaseModel
      * @param int $category_id
      * @return PresentationCategory|null
      */
-    public function getCategoryById($category_id){
+    public function getCategoryById($category_id)
+    {
         /*$criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($category_id)));
         $res = $this->categories->matching($criteria)->first();
         return $res === false ? null : $res;*/
-        $res = $this->categories->filter(function(PresentationCategory $t) use($category_id){
+        $res = $this->categories->filter(function (PresentationCategory $t) use ($category_id) {
             return $t->getId() == $category_id;
         })->first();
 
@@ -191,7 +224,8 @@ class PresentationCategoryGroup extends SilverstripeBaseModel
      * @param int $category_id
      * @return bool
      */
-    public function hasCategory($category_id){
+    public function hasCategory($category_id)
+    {
         return $this->getCategoryById($category_id) != null;
     }
 
@@ -200,25 +234,138 @@ class PresentationCategoryGroup extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getClassName(){
+    public function getClassName()
+    {
         return self::ClassName;
     }
 
     public static $metadata = [
-        'class_name'  => self::ClassName,
-        'id'          => 'integer',
-        'summit_id'   => 'integer',
-        'name'        => 'string',
-        'color'       => 'string',
+        'class_name' => self::ClassName,
+        'id' => 'integer',
+        'summit_id' => 'integer',
+        'name' => 'string',
+        'color' => 'string',
         'description' => 'string',
-        'categories'  => 'array'
+        'categories' => 'array',
+        'begin_attendee_voting_period_date' => 'datetime',
+        'end_attendee_voting_period_date' => 'datetime',
+        'max_attendee_votes' => 'integer',
     ];
 
     /**
      * @return array
      */
-    public static function getMetadata(){
+    public static function getMetadata()
+    {
         return self::$metadata;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getBeginAttendeeVotingPeriodDate(): ?\DateTime
+    {
+        return $this->begin_attendee_voting_period_date;
+    }
+
+    /**
+     * @param \DateTime $begin_attendee_voting_period_date
+     */
+    public function setBeginAttendeeVotingPeriodDate(?\DateTime $begin_attendee_voting_period_date): void
+    {
+        $this->begin_attendee_voting_period_date = $begin_attendee_voting_period_date;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getEndAttendeeVotingPeriodDate(): ?\DateTime
+    {
+        return $this->end_attendee_voting_period_date;
+    }
+
+    /**
+     * @param \DateTime $end_attendee_voting_period_date
+     */
+    public function setEndAttendeeVotingPeriodDate(?\DateTime $end_attendee_voting_period_date): void
+    {
+        $this->end_attendee_voting_period_date = $end_attendee_voting_period_date;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMaxAttendeeVotes(): int
+    {
+        return $this->max_attendee_votes;
+    }
+
+    /**
+     * @param int $max_attendee_votes
+     */
+    public function setMaxAttendeeVotes(int $max_attendee_votes): void
+    {
+        $this->max_attendee_votes = $max_attendee_votes;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function isAttendeeVotingPeriodOpen(): bool
+    {
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        if (!is_null($this->begin_attendee_voting_period_date) && !is_null($this->end_attendee_voting_period_date)) {
+            return $now >= $this->begin_attendee_voting_period_date && $now <= $this->end_attendee_voting_period_date;
+        }
+        return true;
+    }
+
+    public function isNotLimitedAttendeeVotingCount(): bool
+    {
+        return $this->max_attendee_votes > 0;
+    }
+
+    /**
+     * @param SummitAttendee $attendee
+     * @return bool
+     */
+    public function canEmitAttendeeVote(SummitAttendee $attendee): bool
+    {
+        if ($this->isNotLimitedAttendeeVotingCount()) return true;
+        try {
+            $sql = <<<SQL
+SELECT COUNT(DISTINCT(PresentationAttendeeVote.ID)) FROM `PresentationAttendeeVote`
+INNER JOIN Presentation ON Presentation.ID = PresentationAttendeeVote.PresentationID
+INNER JOIN SummitEvent ON SummitEvent.ID = Presentation.ID
+INNER JOIN PresentationCategoryGroup_Categories ON PresentationCategoryGroup_Categories.PresentationCategoryID = SummitEvent.CategoryID
+WHERE PresentationAttendeeVote.SummitAttendeeID = :attendee_id
+AND PresentationCategoryGroup_Categories.PresentationCategoryGroupID = :id
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute
+            ([
+                'id' => $this->id,
+                'attendee_id' => $attendee->getId(),
+            ]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = count($res) > 0 ? $res[0] : 0;
+            $res = !is_null($res) ? $res : 0;
+            Log::debug
+            (
+                sprintf
+                (
+                    "PresentationCategoryGroup::canEmitAttendeeVote group %s attendee %s votes %s max vote %s",
+                    $this->id,
+                    $attendee->getId(),
+                    $res,
+                    $this->max_attendee_votes
+                )
+            );
+            return ($res + 1) < $this->max_attendee_votes;
+        } catch (\Exception $ex) {
+            Log::warning($ex);
+        }
+        return true;
     }
 
 }

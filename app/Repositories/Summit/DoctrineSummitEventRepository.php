@@ -15,18 +15,22 @@
 use App\Models\Foundation\Main\IGroup;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Query\Expr\Join;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Illuminate\Support\Facades\Log;
 use models\main\Tag;
 use models\summit\ISummitCategoryChangeStatus;
 use models\summit\ISummitEventRepository;
 use models\summit\Presentation;
+use models\summit\PresentationType;
 use models\summit\Summit;
 use models\summit\SummitEvent;
+use models\summit\SummitEventType;
 use models\summit\SummitGroupEvent;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineCollectionFieldsFilterMapping;
 use utils\DoctrineFilterMapping;
+use utils\DoctrineInstanceOfFilterMapping;
 use utils\DoctrineJoinFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
@@ -34,7 +38,6 @@ use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
 use utils\PagingResponse;
-
 /**
  * Class DoctrineSummitEventRepository
  * @package App\Repositories\Summit
@@ -55,11 +58,11 @@ final class DoctrineSummitEventRepository
      */
     public function getPublishedOnSameTimeFrame(SummitEvent $event)
     {
-        $summit     = $event->getSummit();
-        $end_date   = $event->getEndDate();
+        $summit = $event->getSummit();
+        $end_date = $event->getEndDate();
         $start_date = $event->getStartDate();
 
-        $query =  $this->getEntityManager()->createQueryBuilder()
+        $query = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
             ->from(\models\summit\SummitEvent::class, "e")
             ->join('e.summit', 's', Join::WITH, " s.id = :summit_id")
@@ -70,11 +73,11 @@ final class DoctrineSummitEventRepository
             ->setParameter('start_date', $start_date)
             ->setParameter('end_date', $end_date);
 
-        $idx  = 1;
-        foreach(self::$forbidden_classes as $forbidden_class){
+        $idx = 1;
+        foreach (self::$forbidden_classes as $forbidden_class) {
             $query = $query
-            ->andWhere("not e INSTANCE OF :forbidden_class".$idx);
-            $query->setParameter("forbidden_class".$idx, $forbidden_class);
+                ->andWhere("not e INSTANCE OF :forbidden_class" . $idx);
+            $query->setParameter("forbidden_class" . $idx, $forbidden_class);
             $idx++;
         }
 
@@ -82,38 +85,53 @@ final class DoctrineSummitEventRepository
     }
 
     /**
+     * @param QueryBuilder $query
+     * @return QueryBuilder
+     */
+    protected function applyExtraJoins(QueryBuilder $query)
+    {
+        $query = $query->innerJoin("e.type", "et", Join::ON);
+        $query = $query->leftJoin(PresentationType::class, 'et2', 'WITH', 'et.id = et2.id');
+        return $query;
+    }
+
+    /**
      * @param int $current_member_id
      * @param int $current_track_id
      * @return array
      */
-    protected function getCustomFilterMappings(int $current_member_id , int $current_track_id)
+    protected function getCustomFilterMappings(int $current_member_id, int $current_track_id)
     {
         return [
-            'id'             => 'e.id:json_int',
-            'title'          => 'e.title:json_string',
-            'abstract'       => 'e.abstract:json_string',
-            'level'          => 'e.level:json_string',
-            'status'          => 'p.status:json_string',
-            'progress'        => 'p.progress:json_int',
-            'is_chair_visible' =>  new DoctrineJoinFilterMapping
+            'id' => 'e.id:json_int',
+            'title' => 'e.title:json_string',
+            'abstract' => 'e.abstract:json_string',
+            'level' => 'e.level:json_string',
+            'status' => 'p.status:json_string',
+            'progress' => 'p.progress:json_int',
+            'is_chair_visible' => new DoctrineJoinFilterMapping
             (
                 'e.category',
                 'c',
                 "c.chair_visible :operator :value"
             ),
-            'is_voting_visible' =>  new DoctrineJoinFilterMapping
+            'is_voting_visible' => new DoctrineJoinFilterMapping
             (
                 'e.category',
                 'c',
                 "c.voting_visible :operator :value"
             ),
             'social_summary' => 'e.social_summary:json_string',
-            'published'      => 'e.published',
-            'start_date'     => 'e.start_date:datetime_epoch',
-            'end_date'       => 'e.end_date:datetime_epoch',
-            'created'     => 'e.created:datetime_epoch',
-            'last_edited'       => 'e.last_edited:datetime_epoch',
-            'tags'           => new DoctrineLeftJoinFilterMapping
+            'published' => 'e.published',
+            'type_allows_publishing_dates' => 'et.allows_publishing_dates',
+            'type_allows_location' => 'et.allows_location',
+            'type_allows_attendee_vote' => 'et2.allow_attendee_vote',
+            'type_allows_custom_ordering' => 'et2.allow_custom_ordering',
+            'start_date' => 'e.start_date:datetime_epoch',
+            'end_date' => 'e.end_date:datetime_epoch',
+            'created' => 'e.created:datetime_epoch',
+            'last_edited' => 'e.last_edited:datetime_epoch',
+            'tags' => new DoctrineLeftJoinFilterMapping
             (
                 'e.tags',
                 't',
@@ -125,12 +143,7 @@ final class DoctrineSummitEventRepository
                 's',
                 "s.id  :operator :value"
             ),
-            'event_type_id' => new DoctrineJoinFilterMapping
-            (
-                'e.type',
-                'et',
-                "et.id :operator :value"
-            ),
+            'event_type_id' => "et.id :operator :value",
             'track_id' => new DoctrineJoinFilterMapping
             (
                 'e.category',
@@ -149,14 +162,14 @@ final class DoctrineSummitEventRepository
             ),
             'speaker' => new DoctrineFilterMapping
             (
-                "( concat(sp.first_name, ' ', sp.last_name) :operator :value ".
-                "OR concat(spm.first_name, ' ', spm.last_name) :operator :value ".
-                "OR concat(spmm.first_name, ' ', spmm.last_name) :operator :value ".
-                "OR sp.first_name :operator :value ".
-                "OR sp.last_name :operator :value ".
-                "OR spm.first_name :operator :value ".
-                "OR spm.last_name :operator :value ".
-                "OR spmm.first_name :operator :value ".
+                "( concat(sp.first_name, ' ', sp.last_name) :operator :value " .
+                "OR concat(spm.first_name, ' ', spm.last_name) :operator :value " .
+                "OR concat(spmm.first_name, ' ', spmm.last_name) :operator :value " .
+                "OR sp.first_name :operator :value " .
+                "OR sp.last_name :operator :value " .
+                "OR spm.first_name :operator :value " .
+                "OR spm.last_name :operator :value " .
+                "OR spmm.first_name :operator :value " .
                 "OR spmm.last_name :operator :value) "
             ),
             'speaker_email' => new DoctrineFilterMapping
@@ -184,29 +197,29 @@ final class DoctrineSummitEventRepository
                 "(sprs.name :operator :value)"
             ),
             'selection_status' => new DoctrineSwitchFilterMapping([
-                 'selected' => new DoctrineCaseFilterMapping(
-                      'selected',
-                      "ssp.order is not null and sspl.list_type = 'Group' and sspl.category = e.category"
-                  ),
-                  'accepted' => new DoctrineCaseFilterMapping(
-                    'accepted',
-                    "ssp.order is not null and ssp.order <= cc.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category"
-                  ),
-                  'alternate' => new DoctrineCaseFilterMapping(
+                    'selected' => new DoctrineCaseFilterMapping(
+                        'selected',
+                        "ssp.order is not null and sspl.list_type = 'Group' and sspl.category = e.category"
+                    ),
+                    'accepted' => new DoctrineCaseFilterMapping(
+                        'accepted',
+                        "ssp.order is not null and ssp.order <= cc.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category"
+                    ),
+                    'alternate' => new DoctrineCaseFilterMapping(
                         'alternate',
                         "ssp.order is not null and ssp.order > cc.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category"
-                  ),
-                  'lightning-accepted' => new DoctrineCaseFilterMapping(
+                    ),
+                    'lightning-accepted' => new DoctrineCaseFilterMapping(
                         'lightning-accepted',
                         "ssp.order is not null and ssp.order <= cc.lightning_count and sspl.list_type = 'Group' and sspl.list_class = 'Lightning' and sspl.category = e.category"
-                  ),
-                  'lightning-alternate' => new DoctrineCaseFilterMapping(
+                    ),
+                    'lightning-alternate' => new DoctrineCaseFilterMapping(
                         'lightning-alternate',
                         "ssp.order is not null and ssp.order > cc.lightning_count and sspl.list_type = 'Group' and sspl.list_class = 'Lightning' and sspl.category = e.category"
-                  ),
-              ]
+                    ),
+                ]
             ),
-            'track_chairs_status' =>  new DoctrineSwitchFilterMapping
+            'track_chairs_status' => new DoctrineSwitchFilterMapping
             (
                 [
                     'voted' => new DoctrineCaseFilterMapping(
@@ -223,19 +236,19 @@ final class DoctrineSummitEventRepository
                     ),
                     'selected' => new DoctrineCaseFilterMapping(
                         'selected',
-                        "sspl.list_type = 'Individual' and sspl.list_class = 'Session' and ssp.collection = 'selected' and ssp_member.id = ".$current_member_id
+                        "sspl.list_type = 'Individual' and sspl.list_class = 'Session' and ssp.collection = 'selected' and ssp_member.id = " . $current_member_id
                     ),
                     'maybe' => new DoctrineCaseFilterMapping(
                         'maybe',
-                        "sspl.list_type = 'Individual' and sspl.list_class = 'Session' and ssp.collection = 'maybe' and ssp_member.id = ".$current_member_id
+                        "sspl.list_type = 'Individual' and sspl.list_class = 'Session' and ssp.collection = 'maybe' and ssp_member.id = " . $current_member_id
                     ),
                     'pass' => new DoctrineCaseFilterMapping(
                         'selected',
-                        "sspl.list_type = 'Individual' and sspl.list_class = 'Session' and ssp.collection = 'pass' and ssp_member.id = ".$current_member_id
+                        "sspl.list_type = 'Individual' and sspl.list_class = 'Session' and ssp.collection = 'pass' and ssp_member.id = " . $current_member_id
                     ),
                 ]
             ),
-            'viewed_status' =>  new DoctrineSwitchFilterMapping
+            'viewed_status' => new DoctrineSwitchFilterMapping
             (
                 [
                     'seen' => new DoctrineCaseFilterMapping(
@@ -284,10 +297,17 @@ final class DoctrineSummitEventRepository
                 ]
             ),
             'created_by_fullname' => new DoctrineFilterMapping
-             (
+            (
                 "concat(cb.first_name, ' ', cb.last_name) :operator :value "
-             ),
+            ),
             'created_by_email' => 'cb.email',
+            'class_name' => new DoctrineInstanceOfFilterMapping(
+                "e",
+                [
+                    SummitEvent::ClassName  => SummitEvent::class,
+                    Presentation::ClassName => Presentation::class,
+                ]
+            )
         ];
     }
 
@@ -297,15 +317,17 @@ final class DoctrineSummitEventRepository
     protected function getOrderMappings()
     {
         return [
-            'id'            => 'e.id',
-            'title'         => 'e.title',
-            'start_date'    => 'e.start_date',
-            'end_date'      => 'e.end_date',
-            'created'       => 'e.created',
-            'track'         => 'cc.title',
-            'location'      => 'l.name',
+            'id' => 'e.id',
+            'title' => 'e.title',
+            'start_date' => 'e.start_date',
+            'end_date' => 'e.end_date',
+            'created' => 'e.created',
+            'track' => 'cc.title',
+            'location' => 'l.name',
             'trackchairsel' => 'ssp.order',
-            'last_edited'   => 'e.last_edited',
+            'last_edited' => 'e.last_edited',
+            'random' => 'RAND()',
+            'custom_order' => 'e.custom_order',
         ];
     }
 
@@ -318,23 +340,23 @@ final class DoctrineSummitEventRepository
     public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
     {
 
-        $current_track_id  = 0;
+        $current_track_id = 0;
         $current_member_id = 0;
 
-        if(!is_null($filter)){
+        if (!is_null($filter)) {
             Log::debug(sprintf("DoctrineSummitEventRepository::getAllByPage filter %s", $filter));
             // check for dependant filtering
-            $track_id_filter   = $filter->getUniqueFilter('track_id');
+            $track_id_filter = $filter->getUniqueFilter('track_id');
             if (!is_null($track_id_filter)) {
                 $current_track_id = intval($track_id_filter->getValue());
             }
-            $current_member_id_filter   = $filter->getUniqueFilter('current_member_id');
+            $current_member_id_filter = $filter->getUniqueFilter('current_member_id');
             if (!is_null($current_member_id_filter)) {
                 $current_member_id = intval($current_member_id_filter->getValue());
             }
         }
 
-        $query  = $this->getEntityManager()->createQueryBuilder()
+        $query = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")
             ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')
@@ -353,30 +375,36 @@ final class DoctrineSummitEventRepository
             ->leftJoin('sp.registration_request', "sprr", Join::LEFT_JOIN)
             ->leftJoin('spm.registration_request', "sprr2", Join::LEFT_JOIN);
 
-        if(!is_null($filter)){
+        $query = $this->applyExtraJoins($query);
+
+        if (!is_null($filter)) {
             $filter->apply2Query($query, $this->getCustomFilterMappings($current_member_id, $current_track_id));
         }
-
+        $shouldPerformRandomOrderingByPage = false;
         if (!is_null($order)) {
+            if($order->hasOrder("random")){
+                $shouldPerformRandomOrderingByPage = true;
+                $order->removeOrder("random");
+            }
             $order->apply2Query($query, $this->getOrderMappings());
-            if(!$order->hasOrder('id')) {
+            if (!$order->hasOrder('id')) {
                 $query = $query->addOrderBy("e.id", 'ASC');
             }
         } else {
             //default order
-            $query = $query->addOrderBy("e.start_date",'ASC');
+            $query = $query->addOrderBy("e.start_date", 'ASC');
             $query = $query->addOrderBy("e.end_date", 'ASC');
             $query = $query->addOrderBy("e.id", 'ASC');
         }
 
         $can_view_private_events = self::isCurrentMemberOnGroup(IGroup::SummitAdministrators);
 
-        if(!$can_view_private_events){
-            $idx  = 1;
-            foreach(self::$forbidden_classes as $forbidden_class){
+        if (!$can_view_private_events) {
+            $idx = 1;
+            foreach (self::$forbidden_classes as $forbidden_class) {
                 $query = $query
-                    ->andWhere("not e INSTANCE OF :forbidden_class".$idx);
-                $query->setParameter("forbidden_class".$idx, $forbidden_class);
+                    ->andWhere("not e INSTANCE OF :forbidden_class" . $idx);
+                $query->setParameter("forbidden_class" . $idx, $forbidden_class);
                 $idx++;
             }
         }
@@ -386,11 +414,14 @@ final class DoctrineSummitEventRepository
             ->setMaxResults($paging_info->getPerPage());
 
         $paginator = new Paginator($query, $fetchJoinCollection = true);
-        $total     = $paginator->count();
-        $data      = [];
+        $total = $paginator->count();
+        $data = [];
 
-        foreach($paginator as $entity)
-            $data[]= $entity;
+        foreach ($paginator as $entity)
+            $data[] = $entity;
+
+        if($shouldPerformRandomOrderingByPage)
+            shuffle($data);
 
         return new PagingResponse
         (
@@ -405,7 +436,8 @@ final class DoctrineSummitEventRepository
     /**
      * @param int $event_id
      */
-    public function cleanupScheduleAndFavoritesForEvent(int $event_id):void{
+    public function cleanupScheduleAndFavoritesForEvent(int $event_id): void
+    {
 
         $query = "DELETE Member_Schedule FROM Member_Schedule WHERE SummitEventID = {$event_id};";
         $this->getEntityManager()->getConnection()->executeStatement($query);
@@ -431,22 +463,22 @@ final class DoctrineSummitEventRepository
     public function getAllByPageLocationTBD(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
     {
 
-        $current_track_id  = 0;
+        $current_track_id = 0;
         $current_member_id = 0;
 
-        if(!is_null($filter)){
+        if (!is_null($filter)) {
             // check for dependant filtering
-            $track_id_filter   = $filter->getUniqueFilter('track_id');
+            $track_id_filter = $filter->getUniqueFilter('track_id');
             if (!is_null($track_id_filter)) {
                 $current_track_id = intval($track_id_filter->getValue());
             }
-            $current_member_id_filter   = $filter->getUniqueFilter('current_member_id');
+            $current_member_id_filter = $filter->getUniqueFilter('current_member_id');
             if (!is_null($current_member_id_filter)) {
                 $current_member_id = intval($current_member_id_filter->getValue());
             }
         }
 
-        $query  = $this->getEntityManager()->createQueryBuilder()
+        $query = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")
             ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')
@@ -459,7 +491,7 @@ final class DoctrineSummitEventRepository
             ->leftJoin('sp.registration_request', "sprr", Join::LEFT_JOIN)
             ->where("l.id is null or l.id = 0");
 
-        if(!is_null($filter)){
+        if (!is_null($filter)) {
             $filter->apply2Query($query, $this->getCustomFilterMappings($current_member_id, $current_track_id));
         }
 
@@ -467,18 +499,18 @@ final class DoctrineSummitEventRepository
             $order->apply2Query($query, $this->getOrderMappings());
         } else {
             //default order
-            $query = $query->addOrderBy("e.start_date",'ASC');
+            $query = $query->addOrderBy("e.start_date", 'ASC');
             $query = $query->addOrderBy("e.end_date", 'ASC');
         }
 
         $can_view_private_events = self::isCurrentMemberOnGroup(IGroup::SummitAdministrators);
 
-        if(!$can_view_private_events){
-            $idx  = 1;
-            foreach(self::$forbidden_classes as $forbidden_class){
+        if (!$can_view_private_events) {
+            $idx = 1;
+            foreach (self::$forbidden_classes as $forbidden_class) {
                 $query = $query
-                    ->andWhere("not e INSTANCE OF :forbidden_class".$idx);
-                $query->setParameter("forbidden_class".$idx, $forbidden_class);
+                    ->andWhere("not e INSTANCE OF :forbidden_class" . $idx);
+                $query->setParameter("forbidden_class" . $idx, $forbidden_class);
                 $idx++;
             }
         }
@@ -488,11 +520,11 @@ final class DoctrineSummitEventRepository
             ->setMaxResults($paging_info->getPerPage());
 
         $paginator = new Paginator($query, $fetchJoinCollection = true);
-        $total     = $paginator->count();
-        $data      = [];
+        $total = $paginator->count();
+        $data = [];
 
-        foreach($paginator as $entity)
-            $data[]= $entity;
+        foreach ($paginator as $entity)
+            $data[] = $entity;
 
         return new PagingResponse
         (
@@ -505,15 +537,16 @@ final class DoctrineSummitEventRepository
     }
 
     /**
-     * @param Summit $summit,
+     * @param Summit $summit ,
      * @param array $external_ids
      * @return mixed
      */
     public function getPublishedEventsBySummitNotInExternalIds(Summit $summit, array $external_ids)
     {
-        $query =  $this->getEntityManager()->createQueryBuilder()
+        $query = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")
+            ->join('e.summit', 's', Join::WITH, " s.id = :summit_id")
             ->join('e.summit', 's', Join::WITH, " s.id = :summit_id")
             ->where('e.published = 1')
             ->andWhere('e.external_id not in (:external_ids)')
@@ -524,12 +557,12 @@ final class DoctrineSummitEventRepository
     }
 
     /**
-     * @param int $summit_id,
+     * @param int $summit_id ,
      * @return array
      */
-    public function getPublishedEventsIdsBySummit(int $summit_id):array
+    public function getPublishedEventsIdsBySummit(int $summit_id): array
     {
-        $query  = $this->getEntityManager()
+        $query = $this->getEntityManager()
             ->createQueryBuilder()
             ->select("e.id")
             ->from($this->getBaseEntity(), "e")
@@ -550,16 +583,16 @@ final class DoctrineSummitEventRepository
     public function getAllPublishedTagsByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse
     {
 
-        $query  = $this->getEntityManager()->createQueryBuilder()
+        $query = $this->getEntityManager()->createQueryBuilder()
             ->select("distinct t")
             ->from(Tag::class, "t")
             ->join("t.events", 'e')
             ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id');
 
-        if(!is_null($filter)){
+        if (!is_null($filter)) {
             $filter->apply2Query($query, [
                 'tag' => 't.tag:json_string',
-                'summit_id'=> new DoctrineJoinFilterMapping
+                'summit_id' => new DoctrineJoinFilterMapping
                 (
                     'e.summit',
                     's',
@@ -581,11 +614,11 @@ final class DoctrineSummitEventRepository
             ->setMaxResults($paging_info->getPerPage());
 
         $paginator = new Paginator($query, $fetchJoinCollection = true);
-        $total     = $paginator->count();
-        $data      = [];
+        $total = $paginator->count();
+        $data = [];
 
-        foreach($paginator as $entity)
-            $data[]= $entity;
+        foreach ($paginator as $entity)
+            $data[] = $entity;
 
         return new PagingResponse
         (

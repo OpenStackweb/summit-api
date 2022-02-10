@@ -37,6 +37,7 @@ class SummitEventSerializer extends SilverStripeSerializer
         'AllowFeedBack' => 'allow_feedback:json_boolean',
         'AvgFeedbackRate' => 'avg_feedback_rate:json_float',
         'Published' => 'is_published:json_boolean',
+        'PublishedDate' => 'published_date:datetime_epoch',
         'HeadCount' => 'head_count:json_int',
         'RSVPLink' => 'rsvp_link:json_string',
         'RSVPTemplateId' => 'rsvp_template_id:json_int',
@@ -92,6 +93,7 @@ class SummitEventSerializer extends SilverStripeSerializer
         'created_by_id',
         'updated_by_id',
         'show_sponsors',
+        'published_date',
     ];
 
     protected static $allowed_relations = [

@@ -924,6 +924,86 @@ class ApiEndpointsSeeder extends Seeder
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm)
                 ],
             ],
+            // schedule settings
+            [
+                'name' => 'get-schedule-settings',
+                'route' => '/api/v1/summits/{id}/schedule-settings',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-schedule-setting',
+                'route' => '/api/v1/summits/{id}/schedule-settings',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'update-schedule-setting',
+                'route' => '/api/v1/summits/{id}/schedule-settings/{config_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-schedule-setting',
+                'route' => '/api/v1/summits/{id}/schedule-settings/{config_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-schedule-setting-filter',
+                'route' => '/api/v1/summits/{id}/schedule-settings/{config_id}/filters',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'update-schedule-setting-filter',
+                'route' => '/api/v1/summits/{id}/schedule-settings/{config_id}/filters/{filter_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             // bookable rooms attributes types
             [
                 'name' => 'get-summit-bookable-room-attribute-types',
@@ -2344,7 +2424,7 @@ class ApiEndpointsSeeder extends Seeder
                 'scopes' => [sprintf(SummitScopes::WriteSummitData, $current_realm)],
             ),
             // events
-            array(
+            [
                 'name' => 'get-events',
                 'route' => '/api/v1/summits/{id}/events',
                 'http_method' => 'GET',
@@ -2357,7 +2437,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                 ]
-            ),
+            ],
            [
                 'name' => 'get-events-csv',
                 'route' => '/api/v1/summits/{id}/events/csv',
@@ -4354,6 +4434,52 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                 ]
+            ],
+            // presentations
+            [
+                'name' => 'get-presentations',
+                'route' => '/api/v1/summits/{id}/presentations',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            // attendees votes
+            [
+                'name' => 'cast-attendee-vote',
+                'route' => '/api/v1/summits/{id}/presentations/{id}/attendee-votes',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::Allow2PresentationAttendeeVote, $current_realm),
+                ],
+            ],
+            [
+                'name' => 'uncast-attendee-vote',
+                'route' => '/api/v1/summits/{id}/presentations/{id}/attendee-votes',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::Allow2PresentationAttendeeVote, $current_realm),
+                ],
+            ],
+            [
+                'name' => 'get-attendees-votes',
+                'route' => '/api/v1/summits/{id}/presentations/{id}/attendee-votes',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            // voteable presentations
+            [
+                'name' => 'get-voteable-presentations',
+                'route' => '/api/v1/summits/{id}/presentations/voteable',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
             ],
             // presentation submissions
             [

@@ -81,6 +81,18 @@ class SummitEventType extends SilverstripeBaseModel
     protected $is_default;
 
     /**
+     * @ORM\Column(name="AllowsPublishingDates", type="boolean")
+     * @var bool
+     */
+    protected $allows_publishing_dates;
+
+    /**
+     * @ORM\Column(name="AllowsLocation", type="boolean")
+     * @var bool
+     */
+    protected $allows_location;
+
+    /**
      * @ORM\Column(name="IsPrivate", type="boolean")
      * @var bool
      */
@@ -234,14 +246,16 @@ class SummitEventType extends SilverstripeBaseModel
     public function __construct()
     {
         parent::__construct();
-        $this->is_default             = false;
-        $this->use_sponsors           = false;
-        $this->blackout_times         = false;
-        $this->are_sponsors_mandatory = false;
-        $this->allows_attachment      = false;
-        $this->is_private             = false;
-        $this->allows_level           = false;
-        $this->summit_documents       = new ArrayCollection();
+        $this->is_default              = false;
+        $this->use_sponsors            = false;
+        $this->blackout_times          = false;
+        $this->are_sponsors_mandatory  = false;
+        $this->allows_attachment       = false;
+        $this->is_private              = false;
+        $this->allows_level            = false;
+        $this->allows_location         = true;
+        $this->allows_publishing_dates = true;
+        $this->summit_documents        = new ArrayCollection();
     }
 
     /**
@@ -338,6 +352,38 @@ SQL;
     public function setAllowsLevel(bool $allows_level): void
     {
         $this->allows_level = $allows_level;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAllowsPublishingDates(): bool
+    {
+        return $this->allows_publishing_dates;
+    }
+
+    /**
+     * @param bool $allows_publishing_dates
+     */
+    public function setAllowsPublishingDates(bool $allows_publishing_dates): void
+    {
+        $this->allows_publishing_dates = $allows_publishing_dates;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAllowsLocation(): bool
+    {
+        return $this->allows_location;
+    }
+
+    /**
+     * @param bool $allows_location
+     */
+    public function setAllowsLocation(bool $allows_location): void
+    {
+        $this->allows_location = $allows_location;
     }
 
 }

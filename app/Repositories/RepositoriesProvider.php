@@ -62,6 +62,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRefundPolicyTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitScheduleConfigRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSelectionPlanExtraQuestionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitTaxTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackChairRepository;
@@ -120,6 +121,7 @@ use models\summit\SummitRefundPolicyType;
 use models\summit\SummitRegistrationInvitation;
 use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitRoomReservation;
+use models\summit\SummitScheduleConfig;
 use models\summit\SummitTaxType;
 use models\summit\SummitTicketType;
 use models\summit\SummitTrackChair;
@@ -686,6 +688,13 @@ final class RepositoriesProvider extends ServiceProvider
             IElectionsRepository::class,
             function(){
                 return EntityManager::getRepository(Election::class);
+            }
+        );
+
+        App::singleton(
+            ISummitScheduleConfigRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitScheduleConfig::class);
             }
         );
 

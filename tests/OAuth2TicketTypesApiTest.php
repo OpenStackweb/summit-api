@@ -12,16 +12,29 @@
  * limitations under the License.
  **/
 
+/**
+ * Class OAuth2TicketTypesApiTest
+ * @package Tests
+ */
 final class OAuth2TicketTypesApiTest extends ProtectedApiTest
 {
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testGetTicketTypes($summit_id=24){
-        $params = [
+    use InsertSummitTestData;
 
-            'id'       => $summit_id,
+    protected function setUp(): void
+    {
+        parent::setUp();
+        self::insertTestData();
+    }
+
+    protected function tearDown(): void
+    {
+        self::clearTestData();
+        parent::tearDown();
+    }
+
+    public function testGetTicketTypes(){
+        $params = [
+            'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 10,
             'order'    => '+name'
@@ -49,15 +62,11 @@ final class OAuth2TicketTypesApiTest extends ProtectedApiTest
         return $ticket_types;
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testGetTicketTypesById($summit_id=24){
-        $ticket_types_response = $this->testGetTicketTypes($summit_id);
+    public function testGetTicketTypesById(){
+        $ticket_types_response = $this->testGetTicketTypes();
 
         $params = [
-            'id' => $summit_id,
+            'id'       => self::$summit->getId(),
             'ticket_type_id' => $ticket_types_response->data[0]->id
         ];
 
@@ -83,14 +92,9 @@ final class OAuth2TicketTypesApiTest extends ProtectedApiTest
         return $ticket_type;
     }
 
-
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testAddTicketType($summit_id = 24){
+    public function testAddTicketType(){
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $name        = str_random(16).'_ticket_type';
@@ -126,16 +130,12 @@ final class OAuth2TicketTypesApiTest extends ProtectedApiTest
         return $ticket_type;
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testUpdateTicketType($summit_id = 24){
+    public function testUpdateTicketType(){
 
-        $ticket_type = $this->testAddTicketType($summit_id);
+        $ticket_type = $this->testAddTicketType();
 
         $params = [
-            'id'             => $summit_id,
+            'id'             => self::$summit->getId(),
             'ticket_type_id' => $ticket_type->id
         ];
 
@@ -167,13 +167,10 @@ final class OAuth2TicketTypesApiTest extends ProtectedApiTest
         return $ticket_type;
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testSeedDefaultTicketTypes($summit_id = 24){
+
+    public function testSeedDefaultTicketTypes(){
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $headers = [

@@ -15,6 +15,7 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\Presentation;
+use models\summit\PresentationAttendeeVote;
 use models\summit\PresentationLink;
 use models\summit\PresentationMediaUpload;
 use models\summit\PresentationSlide;
@@ -197,4 +198,23 @@ interface IPresentationService
      * @throws EntityNotFoundException
      */
     public function deleteMediaUpload(Summit $summit, int $presentation_id, int $media_upload_id): void;
+
+    /**
+     * @param Summit $summit
+     * @param Member $member
+     * @param int $presentation_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function castAttendeeVote(Summit $summit, Member $member, int $presentation_id):PresentationAttendeeVote;
+
+    /**
+     * @param Summit $summit
+     * @param Member $member
+     * @param int $presentation_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function unCastAttendeeVote(Summit $summit, Member $member, int $presentation_id):void;
+
 }

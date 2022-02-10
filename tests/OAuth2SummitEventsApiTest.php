@@ -28,12 +28,11 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         parent::tearDown();
     }
 
-    public function testPostEvent($summit_id = 23, $location_id = 0, $type_id = 0, $track_id = 0, $start_date = 1477645200, $end_date = 1477647600)
+    public function testAddPublishableEvent($start_date = 1477645200, $end_date = 1477647600, $location_id = 0)
     {
-        $params = array
-        (
-            'id' => $summit_id,
-        );
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
 
         $headers = array
         (
@@ -46,9 +45,9 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             'title'         => 'Neutron: tbd',
             'description'    => 'TBD',
             'allow_feedback' => true,
-            'type_id'        => $type_id,
+            'type_id'        => self::$defaultPresentationType->getId(),
             'tags'           => ['Neutron'],
-            'track_id'       => $track_id
+            'track_id'       => self::$defaultTrack->getId()
         );
 
         if($start_date > 0){
@@ -82,12 +81,11 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         return $event;
     }
 
-    public function testPostEventRSVPTemplateUnExistent($summit_id = 23, $location_id = 0, $type_id = 124, $track_id = 208, $start_date = 1477645200, $end_date = 1477647600)
+    public function testAddNonPublishableEventWithScheduledDates($start_date = 1477645200, $end_date = 1477647600, $location_id = 0)
     {
-        $params = array
-        (
-            'id' => $summit_id,
-        );
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
 
         $headers = array
         (
@@ -97,13 +95,12 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
         $data = array
         (
-            'title'            => 'Neutron: tbd',
-            'description'      => 'TBD',
-            'allow_feedback'   => true,
-            'type_id'          => $type_id,
-            'tags'             => ['Neutron'],
-            'track_id'         => $track_id,
-            'rsvp_template_id' => 1,
+            'title'         => 'Neutron: tbd',
+            'description'    => 'TBD',
+            'allow_feedback' => true,
+            'type_id'        => self::$allow2VotePresentationType->getId(),
+            'tags'           => ['Neutron'],
+            'track_id'       => self::$defaultTrack->getId()
         );
 
         if($start_date > 0){
@@ -117,6 +114,167 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         if($location_id > 0){
             $data['location_id'] = $location_id;
         }
+
+        $response = $this->action
+        (
+            "POST",
+            "OAuth2SummitEventsApiController@addEvent",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(412);
+        $error = json_decode($content);
+    }
+
+    public function testAddNonPublishableEventWithScheduledDatesAndLocation()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
+
+        $start_date  = clone(self::$summit->getBeginDate());
+        $end_date    = clone($start_date);
+        $end_date =    $end_date->add(new \DateInterval("P1D"));
+        $data = array
+        (
+            'title'         => 'Neutron: tbd',
+            'description'    => 'TBD',
+            'allow_feedback' => true,
+            'type_id'        => self::$allow2VotePresentationType->getId(),
+            'tags'           => ['Neutron'],
+            'track_id'       => self::$defaultTrack->getId(),
+            'start_date' => $start_date->getTimestamp(),
+            'end_date' => $end_date->getTimestamp(),
+            'location_id' => self::$mainVenue->getId()
+        );
+
+        $response = $this->action
+        (
+            "POST",
+            "OAuth2SummitEventsApiController@addEvent",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(412);
+        $error = json_decode($content);
+    }
+
+    public function testAddNonPublishableEvent()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
+
+        $start_date  = clone(self::$summit->getBeginDate());
+        $end_date    = clone($start_date);
+        $end_date =    $end_date->add(new \DateInterval("P1D"));
+        $data = array
+        (
+            'title'         => 'Neutron: tbd',
+            'description'    => 'TBD',
+            'allow_feedback' => true,
+            'type_id'        => self::$allow2VotePresentationType->getId(),
+            'tags'           => ['Neutron'],
+            'track_id'       => self::$defaultTrack->getId(),
+        );
+
+        $response = $this->action
+        (
+            "POST",
+            "OAuth2SummitEventsApiController@addEvent",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $event = json_decode($content);
+        $this->assertTrue($event->id > 0);
+
+        $params = array
+        (
+            'id'         => self::$summit->getId(),
+            'event_id'   => $event->id,
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
+
+        $response = $this->action
+        (
+            "PUT",
+            "OAuth2SummitEventsApiController@publishEvent",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
+        $content = $response->getContent();
+
+        $event = json_decode($content);
+        $this->assertTrue($event->id > 0);
+        $this->assertTrue(is_null($event->start_date));
+        $this->assertTrue($event->is_published == true);
+    }
+
+    public function testPostEventRSVPTemplateUnExistent()
+    {
+        $params = array
+        (
+            'id' => self::$summit->getId(),
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
+
+        $data = array
+        (
+            'title'            => 'Neutron: tbd',
+            'description'      => 'TBD',
+            'allow_feedback'   => true,
+            'type_id'        => self::$allow2VotePresentationType->getId(),
+            'tags'           => ['Neutron'],
+            'track_id'       => self::$defaultTrack->getId(),
+            'rsvp_template_id' => 1,
+        );
+
 
         $response = $this->action
         (
@@ -1069,16 +1227,119 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($events));
     }
 
+    public function testGetAllEvents(){
+        $params = array
+        (
+            'id' => self::$summit->getId(),
+            'page' => 1,
+            'per_page' => 5,
+            'filter' => [
+                'published==1',
+                'type_allows_attendee_vote==1',
+            ],
+            'order' => 'random'
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
+
+        $response = $this->action
+        (
+            "GET",
+            "OAuth2SummitEventsApiController@getEvents",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $events = json_decode($content);
+        $this->assertTrue(!is_null($events));
+    }
+
+    public function testGetAllPresentations(){
+        $params = array
+        (
+            'id' => self::$summit->getId(),
+            'page' => 1,
+            'per_page' => 5,
+            'order' => 'random'
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
+
+        $response = $this->action
+        (
+            "GET",
+            "OAuth2SummitEventsApiController@getAllPresentations",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $events = json_decode($content);
+        $this->assertTrue(!is_null($events));
+    }
+
+    public function testGetAllVoteablePresentations(){
+        $params = array
+        (
+            'id' => self::$summit->getId(),
+            'page' => 1,
+            'per_page' => 5,
+            'filter' => ['published==1'],
+            'order' => 'random'
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
+
+        $response = $this->action
+        (
+            "GET",
+            "OAuth2SummitEventsApiController@getAllVoteablePresentations",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $events = json_decode($content);
+        $this->assertTrue(!is_null($events));
+    }
+
     public function testGetAllScheduledEventsUsingOrder()
     {
 
         $params = array
         (
-            'id' => 7,
+            'id' => self::$summit->getId(),
             'page' => 1,
             'per_page' => 5,
-            'filter' => '',
-            'order' => '+title'
+            'order' => 'random'
         );
 
         $headers = array
@@ -1110,13 +1371,9 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
         $params = array
         (
-            'id' => 7,
+            'id' => self::$summit->getId(),
             'page' => 1,
             'per_page' => 10,
-            'filter' => array
-            (
-                'title=@Lightning',
-            ),
         );
 
         $headers = array
@@ -1160,7 +1417,6 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             "HTTP_Authorization" => " Bearer " . $this->access_token,
             "CONTENT_TYPE" => "application/json"
         );
-
 
         $response = $this->action
         (

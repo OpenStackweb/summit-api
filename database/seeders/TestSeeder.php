@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
+
 /**
  * Class TestSeeder
  */
@@ -24,6 +25,17 @@ final class TestSeeder extends Seeder
     public function run()
     {
         Model::unguard();
+        DB::setDefaultConnection("model");
+        DB::table('SummitScheduleConfig')->delete();
+        DB::table('Presentation')->delete();
+        DB::table('SummitEvent')->delete();
+        DB::table('Summit')->delete();
+        DB::table('SummitEventType')->delete();
+        DB::table('PresentationType')->delete();
+        DB::table('SummitAbstractLocation')->delete();
+        DB::table('SummitGeoLocatedLocation')->delete();
+        DB::table('SummitVenue')->delete();
+
         DB::setDefaultConnection("config");
         $this->call(ApiSeeder::class);
         $this->call(ApiScopesSeeder::class);

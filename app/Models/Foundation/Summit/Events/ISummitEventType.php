@@ -28,4 +28,5 @@ interface ISummitEventType
     const Breaks = 'Breaks';
     const Breakfast = 'Breakfast';
     const MarketplaceHours = 'Marketplace Hours';
+
 }

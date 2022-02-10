@@ -25,7 +25,7 @@ class RetrieveAllSummitPresentationsStrategy extends RetrieveAllSummitEventsBySu
     /**
      * @return null|Filter
      */
-    protected function buildFilter(): ?Filter
+    protected function buildFilter()
     {
         $filter = parent::buildFilter();
         $filter->addFilterCondition(FilterParser::buildFilter('class_name','==',Presentation::ClassName));

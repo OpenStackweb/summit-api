@@ -174,6 +174,7 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
 
         $query  = $this->getEntityManager()
             ->createQueryBuilder()
+            ->distinct(true)
             ->select("e.id")
             ->from($this->getBaseEntity(), "e");
 

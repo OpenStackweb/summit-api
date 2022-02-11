@@ -3265,15 +3265,26 @@ final class SummitOrderService
         });
 
         foreach ($summits as $summit) {
-            Log::debug
-            (
-                sprintf
+            if ($summit->isAllowAutomaticReminderEmails()) {
+                Log::debug
                 (
-                    "SummitOrderService::processAllOrderReminder calling processSummitOrderReminders for summit %s",
-                    $summit->getId()
-                )
-            );
-            $this->processSummitOrderReminders($summit);
+                    sprintf
+                    (
+                        "SummitOrderService::processAllOrderReminder calling processSummitOrderReminders for summit %s",
+                        $summit->getId()
+                    )
+                );
+                $this->processSummitOrderReminders($summit);
+            } else {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::processAllOrderReminder summit %s doesn't allow automatic reminder emails",
+                        $summit->getId()
+                    )
+                );
+            }
         }
     }
 

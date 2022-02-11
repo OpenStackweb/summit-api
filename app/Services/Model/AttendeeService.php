@@ -393,7 +393,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         $maxPageSize = 100;
 
         do {
-            Log::debug(sprintf("AttendeeService::send summit id %s flow_event %s", $summit_id, $flow_event));
+            Log::debug(sprintf("AttendeeService::send summit id %s flow_event %s filter %s", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString()));
 
             $ids = $this->tx_service->transaction(function () use ($summit_id, $payload, $filter, $page, $maxPageSize) {
                 if (isset($payload['attendees_ids'])) {
@@ -410,6 +410,8 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 Log::debug(sprintf("AttendeeService::send page %s", $page));
                 return $this->attendee_repository->getAllIdsByPage(new PagingInfo($page, $maxPageSize), $filter);
             });
+
+            Log::debug(sprintf("AttendeeService::send summit id %s flow_event %s filter %s page %s got %s records", $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $page, count($ids)));
 
             if (!count($ids)) {
                 // if we are processing a page, then break it

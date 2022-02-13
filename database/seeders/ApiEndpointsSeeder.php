@@ -4448,7 +4448,7 @@ class ApiEndpointsSeeder extends Seeder
             // attendees votes
             [
                 'name' => 'cast-attendee-vote',
-                'route' => '/api/v1/summits/{id}/presentations/{id}/attendee-votes',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/attendee-votes',
                 'http_method' => 'POST',
                 'scopes' => [
                     sprintf(SummitScopes::Allow2PresentationAttendeeVote, $current_realm),
@@ -4456,7 +4456,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'uncast-attendee-vote',
-                'route' => '/api/v1/summits/{id}/presentations/{id}/attendee-votes',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/attendee-votes',
                 'http_method' => 'DELETE',
                 'scopes' => [
                     sprintf(SummitScopes::Allow2PresentationAttendeeVote, $current_realm),

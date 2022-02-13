@@ -117,6 +117,7 @@ class AccessTokenServiceStub implements IAccessTokenService
             sprintf(SponsoredProjectScope::Read, $url),
             sprintf(SummitScopes::WriteMetrics, $url),
             sprintf(SummitScopes::ReadMetrics, $url),
+            sprintf(SummitScopes::Allow2PresentationAttendeeVote, $url),
             ElectionScopes::NominatesCandidates,
             ElectionScopes::WriteMyCandidateProfile,
         );
@@ -220,6 +221,7 @@ class AccessTokenServiceStub2 implements IAccessTokenService
             sprintf(SponsoredProjectScope::Read, $url),
             ElectionScopes::NominatesCandidates,
             ElectionScopes::WriteMyCandidateProfile,
+            sprintf(SummitScopes::Allow2PresentationAttendeeVote, $url),
         );
 
         return AccessToken::createFromParams(

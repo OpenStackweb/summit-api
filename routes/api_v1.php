@@ -510,9 +510,9 @@ Route::group(array('prefix' => 'summits'), function () {
                 // attendees votes
 
                 Route::group(['prefix' => 'attendee-votes'], function(){
-                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@getAttendeeVotes']);
-                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@castAttendeeVote']);
-                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@unCastAttendeeVote']);
+                    Route::get('', ['uses' => 'OAuth2PresentationApiController@getAttendeeVotes']);
+                    Route::post('', ['uses' => 'OAuth2PresentationApiController@castAttendeeVote']);
+                    Route::delete('', [ 'uses' => 'OAuth2PresentationApiController@unCastAttendeeVote']);
                 });
             });
         });

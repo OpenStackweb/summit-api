@@ -1870,4 +1870,33 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $content = $response->getContent();
         $this->assertResponseStatus(200);
     }
+
+    public function testCastVote(){
+        $presentation = self::$presentations[count(self::$presentations) - 1];
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $payload = [
+        ];
+
+        $response = $this->action
+        (
+            "POST",
+            "OAuth2PresentationApiController@castAttendeeVote",
+            $params,
+            [], [], [],
+            $headers,
+            json_encode($payload)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+    }
 }

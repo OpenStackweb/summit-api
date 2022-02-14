@@ -368,4 +368,9 @@ SQL;
         return true;
     }
 
+    public function clearAttendeeVotingPeriod():void{
+        $this->begin_attendee_voting_period_date = null;
+        $this->end_attendee_voting_period_date = null;
+    }
+
 }

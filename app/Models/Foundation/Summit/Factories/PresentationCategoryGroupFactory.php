@@ -67,11 +67,14 @@ final class PresentationCategoryGroupFactory
         if(isset($data['color']))
             $track_group->setColor(trim($data['color']));
 
-        if(isset($data['begin_attendee_voting_period_date'])) {
+        if(isset($data['begin_attendee_voting_period_date']) && !empty($data['begin_attendee_voting_period_date'])) {
             $start_datetime = intval($data['begin_attendee_voting_period_date']);
             $start_datetime = new \DateTime("@$start_datetime");
             $start_datetime->setTimezone($summit->getTimeZone());
             $track_group->setBeginAttendeeVotingPeriodDate($start_datetime);
+        }
+        else{
+            $track_group->clearAttendeeVotingPeriod();
         }
 
         if(isset($data['end_attendee_voting_period_date'])) {

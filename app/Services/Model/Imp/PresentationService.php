@@ -1198,14 +1198,13 @@ final class PresentationService
                 Log::debug(sprintf( "PresentationService::castAttendeeVote processing track group %s", $currentTrackGroup->getId()));
                 // check voting period
                 if(!$currentTrackGroup->isAttendeeVotingPeriodOpen())
-                    throw new ValidationException("Attendee Voting Period for track group %s is closed.", $currentTrackGroup->getName());
+                    throw new ValidationException(sprintf( "Attendee Voting Period for track group %s is closed.", $currentTrackGroup->getName()));
 
                 // check voting count
 
                 if(!$currentTrackGroup->canEmitAttendeeVote($attendee)){
-                    throw new ValidationException(sprintf("You Reached the Max. allowed votes for Track Group %s (%s) [%s]",
+                    throw new ValidationException(sprintf("You Reached the Max. allowed votes for Track Group %s [%s]",
                         $currentTrackGroup->getName(),
-                        $currentTrackGroup->getId(),
                         $currentTrackGroup->getMaxAttendeeVotes()));
                 }
             }

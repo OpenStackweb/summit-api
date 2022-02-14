@@ -322,7 +322,7 @@ class PresentationCategoryGroup extends SilverstripeBaseModel
 
     public function isNotLimitedAttendeeVotingCount(): bool
     {
-        return $this->max_attendee_votes > 0;
+        return $this->max_attendee_votes == 0;
     }
 
     /**

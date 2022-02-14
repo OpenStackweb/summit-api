@@ -1203,8 +1203,9 @@ final class PresentationService
                 // check voting count
 
                 if(!$currentTrackGroup->canEmitAttendeeVote($attendee)){
-                    throw new ValidationException(sprintf("You Reached the Max. allowed votes for Track Group %a (%s)",
+                    throw new ValidationException(sprintf("You Reached the Max. allowed votes for Track Group %s (%s) [%s]",
                         $currentTrackGroup->getName(),
+                        $currentTrackGroup->getId(),
                         $currentTrackGroup->getMaxAttendeeVotes()));
                 }
             }

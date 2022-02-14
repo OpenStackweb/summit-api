@@ -1177,6 +1177,8 @@ final class PresentationService
     public function castAttendeeVote(Summit $summit, Member $member, int $presentation_id): PresentationAttendeeVote
     {
         return $this->tx_service->transaction(function () use($summit, $member, $presentation_id){
+
+            Log::debug(sprintf("PresentationService::castAttendeeVote summit %s member %s presentation %s", $summit->getId(), $member->getId(), $presentation_id));
             $presentation = $this->presentation_repository->getById($presentation_id);
             if(is_null($presentation) || !$presentation instanceof Presentation)
                 throw new EntityNotFoundException("Presentation not found.");
@@ -1184,6 +1186,7 @@ final class PresentationService
             if($presentation->getSummitId() !== $summit->getId())
                 throw new EntityNotFoundException("Presentation not found.");
 
+            Log::debug("PresentationService::castAttendeeVote get attendee by member");
             $attendee = $summit->getAttendeeByMember($member);
 
             if(is_null($attendee))
@@ -1192,6 +1195,7 @@ final class PresentationService
             $currentTrack = $presentation->getCategory();
 
             foreach($currentTrack->getGroups() as $currentTrackGroup){
+                Log::debug("PresentationService::castAttendeeVote processing track group %s", $currentTrackGroup->getId());
                 // check voting period
                 if(!$currentTrackGroup->isAttendeeVotingPeriodOpen())
                     throw new ValidationException("Attendee Voting Period for track group %s is closed.", $currentTrackGroup->getName());
@@ -1202,7 +1206,7 @@ final class PresentationService
                     throw new ValidationException("You Reached the Max. allowed votes for Track Group (%s)", $currentTrackGroup->getMaxAttendeeVotes());
                 }
             }
-
+            Log::debug("PresentationService::castAttendeeVote casting vote");
             $presentation->castAttendeeVote($attendee);
         });
     }

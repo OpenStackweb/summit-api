@@ -1324,7 +1324,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      */
     public function castAttendeeVote($summit_id, $presentation_id){
         try {
-
+            Log::debug(sprintf("OAuth2PresentationApiController::castAttendeeVote summit %s presentation %s", $summit_id, $presentation_id));
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 

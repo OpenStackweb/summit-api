@@ -32,6 +32,7 @@ use App\Models\Foundation\Summit\Factories\SummitEventFeedbackFactory;
 use App\Models\Foundation\Summit\Factories\SummitFactory;
 use App\Models\Foundation\Summit\Factories\SummitRSVPFactory;
 use App\Models\Foundation\Summit\Repositories\IDefaultSummitEventTypeRepository;
+use App\Models\Foundation\Summit\Repositories\IPresentationMediaUploadRepository;
 use App\Models\Utils\IntervalParser;
 use App\Models\Utils\IStorageTypesConstants;
 use App\Permissions\IPermissionsManager;
@@ -205,6 +206,11 @@ final class SummitService extends AbstractService implements ISummitService
     private $member_service;
 
     /**
+     * @var IPresentationMediaUploadRepository
+     */
+    private $presentation_media_upload_repository;
+
+    /**
      * SummitService constructor.
      * @param ISummitRepository $summit_repository
      * @param ISummitEventRepository $event_repository
@@ -220,6 +226,7 @@ final class SummitService extends AbstractService implements ISummitService
      * @param ICompanyRepository $company_repository
      * @param IGroupRepository $group_repository
      * @param IDefaultSummitEventTypeRepository $default_event_types_repository
+     * @param IPresentationMediaUploadRepository $presentation_media_upload_repository
      * @param IPermissionsManager $permissions_manager
      * @param IFileUploader $file_uploader
      * @param ISpeakerService $speaker_service
@@ -242,6 +249,7 @@ final class SummitService extends AbstractService implements ISummitService
         ICompanyRepository                         $company_repository,
         IGroupRepository                           $group_repository,
         IDefaultSummitEventTypeRepository          $default_event_types_repository,
+        IPresentationMediaUploadRepository         $presentation_media_upload_repository,
         IPermissionsManager                        $permissions_manager,
         IFileUploader                              $file_uploader,
         ISpeakerService                            $speaker_service,
@@ -268,6 +276,7 @@ final class SummitService extends AbstractService implements ISummitService
         $this->file_uploader = $file_uploader;
         $this->speaker_service = $speaker_service;
         $this->member_service = $member_service;
+        $this->presentation_media_upload_repository = $presentation_media_upload_repository;
     }
 
     /**
@@ -3322,5 +3331,62 @@ final class SummitService extends AbstractService implements ISummitService
 
             return $processed;
         });
+    }
+
+    /**
+     * @param int $summit_id
+     * @throws Exception
+     */
+    public function regenerateTemporalUrlsForMediaUploads(int $summit_id):void{
+
+        Log::debug(sprintf("SummitService::regenerateTemporalUrlsForMediaUploads processing summit %s", $summit_id));
+
+        $mediaUploadTypes = $this->tx_service->transaction(function() use($summit_id){
+            $summit = $this->summit_repository->getById($summit_id);
+            if (is_null($summit) || !$summit instanceof Summit)
+                throw new EntityNotFoundException("Summit not found.");
+            $res = [];
+            foreach($summit->getMediaUploadTypes() as $mediaUploadType){
+                if($mediaUploadType->hasPublicStorageSet() && $mediaUploadType->isUseTemporaryLinksOnPublicStorage()){
+                    $res[] = $mediaUploadType;
+                }
+            }
+            return $res;
+        });
+
+        foreach ($mediaUploadTypes as $mediaUploadType){
+            $page = 1;
+            $filter = new Filter();
+            $filter->addFilterCondition(FilterElement::makeEqual('type', $mediaUploadType->getId()));
+            Log::debug(sprintf("SummitService::regenerateTemporalUrlsForMediaUploads processing media upload type %s", $mediaUploadType->getId()));
+            do {
+                $res = $this->presentation_media_upload_repository->getAllByPage(new PagingInfo($page, 100), $filter);
+                Log::debug(sprintf("SummitService::regenerateTemporalUrlsForMediaUploads processing media upload type %s page %s got %s items", $mediaUploadType->getId(), $page, count($res->getItems())));
+                foreach ($res->getItems() as $item){
+                    if(!$item instanceof PresentationMediaUpload) continue;
+                    Log::debug(sprintf("SummitService::regenerateTemporalUrlsForMediaUploads processing media upload %s", $item->getId()));
+                    try {
+                        $strategy = FileDownloadStrategyFactory::build($mediaUploadType->getPublicStorageType());
+                        Log::debug(sprintf("SummitService::regenerateTemporalUrlsForMediaUploads media upload %s trying to regenerate public url for %s", $item->getId(), $item->getRelativePath()));
+                        if (!is_null($strategy)) {
+                            $strategy->getUrl
+                            (
+                                $item->getRelativePath(),
+                                $mediaUploadType->isUseTemporaryLinksOnPublicStorage(),
+                                $mediaUploadType->getTemporaryLinksPublicStorageTtl(),
+                                true
+                            );
+                            Log::debug(sprintf("SummitService::regenerateTemporalUrlsForMediaUploads media upload %s regenerated public url for %s", $item->getId(), $item->getRelativePath()));
+                        }
+                    }
+                    catch (\Exception $ex){
+                        Log::warning($ex);
+                    }
+                }
+                if (!$res->hasMoreItems()) break;
+                $page++;
+            } while(true);
+        }
+        Log::debug(sprintf("SummitService::regenerateTemporalUrlsForMediaUploads processed summit %s", $summit_id));
     }
 }

@@ -30,9 +30,10 @@ interface IFileDownloadStrategy
      * @param string $relativeFileName
      * @param boolean $useTemporaryUrl
      * @param int $ttl time to live in minutes
+     * @param false boolean $avoidCache
      * @return string|null
      */
-    public function getUrl(string $relativeFileName, bool $useTemporaryUrl = false, int $ttl = 10):?string;
+    public function getUrl(string $relativeFileName, bool $useTemporaryUrl = false, int $ttl = 10, bool $avoidCache = false):?string;
 
     /**
      * @param string $relativeFileName

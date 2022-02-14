@@ -33,6 +33,7 @@ use App\Models\Foundation\Summit\Repositories\IDefaultTrackTagGroupRepository;
 use App\Models\Foundation\Summit\Repositories\IPaymentGatewayProfileRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationActionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationCategoryGroupRepository;
+use App\Models\Foundation\Summit\Repositories\IPresentationMediaUploadRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationSpeakerSummitAssistanceConfirmationRequestRepository;
 use App\Models\Foundation\Summit\Repositories\IRSVPTemplateRepository;
 use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
@@ -93,6 +94,7 @@ use models\summit\PaymentGatewayProfile;
 use models\summit\PresentationActionType;
 use models\summit\PresentationCategory;
 use models\summit\PresentationCategoryGroup;
+use models\summit\PresentationMediaUpload;
 use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
 use models\summit\SpeakerActiveInvolvement;
 use models\summit\SpeakerOrganizationalRole;
@@ -695,6 +697,13 @@ final class RepositoriesProvider extends ServiceProvider
             ISummitScheduleConfigRepository::class,
             function(){
                 return EntityManager::getRepository(SummitScheduleConfig::class);
+            }
+        );
+
+        App::singleton(
+            IPresentationMediaUploadRepository::class,
+            function(){
+                return EntityManager::getRepository(PresentationMediaUpload::class);
             }
         );
 

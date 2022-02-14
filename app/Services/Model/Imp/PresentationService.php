@@ -1207,7 +1207,7 @@ final class PresentationService
                 }
             }
             Log::debug("PresentationService::castAttendeeVote casting vote");
-            $presentation->castAttendeeVote($attendee);
+            return $presentation->castAttendeeVote($attendee);
         });
     }
 

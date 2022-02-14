@@ -447,7 +447,13 @@ Route::group(array('prefix' => 'summits'), function () {
         // presentations
         Route::group(['prefix' => 'presentations'], function () {
             Route::get('', [ 'uses' => 'OAuth2SummitEventsApiController@getAllPresentations']);
-            Route::get('voteable', [ 'uses' => 'OAuth2SummitEventsApiController@getAllVoteablePresentations']);
+            Route::group(['prefix' => 'voteable'], function () {
+                Route::get('', [ 'uses' => 'OAuth2SummitEventsApiController@getAllVoteablePresentations']);
+                Route::group(['prefix' => '{presentation_id}'], function () {
+                    Route::get('', [ 'uses' => 'OAuth2SummitEventsApiController@getVoteablePresentation']);
+                });
+            });
+
             // opened without role CFP - valid selection plan on CFP status
             Route::post('', 'OAuth2PresentationApiController@submitPresentation');
             // import from mux

@@ -4481,6 +4481,15 @@ class ApiEndpointsSeeder extends Seeder
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm)
                 ],
             ],
+            [
+                'name' => 'get-voteable-presentation-by-id',
+                'route' => '/api/v1/summits/{id}/presentations/voteable/{presentation_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
             // presentation submissions
             [
                 'name' => 'submit-presentation',

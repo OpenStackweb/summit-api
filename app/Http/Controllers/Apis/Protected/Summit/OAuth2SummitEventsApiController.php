@@ -28,6 +28,8 @@ use models\summit\IEventFeedbackRepository;
 use models\summit\ISpeakerRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
+use models\summit\Presentation;
+use models\summit\PresentationType;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISummitService;
 use utils\Filter;
@@ -415,6 +417,50 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                     ],
                     $this->getSerializerType()
                 )
+            );
+        }
+        catch (EntityNotFoundException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error404();
+        }
+        catch (ValidationException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error412($ex2->getMessages());
+        }
+        catch (Exception $ex)
+        {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $presentation_id
+     * @return array|\Illuminate\Http\JsonResponse|mixed
+     */
+    public function getVoteablePresentation($summit_id, $presentation_id){
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) throw new EntityNotFoundException;
+
+            $event =  $summit->getScheduleEvent(intval($presentation_id));
+
+            if (is_null($event) || !$event instanceof Presentation) throw new EntityNotFoundException;
+
+            if(!$event->getType()->isAllowAttendeeVote())
+                throw new EntityNotFoundException;
+
+            return SerializerRegistry::getInstance()->getSerializer($event, $this->getSerializerType())->serialize
+            (
+                self::getExpands(),
+                self::getFields(),
+                self::getRelations(),
+                [
+                    'current_user' => $this->resource_server_context->getCurrentUser(true)
+                ]
             );
         }
         catch (EntityNotFoundException $ex1)

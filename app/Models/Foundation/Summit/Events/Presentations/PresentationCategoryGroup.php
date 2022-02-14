@@ -361,7 +361,7 @@ SQL;
                     $this->max_attendee_votes
                 )
             );
-            return ($res + 1) < $this->max_attendee_votes;
+            return ($res + 1) <= $this->max_attendee_votes;
         } catch (\Exception $ex) {
             Log::warning($ex);
         }

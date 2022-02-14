@@ -28,6 +28,7 @@ final class SummitScheduleConfigRulesFactory
         return [
             'key' => 'required|string|max:50',
             'is_enabled' => 'required|boolean',
+            'is_default' => 'required|boolean',
             'is_my_schedule' => 'required|boolean',
             'only_events_with_attendee_access' => 'required|boolean',
             'color_source' => 'required|string|in:'.implode(',', SummitScheduleConfig::AllowedColorSource),

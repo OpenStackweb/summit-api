@@ -56,6 +56,12 @@ class SummitScheduleConfig extends SilverstripeBaseModel
     private $is_my_schedule;
 
     /**
+     * @ORM\Column(name="IsDefault", type="boolean")
+     * @var bool
+     */
+    private $is_default;
+
+    /**
      * @ORM\Column(name="OnlyEventsWithAttendeeAccess", type="boolean")
      * @var bool
      */
@@ -86,6 +92,7 @@ class SummitScheduleConfig extends SilverstripeBaseModel
         $this->is_my_schedule = false;
         $this->only_events_with_attendee_access = false;
         $this->color_source = self::ColorSource_EventType;
+        $this->is_default = false;
         $this->filters = new ArrayCollection();
         $this->pre_filters = new ArrayCollection();
     }
@@ -240,5 +247,22 @@ class SummitScheduleConfig extends SilverstripeBaseModel
         $this->pre_filters->removeElement($filter);
         $filter->clearConfig();
     }
+
+    /**
+     * @return bool
+     */
+    public function isDefault(): bool
+    {
+        return $this->is_default;
+    }
+
+    /**
+     * @param bool $is_default
+     */
+    public function setIsDefault(bool $is_default): void
+    {
+        $this->is_default = $is_default;
+    }
+
 
 }

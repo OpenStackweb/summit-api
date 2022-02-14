@@ -41,6 +41,8 @@ final class SummitScheduleConfigFactory
     public static function populate(SummitScheduleConfig $config, array $payload):SummitScheduleConfig{
         if(isset($payload['key']))
             $config->setKey(trim($payload['key']));
+        if(isset($payload['is_default']))
+            $config->setIsDefault(boolval($payload['is_default']));
         if(isset($payload['is_enabled']))
             $config->setIsEnabled(boolval($payload['is_enabled']));
         if(isset($payload['is_my_schedule']))

@@ -27,6 +27,7 @@ final class SummitScheduleConfigSerializer extends SilverStripeSerializer
         'OnlyEventsWithAttendeeAccess' => 'only_events_with_attendee_access:json_boolean',
         'ColorSource' => 'color_source:json_string',
         'Enabled' => 'is_enabled:json_boolean',
+        'Default' => 'is_default:json_boolean',
     ];
 
     protected static $allowed_relations = [

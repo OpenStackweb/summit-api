@@ -91,6 +91,7 @@ final class DoctrineSummitEventRepository
     protected function applyExtraJoins(QueryBuilder $query)
     {
         $query = $query->innerJoin("e.type", "et", Join::ON);
+        $query = $query->innerJoin("e.category", "c", Join::ON);
         $query = $query->leftJoin(PresentationType::class, 'et2', 'WITH', 'et.id = et2.id');
         return $query;
     }
@@ -149,6 +150,12 @@ final class DoctrineSummitEventRepository
                 'e.category',
                 'c',
                 "c.id :operator :value"
+            ),
+            'track_group_id' => new DoctrineJoinFilterMapping
+            (
+                'c.groups',
+                'cg',
+                "cg.id :operator :value"
             ),
             'selection_plan_id' => new DoctrineFilterMapping
             (
@@ -326,6 +333,7 @@ final class DoctrineSummitEventRepository
             'location' => 'l.name',
             'trackchairsel' => 'ssp.order',
             'last_edited' => 'e.last_edited',
+            'page_random' => 'RAND()',
             'random' => 'RAND()',
             'custom_order' => 'e.custom_order',
         ];
@@ -380,11 +388,12 @@ final class DoctrineSummitEventRepository
         if (!is_null($filter)) {
             $filter->apply2Query($query, $this->getCustomFilterMappings($current_member_id, $current_track_id));
         }
+
         $shouldPerformRandomOrderingByPage = false;
         if (!is_null($order)) {
-            if($order->hasOrder("random")){
+            if($order->hasOrder("page_random")){
                 $shouldPerformRandomOrderingByPage = true;
-                $order->removeOrder("random");
+                $order->removeOrder("page_random");
             }
             $order->apply2Query($query, $this->getOrderMappings());
             if (!$order->hasOrder('id')) {

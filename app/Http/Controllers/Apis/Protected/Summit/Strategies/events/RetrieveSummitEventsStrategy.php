@@ -109,6 +109,7 @@ abstract class RetrieveSummitEventsStrategy
                 'created',
                 'track',
                 'random',
+                'page_random',
                 'custom_order',
             ]);
         }
@@ -139,6 +140,7 @@ abstract class RetrieveSummitEventsStrategy
             'summit_type_id'   => ['=='],
             'event_type_id'    => ['=='],
             'track_id'         => ['=='],
+            'track_group_id'   => ['=='],
             'speaker_id'       => ['=='],
             'sponsor_id'       => ['=='],
             'summit_id'        => ['=='],
@@ -181,6 +183,7 @@ abstract class RetrieveSummitEventsStrategy
             'summit_type_id'  => 'sometimes|integer',
             'event_type_id'   => 'sometimes|integer',
             'track_id'        => 'sometimes|integer',
+            'track_group_id'  => 'sometimes|integer',
             'summit_id'       => 'sometimes|integer',
             'speaker_id'      => 'sometimes|integer',
             'location_id'     => 'sometimes|integer',

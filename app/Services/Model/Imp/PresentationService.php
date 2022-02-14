@@ -1195,7 +1195,7 @@ final class PresentationService
             $currentTrack = $presentation->getCategory();
 
             foreach($currentTrack->getGroups() as $currentTrackGroup){
-                Log::debug("PresentationService::castAttendeeVote processing track group %s", $currentTrackGroup->getId());
+                Log::debug(sprintf( "PresentationService::castAttendeeVote processing track group %s", $currentTrackGroup->getId()));
                 // check voting period
                 if(!$currentTrackGroup->isAttendeeVotingPeriodOpen())
                     throw new ValidationException("Attendee Voting Period for track group %s is closed.", $currentTrackGroup->getName());

@@ -1748,15 +1748,16 @@ class Presentation extends SummitEvent
      */
     public function castAttendeeVote(SummitAttendee $attendee):PresentationAttendeeVote{
 
+        Log::debug(sprintf("Presentation::castAttendeeVote attendee %s presentation %s", $attendee->getId(), $this->getId()));
         // check that member did not vote yet...
         if($this->attendees_votes->matching(Criteria::create()
             ->where(Criteria::expr()->eq("voter", $attendee)))->count() > 0)
             throw new ValidationException(sprintf("Attendee %s already vote on presentation %s", $attendee->getEmail(), $this->id));
 
+        Log::debug("Presentation::castAttendeeVote creating vote");
         $vote = new PresentationAttendeeVote($attendee, $this);
 
         $this->attendees_votes->add($vote);
-        $attendee->addPresentationVote($vote);
 
         return $vote;
     }

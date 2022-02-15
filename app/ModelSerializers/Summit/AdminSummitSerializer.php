@@ -68,6 +68,7 @@ final class AdminSummitSerializer extends SummitSerializer
         'dates_with_events',
         'presentation_action_types',
         'schedule_settings',
+        'track_groups'
     ];
 
     /**
@@ -102,6 +103,14 @@ final class AdminSummitSerializer extends SummitSerializer
             $values['schedule_settings'] = $schedule_settings;
         }
 
+        if(in_array('track_groups', $relations) && !isset($values['track_groups'])){
+            $track_groups = [];
+            foreach ($summit->getCategoryGroups() as $group){
+                $track_groups[] = $group->getId();
+            }
+            $values['track_groups'] = $track_groups;
+        }
+
         return $values;
     }
 
@@ -109,6 +118,10 @@ final class AdminSummitSerializer extends SummitSerializer
         'schedule_settings' => [
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getEnableScheduleSettings',
-        ]
+        ],
+        'track_groups' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getCategoryGroups',
+        ],
     ];
 }

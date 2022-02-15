@@ -979,6 +979,20 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'get-schedule-setting',
+                'route' => '/api/v1/summits/{id}/schedule-settings/{config_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
                 'name' => 'add-schedule-setting-filter',
                 'route' => '/api/v1/summits/{id}/schedule-settings/{config_id}/filters',
                 'http_method' => 'POST',

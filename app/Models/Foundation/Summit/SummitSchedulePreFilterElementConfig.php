@@ -77,6 +77,7 @@ class SummitSchedulePreFilterElementConfig extends SilverstripeBaseModel
      */
     public function getValues(): array
     {
+        if(empty($this->values)) return [];
         return  explode(",", $this->values);
     }
 

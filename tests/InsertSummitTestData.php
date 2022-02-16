@@ -223,6 +223,7 @@ trait InsertSummitTestData
         self::$defaultEventType = new SummitEventType();
         self::$defaultEventType->setType(ISummitEventType::Breaks);
         self::$summit->addEventType(self::$defaultEventType);
+        
         self::$summit->addEventType(self::$allow2VotePresentationType);
 
         if (self::$defaultMember != null) {

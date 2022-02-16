@@ -49,6 +49,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
         $data = [
             'key' => 'my-schedule-config',
             'is_enabled' => true,
+            'is_default' => true,
             'is_my_schedule' => true,
             'only_events_with_attendee_access' => true,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
@@ -90,6 +91,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
         $data = [
             'key' => 'my-schedule-config',
             'is_enabled' => true,
+            'is_default' => true,
             'is_my_schedule' => true,
             'only_events_with_attendee_access' => true,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
@@ -157,6 +159,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
 
         $data = [
             'key' => 'my-schedule-config',
+            'is_default' => true,
             'is_enabled' => true,
             'is_my_schedule' => true,
             'only_events_with_attendee_access' => true,
@@ -350,6 +353,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
 
         $data = [
             'key' => 'my-schedule-config',
+            'is_default' => true,
             'is_enabled' => true,
             'is_my_schedule' => true,
             'only_events_with_attendee_access' => true,

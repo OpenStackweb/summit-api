@@ -16,7 +16,7 @@
  * Class SummitScheduleFilterElementConfigSerializer
  * @package ModelSerializers
  */
-final class SummitScheduleFilterElementConfigSerializer extends SilverStripeSerializer
+final class AdminSummitScheduleFilterElementConfigSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
         'Type' => 'type:json_string',

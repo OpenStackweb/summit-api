@@ -1,4 +1,4 @@
-<?php namespace App\ModelSerializers\Summit;
+<?php namespace ModelSerializers;
 /*
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,12 +14,11 @@
 
 use Libs\ModelSerializers\Many2OneExpandSerializer;
 use models\summit\SummitScheduleConfig;
-use ModelSerializers\SilverStripeSerializer;
 /**
- * Class SummitScheduleConfigSerializer
- * @package App\ModelSerializers\Summit
+ * Class AdminSummitScheduleConfigSerializer
+ * @package ModelSerializers
  */
-final class SummitScheduleConfigSerializer extends SilverStripeSerializer
+final class AdminSummitScheduleConfigSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
         'Key' => 'key:json_string',
@@ -70,10 +69,12 @@ final class SummitScheduleConfigSerializer extends SilverStripeSerializer
 
     protected static $expand_mappings = [
         'filters' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Private,
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getFilters',
         ],
         'pre_filters' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Private,
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getPreFilters',
         ]

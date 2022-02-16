@@ -41,18 +41,31 @@ class One2ManyExpandSerializer implements IExpandSerializer
     protected $has;
 
     /**
-     * One2ManyExpandSerializer constructor.
+     * @var string
+     */
+    protected $serializer_type;
+
+    /**
      * @param string $original_attribute
      * @param string $attribute
      * @param string $getter
      * @param string|null $has
+     * @param string|null $serializer_type
      */
-    public function __construct(string $original_attribute, string $attribute, string $getter, ?string $has = null)
+    public function __construct
+    (
+        string $original_attribute,
+        string $attribute,
+        string $getter,
+        ?string $has = null,
+        ?string $serializer_type = SerializerRegistry::SerializerType_Public
+    )
     {
         $this->original_attribute = $original_attribute;
         $this->attribute = $attribute;
         $this->getter = $getter;
         $this->has = $has;
+        $this->serializer_type = $serializer_type;
     }
 
 
@@ -83,7 +96,8 @@ class One2ManyExpandSerializer implements IExpandSerializer
             $values = $this->unsetOriginalAttribute($values);
             $values[$this->attribute] = SerializerRegistry::getInstance()->getSerializer
             (
-                $entity->{$this->getter}()
+                $entity->{$this->getter}(),
+                $this->serializer_type
             )->serialize
             (
                 AbstractSerializer::filterExpandByPrefix($expand, $this->attribute),

@@ -83,8 +83,11 @@ use App\ModelSerializers\Summit\StripePaymentProfileSerializer;
 use App\ModelSerializers\Summit\SummitAttendeeBadgeSerializer;
 use App\ModelSerializers\Summit\SummitEmailEventFlowSerializer;
 use App\ModelSerializers\Summit\SummitLocationBannerSerializer;
+use App\ModelSerializers\Summit\SummitScheduleConfigSerializer;
+use App\ModelSerializers\Summit\SummitSchedulePreFilterElementConfigSerializer;
 use App\ModelSerializers\Summit\TrackTagGroups\TrackTagGroupAllowedTagSerializer;
 use App\ModelSerializers\Summit\TrackTagGroups\TrackTagGroupSerializer;
+use App\ModelSerializers\SummitScheduleFilterElementConfigSerializer;
 use Illuminate\Support\Facades\App;
 use Libs\ModelSerializers\IModelSerializer;
 use models\oauth2\IResourceServerContext;
@@ -176,9 +179,20 @@ final class SerializerRegistry
                 self::SerializerType_Private => AdminSummitSerializer::class
             ];
 
-        $this->registry['SummitScheduleConfig'] = SummitScheduleConfigSerializer::class;
-        $this->registry['SummitScheduleFilterElementConfig'] = SummitScheduleFilterElementConfigSerializer::class;
-        $this->registry['SummitSchedulePreFilterElementConfig'] = SummitSchedulePreFilterElementConfigSerializer::class;
+        $this->registry['SummitScheduleConfig'] = [
+            self::SerializerType_Public => SummitScheduleConfigSerializer::class,
+            self::SerializerType_Private => AdminSummitScheduleConfigSerializer::class,
+        ];
+
+        $this->registry['SummitScheduleFilterElementConfig'] = [
+            self::SerializerType_Public => SummitScheduleFilterElementConfigSerializer::class,
+            self::SerializerType_Private => AdminSummitScheduleFilterElementConfigSerializer::class
+        ];
+
+        $this->registry['SummitSchedulePreFilterElementConfig'] = [
+            self::SerializerType_Public => SummitSchedulePreFilterElementConfigSerializer::class,
+            self::SerializerType_Private => AdminSummitSchedulePreFilterElementConfigSerializer::class
+        ];
 
         $this->registry['SummitDocument'] = SummitDocumentSerializer::class;
         $this->registry['SummitEmailEventFlow'] = SummitEmailEventFlowSerializer::class;

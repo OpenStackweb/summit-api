@@ -167,19 +167,19 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
     }
 
     protected function serializerType():string{
-        return SerializerRegistry::SerializerType_Public;
+        return SerializerRegistry::SerializerType_Private;
     }
 
     protected function addSerializerType():string{
-        return SerializerRegistry::SerializerType_Public;
+        return SerializerRegistry::SerializerType_Private;
     }
 
     protected function updateSerializerType():string{
-        return SerializerRegistry::SerializerType_Public;
+        return SerializerRegistry::SerializerType_Private;
     }
 
     public function getChildSerializer():string{
-        return SerializerRegistry::SerializerType_Public;
+        return SerializerRegistry::SerializerType_Private;
     }
 
     public function getMetadata($summit_id){

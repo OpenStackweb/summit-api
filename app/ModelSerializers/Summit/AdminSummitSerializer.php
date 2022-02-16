@@ -67,7 +67,6 @@ final class AdminSummitSerializer extends SummitSerializer
         'featured_speakers',
         'dates_with_events',
         'presentation_action_types',
-        'schedule_settings',
         'track_groups'
     ];
 
@@ -94,15 +93,6 @@ final class AdminSummitSerializer extends SummitSerializer
         if (!count($relations)) $relations = $this->getAllowedRelations();
         $values  = parent::serialize($expand, $fields, $relations, $params);
 
-        if(in_array('schedule_settings', $relations) && !isset($values['schedule_settings'])){
-            $schedule_settings = [];
-            foreach ($summit->getScheduleSettings() as $config){
-                if(!$config->isEnabled()) continue;
-                $schedule_settings[] = $config->getId();
-            }
-            $values['schedule_settings'] = $schedule_settings;
-        }
-
         if(in_array('track_groups', $relations) && !isset($values['track_groups'])){
             $track_groups = [];
             foreach ($summit->getCategoryGroups() as $group){
@@ -115,10 +105,6 @@ final class AdminSummitSerializer extends SummitSerializer
     }
 
     protected static $expand_mappings = [
-        'schedule_settings' => [
-            'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getEnableScheduleSettings',
-        ],
         'track_groups' => [
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getCategoryGroups',

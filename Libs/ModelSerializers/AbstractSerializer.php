@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use libs\utils\JsonUtils;
 use models\oauth2\IResourceServerContext;
 use models\utils\IEntity;
+use ModelSerializers\SerializerRegistry;
 use ReflectionClass;
 use Exception;
 
@@ -381,7 +382,8 @@ abstract class AbstractSerializer implements IModelSerializer
                 $getter = $serializerSpec['getter'] ?? null;
                 if(empty($getter)) continue;
                 $has = $serializerSpec['has'] ?? null;
-                $serializer = new $serializerClass($original_attribute, $attribute, $getter, $has);
+                $serializer_type = $serializerSpec['serializer_type'] ?? SerializerRegistry::SerializerType_Public;
+                $serializer = new $serializerClass($original_attribute, $attribute, $getter, $has, $serializer_type);
                 $values = $serializer->serialize($this->object, $values, $expand, $fields, $relations, $params);
             }
         }

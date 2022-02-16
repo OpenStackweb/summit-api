@@ -1,4 +1,4 @@
-<?php namespace App\ModelSerializers\Summit;
+<?php namespace ModelSerializers;
 /*
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,14 +11,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use models\summit\SummitSchedulePreFilterElementConfig;
-use ModelSerializers\SilverStripeSerializer;
+
 /**
  * Class SummitSchedulePreFilterElementConfigSerializer
- * @package App\ModelSerializers\Summit
+ * @package ModelSerializers
  */
-final class SummitSchedulePreFilterElementConfigSerializer extends SilverStripeSerializer
+final class AdminSummitSchedulePreFilterElementConfigSerializer extends SilverStripeSerializer
 {
+    protected static $array_mappings = [
+        'Type' => 'type:json_string',
+        'ConfigId' => 'config_id:json_int'
+    ];
+
+    protected static $allowed_relations = [
+        'values',
+    ];
 
     /**
      * @param null $expand
@@ -38,7 +47,6 @@ final class SummitSchedulePreFilterElementConfigSerializer extends SilverStripeS
         if(in_array('values', $relations) && !isset($values['values'])){
             $values['values'] = $filter->getValues();
         }
-
-        return [$filter->getType() => $values];
+        return $values;
     }
 }

@@ -34,7 +34,7 @@ class Many2OneExpandSerializer extends One2ManyExpandSerializer
         $values = $this->unsetOriginalAttribute($values);
         $res = [];
         foreach ($entity->{$this->getter}() as $item){
-            $res[] = SerializerRegistry::getInstance()->getSerializer($item)
+            $res[] = SerializerRegistry::getInstance()->getSerializer($item, $this->serializer_type)
                 ->serialize
                 (
                     AbstractSerializer::filterExpandByPrefix($expand, $this->attribute),

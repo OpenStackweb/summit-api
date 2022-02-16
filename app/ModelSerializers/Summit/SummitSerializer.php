@@ -17,6 +17,7 @@ use Google\Service\ServiceUsage\LogDescriptor;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
+use Libs\ModelSerializers\Many2OneExpandSerializer;
 use libs\utils\JsonUtils;
 use models\summit\IPaymentConstants;
 use models\summit\Summit;
@@ -125,6 +126,7 @@ class SummitSerializer extends SilverStripeSerializer
         'featured_speakers',
         'dates_with_events',
         'presentation_action_types',
+        'schedule_settings',
     ];
 
     /**
@@ -517,6 +519,14 @@ class SummitSerializer extends SilverStripeSerializer
         $values['supported_currencies'] = $summit->getSupportedCurrencies();
         $values['timestamp'] = time();
 
+        if(in_array('schedule_settings', $relations) && !isset($values['schedule_settings'])){
+            $schedule_settings = [];
+            foreach ($summit->getScheduleSettings() as $config){
+                if(!$config->isEnabled()) continue;
+                $schedule_settings[] = $config->getId();
+            }
+            $values['schedule_settings'] = $schedule_settings;
+        }
         return $values;
     }
 
@@ -527,4 +537,11 @@ class SummitSerializer extends SilverStripeSerializer
     {
         return SerializerRegistry::SerializerType_Public;
     }
+
+    protected static $expand_mappings = [
+        'schedule_settings' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getEnableScheduleSettings',
+        ],
+    ];
 }

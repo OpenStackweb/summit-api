@@ -86,6 +86,7 @@ final class SummitValidationRulesFactory
                 'registration_send_qr_as_image_attachment_on_ticket_email' => 'sometimes|boolean',
                 'registration_send_ticket_as_pdf_attachment_on_ticket_email' => 'sometimes|boolean',
                 'registration_send_ticket_email_automatically' => 'sometimes|boolean',
+                'registration_allow_automatic_reminder_emails' => 'sometimes|boolean',
                 'allow_update_attendee_extra_questions' => 'sometimes|boolean',
                 'time_zone_label' => 'sometimes|string',
             ];
@@ -154,6 +155,7 @@ final class SummitValidationRulesFactory
             'registration_send_qr_as_image_attachment_on_ticket_email' => 'sometimes|boolean',
             'registration_send_ticket_as_pdf_attachment_on_ticket_email' => 'sometimes|boolean',
             'registration_send_ticket_email_automatically' => 'sometimes|boolean',
+            'registration_allow_automatic_reminder_emails' => 'sometimes|boolean',
             'allow_update_attendee_extra_questions' => 'sometimes|boolean',
             'time_zone_label' => 'sometimes|string',
         ];

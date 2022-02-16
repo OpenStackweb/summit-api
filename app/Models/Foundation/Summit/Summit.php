@@ -432,6 +432,12 @@ class Summit extends SilverstripeBaseModel
     private $allow_update_attendee_extra_questions;
 
     /**
+     * @ORM\Column(name="RegistrationAllowAutomaticReminderEmails", type="boolean")
+     * @var bool
+     */
+    private $registration_allow_automatic_reminder_emails;
+
+    /**
      * @ORM\OneToMany(targetEntity="SummitEvent", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      */
     private $events;
@@ -699,6 +705,7 @@ class Summit extends SilverstripeBaseModel
      * @var PresentationActionType[]
      */
     private $presentation_action_types;
+
 
     /**
      * @return string
@@ -1033,6 +1040,7 @@ class Summit extends SilverstripeBaseModel
         $this->registration_send_qr_as_image_attachment_on_ticket_email = false;
         $this->registration_send_ticket_as_pdf_attachment_on_ticket_email = false;
         $this->registration_send_ticket_email_automatically = true;
+        $this->registration_allow_automatic_reminder_emails = true;
     }
 
     /**
@@ -6085,6 +6093,22 @@ SQL;
     public function setAllowUpdateAttendeeExtraQuestions(bool $allow_update_attendee_extra_questions): void
     {
         $this->allow_update_attendee_extra_questions = $allow_update_attendee_extra_questions;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAllowAutomaticReminderEmails(): bool
+    {
+        return $this->registration_allow_automatic_reminder_emails;
+    }
+
+    /**
+     * @param bool $registration_allow_automatic_reminder_emails
+     */
+    public function setAllowAutomaticReminderEmails(bool $registration_allow_automatic_reminder_emails): void
+    {
+        $this->registration_allow_automatic_reminder_emails = $registration_allow_automatic_reminder_emails;
     }
 
     /**

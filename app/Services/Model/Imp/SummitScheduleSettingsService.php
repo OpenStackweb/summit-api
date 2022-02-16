@@ -21,6 +21,7 @@ use models\exceptions\ValidationException;
 use models\summit\Summit;
 use models\summit\SummitScheduleConfig;
 use models\summit\SummitScheduleFilterElementConfig;
+use models\summit\SummitSchedulePreFilterElementConfig;
 
 /**
  * Class SummitScheduleSettingsService
@@ -31,15 +32,22 @@ final class SummitScheduleSettingsService
     implements ISummitScheduleSettingsService
 {
     /**
+     * @var ISummitScheduleConfigRepository
+     */
+    private $repository;
+
+    /**
      * @param ISummitScheduleConfigRepository $repository
      * @param ITransactionService $tx_service
      */
     public function __construct
     (
+        ISummitScheduleConfigRepository $repository,
         ITransactionService $tx_service
     )
     {
         parent::__construct($tx_service);
+        $this->repository = $repository;
     }
 
     /**
@@ -54,7 +62,6 @@ final class SummitScheduleSettingsService
        return $this->tx_service->transaction(function() use($summit, $payload){
 
            $config = SummitScheduleConfigFactory::build($payload);
-
            $summit->addScheduleSetting($config);
 
            return $config;
@@ -76,7 +83,7 @@ final class SummitScheduleSettingsService
             if(is_null($config))
                 throw new EntityNotFoundException(sprintf("Schedule config setting %s not found on Summit %s", $config_id, $summit->getId()));
 
-            SummitScheduleConfigFactory::populate($config, $payload);
+            SummitScheduleConfigFactory::populate($config, $payload, $this->repository);
 
             return $config;
         });

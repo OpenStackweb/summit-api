@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Summit\Repositories\ISummitScheduleConfigRepository;
 use models\summit\SummitScheduleConfig;
 use models\summit\SummitScheduleFilterElementConfig;
 use \models\exceptions\ValidationException;
@@ -35,10 +37,11 @@ final class SummitScheduleConfigFactory
     /**
      * @param SummitScheduleConfig $config
      * @param array $payload
+     * @param ISummitScheduleConfigRepository|null $repository
      * @return SummitScheduleConfig
      * @throws ValidationException
      */
-    public static function populate(SummitScheduleConfig $config, array $payload):SummitScheduleConfig{
+    public static function populate(SummitScheduleConfig $config, array $payload, ISummitScheduleConfigRepository $repository = null):SummitScheduleConfig{
         if(isset($payload['key']))
             $config->setKey(trim($payload['key']));
         if(isset($payload['is_default']))
@@ -53,7 +56,10 @@ final class SummitScheduleConfigFactory
             $config->setColorSource(trim($payload['color_source']));
         if(isset($payload['filters'])){
             $filters_dto = $payload['filters'];
-            $config->clearFilters();;
+            if(!is_null($repository) && !$config->isNew()){
+                $config->clearFilters();
+                $repository->add($config, true);
+            }
             foreach ($filters_dto as $dto){
                 $filter = new SummitScheduleFilterElementConfig();
                 if(isset($dto['label']))
@@ -67,7 +73,10 @@ final class SummitScheduleConfigFactory
         }
         if(isset($payload['pre_filters'])){
             $pre_filters_dto = $payload['pre_filters'];
-            $config->clearPreFilters();;
+            if(!is_null($repository) && !$config->isNew()){
+                $config->clearPreFilters();
+                $repository->add($config, true);
+            }
             foreach ($pre_filters_dto as $dto){
                 $filter = new SummitSchedulePreFilterElementConfig();
                 if(isset($dto['type']))

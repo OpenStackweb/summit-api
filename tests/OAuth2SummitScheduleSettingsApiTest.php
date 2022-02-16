@@ -222,9 +222,34 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
         $data = [
             'key' => 'my-schedule-config',
             'is_enabled' => true,
+            'is_default' => false,
             'is_my_schedule' => true,
             'only_events_with_attendee_access' => true,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
+            'filters' => [
+                [
+                    'type' => SummitScheduleFilterElementConfig::Type_Date,
+                    'is_enabled' => true,
+                ],
+                [
+                    'type' => SummitScheduleFilterElementConfig::Type_Tags,
+                    'is_enabled' => true,
+                ],
+                [
+                    'type' => SummitScheduleFilterElementConfig::Type_EventTypes,
+                    'is_enabled' => true,
+                ]
+            ],
+            'pre_filters' => [
+                [
+                    'type' => SummitScheduleFilterElementConfig::Type_Tags,
+                    'values' => ['tag1','tag2', 'tag3']
+                ],
+                [
+                    'type' => SummitScheduleFilterElementConfig::Type_Company,
+                    'values' => ['1', '2']
+                ],
+            ]
         ];
 
         $response = $this->action
@@ -261,6 +286,7 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
         $data = [
             'key' => 'my-schedule-config',
             'is_enabled' => true,
+            'is_default' => false,
             'is_my_schedule' => true,
             'only_events_with_attendee_access' => true,
             'color_source' => SummitScheduleConfig::ColorSource_EventType,
@@ -281,11 +307,11 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
             'pre_filters' => [
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_Tags,
-                    'values' => ['tag1','tag2', 'tag3']
+                    'values' => ['tag1','tag5', 'tag3']
                 ],
                 [
                     'type' => SummitScheduleFilterElementConfig::Type_Company,
-                    'values' => ['1', '2']
+                    'values' => ['1', '3']
                 ],
             ]
         ];

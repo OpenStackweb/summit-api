@@ -540,6 +540,7 @@ class SummitSerializer extends SilverStripeSerializer
 
     protected static $expand_mappings = [
         'schedule_settings' => [
+            'serializer_type' => SerializerRegistry::SerializerType_Private,
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getEnableScheduleSettings',
         ],

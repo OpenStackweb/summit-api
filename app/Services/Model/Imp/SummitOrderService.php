@@ -3265,7 +3265,7 @@ final class SummitOrderService
         });
 
         foreach ($summits as $summit) {
-            if ($summit->isAllowAutomaticReminderEmails()) {
+            if ($summit->isRegistrationAllowAutomaticReminderEmails()) {
                 Log::debug
                 (
                     sprintf

@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailFlowType;
@@ -128,6 +130,11 @@ final class SummitEmailFlowTypeSeeder extends Seeder
                 'name' => SummitTicketReminderEmail::EVENT_NAME,
                 'slug' => SummitTicketReminderEmail::EVENT_SLUG,
                 'default_email_template' => SummitTicketReminderEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => SummitAttendeeRegistrationIncompleteReminderEmail::EVENT_NAME,
+                'slug' => SummitAttendeeRegistrationIncompleteReminderEmail::EVENT_SLUG,
+                'default_email_template' => SummitAttendeeRegistrationIncompleteReminderEmail::DEFAULT_TEMPLATE
             ],
             // refunds
             [

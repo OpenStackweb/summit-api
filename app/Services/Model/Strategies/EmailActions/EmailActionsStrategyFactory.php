@@ -14,6 +14,7 @@
 
 use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
 use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
+use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
 use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
 
 /**
@@ -33,6 +34,8 @@ final class EmailActionsStrategyFactory implements IEmailActionsStrategyFactory
                 return new SummitAttendeeTicketEmailStrategy($flow_event);
             case SummitAttendeeAllTicketsEditionEmail::EVENT_SLUG:
                 return new SummitAttendeeAllCurrentTicketsEmailStrategy($flow_event);
+            case SummitAttendeeRegistrationIncompleteReminderEmail::EVENT_SLUG:
+                return new SummitAttendeeRegistrationIncompleteReminderStrategy($flow_event);
             default:
                 return null;
         }

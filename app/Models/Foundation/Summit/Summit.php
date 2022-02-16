@@ -6098,7 +6098,7 @@ SQL;
     /**
      * @return bool
      */
-    public function isAllowAutomaticReminderEmails(): bool
+    public function isRegistrationAllowAutomaticReminderEmails(): bool
     {
         return $this->registration_allow_automatic_reminder_emails;
     }

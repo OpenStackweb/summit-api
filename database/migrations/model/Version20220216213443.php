@@ -15,15 +15,12 @@ use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
 use LaravelDoctrine\Migrations\Schema\Builder;
 use LaravelDoctrine\Migrations\Schema\Table;
-use LaravelDoctrine\ORM\Facades\Registry;
-use models\summit\Summit;
-use models\utils\SilverstripeBaseModel;
+
 /**
- * Class Version20220211202106
+ * Class Version20220216213443
  * @package Database\Migrations\Model
  */
-
-class Version20220214204302 extends AbstractMigration
+class Version20220216213443 extends AbstractMigration
 {
     /**
      * @param Schema $schema
@@ -36,15 +33,6 @@ class Version20220214204302 extends AbstractMigration
                 $table->boolean('RegistrationAllowAutomaticReminderEmails')->setNotnull(true)->setDefault(true);
             });
         }
-
-        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
-        $repository = $em->getRepository(Summit::class);
-        $summits = $repository->findAll();
-        foreach($summits as $summit){
-            $summit->seedDefaultEmailFlowEvents();
-            $em->persist($summit);
-        }
-        $em->flush();
     }
 
     /**
@@ -58,5 +46,6 @@ class Version20220214204302 extends AbstractMigration
                 $table->dropColumn('RegistrationAllowAutomaticReminderEmails');
             });
         }
+
     }
 }

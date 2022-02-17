@@ -60,29 +60,34 @@ abstract class AbstractFileDownloadStrategy implements IFileDownloadStrategy
      * @param string $relativeFileName
      * @param bool $useTemporaryUrl
      * @param int $ttl
+     * @param false $avoidCache
      * @return string|null
      */
-    public function getUrl(string $relativeFileName, bool $useTemporaryUrl = false, int $ttl = 10): ?string
+    public function getUrl(string $relativeFileName, bool $useTemporaryUrl = false, int $ttl = 10, bool $avoidCache = false): ?string
     {
         Log::debug
         (
             sprintf
             (
-                "AbstractFileDownloadStrategy::getUrl relativeFileName %s useTemporaryUrl %b ttl %s",
+                "AbstractFileDownloadStrategy::getUrl relativeFileName %s useTemporaryUrl %b ttl %s avoidCache %b",
                 $relativeFileName,
                 $useTemporaryUrl,
-                $ttl
+                $ttl,
+                $avoidCache
             )
         );
 
         $key = sprintf("%s/%s_%b_%s", $this->getDriver(), $relativeFileName, $useTemporaryUrl, $ttl);
         $res = Cache::get($key);
-        if(!empty($res)) return $res;
+        if(!empty($res) && !$avoidCache) return $res;
         // @see https://laravel.com/docs/8.x/filesystem#temporary-urls
         $res = $useTemporaryUrl ? Storage::disk($this->getDriver())->temporaryUrl($relativeFileName, now()->addMinutes($ttl))
             : Storage::disk($this->getDriver())->url($relativeFileName);
-        if(!empty($res))
-            Cache::add($key, $res,$useTemporaryUrl? ($ttl - 1 ) :intval(Config::get('cache_api_response.file_url_lifetime', 3600)));
+        if(!empty($res)) {
+            $ttl = $useTemporaryUrl ? ($ttl - 1) : intval(Config::get('cache_api_response.file_url_lifetime', 3600));
+            Log::debug(sprintf("AbstractFileDownloadStrategy::getUrl adding key %s res %s ttl %s to cache", $key, $res, $ttl));
+            Cache::add($key, $res, $ttl);
+        }
         return $res;
     }
 

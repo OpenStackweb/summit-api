@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrinePresentationMediaUploadRepository")
  * @ORM\Table(name="PresentationMediaUpload")
  * Class PresentationMediaUpload
  * @package models\summit

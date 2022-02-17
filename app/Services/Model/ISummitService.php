@@ -521,4 +521,11 @@ interface ISummitService
      * @throws EntityNotFoundException
      */
     public function migratePrivateStorage2PublicStorage(int $summit_id, int $media_upload_type_id, string $default_public_storage = IStorageTypesConstants::S3):int;
+
+    /**
+     * @param int $summit_id
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function regenerateTemporalUrlsForMediaUploads(int $summit_id):void;
 }

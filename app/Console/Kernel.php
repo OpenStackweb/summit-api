@@ -13,6 +13,7 @@
  **/
 
 use App\Console\Commands\PresentationMaterialsCreateMUXAssetsCommand;
+use App\Console\Commands\PresentationMediaUploadsRegenerateTemporalLinks;
 use App\Console\Commands\SummitSyncAllPresentationActions;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -47,6 +48,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\EnableMP4SupportAtMUXCommand::class,
         \App\Console\Commands\SummitSyncAllPresentationActions::class,
         \App\Console\Commands\SummitMediaUploadMigratePrivateToPublicStorage::class,
+        \App\Console\Commands\PresentationMediaUploadsRegenerateTemporalLinks::class,
     ];
 
     /**
@@ -98,5 +100,6 @@ class Kernel extends ConsoleKernel
             $schedule->command("summit:forward-x-days", ["FNTECH", 30, 3, '--check-ended'])->dailyAt("07:00")->timezone('UTC')->withoutOverlapping()->onOneServer();
         }
 
+        $schedule->command('summit:presentations-regenerate-media-uploads-temporal-public-urls')->everyMinute()->withoutOverlapping()->onOneServer();
     }
 }

@@ -14,6 +14,7 @@
 
 use App\Models\Foundation\Summit\Repositories\IPresentationMediaUploadRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
+use Doctrine\ORM\QueryBuilder;
 use models\summit\PresentationMediaUpload;
 
 /**
@@ -30,5 +31,33 @@ extends SilverStripeDoctrineRepository
     protected function getBaseEntity()
     {
         return PresentationMediaUpload::class;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getFilterMappings()
+    {
+        return [
+            'type_id' => 't.id'
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function getOrderMappings()
+    {
+        return ['id'];
+    }
+
+
+    /**
+     * @param QueryBuilder $query
+     * @return QueryBuilder
+     */
+    protected function applyExtraJoins(QueryBuilder $query){
+        $query = $query->innerJoin("e.media_upload_type", "t");
+        return $query;
     }
 }

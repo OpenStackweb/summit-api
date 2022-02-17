@@ -3357,7 +3357,7 @@ final class SummitService extends AbstractService implements ISummitService
         foreach ($mediaUploadTypes as $mediaUploadType){
             $page = 1;
             $filter = new Filter();
-            $filter->addFilterCondition(FilterElement::makeEqual('type', $mediaUploadType->getId()));
+            $filter->addFilterCondition(FilterElement::makeEqual('type_id', $mediaUploadType->getId()));
             Log::debug(sprintf("SummitService::regenerateTemporalUrlsForMediaUploads processing media upload type %s", $mediaUploadType->getId()));
             do {
                 $res = $this->presentation_media_upload_repository->getAllByPage(new PagingInfo($page, 100), $filter);

@@ -431,6 +431,7 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitScheduleSettingsApiController@getAllBySummit']);
             Route::get('metadata', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitScheduleSettingsApiController@getMetadata']);
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitScheduleSettingsApiController@add']);
+            Route::post('seed', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitScheduleSettingsApiController@seedDefaults']);
             Route::group(['prefix' => '{config_id}'], function () {
                 Route::group(['prefix' => 'filters'], function () {
                     Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitScheduleSettingsApiController@addFilter']);

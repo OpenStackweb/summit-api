@@ -132,4 +132,39 @@ final class SummitScheduleSettingsService
     {
         // TODO: Implement updateFilter() method.
     }
+
+    /**
+     * @param Summit $summit
+     * @return array|SummitScheduleConfig[]
+     * @throws \Exception
+     */
+    public function seedDefaults(Summit $summit):array{
+        return $this->tx_service->transaction(function() use($summit){
+            $list = [];
+            $default_configs = [
+                [
+                    'key' => 'schedule-main',
+                    'is_enabled' => true,
+                    'is_default' => true,
+                    'is_my_schedule' => false,
+                    'only_events_with_attendee_access' => false,
+                    'color_source' => SummitScheduleConfig::ColorSource_EventType,
+                ],
+                [
+                    'key' => 'my-schedule-main',
+                    'is_enabled' => true,
+                    'is_default' => true,
+                    'is_my_schedule' => true,
+                    'only_events_with_attendee_access' => false,
+                    'color_source' => SummitScheduleConfig::ColorSource_EventType,
+                ]
+            ];
+
+            foreach ($default_configs as $default_config){
+                $list[] = $this->add($summit, $default_config);
+            }
+
+            return $list;
+        });
+    }
 }

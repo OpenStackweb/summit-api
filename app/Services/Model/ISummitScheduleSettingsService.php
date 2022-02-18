@@ -69,4 +69,11 @@ interface ISummitScheduleSettingsService
      * @throws ValidationException
      */
     public function updateFilter(Summit $summit, int $config_id, int $filter_id, array $payload):?SummitScheduleFilterElementConfig;
+
+    /**
+     * @param Summit $summit
+     * @return array|SummitScheduleConfig[]
+     * @throws \Exception
+     */
+    public function seedDefaults(Summit $summit):array;
 }

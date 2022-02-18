@@ -76,6 +76,35 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
         return $config;
     }
 
+    public function testSeed()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action
+        (
+            "POST",
+            "OAuth2SummitScheduleSettingsApiController@seedDefaults",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $configs = json_decode($content);
+
+    }
+
     public function testAddWithFiltersAndPrefilters()
     {
         $params = [

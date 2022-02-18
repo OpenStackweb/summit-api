@@ -119,7 +119,8 @@ class SummitScheduleFilterElementConfig extends SilverstripeBaseModel
         if(!in_array($type, self::AllowedTypes))
             throw new ValidationException(sprintf("Type %s is not valid.", $type));
         $this->type = $type;
-        $this->label = self::DefaultLabelsByType[$type];
+        if(empty($this->label))
+            $this->label = self::DefaultLabelsByType[$type];
     }
 
     /**

@@ -12,14 +12,19 @@
  * limitations under the License.
  **/
 
+use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Models\Foundation\Summit\Repositories\ISummitScheduleConfigRepository;
 use App\Services\Model\ISummitScheduleSettingsService;
+use Illuminate\Support\Facades\Log;
+use models\exceptions\EntityNotFoundException;
+use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
 use models\summit\SummitScheduleConfig;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
+use utils\PagingResponse;
 
 /**
  * Class OAuth2SummitScheduleSettingsApiController
@@ -222,5 +227,55 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
                     $payload
                 );
             }, ...$args);
+    }
+
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     * @throws \Exception
+     */
+    public function seedDefaults($summit_id){
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $list = $this->service->seedDefaults($summit);
+
+            $response = new PagingResponse
+            (
+                count($list),
+                count($list),
+                1,
+                1,
+                $list
+            );
+
+            return $this->created($response->toArray(
+                self::getExpands(),
+                self::getFields(),
+                self::getRelations()
+            ));
+        }
+        catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412(array($ex->getMessage()));
+        }
+        catch(EntityNotFoundException $ex)
+        {
+            Log::warning($ex);
+            return $this->error404(array('message'=> $ex->getMessage()));
+        }
+        catch (\HTTP401UnauthorizedException $ex) {
+            Log::warning($ex);
+            return $this->error401();
+        }
+        catch (HTTP403ForbiddenException $ex) {
+            Log::warning($ex);
+            return $this->error403();
+        }
+        catch (\Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
     }
 }

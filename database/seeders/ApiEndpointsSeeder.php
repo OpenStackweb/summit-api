@@ -953,6 +953,19 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'seed-schedule-settings',
+                'route' => '/api/v1/summits/{id}/schedule-settings/seed',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
                 'name' => 'update-schedule-setting',
                 'route' => '/api/v1/summits/{id}/schedule-settings/{config_id}',
                 'http_method' => 'PUT',

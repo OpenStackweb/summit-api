@@ -453,7 +453,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             if(!$event->getType()->isAllowAttendeeVote())
                 throw new EntityNotFoundException;
 
-            return SerializerRegistry::getInstance()->getSerializer($event, $this->getSerializerType())->serialize
+            return SerializerRegistry::getInstance()->getSerializer($event, SerializerRegistry::SerializerType_Private)->serialize
             (
                 self::getExpands(),
                 self::getFields(),

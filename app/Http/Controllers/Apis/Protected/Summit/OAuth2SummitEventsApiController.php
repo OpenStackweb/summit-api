@@ -280,6 +280,9 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 return [
                     'tag' => ['=@', '=='],
                 ];
+        // always set
+        $values['streaming_url'] = $presentation->getStreamingUrl();
+        $values['streaming_type'] = $presentation->getStreamingType();
             },
             function(){
                 return [
@@ -453,13 +456,30 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             if(!$event->getType()->isAllowAttendeeVote())
                 throw new EntityNotFoundException;
 
+            $current_user = $this->resource_server_context->getCurrentUser(true);
+
+            $has_access = false;
+            if(!is_null($current_user)){
+                if($current_user->isAdmin() || $current_user->isSummitAdmin()){
+                    $has_access = true;
+                }
+                else{
+                    // raw user
+                    $has_access = $current_user->hasSummitAccess($summit);
+                }
+            }
+
+            if(!$has_access){
+                throw new EntityNotFoundException;
+            }
+
             return SerializerRegistry::getInstance()->getSerializer($event, SerializerRegistry::SerializerType_Private)->serialize
             (
                 self::getExpands(),
                 self::getFields(),
                 self::getRelations(),
                 [
-                    'current_user' => $this->resource_server_context->getCurrentUser(true)
+                    'current_user' => $current_user
                 ]
             );
         }

@@ -759,6 +759,7 @@ class Member extends SilverstripeBaseModel
     public function isAdmin($skip_external = false): bool
     {
         // admin or super admin
+        Log::debug(sprintf("Member::isAdmin id %s email %s", $this->id, $this->email));
         $superAdminGroup = $this->getGroupByCode(IGroup::SuperAdmins);
         if (!is_null($superAdminGroup)) {
             Log::debug(sprintf("Member::isAdmin has Super Admin Group On DB"));

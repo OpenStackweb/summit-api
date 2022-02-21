@@ -19,7 +19,7 @@ use App\Events\SummitEventUpdated;
 use App\Models\Utils\Traits\HasImageTrait;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
-use Google\Service\AdMob\Date;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Company;
 use models\main\File;
@@ -1270,11 +1270,25 @@ class SummitEvent extends SilverstripeBaseModel
      * @return bool
      */
     public function hasAccess(?Member $member):bool{
-        if($this->summit->isPubliclyOpen()) return true;
-        // user is anonymous
-        if(is_null($member)) return false;
-        if($member->isAdmin()) return true;
-        if($member->hasPaidTicketOnSummit($this->summit)) return true;
+        if(is_null($member)) {
+            Log::debug("Member::hasAccess member is null");
+            return false;
+        }
+
+        Log::debug(sprintf("Member::hasAccess member %s (%s) event %s.",$member->getId(), $member->getEmail(), $this->id));
+        if($this->summit->isPubliclyOpen()) {
+            Log::debug(sprintf("Member::hasAccess member %s (%s) event %s summit is public open.",$member->getId(), $member->getEmail(), $this->id));
+            return true;
+        }
+        if($member->isAdmin() || $this->summit->isSummitAdmin($member) || $member->isTester()){
+            Log::debug(sprintf("Member::hasAccess member %s (%s) event %s is SuperAdmnin/Admin/SummitAdmin or Tester.",$member->getId(), $member->getEmail(), $this->id));
+            return true;
+        }
+        if($member->hasPaidTicketOnSummit($this->summit)){
+            Log::debug(sprintf("Member::hasAccess member %s (%s) event %s has a paid ticket.",$member->getId(), $member->getEmail(), $this->id));
+            return true;
+        }
+        Log::debug(sprintf("Member::hasAccess member %s (%s) event %s has no access.",$member->getId(), $member->getEmail(), $this->id));
         return false;
     }
 
@@ -1412,5 +1426,4 @@ class SummitEvent extends SilverstripeBaseModel
     {
         $this->show_sponsors = $show_sponsors;
     }
-
 }

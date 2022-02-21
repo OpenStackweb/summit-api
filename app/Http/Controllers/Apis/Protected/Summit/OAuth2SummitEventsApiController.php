@@ -449,28 +449,17 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) throw new EntityNotFoundException;
 
-            $event =  $summit->getScheduleEvent(intval($presentation_id));
+            $event = $summit->getScheduleEvent(intval($presentation_id));
 
             if (is_null($event) || !$event instanceof Presentation) throw new EntityNotFoundException;
 
             if(!$event->getType()->isAllowAttendeeVote())
-                throw new EntityNotFoundException;
+                throw new EntityNotFoundException('Type does not allows Attendee Vote.');
 
             $current_user = $this->resource_server_context->getCurrentUser(true);
 
-            $has_access = false;
-            if(!is_null($current_user)){
-                if($current_user->isAdmin() || $current_user->isSummitAdmin()){
-                    $has_access = true;
-                }
-                else{
-                    // raw user
-                    $has_access = $current_user->hasSummitAccess($summit);
-                }
-            }
-
-            if(!$has_access){
-                throw new EntityNotFoundException;
+            if(!$event->hasAccess($current_user)){
+                throw new EntityNotFoundException("User has not access to this presentation.");
             }
 
             return SerializerRegistry::getInstance()->getSerializer($event, SerializerRegistry::SerializerType_Private)->serialize

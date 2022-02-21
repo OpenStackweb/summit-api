@@ -794,6 +794,16 @@ class Member extends SilverstripeBaseModel
         return false;
     }
 
+    public function isTester(): bool
+    {
+        $summitAdminGroup = $this->getGroupByCode(IGroup::Testers);
+        if (!is_null($summitAdminGroup))
+            return true;
+        if ($this->isOnExternalGroup(IGroup::Testers))
+            return true;
+        return false;
+    }
+
     public function isTrackChairAdmin(): bool
     {
         $summitAdminGroup = $this->getGroupByCode(IGroup::TrackChairsAdmins);

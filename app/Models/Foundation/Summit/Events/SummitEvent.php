@@ -1271,24 +1271,24 @@ class SummitEvent extends SilverstripeBaseModel
      */
     public function hasAccess(?Member $member):bool{
         if(is_null($member)) {
-            Log::debug("Member::hasAccess member is null");
+            Log::debug("SummitEvent::hasAccess member is null");
             return false;
         }
 
-        Log::debug(sprintf("Member::hasAccess member %s (%s) event %s.",$member->getId(), $member->getEmail(), $this->id));
+        Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s.",$member->getId(), $member->getEmail(), $this->id));
         if($this->summit->isPubliclyOpen()) {
-            Log::debug(sprintf("Member::hasAccess member %s (%s) event %s summit is public open.",$member->getId(), $member->getEmail(), $this->id));
+            Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s summit is public open.",$member->getId(), $member->getEmail(), $this->id));
             return true;
         }
         if($member->isAdmin() || $this->summit->isSummitAdmin($member) || $member->isTester()){
-            Log::debug(sprintf("Member::hasAccess member %s (%s) event %s is SuperAdmnin/Admin/SummitAdmin or Tester.",$member->getId(), $member->getEmail(), $this->id));
+            Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s is SuperAdmnin/Admin/SummitAdmin or Tester.",$member->getId(), $member->getEmail(), $this->id));
             return true;
         }
         if($member->hasPaidTicketOnSummit($this->summit)){
-            Log::debug(sprintf("Member::hasAccess member %s (%s) event %s has a paid ticket.",$member->getId(), $member->getEmail(), $this->id));
+            Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has a paid ticket.",$member->getId(), $member->getEmail(), $this->id));
             return true;
         }
-        Log::debug(sprintf("Member::hasAccess member %s (%s) event %s has no access.",$member->getId(), $member->getEmail(), $this->id));
+        Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has no access.",$member->getId(), $member->getEmail(), $this->id));
         return false;
     }
 

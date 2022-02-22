@@ -18,7 +18,10 @@ use App\Events\PresentationSpeakerCreated;
 use App\Events\PresentationSpeakerDeleted;
 use App\Events\PresentationSpeakerUpdated;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use models\main\File;
 use models\main\Member;
 use models\utils\PreRemoveEventArgs;
@@ -1668,21 +1671,56 @@ SQL;
     /**
      * @return string|null
      */
+    public function getBigProfilePhotoUrl():?string{
+        $default_pic = Config::get("app.default_profile_image", null);
+        try {
+            $photoUrl = null;
+            if ($this->hasBigPhoto() && $photo = $this->getBigPhoto()) {
+                $photoUrl = $photo->getUrl();
+            }
+            if (empty($photoUrl) && $this->hasMember() && $this->member->hasPhoto() && $photo = $this->member->getPhoto()) {
+                $photoUrl = $photo->getUrl();
+            }
+            if(empty($photoUrl) && !empty($default_pic))
+                $photoUrl = $default_pic;
+            if(empty($photoUrl))
+                $photoUrl = $this->getGravatarUrl();
+            return $photoUrl;
+        }
+        catch(\Exception $ex){
+            Log::warning($ex);
+        }
+        if(!empty($default_pic))
+            return $default_pic;
+        return $this->getGravatarUrl();
+    }
+
+    /**
+     * @return string|null
+     */
     public function getProfilePhotoUrl():?string{
-        $photoUrl = null;
-        if($this->hasPhoto() && $photo = $this->getPhoto()){
-            $photoUrl =  $photo->getUrl();
+        $default_pic = Config::get("app.default_profile_image", null);
+        try {
+            $photoUrl = null;
+            if ($this->hasPhoto() && $photo = $this->getPhoto()) {
+                $photoUrl = $photo->getUrl();
+            }
+            if (empty($photoUrl) && $this->hasMember() && $this->member->hasPhoto() && $photo = $this->member->getPhoto()) {
+                $photoUrl = $photo->getUrl();
+            }
+            if(empty($photoUrl) && !empty($default_pic))
+                $photoUrl = $default_pic;
+            if(empty($photoUrl))
+                $photoUrl = $this->getGravatarUrl();
+            return $photoUrl;
         }
-        if(empty($photoUrl)  && $this->hasMember() && $this->member->hasPhoto() && $photo = $this->member->getPhoto()){
-            $photoUrl =  $photo->getUrl();
+        catch(\Exception $ex){
+            Log::warning($ex);
         }
-        if(empty($photoUrl) && !empty($this->getEmail()) ){
-            $photoUrl = $this->getGravatarUrl();
-        }
-        if(empty($photoUrl)){
-            $photoUrl = File::getCloudLinkForImages("generic-speaker-icon.png");
-        }
-        return $photoUrl;
+        if(!empty($default_pic))
+            return $default_pic;
+        return $this->getGravatarUrl();
+
     }
 
     /**
@@ -1735,20 +1773,6 @@ SQL;
 
     public function getBigPhoto():?File{
         return $this->big_photo;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getBigProfilePhotoUrl():?string{
-        $photoUrl = null;
-        if($this->hasBigPhoto() && $photo = $this->getBigPhoto()){
-            $photoUrl =  $photo->getUrl();
-        }
-        if(empty($photoUrl)){
-            $photoUrl = File::getCloudLinkForImages("generic-speaker-icon.png");
-        }
-        return $photoUrl;
     }
 
     /**

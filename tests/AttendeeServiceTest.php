@@ -13,6 +13,7 @@
  **/
 
 use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
+use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
 use App\Models\Foundation\Main\IGroup;
 use App\Services\Model\IAttendeeService;
 use Illuminate\Support\Facades\App;
@@ -66,6 +67,18 @@ final class AttendeeServiceTest extends TestCase
 
         $payload = [
             "email_flow_event"  => SummitAttendeeAllTicketsEditionEmail::EVENT_SLUG,
+            "attendees_ids"     => [self::$summit->getAttendees()[0]->getId()],
+        ];
+
+        $service->send(self::$summit->getId(), $payload);
+    }
+
+    public function testSendRegistrationIncompleteReminderByAttendeeIds() {
+
+        $service = App::make(IAttendeeService::class);
+
+        $payload = [
+            "email_flow_event"  => SummitAttendeeRegistrationIncompleteReminderEmail::EVENT_SLUG,
             "attendees_ids"     => [self::$summit->getAttendees()[0]->getId()],
         ];
 

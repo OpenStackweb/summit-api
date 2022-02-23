@@ -50,7 +50,7 @@ final class DoctrineSummitMetricRepository
             ->where("e.type = :type");
 
         if(!is_null($source_id) && $source_id > 0){
-            if($type == ISummitMetricType::Event){
+            if($type == ISummitMetricType::Event || $type == ISummitMetricType::Poster){
                 $query = $query->leftJoin(SummitEventAttendanceMetric::class, 'sam', 'WITH', 'e.id = sam.id')
                     ->join("sam.event", "evt")
                     ->andWhere("evt.id = :source_id")

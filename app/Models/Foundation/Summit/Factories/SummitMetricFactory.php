@@ -35,13 +35,17 @@ final class SummitMetricFactory
         $metric = null;
         switch($type){
             case ISummitMetricType::General:
-                $metric = SummitMetric::build($member);
-                break;
             case ISummitMetricType::Lobby:
+            case ISummitMetricType::Posters:
+            {
                 $metric = SummitMetric::build($member);
+            }
                 break;
             case ISummitMetricType::Event:
+            case ISummitMetricType::Poster:
+            {
                 $metric = SummitEventAttendanceMetric::build($member);
+            }
                 break;
             case ISummitMetricType::Sponsor:
                 $metric = SummitSponsorMetric::build($member);

@@ -22,11 +22,15 @@ interface ISummitMetricType
     const Lobby = 'LOBBY';
     const Event = 'EVENT';
     const Sponsor = 'SPONSOR';
+    const Poster = 'POSTER';
+    const Posters = 'POSTERS';
 
     const ValidTypes = [
         self::General,
         self::Lobby,
         self::Event,
         self::Sponsor,
+        self::Poster,
+        self::Posters,
     ];
 }

@@ -53,37 +53,43 @@ final class AdminSummitSchedulePreFilterElementConfigSerializer extends SilverSt
             $values['values'] = $filter->getValues();
         }
 
-        switch(trim($expand)){
-            case 'values':
-            {
-                $res = [];
-                if($filter->getType() === SummitScheduleFilterElementConfig::Type_Company){
-                    $company_repository = App::make(ICompanyRepository::class);
-                    foreach ($filter->getValues() as $id){
-                        $company = $company_repository->getById(intval($id));
-                        if(is_null($company)) continue;
-                        $res[] = [
-                            'id' => $company->getId(),
-                            'name' => $company->getName()
-                        ];
-                    }
+        if (!empty($expand)) {
+            $exp_expand = explode(',', $expand);
+            foreach ($exp_expand as $relation) {
+                switch (trim($relation)) {
+                    case 'values':
+                        {
+                            $res = [];
+                            if($filter->getType() === SummitScheduleFilterElementConfig::Type_Company){
+                                $company_repository = App::make(ICompanyRepository::class);
+                                foreach ($filter->getValues() as $id){
+                                    $company = $company_repository->getById(intval($id));
+                                    if(is_null($company)) continue;
+                                    $res[] = [
+                                        'id' => $company->getId(),
+                                        'name' => $company->getName()
+                                    ];
+                                }
+                            }
+                            if($filter->getType() === SummitScheduleFilterElementConfig::Type_Speakers){
+                                $speakers_repository = App::make(ISpeakerRepository::class);
+                                foreach ($filter->getValues() as $id){
+                                    $speaker = $speakers_repository->getById(intval($id));
+                                    if(is_null($speaker)) continue;
+                                    $res[] = [
+                                        'id' => $speaker->getId(),
+                                        'first_name' => $speaker->getFirstName(),
+                                        'last_name' => $speaker->getLastName(),
+                                        'email' => $speaker->getEmail(),
+                                    ];
+                                }
+                            }
+                            $values['values'] = count($res) ? $res : $values['values'];
+                        }
+                        break;
+
                 }
-                if($filter->getType() === SummitScheduleFilterElementConfig::Type_Speakers){
-                    $speakers_repository = App::make(ISpeakerRepository::class);
-                    foreach ($filter->getValues() as $id){
-                        $speaker = $speakers_repository->getById(intval($id));
-                        if(is_null($speaker)) continue;
-                        $res[] = [
-                            'id' => $speaker->getId(),
-                            'first_name' => $speaker->getFirstName(),
-                            'last_name' => $speaker->getLastName(),
-                            'email' => $speaker->getEmail(),
-                        ];
-                    }
-                }
-                $values['values'] = count($res) ? $res : $values['values'];
             }
-            break;
         }
 
         return $values;

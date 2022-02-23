@@ -77,6 +77,5 @@ final class SummitScheduleConfigSerializer extends SilverStripeSerializer
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getPreFilters',
         ]
-
     ];
 }

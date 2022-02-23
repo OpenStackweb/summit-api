@@ -33,13 +33,24 @@ class SummitAttendeeAllTicketsEditionEmail extends AbstractSummitAttendeeTicketE
     {
         $payload = [];
         $tickets = [];
-        $payload['owner_full_name'] = $attendee->getFullName();
+        $payload['owner_first_name'] =$attendee->getFirstName();
+        $payload['owner_last_name'] = $attendee->getSurname();
         $payload['owner_company'] = $attendee->getCompanyName();
         $payload['owner_email']  = $attendee->getEmail();
-        $template_identifier = "";
 
         if(empty($payload['owner_full_name'])){
+            Log::warning(sprintf("SummitAttendeeAllTicketsEditionEmail owner_full_name is empty setting email"));
             $payload['owner_full_name'] = $payload['owner_email'];
+        }
+
+        if(empty($payload['owner_first_name'])){
+            Log::warning(sprintf("SummitAttendeeAllTicketsEditionEmail owner_first_name is empty setting email"));
+            $payload['owner_first_name'] = $payload['owner_email'];
+        }
+
+        if(empty($payload['owner_last_name'])){
+            Log::warning(sprintf("SummitAttendeeAllTicketsEditionEmail owner_last_name is empty setting email"));
+            $payload['owner_last_name'] = $payload['owner_email'];
         }
 
         $summit = $attendee->getSummit();

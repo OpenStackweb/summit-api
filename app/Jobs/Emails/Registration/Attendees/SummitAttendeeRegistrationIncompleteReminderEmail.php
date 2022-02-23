@@ -37,7 +37,18 @@ class SummitAttendeeRegistrationIncompleteReminderEmail extends AbstractSummitAt
         $payload['owner_email']  = $attendee->getEmail();
 
         if(empty($payload['owner_full_name'])){
+            Log::warning(sprintf("SummitAttendeeRegistrationIncompleteReminderEmail owner_full_name is empty setting email"));
             $payload['owner_full_name'] = $payload['owner_email'];
+        }
+
+        if(empty($payload['owner_first_name'])){
+            Log::warning(sprintf("SummitAttendeeRegistrationIncompleteReminderEmail owner_first_name is empty setting email"));
+            $payload['owner_first_name'] = $payload['owner_email'];
+        }
+
+        if(empty($payload['owner_last_name'])){
+            Log::warning(sprintf("SummitAttendeeRegistrationIncompleteReminderEmail owner_last_name is empty setting email"));
+            $payload['owner_last_name'] = $payload['owner_email'];
         }
 
         $summit = $attendee->getSummit();

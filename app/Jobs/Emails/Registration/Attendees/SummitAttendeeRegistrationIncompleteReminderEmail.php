@@ -31,6 +31,8 @@ class SummitAttendeeRegistrationIncompleteReminderEmail extends AbstractSummitAt
     {
         $payload = [];
         $payload['owner_full_name'] = $attendee->getFullName();
+        $payload['owner_first_name'] =$attendee->getFirstName();
+        $payload['owner_last_name'] = $attendee->getSurname();
         $payload['owner_company'] = $attendee->getCompanyName();
         $payload['owner_email']  = $attendee->getEmail();
 

@@ -84,6 +84,17 @@ final class AdminSummitSchedulePreFilterElementConfigSerializer extends SilverSt
                                     ];
                                 }
                             }
+                            if($filter->getType() === SummitScheduleFilterElementConfig::Type_Tags){
+                                $tag_repository = App::make(ITagRepository::class);
+                                foreach ($filter->getValues() as $id){
+                                    $tag = $tag_repository->getByTag(trim($id));
+                                    if(is_null($tag)) continue;
+                                    $res[] = [
+                                        'id' => $tag->getId(),
+                                        'tag' => $tag->getTag(),
+                                    ];
+                                }
+                            }
                             $values['values'] = count($res) ? $res : $values['values'];
                         }
                         break;

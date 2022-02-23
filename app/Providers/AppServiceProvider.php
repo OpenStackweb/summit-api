@@ -48,7 +48,7 @@ class AppServiceProvider extends ServiceProvider
     ];
 
     static $summit_schedule_config_pre_filter_dto_validation_rules = [
-        'values' => 'sometimes|string_array',
+        'values' => 'sometimes|int_or_string_array',
         'type' => 'required|string|in:DATE,TRACK,TAGS,TRACK_GROUPS,COMPANY,LEVEL,SPEAKERS,VENUES,EVENT_TYPES,TITLE,CUSTOM_ORDER,ABSTRACT',
     ];
 
@@ -199,6 +199,19 @@ class AppServiceProvider extends ServiceProvider
             foreach($value as $element)
             {
                 if(!is_numeric($element)) return false;
+            }
+            return true;
+        });
+
+        Validator::extend('int_or_string_array', function($attribute, $value, $parameters, $validator)
+        {
+            $validator->addReplacer('int_or_string_array', function($message, $attribute, $rule, $parameters) use ($validator) {
+                return sprintf("%s should be an array of integers or strings", $attribute);
+            });
+            if(!is_array($value)) return false;
+            foreach($value as $element)
+            {
+                if(!is_numeric($element) && !is_string($element)) return false;
             }
             return true;
         });

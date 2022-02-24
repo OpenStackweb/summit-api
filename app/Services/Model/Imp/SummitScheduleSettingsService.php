@@ -141,6 +141,16 @@ final class SummitScheduleSettingsService
     public function seedDefaults(Summit $summit):array{
         return $this->tx_service->transaction(function() use($summit){
             $list = [];
+
+            $filters = [];
+
+            foreach (SummitScheduleFilterElementConfig::AllowedTypes as $type){
+                $filters[] = [
+                    'type' => $type,
+                    'is_enabled' => true,
+                ];
+            }
+
             $default_configs = [
                 [
                     'key' => 'schedule-main',
@@ -149,6 +159,7 @@ final class SummitScheduleSettingsService
                     'is_my_schedule' => false,
                     'only_events_with_attendee_access' => false,
                     'color_source' => SummitScheduleConfig::ColorSource_EventType,
+                    'filters' => $filters
                 ],
                 [
                     'key' => 'my-schedule-main',
@@ -157,6 +168,7 @@ final class SummitScheduleSettingsService
                     'is_my_schedule' => true,
                     'only_events_with_attendee_access' => false,
                     'color_source' => SummitScheduleConfig::ColorSource_EventType,
+                    'filters' => $filters
                 ]
             ];
 

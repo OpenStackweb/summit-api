@@ -243,7 +243,7 @@ final class AccessTokenService implements IAccessTokenService
             $body         = $is_json ? json_decode($body, true): $body;
             $code         = $response->getStatusCode();
 
-            Log::error(sprintf("AccessTokenService::doIntrospectionRequest token %s code %s body %s", $token_value, $code, json_encode($body)));
+            Log::warning(sprintf("AccessTokenService::doIntrospectionRequest token %s code %s body %s", $token_value, $code, json_encode($body)));
 
             if ($code === 400 && $is_json && isset($body['error'])
                 && (

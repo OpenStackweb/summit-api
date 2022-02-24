@@ -30,7 +30,7 @@ final class SummitEventValidationRulesFactory
             return [
                 // summit event rules
                 'title' => 'sometimes|string|max:255',
-                'description' => 'sometimes|string|max:1600',
+                'description' => 'sometimes|string|max:2200',
                 'rsvp_link' => 'nullable|sometimes|url',
                 'streaming_url' => 'nullable|sometimes|url',
                 'streaming_type' => 'required_with:streaming_url|string|in:VOD,LIVE',
@@ -71,7 +71,7 @@ final class SummitEventValidationRulesFactory
 
         return [
             'title' => 'required|string|max:255',
-            'description' => 'required|string|max:1600',
+            'description' => 'required|string|max:2200',
             'type_id' => 'required|integer',
             'location_id' => 'sometimes|integer',
             'start_date' => 'sometimes|required|date_format:U',
@@ -120,7 +120,7 @@ final class SummitEventValidationRulesFactory
         if ($update) {
             return [
                 'title' => 'required|string|max:255',
-                'description' => 'required|string|max:1600',
+                'description' => 'required|string|max:2200',
                 'social_description' => 'sometimes|string|max:110',
                 'attendees_expected_learnt' => 'required|string|max:1100',
                 'will_all_speakers_attend' => 'sometimes|boolean',
@@ -136,7 +136,7 @@ final class SummitEventValidationRulesFactory
 
         return [
             'title' => 'required|string|max:255',
-            'description' => 'required|string|max:1600',
+            'description' => 'required|string|max:2200',
             'social_description' => 'sometimes|string|max:110',
             'attendees_expected_learnt' => 'required|string|max:1100',
             'type_id' => 'required|integer',

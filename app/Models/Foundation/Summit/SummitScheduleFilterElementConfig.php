@@ -52,6 +52,15 @@ class SummitScheduleFilterElementConfig extends SilverstripeBaseModel
         self::Type_Abstract,
     ];
 
+    const NumericTypes = [
+        self::Type_Track,
+        self::Type_TrackGroups,
+        self::Type_Speakers,
+        self::Type_Venues,
+        self::Type_EventTypes,
+        self::Type_CustomOrder,
+    ];
+
     const DefaultLabelsByType = [
         self::Type_Date => 'Date',
         self::Type_Track => 'Categories',

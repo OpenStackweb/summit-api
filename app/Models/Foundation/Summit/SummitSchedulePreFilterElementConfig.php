@@ -78,7 +78,11 @@ class SummitSchedulePreFilterElementConfig extends SilverstripeBaseModel
     public function getValues(): array
     {
         if(empty($this->values)) return [];
-        return  explode(",", $this->values);
+        $res = explode(",", $this->values);
+        if($this->hasNumericValues()){
+            $res = array_map('intval', $res);
+        }
+        return $res;
     }
 
     /**
@@ -87,6 +91,10 @@ class SummitSchedulePreFilterElementConfig extends SilverstripeBaseModel
     public function setValues(array $values): void
     {
         $this->values = implode(',', $values);
+    }
+
+    private function hasNumericValues():bool{
+        return (in_array($this->type,SummitScheduleFilterElementConfig::NumericTypes));
     }
 
     /**

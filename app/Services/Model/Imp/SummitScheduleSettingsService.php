@@ -143,11 +143,16 @@ final class SummitScheduleSettingsService
             $list = [];
 
             $filters = [];
+            $pre_filters = [];
 
             foreach (SummitScheduleFilterElementConfig::AllowedTypes as $type){
                 $filters[] = [
                     'type' => $type,
                     'is_enabled' => true,
+                ];
+                $pre_filters[] = [
+                    'type' => $type,
+                    'values' => []
                 ];
             }
 
@@ -159,7 +164,8 @@ final class SummitScheduleSettingsService
                     'is_my_schedule' => false,
                     'only_events_with_attendee_access' => false,
                     'color_source' => SummitScheduleConfig::ColorSource_EventType,
-                    'filters' => $filters
+                    'filters' => $filters,
+                    'pre_filters' => $pre_filters,
                 ],
                 [
                     'key' => 'my-schedule-main',
@@ -168,7 +174,8 @@ final class SummitScheduleSettingsService
                     'is_my_schedule' => true,
                     'only_events_with_attendee_access' => false,
                     'color_source' => SummitScheduleConfig::ColorSource_EventType,
-                    'filters' => $filters
+                    'filters' => $filters,
+                    'pre_filters' => $pre_filters,
                 ]
             ];
 

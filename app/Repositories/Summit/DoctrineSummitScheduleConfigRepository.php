@@ -13,6 +13,7 @@
  **/
 use App\Models\Foundation\Summit\Repositories\ISummitScheduleConfigRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use models\summit\SummitScheduleConfig;
 /**
@@ -25,6 +26,15 @@ class DoctrineSummitScheduleConfigRepository
 {
 
     /**
+     * @param QueryBuilder $query
+     * @return QueryBuilder
+     */
+    protected function applyExtraJoins(QueryBuilder $query){
+        $query = $query->innerJoin("e.summit", "s", Join::ON);
+        return $query;
+    }
+
+    /**
      * @return array
      */
     protected function getFilterMappings(): array
@@ -35,6 +45,7 @@ class DoctrineSummitScheduleConfigRepository
             'is_my_schedule' => 'e.is_my_schedule',
             'only_events_with_attendee_access' => 'e.only_events_with_attendee_access',
             'color_source' => 'e.color_source',
+            'summit_id' => 's.id'
         ];
     }
 

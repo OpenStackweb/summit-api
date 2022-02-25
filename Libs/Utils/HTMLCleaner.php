@@ -30,6 +30,7 @@ final class HTMLCleaner
         $config = \HTMLPurifier_Config::createDefault();
         // Remove any CSS or inline styles
         $config->set('CSS.AllowedProperties', []);
+        $config->set('HTML.TargetBlank', true);
         $purifier = new \HTMLPurifier($config);
         foreach($fields as $field){
             if(!isset($data[$field])) continue;

@@ -77,11 +77,14 @@ final class PresentationCategoryGroupFactory
             $track_group->clearAttendeeVotingPeriod();
         }
 
-        if(isset($data['end_attendee_voting_period_date'])) {
+        if(isset($data['end_attendee_voting_period_date']) && !empty($data['end_attendee_voting_period_date'])) {
             $end_datetime = intval($data['end_attendee_voting_period_date']);
             $end_datetime = new \DateTime("@$end_datetime");
             $end_datetime->setTimezone($summit->getTimeZone());
             $track_group->setEndAttendeeVotingPeriodDate($end_datetime);
+        }
+        else{
+            $track_group->clearAttendeeVotingPeriod();
         }
 
         if(isset($data['max_attendee_votes']))

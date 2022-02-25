@@ -19,6 +19,7 @@ use App\Services\Filesystem\FileUploadStrategyFactory;
 use Behat\Transliterator\Transliterator;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackAnswer;
 use App\Models\Foundation\Summit\SelectionPlan;
+use Carbon\Carbon;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\ArrayCollection;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplate;
@@ -1735,10 +1736,46 @@ class Presentation extends SummitEvent
     }
 
     /**
+     * @param $begin_voting_date
+     * @param $end_voting_date
+     * @return ArrayCollection
+     */
+    private function getVotesRange($begin_voting_date = null, $end_voting_date = null): ArrayCollection {
+        $criteria = null;
+
+        if ($begin_voting_date != null) {
+            $begin_voting_date = Carbon::createFromTimestamp($begin_voting_date);
+            $criteria = Criteria::create();
+            $criteria->where(Criteria::expr()->gte('created', $begin_voting_date));
+        }
+        if ($end_voting_date != null) {
+            $end_voting_date = Carbon::createFromTimestamp($end_voting_date);
+            $expr = Criteria::expr()->lte('created', $end_voting_date);
+            if ($criteria == null) {
+                $criteria = Criteria::create();
+                $criteria->where($expr);
+            } else {
+                $criteria->andWhere($expr);
+            }
+        }
+        $res = $criteria != null ? $this->attendees_votes->matching($criteria) : $this->attendees_votes;
+        return new ArrayCollection($res->toArray());
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getVoters($begin_voting_date = null, $end_voting_date = null): ArrayCollection {
+        return $this->getVotesRange($begin_voting_date, $end_voting_date)->map(function ($attendeeVote) {
+            return $attendeeVote->getVoter();
+        });
+    }
+
+    /**
      * @return int
      */
-    public function getAttendeeVotesCount():int{
-        return $this->attendees_votes->count();
+    public function getAttendeeVotesCount($begin_voting_date = null, $end_voting_date = null): int {
+        return $this->getVotesRange($begin_voting_date, $end_voting_date)->count();
     }
 
     /**

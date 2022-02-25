@@ -1,4 +1,8 @@
 <?php namespace Tests;
+use App\Models\Foundation\Main\IGroup;
+use Illuminate\Support\Facades\App;
+use services\model\IPresentationService;
+
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,15 +20,21 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 {
     use InsertSummitTestData;
 
+    use InsertMemberTestData;
+
     protected function setUp():void
     {
         parent::setUp();
+        self::insertMemberTestData(IGroup::TrackChairs);
+        self::$defaultMember = self::$member;
+        self::$defaultMember2 = self::$member2;
         self::insertTestData();
     }
 
     protected function tearDown():void
     {
         self::clearTestData();
+        self::clearMemberTestData();
         parent::tearDown();
     }
 
@@ -1298,13 +1308,33 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
     }
 
     public function testGetAllVoteablePresentations(){
+
+        $service = App::make(IPresentationService::class);
+        $summitPresentations = self::$summit->getPresentations();
+        for ($i = 0; $i < count($summitPresentations); $i++) {
+            $presentation = $summitPresentations[$i];
+            $service->castAttendeeVote(self::$summit, self::$defaultMember, $presentation->getId());
+            if (self::$defaultMember2 != null && $i % 3 == 0) {
+                $service->castAttendeeVote(self::$summit, self::$defaultMember2, $presentation->getId());
+            }
+        }
+
+        $summit_time_zone    = self::$summit->getTimeZone();
+        $start_datetime      = new \DateTime( "2022-02-27 07:00:00", $summit_time_zone);
+        $end_datetime        = new \DateTime("2022-03-3 22:00:00", $summit_time_zone);
+
         $params = array
         (
             'id' => self::$summit->getId(),
             'page' => 1,
             'per_page' => 5,
-            'filter' => ['published==1'],
-            'order' => 'random'
+            'expand' => 'voters',
+            'filter' => [
+                'published==1',
+                'presentation_attendee_vote_date>='.$start_datetime->getTimestamp(),
+                'presentation_attendee_vote_date<='.$end_datetime->getTimestamp(),
+            ],
+            'order' => '-vote_count'
         );
 
         $headers = array
@@ -1318,9 +1348,9 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             "GET",
             "OAuth2SummitEventsApiController@getAllVoteablePresentations",
             $params,
-            array(),
-            array(),
-            array(),
+            [],
+            [],
+            [],
             $headers
         );
 

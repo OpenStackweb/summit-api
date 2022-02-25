@@ -147,6 +147,11 @@ trait InsertSummitTestData
     static $defaultMember;
 
     /**
+     * @var Member
+     */
+    static $defaultMember2;
+
+    /**
      * @throws Exception
      */
     protected static function insertTestData(){
@@ -232,6 +237,22 @@ trait InsertSummitTestData
             $attendee->setEmail(self::$defaultMember->getEmail());
             $attendee->setFirstName(self::$defaultMember->getFirstName());
             $attendee->setSurname(self::$defaultMember->getLastName());
+
+            $ticket = new SummitAttendeeTicket();
+            $ticket->setTicketType(self::$default_ticket_type);
+            $ticket->activate();
+            $ticket->setPaid(true);
+            $attendee->addTicket($ticket);
+
+            self::$summit->addAttendee($attendee);
+        }
+
+        if (self::$defaultMember2 != null) {
+            $attendee = new SummitAttendee();
+            $attendee->setMember(self::$defaultMember2);
+            $attendee->setEmail(self::$defaultMember2->getEmail());
+            $attendee->setFirstName(self::$defaultMember2->getFirstName());
+            $attendee->setSurname(self::$defaultMember2->getLastName());
 
             $ticket = new SummitAttendeeTicket();
             $ticket->setTicketType(self::$default_ticket_type);

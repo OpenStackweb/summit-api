@@ -95,10 +95,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     /**
      * @return string
      */
-    /**
-     * @return string
-     */
-    private function getSerializerType():string{
+    private function getSerializerType($isVoteable = false):string{
 
         $current_user = $this->resource_server_context->getCurrentUser(true);
         $application_type = $this->resource_server_context->getApplicationType();
@@ -106,10 +103,11 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         $method = Request::method();
         $clientId = $this->resource_server_context->getCurrentClientId();
         $scope = $this->resource_server_context->getCurrentScope();
+
         Log::debug(sprintf("OAuth2SummitEventsApiController::getSerializerType client id %s app_type %s scope %s has current user %b %s %s ", $clientId, $application_type, implode(" ", $scope), !is_null($current_user), $method, $path));
         if($application_type == "SERVICE" || (!is_null($current_user) && ($current_user->isAdmin() || ($current_user->isSummitAdmin())))){
             Log::debug(sprintf("OAuth2SummitEventsApiController::getSerializerType app_type %s has current user %b PRIVATE", $application_type, !is_null($current_user)));
-            return SerializerRegistry::SerializerType_Private;
+            return $isVoteable ? SerializerRegistry::SerializerType_Admin_Voteable : SerializerRegistry::SerializerType_Private;
         }
         Log::debug(sprintf("OAuth2SummitEventsApiController::getSerializerType app_type %s has current user %b PUBLIC", $application_type, !is_null($current_user)));
         return SerializerRegistry::SerializerType_Public;
@@ -375,9 +373,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                     self::getExpands(),
                     self::getFields(),
                     self::getRelations(),
-                    [
-                        'current_user' => $this->resource_server_context->getCurrentUser(true)
-                    ],
+                    $params,
                     $this->getSerializerType()
                 )
             );
@@ -408,6 +404,24 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         {
             $strategy = new RetrieveAllSummitVoteablePresentationsStrategy($this->repository, $this->event_repository, $this->resource_server_context);
             $response = $strategy->getEvents(['summit_id' => intval($summit_id)]);
+
+            $params  = [
+                'current_user' => $this->resource_server_context->getCurrentUser(true),
+                'use_cache' => true,
+            ];
+
+            $filter = $strategy->getFilter();
+
+            if(!is_null($filter)) {
+                $votingDateFilter = $filter->getFilter('presentation_attendee_vote_date');
+                if ($votingDateFilter != null) {
+                    $params['begin_attendee_voting_period_date'] = $votingDateFilter[0]->getValue();
+                    if (count($votingDateFilter) > 1) {
+                        $params['end_attendee_voting_period_date'] = $votingDateFilter[1]->getValue();
+                    }
+                }
+            }
+
             return $this->ok
             (
                 $response->toArray
@@ -415,11 +429,8 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                     self::getExpands(),
                     self::getFields(),
                     self::getRelations(),
-                    [
-                        'current_user' => $this->resource_server_context->getCurrentUser(true),
-                        'use_cache' => true,
-                    ],
-                    $this->getSerializerType()
+                    $params,
+                    $this->getSerializerType(true)
                 )
             );
         }

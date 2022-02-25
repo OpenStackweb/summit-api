@@ -2866,7 +2866,7 @@ final class SummitService extends AbstractService implements ISummitService
         Log::debug(sprintf("SummitService::processEventData summit %s filename %s", $summit_id, $filename));
         $path = sprintf("tmp/events_imports/%s", $filename);
 
-        if ($this->download_strategy->exists($path)) {
+        if (!$this->download_strategy->exists($path)) {
             Log::warning(sprintf("SummitService::processEventData file %s does not exists on storage %s.", $filename, $this->download_strategy->getDriver()));
             throw new ValidationException(sprintf("file %s does not exists.", $filename));
         }

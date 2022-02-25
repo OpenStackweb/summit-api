@@ -20,6 +20,11 @@ use Illuminate\Http\UploadedFile;
 interface IFileUploadStrategy
 {
     /**
+     * @return string
+     */
+    public function getDriver():string;
+
+    /**
      * @param UploadedFile $file
      * @param string $path
      * @param string $filename

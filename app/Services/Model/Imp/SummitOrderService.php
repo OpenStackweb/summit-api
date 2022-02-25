@@ -28,6 +28,8 @@ use App\Models\Foundation\Summit\Factories\SummitOrderFactory;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRuleRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
+use App\Services\FileSystem\IFileDownloadStrategy;
+use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Utils\CSVReader;
 use Google\Service\AccessContextManager\AccessLevel;
@@ -889,7 +891,16 @@ final class SummitOrderService
     private $default_payment_gateway_strategy;
 
     /**
-     * SummitOrderService constructor.
+     * @var IFileUploadStrategy
+     */
+    private $upload_strategy;
+
+    /**
+     * @var IFileDownloadStrategy
+     */
+    private $download_strategy;
+
+    /**
      * @param ISummitTicketTypeRepository $ticket_type_repository
      * @param IMemberRepository $member_repository
      * @param ISummitRegistrationPromoCodeRepository $promo_code_repository
@@ -901,6 +912,8 @@ final class SummitOrderService
      * @param ISummitAttendeeBadgePrintRuleRepository $print_rules_repository
      * @param IMemberService $member_service
      * @param IBuildDefaultPaymentGatewayProfileStrategy $default_payment_gateway_strategy
+     * @param IFileUploadStrategy $upload_strategy
+     * @param IFileDownloadStrategy $download_strategy
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -916,6 +929,8 @@ final class SummitOrderService
         ISummitAttendeeBadgePrintRuleRepository $print_rules_repository,
         IMemberService $member_service,
         IBuildDefaultPaymentGatewayProfileStrategy $default_payment_gateway_strategy,
+        IFileUploadStrategy                        $upload_strategy,
+        IFileDownloadStrategy                      $download_strategy,
         ITransactionService $tx_service
     )
     {
@@ -931,6 +946,8 @@ final class SummitOrderService
         $this->print_rules_repository = $print_rules_repository;
         $this->member_service = $member_service;
         $this->default_payment_gateway_strategy = $default_payment_gateway_strategy;
+        $this->upload_strategy = $upload_strategy;
+        $this->download_strategy = $download_strategy;
     }
 
     /**
@@ -2931,7 +2948,6 @@ final class SummitOrderService
      */
     public function importTicketData(Summit $summit, UploadedFile $csv_file): void
     {
-
         Log::debug(sprintf("SummitOrderService::importTicketData - summit %s", $summit->getId()));
 
         $allowed_extensions = ['txt'];
@@ -2944,10 +2960,12 @@ final class SummitOrderService
         $filename = pathinfo($real_path);
         $filename = $filename['filename'] ?? sprintf("file%s", time());
         $basename = sprintf("%s_%s.csv", $filename, time());
-        $filename = $csv_file->storeAs(sprintf("%s/tickets_imports", sys_get_temp_dir()), $basename);
+        $path = "tmp/tickets_imports";
         $csv_data = File::get($real_path);
         if (empty($csv_data))
             throw new ValidationException("file content is empty!");
+
+        $this->upload_strategy->save($csv_file, $path, $basename);
 
         $reader = CSVReader::buildFrom($csv_data);
 
@@ -2980,7 +2998,7 @@ final class SummitOrderService
                 attendee data [attendee_email, attendee_first_name, attendee_last_name] on csv columns"
             );
 
-        ProcessTicketDataImport::dispatch($summit->getId(), $filename);
+        ProcessTicketDataImport::dispatch($summit->getId(), $basename);
     }
 
     /**
@@ -2991,14 +3009,24 @@ final class SummitOrderService
      */
     public function processTicketData(int $summit_id, string $filename)
     {
-
+        $path = sprintf("tmp/tickets_imports/%s",$filename);
         Log::debug(sprintf("SummitOrderService::processTicketData summit %s filename %s", $summit_id, $filename));
 
-        if (!Storage::disk('local')->exists($filename)) {
+        if (!$this->download_strategy->exists($path)) {
+            Log::warning
+            (
+                sprintf
+                (
+                    "SummitOrderService::processTicketData file %s does not exist on storage %s",
+                    $path,
+                    $this->download_strategy->getDriver()
+                )
+            );
+
             throw new ValidationException(sprintf("file %s does not exists.", $filename));
         }
 
-        $csv_data = Storage::disk('local')->get($filename);
+        $csv_data = $this->download_strategy->get($path);
 
         $summit = $this->tx_service->transaction(function () use ($summit_id) {
             $summit = $this->summit_repository->getById($summit_id);
@@ -3222,6 +3250,9 @@ final class SummitOrderService
                 }
             });
         }
+
+        Log::debug(sprintf("SummitOrderService::processTicketData deleting file %s from storage %s", $path, $this->download_strategy->getDriver()));
+        $this->download_strategy->delete($path);
     }
 
     /**

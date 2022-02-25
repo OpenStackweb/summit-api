@@ -19,6 +19,17 @@
 interface IFileDownloadStrategy
 {
     /**
+     * @return string
+     */
+    public function getDriver():string;
+
+    /**
+     * @param string $path
+     * @return bool
+     */
+    public function exists(string $path):bool;
+
+    /**
      * @param string $path
      * @param string $name
      * @param array $options

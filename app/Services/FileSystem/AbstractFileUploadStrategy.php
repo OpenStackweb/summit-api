@@ -20,8 +20,6 @@ use Illuminate\Support\Facades\Storage;
  */
 abstract class AbstractFileUploadStrategy implements IFileUploadStrategy
 {
-    abstract protected function getDriver():string;
-
     /**
      * @param UploadedFile $file
      * @param string $path

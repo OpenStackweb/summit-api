@@ -18,6 +18,10 @@ use App\Services\Apis\ExternalRegistrationFeeds\ExternalRegistrationFeedFactory;
 use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedFactory;
 use App\Services\Apis\ExternalScheduleFeeds\ExternalScheduleFeedFactory;
 use App\Services\Apis\ExternalScheduleFeeds\IExternalScheduleFeedFactory;
+use App\Services\FileSystem\IFileDownloadStrategy;
+use App\Services\FileSystem\IFileUploadStrategy;
+use App\Services\FileSystem\Swift\SwiftStorageFileDownloadStrategy;
+use App\Services\FileSystem\Swift\SwiftStorageFileUploadStrategy;
 use App\Services\Model\AttendeeService;
 use App\Services\Model\IAttendeeService;
 use App\Services\Model\ICompanyService;
@@ -133,6 +137,13 @@ final class ModelServicesProvider extends ServiceProvider
 
     public function register()
     {
+        // add bindings for service
+
+        App::when(ISummitService::class)->needs(IFileDownloadStrategy::class)->give(SwiftStorageFileDownloadStrategy::class);
+        App::when(ISummitService::class)->needs(IFileUploadStrategy::class)->give(SwiftStorageFileUploadStrategy::class);
+
+        App::when(ISummitOrderService::class)->needs(IFileDownloadStrategy::class)->give(SwiftStorageFileDownloadStrategy::class);
+        App::when(ISummitOrderService::class)->needs(IFileUploadStrategy::class)->give(SwiftStorageFileUploadStrategy::class);
 
         App::singleton(ISummitService::class, SummitService::class);
 

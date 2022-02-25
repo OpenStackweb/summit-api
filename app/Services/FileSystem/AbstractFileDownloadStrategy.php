@@ -21,7 +21,13 @@ use Illuminate\Support\Facades\Storage;
  */
 abstract class AbstractFileDownloadStrategy implements IFileDownloadStrategy
 {
-    abstract protected function getDriver():string;
+    /**
+     * @param string $path
+     * @return bool
+     */
+    public function exists(string $path):bool{
+        return Storage::disk($this->getDriver())->exists($path);
+    }
 
     /**
      * @inheritDoc

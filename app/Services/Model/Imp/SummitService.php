@@ -38,6 +38,10 @@ use App\Models\Utils\IStorageTypesConstants;
 use App\Permissions\IPermissionsManager;
 use App\Services\Filesystem\FileDownloadStrategyFactory;
 use App\Services\Filesystem\FileUploadStrategyFactory;
+use App\Services\FileSystem\IFileDownloadStrategy;
+use App\Services\FileSystem\IFileUploadStrategy;
+use App\Services\FileSystem\Swift\SwiftStorageFileDownloadStrategy;
+use App\Services\FileSystem\Swift\SwiftStorageFileUploadStrategy;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IMemberService;
 use DateInterval;
@@ -211,6 +215,16 @@ final class SummitService extends AbstractService implements ISummitService
     private $presentation_media_upload_repository;
 
     /**
+     * @var IFileUploadStrategy
+     */
+    private $upload_strategy;
+
+    /**
+     * @var IFileDownloadStrategy
+     */
+    private $download_strategy;
+
+    /**
      * SummitService constructor.
      * @param ISummitRepository $summit_repository
      * @param ISummitEventRepository $event_repository
@@ -231,6 +245,8 @@ final class SummitService extends AbstractService implements ISummitService
      * @param IFileUploader $file_uploader
      * @param ISpeakerService $speaker_service
      * @param IMemberService $member_service
+     * @param IFileUploadStrategy $upload_strategy
+     * @param IFileDownloadStrategy $download_strategy
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -254,6 +270,8 @@ final class SummitService extends AbstractService implements ISummitService
         IFileUploader                              $file_uploader,
         ISpeakerService                            $speaker_service,
         IMemberService                             $member_service,
+        IFileUploadStrategy                        $upload_strategy,
+        IFileDownloadStrategy                      $download_strategy,
         ITransactionService                        $tx_service
     )
     {
@@ -277,6 +295,8 @@ final class SummitService extends AbstractService implements ISummitService
         $this->speaker_service = $speaker_service;
         $this->member_service = $member_service;
         $this->presentation_media_upload_repository = $presentation_media_upload_repository;
+        $this->upload_strategy = $upload_strategy;
+        $this->download_strategy = $download_strategy;
     }
 
     /**
@@ -2752,12 +2772,19 @@ final class SummitService extends AbstractService implements ISummitService
      */
     public function importEventData(Summit $summit, UploadedFile $csv_file, array $payload): void
     {
-
-        Log::debug(sprintf("SummitService::importEventData - summit %s", $summit->getId()));
+        Log::debug(sprintf("SummitService::importEventData summit %s", $summit->getId()));
 
         $allowed_extensions = ['txt'];
 
         if (!in_array($csv_file->extension(), $allowed_extensions)) {
+            Log::warning
+            (
+                sprintf
+                (
+                    "SummitService::importEventData %s is not allowed extension",
+                    $csv_file->extension()
+                )
+            );
             throw new ValidationException("file does not has a valid extension ('csv').");
         }
 
@@ -2765,19 +2792,30 @@ final class SummitService extends AbstractService implements ISummitService
         $filename = pathinfo($real_path);
         $filename = $filename['filename'] ?? sprintf("file%s", time());
         $basename = sprintf("%s_%s.csv", $filename, time());
-        $filename = $csv_file->storeAs(sprintf("%s/events_imports", sys_get_temp_dir()), $basename);
+
+        Log::debug(sprintf("SummitService::importEventData trying to read file data from %s", $real_path));
         $csv_data = \Illuminate\Support\Facades\File::get($real_path);
-        if (empty($csv_data))
+
+        if (empty($csv_data)) {
+            Log::warning(sprintf("SummitService::importEventData file %s has empty content.", $real_path));
             throw new ValidationException("file content is empty!");
+        }
+
+        // upload to distribute storage
+        Log::debug(sprintf("SummitService::importEventData uploading file %s to storage %s", $basename, $this->upload_strategy->getDriver()));
+
+        $this->upload_strategy->save($csv_file, "tmp/events_imports", $basename);
 
         $csv = Reader::createFromString($csv_data);
         $csv->setHeaderOffset(0);
 
         $header = $csv->getHeader(); //returns the CSV header record
 
+        Log::debug(sprintf("SummitService::importEventData validating header %s", json_encode($header)));
+
         // check needed columns (headers names)
         /*
-            columns ( min)
+            columns (min)
             * title
             * abstract
             * type_id (int) or type (string type name)
@@ -2786,16 +2824,21 @@ final class SummitService extends AbstractService implements ISummitService
 
         if (!in_array("id", $header)) {
             // validate format with col names
-            if (!in_array("title", $header))
+            if (!in_array("title", $header)){
+                Log::warning("SummitService::importEventData title column is missing.");
                 throw new ValidationException('title column missing');
+            }
 
-            if (!in_array("abstract", $header))
+            if (!in_array("abstract", $header)) {
+                Log::warning("SummitService::importEventData abstract column is missing.");
                 throw new ValidationException('abstract column missing');
+            }
 
             $type_data_present = in_array("type_id", $header) ||
                 in_array("type", $header);
 
             if (!$type_data_present) {
+                Log::warning("SummitService::importEventData type_id / type  column is missing.");
                 throw new ValidationException('type_id / type column missing');
             }
 
@@ -2803,11 +2846,12 @@ final class SummitService extends AbstractService implements ISummitService
                 in_array("track", $header);
 
             if (!$track_present) {
+                Log::warning("SummitService::importEventData track_id / track column is missing.");
                 throw new ValidationException('track_id / track column missing');
             }
         }
 
-        ProcessEventDataImport::dispatch($summit->getId(), $filename, $payload);
+        ProcessEventDataImport::dispatch($summit->getId(), $basename, $payload);
     }
 
     /**
@@ -2820,12 +2864,18 @@ final class SummitService extends AbstractService implements ISummitService
     public function processEventData(int $summit_id, string $filename, bool $send_speaker_email): void
     {
         Log::debug(sprintf("SummitService::processEventData summit %s filename %s", $summit_id, $filename));
+        $path = sprintf("tmp/events_imports/%s", $filename);
 
-        if (!Storage::disk('local')->exists($filename)) {
+        if ($this->download_strategy->exists($path)) {
+            Log::warning(sprintf("SummitService::processEventData file %s does not exists on storage %s.", $filename, $this->download_strategy->getDriver()));
             throw new ValidationException(sprintf("file %s does not exists.", $filename));
         }
 
-        $csv_data = Storage::disk('local')->get($filename);
+        $csv_data = $this->download_strategy->get($path);
+        if (empty($csv_data)) {
+            Log::warning(sprintf("SummitService::processEventData file %s is empty.", $filename));
+            throw new ValidationException(sprintf("file %s does not exists.", $filename));
+        }
 
         $summit = $this->tx_service->transaction(function () use ($summit_id) {
             $summit = $this->summit_repository->getById($summit_id);
@@ -3193,6 +3243,9 @@ final class SummitService extends AbstractService implements ISummitService
                 Log::warning($ex);
             }
         }
+
+        Log::debug(sprintf("SummitService::processEventData deleting file %s from cloud storage %s", $path, $this->download_strategy->getDriver()));
+        $this->download_strategy->delete($path);
     }
 
     /**

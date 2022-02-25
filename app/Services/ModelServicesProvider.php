@@ -137,14 +137,13 @@ final class ModelServicesProvider extends ServiceProvider
 
     public function register()
     {
+        App::when(SummitService::class)->needs(IFileDownloadStrategy::class)->give(SwiftStorageFileDownloadStrategy::class);
+        App::when(SummitService::class)->needs(IFileUploadStrategy::class)->give(SwiftStorageFileUploadStrategy::class);
+
+        App::when(SummitOrderService::class)->needs(IFileDownloadStrategy::class)->give(SwiftStorageFileDownloadStrategy::class);
+        App::when(SummitOrderService::class)->needs(IFileUploadStrategy::class)->give(SwiftStorageFileUploadStrategy::class);
+
         // add bindings for service
-
-        App::when(ISummitService::class)->needs(IFileDownloadStrategy::class)->give(SwiftStorageFileDownloadStrategy::class);
-        App::when(ISummitService::class)->needs(IFileUploadStrategy::class)->give(SwiftStorageFileUploadStrategy::class);
-
-        App::when(ISummitOrderService::class)->needs(IFileDownloadStrategy::class)->give(SwiftStorageFileDownloadStrategy::class);
-        App::when(ISummitOrderService::class)->needs(IFileUploadStrategy::class)->give(SwiftStorageFileUploadStrategy::class);
-
         App::singleton(ISummitService::class, SummitService::class);
 
         App::singleton(ISpeakerService::class, SpeakerService::class);
@@ -408,7 +407,8 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitScheduleSettingsService::class,
             SummitScheduleSettingsService::class
         );
-    }
+
+   }
 
     /**
      * Get the services provided by the provider.

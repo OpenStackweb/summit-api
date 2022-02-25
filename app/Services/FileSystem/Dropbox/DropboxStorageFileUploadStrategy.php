@@ -20,7 +20,7 @@ final class DropboxStorageFileUploadStrategy extends AbstractFileUploadStrategy
 {
     const Driver = 'dropbox';
 
-    protected function getDriver(): string
+    public function getDriver(): string
     {
         return self::Driver;
     }

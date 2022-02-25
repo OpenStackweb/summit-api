@@ -21,7 +21,7 @@ final class S3StorageFileDownloadStrategy extends AbstractFileDownloadStrategy
 {
     const Driver = "s3";
 
-    protected function getDriver(): string
+    public function getDriver(): string
     {
         return self::Driver;
     }

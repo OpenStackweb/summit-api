@@ -21,7 +21,7 @@ final class DropboxStorageFileDownloadStrategy extends AbstractFileDownloadStrat
 {
     const Driver = 'dropbox';
 
-    protected function getDriver(): string
+    public function getDriver(): string
     {
         return self::Driver;
     }

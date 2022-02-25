@@ -21,7 +21,7 @@ final class LocalStorageFileDownloadStrategy  extends AbstractFileDownloadStrate
 {
     const Driver = 'local';
 
-    protected function getDriver(): string
+    public function getDriver(): string
     {
         return self::Driver;
     }

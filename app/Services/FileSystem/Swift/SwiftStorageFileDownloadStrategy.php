@@ -21,7 +21,7 @@ class SwiftStorageFileDownloadStrategy  extends AbstractFileDownloadStrategy
 {
     const Driver = "swift";
 
-    protected function getDriver(): string
+    public function getDriver(): string
     {
         return self::Driver;
     }

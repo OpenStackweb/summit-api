@@ -20,7 +20,7 @@ final class LocalStorageFileUploadStrategy extends AbstractFileUploadStrategy
 {
     const Driver = 'local';
 
-    protected function getDriver(): string
+    public function getDriver(): string
     {
         return self::Driver;
     }

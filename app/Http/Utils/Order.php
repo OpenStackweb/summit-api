@@ -13,6 +13,7 @@
  **/
 
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\Query\Expr\Select;
 use Doctrine\ORM\QueryBuilder;
 
 /**
@@ -78,8 +79,13 @@ final class Order
                         ++$hidden_ord_idx;
                     }
                     if(str_contains(strtoupper($mapping),"COUNT")){
+                        $selects = $query->getDQLPart("select");
                         $query->addSelect("({$mapping}) AS HIDDEN ORD_{$hidden_ord_idx}");
                         $mapping = "ORD_{$hidden_ord_idx}";
+                        // add original selects to grouping
+                        foreach($selects as $s)
+                            foreach($s->getParts() as $p)
+                                $query->addGroupBy($p);
                         ++$hidden_ord_idx;
                     }
                     $query->addOrderBy($mapping, $order->getDirection());

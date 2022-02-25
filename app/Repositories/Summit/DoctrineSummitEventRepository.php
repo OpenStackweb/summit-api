@@ -93,6 +93,8 @@ final class DoctrineSummitEventRepository
         $query = $query->innerJoin("e.type", "et", Join::ON);
         $query = $query->innerJoin("e.category", "c", Join::ON);
         $query = $query->leftJoin(PresentationType::class, 'et2', 'WITH', 'et.id = et2.id');
+        $query = $query->leftJoin("p.attendees_votes", 'av', Join::ON);
+
         return $query;
     }
 
@@ -336,6 +338,7 @@ final class DoctrineSummitEventRepository
             'page_random' => 'RAND()',
             'random' => 'RAND()',
             'custom_order' => 'e.custom_order',
+            'vote_count' => 'COUNT(av.id)',
         ];
     }
 

@@ -77,6 +77,11 @@ final class Order
                         $mapping = "ORD_{$hidden_ord_idx}";
                         ++$hidden_ord_idx;
                     }
+                    if(str_contains(strtoupper($mapping),"COUNT")){
+                        $query->addSelect("({$mapping}) AS HIDDEN ORD_{$hidden_ord_idx}");
+                        $mapping = "ORD_{$hidden_ord_idx}";
+                        ++$hidden_ord_idx;
+                    }
                     $query->addOrderBy($mapping, $order->getDirection());
                 }
             }

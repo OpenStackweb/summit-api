@@ -111,6 +111,7 @@ abstract class RetrieveSummitEventsStrategy
                 'random',
                 'page_random',
                 'custom_order',
+                'vote_count',
             ]);
         }
         return $order;

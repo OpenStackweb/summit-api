@@ -1304,7 +1304,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             'page' => 1,
             'per_page' => 5,
             'filter' => ['published==1'],
-            'order' => 'random'
+            'order' => 'vote_count'
         );
 
         $headers = array
@@ -1318,9 +1318,9 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             "GET",
             "OAuth2SummitEventsApiController@getAllVoteablePresentations",
             $params,
-            array(),
-            array(),
-            array(),
+            [],
+            [],
+            [],
             $headers
         );
 

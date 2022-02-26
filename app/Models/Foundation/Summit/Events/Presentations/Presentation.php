@@ -173,7 +173,7 @@ class Presentation extends SummitEvent
     protected $comments;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationSpeaker", inversedBy="presentations" , fetch="EXTRA_LAZY")
+     * @ORM\ManyToMany(targetEntity="models\summit\PresentationSpeaker", inversedBy="presentations" , fetch="EXTRA_LAZY", cascade={"persist"})
      * @ORM\JoinTable(name="Presentation_Speakers",
      *  joinColumns={
      *     @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="CASCADE")

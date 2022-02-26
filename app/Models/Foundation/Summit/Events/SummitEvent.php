@@ -181,21 +181,21 @@ class SummitEvent extends SilverstripeBaseModel
     protected $external_id;
 
     /**
-     * @ORM\ManyToOne(targetEntity="PresentationCategory", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="PresentationCategory", fetch="EXTRA_LAZY", cascade={"persist"})
      * @ORM\JoinColumn(name="CategoryID", referencedColumnName="ID", onDelete="SET NULL")
      * @var PresentationCategory
      */
     protected $category = null;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitEventType", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="SummitEventType", fetch="EXTRA_LAZY", cascade={"persist"})
      * @ORM\JoinColumn(name="TypeID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitEventType
      */
     protected $type;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitAbstractLocation", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="SummitAbstractLocation", fetch="EXTRA_LAZY", cascade={"persist"})
      * @ORM\JoinColumn(name="LocationID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitAbstractLocation
      */

@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Cache;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\Presentation;
 /**
@@ -100,6 +102,34 @@ class PresentationSerializer extends SummitEventSerializer
         $presentation = $this->object;
 
         if(!$presentation instanceof Presentation) return [];
+
+        $key = sprintf("public_presentation_%s", $presentation->getId());
+        $use_cache = isset($params['user_cache']) && boolval($params['use_cache']) === true;
+
+        if(Cache::has($key) && $use_cache){
+            $values = json_decode(Cache::get($key));
+            if (!empty($expand)) {
+                foreach (explode(',', $expand) as $relation) {
+                    $relation = trim($relation);
+                    switch ($relation) {
+                        case 'media_uploads':
+                        {
+                            $media_uploads = [];
+
+                            foreach ($presentation->getMediaUploads() as $mediaUpload) {
+                                $media_uploads[] = SerializerRegistry::getInstance()->getSerializer
+                                (
+                                    $mediaUpload, $this->getMediaUploadsSerializerType()
+                                )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            }
+
+                            $values['media_uploads'] = $media_uploads;
+                        }
+                    }
+                }
+            }
+            return $values;
+        }
 
         $values = parent::serialize($expand, $fields, $relations, $params);
 
@@ -293,6 +323,9 @@ class PresentationSerializer extends SummitEventSerializer
                 }
             }
         }
+
+        CAche::put($key, json_encode($values), 600);
+
         return $values;
     }
 }

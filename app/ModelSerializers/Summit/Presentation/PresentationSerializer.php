@@ -326,7 +326,7 @@ class PresentationSerializer extends SummitEventSerializer
             }
         }
 
-        CAche::put($key, json_encode($values), 600);
+        Cache::put($key, json_encode($values), 600);
 
         return $values;
     }

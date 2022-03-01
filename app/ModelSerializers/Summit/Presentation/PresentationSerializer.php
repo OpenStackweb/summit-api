@@ -22,6 +22,8 @@ use models\summit\Presentation;
  */
 class PresentationSerializer extends SummitEventSerializer
 {
+    const CacheTTL = 1200;
+
     protected static $array_mappings = [
         'CreatorId'               => 'creator_id:json_int',
         'ModeratorId'             => 'moderator_speaker_id:json_int',
@@ -105,10 +107,10 @@ class PresentationSerializer extends SummitEventSerializer
         if(!$presentation instanceof Presentation) return [];
 
         $key = sprintf("public_presentation_%s", $presentation->getId());
-        $use_cache = isset($params['user_cache']) && $params['use_cache'] == true;
+        $use_cache = $params['use_cache'] ?? false;
 
         if(Cache::has($key) && $use_cache){
-            $values = json_decode(Cache::get($key));
+            $values = json_decode(Cache::get($key), true);
             Log::debug(sprintf("PresentationSerializer::serialize cache hit for presentation %s", $presentation->getId()));
             if (!empty($expand)) {
                 foreach (explode(',', $expand) as $relation) {
@@ -326,7 +328,7 @@ class PresentationSerializer extends SummitEventSerializer
             }
         }
 
-        Cache::put($key, json_encode($values), 600);
+        Cache::put($key, json_encode($values), self::CacheTTL);
 
         return $values;
     }

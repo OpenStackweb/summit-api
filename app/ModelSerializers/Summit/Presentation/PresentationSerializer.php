@@ -13,6 +13,7 @@
  **/
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\Presentation;
 /**
@@ -104,10 +105,11 @@ class PresentationSerializer extends SummitEventSerializer
         if(!$presentation instanceof Presentation) return [];
 
         $key = sprintf("public_presentation_%s", $presentation->getId());
-        $use_cache = isset($params['user_cache']) && boolval($params['use_cache']) === true;
+        $use_cache = isset($params['user_cache']) && $params['use_cache'] == true;
 
         if(Cache::has($key) && $use_cache){
             $values = json_decode(Cache::get($key));
+            Log::debug(sprintf("PresentationSerializer::serialize cache hit for presentation %s", $presentation->getId()));
             if (!empty($expand)) {
                 foreach (explode(',', $expand) as $relation) {
                     $relation = trim($relation);

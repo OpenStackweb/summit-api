@@ -405,6 +405,10 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::group(['prefix' => 'published'], function () {
                     Route::get('', [ 'uses' => 'OAuth2SummitEventsApiController@getScheduledEvent']);
                     Route::post('mail', 'OAuth2SummitEventsApiController@shareScheduledEventByEmail');
+                    // media uploads
+                    Route::group(['prefix' => 'media-uploads'], function () {
+                        Route::get('', 'OAuth2PresentationApiController@getPresentationMediaUploads');
+                    });
                 });
 
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@updateEvent']);

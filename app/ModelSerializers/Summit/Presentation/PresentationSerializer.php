@@ -106,7 +106,16 @@ class PresentationSerializer extends SummitEventSerializer
 
         if(!$presentation instanceof Presentation) return [];
 
-        $key = sprintf("public_presentation_%s", $presentation->getId());
+        $key =
+            sprintf
+            (
+                "public_presentation_%s_%s_%s_%s",
+                $presentation->getId(),
+                $expand ?? "",
+                implode(",",$fields),
+                implode(",", $relations)
+            );
+
         $use_cache = $params['use_cache'] ?? false;
 
         if(Cache::has($key) && $use_cache){

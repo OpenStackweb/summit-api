@@ -16,6 +16,7 @@ use App\Models\Foundation\Elections\Candidate;
 use App\Models\Foundation\Elections\Election;
 use App\Models\Foundation\Elections\Nomination;
 use App\Models\Foundation\Main\IGroup;
+use Illuminate\Support\Facades\Config;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\SummitMetric;
 use Illuminate\Support\Facades\App;
@@ -1414,27 +1415,38 @@ SQL;
      */
     public function getProfilePhotoUrl(): ?string
     {
-        $photoUrl = null;
+        $default_pic = Config::get("app.default_profile_image", null);
+        try {
 
-        if(!empty($this->external_pic)){
-            return $this->external_pic;
+            $photoUrl = null;
+
+            if(!empty($this->external_pic)){
+                $photoUrl = $this->external_pic;
+            }
+
+            if (empty($photoUrl) && $this->hasPhoto() && $photo = $this->getPhoto()) {
+                $photoUrl = $photo->getUrl();
+            }
+
+            if(empty($photoUrl) && !empty($default_pic))
+                $photoUrl = $default_pic;
+
+            if (empty($photo_url) && !empty($this->getTwitterHandle())) {
+                $twitterName = $this->getTwitterHandle();
+                $photoUrl = sprintf("https://avatars.io/twitter/%s", trim(trim($twitterName, '@')));
+            }
+
+            if(empty($photoUrl))
+                $photoUrl = $this->getGravatarUrl();
+
+            return $photoUrl;
         }
-
-        if ($this->hasPhoto() && $photo = $this->getPhoto()) {
-            $photoUrl = $photo->getUrl();
+        catch(\Exception $ex){
+            Log::warning($ex);
         }
-
-        if (empty($photo_url) && !empty($this->getTwitterHandle())) {
-            $twitterName = $this->getTwitterHandle();
-            $photoUrl = sprintf("https://avatars.io/twitter/%s", trim(trim($twitterName, '@')));
-        }
-
-        if (empty($photoUrl)) {
-           // get gravatar by default
-            $photoUrl = $this->getGravatarUrl();
-        }
-
-        return $photoUrl;
+        if(!empty($default_pic))
+            return $default_pic;
+        return $this->getGravatarUrl();
     }
 
     /**

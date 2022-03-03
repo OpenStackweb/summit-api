@@ -269,11 +269,15 @@ class PresentationCategoryGroup extends SilverstripeBaseModel
     }
 
     /**
-     * @param \DateTime $begin_attendee_voting_period_date
+     * @param \DateTime $value
      */
-    public function setBeginAttendeeVotingPeriodDate(?\DateTime $begin_attendee_voting_period_date): void
+    public function setBeginAttendeeVotingPeriodDate(?\DateTime $value): void
     {
-        $this->begin_attendee_voting_period_date = $begin_attendee_voting_period_date;
+        $summit = $this->getSummit();
+        if (!is_null($summit)) {
+            $value = $summit->convertDateFromTimeZone2UTC($value);
+        }
+        $this->begin_attendee_voting_period_date = $value;
     }
 
     /**
@@ -285,11 +289,15 @@ class PresentationCategoryGroup extends SilverstripeBaseModel
     }
 
     /**
-     * @param \DateTime $end_attendee_voting_period_date
+     * @param \DateTime $value
      */
-    public function setEndAttendeeVotingPeriodDate(?\DateTime $end_attendee_voting_period_date): void
+    public function setEndAttendeeVotingPeriodDate(?\DateTime $value): void
     {
-        $this->end_attendee_voting_period_date = $end_attendee_voting_period_date;
+        $summit = $this->getSummit();
+        if (!is_null($summit)) {
+            $value = $summit->convertDateFromTimeZone2UTC($value);
+        }
+        $this->end_attendee_voting_period_date = $value;
     }
 
     /**

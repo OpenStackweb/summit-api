@@ -11,10 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use Mockery\CountValidator\Exception;
 use models\exceptions\ValidationException;
 use models\main\Member;
+use models\oauth2\IResourceServerContext;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitOrderExtraQuestionAnswer;
@@ -54,6 +57,10 @@ final class SummitAttendeeFactory
         ?Member $member = null
     )
     {
+
+        $resource_server_ctx = App::make(IResourceServerContext::class);
+        $currentUser = $resource_server_ctx->getCurrentUser(false);
+        $currentUserIsAdmin = is_null($currentUser)? false: ($currentUser->isAdmin() || $currentUser->isSummitAdmin());
 
         if (!is_null($member)) {
             $attendee->setEmail($member->getEmail());
@@ -128,8 +135,8 @@ final class SummitAttendeeFactory
                         if (intval($question_answer['question_id']) == $question->getId()) {
                             $value = trim($question_answer['answer']);
                             $formerValue = $formerAnswers[$question->getName()] ?? null;
-                            // check if we are allowed to change the answers that we already did
-                            if(!empty($formerValue) && $formerValue != $value && !$summit->isAllowUpdateAttendeeExtraQuestions()){
+                            // check if we are allowed to change the answers that we already did ( bypass only if we are admin)
+                            if(!$currentUserIsAdmin && !empty($formerValue) && $formerValue != $value && !$summit->isAllowUpdateAttendeeExtraQuestions()){
                                 throw new ValidationException(sprintf("Answer can not be changed by this time. Original answer is %s.", $formerValue));
                             }
 

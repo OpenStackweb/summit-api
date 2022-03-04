@@ -55,7 +55,7 @@ class PresentationMediaUploadSerializer extends PresentationMaterialSerializer
                     (
                         $mediaUpload->getRelativePath(),
                         $mediaUploadType->isUseTemporaryLinksOnPublicStorage(),
-                        $mediaUploadType->getTemporaryLinksPublicStorageTtl()
+                        $mediaUploadType->getTemporaryLinksPublicStorageTtl() * 60 // convert to seconds
                     );
                 }
             }

@@ -3426,7 +3426,7 @@ final class SummitService extends AbstractService implements ISummitService
                             (
                                 $item->getRelativePath(),
                                 $mediaUploadType->isUseTemporaryLinksOnPublicStorage(),
-                                $mediaUploadType->getTemporaryLinksPublicStorageTtl(),
+                                $mediaUploadType->getTemporaryLinksPublicStorageTtl() * 60, // convert to seconds
                                 true
                             );
                             Log::debug(sprintf("SummitService::regenerateTemporalUrlsForMediaUploads media upload %s regenerated public url for %s", $item->getId(), $item->getRelativePath()));

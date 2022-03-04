@@ -4517,6 +4517,26 @@ class ApiEndpointsSeeder extends Seeder
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm)
                 ],
             ],
+            // voteable presentations v2
+            [
+                'name' => 'get-voteable-presentations-v2',
+                'route' => '/api/v2/summits/{id}/presentations/voteable',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            // voteable presentations v2
+            [
+                'name' => 'get-voteable-presentations-v2-csv',
+                'route' => '/api/v2/summits/{id}/presentations/voteable/csv',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
             [
                 'name' => 'get-voteable-presentation-by-id',
                 'route' => '/api/v1/summits/{id}/presentations/voteable/{presentation_id}',

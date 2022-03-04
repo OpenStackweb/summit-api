@@ -1,6 +1,7 @@
 <?php namespace Tests;
 use App\Models\Foundation\Main\IGroup;
 use Illuminate\Support\Facades\App;
+use models\utils\SilverstripeBaseModel;
 use services\model\IPresentationService;
 
 /**
@@ -1087,8 +1088,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $summit_repository   = EntityManager::getRepository(\models\summit\Summit::class);
         $summit              = $summit_repository->getById(25);
         $summit_time_zone    = $summit->getTimeZone();
-        $start_datetime      = new DateTime( "2018-11-10 07:00:00", $summit_time_zone);
-        $end_datetime        = new DateTime("2018-11-10 22:00:00", $summit_time_zone);
+        $start_datetime      = new \DateTime( "2018-11-10 07:00:00", $summit_time_zone);
+        $end_datetime        = new \DateTime("2018-11-10 22:00:00", $summit_time_zone);
         $start_datetime_unix = $start_datetime->getTimestamp();
         $end_datetime_unix   = $end_datetime->getTimestamp();
 
@@ -1319,9 +1320,10 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             }
         }
 
-        $summit_time_zone    = self::$summit->getTimeZone();
-        $start_datetime      = new \DateTime( "2022-02-27 07:00:00", $summit_time_zone);
-        $end_datetime        = new \DateTime("2022-03-3 22:00:00", $summit_time_zone);
+        $start_datetime      = new \DateTime( 'now', new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone));
+        $start_datetime->setTime(0,0,0);
+        $end_datetime        = clone $start_datetime;
+        $end_datetime->setTime(23,59,59);
 
         $params = array
         (
@@ -1329,6 +1331,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
             'page' => 1,
             'per_page' => 5,
             'expand' => 'voters',
+            'fields' => 'id,title,votes_count,voters.first_name,voters.last_name,voters.email',
+            'relations'=> 'voters.none',
             'filter' => [
                 'published==1',
                 'presentation_attendee_vote_date>='.$start_datetime->getTimestamp(),
@@ -1346,7 +1350,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $response = $this->action
         (
             "GET",
-            "OAuth2SummitEventsApiController@getAllVoteablePresentations",
+            "OAuth2SummitEventsApiController@getAllVoteablePresentationsV2",
             $params,
             [],
             [],

@@ -364,8 +364,9 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         {
             $strategy = new RetrieveAllSummitPresentationsStrategy($this->repository, $this->event_repository, $this->resource_server_context);
             $response = $strategy->getEvents(['summit_id' => intval($summit_id)]);
-
-            $response = $strategy->getEvents();
+            $params  = [
+                'current_user' => $this->resource_server_context->getCurrentUser(true),
+            ];
             return $this->ok
             (
                 $response->toArray
@@ -399,6 +400,50 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function getAllVoteablePresentations($summit_id)
+    {
+        try
+        {
+            $strategy = new RetrieveAllSummitVoteablePresentationsStrategy($this->repository, $this->event_repository, $this->resource_server_context);
+            $response = $strategy->getEvents(['summit_id' => intval($summit_id)]);
+
+            $params  = [
+                'current_user' => $this->resource_server_context->getCurrentUser(true),
+                'use_cache' => true,
+            ];
+
+            return $this->ok
+            (
+                $response->toArray
+                (
+                    self::getExpands(),
+                    self::getFields(),
+                    self::getRelations(),
+                    $params,
+                    $this->getSerializerType()
+                )
+            );
+        }
+        catch (EntityNotFoundException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error404();
+        }
+        catch (ValidationException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error412($ex2->getMessages());
+        }
+        catch (Exception $ex)
+        {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getAllVoteablePresentationsV2($summit_id)
     {
         try
         {
@@ -449,6 +494,10 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             Log::error($ex);
             return $this->error500($ex);
         }
+    }
+
+    public function getAllVoteablePresentationsV2CSV($summit_id){
+
     }
 
     /**

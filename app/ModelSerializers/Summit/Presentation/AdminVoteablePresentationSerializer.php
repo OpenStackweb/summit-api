@@ -1,7 +1,4 @@
 <?php namespace ModelSerializers;
-use Libs\ModelSerializers\AbstractSerializer;
-use models\summit\Presentation;
-
 /**
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,13 +11,20 @@ use models\summit\Presentation;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use Libs\ModelSerializers\AbstractSerializer;
+use Libs\ModelSerializers\Many2OneExpandSerializer;
+use models\summit\Presentation;
 /**
  * Class AdminVoteablePresentationSerializer
  * @package ModelSerializers
  */
-class AdminVoteablePresentationSerializer extends AdminPresentationSerializer
+final class AdminVoteablePresentationSerializer extends AdminPresentationSerializer
 {
+
+    protected static $allowed_relations = [
+        'voters',
+    ];
+
     /**
      * @param null $expand
      * @param array $fields
@@ -40,24 +44,39 @@ class AdminVoteablePresentationSerializer extends AdminPresentationSerializer
 
         $beginVotingDate = $params['begin_attendee_voting_period_date'] ?? null;
         $endVotingDate = $params['end_attendee_voting_period_date'] ?? null;
+        $values['votes_count'] = $presentation->getAttendeeVotesCount($beginVotingDate, $endVotingDate);
+
+        if(in_array("voters", $relations)) {
+            $voters = [];
+            foreach ($presentation->getVoters($beginVotingDate, $endVotingDate) as $voter) {
+                   $voters[] = $voter->getId();
+            }
+            $values['voters'] = $voters;
+        }
 
         if (!empty($expand)) {
-            $expandValues = explode(',', $expand);
-            $expandVoters = false;
-            foreach ($expandValues as $relation) {
-                if (trim($relation) == 'voters') {
-                    $expandVoters = true;
+            foreach (explode(',', $expand) as $relation) {
+                $relation = trim($relation);
+                switch ($relation) {
+                    case 'voters':
+                    {
+                        $voters = [];
+                        foreach ($presentation->getVoters($beginVotingDate, $endVotingDate) as $voter) {
+                            $voters[] = SerializerRegistry::getInstance()->getSerializer($voter)->serialize
+                            (
+                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                $params
+                            );
+                        }
+                        $values['voters'] = $voters;
+                    }
                     break;
                 }
             }
-            foreach ($presentation->getVoters($beginVotingDate, $endVotingDate) as $voter) {
-                $values['voters'][] = $expandVoters == true ?
-                    SerializerRegistry::getInstance()->getSerializer($voter)
-                        ->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'voters')) :
-                    $voter->getId();
-            }
         }
-        $values['votes_count'] = $presentation->getAttendeeVotesCount($beginVotingDate, $endVotingDate);
+
 
         return $values;
     }

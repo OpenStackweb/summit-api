@@ -155,26 +155,31 @@ trait InsertMemberTestData
     }
 
     protected static function clearMemberTestData(){
-        if (!self::$em ->isOpen()) {
-            self::$em  = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+        try {
+            if (!self::$em->isOpen()) {
+                self::$em = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+            }
+
+            self::$member = self::$member_repository->find(self::$member->getId());
+            self::$group = self::$group_repository->find(self::$group->getId());
+
+            self::$member2 = self::$member_repository->find(self::$member2->getId());
+            self::$group2 = self::$group_repository->find(self::$group2->getId());
+
+            if (!is_null(self::$member))
+                self::$em->remove(self::$member);
+            if (!is_null(self::$group))
+                self::$em->remove(self::$group);
+
+            if (!is_null(self::$member2))
+                self::$em->remove(self::$member2);
+            if (!is_null(self::$group2))
+                self::$em->remove(self::$group2);
+
+            self::$em->flush();
         }
+        catch (\Exception $ex){
 
-        self::$member =  self::$member_repository->find(self::$member->getId());
-        self::$group =  self::$group_repository->find(self::$group->getId());
-
-        self::$member2 =  self::$member_repository->find(self::$member2->getId());
-        self::$group2 =  self::$group_repository->find(self::$group2->getId());
-
-        if(!is_null(self::$member))
-            self::$em->remove(self::$member);
-        if(!is_null(self::$group))
-            self::$em->remove(self::$group);
-
-        if(!is_null(self::$member2))
-            self::$em->remove(self::$member2);
-        if(!is_null(self::$group2))
-            self::$em->remove(self::$group2);
-
-        self::$em->flush();
+        }
     }
 }

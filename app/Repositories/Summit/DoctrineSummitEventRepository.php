@@ -377,7 +377,7 @@ final class DoctrineSummitEventRepository
             ->from($this->getBaseEntity(), "e")
             ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id');
 
-            if(!$order->hasOrder("votes_count")) {
+            if(is_null($order) || !$order->hasOrder("votes_count")) {
                 $query = $query
                     ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
                     ->leftJoin("e.created_by", 'cb', Join::LEFT_JOIN)

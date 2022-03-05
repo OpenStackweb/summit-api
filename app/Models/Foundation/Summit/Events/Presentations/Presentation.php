@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use Doctrine\ORM\Mapping AS ORM;
+use models\utils\SilverstripeBaseModel;
 
 /**
  * Class Presentation
@@ -1744,13 +1745,13 @@ class Presentation extends SummitEvent
         $criteria = null;
 
         if ($begin_voting_date != null) {
-            $begin_voting_date = Carbon::createFromTimestamp($begin_voting_date);
+            $begin_voting_date = Carbon::createFromTimestamp($begin_voting_date, new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone));
             Log::debug(sprintf("Presentation::getVotesRange begin_voting_date %s", $begin_voting_date->format("Y-m-d H:i:s")));
             $criteria = Criteria::create();
             $criteria->where(Criteria::expr()->gte('created', $begin_voting_date));
         }
         if ($end_voting_date != null) {
-            $end_voting_date = Carbon::createFromTimestamp($end_voting_date);
+            $end_voting_date = Carbon::createFromTimestamp($end_voting_date, new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone));
             Log::debug(sprintf("Presentation::getVotesRange end_voting_date %s", $end_voting_date->format("Y-m-d H:i:s")));
             $expr = Criteria::expr()->lte('created', $end_voting_date);
             if ($criteria == null) {

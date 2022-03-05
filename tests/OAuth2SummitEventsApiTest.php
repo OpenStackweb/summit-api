@@ -1338,7 +1338,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
                 'presentation_attendee_vote_date>='.$start_datetime->getTimestamp(),
                 'presentation_attendee_vote_date<='.$end_datetime->getTimestamp(),
             ],
-            'order' => '-vote_count'
+            'order' => '-votes_count'
         );
 
         $headers = array

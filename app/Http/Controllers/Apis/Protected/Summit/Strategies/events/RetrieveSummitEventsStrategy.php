@@ -117,7 +117,7 @@ abstract class RetrieveSummitEventsStrategy
                 'random',
                 'page_random',
                 'custom_order',
-                'vote_count',
+                'votes_count',
             ]);
         }
         return $order;
@@ -169,7 +169,7 @@ abstract class RetrieveSummitEventsStrategy
             'published' => ['=='],
             'class_name' => ['=='],
             'presentation_attendee_vote_date' => ['>', '<', '<=', '>=', '=='],
-            'vote_count' => ['>', '<', '<=', '>=', '=='],
+            'votes_count' => ['>', '<', '<=', '>=', '=='],
         ];
     }
 
@@ -207,7 +207,7 @@ abstract class RetrieveSummitEventsStrategy
             'published' => 'sometimes|boolean',
             'class_name' => 'sometimes|string|in:'.implode(',',[ Presentation::ClassName, SummitEvent::ClassName]),
             'presentation_attendee_vote_date'  => 'sometimes|date_format:U',
-            'vote_count' => 'sometimes|integer',
+            'votes_count' => 'sometimes|integer',
         ];
     }
 }

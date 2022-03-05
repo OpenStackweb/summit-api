@@ -2084,7 +2084,7 @@ SQL;
     {
         try {
             $sql = <<<SQL
-            SELECT COUNT(DISTINCT(Vote.ID)) AS vote_count
+            SELECT COUNT(DISTINCT(Vote.ID)) AS votes_count
             FROM PresentationVote AS Vote
             INNER JOIN SummitEvent AS E ON E.ID = Vote.PresentationID
             WHERE E.SummitID = :summit_id

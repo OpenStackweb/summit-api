@@ -319,7 +319,7 @@ final class DoctrineSummitEventRepository
                 ]
             ),
             'presentation_attendee_vote_date' => 'av.created:datetime_epoch',
-            'vote_count' => new DoctrineHavingFilterMapping("", "av.presentation", "count(av.id) :operator :value")
+            'votes_count' => new DoctrineHavingFilterMapping("", "av.presentation", "count(av.id) :operator :value")
         ];
     }
 
@@ -341,7 +341,7 @@ final class DoctrineSummitEventRepository
             'page_random' => 'RAND()',
             'random' => 'RAND()',
             'custom_order' => 'e.custom_order',
-            'vote_count' => 'COUNT(av.id)',
+            'votes_count' => 'COUNT(av.id)',
         ];
     }
 
@@ -376,7 +376,7 @@ final class DoctrineSummitEventRepository
             ->from($this->getBaseEntity(), "e")
             ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id');
 
-            if(!$order->hasOrder("vote_count")) {
+            if(!$order->hasOrder("votes_count")) {
                 $query = $query
                     ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
                     ->leftJoin("e.created_by", 'cb', Join::LEFT_JOIN)

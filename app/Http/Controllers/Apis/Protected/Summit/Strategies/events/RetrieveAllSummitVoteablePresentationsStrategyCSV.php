@@ -18,7 +18,7 @@ use utils\FilterParser;
  * Class RetrieveAllSummitVoteablePresentationsStrategyCSV
  * @package App\Http\Controllers
  */
-class RetrieveAllSummitVoteablePresentationsStrategyCSV extends RetrieveAllUnPublishedSummitEventsStrategy
+class RetrieveAllSummitVoteablePresentationsStrategyCSV extends RetrieveAllSummitVoteablePresentationsStrategy
 {
     protected function getPageParams(){
         return [1, PHP_INT_MAX];

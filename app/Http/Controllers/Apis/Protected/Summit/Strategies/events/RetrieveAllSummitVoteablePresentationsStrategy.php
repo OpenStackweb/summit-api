@@ -16,12 +16,11 @@ use models\summit\Presentation;
 use utils\Filter;
 use utils\FilterParser;
 
-
 /**
  * Class RetrieveAllSummitVoteablePresentationsStrategy
  * @package App\Http\Controllers
  */
-final class RetrieveAllSummitVoteablePresentationsStrategy extends RetrieveAllSummitPresentationsStrategy
+class RetrieveAllSummitVoteablePresentationsStrategy extends RetrieveAllSummitPresentationsStrategy
 {
     /**
      * @return null|Filter

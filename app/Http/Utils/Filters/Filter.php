@@ -443,16 +443,16 @@ final class Filter
                         $datetime = new \DateTime("@$val", $timezone);
                         if(!is_null($timezone))
                             $datetime = $datetime->setTimezone($timezone);
-                        $res[] = sprintf("%s", $datetime->format("Y-m-d H:i:s"));
+                        $res[] =  $datetime->format("Y-m-d H:i:s");
                     }
                     return $res;
                 }
                 $datetime = new \DateTime("@$value");
-                Log::debug(sprintf("Filter::convertValue original date value %s", sprintf("%s", $datetime->format("Y-m-d H:i:s"))));
+                Log::debug(sprintf("Filter::convertValue original date value %s", $datetime->format("Y-m-d H:i:s")));
                 if(!is_null($timezone))
                     $datetime = $datetime->setTimezone($timezone);
-                Log::debug(sprintf("Filter::convertValue final date %s",  sprintf("%s", $datetime->format("Y-m-d H:i:s"))));
-                return  sprintf("%s", $datetime->format("Y-m-d H:i:s"));;
+                Log::debug(sprintf("Filter::convertValue final date %s", $datetime->format("Y-m-d H:i:s")));
+                return  $datetime->format("Y-m-d H:i:s");
                 break;
             case 'json_int':
                 if(is_array($value)){

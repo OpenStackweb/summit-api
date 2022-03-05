@@ -1736,20 +1736,22 @@ class Presentation extends SummitEvent
     }
 
     /**
-     * @param $begin_voting_date
-     * @param $end_voting_date
+     * @param int|null $begin_voting_date
+     * @param int|null $end_voting_date
      * @return ArrayCollection
      */
-    private function getVotesRange($begin_voting_date = null, $end_voting_date = null): ArrayCollection {
+    private function getVotesRange(?int $begin_voting_date = null, ?int $end_voting_date = null): ArrayCollection {
         $criteria = null;
 
         if ($begin_voting_date != null) {
             $begin_voting_date = Carbon::createFromTimestamp($begin_voting_date);
+            Log::debug(sprintf("Presentation::getVotesRange begin_voting_date %s", $begin_voting_date->format("Y-m-d H:i:s")));
             $criteria = Criteria::create();
             $criteria->where(Criteria::expr()->gte('created', $begin_voting_date));
         }
         if ($end_voting_date != null) {
             $end_voting_date = Carbon::createFromTimestamp($end_voting_date);
+            Log::debug(sprintf("Presentation::getVotesRange end_voting_date %s", $end_voting_date->format("Y-m-d H:i:s")));
             $expr = Criteria::expr()->lte('created', $end_voting_date);
             if ($criteria == null) {
                 $criteria = Criteria::create();

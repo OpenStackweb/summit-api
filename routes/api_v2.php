@@ -36,8 +36,8 @@ Route::group(['prefix' => 'summits'], function () {
         // presentations
         Route::group(['prefix' => 'presentations'], function () {
             Route::group(['prefix' => 'voteable'], function () {
-                Route::get('', [ 'uses' => 'OAuth2SummitEventsApiController@getAllVoteablePresentationsV2']);
-                Route::get('csv', [ 'uses' => 'OAuth2SummitEventsApiController@getAllVoteablePresentationsV2CSV']);
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@getAllVoteablePresentationsV2']);
+                Route::get('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@getAllVoteablePresentationsV2CSV']);
             });
         });
     });

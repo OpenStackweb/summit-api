@@ -95,7 +95,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     /**
      * @return string
      */
-    private function getSerializerType($isVoteable = false):string{
+    private function getSerializerType():string{
 
         $current_user = $this->resource_server_context->getCurrentUser(true);
         $application_type = $this->resource_server_context->getApplicationType();
@@ -107,7 +107,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         Log::debug(sprintf("OAuth2SummitEventsApiController::getSerializerType client id %s app_type %s scope %s has current user %b %s %s ", $clientId, $application_type, implode(" ", $scope), !is_null($current_user), $method, $path));
         if($application_type == "SERVICE" || (!is_null($current_user) && ($current_user->isAdmin() || ($current_user->isSummitAdmin())))){
             Log::debug(sprintf("OAuth2SummitEventsApiController::getSerializerType app_type %s has current user %b PRIVATE", $application_type, !is_null($current_user)));
-            return $isVoteable ? SerializerRegistry::SerializerType_Admin_Voteable : SerializerRegistry::SerializerType_Private;
+            return SerializerRegistry::SerializerType_Private;
         }
         Log::debug(sprintf("OAuth2SummitEventsApiController::getSerializerType app_type %s has current user %b PUBLIC", $application_type, !is_null($current_user)));
         return SerializerRegistry::SerializerType_Public;
@@ -403,7 +403,16 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     {
         try
         {
-            $strategy = new RetrieveAllSummitVoteablePresentationsStrategy($this->repository, $this->event_repository, $this->resource_server_context);
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) throw new EntityNotFoundException;
+
+            $strategy = new RetrieveAllSummitVoteablePresentationsStrategy
+            (
+                $this->repository,
+                $this->event_repository,
+                $this->resource_server_context
+            );
+
             $response = $strategy->getEvents(['summit_id' => intval($summit_id)]);
 
             $params  = [
@@ -447,7 +456,15 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     {
         try
         {
-            $strategy = new RetrieveAllSummitVoteablePresentationsStrategy($this->repository, $this->event_repository, $this->resource_server_context);
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) throw new EntityNotFoundException;
+
+            $strategy = new RetrieveAllSummitVoteablePresentationsStrategy
+            (
+                $this->repository,
+                $this->event_repository,
+                $this->resource_server_context
+            );
             $response = $strategy->getEvents(['summit_id' => intval($summit_id)]);
 
             $params  = [
@@ -475,7 +492,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                     self::getFields(),
                     self::getRelations(),
                     $params,
-                    $this->getSerializerType(true)
+                    SerializerRegistry::SerializerType_Admin_Voteable
                 )
             );
         }
@@ -497,7 +514,74 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     }
 
     public function getAllVoteablePresentationsV2CSV($summit_id){
+        try
+        {
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) throw new EntityNotFoundException;
 
+            $strategy = new RetrieveAllSummitVoteablePresentationsStrategyCSV
+            (
+                $this->repository,
+                $this->event_repository,
+                $this->resource_server_context
+            );
+
+            $response = $strategy->getEvents(['summit_id' => intval($summit_id)]);
+
+            $params  = [
+                'current_user' => $this->resource_server_context->getCurrentUser(true),
+                'use_cache' => true,
+            ];
+
+            $filter = $strategy->getFilter();
+
+            if(!is_null($filter)) {
+                $votingDateFilter = $filter->getFilter('presentation_attendee_vote_date');
+                if ($votingDateFilter != null) {
+                    $params['begin_attendee_voting_period_date'] = $votingDateFilter[0]->getValue();
+                    if (count($votingDateFilter) > 1) {
+                        $params['end_attendee_voting_period_date'] = $votingDateFilter[1]->getValue();
+                    }
+                }
+            }
+
+
+            $filename = "voteable-presentations-" . date('Ymd');
+            $list     = $response->toArray
+            (
+                self::getExpands(),
+                self::getFields(),
+                ['none'],
+                $params,
+                SerializerRegistry::SerializerType_Admin_Voteable_CSV
+            );
+
+            return $this->export
+            (
+                'csv',
+                $filename,
+                $list['data'],
+                [
+                    'created'        => new EpochCellFormatter(),
+                    'last_edited'    => new EpochCellFormatter(),
+                ]
+            );
+        }
+        catch (EntityNotFoundException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error404();
+        }
+        catch (ValidationException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error412($ex2->getMessages());
+        }
+        catch (Exception $ex)
+        {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
     }
 
     /**

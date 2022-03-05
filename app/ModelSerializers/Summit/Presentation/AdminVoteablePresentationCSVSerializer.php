@@ -11,20 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Libs\ModelSerializers\AbstractSerializer;
-use Libs\ModelSerializers\Many2OneExpandSerializer;
 use models\summit\Presentation;
 /**
- * Class AdminVoteablePresentationSerializer
+ * Class AdminVoteablePresentationCSVSerializer
  * @package ModelSerializers
  */
-class AdminVoteablePresentationSerializer extends AdminPresentationSerializer
+final class AdminVoteablePresentationCSVSerializer extends AdminVoteablePresentationSerializer
 {
-
-    protected static $allowed_relations = [
-        'voters',
-    ];
-
     /**
      * @param null $expand
      * @param array $fields
@@ -46,40 +39,23 @@ class AdminVoteablePresentationSerializer extends AdminPresentationSerializer
 
         $beginVotingDate = $params['begin_attendee_voting_period_date'] ?? null;
         $endVotingDate = $params['end_attendee_voting_period_date'] ?? null;
-        $values['votes_count'] = $presentation->getAttendeeVotesCount($beginVotingDate, $endVotingDate);
-
-        if(in_array("voters", $relations)) {
-            $voters = [];
-            foreach ($presentation->getVoters($beginVotingDate, $endVotingDate) as $voter) {
-                   $voters[] = $voter->getId();
-            }
-            $values['voters'] = $voters;
-        }
 
         if (!empty($expand)) {
             foreach (explode(',', $expand) as $relation) {
                 $relation = trim($relation);
                 switch ($relation) {
                     case 'voters':
-                    {
-                        $voters = [];
-                        foreach ($presentation->getVoters($beginVotingDate, $endVotingDate) as $voter) {
-                            $voters[] = SerializerRegistry::getInstance()->getSerializer($voter)->serialize
-                            (
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                $params
-                            );
+                        {
+                            $voters = [];
+                            foreach ($presentation->getVoters($beginVotingDate, $endVotingDate) as $voter) {
+                                $voters[] = sprintf("%s %s %s", $voter->getFirstName(), $voter->getSurname(), $voter->getEmail());
+                            }
+                            $values['voters'] = implode('|', $voters);
                         }
-                        $values['voters'] = $voters;
-                    }
-                    break;
+                        break;
                 }
             }
         }
-
-
         return $values;
     }
 }

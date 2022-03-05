@@ -1766,7 +1766,7 @@ class Presentation extends SummitEvent
     }
 
     /**
-     * @return ArrayCollection
+     * @return ArrayCollection|SummitAttendee[]
      */
     public function getVoters($begin_voting_date = null, $end_voting_date = null): ArrayCollection {
         return $this->getVotesRange($begin_voting_date, $end_voting_date)->map(function ($attendeeVote) {

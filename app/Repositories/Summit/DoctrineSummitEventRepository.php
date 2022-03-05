@@ -371,22 +371,25 @@ final class DoctrineSummitEventRepository
         $query = $this->getEntityManager()->createQueryBuilder()
             ->addSelect("e")
             ->select("e")
-            ->from($this->getBaseEntity(), "e")
-            ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')
-            ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
-            ->leftJoin("e.created_by", 'cb', Join::LEFT_JOIN)
-            ->leftJoin("e.category", 'cc', Join::LEFT_JOIN)
-            ->leftJoin("e.sponsors", "sprs", Join::LEFT_JOIN)
-            ->leftJoin("p.speakers", "sp", Join::LEFT_JOIN)
-            ->leftJoin('p.selected_presentations', "ssp", Join::LEFT_JOIN)
-            ->leftJoin('ssp.member', "ssp_member", Join::LEFT_JOIN)
-            ->leftJoin('p.selection_plan', "selp", Join::LEFT_JOIN)
-            ->leftJoin('ssp.list', "sspl", Join::LEFT_JOIN)
-            ->leftJoin('p.moderator', "spm", Join::LEFT_JOIN)
-            ->leftJoin('spm.member', "spmm2", Join::LEFT_JOIN)
-            ->leftJoin('sp.member', "spmm", Join::LEFT_JOIN)
-            ->leftJoin('sp.registration_request', "sprr", Join::LEFT_JOIN)
-            ->leftJoin('spm.registration_request', "sprr2", Join::LEFT_JOIN);
+            ->from($this->getBaseEntity(), "e");
+
+            if(!$order->hasOrder("vote_count")) {
+                $query = $query->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')
+                    ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
+                    ->leftJoin("e.created_by", 'cb', Join::LEFT_JOIN)
+                    ->leftJoin("e.category", 'cc', Join::LEFT_JOIN)
+                    ->leftJoin("e.sponsors", "sprs", Join::LEFT_JOIN)
+                    ->leftJoin("p.speakers", "sp", Join::LEFT_JOIN)
+                    ->leftJoin('p.selected_presentations', "ssp", Join::LEFT_JOIN)
+                    ->leftJoin('ssp.member', "ssp_member", Join::LEFT_JOIN)
+                    ->leftJoin('p.selection_plan', "selp", Join::LEFT_JOIN)
+                    ->leftJoin('ssp.list', "sspl", Join::LEFT_JOIN)
+                    ->leftJoin('p.moderator', "spm", Join::LEFT_JOIN)
+                    ->leftJoin('spm.member', "spmm2", Join::LEFT_JOIN)
+                    ->leftJoin('sp.member', "spmm", Join::LEFT_JOIN)
+                    ->leftJoin('sp.registration_request', "sprr", Join::LEFT_JOIN)
+                    ->leftJoin('spm.registration_request', "sprr2", Join::LEFT_JOIN);
+            }
 
         $query = $this->applyExtraJoins($query);
 

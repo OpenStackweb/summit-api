@@ -27,6 +27,7 @@ use models\summit\Summit;
 use models\summit\SummitEvent;
 use models\summit\SummitEventType;
 use models\summit\SummitGroupEvent;
+use models\utils\SilverstripeBaseModel;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineCollectionFieldsFilterMapping;
 use utils\DoctrineFilterMapping;
@@ -318,7 +319,7 @@ final class DoctrineSummitEventRepository
                     Presentation::ClassName => Presentation::class,
                 ]
             ),
-            'presentation_attendee_vote_date' => 'av.created:datetime_epoch',
+            'presentation_attendee_vote_date' => 'av.created:datetime_epoch|'.SilverstripeBaseModel::DefaultTimeZone,
             'votes_count' => new DoctrineHavingFilterMapping("", "av.presentation", "count(av.id) :operator :value")
         ];
     }

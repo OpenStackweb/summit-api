@@ -369,6 +369,7 @@ final class DoctrineSummitEventRepository
         }
 
         $query = $this->getEntityManager()->createQueryBuilder()
+            ->addSelect("e")
             ->select("e")
             ->from($this->getBaseEntity(), "e")
             ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')

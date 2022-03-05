@@ -369,12 +369,13 @@ final class DoctrineSummitEventRepository
         }
 
         $query = $this->getEntityManager()->createQueryBuilder()
-            ->addSelect("e")
+            ->distinct("e")
             ->select("e")
-            ->from($this->getBaseEntity(), "e");
+            ->from($this->getBaseEntity(), "e")
+            ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id');
 
             if(!$order->hasOrder("vote_count")) {
-                $query = $query->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')
+                $query = $query
                     ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
                     ->leftJoin("e.created_by", 'cb', Join::LEFT_JOIN)
                     ->leftJoin("e.category", 'cc', Join::LEFT_JOIN)

@@ -30,6 +30,7 @@ use models\summit\SummitGroupEvent;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineCollectionFieldsFilterMapping;
 use utils\DoctrineFilterMapping;
+use utils\DoctrineHavingFilterMapping;
 use utils\DoctrineInstanceOfFilterMapping;
 use utils\DoctrineJoinFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
@@ -317,7 +318,8 @@ final class DoctrineSummitEventRepository
                     Presentation::ClassName => Presentation::class,
                 ]
             ),
-            'presentation_attendee_vote_date' => 'av.created:datetime_epoch'
+            'presentation_attendee_vote_date' => 'av.created:datetime_epoch',
+            'vote_count' => new DoctrineHavingFilterMapping("", "av.presentation", "count(av.id) :operator :value")
         ];
     }
 

@@ -46,7 +46,8 @@ final class DoctrineSummitAttendeeRepository
      * @return QueryBuilder
      */
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
-        $query =  $query->join('e.summit', 's');
+        $query =  $query->join('e.summit', 's')
+            ->leftJoin('e.member', 'm');
 
         if($filter->hasFilter("presentation_votes_count")){
             $query = $query->leftJoin("e.presentation_votes","pv");
@@ -57,14 +58,6 @@ final class DoctrineSummitAttendeeRepository
                 ->leftJoin("p.category", "pc")
                 ->leftJoin("pc.groups","pcg");
         }
-
-        if($filter->hasFilter("member_id") ||
-            $filter->hasFilter("first_name") ||
-            $filter->hasFilter("last_name") ||
-            $filter->hasFilter("full_name") ||
-            $filter->hasFilter("email")
-        )
-            $query = $query->leftJoin('e.member', 'm');
 
         if(
             $filter->hasFilter("has_tickets") ||

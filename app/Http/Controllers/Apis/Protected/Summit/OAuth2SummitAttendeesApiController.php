@@ -385,7 +385,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         $params  = [];
 
         if(!is_null($filter)) {
-            $votingDateFilter = $filter->getFilter('presentation_attendee_vote_date');
+            $votingDateFilter = $filter->getFilter('presentation_votes_date');
             if ($votingDateFilter != null) {
                 $params['begin_attendee_voting_period_date'] = $votingDateFilter[0]->getValue();
                 if (count($votingDateFilter) > 1) {
@@ -395,11 +395,29 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         }
 
         return $this->_getAll(
-            function () {
-                return;
-            },
-            function () use($filterRules) {
+            function () use($filterRules){
                 return $filterRules;
+            },
+            function () {
+                return [
+                    'first_name' => 'sometimes|string',
+                    'last_name' => 'sometimes|string',
+                    'full_name' => 'sometimes|string',
+                    'company' => 'sometimes|string',
+                    'email' => 'sometimes|string',
+                    'external_order_id' => 'sometimes|string',
+                    'external_attendee_id' => 'sometimes|string',
+                    'member_id' => 'sometimes|integer',
+                    'ticket_type' => 'sometimes|string',
+                    'badge_type' => 'sometimes|string',
+                    'status' => 'sometimes|string',
+                    'has_member' => 'sometimes|required|string|in:true,false',
+                    'has_tickets'=> 'sometimes|required|string|in:true,false',
+                    'tickets_count' => 'sometimes|integer',
+                    'presentation_votes_date' => 'sometimes|date_format:U',
+                    'presentation_votes_count' => 'sometimes|integer',
+                    'presentation_votes_track_group_id' => 'sometimes|integer',
+                ];
             },
             function () {
                 return [

@@ -952,7 +952,7 @@ SQL;
         if($track_group_id != null){
             $res = $res->filter(function($v) use($track_group_id){
                if($v instanceof PresentationAttendeeVote){
-                   return $v->getPresentation()->getCategory()->getGroupById($track_group_id) != null;
+                   return $v->getPresentation()->getCategory()->belongsToGroup($track_group_id);
                }
                return false;
             });

@@ -383,18 +383,47 @@ class PresentationCategory extends SilverstripeBaseModel
      * @return PresentationCategoryGroup|null
      */
     public function getGroupById($group_id){
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('id', intval($group_id)));
-        $res = $this->groups->matching($criteria)->first();
-        return $res === false ? null : $res;
+        //$criteria = Criteria::create();
+        //$criteria->where(Criteria::expr()->eq('id', intval($group_id)));
+        //$res = $this->groups->matching($criteria)->first();
+        //return $res === false ? null : $res;
+
+        return $this->groups->filter(function($g){
+            if($g instanceof PresentationCategoryGroup){
+                return $g->hasCategory($this->id);
+            }
+            return false;
+        });
     }
 
     /**
      * @param int $group_id
      * @return bool
      */
-    public function belongsToGroup($group_id){
-        return $this->getGroupById($group_id) != null;
+    public function belongsToGroup(int $group_id):bool{
+        try {
+            $sql = <<<SQL
+SELECT COUNT(*) FROM PresentationCategoryGroup_Categories
+WHERE PresentationCategoryGroupID = :group_id AND 
+      PresentationCategoryID = :track_id
+SQL;
+
+
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(
+                [
+                    'track_id' => $this->getId(),
+                    'group_id' => $group_id
+                ]
+            );
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = count($res) > 0 ? $res[0] : 0;
+            return $res > 0;
+        }
+        catch (\Exception $ex){
+            Log::warning($ex);
+        }
+        return false;
     }
 
     /**

@@ -17,6 +17,8 @@ use models\summit\ISponsorUserInfoGrantRepository;
 use models\summit\SponsorBadgeScan;
 use models\summit\SponsorUserInfoGrant;
 use utils\DoctrineFilterMapping;
+use utils\Filter;
+
 /**
  * Class DoctrineSponsorUserInfoGrantRepository
  * @package App\Repositories\Summit
@@ -82,7 +84,7 @@ final class DoctrineSponsorUserInfoGrantRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
         $query = $query->join('e.sponsor', 'sp')
             ->join('sp.summit', 's')
             ->join('sp.company', 'c')

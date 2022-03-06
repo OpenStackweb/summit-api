@@ -17,6 +17,8 @@ use Doctrine\ORM\QueryBuilder;
 use Illuminate\Support\Facades\App;
 use models\utils\SilverstripeBaseModel;
 use LaravelDoctrine\ORM\Facades\Registry;
+use utils\Filter;
+
 /**
  * Class SilverStripeDoctrineRepository
  * @package App\Repositories
@@ -64,7 +66,7 @@ abstract class SilverStripeDoctrineRepository extends DoctrineRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
         return $query;
     }
 

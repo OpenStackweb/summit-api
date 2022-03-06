@@ -18,6 +18,8 @@ use models\summit\Sponsor;
 use utils\DoctrineHavingFilterMapping;
 use utils\DoctrineJoinFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
+use utils\Filter;
+
 /**
  * Class DoctrineSponsorRepository
  * @package App\Repositories\Summit
@@ -45,7 +47,7 @@ implements ISponsorRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
         $query = $query->leftJoin("e.user_info_grants", "bs");
         return $query;
     }

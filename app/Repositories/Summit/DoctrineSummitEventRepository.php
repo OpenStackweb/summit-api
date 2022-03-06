@@ -90,7 +90,7 @@ final class DoctrineSummitEventRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query)
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
     {
         $query = $query->innerJoin("e.type", "et", Join::ON);
         $query = $query->innerJoin("e.category", "c", Join::ON);
@@ -395,7 +395,7 @@ final class DoctrineSummitEventRepository
                     ->leftJoin('spm.registration_request', "sprr2", Join::LEFT_JOIN);
             }
 
-        $query = $this->applyExtraJoins($query);
+        $query = $this->applyExtraJoins($query,$filter);
 
         if (!is_null($filter)) {
             $filter->apply2Query($query, $this->getCustomFilterMappings($current_member_id, $current_track_id));

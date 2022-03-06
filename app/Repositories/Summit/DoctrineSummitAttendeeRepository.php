@@ -40,17 +40,44 @@ final class DoctrineSummitAttendeeRepository
     implements ISummitAttendeeRepository
 {
 
-    protected function applyExtraJoins(QueryBuilder $query){
-        $query =  $query->join('e.summit', 's')
-            ->leftJoin('e.member', 'm')
-            ->leftJoin('e.tickets', 't')
-            ->leftJoin('t.badge', 'b')
-            ->leftJoin('b.type', 'bt')
-            ->leftJoin('t.ticket_type', 'tt')
-            ->leftJoin("e.presentation_votes","pv")
-            ->leftJoin("pv.presentation", "p")
-            ->leftJoin("p.category", "pc")
-            ->leftJoin("pc.groups","pcg");
+    /**
+     * @param QueryBuilder $query
+     * @param Filter|null $filter
+     * @return QueryBuilder
+     */
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+        $query =  $query->join('e.summit', 's');
+
+        if($filter->hasFilter("presentation_votes_count")){
+            $query = $query->leftJoin("e.presentation_votes","pv");
+        }
+
+        if($filter->hasFilter("presentation_votes_track_group_id")){
+            $query = $query->leftJoin("pv.presentation", "p")
+                ->leftJoin("p.category", "pc")
+                ->leftJoin("pc.groups","pcg");
+        }
+
+        if($filter->hasFilter("member_id") ||
+            $filter->hasFilter("first_name") ||
+            $filter->hasFilter("last_name") ||
+            $filter->hasFilter("full_name") ||
+            $filter->hasFilter("email")
+        )
+            $query = $query->leftJoin('e.member', 'm');
+
+        if(
+            $filter->hasFilter("has_tickets") ||
+            $filter->hasFilter("tickets_count") ||
+            $filter->hasFilter("ticket_type") ||
+            $filter->hasFilter("badge_type")
+        ) {
+            $query = $query->leftJoin('e.tickets', 't')
+                ->leftJoin('t.badge', 'b')
+                ->leftJoin('b.type', 'bt')
+                ->leftJoin('t.ticket_type', 'tt');
+        }
+
         return $query;
     }
 

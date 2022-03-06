@@ -18,6 +18,7 @@ use models\summit\ISummitRepository;
 use models\summit\Summit;
 use App\Repositories\SilverStripeDoctrineRepository;
 use utils\DoctrineHavingFilterMapping;
+use utils\Filter;
 
 /**
  * Class DoctrineSummitRepository
@@ -78,7 +79,7 @@ final class DoctrineSummitRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query)
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
     {
         $query = $query->leftJoin("e.ticket_types", "tt");
         $query = $query->leftJoin("e.selection_plans", "sp");

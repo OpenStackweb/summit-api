@@ -66,6 +66,18 @@ class One2ManyExpandSerializer implements IExpandSerializer
         $this->getter = $getter;
         $this->has = $has;
         $this->serializer_type = $serializer_type;
+        Log::debug
+        (
+            sprintf
+            (
+                "One2ManyExpandSerializer::__construct original attribute %s attribute %s getter %s has %s serializer type %s",
+                $this->original_attribute,
+                $this->attribute,
+                $this->getter,
+                $this->has,
+                $this->serializer_type
+            )
+        );
     }
 
 
@@ -91,6 +103,17 @@ class One2ManyExpandSerializer implements IExpandSerializer
      */
     public function serialize($entity, array $values, string $expand, array $fields = [], array $relations = [], array $params = []): array
     {
+        Log::debug
+        (
+            sprintf
+            (
+                "One2ManyExpandSerializer::serialize expand %s fields %s relations %s",
+                $expand,
+                implode(',', $fields),
+                implode(',', $relations)
+            )
+        );
+
         $res = $entity->{$this->has}();
         if(boolval($res)){
             $values = $this->unsetOriginalAttribute($values);

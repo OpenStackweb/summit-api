@@ -392,6 +392,10 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     $params['end_attendee_voting_period_date'] = $votingDateFilter[1]->getValue();
                 }
             }
+            $trackGroupFilter = $filter->getFilter('presentation_votes_track_group_id');
+            if ($trackGroupFilter != null) {
+                $params['presentation_votes_track_group_id'] = $trackGroupFilter[0]->getValue();
+            }
         }
 
         return $this->_getAll(

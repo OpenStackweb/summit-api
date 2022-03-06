@@ -915,18 +915,20 @@ SQL;
     /**
      * @param int|null $begin_voting_date
      * @param int|null $end_voting_date
+     * @param int|null $track_group_id
      * @return ArrayCollection| PresentationAttendeeVote[]
      */
-    public function getPresentationVotes(?int $begin_voting_date = null, ?int $end_voting_date = null){
-        return $this->getVotesRange($begin_voting_date, $end_voting_date);
+    public function getPresentationVotes(?int $begin_voting_date = null, ?int $end_voting_date = null, ?int $track_group_id = null){
+        return $this->getVotesRange($begin_voting_date, $end_voting_date, $track_group_id);
     }
 
     /**
      * @param int|null $begin_voting_date
      * @param int|null $end_voting_date
+     * @param int|null $track_group_id
      * @return ArrayCollection|\Doctrine\Common\Collections\Collection|PresentationAttendeeVote[]
      */
-    private function getVotesRange(?int $begin_voting_date = null, ?int $end_voting_date = null) {
+    private function getVotesRange(?int $begin_voting_date = null, ?int $end_voting_date = null, ?int $track_group_id = null) {
         $criteria = null;
 
         if ($begin_voting_date != null) {
@@ -944,6 +946,17 @@ SQL;
                 $criteria->andWhere($expr);
             }
         }
-        return $criteria != null ? $this->presentation_votes->matching($criteria) : $this->presentation_votes;
+
+        $res = $criteria != null ? $this->presentation_votes->matching($criteria) : $this->presentation_votes;
+        if($track_group_id != null){
+            $res = $res->filter(function($v) use($track_group_id){
+               if($v instanceof PresentationAttendeeVote){
+                   return $v->getPresentation()->getCategory()->getGroupById($track_group_id) != null;
+               }
+               return false;
+            });
+        }
+
+        return $res;
     }
 }

@@ -906,10 +906,11 @@ SQL;
     /**
      * @param int|null $begin_voting_date
      * @param int|null $end_voting_date
+     * @param int|null $track_group_id
      * @return int
      */
-    public function getVotesCount(?int $begin_voting_date = null, ?int $end_voting_date = null):int{
-        return $this->getVotesRange($begin_voting_date, $end_voting_date)->count();
+    public function getVotesCount(?int $begin_voting_date = null, ?int $end_voting_date = null, ?int $track_group_id = null):int{
+        return $this->getVotesRange($begin_voting_date, $end_voting_date, $track_group_id)->count();
     }
 
     /**

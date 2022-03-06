@@ -89,7 +89,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
         if (in_array('presentation_votes', $relations)) {
             $presentation_votes = [];
 
-            foreach ($attendee->getPresentationVotes($beginVotingDate, $endVotingDate) as $vote) {
+            foreach ($attendee->getPresentationVotes($beginVotingDate, $endVotingDate, $track_group_id) as $vote) {
                 $presentation_votes[] = $vote->getId();
             }
             $values['presentation_votes'] = $presentation_votes;
@@ -108,7 +108,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
 
         $beginVotingDate = $params['begin_attendee_voting_period_date'] ?? null;
         $endVotingDate = $params['end_attendee_voting_period_date'] ?? null;
-        $values['votes_count'] = $attendee->getVotesCount($beginVotingDate, $endVotingDate);
+        $values['votes_count'] = $attendee->getVotesCount($beginVotingDate, $endVotingDate, $track_group_id);
 
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);
@@ -142,7 +142,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                         if (!in_array('presentation_votes', $relations)) break;
                         unset($values['presentation_votes']);
                         $presentation_votes = [];
-                        foreach($attendee->getPresentationVotes($beginVotingDate, $endVotingDate) as $vote)
+                        foreach($attendee->getPresentationVotes($beginVotingDate, $endVotingDate, $track_group_id) as $vote)
                         {
                             $presentation_votes[] = SerializerRegistry::getInstance()->getSerializer($vote)
                                 ->serialize(

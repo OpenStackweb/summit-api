@@ -79,7 +79,6 @@ class AdminVoteablePresentationSerializer extends AdminPresentationSerializer
             }
         }
 
-
         return $values;
     }
 }

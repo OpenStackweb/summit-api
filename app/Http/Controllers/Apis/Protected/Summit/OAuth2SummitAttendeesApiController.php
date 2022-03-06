@@ -354,6 +354,26 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
         SynchAllAttendeesStatus::dispatch($summit->getId());
 
+        $filter = null;
+
+        if (Request::has('filter')) {
+            $filter = FilterParser::parse(Request::get('filter'), call_user_func($getFilterRules));
+        }
+
+        if (is_null($filter)) $filter = new Filter();
+
+        $params  = [];
+
+        if(!is_null($filter)) {
+            $votingDateFilter = $filter->getFilter('presentation_attendee_vote_date');
+            if ($votingDateFilter != null) {
+                $params['begin_attendee_voting_period_date'] = $votingDateFilter[0]->getValue();
+                if (count($votingDateFilter) > 1) {
+                    $params['end_attendee_voting_period_date'] = $votingDateFilter[1]->getValue();
+                }
+            }
+        }
+
         return $this->_getAll(
             function () {
                 return [
@@ -371,6 +391,9 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'has_member' => ['=='],
                     'has_tickets' => ['=='],
                     'tickets_count' => ['==', '>=', '<=', '>', '<'],
+                    'presentation_votes_date' => ['==', '>=', '<=', '>', '<'],
+                    'presentation_votes_count' => ['==', '>=', '<=', '>', '<'],
+                    'presentation_votes_track_group_id' => ['=='],
                 ];
             },
             function () {
@@ -389,6 +412,9 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'has_member' => 'sometimes|required|string|in:true,false',
                     'has_tickets'=> 'sometimes|required|string|in:true,false',
                     'tickets_count' => 'sometimes|integer',
+                    'presentation_votes_date' => 'sometimes|date_format:U',
+                    'presentation_votes_count' => 'sometimes|integer',
+                    'presentation_votes_track_group_id' => 'sometimes|integer',
                 ];
             },
             function () {
@@ -403,6 +429,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'member_id',
                     'status',
                     'full_name',
+                    'presentation_votes_count'
                 ];
             },
             function ($filter) use ($summit) {
@@ -413,7 +440,11 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             },
             function () {
                 return SerializerRegistry::SerializerType_Private;
-            }
+            },
+            null,
+            null,
+            null,
+            $params
         );
     }
 

@@ -1280,11 +1280,30 @@ class SummitEvent extends SilverstripeBaseModel
             Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s summit is public open.",$member->getId(), $member->getEmail(), $this->id));
             return true;
         }
+
         if($member->isAdmin() || $this->summit->isSummitAdmin($member) || $member->isTester()){
             Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s is SuperAdmnin/Admin/SummitAdmin or Tester.",$member->getId(), $member->getEmail(), $this->id));
             return true;
         }
+
         if($member->hasPaidTicketOnSummit($this->summit)){
+
+            if($this->category->getAllowedAccessLevels()->count() > 0){
+                $eventAccessLevels = $this->category->getAllowedAccessLevels();
+                Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has set access levels.", $member->getId(), $member->getEmail(), $this->id));
+                foreach($member->getPaidSummitTickets($this->summit) as $ticket){
+                    $accessLevels = $ticket->getBadgeAccessLevels();
+                    Log::debug(sprintf("SummitEvent::hasAccess checking access levels for ticket %s", $ticket->getId()));
+                    foreach ($eventAccessLevels as $accessLevel){
+                        Log::debug(sprintf("SummitEvent::hasAccess checking access level %s for ticket %s", $ticket->getId(), $accessLevel->getName()));
+                        if(array_key_exists($accessLevel->getId(), $accessLevels)) {
+                            Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s owns access level %s.", $member->getId(), $member->getEmail(), $this->id, $accessLevel->getName()));
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
             Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has a paid ticket.",$member->getId(), $member->getEmail(), $this->id));
             return true;
         }

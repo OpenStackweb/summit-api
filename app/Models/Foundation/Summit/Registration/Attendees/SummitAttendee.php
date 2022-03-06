@@ -920,12 +920,13 @@ SQL;
     public function getPresentationVotes(?int $begin_voting_date = null, ?int $end_voting_date = null){
         return $this->getVotesRange($begin_voting_date, $end_voting_date);
     }
+
     /**
      * @param int|null $begin_voting_date
      * @param int|null $end_voting_date
-     * @return ArrayCollection
+     * @return ArrayCollection|\Doctrine\Common\Collections\Collection|PresentationAttendeeVote[]
      */
-    private function getVotesRange(?int $begin_voting_date = null, ?int $end_voting_date = null): ArrayCollection {
+    private function getVotesRange(?int $begin_voting_date = null, ?int $end_voting_date = null) {
         $criteria = null;
 
         if ($begin_voting_date != null) {

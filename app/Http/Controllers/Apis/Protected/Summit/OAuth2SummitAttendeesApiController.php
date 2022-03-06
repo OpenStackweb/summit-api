@@ -356,8 +356,28 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
         $filter = null;
 
+        $filterRules =  [
+            'first_name' => ['=@', '=='],
+            'last_name' => ['=@', '=='],
+            'full_name' => ['=@', '=='],
+            'company' => ['=@', '=='],
+            'email' => ['=@', '=='],
+            'external_order_id' => ['=@', '=='],
+            'external_attendee_id' => ['=@', '=='],
+            'member_id' => ['==', '>'],
+            'ticket_type' => ['=@', '=='],
+            'badge_type' => ['=@', '=='],
+            'status' => ['=@', '=='],
+            'has_member' => ['=='],
+            'has_tickets' => ['=='],
+            'tickets_count' => ['==', '>=', '<=', '>', '<'],
+            'presentation_votes_date' => ['==', '>=', '<=', '>', '<'],
+            'presentation_votes_count' => ['==', '>=', '<=', '>', '<'],
+            'presentation_votes_track_group_id' => ['=='],
+        ];
+
         if (Request::has('filter')) {
-            $filter = FilterParser::parse(Request::get('filter'), call_user_func($getFilterRules));
+            $filter = FilterParser::parse(Request::get('filter'), $filterRules);
         }
 
         if (is_null($filter)) $filter = new Filter();
@@ -376,46 +396,10 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
         return $this->_getAll(
             function () {
-                return [
-                    'first_name' => ['=@', '=='],
-                    'last_name' => ['=@', '=='],
-                    'full_name' => ['=@', '=='],
-                    'company' => ['=@', '=='],
-                    'email' => ['=@', '=='],
-                    'external_order_id' => ['=@', '=='],
-                    'external_attendee_id' => ['=@', '=='],
-                    'member_id' => ['==', '>'],
-                    'ticket_type' => ['=@', '=='],
-                    'badge_type' => ['=@', '=='],
-                    'status' => ['=@', '=='],
-                    'has_member' => ['=='],
-                    'has_tickets' => ['=='],
-                    'tickets_count' => ['==', '>=', '<=', '>', '<'],
-                    'presentation_votes_date' => ['==', '>=', '<=', '>', '<'],
-                    'presentation_votes_count' => ['==', '>=', '<=', '>', '<'],
-                    'presentation_votes_track_group_id' => ['=='],
-                ];
+                return;
             },
-            function () {
-                return [
-                    'first_name' => 'sometimes|string',
-                    'last_name' => 'sometimes|string',
-                    'full_name' => 'sometimes|string',
-                    'company' => 'sometimes|string',
-                    'email' => 'sometimes|string',
-                    'external_order_id' => 'sometimes|string',
-                    'external_attendee_id' => 'sometimes|string',
-                    'member_id' => 'sometimes|integer',
-                    'ticket_type' => 'sometimes|string',
-                    'badge_type' => 'sometimes|string',
-                    'status' => 'sometimes|string',
-                    'has_member' => 'sometimes|required|string|in:true,false',
-                    'has_tickets'=> 'sometimes|required|string|in:true,false',
-                    'tickets_count' => 'sometimes|integer',
-                    'presentation_votes_date' => 'sometimes|date_format:U',
-                    'presentation_votes_count' => 'sometimes|integer',
-                    'presentation_votes_track_group_id' => 'sometimes|integer',
-                ];
+            function () use($filterRules) {
+                return $filterRules;
             },
             function () {
                 return [

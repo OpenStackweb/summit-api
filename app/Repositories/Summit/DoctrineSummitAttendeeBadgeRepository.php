@@ -16,6 +16,8 @@ use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use models\summit\SummitAttendeeBadge;
 use utils\DoctrineFilterMapping;
+use utils\Filter;
+
 /**
  * Class DoctrineSummitAttendeeBadgeRepository
  * @package App\Repositories\Summit
@@ -70,7 +72,7 @@ final class DoctrineSummitAttendeeBadgeRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
         $query = $query->join('e.ticket', 't')
             ->leftJoin('t.owner', 'o')
             ->leftJoin('o.member', 'm')

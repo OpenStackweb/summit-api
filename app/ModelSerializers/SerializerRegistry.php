@@ -123,6 +123,8 @@ final class SerializerRegistry
     const SerializerType_Public = 'PUBLIC';
     const SerializerType_Private = 'PRIVATE';
     const SerializerType_Admin = 'ADMIN';
+    const SerializerType_Admin_Voteable = 'ADMIN_VOTEABLE';
+    const SerializerType_Admin_Voteable_CSV = "ADMIN_VOTEABLE_CSV";
     const SerializerType_CSV = 'CSV';
 
     private function __clone()
@@ -231,6 +233,8 @@ final class SerializerRegistry
             self::SerializerType_Public => PresentationSerializer::class,
             self::SerializerType_Private => AdminPresentationSerializer::class,
             self::SerializerType_CSV => AdminPresentationCSVSerializer::class,
+            self::SerializerType_Admin_Voteable => AdminVoteablePresentationSerializer::class,
+            self::SerializerType_Admin_Voteable_CSV => AdminVoteablePresentationCSVSerializer::class,
             IPresentationSerializerTypes::TrackChairs => TrackChairPresentationSerializer::class,
             IPresentationSerializerTypes::TrackChairs_CSV => TrackChairPresentationCSVSerializer::class
         ];

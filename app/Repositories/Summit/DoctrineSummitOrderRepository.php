@@ -21,6 +21,7 @@ use models\summit\SummitAttendee;
 use models\summit\SummitOrder;
 use models\utils\SilverstripeBaseModel;
 use utils\DoctrineFilterMapping;
+use utils\Filter;
 use utils\PagingInfo;
 use utils\PagingResponse;
 /**
@@ -67,7 +68,7 @@ final class DoctrineSummitOrderRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
         $query
             ->join('e.tickets','t')
             ->join('e.summit','s')

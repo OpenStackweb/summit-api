@@ -15,6 +15,7 @@
 use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
 use App\Jobs\Emails\RevocationTicketEmail;
 use App\Jobs\Emails\SummitAttendeeTicketEmail;
+use Carbon\Carbon;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\ArrayCollection;
 use Illuminate\Support\Facades\Cache;
@@ -892,10 +893,6 @@ SQL;
         return $now;
     }
 
-    public function getPresentationVotes(){
-        return $this->presentation_votes;
-    }
-
     public function addPresentationVote(PresentationAttendeeVote $vote){
         if($this->presentation_votes->contains($vote)) return;
         $this->addPresentationVote($vote);
@@ -906,4 +903,61 @@ SQL;
         $this->presentation_votes->removeElement($vote);
     }
 
+    /**
+     * @param int|null $begin_voting_date
+     * @param int|null $end_voting_date
+     * @param int|null $track_group_id
+     * @return int
+     */
+    public function getVotesCount(?int $begin_voting_date = null, ?int $end_voting_date = null, ?int $track_group_id = null):int{
+        return $this->getVotesRange($begin_voting_date, $end_voting_date, $track_group_id)->count();
+    }
+
+    /**
+     * @param int|null $begin_voting_date
+     * @param int|null $end_voting_date
+     * @param int|null $track_group_id
+     * @return ArrayCollection| PresentationAttendeeVote[]
+     */
+    public function getPresentationVotes(?int $begin_voting_date = null, ?int $end_voting_date = null, ?int $track_group_id = null){
+        return $this->getVotesRange($begin_voting_date, $end_voting_date, $track_group_id);
+    }
+
+    /**
+     * @param int|null $begin_voting_date
+     * @param int|null $end_voting_date
+     * @param int|null $track_group_id
+     * @return ArrayCollection|\Doctrine\Common\Collections\Collection|PresentationAttendeeVote[]
+     */
+    private function getVotesRange(?int $begin_voting_date = null, ?int $end_voting_date = null, ?int $track_group_id = null) {
+        $criteria = null;
+
+        if ($begin_voting_date != null) {
+            $begin_voting_date = Carbon::createFromTimestamp($begin_voting_date, new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone));
+            $criteria = Criteria::create();
+            $criteria->where(Criteria::expr()->gte('created', $begin_voting_date));
+        }
+        if ($end_voting_date != null) {
+            $end_voting_date = Carbon::createFromTimestamp($end_voting_date, new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone));
+            $expr = Criteria::expr()->lte('created', $end_voting_date);
+            if ($criteria == null) {
+                $criteria = Criteria::create();
+                $criteria->where($expr);
+            } else {
+                $criteria->andWhere($expr);
+            }
+        }
+
+        $res = $criteria != null ? $this->presentation_votes->matching($criteria) : $this->presentation_votes;
+        if($track_group_id != null){
+            $res = $res->filter(function($v) use($track_group_id){
+               if($v instanceof PresentationAttendeeVote){
+                   return $v->getPresentation()->getCategory()->belongsToGroup($track_group_id);
+               }
+               return false;
+            });
+        }
+
+        return $res;
+    }
 }

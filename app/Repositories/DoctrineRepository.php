@@ -114,9 +114,10 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
 
     /**
      * @param QueryBuilder $query
+     * @param Filter|null $filter
      * @return QueryBuilder
      */
-    protected abstract function applyExtraJoins(QueryBuilder $query);
+    protected abstract function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null);
 
     /**
      * @param PagingInfo $paging_info
@@ -131,7 +132,7 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
             ->select("e")
             ->from($this->getBaseEntity(), "e");
 
-        $query = $this->applyExtraJoins($query);
+        $query = $this->applyExtraJoins($query, $filter);
 
         $query = $this->applyExtraFilters($query);
 
@@ -178,7 +179,7 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
             ->select("e.id")
             ->from($this->getBaseEntity(), "e");
 
-        $query = $this->applyExtraJoins($query);
+        $query = $this->applyExtraJoins($query, $filter);
 
         $query = $this->applyExtraFilters($query);
 

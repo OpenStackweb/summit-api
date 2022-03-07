@@ -117,6 +117,7 @@ class SummitEventSerializer extends SilverStripeSerializer
         if (!$event instanceof SummitEvent) return [];
 
         if (!count($relations)) $relations = $this->getAllowedRelations();
+        if(!count($fields)) $fields = $this->getAllowedFields();
 
         $values = parent::serialize($expand, $fields, $relations, $params);
 
@@ -154,9 +155,12 @@ class SummitEventSerializer extends SilverStripeSerializer
         }
 
         if ($event->hasAccess($params['current_user'] ?? null)) {
-            $values['streaming_url'] = $event->getStreamingUrl();
-            $values['streaming_type'] = $event->getStreamingType();
-            $values['etherpad_link'] = $event->getEtherpadLink();
+            if(in_array("streaming_url",$fields))
+                $values['streaming_url'] = $event->getStreamingUrl();
+            if(in_array("streaming_type",$fields))
+                $values['streaming_type'] = $event->getStreamingType();
+            if(in_array("etherpad_link",$fields))
+                $values['etherpad_link'] = $event->getEtherpadLink();
         }
 
         if (!empty($expand)) {

@@ -11,24 +11,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use models\summit\Presentation;
 use utils\Filter;
 use utils\FilterParser;
-
 /**
- * Class RetrieveAllSummitVoteablePresentationsStrategy
+ * Class RetrieveAllSummitVoteablePresentationsStrategyCSV
  * @package App\Http\Controllers
  */
-class RetrieveAllSummitVoteablePresentationsStrategy extends RetrieveAllSummitPresentationsStrategy
+class RetrieveAllSummitVoteablePresentationsStrategyCSV extends RetrieveAllSummitVoteablePresentationsStrategy
 {
-    /**
-     * @return null|Filter
-     */
-    protected function buildFilter()
-    {
-        $filter = parent::buildFilter();
-        $filter->addFilterCondition(FilterParser::buildFilter('type_allows_attendee_vote','==',1));
-        return $filter;
+    protected function getPageParams(){
+        return [1, PHP_INT_MAX];
     }
 }

@@ -16,6 +16,7 @@ use App\Models\Foundation\Summit\Repositories\IPresentationMediaUploadRepository
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use models\summit\PresentationMediaUpload;
+use utils\Filter;
 
 /**
  * Class DoctrinePresentationMediaUploadRepository
@@ -56,7 +57,7 @@ extends SilverStripeDoctrineRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
         $query = $query->innerJoin("e.media_upload_type", "t");
         return $query;
     }

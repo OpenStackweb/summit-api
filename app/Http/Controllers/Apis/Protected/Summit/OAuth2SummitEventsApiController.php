@@ -95,9 +95,6 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     /**
      * @return string
      */
-    /**
-     * @return string
-     */
     private function getSerializerType():string{
 
         $current_user = $this->resource_server_context->getCurrentUser(true);
@@ -106,6 +103,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         $method = Request::method();
         $clientId = $this->resource_server_context->getCurrentClientId();
         $scope = $this->resource_server_context->getCurrentScope();
+
         Log::debug(sprintf("OAuth2SummitEventsApiController::getSerializerType client id %s app_type %s scope %s has current user %b %s %s ", $clientId, $application_type, implode(" ", $scope), !is_null($current_user), $method, $path));
         if($application_type == "SERVICE" || (!is_null($current_user) && ($current_user->isAdmin() || ($current_user->isSummitAdmin())))){
             Log::debug(sprintf("OAuth2SummitEventsApiController::getSerializerType app_type %s has current user %b PRIVATE", $application_type, !is_null($current_user)));
@@ -366,8 +364,9 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         {
             $strategy = new RetrieveAllSummitPresentationsStrategy($this->repository, $this->event_repository, $this->resource_server_context);
             $response = $strategy->getEvents(['summit_id' => intval($summit_id)]);
-
-            $response = $strategy->getEvents();
+            $params  = [
+                'current_user' => $this->resource_server_context->getCurrentUser(true),
+            ];
             return $this->ok
             (
                 $response->toArray
@@ -375,9 +374,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                     self::getExpands(),
                     self::getFields(),
                     self::getRelations(),
-                    [
-                        'current_user' => $this->resource_server_context->getCurrentUser(true)
-                    ],
+                    $params,
                     $this->getSerializerType()
                 )
             );
@@ -406,8 +403,23 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     {
         try
         {
-            $strategy = new RetrieveAllSummitVoteablePresentationsStrategy($this->repository, $this->event_repository, $this->resource_server_context);
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) throw new EntityNotFoundException;
+
+            $strategy = new RetrieveAllSummitVoteablePresentationsStrategy
+            (
+                $this->repository,
+                $this->event_repository,
+                $this->resource_server_context
+            );
+
             $response = $strategy->getEvents(['summit_id' => intval($summit_id)]);
+
+            $params  = [
+                'current_user' => $this->resource_server_context->getCurrentUser(true),
+                'use_cache' => true,
+            ];
+
             return $this->ok
             (
                 $response->toArray
@@ -415,12 +427,144 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                     self::getExpands(),
                     self::getFields(),
                     self::getRelations(),
-                    [
-                        'current_user' => $this->resource_server_context->getCurrentUser(true),
-                        'use_cache' => true,
-                    ],
+                    $params,
                     $this->getSerializerType()
                 )
+            );
+        }
+        catch (EntityNotFoundException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error404();
+        }
+        catch (ValidationException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error412($ex2->getMessages());
+        }
+        catch (Exception $ex)
+        {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getAllVoteablePresentationsV2($summit_id)
+    {
+        try
+        {
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) throw new EntityNotFoundException;
+
+            $strategy = new RetrieveAllSummitVoteablePresentationsStrategy
+            (
+                $this->repository,
+                $this->event_repository,
+                $this->resource_server_context
+            );
+            $response = $strategy->getEvents(['summit_id' => intval($summit_id)]);
+
+            $params  = [
+                'current_user' => $this->resource_server_context->getCurrentUser(true),
+                'use_cache' => true,
+            ];
+
+            $filter = $strategy->getFilter();
+
+            if(!is_null($filter)) {
+                $votingDateFilter = $filter->getFilter('presentation_attendee_vote_date');
+                if ($votingDateFilter != null) {
+                    $params['begin_attendee_voting_period_date'] = $votingDateFilter[0]->getValue();
+                    if (count($votingDateFilter) > 1) {
+                        $params['end_attendee_voting_period_date'] = $votingDateFilter[1]->getValue();
+                    }
+                }
+            }
+
+            return $this->ok
+            (
+                $response->toArray
+                (
+                    self::getExpands(),
+                    self::getFields(),
+                    self::getRelations(),
+                    $params,
+                    SerializerRegistry::SerializerType_Admin_Voteable
+                )
+            );
+        }
+        catch (EntityNotFoundException $ex1)
+        {
+            Log::warning($ex1);
+            return $this->error404();
+        }
+        catch (ValidationException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error412($ex2->getMessages());
+        }
+        catch (Exception $ex)
+        {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    public function getAllVoteablePresentationsV2CSV($summit_id){
+        try
+        {
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) throw new EntityNotFoundException;
+
+            $strategy = new RetrieveAllSummitVoteablePresentationsStrategyCSV
+            (
+                $this->repository,
+                $this->event_repository,
+                $this->resource_server_context
+            );
+
+            $response = $strategy->getEvents(['summit_id' => intval($summit_id)]);
+
+            $params  = [
+                'current_user' => $this->resource_server_context->getCurrentUser(true),
+                'use_cache' => true,
+            ];
+
+            $filter = $strategy->getFilter();
+
+            if(!is_null($filter)) {
+                $votingDateFilter = $filter->getFilter('presentation_attendee_vote_date');
+                if ($votingDateFilter != null) {
+                    $params['begin_attendee_voting_period_date'] = $votingDateFilter[0]->getValue();
+                    if (count($votingDateFilter) > 1) {
+                        $params['end_attendee_voting_period_date'] = $votingDateFilter[1]->getValue();
+                    }
+                }
+            }
+
+
+            $filename = "voteable-presentations-" . date('Ymd');
+            $list     = $response->toArray
+            (
+                self::getExpands(),
+                self::getFields(),
+                ['none'],
+                $params,
+                SerializerRegistry::SerializerType_Admin_Voteable_CSV
+            );
+
+            return $this->export
+            (
+                'csv',
+                $filename,
+                $list['data'],
+                [
+                    'created'        => new EpochCellFormatter(),
+                    'last_edited'    => new EpochCellFormatter(),
+                ]
             );
         }
         catch (EntityNotFoundException $ex1)
@@ -460,6 +604,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $current_user = $this->resource_server_context->getCurrentUser(true);
 
             if(!$event->hasAccess($current_user)){
+                Log::debug(sprintf("OAuth2SummitEventsApiController::getVoteablePresentation summit id %s presentation id %s user has no access.", $summit_id, $presentation_id));
                 throw new EntityNotFoundException("User has not access to this presentation.");
             }
 

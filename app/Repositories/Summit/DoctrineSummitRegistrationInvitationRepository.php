@@ -20,6 +20,8 @@ use models\summit\SummitRegistrationInvitation;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
+use utils\Filter;
+
 /**
  * Class DoctrineSummitRegistrationInvitationRepository
  * @package App\Repositories\Summit
@@ -41,7 +43,7 @@ class DoctrineSummitRegistrationInvitationRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
         $query = $query->join('e.summit', 's');
         return $query;
     }

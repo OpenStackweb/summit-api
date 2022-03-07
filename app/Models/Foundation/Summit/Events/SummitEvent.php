@@ -1270,6 +1270,7 @@ class SummitEvent extends SilverstripeBaseModel
      * @return bool
      */
     public function hasAccess(?Member $member):bool{
+
         if(is_null($member)) {
             Log::debug("SummitEvent::hasAccess member is null");
             return false;
@@ -1280,15 +1281,40 @@ class SummitEvent extends SilverstripeBaseModel
             Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s summit is public open.",$member->getId(), $member->getEmail(), $this->id));
             return true;
         }
+
         if($member->isAdmin() || $this->summit->isSummitAdmin($member) || $member->isTester()){
             Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s is SuperAdmnin/Admin/SummitAdmin or Tester.",$member->getId(), $member->getEmail(), $this->id));
             return true;
         }
+
         if($member->hasPaidTicketOnSummit($this->summit)){
+            if($this->category->getAllowedAccessLevels()->count() > 0){
+                $eventAccessLevelsIds = $this->category->getAllowedAccessLevelsIds();
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitEvent::hasAccess member %s (%s) event %s has set access levels event access levels (%s).",
+                        $member->getId(),
+                        $member->getEmail(),
+                        $this->id,
+                        implode(",", $eventAccessLevelsIds)
+                    )
+                );
+                // for each ticket check if we have the required access levels
+                foreach($member->getPaidSummitTickets($this->summit) as $ticket){
+                    $ticketAccessLevelsIds = $ticket->getBadgeAccessLevelsIds();
+                    Log::debug(sprintf("SummitEvent::hasAccess checking access levels for ticket %s ticket access levels (%s).", $ticket->getId(), implode(",", $ticketAccessLevelsIds)));
+                    if(count(array_intersect($eventAccessLevelsIds, $ticketAccessLevelsIds))) return true;
+                }
+                Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has no access.",$member->getId(), $member->getEmail(), $this->id));
+                return false;
+            }
             Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has a paid ticket.",$member->getId(), $member->getEmail(), $this->id));
             return true;
         }
         Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has no access.",$member->getId(), $member->getEmail(), $this->id));
+
         return false;
     }
 

@@ -1018,6 +1018,25 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         return $res;
     }
 
+    public function getBadgeAccessLevels():array{
+        $res = [];
+        if(is_null($this->badge)) return [];
+
+        foreach ($this->badge->getType()->getAccessLevels() as $accessLevel){
+            $res[$accessLevel->getId()] = $accessLevel;
+        }
+
+        return $res;
+    }
+
+    /**
+     * @return array|int[]
+     */
+    public function getBadgeAccessLevelsIds():array{
+        if(is_null($this->badge)) return [];
+        return $this->badge->getType()->getAccessLevels()->map(function($al){ return $al->getId();})->toArray();
+    }
+
     /**
      * @return null|string
      */

@@ -60,10 +60,12 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
         $summit         = $attendee->getSummit();
 
         $attendee->updateStatus();
-
-        $values         = parent::serialize($expand, $fields, $relations, $params);
-        $member         = null;
-        $speaker        = null;
+        $beginVotingDate = $params['begin_attendee_voting_period_date'] ?? null;
+        $endVotingDate   = $params['end_attendee_voting_period_date'] ?? null;
+        $track_group_id  = $params['presentation_votes_track_group_id'] ?? null;
+        $values          = parent::serialize($expand, $fields, $relations, $params);
+        $member          = null;
+        $speaker         = null;
 
         if (in_array('tickets', $relations)) {
             $tickets = [];
@@ -87,7 +89,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
         if (in_array('presentation_votes', $relations)) {
             $presentation_votes = [];
 
-            foreach ($attendee->getPresentationVotes() as $vote) {
+            foreach ($attendee->getPresentationVotes($beginVotingDate, $endVotingDate, $track_group_id) as $vote) {
                 $presentation_votes[] = $vote->getId();
             }
             $values['presentation_votes'] = $presentation_votes;
@@ -102,6 +104,11 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                 $values['speaker_id'] = intval($speaker->getId());
             }
         }
+
+
+        $beginVotingDate = $params['begin_attendee_voting_period_date'] ?? null;
+        $endVotingDate = $params['end_attendee_voting_period_date'] ?? null;
+        $values['votes_count'] = $attendee->getVotesCount($beginVotingDate, $endVotingDate, $track_group_id);
 
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);
@@ -135,9 +142,15 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                         if (!in_array('presentation_votes', $relations)) break;
                         unset($values['presentation_votes']);
                         $presentation_votes = [];
-                        foreach($attendee->getPresentationVotes() as $vote)
+                        foreach($attendee->getPresentationVotes($beginVotingDate, $endVotingDate, $track_group_id) as $vote)
                         {
-                            $presentation_votes[] = SerializerRegistry::getInstance()->getSerializer($vote)->serialize(AbstractSerializer::getExpandForPrefix('presentation_votes', $expand));
+                            $presentation_votes[] = SerializerRegistry::getInstance()->getSerializer($vote)
+                                ->serialize(
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
                         }
                         $values['presentation_votes'] = $presentation_votes;
                     }

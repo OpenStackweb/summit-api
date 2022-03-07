@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use Libs\ModelSerializers\One2ManyExpandSerializer;
+
 /**
  * Class PresentationAttendeeVoteSerializer
  * @package ModelSerializers
@@ -23,4 +25,18 @@ class PresentationAttendeeVoteSerializer extends SilverStripeSerializer
         'PresentationId' => 'presentation_id:json_int',
      ];
 
+    protected static $expand_mappings = [
+        'voter' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'voter_id',
+            'getter' => 'getVoter',
+            'has' => 'hasVoter'
+        ],
+        'presentation' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'presentation_id',
+            'getter' => 'getPresentation',
+            'has' => 'hasPresentation'
+        ],
+    ];
 }

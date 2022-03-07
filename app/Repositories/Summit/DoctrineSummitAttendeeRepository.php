@@ -19,6 +19,7 @@ use models\summit\Summit;
 use models\summit\SummitAttendee;
 use App\Repositories\SilverStripeDoctrineRepository;
 use models\summit\SummitAttendeeTicket;
+use models\utils\SilverstripeBaseModel;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineHavingFilterMapping;
@@ -39,13 +40,37 @@ final class DoctrineSummitAttendeeRepository
     implements ISummitAttendeeRepository
 {
 
-    protected function applyExtraJoins(QueryBuilder $query){
+    /**
+     * @param QueryBuilder $query
+     * @param Filter|null $filter
+     * @return QueryBuilder
+     */
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
         $query =  $query->join('e.summit', 's')
-            ->leftJoin('e.member', 'm')
-            ->leftJoin('e.tickets', 't')
-            ->leftJoin('t.badge', 'b')
-            ->leftJoin('b.type', 'bt')
-            ->leftJoin('t.ticket_type', 'tt');
+            ->leftJoin('e.member', 'm');
+
+        if($filter->hasFilter("presentation_votes_count")){
+            $query = $query->leftJoin("e.presentation_votes","pv");
+        }
+
+        if($filter->hasFilter("presentation_votes_track_group_id")){
+            $query = $query->leftJoin("pv.presentation", "p")
+                ->leftJoin("p.category", "pc")
+                ->leftJoin("pc.groups","pcg");
+        }
+
+        if(
+            $filter->hasFilter("has_tickets") ||
+            $filter->hasFilter("tickets_count") ||
+            $filter->hasFilter("ticket_type") ||
+            $filter->hasFilter("badge_type")
+        ) {
+            $query = $query->leftJoin('e.tickets', 't')
+                ->leftJoin('t.badge', 'b')
+                ->leftJoin('b.type', 'bt')
+                ->leftJoin('t.ticket_type', 'tt');
+        }
+
         return $query;
     }
 
@@ -112,7 +137,10 @@ final class DoctrineSummitAttendeeRepository
                 "e.email :operator :value"
             ],
             'external_order_id'    => new DoctrineFilterMapping("t.external_order_id :operator :value"),
-            'external_attendee_id' => new DoctrineFilterMapping("t.external_attendee_id :operator :value")
+            'external_attendee_id' => new DoctrineFilterMapping("t.external_attendee_id :operator :value"),
+            'presentation_votes_date' => 'pv.created:datetime_epoch|'.SilverstripeBaseModel::DefaultTimeZone,
+            'presentation_votes_count' => new DoctrineHavingFilterMapping("", "pv.voter", "count(pv.id) :operator :value"),
+            'presentation_votes_track_group_id' => new DoctrineFilterMapping("pcg.id :operator :value"),
         ];
     }
 
@@ -134,7 +162,8 @@ SQL,
             'status'            => 'e.status',
             'email'             => <<<SQL
 COALESCE(LOWER(m.email), LOWER(e.email)) 
-SQL
+SQL,
+            'presentation_votes_count' => 'COUNT(pv.id)',
         ];
     }
 

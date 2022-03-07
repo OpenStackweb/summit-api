@@ -1180,7 +1180,7 @@ final class PresentationService
 
             Log::debug(sprintf("PresentationService::castAttendeeVote summit %s member %s presentation %s", $summit->getId(), $member->getId(), $presentation_id));
             $presentation = $this->presentation_repository->getById($presentation_id);
-            if(is_null($presentation) || !$presentation instanceof Presentation)
+            if(is_null($presentation) || !$presentation instanceof Presentation || !$presentation->hasAccess($member))
                 throw new EntityNotFoundException("Presentation not found.");
 
             if($presentation->getSummitId() !== $summit->getId())

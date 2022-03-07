@@ -15,6 +15,7 @@
 
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\QueryBuilder;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use models\exceptions\ValidationException;
 
@@ -427,18 +428,31 @@ final class Filter
      */
     private function convertValue($value, $original_format)
     {
-        switch ($original_format) {
+        $original_format_parts = explode('|', $original_format);
+        switch ($original_format_parts[0]) {
             case 'datetime_epoch':
+                Log::debug(sprintf("Filter::convertValue datetime_epoch %s", $original_format));
+                $timezone = null;
+                if(count($original_format_parts) > 1){
+                    Log::debug(sprintf("Filter::convertValue datetime_epoch %s setting time zone to %s", $original_format, $original_format_parts[1]));
+                    $timezone = new \DateTimeZone($original_format_parts[1]);
+                }
                 if(is_array($value)){
                     $res = [];
                     foreach ($value as $val){
-                        $datetime = new \DateTime("@$val");
-                        $res[] = sprintf("%s", $datetime->format("Y-m-d H:i:s"));
+                        $datetime = new \DateTime("@$val", $timezone);
+                        if(!is_null($timezone))
+                            $datetime = $datetime->setTimezone($timezone);
+                        $res[] =  $datetime->format("Y-m-d H:i:s");
                     }
                     return $res;
                 }
                 $datetime = new \DateTime("@$value");
-                return sprintf("%s", $datetime->format("Y-m-d H:i:s"));
+                Log::debug(sprintf("Filter::convertValue original date value %s", $datetime->format("Y-m-d H:i:s")));
+                if(!is_null($timezone))
+                    $datetime = $datetime->setTimezone($timezone);
+                Log::debug(sprintf("Filter::convertValue final date %s", $datetime->format("Y-m-d H:i:s")));
+                return  $datetime->format("Y-m-d H:i:s");
                 break;
             case 'json_int':
                 if(is_array($value)){

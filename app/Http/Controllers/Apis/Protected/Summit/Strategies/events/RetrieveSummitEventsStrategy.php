@@ -75,6 +75,13 @@ abstract class RetrieveSummitEventsStrategy
     /**
      * @return null|Filter
      */
+    public function getFilter(){
+        return $this->buildFilter();
+    }
+
+    /**
+     * @return null|Filter
+     */
     protected function buildFilter(){
 
         $filter = null;
@@ -101,7 +108,6 @@ abstract class RetrieveSummitEventsStrategy
         if (Request::has('order'))
         {
             $order = OrderParser::parse(Request::input('order'), [
-
                 'title',
                 'start_date',
                 'end_date',
@@ -111,6 +117,7 @@ abstract class RetrieveSummitEventsStrategy
                 'random',
                 'page_random',
                 'custom_order',
+                'votes_count',
             ]);
         }
         return $order;
@@ -161,6 +168,8 @@ abstract class RetrieveSummitEventsStrategy
             'type_allows_custom_ordering' => ['=='],
             'published' => ['=='],
             'class_name' => ['=='],
+            'presentation_attendee_vote_date' => ['>', '<', '<=', '>=', '=='],
+            'votes_count' => ['>', '<', '<=', '>=', '=='],
         ];
     }
 
@@ -196,7 +205,9 @@ abstract class RetrieveSummitEventsStrategy
             'type_allows_attendee_vote' => 'sometimes|boolean',
             'type_allows_custom_ordering' => 'sometimes|boolean',
             'published' => 'sometimes|boolean',
-            'class_name' => 'sometimes|string|in:'.implode(',',[ Presentation::ClassName, SummitEvent::ClassName])
+            'class_name' => 'sometimes|string|in:'.implode(',',[ Presentation::ClassName, SummitEvent::ClassName]),
+            'presentation_attendee_vote_date'  => 'sometimes|date_format:U',
+            'votes_count' => 'sometimes|integer',
         ];
     }
 }

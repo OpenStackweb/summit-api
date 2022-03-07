@@ -19,6 +19,7 @@ use App\Services\Filesystem\FileUploadStrategyFactory;
 use Behat\Transliterator\Transliterator;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackAnswer;
 use App\Models\Foundation\Summit\SelectionPlan;
+use Carbon\Carbon;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\ArrayCollection;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplate;
@@ -27,6 +28,7 @@ use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use Doctrine\ORM\Mapping AS ORM;
+use models\utils\SilverstripeBaseModel;
 
 /**
  * Class Presentation
@@ -1735,10 +1737,45 @@ class Presentation extends SummitEvent
     }
 
     /**
+     * @param int|null $begin_voting_date
+     * @param int|null $end_voting_date
+     * @return ArrayCollection|\Doctrine\Common\Collections\Collection|PresentationAttendeeVote[]
+     */
+    private function getVotesRange(?int $begin_voting_date = null, ?int $end_voting_date = null) {
+        $criteria = null;
+
+        if ($begin_voting_date != null) {
+            $begin_voting_date = Carbon::createFromTimestamp($begin_voting_date, new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone));
+            $criteria = Criteria::create();
+            $criteria->where(Criteria::expr()->gte('created', $begin_voting_date));
+        }
+        if ($end_voting_date != null) {
+            $end_voting_date = Carbon::createFromTimestamp($end_voting_date, new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone));
+            $expr = Criteria::expr()->lte('created', $end_voting_date);
+            if ($criteria == null) {
+                $criteria = Criteria::create();
+                $criteria->where($expr);
+            } else {
+                $criteria->andWhere($expr);
+            }
+        }
+        return $criteria != null ? $this->attendees_votes->matching($criteria) : $this->attendees_votes;
+    }
+
+    /**
+     * @return ArrayCollection|SummitAttendee[]
+     */
+    public function getVoters($begin_voting_date = null, $end_voting_date = null): ArrayCollection {
+        return $this->getVotesRange($begin_voting_date, $end_voting_date)->map(function ($attendeeVote) {
+            return $attendeeVote->getVoter();
+        });
+    }
+
+    /**
      * @return int
      */
-    public function getAttendeeVotesCount():int{
-        return $this->attendees_votes->count();
+    public function getAttendeeVotesCount($begin_voting_date = null, $end_voting_date = null): int {
+        return $this->getVotesRange($begin_voting_date, $end_voting_date)->count();
     }
 
     /**

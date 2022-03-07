@@ -26,6 +26,7 @@ use utils\DoctrineFilterMapping;
 use utils\DoctrineJoinFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
+use utils\Filter;
 
 /**
  * Class DoctrineSummitAttendeeTicketRepository
@@ -92,7 +93,7 @@ final class DoctrineSummitAttendeeTicketRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
         $query->join("e.order","o");
         $query->join("o.summit","s");
         $query->leftJoin("e.owner","a");

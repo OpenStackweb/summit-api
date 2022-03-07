@@ -27,9 +27,11 @@ use models\summit\Summit;
 use models\summit\SummitEvent;
 use models\summit\SummitEventType;
 use models\summit\SummitGroupEvent;
+use models\utils\SilverstripeBaseModel;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineCollectionFieldsFilterMapping;
 use utils\DoctrineFilterMapping;
+use utils\DoctrineHavingFilterMapping;
 use utils\DoctrineInstanceOfFilterMapping;
 use utils\DoctrineJoinFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
@@ -88,11 +90,13 @@ final class DoctrineSummitEventRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query)
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
     {
         $query = $query->innerJoin("e.type", "et", Join::ON);
         $query = $query->innerJoin("e.category", "c", Join::ON);
         $query = $query->leftJoin(PresentationType::class, 'et2', 'WITH', 'et.id = et2.id');
+        $query = $query->leftJoin("p.attendees_votes", 'av', Join::ON);
+
         return $query;
     }
 
@@ -314,7 +318,9 @@ final class DoctrineSummitEventRepository
                     SummitEvent::ClassName  => SummitEvent::class,
                     Presentation::ClassName => Presentation::class,
                 ]
-            )
+            ),
+            'presentation_attendee_vote_date' => 'av.created:datetime_epoch|'.SilverstripeBaseModel::DefaultTimeZone,
+            'votes_count' => new DoctrineHavingFilterMapping("", "av.presentation", "count(av.id) :operator :value")
         ];
     }
 
@@ -336,6 +342,7 @@ final class DoctrineSummitEventRepository
             'page_random' => 'RAND()',
             'random' => 'RAND()',
             'custom_order' => 'e.custom_order',
+            'votes_count' => 'COUNT(av.id)',
         ];
     }
 
@@ -365,25 +372,30 @@ final class DoctrineSummitEventRepository
         }
 
         $query = $this->getEntityManager()->createQueryBuilder()
+            ->distinct("e")
             ->select("e")
             ->from($this->getBaseEntity(), "e")
-            ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')
-            ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
-            ->leftJoin("e.created_by", 'cb', Join::LEFT_JOIN)
-            ->leftJoin("e.category", 'cc', Join::LEFT_JOIN)
-            ->leftJoin("e.sponsors", "sprs", Join::LEFT_JOIN)
-            ->leftJoin("p.speakers", "sp", Join::LEFT_JOIN)
-            ->leftJoin('p.selected_presentations', "ssp", Join::LEFT_JOIN)
-            ->leftJoin('ssp.member', "ssp_member", Join::LEFT_JOIN)
-            ->leftJoin('p.selection_plan', "selp", Join::LEFT_JOIN)
-            ->leftJoin('ssp.list', "sspl", Join::LEFT_JOIN)
-            ->leftJoin('p.moderator', "spm", Join::LEFT_JOIN)
-            ->leftJoin('spm.member', "spmm2", Join::LEFT_JOIN)
-            ->leftJoin('sp.member', "spmm", Join::LEFT_JOIN)
-            ->leftJoin('sp.registration_request', "sprr", Join::LEFT_JOIN)
-            ->leftJoin('spm.registration_request', "sprr2", Join::LEFT_JOIN);
+            ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id');
 
-        $query = $this->applyExtraJoins($query);
+            if(is_null($order) || !$order->hasOrder("votes_count")) {
+                $query = $query
+                    ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
+                    ->leftJoin("e.created_by", 'cb', Join::LEFT_JOIN)
+                    ->leftJoin("e.category", 'cc', Join::LEFT_JOIN)
+                    ->leftJoin("e.sponsors", "sprs", Join::LEFT_JOIN)
+                    ->leftJoin("p.speakers", "sp", Join::LEFT_JOIN)
+                    ->leftJoin('p.selected_presentations', "ssp", Join::LEFT_JOIN)
+                    ->leftJoin('ssp.member', "ssp_member", Join::LEFT_JOIN)
+                    ->leftJoin('p.selection_plan', "selp", Join::LEFT_JOIN)
+                    ->leftJoin('ssp.list', "sspl", Join::LEFT_JOIN)
+                    ->leftJoin('p.moderator', "spm", Join::LEFT_JOIN)
+                    ->leftJoin('spm.member', "spmm2", Join::LEFT_JOIN)
+                    ->leftJoin('sp.member', "spmm", Join::LEFT_JOIN)
+                    ->leftJoin('sp.registration_request', "sprr", Join::LEFT_JOIN)
+                    ->leftJoin('spm.registration_request', "sprr2", Join::LEFT_JOIN);
+            }
+
+        $query = $this->applyExtraJoins($query,$filter);
 
         if (!is_null($filter)) {
             $filter->apply2Query($query, $this->getCustomFilterMappings($current_member_id, $current_track_id));

@@ -57,13 +57,15 @@ class AdminPresentationSerializer extends PresentationSerializer
         if (!$presentation instanceof Presentation) return [];
 
         if (!count($relations)) $relations = $this->getAllowedRelations();
-
+        if(!count($fields)) $fields = $this->getAllowedFields();
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        // always set
-        $values['streaming_url'] = $presentation->getStreamingUrl();
-        $values['streaming_type'] = $presentation->getStreamingType();
-        $values['etherpad_link'] = $presentation->getEtherpadLink();
+        if(in_array("streaming_url",$fields))
+            $values['streaming_url'] = $presentation->getStreamingUrl();
+        if(in_array("streaming_type",$fields))
+            $values['streaming_type'] = $presentation->getStreamingType();
+        if(in_array("etherpad_link",$fields))
+            $values['etherpad_link'] = $presentation->getEtherpadLink();
 
         return $values;
     }

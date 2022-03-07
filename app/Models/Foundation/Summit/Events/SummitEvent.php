@@ -1307,6 +1307,7 @@ class SummitEvent extends SilverstripeBaseModel
                     Log::debug(sprintf("SummitEvent::hasAccess checking access levels for ticket %s ticket access levels (%s).", $ticket->getId(), implode(",", $ticketAccessLevelsIds)));
                     if(count(array_intersect($eventAccessLevelsIds, $ticketAccessLevelsIds))) return true;
                 }
+                Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has no access.",$member->getId(), $member->getEmail(), $this->id));
                 return false;
             }
             Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has a paid ticket.",$member->getId(), $member->getEmail(), $this->id));

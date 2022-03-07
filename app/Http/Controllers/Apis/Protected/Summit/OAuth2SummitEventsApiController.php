@@ -604,6 +604,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $current_user = $this->resource_server_context->getCurrentUser(true);
 
             if(!$event->hasAccess($current_user)){
+                Log::debug(sprintf("OAuth2SummitEventsApiController::getVoteablePresentation summit id %s presentation id %s user has no access.", $summit_id, $presentation_id));
                 throw new EntityNotFoundException("User has not access to this presentation.");
             }
 

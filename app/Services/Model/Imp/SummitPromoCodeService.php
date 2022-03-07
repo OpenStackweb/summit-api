@@ -155,8 +155,10 @@ final class SummitPromoCodeService
     public function addPromoCode(Summit $summit, array $data, Member $current_user = null)
     {
         return $this->tx_service->transaction(function () use ($summit, $data, $current_user) {
+            Log::debug(sprintf("SummitPromoCodeService::addPromoCode summit %s data %s", $summit->getId(), json_encode($data)));
 
             $code = trim($data['code']);
+
             if (empty($code)) {
                 throw new ValidationException("code can not be empty!");
             }
@@ -431,7 +433,6 @@ final class SummitPromoCodeService
 
         foreach ($reader as $idx => $row) {
             try {
-
                 Log::debug(sprintf("SummitPromoCodeService::importPromoCodes processing row %s", json_encode($row)));
                 $this->addPromoCode($summit, $row, $current_user);
             } catch (\Exception $ex) {

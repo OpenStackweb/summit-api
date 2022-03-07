@@ -663,7 +663,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 return $this->error412(array('file param not set!'));
             }
 
-            $this->promo_code_service->importPromoCodes($summit, $file);
+            $this->promo_code_service->importPromoCodes($summit, $file, $this->resource_server_context->getCurrentUser());
             return $this->ok();
 
         } catch (EntityNotFoundException $ex1) {

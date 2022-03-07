@@ -106,8 +106,9 @@ interface ISummitPromoCodeService
     /**
      * @param Summit $summit
      * @param UploadedFile $csv_file
+     * @param Member|null $current_user
      * @throws ValidationException
      */
-    public function importPromoCodes(Summit $summit, UploadedFile $csv_file):void;
+    public function importPromoCodes(Summit $summit, UploadedFile $csv_file, ?Member $current_user = null):void;
 
 }

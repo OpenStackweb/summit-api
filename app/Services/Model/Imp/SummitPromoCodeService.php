@@ -422,12 +422,12 @@ final class SummitPromoCodeService
 
         // check needed columns (headers names)
 
-        if (!$reader->hasColumn("email"))
-            throw new ValidationException("File is missing email column.");
-        if (!$reader->hasColumn("first_name"))
-            throw new ValidationException("File is missing first_name column.");
-        if (!$reader->hasColumn("last_name"))
-            throw new ValidationException("File is missing last_name column.");
+        if (!$reader->hasColumn("code"))
+            throw new ValidationException("File is missing code column.");
+        if (!$reader->hasColumn("class_name"))
+            throw new ValidationException("File is missing class_name column.");
+        if (!$reader->hasColumn("quantity_available"))
+            throw new ValidationException("File is missing quantity_available column.");
 
         foreach ($reader as $idx => $row) {
             try {

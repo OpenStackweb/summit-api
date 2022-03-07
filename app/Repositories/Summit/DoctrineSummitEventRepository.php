@@ -341,7 +341,7 @@ final class DoctrineSummitEventRepository
             'last_edited' => 'e.last_edited',
             'page_random' => 'RAND()',
             'random' => 'RAND()',
-            'custom_order' => 'e.custom_order',
+            'custom_order' => 'p.custom_order',
             'votes_count' => 'COUNT(av.id)',
         ];
     }

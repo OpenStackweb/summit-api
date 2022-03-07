@@ -31,6 +31,7 @@ use utils\OrderParser;
 use Illuminate\Support\Facades\Validator;
 use utils\PagingInfo;
 use Exception;
+use Illuminate\Http\Request as LaravelRequest;
 /**
  * Class OAuth2SummitPromoCodesApiController
  * @package App\Http\Controllers
@@ -638,6 +639,43 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             Log::warning($ex2);
             return $this->error404(array('message' => $ex2->getMessage()));
         } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param LaravelRequest $request
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function ingestPromoCodes(LaravelRequest $request, $summit_id){
+        try {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $file = $request->file('file');
+            if (is_null($file)) {
+                return $this->error412(array('file param not set!'));
+            }
+
+            $this->promo_code_service->importPromoCodes($summit, $file);
+            return $this->ok();
+
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412(array($ex2->getMessage()));
+        } catch (\HTTP401UnauthorizedException $ex3) {
+            Log::warning($ex3);
+            return $this->error401();
+        } catch (\Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }

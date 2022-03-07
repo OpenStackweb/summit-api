@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Http\UploadedFile;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Member;
@@ -100,5 +102,12 @@ interface ISummitPromoCodeService
      * @throws ValidationException
      */
     public function removePromoCodeBadgeFeature(Summit $summit, int $promo_code_id, int $badge_feature_id):SummitRegistrationPromoCode;
+
+    /**
+     * @param Summit $summit
+     * @param UploadedFile $csv_file
+     * @throws ValidationException
+     */
+    public function importPromoCodes(Summit $summit, UploadedFile $csv_file):void;
 
 }

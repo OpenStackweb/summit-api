@@ -766,4 +766,11 @@ SQL;
     public function getAllowedAccessLevels(){
         return $this->allowed_access_levels;
     }
+
+    /**
+     * @return array|int[]
+     */
+    public function getAllowedAccessLevelsIds():array{
+        return $this->allowed_access_levels->map(function($al){ return $al->getId();})->toArray();
+    }
 }

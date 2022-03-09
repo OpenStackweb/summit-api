@@ -119,6 +119,17 @@ final class DoctrineSummitAttendeeRepository
                     ),
                 ]
             ),
+            'has_virtual_checkin' => new DoctrineSwitchFilterMapping([
+                    'true' => new DoctrineCaseFilterMapping(
+                        'true',
+                        "e.summit_virtual_checked_in_date is not null"
+                    ),
+                    'false' => new DoctrineCaseFilterMapping(
+                        'false',
+                        "e.summit_virtual_checked_in_date is null"
+                    ),
+                ]
+            ),
             'tickets_count' => new DoctrineHavingFilterMapping("", "t.owner", "count(t.id) :operator :value"),
             'ticket_type' => new DoctrineFilterMapping("tt.name :operator :value"),
             'badge_type' => new DoctrineFilterMapping("bt.name :operator :value"),

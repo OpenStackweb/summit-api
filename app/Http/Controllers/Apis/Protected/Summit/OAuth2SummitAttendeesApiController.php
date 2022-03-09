@@ -921,6 +921,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'has_member' => ['=='],
                     'tickets_count' => ['==', '>=', '<=', '>', '<'],
                     'has_tickets' => ['=='],
+                    'has_virtual_checkin' => ['=='],
                 ]);
             }
 
@@ -942,6 +943,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'has_member' => 'sometimes|required|string|in:true,false',
                 'tickets_count' => 'sometimes|integer',
                 'has_tickets'=> 'sometimes|required|string|in:true,false',
+                'has_virtual_checkin' => 'sometimes|required|string|in:true,false',
             ]);
 
             $this->attendee_service->triggerSend($summit, $payload, Request::input('filter'));

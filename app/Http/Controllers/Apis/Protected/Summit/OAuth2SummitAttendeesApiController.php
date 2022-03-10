@@ -483,6 +483,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'has_member' => ['=='],
                     'has_tickets' => ['=='],
                     'tickets_count' => ['==', '>=', '<=', '>', '<'],
+                    'has_virtual_checkin' => ['=='],
                 ];
             },
             function () {

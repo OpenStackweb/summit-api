@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
 use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
@@ -532,6 +533,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'created' => new EpochCellFormatter(),
                     'last_edited' => new EpochCellFormatter(),
                     'disclaimer_accepted_date' => new EpochCellFormatter(),
+                    'has_virtual_check_in' => new BooleanCellFormatter(),
                 ];
             },
             function () {

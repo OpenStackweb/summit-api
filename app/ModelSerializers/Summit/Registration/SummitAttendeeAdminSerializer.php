@@ -19,5 +19,6 @@ class SummitAttendeeAdminSerializer extends SummitAttendeeSerializer
 {
     protected static $array_mappings = [
         'AdminNotes' => 'admin_notes:json_string',
+        'VirtualCheckedIn' => 'has_virtual_check_in:json_boolean',
     ];
 }

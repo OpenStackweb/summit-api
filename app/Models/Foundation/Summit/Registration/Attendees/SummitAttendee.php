@@ -288,6 +288,10 @@ class SummitAttendee extends SilverstripeBaseModel
         $this->presentation_votes = new ArrayCollection();
     }
 
+    public function isVirtualCheckedIn():bool{
+        return !is_null($this->summit_virtual_checked_in_date);
+    }
+
     /**
      * @return SummitEventFeedback[]
      */

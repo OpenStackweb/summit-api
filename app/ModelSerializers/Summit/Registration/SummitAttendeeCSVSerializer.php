@@ -27,6 +27,7 @@ final class SummitAttendeeCSVSerializer extends SilverStripeSerializer
         'CompanyName'             => 'company:json_string',
         'DisclaimerAcceptedDate'  => 'disclaimer_accepted_date:datetime_epoch',
         'Status'                  => 'status:json_string',
+        'VirtualCheckedIn'        => 'has_virtual_check_in:json_boolean',
     ];
     
 }

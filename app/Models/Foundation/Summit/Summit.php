@@ -1041,6 +1041,7 @@ class Summit extends SilverstripeBaseModel
         $this->registration_send_ticket_as_pdf_attachment_on_ticket_email = false;
         $this->registration_send_ticket_email_automatically = true;
         $this->registration_allow_automatic_reminder_emails = true;
+        $this->allow_update_attendee_extra_questions = false;
     }
 
     /**

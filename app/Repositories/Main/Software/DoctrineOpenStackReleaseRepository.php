@@ -40,7 +40,7 @@ implements IOpenStackReleaseRepository
     {
         try {
             return $this->getEntityManager()->createQueryBuilder()
-                ->select("t")
+                ->select("distinct e")
                 ->from($this->getBaseEntity(), "e")
                 ->where('UPPER(TRIM(e.status)) = UPPER(TRIM(:status))')
                 ->setParameter('status', 'Current')

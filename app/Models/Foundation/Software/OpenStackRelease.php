@@ -41,26 +41,20 @@ class OpenStackRelease extends SilverstripeBaseModel
     private $release_date;
 
     /**
-     * @return string
+     * @ORM\Column(name="Status", type="string")
+     * @var string
      */
-    public function getName()
-    {
-        return $this->name;
-    }
+    private $status;
 
     /**
-     * @return string
+     * @ORM\ManyToMany(targetEntity="App\Models\Foundation\Software\OpenStackReleaseComponent", inversedBy="releases", cascade={"persist"})
+     * @ORM\JoinTable(name="Group_Members",
+     *      joinColumns={@ORM\JoinColumn(name="MemberID", referencedColumnName="ID")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="GroupID", referencedColumnName="ID")}
+     *      )
+     * @var OpenStackReleaseComponent[]
      */
-    public function getReleaseNumber()
-    {
-        return $this->release_number;
-    }
+    private $components;
 
-    /**
-     * @return DateTime
-     */
-    public function getReleaseDate()
-    {
-        return $this->release_date;
-    }
+
 }

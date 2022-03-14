@@ -11,20 +11,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\AbstractSerializer;
 use Libs\ModelSerializers\One2ManyExpandSerializer;
-use ModelSerializers\SilverStripeSerializer;
+
 /**
  * Class OpenStackReleaseComponentSerializer
  * @package App\ModelSerializers\Software
  */
-final class OpenStackReleaseComponentSerializer extends SilverStripeSerializer
+final class OpenStackReleaseComponentSerializer extends AbstractSerializer
 {
     /**
      * @var array
      */
     protected static $array_mappings = [
-        'Adoption'           => 'adoption:json_int',
-        'MaturityPoints'  => 'maturity_points:json_int',
+        'Id' => 'id:json_int',
+        'Adoption' => 'adoption:json_int',
+        'MaturityPoints' => 'maturity_points:json_int',
         'HasInstallationGuide' => 'has_installation_guide:json_boolean',
         'ComponentId' => 'component_id:json_int',
         'ReleaseId' => 'release_id:json_int',

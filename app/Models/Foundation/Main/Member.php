@@ -2247,6 +2247,7 @@ SQL;
      */
     public function getProjects(): array
     {
+        if(empty($this->projects)) return [];
         return explode(',', $this->projects);
     }
 
@@ -2259,9 +2260,9 @@ SQL;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getOtherProject(): string
+    public function getOtherProject(): ?string
     {
         return $this->other_project;
     }
@@ -2307,9 +2308,9 @@ SQL;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getShirtSize(): string
+    public function getShirtSize():?string
     {
         return $this->shirt_size;
     }
@@ -2326,9 +2327,9 @@ SQL;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getFoodPreference(): string
+    public function getFoodPreference():?string
     {
         return $this->food_preference;
     }
@@ -2345,9 +2346,9 @@ SQL;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getOtherFoodPreference(): string
+    public function getOtherFoodPreference():?string
     {
         return $this->other_food_preference;
     }

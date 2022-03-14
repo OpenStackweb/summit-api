@@ -21,6 +21,8 @@ use App\Models\Foundation\Main\Repositories\IProjectSponsorshipTypeRepository;
 use App\Models\Foundation\Main\Repositories\ISponsoredProjectRepository;
 use App\Models\Foundation\Main\Repositories\ISummitAdministratorPermissionGroupRepository;
 use App\Models\Foundation\Main\Repositories\ISupportingCompanyRepository;
+use App\Models\Foundation\Software\OpenStackRelease;
+use App\Models\Foundation\Software\Repositories\IOpenStackReleaseRepository;
 use App\Models\Foundation\Summit\Defaults\DefaultSummitEventType;
 use App\Models\Foundation\Summit\DefaultTrackTagGroup;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlow;
@@ -704,6 +706,13 @@ final class RepositoriesProvider extends ServiceProvider
             IPresentationMediaUploadRepository::class,
             function(){
                 return EntityManager::getRepository(PresentationMediaUpload::class);
+            }
+        );
+
+        App::singleton(
+            IOpenStackReleaseRepository::class,
+            function(){
+                return EntityManager::getRepository(OpenStackRelease::class);
             }
         );
 

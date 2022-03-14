@@ -11,11 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 use DateTime;
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repositories\Main\Software\DoctrineOpenStackReleaseRepository")
  * @ORM\Table(name="OpenStackRelease")
  * Class OpenStackRelease
  * @package App\Models\Foundation\Software
@@ -47,14 +49,71 @@ class OpenStackRelease extends SilverstripeBaseModel
     private $status;
 
     /**
-     * @ORM\ManyToMany(targetEntity="App\Models\Foundation\Software\OpenStackReleaseComponent", inversedBy="releases", cascade={"persist"})
-     * @ORM\JoinTable(name="Group_Members",
-     *      joinColumns={@ORM\JoinColumn(name="MemberID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="GroupID", referencedColumnName="ID")}
-     *      )
-     * @var OpenStackReleaseComponent[]
+     * @ORM\OneToMany(targetEntity="OpenStackReleaseComponent", mappedBy="release", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      */
     private $components;
 
+    public function __construct()
+    {
+        parent::__construct();
+        $this->components = new ArrayCollection();
+    }
+
+    /**
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getReleaseNumber(): string
+    {
+        return $this->release_number;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getReleaseDate(): DateTime
+    {
+        return $this->release_date;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getComponents(): ArrayCollection
+    {
+        return $this->components;
+    }
+
+    /**
+     * @return OpenStackReleaseComponent[]
+     */
+    public function getOrderedComponents(): array
+    {
+
+        return $this->createQueryBuilder()->select('distinct e')
+            ->from(OpenStackReleaseComponent::class, 'e')
+            ->join('e.release', 'r')
+            ->join('e.component', 'c')
+            ->where('r.id = :release_id')
+            ->orderBy("c.is_core_service","DESC")
+            ->orderBy("c.order", "ASC")
+            ->setParameter('release_id', $this->getId())
+            ->getQuery()->getResult();
+    }
 
 }

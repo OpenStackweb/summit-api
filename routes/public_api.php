@@ -261,8 +261,6 @@ Route::group(array('prefix' => 'timezones'), function () {
 // releases
 Route::group(array('prefix' => 'releases'), function () {
     Route::group(array('prefix' => 'current'), function () {
-        Route::group(array('prefix' => 'components'), function () {
-            Route::get('', 'ReleasesApiController@getAllCurrentReleasesCoreComponents');
-        });
+        Route::get('', 'ReleasesApiController@getCurrent');
     });
 });

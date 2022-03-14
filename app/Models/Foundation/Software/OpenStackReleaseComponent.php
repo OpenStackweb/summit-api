@@ -13,6 +13,8 @@
  **/
 
 use Doctrine\ORM\Mapping AS ORM;
+use models\summit\Summit;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 use DateTime;
 /**
@@ -24,9 +26,93 @@ use DateTime;
 class OpenStackReleaseComponent extends SilverstripeBaseModel
 {
 
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getComponentId' => 'component',
+        'getReleaseId' => 'release',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasComponent' => 'component',
+        'hasRelease' => 'release',
+    ];
+
     /**
-     * @ORM\Column(name="Adption", type="string")
-     * @var string
+     * @ORM\Column(name="Adption", type="integer")
+     * @var int
      */
     private $adoption;
+
+    /**
+     * @ORM\Column(name="MaturityPoints", type="integer")
+     * @var int
+     */
+    private $maturity_points;
+
+    /**
+     * @ORM\Column(name="HasInstallationGuide", type="boolean")
+     * @var bool
+     */
+    private $has_installation_guide;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="OpenStackRelease", fetch="EXTRA_LAZY", cascade={"persist"},  inversedBy="components")
+     * @ORM\JoinColumn(name="OpenStackReleaseID", referencedColumnName="ID")
+     * @var OpenStackRelease
+     */
+    private $release;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="OpenStackComponent", fetch="EXTRA_LAZY", cascade={"persist"})
+     * @ORM\JoinColumn(name="OpenStackComponentID", referencedColumnName="ID")
+     * @var OpenStackComponent
+     */
+    private $component;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->has_installation_guide = false;
+    }
+
+    /**
+     * @return int
+     */
+    public function getAdoption(): int
+    {
+        return $this->adoption;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMaturityPoints(): int
+    {
+        return $this->maturity_points;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHasInstallationGuide(): bool
+    {
+        return $this->has_installation_guide;
+    }
+
+    /**
+     * @return OpenStackRelease
+     */
+    public function getRelease(): OpenStackRelease
+    {
+        return $this->release;
+    }
+
+    /**
+     * @return OpenStackComponent
+     */
+    public function getComponent(): OpenStackComponent
+    {
+        return $this->component;
+    }
 }

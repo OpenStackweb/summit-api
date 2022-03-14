@@ -40,26 +40,63 @@ class OpenStackComponent extends SilverstripeBaseModel
     private $description;
 
     /**
-     * @return string
+     * @ORM\Column(name="IsCoreService", type="boolean")
+     * @var boolean
      */
-    public function getName()
+    private $is_core_service;
+
+    /**
+     * @ORM\Column(name="`Order`", type="integer")
+     * @var int
+     */
+    private $order;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->is_core_service = false;
+        $this->order = 0;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getName(): ?string
     {
         return $this->name;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getCodeName()
+    public function getCodeName(): ?string
     {
         return $this->code_name;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getDescription()
+    public function getDescription(): ?string
     {
         return $this->description;
     }
+
+    /**
+     * @return bool
+     */
+    public function isIsCoreService(): bool
+    {
+        return $this->is_core_service;
+    }
+
+    /**
+     * @return int
+     */
+    public function getOrder(): int
+    {
+        return $this->order;
+    }
+
+
 }

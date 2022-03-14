@@ -12,18 +12,16 @@
  * limitations under the License.
  **/
 
+use App\Models\Utils\BaseEntity;
 use Doctrine\ORM\Mapping AS ORM;
-use models\summit\Summit;
 use models\utils\One2ManyPropertyTrait;
-use models\utils\SilverstripeBaseModel;
-use DateTime;
 /**
  * @ORM\Entity
  * @ORM\Table(name="OpenStackRelease_OpenStackComponents")
  * Class OpenStackReleaseComponent
  * @package App\Models\Foundation\Software
  */
-class OpenStackReleaseComponent extends SilverstripeBaseModel
+class OpenStackReleaseComponent extends BaseEntity
 {
 
     use One2ManyPropertyTrait;
@@ -72,7 +70,6 @@ class OpenStackReleaseComponent extends SilverstripeBaseModel
 
     public function __construct()
     {
-        parent::__construct();
         $this->has_installation_guide = false;
     }
 

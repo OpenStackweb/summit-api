@@ -44,7 +44,7 @@ implements IOpenStackReleaseRepository
                 ->from($this->getBaseEntity(), "e")
                 ->where('UPPER(TRIM(e.status)) = UPPER(TRIM(:status))')
                 ->setParameter('status', 'Current')
-                ->orderBy("release_date", "DESC")
+                ->orderBy("e.release_date", "DESC")
                 ->setMaxResults(1)
                 ->getQuery()
                 ->getOneOrNullResult();

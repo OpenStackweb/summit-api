@@ -39,7 +39,7 @@ class OpenStackReleaseComponent extends SilverstripeBaseModel
     ];
 
     /**
-     * @ORM\Column(name="Adption", type="integer")
+     * @ORM\Column(name="Adoption", type="integer")
      * @var int
      */
     private $adoption;

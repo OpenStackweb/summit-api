@@ -23,6 +23,7 @@ Route::group(['prefix' => 'members'], function () {
     Route::group(['prefix' => 'me'], function () {
         // get my member info
         Route::get('', 'OAuth2MembersApiController@getMyMember');
+        Route::put('', 'OAuth2MembersApiController@updateMyMember');
 
         // my affiliations
         Route::group(['prefix' => 'affiliations'], function () {

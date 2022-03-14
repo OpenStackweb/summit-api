@@ -16,6 +16,7 @@ use App\Services\Model\IMemberService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\IMemberRepository;
+use models\main\Member;
 use models\oauth2\IResourceServerContext;
 use Illuminate\Support\Facades\Validator;
 use ModelSerializers\SerializerRegistry;
@@ -188,12 +189,10 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             if(is_null($current_member))
                 throw new EntityNotFoundException();
 
-            $serializer_type = SerializerRegistry::SerializerType_Private;
-
             return $this->ok
             (
                 SerializerRegistry::getInstance()
-                    ->getSerializer($current_member, $serializer_type)
+                    ->getSerializer($current_member, SerializerRegistry::SerializerType_Private)
                     ->serialize
                     (
                         self::getExpands(),
@@ -211,6 +210,66 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             return $this->error412($ex2->getMessages());
         }
         catch (\Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $member_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function updateMyMember(){
+        try {
+            if(!Request::isJson()) return $this->error400();
+            $data = Request::json();
+
+            $member = $this->resource_server_context->getCurrentUser();
+
+            if(is_null($member)) return $this->error404();
+
+            $rules = [
+                'projects'          => 'sometimes|string_array',
+                'other_project'     => 'sometimes|string|max:100',
+                'display_on_site'   => 'sometimes|boolean',
+                'subscribed_to_newsletter' => 'sometimes|boolean',
+                'shirt_size' => 'sometimes|string|in:'.implode(',', Member::AllowedShirtSizes),
+                'food_preference' => 'sometimes|string|in:'.implode(',', Member::AllowedFoodPreferences),
+                'other_food_preference' => 'sometimes|string|max:100'
+            ];
+
+            // Creates a Validator instance and validates the data.
+            $validation = Validator::make($data->all(), $rules);
+
+            if ($validation->fails()) {
+                $messages = $validation->messages()->toArray();
+
+                return $this->error412
+                (
+                    $messages
+                );
+            }
+
+            $me = $this->member_service->updateMyMember($member, $data->all());
+
+            return $this->updated(SerializerRegistry::getInstance()
+                ->getSerializer($me, SerializerRegistry::SerializerType_Private)->serialize
+            (
+                self::getExpands(),
+                self::getRelations(),
+                self::getFields()
+            ));
+        }
+        catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return $this->error412([$ex1->getMessage()]);
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(['message'=> $ex2->getMessage()]);
+        }
+        catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -262,7 +321,6 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             return $this->error500($ex);
         }
     }
-
 
     /**
      * @return mixed
@@ -379,7 +437,6 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             return $this->error500($ex);
         }
     }
-
 
     /**
      * @param $affiliation_id

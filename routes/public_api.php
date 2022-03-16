@@ -257,3 +257,10 @@ Route::group(array('prefix' => 'languages'), function () {
 Route::group(array('prefix' => 'timezones'), function () {
     Route::get('', 'TimezonesApiController@getAll');
 });
+
+// releases
+Route::group(array('prefix' => 'releases'), function () {
+    Route::group(array('prefix' => 'current'), function () {
+        Route::get('', 'ReleasesApiController@getCurrent');
+    });
+});

@@ -54,6 +54,7 @@ use App\ModelSerializers\ResourceServer\ApiEndpointSerializer;
 use App\ModelSerializers\ResourceServer\ApiScopeSerializer;
 use App\ModelSerializers\ResourceServer\ApiSerializer;
 use App\ModelSerializers\Software\OpenStackComponentSerializer;
+use App\ModelSerializers\Software\OpenStackReleaseComponentSerializer;
 use App\ModelSerializers\Software\OpenStackReleaseSerializer;
 use App\ModelSerializers\Summit\AdminStripePaymentProfileSerializer;
 use App\ModelSerializers\Summit\AdminSummitSerializer;
@@ -466,6 +467,7 @@ final class SerializerRegistry
         // software
 
         $this->registry['OpenStackComponent'] = OpenStackComponentSerializer::class;
+        $this->registry['OpenStackReleaseComponent'] = OpenStackReleaseComponentSerializer::class;
         $this->registry['OpenStackRelease'] = OpenStackReleaseSerializer::class;
 
         // ccla

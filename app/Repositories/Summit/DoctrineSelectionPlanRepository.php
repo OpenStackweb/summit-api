@@ -14,6 +14,13 @@
 use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\Repositories\SilverStripeDoctrineRepository;
+use Doctrine\ORM\QueryBuilder;
+use utils\DoctrineCaseFilterMapping;
+use utils\DoctrineFilterMapping;
+use utils\DoctrineSwitchFilterMapping;
+use utils\Filter;
+use utils\FilterElement;
+
 /**
  * Class DoctrineSelectionPlanRepository
  * @package App\Repositories\Summit
@@ -29,5 +36,44 @@ final class DoctrineSelectionPlanRepository
     protected function getBaseEntity()
     {
         return SelectionPlan::class;
+    }
+
+    /**
+     * @param QueryBuilder $query
+     * @param Filter|null $filter
+     * @return QueryBuilder
+     */
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+        if($filter->hasFilter("summit_id")){
+            $query = $query->join('e.summit', 's');
+        }
+        return $query;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getFilterMappings()
+    {
+        $now_utc = date_format(new \DateTime('now', new \DateTimeZone('UTC')),"Y/m/d H:i:s");
+
+        return [
+            'summit_id' => new DoctrineFilterMapping("s.id :operator :value"),
+            'status'    => new DoctrineSwitchFilterMapping([
+                    'submission' => new DoctrineCaseFilterMapping(
+                        'submission',
+                        "e.submission_begin_date <= '$now_utc' and e.submission_end_date >= '$now_utc'"
+                    ),
+                    'selection' => new DoctrineCaseFilterMapping(
+                        'selection',
+                        "e.selection_begin_date <= '$now_utc' and e.selection_end_date >= '$now_utc'",
+                    ),
+                    'voting' => new DoctrineCaseFilterMapping(
+                        'voting',
+                        "e.voting_begin_date <= '$now_utc' and e.voting_end_date >= '$now_utc'",
+                    ),
+                ]
+            ),
+        ];
     }
 }

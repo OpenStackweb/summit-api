@@ -13,6 +13,7 @@
  **/
 
 use App\Events\NewMember;
+use App\Models\Foundation\Main\Factories\MemberFactory;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Main\Repositories\ILegalDocumentRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
@@ -666,5 +667,19 @@ final class MemberService
         if (!is_null($res)) {
             $this->external_user_api->updateUserRegistrationRequest($res['id'], $first_name, $last_name, $company_name, $country);
         }
+    }
+
+    /**
+     * @param Member $me
+     * @param array $payload
+     * @return Member|null
+     */
+    public function updateMyMember(Member $me, array $payload): ?Member
+    {
+        return $this->tx_service->transaction(function() use($me, $payload){
+            $me = $this->member_repository->getById($me->getId());
+            MemberFactory::populate($me, $payload);
+            return $me;
+        });
     }
 }

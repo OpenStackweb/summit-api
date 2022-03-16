@@ -137,6 +137,48 @@ class Member extends SilverstripeBaseModel
     private $gender;
 
     /**
+     * @ORM\Column(name="Projects", type="string")
+     * @var string
+     */
+    private $projects;
+
+    /**
+     * @ORM\Column(name="OtherProject", type="string")
+     * @var string
+     */
+    private $other_project;
+
+    /**
+     * @ORM\Column(name="DisplayOnSite", type="boolean")
+     * @var bool
+     */
+    private $display_on_site;
+
+    /**
+     * @ORM\Column(name="SubscribedToNewsletter", type="boolean")
+     * @var bool
+     */
+    private $subscribed_to_newsletter;
+
+    /**
+     * @ORM\Column(name="ShirtSize", type="string")
+     * @var string
+     */
+    private $shirt_size;
+
+    /**
+     * @ORM\Column(name="FoodPreference", type="string")
+     * @var string
+     */
+    private $food_preference;
+
+    /**
+     * @ORM\Column(name="OtherFood", type="string")
+     * @var string
+     */
+    private $other_food_preference;
+
+    /**
      * @ORM\Column(name="Country", type="string")
      * @var string
      */
@@ -357,6 +399,8 @@ class Member extends SilverstripeBaseModel
         $this->election_applications = new ArrayCollection();
         $this->election_nominations = new ArrayCollection();
         $this->candidate_profiles = new  ArrayCollection();
+        $this->subscribed_to_newsletter = false;
+        $this->display_on_site = false;
     }
 
     /**
@@ -2198,4 +2242,160 @@ SQL;
         return $this->candidate_profiles->matching($criteria)->count() > 0;
     }
 
+    /**
+     * @return array|string[]
+     */
+    public function getProjects(): array
+    {
+        if(empty($this->projects)) return [];
+        return explode(',', $this->projects);
+    }
+
+    /**
+     * @param array|string[] $projects
+     */
+    public function setProjects(array $projects): void
+    {
+        $this->projects = implode(',', $projects);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getOtherProject(): ?string
+    {
+        return $this->other_project;
+    }
+
+    /**
+     * @param string $other_project
+     */
+    public function setOtherProject(string $other_project): void
+    {
+        $this->other_project = $other_project;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDisplayOnSite(): bool
+    {
+        return $this->display_on_site;
+    }
+
+    /**
+     * @param bool $display_on_site
+     */
+    public function setDisplayOnSite(bool $display_on_site): void
+    {
+        $this->display_on_site = $display_on_site;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSubscribedToNewsletter(): bool
+    {
+        return $this->subscribed_to_newsletter;
+    }
+
+    /**
+     * @param bool $subscribed_to_newsletter
+     */
+    public function setSubscribedToNewsletter(bool $subscribed_to_newsletter): void
+    {
+        $this->subscribed_to_newsletter = $subscribed_to_newsletter;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getShirtSize():?string
+    {
+        return $this->shirt_size;
+    }
+
+    /**
+     * @param string $shirt_size
+     * @throws ValidationException
+     */
+    public function setShirtSize(string $shirt_size): void
+    {
+        if(!in_array($shirt_size, self::AllowedShirtSizes))
+            throw new ValidationException(sprintf("shirt_size %s is not valid one.", $shirt_size));
+        $this->shirt_size = $shirt_size;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getFoodPreference():?string
+    {
+        return $this->food_preference;
+    }
+
+    /**
+     * @param string $food_preference
+     * @throws ValidationException
+     */
+    public function setFoodPreference(string $food_preference): void
+    {
+        if(!in_array($food_preference, self::AllowedFoodPreferences))
+            throw new ValidationException(sprintf("food_preference %s is not valid one.", $food_preference));
+        $this->food_preference = $food_preference;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getOtherFoodPreference():?string
+    {
+        return $this->other_food_preference;
+    }
+
+    /**
+     * @param string $other_food_preference
+     */
+    public function setOtherFoodPreference(string $other_food_preference): void
+    {
+        $this->other_food_preference = $other_food_preference;
+    }
+
+    const FoodPreference_Vegan = 'Vegan';
+    const FoodPreference_Vegetarian = 'Vegetarian';
+    const FoodPreference_Gluten = 'Gluten';
+    const FoodPreference_Peanut = 'Peanut';
+
+    const AllowedFoodPreferences = [
+        self::FoodPreference_Vegan,
+        self::FoodPreference_Vegetarian,
+        self::FoodPreference_Gluten,
+        self::FoodPreference_Peanut,
+    ];
+
+    const ShirtSize_ExtraSmall = 'Extra Small';
+    const ShirtSize_Small = 'Small';
+    const ShirtSize_Medium = 'Medium';
+    const ShirtSize_Large = 'Large';
+    const ShirtSize_XL = 'XL';
+    const ShirtSize_XXL = 'XXL';
+    const ShirtSize_WSmall = 'WS';
+    const ShirtSize_WMedium = 'WM';
+    const ShirtSize_WLarge = 'WL';
+    const ShirtSize_WXL = 'WXL';
+    const ShirtSize_WXXL = 'WXXL';
+
+    const AllowedShirtSizes = [
+        self::ShirtSize_ExtraSmall,
+        self::ShirtSize_Small,
+        self::ShirtSize_Medium,
+        self::ShirtSize_Large,
+        self::ShirtSize_XL,
+        self::ShirtSize_XXL,
+        self::ShirtSize_WSmall,
+        self::ShirtSize_WMedium,
+        self::ShirtSize_WLarge,
+        self::ShirtSize_WXL,
+        self::ShirtSize_WXXL,
+    ];
 }

@@ -6180,13 +6180,19 @@ class ApiEndpointsSeeder extends Seeder
                     'name' => 'get-members',
                     'route' => '/api/v1/members',
                     'http_method' => 'GET',
-                    'scopes' => [sprintf('%s/members/read', $current_realm)],
+                   'scopes' => [sprintf(MemberScopes::ReadMemberData, $current_realm)],
                ],
                [
                     'name'        => 'get-my-member',
                     'route'       => '/api/v1/members/me',
                     'http_method' => 'GET',
-                    'scopes'      => [sprintf('%s/members/read/me', $current_realm)],
+                   'scopes' => [sprintf(MemberScopes::ReadMyMemberData, $current_realm)],
+               ],
+               [
+                    'name'        => 'update-my-member',
+                    'route'       => '/api/v1/members/me',
+                    'http_method' => 'PUT',
+                    'scopes' => [sprintf(MemberScopes::WriteMyMemberData, $current_realm)],
                ],
                // my membership
                 [

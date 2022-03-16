@@ -34,6 +34,13 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
         'Active'          => 'active:json_boolean',
         'EmailVerified'   => 'email_verified:json_boolean',
         'Email'           => 'email:json_string',
+        'Projects'        => 'projects:json_string_array',
+        'OtherProject'    => 'other_project:json_string',
+        'DisplayOnSite'   => 'display_on_site:json_boolean',
+        'SubscribedToNewsletter' => 'subscribed_to_newsletter:json_boolean',
+        'ShirtSize' => 'shirt_size:json_string',
+        'FoodPreference' => 'food_preference:json_string',
+        'OtherFoodPreference' => 'other_food_preference:json_string',
     ];
 
     protected static $allowed_relations = [

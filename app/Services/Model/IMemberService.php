@@ -147,4 +147,11 @@ interface IMemberService
      */
     public function updatePendingRegistrationRequest(string $email, bool $is_redeemed, ?string $first_name, ?string $last_name,
                                                      ?string $company_name, ?string $country):void;
+
+    /**
+     * @param Member $me
+     * @param array $payload
+     * @return Member|null
+     */
+    public function updateMyMember(Member $me, array $payload):?Member;
 }

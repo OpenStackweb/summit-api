@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\IGroup;
+use DateInterval;
+use DateTime;
 use models\summit\SummitSelectedPresentation;
 
 /**
@@ -47,15 +49,22 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
      * @return mixed
      */
     public function testAddSelectionPlan(){
+
+        $start = new DateTime('now');
+        $end   = new DateTime('now');
+        $end->add(new DateInterval('P15D'));
+
         $params = [
             'id' => self::$summit->getId(),
         ];
 
-        $name       = str_random(16).'_selection_plan';
+        $name = str_random(16).'_selection_plan';
         $data = [
             'name'       => $name,
             'is_enabled'  => false,
             'allow_new_presentations' => false,
+            'submission_begin_date' => $start->getTimestamp(),
+            'submission_end_date' => $end->getTimestamp(),
         ];
 
         $headers = [

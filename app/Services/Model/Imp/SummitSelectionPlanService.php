@@ -86,10 +86,6 @@ final class SummitSelectionPlanService
                 ));
             }
 
-            // validate selection plan
-
-            $summit->checkSelectionPlanConflicts($selection_plan);
-
             $summit->addSelectionPlan($selection_plan);
 
             return $selection_plan;
@@ -131,8 +127,6 @@ final class SummitSelectionPlanService
             }
 
             SummitSelectionPlanFactory::populate($selection_plan, $payload, $summit);
-            // check conflict on current summits ( selections plans can not conflict inside summit)
-            $summit->checkSelectionPlanConflicts($selection_plan);
 
             return $selection_plan;
         });

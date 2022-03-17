@@ -333,7 +333,7 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
 
         $response = $this->action(
             "GET",
-            "OAuth2SummitSelectionPlansApiController@getAllCurrentSelectionPlansByStatus",
+            "OAuth2SummitSelectionPlansApiController@getAll",
             $params,
             [],
             [],

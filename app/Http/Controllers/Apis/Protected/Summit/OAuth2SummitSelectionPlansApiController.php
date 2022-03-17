@@ -335,7 +335,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function getAllCurrentSelectionPlansByStatus($summit_id)
+    public function getAll($summit_id)
     {
         try {
             return $this->_getAll(

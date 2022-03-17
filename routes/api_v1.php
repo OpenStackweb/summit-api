@@ -223,6 +223,7 @@ Route::group(array('prefix' => 'summits'), function () {
 
         // selection plans crud
         Route::group(['prefix' => 'selection-plans'], function () {
+            Route::get('', ['uses' => 'OAuth2SummitSelectionPlansApiController@getAll']);
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addSelectionPlan']);
             Route::group(['prefix' => '{selection_plan_id}'], function () {
 

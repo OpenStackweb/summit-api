@@ -14,6 +14,7 @@
 
 use App\Http\Utils\EpochCellFormatter;
 use App\Models\Exceptions\AuthzException;
+use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitCategoryChangeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSelectionPlanExtraQuestionTypeRepository;
 use App\Services\Model\ISelectionPlanExtraQuestionTypeService;
@@ -74,6 +75,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
      * @param ISummitRepository $summit_repository
      * @param ISummitEventRepository $summit_event_repository
      * @param ISummitCategoryChangeRepository $category_change_request_repository
+     * @param ISelectionPlanRepository $selection_plan_repository
      * @param ISummitSelectionPlanExtraQuestionTypeRepository $selection_plan_extra_questions_repository
      * @param ISummitSelectionPlanService $selection_plan_service
      * @param ISelectionPlanExtraQuestionTypeService $selection_plan_extra_questions_service
@@ -84,6 +86,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         ISummitRepository $summit_repository,
         ISummitEventRepository $summit_event_repository,
         ISummitCategoryChangeRepository $category_change_request_repository,
+        ISelectionPlanRepository $selection_plan_repository,
         ISummitSelectionPlanExtraQuestionTypeRepository $selection_plan_extra_questions_repository,
         ISummitSelectionPlanService $selection_plan_service,
         ISelectionPlanExtraQuestionTypeService $selection_plan_extra_questions_service,
@@ -92,6 +95,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
     {
         parent::__construct($resource_server_context);
 
+        $this->repository = $selection_plan_repository;
         $this->summit_repository = $summit_repository;
         $this->summit_event_repository = $summit_event_repository;
         $this->category_change_request_repository = $category_change_request_repository;
@@ -326,6 +330,57 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
     }
 
     use ParametrizedGetAll;
+
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getAll($summit_id)
+    {
+        try {
+            return $this->_getAll(
+                function () {
+                    return [
+                        'status' => ['=='],
+                    ];
+                },
+                function () {
+                    return [
+                        'status' => 'sometimes|string|in:submission,selection,voting',
+                    ];
+                },
+                function () {
+                    return [
+                        'id',
+                        'created',
+                        'last_edited',
+                    ];
+                },
+                function ($filter) use ($summit_id) {
+                    if ($filter instanceof Filter) {
+                        $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
+                    }
+                    return $filter;
+                },
+                function () {
+                    return SerializerRegistry::SerializerType_Public;
+                },
+                null,
+                null,
+                null,
+            );
+
+        } catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
+        } catch (EntityNotFoundException $ex) {
+            Log::warning($ex);
+            return $this->error404($ex->getMessage());
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
 
     /**
      * @param $summit_id

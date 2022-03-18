@@ -185,11 +185,6 @@ final class SummitSelectedPresentationListService
 
             Log::debug(sprintf("SummitSelectedPresentationListService::reorderList track %s list %s payload %s.", $track_id, $list_id, json_encode($payload)));
 
-            $selection_plan = $summit->getCurrentSelectionPlanByStatus(SelectionPlan::STATUS_SELECTION);
-
-            if(is_null($selection_plan))
-                throw new ValidationException(sprintf("There is not current Selection Plan active on Selection Phase."));
-
             $category = $summit->getPresentationCategory(intval($track_id));
 
             if (is_null($category) || !$category instanceof PresentationCategory || !$category->isChairVisible()) throw new EntityNotFoundException("Track not found.");
@@ -245,9 +240,13 @@ final class SummitSelectedPresentationListService
                 if (is_null($presentation)
                     || !$presentation instanceof Presentation
                     || $presentation->getStatus() !== Presentation::STATUS_RECEIVED
-                    || $presentation->getProgress() !== Presentation::PHASE_COMPLETE
-                    || $presentation->getSelectionPlanId() !== $selection_plan->getId())
+                    || $presentation->getProgress() !== Presentation::PHASE_COMPLETE)
                     throw new EntityNotFoundException(sprintf("Presentation %s not found.", $id));
+
+                $selection_plan = $presentation->getSelectionPlan();
+
+                if(is_null($selection_plan) || !$selection_plan->isSelectionOpen() || !$selection_plan->IsEnabled())
+                    throw new ValidationException(sprintf("There is not current Selection Plan active on Selection Phase."));
 
                 if($category->getId() !== $presentation->getCategoryId()){
                     throw new ValidationException(sprintf("Current member can not assign Presentation %s to his/her list [Presentation does not belong to category].", $id));
@@ -323,11 +322,6 @@ final class SummitSelectedPresentationListService
             if(is_null($current_member))
                 throw new AuthzException("User is missing.");
 
-            $selection_plan = $summit->getCurrentSelectionPlanByStatus(SelectionPlan::STATUS_SELECTION);
-
-            if(is_null($selection_plan))
-                throw new ValidationException(sprintf("There is not current Selection Plan active on Selection Phase."));
-
             $category = $summit->getPresentationCategory(intval($track_id));
             if (is_null($category) || !$category instanceof PresentationCategory || !$category->isChairVisible())
                 throw new EntityNotFoundException("Track not found.");
@@ -347,12 +341,17 @@ final class SummitSelectedPresentationListService
 
             $presentation = $summit->getEvent($presentation_id);
 
+
             if (is_null($presentation)
                 || !$presentation instanceof Presentation
                 || $presentation->getStatus() !== Presentation::STATUS_RECEIVED
-                || $presentation->getProgress() !== Presentation::PHASE_COMPLETE
-                || $presentation->getSelectionPlanId() !== $selection_plan->getId())
+                || $presentation->getProgress() !== Presentation::PHASE_COMPLETE)
                 throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
+
+            $selection_plan = $presentation->getSelectionPlan();
+
+            if(is_null($selection_plan) || !$selection_plan->isSelectionOpen() || !$selection_plan->IsEnabled())
+                throw new ValidationException(sprintf("There is not current Selection Plan active on Selection Phase."));
 
             if($category->getId() !== $presentation->getCategoryId()){
                 throw new ValidationException(sprintf("Current member can not assign Presentation %s to his/her list [Presentation does not belong to category].", $presentation_id));
@@ -455,11 +454,6 @@ final class SummitSelectedPresentationListService
                 )
             );
 
-            $selection_plan = $summit->getCurrentSelectionPlanByStatus(SelectionPlan::STATUS_SELECTION);
-
-            if(is_null($selection_plan))
-                throw new ValidationException(sprintf("There is not current Selection Plan active on Selection Phase."));
-
             $category = $summit->getPresentationCategory(intval($track_id));
             if (is_null($category) || !$category instanceof PresentationCategory) throw new EntityNotFoundException("Track not found.");
 
@@ -485,6 +479,12 @@ final class SummitSelectedPresentationListService
 
             if (is_null($presentation) || !$presentation instanceof Presentation)
                 throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
+
+            $selection_plan = $presentation->getSelectionPlan();
+
+            if(is_null($selection_plan) || !$selection_plan->isSelectionOpen() || !$selection_plan->IsEnabled())
+                throw new ValidationException(sprintf("There is not current Selection Plan active on Selection Phase."));
+
 
             $selection = $selection_list->getSelectionByPresentation($presentation);
             if(is_null($selection))

@@ -2932,38 +2932,6 @@ SQL;
         })->toArray();
     }
 
-    /**
-     * @return bool
-     */
-    public function isSubmissionOpen()
-    {
-        foreach ($this->getActiveSelectionPlans() as $plan) {
-            if ($plan->isSubmissionOpen())
-                return true;
-        }
-        return false;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isPresentationEditionAllowed()
-    {
-        return $this->isSubmissionOpen() || $this->isVotingOpen();
-    }
-
-    /**
-     * @return bool
-     */
-    public function isVotingOpen()
-    {
-        foreach ($this->getActiveSelectionPlans() as $plan) {
-            if ($plan->isVotingOpen()) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     const STAGE_UNSTARTED = -1;
     const STAGE_OPEN = 0;
@@ -6091,4 +6059,5 @@ SQL;
         $res = $this->schedule_settings->matching($criteria)->first();
         return $res === false ? null : $res;
     }
+
 }

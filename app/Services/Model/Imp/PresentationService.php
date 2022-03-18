@@ -223,20 +223,6 @@ final class PresentationService
 
     }
 
-    /**
-     * @param Summit $summit
-     * @return int
-     */
-    public function getSubmissionLimitFor(Summit $summit)
-    {
-        $res = -1;
-        if ($summit->isSubmissionOpen()) {
-            $res = intval($summit->getCurrentSelectionPlanByStatus(SelectionPlan::STATUS_SUBMISSION)->getMaxSubmissionAllowedPerUser());
-        }
-
-        // zero means infinity
-        return $res === 0 ? PHP_INT_MAX : $res;
-    }
 
     /**
      * @param Summit $summit
@@ -251,12 +237,25 @@ final class PresentationService
         return $this->tx_service->transaction(function () use ($summit, $data) {
 
             $member = ResourceServerContext::getCurrentUser(false);
-            $current_selection_plan = $summit->getCurrentSelectionPlanByStatus(SelectionPlan::STATUS_SUBMISSION);
+            $selection_plan_id = $data['selection_plan_id'] ?? null;
+            if(is_null($selection_plan_id))
+                throw new ValidationException("selection_plan_id is required.");
+
+            $current_selection_plan = $summit->getSelectionPlanById(intval($selection_plan_id));
 
             if (is_null($current_selection_plan))
                 throw new ValidationException(trans(
                     'validation_errors.PresentationService.submitPresentation.NotValidSelectionPlan'
                 ));
+
+
+            if (!$current_selection_plan->IsEnabled()) {
+                throw new ValidationException(sprintf("Submission Period is Closed."));
+            }
+
+            if(!$current_selection_plan->isSubmissionOpen()){
+                throw new ValidationException(sprintf("Submission Period is Closed."));
+            }
 
             if (!$current_selection_plan->isAllowNewPresentations()) {
                 throw new ValidationException(sprintf("Selection Plan %s does not allow new submissions", $current_selection_plan->getId()));
@@ -277,7 +276,7 @@ final class PresentationService
             }
             // check qty
 
-            $limit = $this->getSubmissionLimitFor($summit);
+            $limit = $current_selection_plan->getSubmissionLimitFor();
             $presentations = [];
 
             foreach ($current_speaker->getPresentationsBySelectionPlanAndRole($current_selection_plan, PresentationSpeaker::ROLE_MODERATOR) as $p) {
@@ -335,26 +334,12 @@ final class PresentationService
         return $this->tx_service->transaction(function () use ($summit, $presentation_id, $data) {
 
             $member = ResourceServerContext::getCurrentUser(false);
-
-            $current_selection_plan = $summit->getCurrentSelectionPlanByStatus(SelectionPlan::STATUS_SUBMISSION);
             $current_speaker = $this->speaker_repository->getByMember($member);
 
             if (is_null($current_speaker))
                 throw new ValidationException(trans(
                     'validation_errors.PresentationService.updatePresentationSubmission.NotValidSpeaker'
                 ));
-
-            if (is_null($current_selection_plan))
-                throw new ValidationException(trans(
-                    'validation_errors.PresentationService.updatePresentationSubmission.NotValidSelectionPlan'
-                ));
-
-            if (!$current_selection_plan->IsEnabled()) {
-                throw new ValidationException(sprintf("Submission Period is Closed."));
-            }
-            if (!$current_selection_plan->isSubmissionOpen()) {
-                throw new ValidationException(sprintf("Submission Period is Closed."));
-            }
 
             $presentation = $summit->getEvent($presentation_id);
 
@@ -375,6 +360,21 @@ final class PresentationService
                     'validation_errors.PresentationService.updatePresentationSubmission.CurrentSpeakerCanNotEditPresentation',
                     ['presentation_id' => $presentation_id]
                 ));
+
+            $current_selection_plan = $presentation->getSelectionPlan();
+
+            if (is_null($current_selection_plan))
+                throw new ValidationException(trans(
+                    'validation_errors.PresentationService.updatePresentationSubmission.NotValidSelectionPlan'
+                ));
+
+            if (!$current_selection_plan->IsEnabled()) {
+                throw new ValidationException(sprintf("Submission Period is Closed."));
+            }
+
+            if (!$current_selection_plan->isSubmissionOpen()) {
+                throw new ValidationException(sprintf("Submission Period is Closed."));
+            }
 
             $presentation->setUpdatedBy(ResourceServerContext::getCurrentUser(false));
 
@@ -536,23 +536,10 @@ final class PresentationService
 
             $member = ResourceServerContext::getCurrentUser(false);
 
-            $current_selection_plan = $summit->getCurrentSelectionPlanByStatus(SelectionPlan::STATUS_SUBMISSION);
             $current_speaker = $this->speaker_repository->getByMember($member);
 
             if (is_null($current_speaker))
                 throw new EntityNotFoundException(sprintf("member %s does not has a speaker profile", $member->getId()));
-
-            if (is_null($current_selection_plan))
-                throw new ValidationException(trans(
-                    'validation_errors.PresentationService.updatePresentationSubmission.NotValidSelectionPlan'
-                ));
-
-            if (!$current_selection_plan->IsEnabled()) {
-                throw new ValidationException(sprintf("Submission Period is Closed."));
-            }
-            if (!$current_selection_plan->isSubmissionOpen()) {
-                throw new ValidationException(sprintf("Submission Period is Closed."));
-            }
 
             $presentation = $summit->getEvent($presentation_id);
             if (is_null($presentation))
@@ -566,6 +553,20 @@ final class PresentationService
                 (
                     sprintf("Presentation %s is not allowed to mark as completed.", $presentation_id)
                 );
+            }
+
+            $current_selection_plan = $presentation->getSelectionPlan();
+
+            if (is_null($current_selection_plan))
+                throw new ValidationException(trans(
+                    'validation_errors.PresentationService.updatePresentationSubmission.NotValidSelectionPlan'
+                ));
+
+            if (!$current_selection_plan->IsEnabled()) {
+                throw new ValidationException(sprintf("Submission Period is Closed."));
+            }
+            if (!$current_selection_plan->isSubmissionOpen()) {
+                throw new ValidationException(sprintf("Submission Period is Closed."));
             }
 
             if (!$presentation->canEdit($current_speaker))

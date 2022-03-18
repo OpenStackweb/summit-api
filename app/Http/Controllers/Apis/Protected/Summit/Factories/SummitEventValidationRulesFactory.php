@@ -131,6 +131,7 @@ final class SummitEventValidationRulesFactory
                 'tags' => 'sometimes|string_array',
                 'extra_questions' => 'sometimes|extra_question_dto_array',
                 'disclaimer_accepted' => 'sometimes|boolean',
+                'selection_plan_id' => 'required|integer',
             ];
         }
 

@@ -559,4 +559,18 @@ class SelectionPlan extends SilverstripeBaseModel
         return $this->extra_questions->matching($criteria);
     }
 
+    /**
+     * @return int
+     */
+    public function getSubmissionLimitFor():int
+    {
+        $res = -1;
+        if ($this->isSubmissionOpen()) {
+            $res = $this->getMaxSubmissionAllowedPerUser();
+        }
+
+        // zero means infinity
+        return $res === 0 ? PHP_INT_MAX : $res;
+    }
+
 }

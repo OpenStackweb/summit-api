@@ -1023,16 +1023,19 @@ final class PresentationService
 
             if (!$presentation->isCompleted()) {
                 Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s is not complete", $presentation_id));
-                $summitMediaUploadCount = $summit->getMediaUploadsMandatoryCount();
-                Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s got summitMediaUploadCount %s", $presentation_id, $summitMediaUploadCount));
-                if ($summitMediaUploadCount == 0) {
-                    Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s marking as PHASE_UPLOADS ( no mandatories uploads)", $presentation_id));
-                    $presentation->setProgress(Presentation::PHASE_UPLOADS);
-                }
+                $type = $presentation->getType();
+                if($type instanceof PresentationType) {
+                    $summitMediaUploadCount = $type->getMandatoryAllowedMediaUploadTypesCount();
+                    Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s got summitMediaUploadCount %s", $presentation_id, $summitMediaUploadCount));
+                    if ($summitMediaUploadCount == 0) {
+                        Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s marking as PHASE_UPLOADS ( no mandatories uploads)", $presentation_id));
+                        $presentation->setProgress(Presentation::PHASE_UPLOADS);
+                    }
 
-                if ($summitMediaUploadCount > 0 && $summitMediaUploadCount == $presentation->getMediaUploadsMandatoryCount()) {
-                    Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s marking as PHASE_UPLOADS ( mandatories completed)", $presentation_id));
-                    $presentation->setProgress(Presentation::PHASE_UPLOADS);
+                    if ($summitMediaUploadCount > 0 && $summitMediaUploadCount == $presentation->getMediaUploadsMandatoryCount()) {
+                        Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s marking as PHASE_UPLOADS ( mandatories completed)", $presentation_id));
+                        $presentation->setProgress(Presentation::PHASE_UPLOADS);
+                    }
                 }
             }
             Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s  deleting original file %s", $presentation_id, $fileInfo->getFileName()));

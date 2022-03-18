@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * Class PresentationType
@@ -328,6 +329,12 @@ SQL;
     {
         if (!$this->allowed_media_upload_types->contains($type)) return;
         $this->allowed_media_upload_types->removeElement($type);
+    }
+
+    public function getMandatoryAllowedMediaUploadTypesCount():int{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('is_mandatory',true));
+        return $this->allowed_media_upload_types->matching($criteria)->count();
     }
 
     public function clearAllowedMediaUploadType()

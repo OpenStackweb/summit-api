@@ -1048,7 +1048,10 @@ class Presentation extends SummitEvent
      */
     public function fulfilMediaUploadsConditions():bool{
 
-        $summitMediaUploadCount = $this->summit->getMediaUploadsMandatoryCount();
+        $type = $this->type;
+        if (!$type instanceof PresentationType) return false;
+
+        $summitMediaUploadCount = $type->getMandatoryAllowedMediaUploadTypesCount();
         if($summitMediaUploadCount === 0) return true;
         if($summitMediaUploadCount > $this->getMediaUploadsMandatoryCount()) return false;
         return true;

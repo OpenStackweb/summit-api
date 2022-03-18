@@ -39,7 +39,7 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
         'DisplayOnSite'   => 'display_on_site:json_boolean',
         'SubscribedToNewsletter' => 'subscribed_to_newsletter:json_boolean',
         'ShirtSize' => 'shirt_size:json_string',
-        'FoodPreference' => 'food_preference:json_string',
+        'FoodPreference' => 'food_preference:json_string_array',
         'OtherFoodPreference' => 'other_food_preference:json_string',
     ];
 

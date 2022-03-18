@@ -2327,22 +2327,25 @@ SQL;
     }
 
     /**
-     * @return string|null
+     * @return array|string[]
      */
-    public function getFoodPreference():?string
+    public function getFoodPreference():array
     {
-        return $this->food_preference;
+        if(empty($this->food_preference)) return [];
+        return explode(',', $this->food_preference);
     }
 
     /**
-     * @param string $food_preference
+     * @param array $food_preference
      * @throws ValidationException
      */
-    public function setFoodPreference(string $food_preference): void
+    public function setFoodPreference(array $food_preference): void
     {
-        if(!in_array($food_preference, self::AllowedFoodPreferences))
-            throw new ValidationException(sprintf("food_preference %s is not valid one.", $food_preference));
-        $this->food_preference = $food_preference;
+        foreach($food_preference as $food) {
+            if (!in_array($food, self::AllowedFoodPreferences))
+                throw new ValidationException(sprintf("food_preference %s is not valid one.", $food));
+        }
+        $this->food_preference = implode(',', $food_preference);
     }
 
     /**

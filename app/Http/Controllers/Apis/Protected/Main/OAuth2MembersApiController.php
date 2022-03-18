@@ -234,7 +234,7 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                 'display_on_site'   => 'sometimes|boolean',
                 'subscribed_to_newsletter' => 'sometimes|boolean',
                 'shirt_size' => 'sometimes|string|in:'.implode(',', Member::AllowedShirtSizes),
-                'food_preference' => 'sometimes|string|in:'.implode(',', Member::AllowedFoodPreferences),
+                'food_preference' => 'sometimes|string_array',
                 'other_food_preference' => 'sometimes|string|max:100'
             ];
 

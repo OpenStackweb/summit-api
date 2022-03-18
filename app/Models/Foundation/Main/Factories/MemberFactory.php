@@ -34,7 +34,7 @@ final class MemberFactory
             $member->setShirtSize(trim($payload['shirt_size']));
         }
         if(isset($payload['food_preference'])){
-            $member->setFoodPreference(trim($payload['food_preference']));
+            $member->setFoodPreference($payload['food_preference']);
         }
         if(isset($payload['other_food_preference'])){
             $member->setOtherFoodPreference(trim($payload['other_food_preference']));

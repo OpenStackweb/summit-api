@@ -46,9 +46,9 @@ interface ISpeakerRepository extends IBaseRepository
      * @param PagingInfo $paging_info
      * @param Filter|null $filter
      * @param Order|null $order
-     * @return mixed
+     * @return PagingResponse
      */
-    public function getFeaturedSpeakers(Summit $summit,  PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+    public function getFeaturedSpeakers(Summit $summit,  PagingInfo $paging_info, Filter $filter = null, Order $order = null):PagingResponse;
 
     /**
      * @param Member $member

@@ -869,7 +869,7 @@ SQL;
     /**
      * @inheritDoc
      */
-    public function getFeaturedSpeakers(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null)
+    public function getFeaturedSpeakers(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null):PagingResponse
     {
         $extra_filters = '';
         $extra_orders  = '';

@@ -24,7 +24,7 @@ class Version20220322195257 extends AbstractMigration
         }
 
         if($schema->hasTable("PresentationType") && !$builder->hasColumn("PresentationType", "AllowsSpeakerAndEventCollision")) {
-            $builder->table('AllowsSpeakerAndEventCollision', function (Table $table) {
+            $builder->table('PresentationType', function (Table $table) {
                 $table->boolean('AllowsSpeakerAndEventCollision')->setNotnull(true)->setDefault(0);
             });
         }
@@ -44,7 +44,7 @@ class Version20220322195257 extends AbstractMigration
         }
 
         if($schema->hasTable("PresentationType") && $builder->hasColumn("PresentationType", "AllowsSpeakerAndEventCollision")) {
-            $builder->table('AllowsSpeakerAndEventCollision', function (Table $table) {
+            $builder->table('PresentationType', function (Table $table) {
                 $table->dropColumn('AllowsSpeakerAndEventCollision');
             });
         }

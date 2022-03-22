@@ -73,7 +73,7 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
         if(!is_null($summit)) {
             $featured = $summit->getFeatureSpeaker($speaker);
             $values['featured']                = !is_null($featured);
-            $values['featured_order']          = is_null($featured) ? 0 : $featured->getOrder();
+            $values['order']                   = is_null($featured) ? 0 : $featured->getOrder();
             $values['presentations']           = $speaker->getPresentationIds($summit->getId(), $published);
             $values['moderated_presentations'] = $speaker->getModeratedPresentationIds($summit->getId(), $published);
         }

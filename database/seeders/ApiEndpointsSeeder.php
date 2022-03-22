@@ -6896,6 +6896,19 @@ class ApiEndpointsSeeder extends Seeder
                 [
                     'name' => 'add-featured-speaker',
                     'route' => '/api/v1/summits/{id}/featured-speakers/{speaker_id}',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
+                    'name' => 'update-featured-speaker',
+                    'route' => '/api/v1/summits/{id}/featured-speakers/{speaker_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
                         sprintf(SummitScopes::WriteSummitData, $current_realm)

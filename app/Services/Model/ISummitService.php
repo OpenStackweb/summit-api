@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\Speakers\FeaturedSpeaker;
 use App\Models\Utils\IStorageTypesConstants;
 use Illuminate\Http\UploadedFile;
 use models\exceptions\EntityNotFoundException;
@@ -501,8 +502,19 @@ interface ISummitService
      * @param int $speaker_id
      * @throws ValidationException
      * @throws EntityNotFoundException
+     * @return FeaturedSpeaker | null
      */
-    public function addFeaturedSpeaker(int $summit_id, int $speaker_id):void;
+    public function addFeaturedSpeaker(int $summit_id, int $speaker_id):?FeaturedSpeaker;
+
+    /**
+     * @param int $summit_id
+     * @param int $speaker_id
+     * @param array $payload
+     * @return FeaturedSpeaker|null
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function updateFeaturedSpeaker(int $summit_id, int $speaker_id, array $payload):?FeaturedSpeaker;
 
     /**
      * @param int $summit_id

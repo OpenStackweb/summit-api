@@ -23,6 +23,7 @@ use App\Models\Foundation\Summit\ISummitModality;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
 use App\Models\Foundation\Summit\SelectionPlan;
+use App\Models\Foundation\Summit\Speakers\FeaturedSpeaker;
 use App\Models\Foundation\Summit\TrackTagGroup;
 use App\Models\Foundation\Summit\TrackTagGroupAllowedTag;
 use App\Models\Utils\GetDefaultValueFromConfig;
@@ -625,12 +626,8 @@ class Summit extends SilverstripeBaseModel
     private $excluded_categories_for_accepted_presentations;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationSpeaker")
-     * @ORM\JoinTable(name="Summit_FeaturedSpeakers",
-     *      joinColumns={@ORM\JoinColumn(name="SummitID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="PresentationSpeakerID", referencedColumnName="ID")}
-     * )
-     * @var PresentationSpeaker[]
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Speakers\FeaturedSpeaker", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var FeaturedSpeaker[]
      */
     private $featured_speakers;
 
@@ -5145,11 +5142,21 @@ SQL;
     }
 
     /**
-     * @return ArrayCollection|PresentationSpeaker[]
+     * @return ArrayCollection|FeaturedSpeaker[]
      */
     public function getFeaturesSpeakers()
     {
         return $this->featured_speakers;
+    }
+
+    /**
+     * @return ArrayCollection|FeaturedSpeaker[]
+     */
+    public function getOrderedFeaturesSpeakers()
+    {
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'ASC']);
+        return $this->featured_speakers->matching($criteria);
     }
 
     public function clearFeaturedSpeakers()
@@ -5161,17 +5168,44 @@ SQL;
      * @param PresentationSpeaker $speaker
      * @return bool
      */
-    public function isFeaturedSpeaker(PresentationSpeaker  $speaker):bool{
-        return $this->featured_speakers->contains($speaker);
+    public function isFeaturedSpeaker(PresentationSpeaker $speaker):bool{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('speaker', $speaker));
+        return $this->featured_speakers->matching($criteria)->count() > 0;
     }
 
     /**
      * @param PresentationSpeaker $speaker
+     * @return FeaturedSpeaker | null
      */
-    public function addFeaturedSpeaker(PresentationSpeaker $speaker)
+    public function getFeatureSpeaker(PresentationSpeaker $speaker):?FeaturedSpeaker{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('speaker', $speaker));
+        $res = $this->featured_speakers->matching($criteria)->first();
+        return !$res ? null : $res;
+    }
+
+    /**
+     * @return int
+     */
+    private function getFeaturedSpeakerMaxOrder(): int
     {
-        if ($this->featured_speakers->contains($speaker)) return;
-        $this->featured_speakers->add($speaker);
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'DESC']);
+        $speaker = $this->featured_speakers->matching($criteria)->first();
+        return $speaker === false ? 0 : $speaker->getOrder();
+    }
+
+    /**
+     * @param PresentationSpeaker $speaker
+     * @return FeaturedSpeaker|null
+     */
+    public function addFeaturedSpeaker(PresentationSpeaker $speaker):?FeaturedSpeaker
+    {
+        if($this->isFeaturedSpeaker($speaker)) return null;
+        $featureSpeaker = new FeaturedSpeaker($this, $speaker, $this->getFeaturedSpeakerMaxOrder() + 1);
+        $this->featured_speakers->add($featureSpeaker);
+        return $featureSpeaker;
     }
 
     /**
@@ -5179,10 +5213,23 @@ SQL;
      */
     public function removeFeaturedSpeaker(PresentationSpeaker $speaker)
     {
-        if (!$this->featured_speakers->contains($speaker)) return;
-        $this->featured_speakers->removeElement($speaker);
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('speaker', $speaker));
+        $featured = $this->featured_speakers->matching($criteria)->first();
+        if(!$featured) return;
+        $this->featured_speakers->removeElement($featured);
+        $featured->clearSummit();
     }
 
+    /**
+     * @param FeaturedSpeaker $speaker
+     * @param int $new_order
+     * @throws ValidationException
+     */
+    public function recalculateFeaturedSpeakerOrder(FeaturedSpeaker $speaker, $new_order)
+    {
+        self::recalculateOrderForSelectable($this->featured_speakers, $speaker, $new_order);
+    }
     /**
      * @return array|DateTime[]
      */

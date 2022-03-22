@@ -1437,7 +1437,8 @@ Route::group(array('prefix' => 'summits'), function () {
         Route::group(['prefix' => 'featured-speakers'], function () {
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@getAllFeatureSpeaker']);
             Route::group(['prefix' => '{speaker_id}'], function () {
-                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@addFeatureSpeaker']);
+                Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@addFeatureSpeaker']);
+                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@updateFeatureSpeaker']);
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@removeFeatureSpeaker']);
             });
         });

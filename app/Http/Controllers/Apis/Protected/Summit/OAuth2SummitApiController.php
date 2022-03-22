@@ -761,6 +761,51 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    public function updateFeatureSpeaker($summit_id, $speaker_id){
+        try {
+
+            if (!Request::isJson()) return $this->error400();
+            $payload = Request::json()->all();
+
+            $rules = [
+                'order' => 'required|integer|min:1',
+            ];
+            // Creates a Validator instance and validates the data.
+            $validation = Validator::make($payload, $rules);
+
+            if ($validation->fails()) {
+                $messages = $validation->messages()->toArray();
+
+                return $this->error412
+                (
+                    $messages
+                );
+            }
+
+            $this->summit_service->updateFeaturedSpeaker(intval($summit_id), intval($speaker_id), $payload);
+
+            return $this->updated();
+
+        } catch (EntityNotFoundException $ex1) {
+            Log::warning($ex1);
+            return $this->error404();
+        } catch (ValidationException $ex2) {
+            Log::warning($ex2);
+            return $this->error412(array($ex2->getMessage()));
+        } catch (\HTTP401UnauthorizedException $ex3) {
+            Log::warning($ex3);
+            return $this->error401();
+        } catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $speaker_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
     public function removeFeatureSpeaker($summit_id, $speaker_id){
         try {
 

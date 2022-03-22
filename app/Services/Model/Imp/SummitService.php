@@ -30,9 +30,11 @@ use App\Jobs\ProcessEventDataImport;
 use App\Models\Foundation\Summit\Factories\PresentationFactory;
 use App\Models\Foundation\Summit\Factories\SummitEventFeedbackFactory;
 use App\Models\Foundation\Summit\Factories\SummitFactory;
+use App\Models\Foundation\Summit\Factories\SummitOrderExtraQuestionTypeFactory;
 use App\Models\Foundation\Summit\Factories\SummitRSVPFactory;
 use App\Models\Foundation\Summit\Repositories\IDefaultSummitEventTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationMediaUploadRepository;
+use App\Models\Foundation\Summit\Speakers\FeaturedSpeaker;
 use App\Models\Utils\IntervalParser;
 use App\Models\Utils\IStorageTypesConstants;
 use App\Permissions\IPermissionsManager;
@@ -3249,9 +3251,12 @@ final class SummitService extends AbstractService implements ISummitService
     }
 
     /**
-     * @inheritDoc
+     * @param int $summit_id
+     * @param int $speaker_id
+     * @return FeaturedSpeaker|null
+     * @throws Exception
      */
-    public function addFeaturedSpeaker(int $summit_id, int $speaker_id): void
+    public function addFeaturedSpeaker(int $summit_id, int $speaker_id): ?FeaturedSpeaker
     {
         $this->tx_service->transaction(function () use ($summit_id, $speaker_id) {
             $summit = $this->summit_repository->getById($summit_id);
@@ -3267,10 +3272,45 @@ final class SummitService extends AbstractService implements ISummitService
                 throw new ValidationException(sprintf("Speaker %s does not belongs to Summit %s schedule.", $speaker_id, $summit_id));
             }
 
-            $summit->addFeaturedSpeaker($speaker);
+            return $summit->addFeaturedSpeaker($speaker);
         });
     }
 
+    /**
+     * @param int $summit_id
+     * @param int $speaker_id
+     * @param array $payload
+     * @return FeaturedSpeaker|null
+     * @throws Exception
+     */
+    public function updateFeaturedSpeaker(int $summit_id, int $speaker_id, array $payload):?FeaturedSpeaker {
+        return $this->tx_service->transaction(function () use ($summit_id, $speaker_id, $payload) {
+            $summit = $this->summit_repository->getById($summit_id);
+            if (is_null($summit) || !$summit instanceof Summit)
+                throw new EntityNotFoundException("summit not found");
+
+            $speaker = $this->speaker_repository->getById($speaker_id);
+            if (is_null($speaker) || !$speaker instanceof PresentationSpeaker)
+                throw new EntityNotFoundException("speaker not found");
+
+            // validate it
+            if (!$this->speaker_repository->speakerBelongsToSummitSchedule($speaker_id, $summit_id)) {
+                throw new ValidationException(sprintf("Speaker %s does not belongs to Summit %s schedule.", $speaker_id, $summit_id));
+            }
+
+            $featured = $summit->getFeatureSpeaker($speaker);
+
+            if(is_null($featured))
+                throw new EntityNotFoundException("Feature Speaker not found");
+
+            if (isset($payload['order']) && intval($payload['order']) != $featured->getOrder()) {
+                // request to update order
+                $summit->recalculateFeaturedSpeakerOrder($featured, intval($payload['order']));
+            }
+
+            return $featured;
+        });
+    }
     /**
      * @inheritDoc
      */

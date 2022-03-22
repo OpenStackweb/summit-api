@@ -956,7 +956,7 @@ FROM (
     IFNULL(M.Email,R.Email) AS Email,
     S.PhotoID,
     S.BigPhotoID,
-    R.ID AS RegistrationRequestID
+    R.ID AS RegistrationRequestID,
 	FS.`Order` AS `Order`
     FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID

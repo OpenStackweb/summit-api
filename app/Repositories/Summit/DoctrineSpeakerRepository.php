@@ -899,6 +899,7 @@ SQL;
                 'first_name' => 'FirstName',
                 'last_name'  => 'LastName',
                 'full_name'  => 'FullName',
+                'order'      => '`Order`'
             ));
         }
 
@@ -913,12 +914,7 @@ FROM (
 	FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
 	LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-	WHERE
-	EXISTS
-	(
-		SELECT FS.ID FROM Summit_FeaturedSpeakers FS
-		WHERE FS.SummitID = {$summit->getId()} AND FS.PresentationSpeakerID = S.ID
-	)
+	INNER JOIN Summit_FeaturedSpeakers FS ON FS.PresentationSpeakerID = S.ID AND FS.SummitID = {$summit->getId()}	
 )
 SUMMIT_SPEAKERS
 {$extra_filters}
@@ -961,16 +957,12 @@ FROM (
     S.PhotoID,
     S.BigPhotoID,
     R.ID AS RegistrationRequestID
+	FS.`Order` AS `Order`
     FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
 	LEFT JOIN File F ON F.ID = S.PhotoID
     LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-	WHERE
-	EXISTS
-	(
-		SELECT FS.ID FROM Summit_FeaturedSpeakers FS
-		WHERE FS.SummitID = {$summit->getId()} AND FS.PresentationSpeakerID = S.ID
-	)
+	INNER JOIN Summit_FeaturedSpeakers FS ON FS.PresentationSpeakerID = S.ID AND FS.SummitID = {$summit->getId()}	
 )
 SUMMIT_SPEAKERS
 {$extra_filters} {$extra_orders} limit :per_page offset :offset;

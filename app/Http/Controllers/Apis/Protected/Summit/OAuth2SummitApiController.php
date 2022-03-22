@@ -863,6 +863,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                         'last_name',
                         'id',
                         'email',
+                        'order',
                     ];
                 },
                 function($filter) use($summit){

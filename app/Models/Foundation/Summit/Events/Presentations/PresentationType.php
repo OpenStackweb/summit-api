@@ -101,6 +101,12 @@ class PresentationType extends SummitEventType
     protected $allow_custom_ordering;
 
     /**
+     * @ORM\Column(name="AllowsSpeakerAndEventCollision", type="boolean")
+     * @var bool
+     */
+    protected $allows_speaker_event_collision;
+
+    /**
      * @param Summit $summit
      * @param string $type
      * @return bool
@@ -317,6 +323,7 @@ SQL;
         $this->min_speakers = 0;
         $this->allow_attendee_vote = false;
         $this->allow_custom_ordering  = false;
+        $this->allows_speaker_event_collision = false;
     }
 
     public function addAllowedMediaUploadType(SummitMediaUploadType $type)
@@ -377,6 +384,22 @@ SQL;
     public function setAllowCustomOrdering(bool $allow_custom_ordering): void
     {
         $this->allow_custom_ordering = $allow_custom_ordering;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAllowsSpeakerEventCollision(): bool
+    {
+        return $this->allows_speaker_event_collision;
+    }
+
+    /**
+     * @param bool $allows_speaker_event_collision
+     */
+    public function setAllowsSpeakerEventCollision(bool $allows_speaker_event_collision): void
+    {
+        $this->allows_speaker_event_collision = $allows_speaker_event_collision;
     }
 
 }

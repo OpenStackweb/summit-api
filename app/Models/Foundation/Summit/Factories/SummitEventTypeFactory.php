@@ -102,6 +102,9 @@ final class SummitEventTypeFactory
                     if(isset($data['allow_attendee_vote'])) {
                         $event_type->setAllowAttendeeVote(boolval($data['allow_attendee_vote']));
                     }
+
+                    if(isset($data['allows_speaker_event_collision']))
+                        $event_type->setAllowsSpeakerEventCollision(boolval($data['allows_speaker_event_collision']));
                 }
             }
            break;
@@ -139,6 +142,9 @@ final class SummitEventTypeFactory
 
         if(isset($data['allows_location']))
             $event_type->setAllowsLocation(boolval($data['allows_location']));
+
+        if(isset($data['allows_location_timeframe_collision']))
+            $event_type->setAllowsLocationTimeframeCollision(boolval($data['allows_location_timeframe_collision']));
 
         $summit->addEventType($event_type);
         return $event_type;

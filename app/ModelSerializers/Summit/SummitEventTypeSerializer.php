@@ -32,6 +32,7 @@ class SummitEventTypeSerializer extends SilverStripeSerializer
         'AllowsAttachment'      => 'allows_attachment:json_boolean',
         'AllowsLevel'           => 'allows_level:json_boolean',
         'AllowsPublishingDates' => 'allows_publishing_dates:json_boolean',
+        'AllowsLocationTimeframeCollision' => 'allows_location_timeframe_collision:json_boolean',
         'AllowsLocation'        => 'allows_location:json_boolean',
         'Default'               => 'is_default:json_boolean',
         'SummitId'              => 'summit_id:json_int',

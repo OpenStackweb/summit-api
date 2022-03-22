@@ -99,9 +99,15 @@ class SummitEventType extends SilverstripeBaseModel
     protected $is_private;
 
     /**
+     * @ORM\Column(name="AllowsLocationAndTimeFrameCollision", type="boolean")
+     * @var bool
+     */
+    protected $allows_location_timeframe_collision;
+
+  /**
      * @ORM\ManyToMany(targetEntity="SummitDocument", mappedBy="event_types")
      */
-    private $summit_documents;
+    protected $summit_documents;
 
     /**
      * @return string
@@ -256,6 +262,7 @@ class SummitEventType extends SilverstripeBaseModel
         $this->allows_location         = true;
         $this->allows_publishing_dates = true;
         $this->summit_documents        = new ArrayCollection();
+        $this->allows_location_timeframe_collision = false;
     }
 
     /**
@@ -384,6 +391,22 @@ SQL;
     public function setAllowsLocation(bool $allows_location): void
     {
         $this->allows_location = $allows_location;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAllowsLocationTimeframeCollision(): bool
+    {
+        return $this->allows_location_timeframe_collision;
+    }
+
+    /**
+     * @param bool $allows_location_timeframe_collision
+     */
+    public function setAllowsLocationTimeframeCollision(bool $allows_location_timeframe_collision): void
+    {
+        $this->allows_location_timeframe_collision = $allows_location_timeframe_collision;
     }
 
 }

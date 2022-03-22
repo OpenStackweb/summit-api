@@ -1070,53 +1070,66 @@ final class SummitService extends AbstractService implements ISummitService
         });
     }
 
+    /**
+     * @param SummitEvent $event
+     * @throws ValidationException
+     */
     private function validateBlackOutTimesAndTimes(SummitEvent $event)
     {
         $current_event_location = $event->getLocation();
-        if(!$event->getType()->isAllowsPublishingDates()) return;
+        $eventType = $event->getType();
+        if(!$eventType->isAllowsPublishingDates()) return;
         // validate blackout times
         $conflict_events = $this->event_repository->getPublishedOnSameTimeFrame($event);
         if (!is_null($conflict_events)) {
             foreach ($conflict_events as $c_event) {
                 // if the published event is BlackoutTime or if there is a BlackoutTime event in this timeframe
-                if ((!is_null($current_event_location) && !$current_event_location->isOverrideBlackouts()) && ($event->getType()->isBlackoutTimes() || $c_event->getType()->isBlackoutTimes()) && $event->getId() != $c_event->getId()) {
+                if ((!is_null($current_event_location) && !$current_event_location->isOverrideBlackouts()) &&
+                    ($eventType->isBlackoutTimes() || $c_event->getType()->isBlackoutTimes()) && $event->getId() != $c_event->getId()) {
                     throw new ValidationException
                     (
                         sprintf
                         (
-                            "You can't publish on this time frame, it conflicts with event id %s",
+                            "You can't publish on this time frame, it conflicts with event id %s.",
                             $c_event->getId()
                         )
                     );
                 }
-                // if trying to publish an event on a slot occupied by another event
-                if (!is_null($current_event_location) && !is_null($c_event->getLocation()) && $current_event_location->getId() == $c_event->getLocation()->getId() && $event->getId() != $c_event->getId()) {
-                    throw new ValidationException
-                    (
-                        sprintf
+                if(!$eventType->isAllowLocationTimeframeCollision()) {
+                    // if trying to publish an event on a slot occupied by another event
+                    // event collision ( same timeframe , same location)
+
+
+                    if (!is_null($current_event_location) && !is_null($c_event->getLocation()) && $current_event_location->getId() == $c_event->getLocation()->getId() && $event->getId() != $c_event->getId()) {
+                        throw new ValidationException
                         (
-                            "You can't publish on this time frame, it conflicts with event id %s",
-                            $c_event->getId()
-                        )
-                    );
+                            sprintf
+                            (
+                                "You can't publish on this time frame, it conflicts with event id %s.",
+                                $c_event->getId()
+                            )
+                        );
+                    }
                 }
 
                 // check speakers collisions
                 if ($event instanceof Presentation && $c_event instanceof Presentation && $event->getId() != $c_event->getId()) {
-                    foreach ($event->getSpeakers() as $current_speaker) {
-                        foreach ($c_event->getSpeakers() as $c_speaker) {
-                            if (intval($c_speaker->getId()) === intval($current_speaker->getId())) {
-                                throw new ValidationException
-                                (
-                                    sprintf
+                    if(!$eventType->isAllowSpeakerEventCollision()) {
+                        foreach ($event->getSpeakers() as $current_speaker) {
+                            foreach ($c_event->getSpeakers() as $c_speaker) {
+                                if (intval($c_speaker->getId()) === intval($current_speaker->getId())) {
+                                    throw new ValidationException
                                     (
-                                        "You can't publish Event %s (%s) on this timeframe, speaker %s its presention in room %s at this time.",
-                                        $event->getTitle(),
-                                        $event->getId(),
-                                        $current_speaker->getFullName(),
-                                        $c_event->getLocationName()
-                                    )
-                                );
+                                        sprintf
+                                        (
+                                            "You can't publish Event %s (%s) on this timeframe, speaker %s its present in room %s at this time.",
+                                            $event->getTitle(),
+                                            $event->getId(),
+                                            $current_speaker->getFullName(),
+                                            $c_event->getLocationName()
+                                        )
+                                    );
+                                }
                             }
                         }
                     }

@@ -32,6 +32,7 @@ final class PresentationTypeSerializer extends SummitEventTypeSerializer
         'ShouldBeAvailableOnCfp'   => 'should_be_available_on_cfp:json_boolean',
         'AllowCustomOrdering'      => 'allow_custom_ordering:json_boolean',
         'AllowAttendeeVote'        => 'allow_attendee_vote:json_boolean',
+        'AllowsSpeakerEventCollision' => 'allows_speaker_event_collision:json_boolean',
     ];
 
     /**

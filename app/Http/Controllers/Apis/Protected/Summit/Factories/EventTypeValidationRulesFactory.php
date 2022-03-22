@@ -60,6 +60,7 @@ final class EventTypeValidationRulesFactory
             'allows_publishing_dates' => 'sometimes|boolean',
             'is_private'              => 'sometimes|boolean',
             'is_default'              => 'sometimes|boolean',
+            'allows_location_timeframe_collision' => 'sometimes|boolean',
         ];
 
         $specific_rules = [];
@@ -80,6 +81,7 @@ final class EventTypeValidationRulesFactory
                     'moderator_label'            => 'sometimes|string',
                     'allow_custom_ordering'      => 'sometimes|boolean',
                     'allow_attendee_vote'        => 'sometimes|boolean',
+                    'allows_speaker_event_collision' => 'sometimes|boolean',
                 ];
             }
             break;

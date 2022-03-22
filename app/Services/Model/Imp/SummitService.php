@@ -1095,7 +1095,7 @@ final class SummitService extends AbstractService implements ISummitService
                         )
                     );
                 }
-                if(!$eventType->isAllowLocationTimeframeCollision()) {
+                if(!$eventType->isAllowsLocationTimeframeCollision()) {
                     // if trying to publish an event on a slot occupied by another event
                     // event collision ( same timeframe , same location)
 
@@ -1114,7 +1114,7 @@ final class SummitService extends AbstractService implements ISummitService
 
                 // check speakers collisions
                 if ($event instanceof Presentation && $c_event instanceof Presentation && $event->getId() != $c_event->getId()) {
-                    if(!$eventType->isAllowSpeakerEventCollision()) {
+                    if(!$eventType->isAllowsSpeakerEventCollision()) {
                         foreach ($event->getSpeakers() as $current_speaker) {
                             foreach ($c_event->getSpeakers() as $c_speaker) {
                                 if (intval($c_speaker->getId()) === intval($current_speaker->getId())) {

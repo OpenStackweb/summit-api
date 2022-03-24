@@ -73,8 +73,10 @@ trait OrderableChilds
      * @param Selectable $collection
      */
     private static function resetOrderForSelectable(Selectable $collection):void{
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'ASC']);
         $order = 1;
-        foreach($collection as $e){
+        foreach($collection->matching($criteria) as $e){
             $e->setOrder($order);
             $order++;
         }

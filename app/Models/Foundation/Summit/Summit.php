@@ -5208,6 +5208,7 @@ SQL;
         return $featureSpeaker;
     }
 
+    private function recalculateOrder
     /**
      * @param PresentationSpeaker $speaker
      */
@@ -5219,6 +5220,7 @@ SQL;
         if(!$featured) return;
         $this->featured_speakers->removeElement($featured);
         $featured->clearSummit();
+        self::resetOrderForSelectable($this->featured_speakers);
     }
 
     /**

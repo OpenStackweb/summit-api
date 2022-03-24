@@ -68,4 +68,15 @@ trait OrderableChilds
 
         self::recalculateOrderForCollection( $collection->matching($criteria)->toArray(), $element, $new_order);
     }
+
+    /**
+     * @param Selectable $collection
+     */
+    private static function resetOrderForSelectable(Selectable $collection):void{
+        $order = 1;
+        foreach($collection as $e){
+            $e->setOrder($order);
+            $order++;
+        }
+    }
 }

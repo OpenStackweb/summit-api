@@ -3271,7 +3271,7 @@ final class SummitService extends AbstractService implements ISummitService
      */
     public function addFeaturedSpeaker(int $summit_id, int $speaker_id): ?FeaturedSpeaker
     {
-        $this->tx_service->transaction(function () use ($summit_id, $speaker_id) {
+        return $this->tx_service->transaction(function () use ($summit_id, $speaker_id) {
             $summit = $this->summit_repository->getById($summit_id);
             if (is_null($summit) || !$summit instanceof Summit)
                 throw new EntityNotFoundException("summit not found");

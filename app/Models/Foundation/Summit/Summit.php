@@ -5208,7 +5208,6 @@ SQL;
         return $featureSpeaker;
     }
 
-    private function recalculateOrder
     /**
      * @param PresentationSpeaker $speaker
      */

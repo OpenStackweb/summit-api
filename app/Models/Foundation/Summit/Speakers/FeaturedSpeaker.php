@@ -18,6 +18,7 @@ use App\Models\Utils\BaseEntity;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use models\summit\SummitOwned;
+use models\utils\One2ManyPropertyTrait;
 
 /**
  * @ORM\Entity
@@ -34,6 +35,16 @@ use models\summit\SummitOwned;
 class FeaturedSpeaker extends BaseEntity implements IOrderable
 {
     use SummitOwned;
+
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getSpeakerId' => 'speaker',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasSpeaker' => 'speaker',
+    ];
 
     /**
      * @ORM\Column(name="`Order`", type="integer")

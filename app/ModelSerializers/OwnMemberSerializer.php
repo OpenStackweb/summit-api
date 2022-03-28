@@ -295,7 +295,13 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         foreach ($member->getSummitAdministratorPermissionGroup() as $permissionGroup){
                             $res[] = SerializerRegistry::getInstance()
                                 ->getSerializer($permissionGroup)
-                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'summits'));
+                                ->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    ['summits'],
+                                    $params
+                                );
                         }
                         $values['summit_permission_groups'] = $res;
                     }

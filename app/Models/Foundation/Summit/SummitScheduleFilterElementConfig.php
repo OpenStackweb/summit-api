@@ -65,7 +65,7 @@ class SummitScheduleFilterElementConfig extends SilverstripeBaseModel
         self::Type_Date => 'Date',
         self::Type_Track => 'Categories',
         self::Type_Tags => 'Tags',
-        self::Type_TrackGroups => 'Categories Groups',
+        self::Type_TrackGroups => 'Category Groups',
         self::Type_Company => 'Company',
         self::Type_Level => 'Level',
         self::Type_Speakers => 'Speakers',

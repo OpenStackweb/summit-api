@@ -1418,7 +1418,7 @@ final class SummitOrderService
                         $ownerEmail,
                         $order->getOwnerFirstName(),
                         $order->getOwnerSurname(),
-                        $order->getCompany()
+                        $order->getOwnerCompany()
                     ));
 
                     return $order;
@@ -3628,7 +3628,7 @@ final class SummitOrderService
                         $ownerEmail,
                         $order->getOwnerFirstName(),
                         $order->getOwnerSurname(),
-                        $order->getCompany()
+                        $order->getOwnerCompany()
                     ));
 
                     $this->sendAttendeesInvitationEmail($order);

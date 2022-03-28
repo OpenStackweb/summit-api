@@ -634,7 +634,6 @@ final class OAuth2SummitOrdersApiController
 
             $order = $this->service->reSendOrderEmail(intval($order_id));
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($order)->serialize( Request::input('expand', '')));
-
         }
         catch(\InvalidArgumentException $ex){
             Log::warning($ex);

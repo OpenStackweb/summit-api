@@ -67,8 +67,8 @@ final class SummitFactory
             $summit->setRegistrationSendTicketEmailAutomatically(boolval($data['registration_send_ticket_email_automatically']));
         }
 
-        if(isset($data['registration_allow_automatic_reminder_emails']) ){
-            $summit->setAllowAutomaticReminderEmails(boolval($data['registration_allow_automatic_reminder_emails']));
+        if(isset($data['registration_send_order_email_automatically']) ){
+            $summit->setRegistrationSendOrderEmailAutomatically(boolval($data['registration_send_order_email_automatically']));
         }
 
         if(isset($data['available_on_api']) ){

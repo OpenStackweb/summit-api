@@ -150,6 +150,12 @@ class Summit extends SilverstripeBaseModel
     private $registration_send_ticket_email_automatically;
 
     /**
+     * @ORM\Column(name="RegistrationSendOrderEmailAutomatically", type="boolean")
+     * @var bool
+     */
+    private $registration_send_order_email_automatically;
+
+    /**
      * @ORM\Column(name="RegistrationBeginDate", type="datetime")
      * @var \DateTime
      */
@@ -1037,6 +1043,7 @@ class Summit extends SilverstripeBaseModel
         $this->registration_send_ticket_as_pdf_attachment_on_ticket_email = false;
         $this->registration_send_ticket_email_automatically = true;
         $this->registration_allow_automatic_reminder_emails = true;
+        $this->registration_send_order_email_automatically = true;
         $this->allow_update_attendee_extra_questions = false;
     }
 
@@ -5982,6 +5989,22 @@ SQL;
     public function setRegistrationSendTicketEmailAutomatically(bool $registration_send_ticket_email_automatically): void
     {
         $this->registration_send_ticket_email_automatically = $registration_send_ticket_email_automatically;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRegistrationSendOrderEmailAutomatically(): bool
+    {
+        return $this->registration_send_order_email_automatically;
+    }
+
+    /**
+     * @param bool $registration_send_order_email_automatically
+     */
+    public function setRegistrationSendOrderEmailAutomatically(bool $registration_send_order_email_automatically): void
+    {
+        $this->registration_send_order_email_automatically = $registration_send_order_email_automatically;
     }
 
     /**

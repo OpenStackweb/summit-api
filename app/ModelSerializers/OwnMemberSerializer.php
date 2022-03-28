@@ -55,6 +55,7 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
         'legal_agreements',
         'track_chairs',
         'schedule_shareable_link',
+        'summit_permission_groups_allowed_summits',
     ];
 
     private static $expand_group_events = [
@@ -169,6 +170,10 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                 $res[] = intval($track_chair->getId());
             }
             $values['track_chairs'] = $res;
+        }
+
+        if(in_array('summit_permission_groups_allowed_summits', $relations)){
+            $values['summit_permission_groups_allowed_summits'] = $member->getAllAllowedSummitsIds();
         }
 
         if (!empty($expand)) {

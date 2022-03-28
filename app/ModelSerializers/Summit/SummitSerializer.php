@@ -322,9 +322,9 @@ class SummitSerializer extends SilverStripeSerializer
         // featured_speakers
         if (in_array('featured_speakers', $relations)) {
             $featured_speakers = [];
-            foreach ($summit->getOrderedFeaturesSpeakers() as $featuresSpeaker) {
-                if(!$featured_speakers->hasSpeaker()) continue;
-                $featured_speakers[] = $featuresSpeaker->getSpeaker()->getId();
+            foreach ($summit->getOrderedFeaturedSpeakers() as $featuredSpeaker) {
+                if(!$featuredSpeaker->hasSpeaker()) continue;
+                $featured_speakers[] = $featuredSpeaker->getSpeaker()->getId();
             }
             $values['featured_speakers'] = $featured_speakers;
         }
@@ -356,9 +356,9 @@ class SummitSerializer extends SilverStripeSerializer
                     case 'featured_speakers':
                         {
                             $featured_speakers = [];
-                            foreach ($summit->getOrderedFeaturesSpeakers() as $featuresSpeaker) {
-                                if(!$featured_speakers->hasSpeaker()) continue;
-                                $featured_speakers[] = SerializerRegistry::getInstance()->getSerializer($featuresSpeaker->getSpeaker())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            foreach ($summit->getOrderedFeaturedSpeakers() as $featuredSpeaker) {
+                                if(!$featuredSpeaker->hasSpeaker()) continue;
+                                $featured_speakers[] = SerializerRegistry::getInstance()->getSerializer($featuredSpeaker->getSpeaker())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
                             $values['featured_speakers'] = $featured_speakers;
                         }

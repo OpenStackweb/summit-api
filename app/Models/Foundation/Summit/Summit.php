@@ -5152,7 +5152,7 @@ SQL;
     /**
      * @return ArrayCollection|FeaturedSpeaker[]
      */
-    public function getOrderedFeaturesSpeakers()
+    public function getOrderedFeaturedSpeakers()
     {
         $criteria = Criteria::create();
         $criteria->orderBy(['order' => 'ASC']);

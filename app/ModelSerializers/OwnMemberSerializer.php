@@ -55,7 +55,7 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
         'legal_agreements',
         'track_chairs',
         'schedule_shareable_link',
-        'summit_permission_groups_allowed_summits',
+        'summit_permission_groups',
     ];
 
     private static $expand_group_events = [
@@ -112,6 +112,7 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
             }
             $values['team_memberships'] = $res;
         }
+
 
         if(in_array('sponsor_memberships', $relations)){
             $res = [];
@@ -172,8 +173,12 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
             $values['track_chairs'] = $res;
         }
 
-        if(in_array('summit_permission_groups_allowed_summits', $relations)){
-            $values['summit_permission_groups_allowed_summits'] = $member->getAllAllowedSummitsIds();
+        if(in_array('summit_permission_groups', $relations)){
+            $res = [];
+            foreach ($member->getSummitAdministratorPermissionGroup() as $permissionGroup){
+                $res[] = intval($permissionGroup->getId());
+            }
+            $values['summit_permission_groups'] = $res;
         }
 
         if (!empty($expand)) {
@@ -282,6 +287,17 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                                 ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['track_chairs'] = $res;
+                    }
+                        break;
+                    case 'summit_permission_groups':{
+                        if(!in_array('summit_permission_groups', $relations)) break;
+                        $res = [];
+                        foreach ($member->getSummitAdministratorPermissionGroup() as $permissionGroup){
+                            $res[] = SerializerRegistry::getInstance()
+                                ->getSerializer($permissionGroup)
+                                ->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'summits'));
+                        }
+                        $values['summit_permission_groups'] = $res;
                     }
                         break;
                 }

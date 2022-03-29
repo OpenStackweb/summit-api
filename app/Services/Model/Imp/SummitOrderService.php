@@ -3526,10 +3526,7 @@ final class SummitOrderService
     private function sendAttendeesInvitationEmail(SummitOrder $order):void
     {
         Log::debug(sprintf("SummitOrderService::sendAttendeesInvitationEmail order %s", $order->getId()));
-        if(!$order->getSummit()->isRegistrationSendTicketEmailAutomatically()){
-            Log::debug(sprintf("SummitOrderService::sendAttendeesInvitationEmail order %s tickets emails will not be send.", $order->getId()));
-            return;
-        }
+
         foreach ($order->getTickets() as $ticket) {
             try {
                 Log::debug(sprintf("SummitOrderService::sendAttendeesInvitationEmail order %s ticket %s", $order->getId(), $ticket->getNumber()));
@@ -3580,6 +3577,7 @@ final class SummitOrderService
             if (is_null($order) || !$order instanceof SummitOrder) {
                 Log::warning(sprintf("SummitOrderService::processOrderPaymentConfirmation order %s not found.", $orderId));
             }
+            $summit = $order->getSummit();
 
             Log::debug(sprintf("SummitOrderService::processOrderPaymentConfirmation - got order id %s nbr %s", $orderId, $order->getNumber()));
             $order->generateQRCode();
@@ -3598,12 +3596,16 @@ final class SummitOrderService
                     Log::debug(sprintf("SummitOrderService::processOrderPaymentConfirmation - member %s found at db", $ownerEmail));
                     $order->setOwner($member);
 
-                    Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to owner");
                     // send email to owner;
-                    $this->sendExistentSummitOrderOwnerEmail($order);
+                    if($summit->isRegistrationSendOrderEmailAutomatically()) {
+                        Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to owner");
+                        $this->sendExistentSummitOrderOwnerEmail($order);
+                    }
 
-                    Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to attendees");
-                    $this->sendAttendeesInvitationEmail($order);
+                    if($summit->isRegistrationSendTicketEmailAutomatically()) {
+                        Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to attendees");
+                        $this->sendAttendeesInvitationEmail($order);
+                    }
                     return;
                 }
 
@@ -3622,16 +3624,21 @@ final class SummitOrderService
 
                     // user does not exists , emit a registration request
                     // need to send email with set password link
+                    if($summit->isRegistrationSendOrderEmailAutomatically()) {
+                        Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to owner (NON REGISTERED)");
+                        $this->sendSummitOrderOwnerInvitationEmail($order, $this->member_service->emitRegistrationRequest
+                        (
+                            $ownerEmail,
+                            $order->getOwnerFirstName(),
+                            $order->getOwnerSurname(),
+                            $order->getOwnerCompany()
+                        ));
+                    }
 
-                    $this->sendSummitOrderOwnerInvitationEmail($order, $this->member_service->emitRegistrationRequest
-                    (
-                        $ownerEmail,
-                        $order->getOwnerFirstName(),
-                        $order->getOwnerSurname(),
-                        $order->getOwnerCompany()
-                    ));
-
-                    $this->sendAttendeesInvitationEmail($order);
+                    if($summit->isRegistrationSendTicketEmailAutomatically()) {
+                        Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to attendees");
+                        $this->sendAttendeesInvitationEmail($order);
+                    }
                     return;
                 }
 
@@ -3674,11 +3681,17 @@ final class SummitOrderService
             }
 
             // send email to owner
-            $this->sendExistentSummitOrderOwnerEmail($order);
-            // send email to owner;
-            $this->sendAttendeesInvitationEmail($order);
 
-            $summit = $order->getSummit();
+            if($summit->isRegistrationSendOrderEmailAutomatically()) {
+                Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to owner (REGISTERED)");
+                $this->sendExistentSummitOrderOwnerEmail($order);
+            }
+            // send email to owner;
+            if($summit->isRegistrationSendTicketEmailAutomatically()) {
+                Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to attendees");
+                $this->sendAttendeesInvitationEmail($order);
+            }
+
             if ($summit->isInviteOnlyRegistration()) {
                 // we should mark the associated invitation as processed
                 $invitation = $summit->getSummitRegistrationInvitationByEmail($order->getOwnerEmail());

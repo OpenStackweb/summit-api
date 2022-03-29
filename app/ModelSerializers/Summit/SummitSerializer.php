@@ -106,6 +106,7 @@ class SummitSerializer extends SilverStripeSerializer
         'RegistrationSendQrAsImageAttachmentOnTicketEmail' => 'registration_send_qr_as_image_attachment_on_ticket_email:json_boolean',
         'RegistrationSendTicketAsPdfAttachmentOnTicketEmail' => 'registration_send_ticket_as_pdf_attachment_on_ticket_email:json_boolean',
         'RegistrationSendTicketEmailAutomatically' => 'registration_send_ticket_email_automatically:json_boolean',
+        'RegistrationSendOrderEmailAutomatically' => 'registration_send_order_email_automatically:json_boolean',
         'RegistrationAllowAutomaticReminderEmails' => 'registration_allow_automatic_reminder_emails:json_boolean',
         'Modality' => 'modality:json_string',
         'AllowUpdateAttendeeExtraQuestions' => 'allow_update_attendee_extra_questions:json_boolean',

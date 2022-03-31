@@ -35,6 +35,7 @@ final class SummitSelectionPlanValidationRulesFactory
                 'voting_end_date'       => 'nullable|required_with:voting_begin_date|date_format:U|after_or_equal:voting_begin_date',
                 'selection_begin_date'  => 'nullable|date_format:U',
                 'selection_end_date'    => 'nullable|required_with:selection_begin_date|date_format:U|after_or_equal:selection_begin_date',
+                'submission_period_disclaimer' =>  'sometimes|string',
             ];
         }
         return [
@@ -48,6 +49,7 @@ final class SummitSelectionPlanValidationRulesFactory
             'voting_end_date'       => 'nullable|required_with:voting_begin_date|date_format:U|after_or_equal:voting_begin_date',
             'selection_begin_date'  => 'nullable|date_format:U',
             'selection_end_date'    => 'nullable|required_with:selection_begin_date|date_format:U|after_or_equal:selection_begin_date',
+            'submission_period_disclaimer' =>  'sometimes|string',
         ];
     }
 }

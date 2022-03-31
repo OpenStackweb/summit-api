@@ -13,7 +13,7 @@ class Version20220328170502 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $sql = <<<SQL
-UPDATE `SummitScheduleFilterElementConfig` SET Label = 'Category Groups' WHERE Type = 'TRACK_GROUPS';
+UPDATE `SummitScheduleFilterElementConfig` SET Label = 'Category Groups' WHERE Type = 'TRACK_GROUPS' AND Label = 'Categories Groups';
 SQL;
         $this->addSql($sql);
     }

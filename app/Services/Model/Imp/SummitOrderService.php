@@ -2638,7 +2638,7 @@ final class SummitOrderService
                     $this->attendee_repository->add($new_owner);
                 }
 
-                // populate the new owner with ectra data
+                // populate the new owner with extra data
                 $attendee_payload = [];
 
                 if(isset($payload['attendee_first_name']))
@@ -2653,7 +2653,7 @@ final class SummitOrderService
                 if(isset($payload['extra_questions']))
                     $attendee_payload['extra_questions'] = $payload['extra_questions'];
 
-                SummitAttendeeFactory::populate($summit, $new_owner , $attendee_payload);
+                SummitAttendeeFactory::populate($summit, $new_owner, $attendee_payload, $new_owner->getMember());
             }
 
             $shouldSendInvitationEmail = false;

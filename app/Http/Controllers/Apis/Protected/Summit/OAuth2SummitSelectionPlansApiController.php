@@ -160,7 +160,10 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 );
             }
 
-            $selection_plan = $this->selection_plan_service->updateSelectionPlan($summit, $selection_plan_id, $payload);
+            $selection_plan = $this->selection_plan_service->updateSelectionPlan($summit, $selection_plan_id,
+                HTMLCleaner::cleanData($payload, [
+                'submission_period_disclaimer',
+            ]));
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($selection_plan)->serialize());
         } catch (ValidationException $ex) {
@@ -202,7 +205,11 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 );
             }
 
-            $selection_plan = $this->selection_plan_service->addSelectionPlan($summit, $payload);
+            $selection_plan = $this->selection_plan_service->addSelectionPlan($summit,
+                HTMLCleaner::cleanData($payload,
+                [
+                    'submission_period_disclaimer',
+                ]));
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($selection_plan)->serialize());
         } catch (ValidationException $ex) {

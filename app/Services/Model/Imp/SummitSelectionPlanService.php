@@ -488,4 +488,51 @@ final class SummitSelectionPlanService
 
         });
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function attachEventTypeToSelectionPlan(Summit $summit, int $selection_plan_id, int $event_type_id) {
+        return $this->tx_service->transaction(function() use($summit, $selection_plan_id, $event_type_id){
+
+            $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
+            if (is_null($selection_plan))
+                throw new EntityNotFoundException("Selection Plan not found.");
+
+            $event_type = $summit->getEventType($event_type_id);
+            if (is_null($event_type))
+                throw new EntityNotFoundException("Event Type not found.");
+
+            $selection_plan->addEventType($event_type);
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function detachEventTypeFromSelectionPlan(Summit $summit, int $selection_plan_id, int $event_type_id) {
+        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $event_type_id) {
+
+            $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
+            if (is_null($selection_plan))
+                throw new EntityNotFoundException(trans
+                ('not_found_errors.SummitSelectionPlanService.detachEventTypeFromSelectionPlan.SelectionPlanNotFound',
+                    [
+                        'selection_plan_id' => $selection_plan_id,
+                        'summit_id' => $summit->getId()
+                    ]
+                ));
+
+            $event_type = $summit->getEventType($event_type_id);
+            if (is_null($event_type))
+                throw new EntityNotFoundException(trans
+                ('not_found_errors.SummitSelectionPlanService.detachEventTypeFromSelectionPlan.EventTypeNotFound',
+                    [
+                        '$event_type_id' => $event_type_id,
+                        'summit_id' => $summit->getId()
+                    ]
+                ));
+            $selection_plan->removeEventType($event_type);
+        });
+    }
 }

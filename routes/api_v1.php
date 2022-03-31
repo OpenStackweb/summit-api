@@ -256,6 +256,15 @@ Route::group(array('prefix' => 'summits'), function () {
                     });
                 });
 
+                // event types
+
+                Route::group(['prefix' => 'event-types'], function(){
+                    Route::group(['prefix' => '{event_type_id}'], function(){
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@attachEventType']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@detachEventType']);
+                    });
+                });
+
                 // presentations
 
                 Route::group(['prefix' => 'presentations'], function () {

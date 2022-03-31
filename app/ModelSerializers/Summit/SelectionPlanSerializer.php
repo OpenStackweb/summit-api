@@ -12,7 +12,8 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\SelectionPlan;
-use Libs\ModelSerializers\AbstractSerializer;
+use Libs\ModelSerializers\Many2OneExpandSerializer;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 /**
  * Class SelectionPlanSerializer
  * @package App\ModelSerializers\Summit
@@ -34,6 +35,13 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
         'SubmissionPeriodDisclaimer'  => 'submission_period_disclaimer:json_string'
     ];
 
+    protected static $allowed_relations = [
+        'track_groups',
+        'extra_questions',
+        'event_types',
+    ];
+
+
     /**
      * @param null $expand
      * @param array $fields
@@ -47,50 +55,51 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
         if (!$selection_plan instanceof SelectionPlan) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        $category_groups  = [];
-        foreach ($selection_plan->getCategoryGroups() as $group) {
-            $category_groups[] = $group->getId();
-        }
-
-        $values['track_groups'] = $category_groups;
-
-        $extra_questions  = [];
-        foreach ($selection_plan->getExtraQuestions() as $extraQuestion) {
-            $extra_questions[] = $extraQuestion->getId();
-        }
-
-        $values['extra_questions'] = $extra_questions;
-
-        if (!empty($expand)) {
-            $relations = explode(',', $expand);
-            foreach ($relations as $relation) {
-                $relation = trim($relation);
-                switch ($relation) {
-                    case 'track_groups':{
-                        $category_groups  = [];
-                        foreach ($selection_plan->getCategoryGroups() as $group) {
-                            $category_groups[] = SerializerRegistry::getInstance()->getSerializer($group)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                        }
-                        $values['track_groups'] = $category_groups;
-                    }
-                    break;
-                    case 'extra_questions':{
-                        $extra_questions  = [];
-                        foreach ($selection_plan->getExtraQuestions() as $extraQuestion) {
-                            $extra_questions[] = SerializerRegistry::getInstance()->getSerializer($extraQuestion)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                        }
-                        $values['extra_questions'] = $extra_questions;
-                    }
-                        break;
-                    case 'summit':{
-                        unset($values['summit_id']);
-                        $values['summit'] = SerializerRegistry::getInstance()->getSerializer($selection_plan->getSummit())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                    }
-                    break;
-                }
+        if (in_array('track_groups', $relations) && !isset($values['track_groups'])) {
+            $category_groups = [];
+            foreach ($selection_plan->getCategoryGroups() as $group) {
+                $category_groups[] = $group->getId();
             }
+            $values['track_groups'] = $category_groups;
+        }
+
+        if (in_array('extra_questions', $relations) && !isset($values['extra_questions'])) {
+            $extra_questions = [];
+            foreach ($selection_plan->getExtraQuestions() as $extraQuestion) {
+                $extra_questions[] = $extraQuestion->getId();
+            }
+            $values['extra_questions'] = $extra_questions;
+        }
+
+        if (in_array('event_types', $relations) && !isset($values['event_types'])) {
+            $event_types = [];
+            foreach ($selection_plan->getEventTypes() as $eventType) {
+                $event_types[] = $eventType->getId();
+            }
+            $values['event_types'] = $event_types;
         }
 
         return $values;
     }
+
+    protected static $expand_mappings = [
+        'track_groups' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getCategoryGroups',
+        ],
+        'extra_questions' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getExtraQuestions',
+        ],
+        'event_types' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getEventTypes',
+        ],
+        'summit' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'summit_id',
+            'getter' => 'getSummit',
+            'has' => 'hasSummit'
+        ],
+    ];
 }

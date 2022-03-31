@@ -23,6 +23,7 @@ use models\summit\Presentation;
 use models\summit\PresentationCategory;
 use models\summit\PresentationCategoryGroup;
 use models\summit\Summit;
+use models\summit\SummitEventType;
 use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
 use DateTime;
@@ -124,6 +125,16 @@ class SelectionPlan extends SilverstripeBaseModel
      * @var PresentationCategoryGroup[]
      */
     private $category_groups;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="models\summit\SummitEventType")
+     * @ORM\JoinTable(name="SelectionPlan_SummitEventTypes",
+     *      joinColumns={@ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitEventTypeID", referencedColumnName="ID")}
+     *      )
+     * @var SummitEventType[]
+     */
+    private $event_types;
 
     /**
      * @ORM\OneToMany(targetEntity="models\summit\Presentation", mappedBy="selection_plan", cascade={"persist"})
@@ -318,6 +329,7 @@ class SelectionPlan extends SilverstripeBaseModel
         $this->category_groups                 = new ArrayCollection;
         $this->presentations                   = new ArrayCollection;
         $this->extra_questions                 = new ArrayCollection;
+        $this->event_types                     = new ArrayCollection;
         $this->max_submission_allowed_per_user = Summit::DefaultMaxSubmissionAllowedPerUser;
         $this->submission_period_disclaimer    = null;
     }
@@ -328,6 +340,10 @@ class SelectionPlan extends SilverstripeBaseModel
     public function getCategoryGroups()
     {
         return $this->category_groups;
+    }
+
+    public function getEventTypes(){
+        return $this->event_types;
     }
 
     /**
@@ -344,6 +360,16 @@ class SelectionPlan extends SilverstripeBaseModel
     public function removeTrackGroup(PresentationCategoryGroup $track_group){
         if(!$this->category_groups->contains($track_group)) return;
         $this->category_groups->removeElement($track_group);
+    }
+
+    public function addEventType(SummitEventType $eventType){
+        if($this->event_types->contains($eventType)) return;
+        $this->event_types->add($eventType);
+    }
+
+    public function removeEventType(SummitEventType $eventType){
+        if(!$this->event_types->contains($eventType)) return;
+        $this->event_types->removeElement($eventType);
     }
 
     /**
@@ -581,6 +607,16 @@ class SelectionPlan extends SilverstripeBaseModel
     }
 
     /**
+     * @param SummitEventType $type
+     * @return bool
+     */
+    public function hasEventType(SummitEventType $type):bool{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $type->getId()));
+        return $this->event_types->matching($criteria)->count() > 0;
+    }
+
+
      * @return String
      */
     public function getSubmissionPeriodDisclaimer(): ?string
@@ -595,6 +631,5 @@ class SelectionPlan extends SilverstripeBaseModel
     {
         $this->submission_period_disclaimer = $submission_period_disclaimer;
     }
-
 
 }

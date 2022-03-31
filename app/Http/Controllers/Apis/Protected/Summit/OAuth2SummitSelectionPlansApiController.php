@@ -1263,4 +1263,56 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         }
         , ...$args);
     }
+
+    /**
+     * @param $id
+     * @param $selection_plan_id
+     * @param $event_type_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function attachEventType($id, $selection_plan_id, $event_type_id){
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($id);
+            if (is_null($summit)) return $this->error404();
+
+            $this->selection_plan_service->attachEventTypeToSelectionPlan($summit, $selection_plan_id, $event_type_id);
+            return $this->updated();
+        } catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
+        } catch (EntityNotFoundException $ex) {
+            Log::warning($ex);
+            return $this->error404($ex->getMessage());
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $id
+     * @param $selection_plan_id
+     * @param $event_type_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function detachEventType($id, $selection_plan_id, $event_type_id){
+        try {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($id);
+            if (is_null($summit)) return $this->error404();
+
+            $this->selection_plan_service->detachEventTypeFromSelectionPlan($summit, $selection_plan_id, $event_type_id);
+            return $this->deleted();
+        } catch (ValidationException $ex) {
+            Log::warning($ex);
+            return $this->error412($ex->getMessages());
+        } catch (EntityNotFoundException $ex) {
+            Log::warning($ex);
+            return $this->error404($ex->getMessage());
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
 }

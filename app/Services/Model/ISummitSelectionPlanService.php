@@ -128,4 +128,25 @@ interface ISummitSelectionPlanService
      * @throws AuthzException
      */
     public function resolvePresentationCategoryChangeRequest(Summit $summit, int $selection_plan_id, int $presentation_id, int $category_change_request_id, array $payload):?SummitCategoryChange;
+
+
+    /**
+     * @param Summit $summit
+     * @param int $selection_plan_id
+     * @param int $event_type_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     * @return void
+     */
+    public function attachEventTypeToSelectionPlan(Summit $summit, int $selection_plan_id, int $event_type_id);
+
+    /**
+     * @param Summit $summit
+     * @param int $selection_plan_id
+     * @param int $event_type_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     * @return void
+     */
+    public function detachEventTypeFromSelectionPlan(Summit $summit, int $selection_plan_id, int $event_type_id);
 }

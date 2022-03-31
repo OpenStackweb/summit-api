@@ -110,6 +110,12 @@ class SelectionPlan extends SilverstripeBaseModel
     private $selection_end_date;
 
     /**
+     * @ORM\Column(name="SubmissionPeriodDisclaimer", type="string")
+     * @var String
+     */
+    private $submission_period_disclaimer;
+
+    /**
      * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategoryGroup")
      * @ORM\JoinTable(name="SelectionPlan_CategoryGroups",
      *      joinColumns={@ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")},
@@ -313,6 +319,7 @@ class SelectionPlan extends SilverstripeBaseModel
         $this->presentations                   = new ArrayCollection;
         $this->extra_questions                 = new ArrayCollection;
         $this->max_submission_allowed_per_user = Summit::DefaultMaxSubmissionAllowedPerUser;
+        $this->submission_period_disclaimer    = null;
     }
 
     /**
@@ -572,5 +579,22 @@ class SelectionPlan extends SilverstripeBaseModel
         // zero means infinity
         return $res === 0 ? PHP_INT_MAX : $res;
     }
+
+    /**
+     * @return String
+     */
+    public function getSubmissionPeriodDisclaimer(): ?string
+    {
+        return $this->submission_period_disclaimer;
+    }
+
+    /**
+     * @param String $submission_period_disclaimer
+     */
+    public function setSubmissionPeriodDisclaimer(?string $submission_period_disclaimer): void
+    {
+        $this->submission_period_disclaimer = $submission_period_disclaimer;
+    }
+
 
 }

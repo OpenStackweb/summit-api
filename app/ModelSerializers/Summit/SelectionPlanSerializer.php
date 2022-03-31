@@ -13,8 +13,6 @@
  **/
 use App\Models\Foundation\Summit\SelectionPlan;
 use Libs\ModelSerializers\AbstractSerializer;
-use ModelSerializers\SerializerRegistry;
-use ModelSerializers\SilverStripeSerializer;
 /**
  * Class SelectionPlanSerializer
  * @package App\ModelSerializers\Summit
@@ -33,6 +31,7 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
         'SelectionEndDate'            => 'selection_end_date:datetime_epoch',
         'SummitId'                    => 'summit_id:json_int',
         'AllowNewPresentations'       => 'allow_new_presentations:json_boolean',
+        'SubmissionPeriodDisclaimer'  => 'submission_period_disclaimer:json_string'
     ];
 
     /**

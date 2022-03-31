@@ -40,7 +40,7 @@ final class Version20220330180247 extends AbstractMigration
 
                 $table->integer("SummitEventTypeID")->setNotnull(true);
                 $table->index("SummitEventTypeID", "SummitEventTypeID");
-                $table->foreign("SummitEvent", "SummitEventTypeID", "ID", ["onDelete" => "CASCADE"]);
+                $table->foreign("SummitEventType", "SummitEventTypeID", "ID", ["onDelete" => "CASCADE"]);
 
                 $table->unique(['SelectionPlanID', 'SummitEventTypeID']);
             });

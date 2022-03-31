@@ -5545,6 +5545,34 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
+            // selection plan event types
+            [
+                'name' => 'attach-selection-plan-event-type',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/event-types/{event_type_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'detach-selection-plan-event-type',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/event-types/{event_type_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+
             // selection plan presentations
             [
                 'name' => 'get-selection-plan-presentations',

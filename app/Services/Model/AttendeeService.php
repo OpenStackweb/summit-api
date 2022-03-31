@@ -353,7 +353,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             if(isset($payload['extra_questions']))
                 $attendee_payload['extra_questions'] = $payload['extra_questions'];
 
-            SummitAttendeeFactory::populate($summit, $new_owner , $attendee_payload);
+            SummitAttendeeFactory::populate($summit, $new_owner, $attendee_payload, $new_owner->getMember());
 
             $attendee->sendRevocationTicketEmail($ticket);
             $attendee->removeTicket($ticket);

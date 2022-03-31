@@ -599,4 +599,14 @@ class SelectionPlan extends SilverstripeBaseModel
         return $res === 0 ? PHP_INT_MAX : $res;
     }
 
+    /**
+     * @param SummitEventType $type
+     * @return bool
+     */
+    public function hasEventType(SummitEventType $type):bool{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $type->getId()));
+        return $this->event_types->matching($criteria)->count() > 0;
+    }
+
 }

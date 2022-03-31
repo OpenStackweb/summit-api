@@ -991,6 +991,7 @@ final class SummitService extends AbstractService implements ISummitService
             $selection_plan = $event->getSummit()->getSelectionPlanById($selection_plan_id);
             if (!is_null($selection_plan)) {
                 $track = $event->getCategory();
+                $type = $event->getType();
                 if (!$selection_plan->hasTrack($track)) {
                     throw new ValidationException
                     (
@@ -999,6 +1000,19 @@ final class SummitService extends AbstractService implements ISummitService
                             "Track %s (%s) does not belongs to Selection Plan %s (%s).",
                             $track->getTitle(),
                             $track->getId(),
+                            $selection_plan->getName(),
+                            $selection_plan->getId()
+                        )
+                    );
+                }
+                if (!$selection_plan->hasEventType($type)) {
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "Type %s (%s) does not belongs to Selection Plan %s (%s).",
+                            $type->getType(),
+                            $type->getId(),
                             $selection_plan->getName(),
                             $selection_plan->getId()
                         )

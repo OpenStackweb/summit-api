@@ -248,7 +248,6 @@ final class PresentationService
                     'validation_errors.PresentationService.submitPresentation.NotValidSelectionPlan'
                 ));
 
-
             if (!$current_selection_plan->IsEnabled()) {
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
@@ -428,6 +427,18 @@ final class PresentationService
                 throw new ValidationException(trans(
                     'validation_errors.PresentationService.saveOrUpdatePresentation.notAvailableCFP',
                     ['type_id' => $event_type->getIdentifier()]));
+            }
+
+            if(!$selection_plan->hasEventType($event_type)){
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Event Type %s is not allowed on selection plan %s.",
+                        $event_type->getType(),
+                        $selection_plan->getName()
+                    )
+                );
             }
 
             if ($presentation->getId() > 0 && $presentation->getTypeId() != $event_type->getId()) {

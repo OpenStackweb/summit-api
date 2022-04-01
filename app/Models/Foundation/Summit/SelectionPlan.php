@@ -617,6 +617,7 @@ class SelectionPlan extends SilverstripeBaseModel
     }
 
 
+    /*
      * @return String
      */
     public function getSubmissionPeriodDisclaimer(): ?string

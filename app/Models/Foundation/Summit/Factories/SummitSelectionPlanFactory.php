@@ -105,6 +105,9 @@ final class SummitSelectionPlanFactory
             }
         }
 
+        if(isset($data['submission_period_disclaimer']))
+            $selection_plan->setSubmissionPeriodDisclaimer(trim($data['submission_period_disclaimer']));
+
         return $selection_plan;
     }
 }

@@ -36,6 +36,9 @@ final class SummitSelectionPlanValidationRulesFactory
                 'selection_begin_date'  => 'nullable|date_format:U',
                 'selection_end_date'    => 'nullable|required_with:selection_begin_date|date_format:U|after_or_equal:selection_begin_date',
                 'submission_period_disclaimer' =>  'sometimes|string',
+                'presentation_creator_notification_email_template'      =>  'sometimes|string|max:255',
+                'presentation_moderator_notification_email_template'    =>  'sometimes|string|max:255',
+                'presentation_speaker_notification_email_template'      =>  'sometimes|string|max:255',
             ];
         }
         return [
@@ -50,6 +53,9 @@ final class SummitSelectionPlanValidationRulesFactory
             'selection_begin_date'  => 'nullable|date_format:U',
             'selection_end_date'    => 'nullable|required_with:selection_begin_date|date_format:U|after_or_equal:selection_begin_date',
             'submission_period_disclaimer' =>  'sometimes|string',
+            'presentation_creator_notification_email_template'      =>  'sometimes|string|max:255',
+            'presentation_moderator_notification_email_template'    =>  'sometimes|string|max:255',
+            'presentation_speaker_notification_email_template'      =>  'sometimes|string|max:255',
         ];
     }
 }

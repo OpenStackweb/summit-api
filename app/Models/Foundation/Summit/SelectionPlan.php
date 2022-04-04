@@ -117,6 +117,24 @@ class SelectionPlan extends SilverstripeBaseModel
     private $submission_period_disclaimer;
 
     /**
+     * @ORM\Column(name="PresentationCreatorNotificationEmailTemplate", type="string")
+     * @var String
+     */
+    private $presentation_creator_notification_email_template;
+
+    /**
+     * @ORM\Column(name="PresentationModeratorNotificationEmailTemplate", type="string")
+     * @var String
+     */
+    private $presentation_moderator_notification_email_template;
+
+    /**
+     * @ORM\Column(name="PresentationSpeakerNotificationEmailTemplate", type="string")
+     * @var String
+     */
+    private $presentation_speaker_notification_email_template;
+
+    /**
      * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategoryGroup")
      * @ORM\JoinTable(name="SelectionPlan_CategoryGroups",
      *      joinColumns={@ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")},
@@ -643,4 +661,51 @@ class SelectionPlan extends SilverstripeBaseModel
         $this->submission_period_disclaimer = $submission_period_disclaimer;
     }
 
+    /*
+     * @return String | null
+     */
+    public function getPresentationCreatorNotificationEmailTemplate(): string
+    {
+        return $this->presentation_creator_notification_email_template;
+    }
+
+    /**
+     * @param string $presentation_creator_notification_email_template
+     */
+    public function setPresentationCreatorNotificationEmailTemplate(string $presentation_creator_notification_email_template): void
+    {
+        $this->presentation_creator_notification_email_template = $presentation_creator_notification_email_template;
+    }
+
+    /*
+     * @return String | null
+     */
+    public function getPresentationModeratorNotificationEmailTemplate(): string
+    {
+        return $this->presentation_moderator_notification_email_template;
+    }
+
+    /**
+     * @param string $presentation_moderator_notification_email_template
+     */
+    public function setPresentationModeratorNotificationEmailTemplate(string $presentation_moderator_notification_email_template): void
+    {
+        $this->presentation_moderator_notification_email_template = $presentation_moderator_notification_email_template;
+    }
+
+    /*
+     * @return String | null
+     */
+    public function getPresentationSpeakerNotificationEmailTemplate(): string
+    {
+        return $this->presentation_speaker_notification_email_template;
+    }
+
+    /**
+     * @param string $presentation_speaker_notification_email_template
+     */
+    public function setPresentationSpeakerNotificationEmailTemplate(string $presentation_speaker_notification_email_template): void
+    {
+        $this->presentation_speaker_notification_email_template = $presentation_speaker_notification_email_template;
+    }
 }

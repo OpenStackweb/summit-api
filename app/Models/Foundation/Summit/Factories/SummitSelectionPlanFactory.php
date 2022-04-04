@@ -108,6 +108,24 @@ final class SummitSelectionPlanFactory
         if(isset($data['submission_period_disclaimer']))
             $selection_plan->setSubmissionPeriodDisclaimer(trim($data['submission_period_disclaimer']));
 
+        if(isset($data['presentation_creator_notification_email_template'])) {
+            $selection_plan->setPresentationCreatorNotificationEmailTemplate(
+                trim($data['presentation_creator_notification_email_template'])
+            );
+        }
+
+        if(isset($data['presentation_moderator_notification_email_template'])) {
+            $selection_plan->setPresentationModeratorNotificationEmailTemplate(
+                trim($data['presentation_moderator_notification_email_template'])
+            );
+        }
+
+        if(isset($data['presentation_speaker_notification_email_template'])) {
+            $selection_plan->setPresentationSpeakerNotificationEmailTemplate(
+                trim($data['presentation_speaker_notification_email_template'])
+            );
+        }
+
         return $selection_plan;
     }
 }

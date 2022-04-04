@@ -73,7 +73,10 @@ class PresentationCreatorNotificationEmail extends AbstractEmailJob
         $payload['reset_password_link'] = sprintf("%s/auth/password/reset", $idp_base_url);
         $payload['support_email'] = $support_email;
 
-        $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+        $selectionPlanTemplateName = $selection_plan->getPresentationCreatorNotificationEmailTemplate();
+
+        $template_identifier =  !empty($selectionPlanTemplateName) ?
+            $selectionPlanTemplateName : $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
         parent::__construct($payload, $template_identifier, $payload['creator_email']);
     }

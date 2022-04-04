@@ -84,7 +84,10 @@ class PresentationSpeakerNotificationEmail extends AbstractEmailJob
         $payload['reset_password_link'] = sprintf("%s/auth/password/reset", $idp_base_url);
         $payload['support_email'] = $support_email;
 
-        $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+        $selectionPlanTemplateName = $selection_plan->getPresentationSpeakerNotificationEmailTemplate();
+
+        $template_identifier =  !empty($selectionPlanTemplateName) ?
+            $selectionPlanTemplateName : $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
         if(empty($payload['speaker_email'])){
             Log::error(sprintf("PresentationSpeakerNotificationEmail::__construct speaker %s has no email set", $speaker->getId()));

@@ -611,9 +611,19 @@ class SelectionPlan extends SilverstripeBaseModel
      * @return bool
      */
     public function hasEventType(SummitEventType $type):bool{
+        return $this->getEventTypeById($type->getId()) != null;
+    }
+
+
+    /**
+     * @param int $eventTypeId
+     * @return SummitEventType|null
+     */
+    public function getEventTypeById(int $eventTypeId):?SummitEventType{
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('id', $type->getId()));
-        return $this->event_types->matching($criteria)->count() > 0;
+        $criteria->where(Criteria::expr()->eq('id', intval($eventTypeId)));
+        $event_type = $this->event_types->matching($criteria)->first();
+        return $event_type === false ? null : $event_type;
     }
 
 

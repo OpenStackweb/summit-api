@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Services\FileSystem\FileNameSanitizer;
+use App\Services\FileSystem\S3\S3StorageFileUploadStrategy;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -86,11 +87,11 @@ final class FileUploadInfo
         }
 
         if(is_null($file) && isset($payload['filepath'])){
-            Log::debug(sprintf("FileUploadInfo::build build file is present on as local storage (%s)", $payload['filepath']));
-            $disk = Storage::disk('local');
+            Log::debug(sprintf("FileUploadInfo::build build file is present on as storage (%s)", $payload['filepath']));
+            $disk = Storage::disk(S3StorageFileUploadStrategy::Driver);
 
             if(!$disk->exists($payload['filepath']))
-                throw new ValidationException(sprintf("file provide on filepath %s does not exists on local storage.", $payload['filepath']));
+                throw new ValidationException(sprintf("file provide on filepath %s does not exists on gistorage.", $payload['filepath']));
 
             // get in bytes should be converted to KB
             $size = $disk->size($payload['filepath']);

@@ -18,7 +18,6 @@ use App\Services\FileSystem\AbstractFileUploadStrategy;
  */
 final class S3StorageFileUploadStrategy extends AbstractFileUploadStrategy
 {
-
     const Driver = "s3";
 
     public function getDriver(): string

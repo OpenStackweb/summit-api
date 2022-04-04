@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Services\FileSystem\S3\S3StorageFileUploadStrategy;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Http\JsonResponse;
 use Pion\Laravel\ChunkUpload\Exceptions\UploadFailedException;
@@ -84,7 +86,7 @@ class UploadController extends BaseController
         // Build the file path
         $filePath = "upload/{$mime}/{$dateFolder}/";
 
-        $disk = Storage::disk('local');
+        $disk = Storage::disk(S3StorageFileUploadStrategy::Driver);
 
         $disk->putFileAs($filePath, $file, $fileName);
 

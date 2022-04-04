@@ -640,6 +640,13 @@ class Presentation extends SummitEvent
     }
 
     /**
+     * @return bool
+     */
+    public function hasSelectionPlan():bool{
+        return $this->getSelectionPlanId() > 0;
+    }
+
+    /**
      * @return int
      */
     public function getSelectionPlanId()
@@ -1140,7 +1147,6 @@ class Presentation extends SummitEvent
         $this->generateSlug();
         return $this;
     }
-
     /**
      * Gets a link to edit this presentation
      *
@@ -1148,11 +1154,14 @@ class Presentation extends SummitEvent
      */
     public function getEditLink(): string
     {
+        if(!$this->hasSelectionPlan()) return '#';
+
         return sprintf
         (
-            "%s/app/%s/presentations/%s/summary",
+            "%s/app/%s/%s/presentations/%s/summary",
             Config::get('cfp.base_url'),
             $this->summit->getRawSlug(),
+            $this->selection_plan->getId(),
             $this->id
         );
     }

@@ -86,7 +86,7 @@ class UploadController extends BaseController
         // Build the file path
         $filePath = "upload/{$mime}/{$dateFolder}/";
 
-        $disk = Storage::disk(S3StorageFileUploadStrategy::Driver);
+        $disk = Storage::disk('local');
 
         $disk->putFileAs($filePath, $file, $fileName);
 

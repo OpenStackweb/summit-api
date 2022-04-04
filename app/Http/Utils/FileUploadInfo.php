@@ -88,7 +88,7 @@ final class FileUploadInfo
 
         if(is_null($file) && isset($payload['filepath'])){
             Log::debug(sprintf("FileUploadInfo::build build file is present on as storage (%s)", $payload['filepath']));
-            $disk = Storage::disk(S3StorageFileUploadStrategy::Driver);
+            $disk = Storage::disk('local');
 
             if(!$disk->exists($payload['filepath']))
                 throw new ValidationException(sprintf("file provide on filepath %s does not exists on gistorage.", $payload['filepath']));

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\SelectionPlan;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Log;
@@ -67,6 +68,13 @@ class SummitSelectedPresentationList extends SilverstripeBaseModel
      * @var PresentationCategory
      */
     private $category = null;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="selection_lists", fetch="EXTRA_LAZY")
+     * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
+     * @var SelectionPlan
+     */
+    private $selection_plan;
 
     /**
      * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY")
@@ -363,8 +371,29 @@ class SummitSelectedPresentationList extends SilverstripeBaseModel
         return $this->category->getTrackChairAvailableSlots();
     }
 
-    public function getMaxAlternates()
+    public function getMaxAlternates():int
     {
-        return intval($this->Category()->AlternateCount);
+        return $this->category->getAlternateCount();
     }
+
+    /**
+     * @return SelectionPlan
+     */
+    public function getSelectionPlan(): ?SelectionPlan
+    {
+        return $this->selection_plan;
+    }
+
+    /**
+     * @param SelectionPlan $selection_plan
+     */
+    public function setSelectionPlan(SelectionPlan $selection_plan): void
+    {
+        $this->selection_plan = $selection_plan;
+    }
+
+    public function clearSelectionPlan():void{
+        $this->selection_plan = null;
+    }
+
 }

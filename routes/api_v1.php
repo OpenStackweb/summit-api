@@ -304,6 +304,84 @@ Route::group(array('prefix' => 'summits'), function () {
 
                     });
                 });
+
+                // selection lists ( track chairs )
+
+                Route::group(['prefix' => 'tracks'], function () {
+                    Route::group(['prefix' => '{track_id}'], function () {
+                        Route::group(['prefix' => 'selection-lists'], function () {
+
+                            Route::group(['prefix' => 'team'], function () {
+                                Route::get('', [
+                                    'middleware' => 'auth.user',
+                                    'uses' => 'OAuth2SummitSelectedPresentationListApiController@getTeamSelectionList'
+                                ]);
+
+                                Route::post('', [
+                                    'middleware' => 'auth.user',
+                                    'uses' => 'OAuth2SummitSelectedPresentationListApiController@createTeamSelectionList'
+                                ]);
+                            });
+
+                            Route::group(['prefix' => 'individual'], function () {
+                                Route::group(['prefix' => 'owner'], function () {
+
+                                    Route::group(['prefix' => 'me'], function () {
+                                        Route::post('', [
+                                            'middleware' => 'auth.user',
+                                            'uses' => 'OAuth2SummitSelectedPresentationListApiController@createIndividualSelectionList'
+                                        ]);
+                                    });
+
+                                    Route::group(['prefix' => '{owner_id}'], function () {
+                                        Route::get('', [
+                                            'middleware' => 'auth.user',
+                                            'uses' => 'OAuth2SummitSelectedPresentationListApiController@getIndividualSelectionList'
+                                        ]);
+                                    });
+
+                                });
+                            });
+
+                            Route::group(['prefix' => 'individual'], function () {
+
+                                Route::group(['prefix' => 'presentation-selections'], function () {
+
+                                    Route::group(['prefix' => '{collection}'], function () {
+
+                                        Route::group(['prefix' => 'presentations'], function () {
+
+                                            Route::group(['prefix' => '{presentation_id}'], function () {
+
+                                                Route::post('', [
+                                                    'middleware' => 'auth.user',
+                                                    'uses' => 'OAuth2SummitSelectedPresentationListApiController@assignPresentationToMyIndividualList'
+                                                ]);
+
+                                                Route::delete('', [
+                                                    'middleware' => 'auth.user',
+                                                    'uses' => 'OAuth2SummitSelectedPresentationListApiController@removePresentationFromMyIndividualList'
+                                                ]);
+
+                                            });
+
+                                        });
+
+                                    });
+
+                                });
+
+                            });
+
+                            Route::group(['prefix' => '{list_id}'], function () {
+                                Route::put('reorder', [
+                                    'middleware' => 'auth.user',
+                                    'uses' => 'OAuth2SummitSelectedPresentationListApiController@reorderSelectionList'
+                                ]);
+                            });
+                        });
+                    });
+                });
             });
         });
 
@@ -1184,81 +1262,6 @@ Route::group(array('prefix' => 'summits'), function () {
                         ]);
                     });
                 });
-
-                // selection lists ( track chairs )
-
-                Route::group(['prefix' => 'selection-lists'], function () {
-
-                    Route::group(['prefix' => 'team'], function () {
-                        Route::get('', [
-                            'middleware' => 'auth.user',
-                            'uses' => 'OAuth2SummitSelectedPresentationListApiController@getTeamSelectionList'
-                        ]);
-
-                        Route::post('', [
-                            'middleware' => 'auth.user',
-                            'uses' => 'OAuth2SummitSelectedPresentationListApiController@createTeamSelectionList'
-                        ]);
-                    });
-
-                    Route::group(['prefix' => 'individual'], function () {
-                        Route::group(['prefix' => 'owner'], function () {
-
-                            Route::group(['prefix' => 'me'], function () {
-                                Route::post('', [
-                                    'middleware' => 'auth.user',
-                                    'uses' => 'OAuth2SummitSelectedPresentationListApiController@createIndividualSelectionList'
-                                ]);
-                            });
-
-                            Route::group(['prefix' => '{owner_id}'], function () {
-                                Route::get('', [
-                                    'middleware' => 'auth.user',
-                                    'uses' => 'OAuth2SummitSelectedPresentationListApiController@getIndividualSelectionList'
-                                ]);
-                            });
-
-                        });
-                    });
-
-                    Route::group(['prefix' => 'individual'], function () {
-
-                        Route::group(['prefix' => 'presentation-selections'], function () {
-
-                            Route::group(['prefix' => '{collection}'], function () {
-
-                                Route::group(['prefix' => 'presentations'], function () {
-
-                                    Route::group(['prefix' => '{presentation_id}'], function () {
-
-                                        Route::post('', [
-                                            'middleware' => 'auth.user',
-                                            'uses' => 'OAuth2SummitSelectedPresentationListApiController@assignPresentationToMyIndividualList'
-                                        ]);
-
-                                        Route::delete('', [
-                                            'middleware' => 'auth.user',
-                                            'uses' => 'OAuth2SummitSelectedPresentationListApiController@removePresentationFromMyIndividualList'
-                                        ]);
-
-                                    });
-
-                                });
-
-                            });
-
-                        });
-
-                    });
-
-                    Route::group(['prefix' => '{list_id}'], function () {
-                        Route::put('reorder', [
-                            'middleware' => 'auth.user',
-                            'uses' => 'OAuth2SummitSelectedPresentationListApiController@reorderSelectionList'
-                        ]);
-                    });
-                });
-
             });
         });
 

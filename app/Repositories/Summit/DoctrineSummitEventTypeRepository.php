@@ -102,7 +102,7 @@ final class DoctrineSummitEventTypeRepository
         $query->setParameter("summit_id", $summit->getId());
 
         if(!is_null($filter)){
-            Log::debug(sprintf("DoctrineSummitEventTypeRepository::getBySummit filter %s", $filter));
+            Log::debug(sprintf("DoctrineSummitEventTypeRepository::getBySummit filter %s", $filter->__toString()));
             $filter->apply2Query($query, $this->getFilterMappings());
         }
 

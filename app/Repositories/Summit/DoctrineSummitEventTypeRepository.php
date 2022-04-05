@@ -14,6 +14,7 @@
 use App\Models\Foundation\Summit\Repositories\ISummitEventTypeRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Illuminate\Support\Facades\Log;
 use models\summit\PresentationType;
 use models\summit\Summit;
 use models\summit\SummitEventType;
@@ -101,6 +102,7 @@ final class DoctrineSummitEventTypeRepository
         $query->setParameter("summit_id", $summit->getId());
 
         if(!is_null($filter)){
+            Log::debug(sprintf("DoctrineSummitEventTypeRepository::getBySummit filter %s", $filter));
             $filter->apply2Query($query, $this->getFilterMappings());
         }
 

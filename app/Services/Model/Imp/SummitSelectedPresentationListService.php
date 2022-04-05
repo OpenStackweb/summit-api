@@ -251,8 +251,9 @@ final class SummitSelectedPresentationListService
                     (
                         sprintf
                         (
-                            "Presentation %s (%s) has not selection plan assigned.",
-                            $presentation->getTitle(), $presentation->getId()
+                            'Presentation "%s" (%s) has not selection plan assigned.',
+                            $presentation->getTitle(),
+                            $presentation->getId()
                         )
                     );
                 }
@@ -262,7 +263,9 @@ final class SummitSelectedPresentationListService
                     (
                         sprintf
                         (
-                            "Presentation Plan %s (%s) is not on selection Phase.",
+                            'Presentation "%s" (%s) has assigned Presentation Plan "%s" (%s) that is not on selection Phase.',
+                            $presentation->getTitle(),
+                            $presentation->getId(),
                             $selection_plan->getName(),
                             $selection_plan->getId()
                         )
@@ -273,7 +276,9 @@ final class SummitSelectedPresentationListService
                     (
                         sprintf
                         (
-                            "Presentation Plan %s (%s) is not enabled.",
+                            'Presentation "%s" (%s) has assigned Presentation Plan %s (%s) that is not enabled.',
+                            $presentation->getTitle(),
+                            $presentation->getId(),
                             $selection_plan->getName(),
                             $selection_plan->getId()
                         )

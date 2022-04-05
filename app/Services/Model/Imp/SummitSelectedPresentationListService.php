@@ -245,8 +245,40 @@ final class SummitSelectedPresentationListService
 
                 $selection_plan = $presentation->getSelectionPlan();
 
-                if(is_null($selection_plan) || !$selection_plan->isSelectionOpen() || !$selection_plan->IsEnabled())
-                    throw new ValidationException(sprintf("There is not current Selection Plan active on Selection Phase."));
+                if(is_null($selection_plan))
+                {
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "Presentation %s (%s) has not selection plan assigned.",
+                            $presentation->getTitle(), $presentation->getId()
+                        )
+                    );
+                }
+
+                if(!$selection_plan->isSelectionOpen())
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "Presentation Plan %s (%s) is not on selection Phase.",
+                            $selection_plan->getName(),
+                            $selection_plan->getId()
+                        )
+                    );
+
+                if(!$selection_plan->IsEnabled())
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "Presentation Plan %s (%s) is not enabled.",
+                            $selection_plan->getName(),
+                            $selection_plan->getId()
+                        )
+                    );
+
 
                 if($category->getId() !== $presentation->getCategoryId()){
                     throw new ValidationException(sprintf("Current member can not assign Presentation %s to his/her list [Presentation does not belong to category].", $id));

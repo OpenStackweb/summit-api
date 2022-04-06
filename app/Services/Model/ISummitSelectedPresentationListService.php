@@ -54,11 +54,12 @@ interface ISummitSelectedPresentationListService
      * @param Summit $summit
      * @param int $selection_plan_id
      * @param int $track_id
+     * @param int $member_id
      * @return SummitSelectedPresentationList
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function createIndividualSelectionList(Summit $summit, int $selection_plan_id, int $track_id):SummitSelectedPresentationList;
+    public function createIndividualSelectionList(Summit $summit, int $selection_plan_id, int $track_id, int $member_id):SummitSelectedPresentationList;
 
     /**
      * @param Summit $summit

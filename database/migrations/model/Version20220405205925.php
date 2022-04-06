@@ -28,6 +28,18 @@ final class Version20220405205925 extends AbstractMigration
      */
     public function up(Schema $schema): void
     {
+        $sql = <<<SQL
+DELETE FROM SummitSelectedPresentation 
+WHERE NOT EXISTS (SELECT 1 FROM Member WHERE Member.ID = SummitSelectedPresentation.MemberID) AND SummitSelectedPresentation.MemberID IS NOT NULL;
+SQL;
+        $this->addSql($sql);
+
+        $sql = <<<SQL
+DELETE FROM SummitSelectedPresentation 
+WHERE NOT EXISTS (SELECT 1 FROM Presentation WHERE Presentation.ID = SummitSelectedPresentation.PresentationID) AND SummitSelectedPresentation.PresentationID IS NOT NULL;
+SQL;
+        $this->addSql($sql);
+
         $builder = new Builder($schema);
         if($schema->hasTable("SummitSelectedPresentation")) {
             $builder->table('SummitSelectedPresentation', function (Table $table) {

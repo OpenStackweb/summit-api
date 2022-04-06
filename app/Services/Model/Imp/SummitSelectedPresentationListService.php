@@ -79,10 +79,10 @@ final class SummitSelectedPresentationListService
     {
         return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $track_id) {
             $category = $summit->getPresentationCategory($track_id);
-            if (is_null($category)) throw new EntityNotFoundException("track not found.");
+            if (is_null($category)) throw new EntityNotFoundException("Track not found.");
 
             $selectionPlan = $summit->getSelectionPlanById($selection_plan_id);
-            if (is_null($selectionPlan)) throw new EntityNotFoundException("selection plan not found.");
+            if (is_null($selectionPlan)) throw new EntityNotFoundException("Selection Plan not found.");
 
             $current_member = $this->resource_server_ctx->getCurrentUser();
 
@@ -97,7 +97,9 @@ final class SummitSelectedPresentationListService
 
             $selection_list = $selectionPlan->getSelectionListByTrackAndTypeAndOwner($category, SummitSelectedPresentationList::Group);
             if (is_null($selection_list))
-                throw new EntityNotFoundException("list not found.");
+            {
+                return $this->createTeamSelectionList($summit, $selection_plan_id, $track_id);
+            }
 
             return $selection_list;
         });
@@ -111,10 +113,10 @@ final class SummitSelectedPresentationListService
         return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $track_id) {
 
             $category = $summit->getPresentationCategory(intval($track_id));
-            if (is_null($category)) throw new EntityNotFoundException("track not found.");
+            if (is_null($category)) throw new EntityNotFoundException("Track not found.");
 
             $selectionPlan = $summit->getSelectionPlanById($selection_plan_id);
-            if (is_null($selectionPlan)) throw new EntityNotFoundException("selection plan not found.");
+            if (is_null($selectionPlan)) throw new EntityNotFoundException("Selection Plan not found.");
 
             $current_member = $this->resource_server_ctx->getCurrentUser();
 
@@ -137,10 +139,12 @@ final class SummitSelectedPresentationListService
     {
         return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $track_id, $owner_id) {
             $category = $summit->getPresentationCategory(intval($track_id));
-            if (is_null($category)) throw new EntityNotFoundException("track not found.");
+            if (is_null($category))
+                throw new EntityNotFoundException("track not found.");
 
             $selectionPlan = $summit->getSelectionPlanById($selection_plan_id);
-            if (is_null($selectionPlan)) throw new EntityNotFoundException("selection plan not found.");
+            if (is_null($selectionPlan))
+                throw new EntityNotFoundException("selection plan not found.");
 
             $current_member = $this->resource_server_ctx->getCurrentUser();
 
@@ -156,7 +160,11 @@ final class SummitSelectedPresentationListService
             if (is_null($member)) throw new EntityNotFoundException("member not found.");
 
             $selection_list = $selectionPlan->getSelectionListByTrackAndTypeAndOwner($category, SummitSelectedPresentationList::Individual, $member);
-            if (is_null($selection_list)) throw new EntityNotFoundException("selection list not found.");
+            if (is_null($selection_list))
+            {
+                // create it
+                return $this->createIndividualSelectionList($summit, $selection_plan_id, $track_id, $owner_id);
+            }
 
             return $selection_list;
         });
@@ -165,9 +173,9 @@ final class SummitSelectedPresentationListService
     /**
      * @inheritDoc
      */
-    public function createIndividualSelectionList(Summit $summit, int $selection_plan_id, int $track_id): SummitSelectedPresentationList
+    public function createIndividualSelectionList(Summit $summit, int $selection_plan_id, int $track_id, int $member_id): SummitSelectedPresentationList
     {
-        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $track_id) {
+        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $track_id, $member_id) {
 
             $category = $summit->getPresentationCategory(intval($track_id));
             if (is_null($category)) throw new EntityNotFoundException("track not found.");
@@ -175,7 +183,7 @@ final class SummitSelectedPresentationListService
             $selectionPlan = $summit->getSelectionPlanById($selection_plan_id);
             if (is_null($selectionPlan)) throw new EntityNotFoundException("selection plan not found.");
 
-            $current_member = $this->resource_server_ctx->getCurrentUser();
+            $current_member = $this->member_repository->getById($member_id);
 
             if(is_null($current_member))
                 throw new AuthzException("Current Member not found.");

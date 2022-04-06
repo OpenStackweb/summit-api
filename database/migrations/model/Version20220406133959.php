@@ -14,6 +14,7 @@
 use Database\Utils\DBHelpers;
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
+use Illuminate\Support\Facades\DB;
 use LaravelDoctrine\Migrations\Schema\Builder;
 use LaravelDoctrine\Migrations\Schema\Table;
 
@@ -29,7 +30,7 @@ final class Version20220406133959 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $builder = new Builder($schema);
-       if(!DBHelpers::existsFK(env('SS_DATABASE'), "SummitSelectedPresentation", "FK_SummitSelectedPresentation_Member_SummitSelectedPresentationList") &&
+       if(!DBHelpers::existsFK(DB::connection()->getDatabaseName(), "SummitSelectedPresentation", "FK_SummitSelectedPresentation_Member_SummitSelectedPresentationList") &&
            $schema->hasTable("SummitSelectedPresentation")) {
             $builder->table('SummitSelectedPresentation', function (Table $table) {
                 // FK

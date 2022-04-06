@@ -191,6 +191,15 @@ class SummitSelectedPresentationList extends SilverstripeBaseModel
         }
     }
 
+    public function getSelectionPlanId():int{
+        try{
+            return is_null($this->selection_plan)? 0: $this->selection_plan->getId();
+        }
+        catch (\Exception $ex){
+            return 0;
+        }
+    }
+
     /**
      * @return int
      */

@@ -18,13 +18,16 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 use App\Models\Utils\TimeZoneEntity;
 use Doctrine\Common\Collections\ArrayCollection;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
+use models\main\Member;
 use models\summit\Presentation;
 use models\summit\PresentationCategory;
 use models\summit\PresentationCategoryGroup;
 use models\summit\Summit;
 use models\summit\SummitEventType;
 use models\summit\SummitOwned;
+use models\summit\SummitSelectedPresentationList;
 use models\utils\SilverstripeBaseModel;
 use DateTime;
 use DateTimeZone;
@@ -147,6 +150,12 @@ class SelectionPlan extends SilverstripeBaseModel
      * @var SummitSelectionPlanExtraQuestionType[]
      */
     private $extra_questions;
+
+    /**
+     * @ORM\OneToMany(targetEntity="models\summit\SummitSelectedPresentationList", mappedBy="selection_plan", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SummitSelectedPresentationList[]
+     */
+    private $selection_lists;
 
     /**
      * @return string
@@ -332,6 +341,7 @@ class SelectionPlan extends SilverstripeBaseModel
         $this->event_types                     = new ArrayCollection;
         $this->max_submission_allowed_per_user = Summit::DefaultMaxSubmissionAllowedPerUser;
         $this->submission_period_disclaimer    = null;
+        $this->selection_lists = new ArrayCollection;
     }
 
     /**
@@ -642,5 +652,115 @@ class SelectionPlan extends SilverstripeBaseModel
     {
         $this->submission_period_disclaimer = $submission_period_disclaimer;
     }
+
+    /**
+     * @return SummitSelectedPresentationList[]
+     */
+    public function getSelectionLists()
+    {
+        return $this->selection_lists;
+    }
+
+    /**
+     * @param SummitSelectedPresentationList $selection_list
+     */
+    public function addSelectionList(SummitSelectedPresentationList $selection_list){
+        if($this->selection_lists->contains($selection_list)) return;
+        $this->selection_lists->add($selection_list);
+        $selection_list->setSelectionPlan($this);
+    }
+
+    /**
+     * @param SummitSelectedPresentationList $selection_list
+     */
+    public function removeSelectionList(SummitSelectedPresentationList $selection_list){
+        if(!$this->selection_lists->contains($selection_list)) return;
+        $this->selection_lists->removeElement($selection_list);
+        $selection_list->clearSelectionPlan();
+    }
+
+    /**
+     * @param PresentationCategory $track
+     * @param string $list_type
+     * @param Member|null $owner
+     * @return SummitSelectedPresentationList|null
+     * @throws ValidationException
+     */
+    public function getSelectionListByTrackAndTypeAndOwner
+    (
+        PresentationCategory $track,
+        string $list_type,
+        ?Member $owner = null
+    ):?SummitSelectedPresentationList{
+        if(!in_array($list_type, SummitSelectedPresentationList::ValidListTypes))
+            throw new ValidationException(sprintf("List Type %s is not valid.", $list_type));
+
+        $criteria = Criteria::create();
+        $criteria->andWhere(Criteria::expr()->eq('list_type', $list_type));
+        $criteria->andWhere(Criteria::expr()->eq('category', $track));
+
+        if($list_type == SummitSelectedPresentationList::Individual){
+            $criteria->andWhere(Criteria::expr()->eq('owner', $owner));
+        }
+
+        $list = $this->selection_lists->matching($criteria)->first();
+        return $list === false ? null : $list;
+    }
+
+    /**
+     * @param int $list_id
+     * @return SummitSelectedPresentationList|null
+     */
+    public function getSelectionListById(int $list_id):?SummitSelectedPresentationList{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $list_id));
+
+        $list = $this->selection_lists->matching($criteria)->first();
+        return $list === false ? null : $list;
+    }
+
+    /**
+     * @param PresentationCategory $track
+     * @return SummitSelectedPresentationList
+     * @throws ValidationException
+     */
+    public function createTeamSelectionList(PresentationCategory $track):SummitSelectedPresentationList{
+        $team_selection_list = $this->getSelectionListByTrackAndTypeAndOwner($track,SummitSelectedPresentationList::Group);
+        if (is_null($team_selection_list)) {
+            Log::debug(sprintf("SelectionPlan::createSelectionLists adding team list for track %s selection plan %s", $track->getId(), $this->getId()));
+            $team_selection_list = new SummitSelectedPresentationList();
+            $team_selection_list->setName(sprintf("Team Selections for %s", $track->getTitle()));
+            $team_selection_list->setListType(SummitSelectedPresentationList::Group);
+            $team_selection_list->setListClass(SummitSelectedPresentationList::Session);
+            $track->addSelectionList($team_selection_list);
+            $this->addSelectionList($team_selection_list);
+        }
+        return $team_selection_list;
+    }
+
+    /**
+     * @param PresentationCategory $track
+     * @param Member $member
+     * @return SummitSelectedPresentationList
+     * @throws ValidationException
+     */
+    public function createIndividualSelectionList(PresentationCategory $track, Member $member ):SummitSelectedPresentationList{
+        if(!is_null($member)) {
+            $individual_selection_list = $this->getSelectionListByTrackAndTypeAndOwner($track, SummitSelectedPresentationList::Individual, $member);
+
+            if (is_null($individual_selection_list)) {
+                $individual_selection_list = new SummitSelectedPresentationList();
+                Log::debug(sprintf("SelectionPLan::createSelectionLists adding individual list for track %s and member %s", $track->getId(), $member->getId()));
+                $individual_selection_list->setName(sprintf("%s Individual Selection List for %s", $member->getFullName(), $track->getTitle()));
+                $individual_selection_list->setListType(SummitSelectedPresentationList::Individual);
+                $individual_selection_list->setListClass(SummitSelectedPresentationList::Session);
+                $individual_selection_list->setOwner($member);
+                $this->addSelectionList($individual_selection_list);
+                $track->addSelectionList($individual_selection_list);
+            }
+        }
+        return $individual_selection_list;
+    }
+
 
 }

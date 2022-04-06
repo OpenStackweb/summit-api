@@ -28,6 +28,7 @@ final class SummitSelectedPresentationListSerializer extends SilverStripeSeriali
         'Hash' => 'hash:json_string',
         'CategoryId' => 'category_id:json_int',
         'OwnerId' => 'owner_id:json_int',
+        'SelectionPlanId' => 'selection_plan_id:json_int',
     ];
 
     protected static $allowed_relations = [
@@ -85,6 +86,14 @@ final class SummitSelectedPresentationListSerializer extends SilverStripeSeriali
                             if ($presentation_list->getCategoryId() > 0) {
                                 unset($values['category_id']);
                                 $values['category'] = SerializerRegistry::getInstance()->getSerializer($presentation_list->getCategory())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            }
+                        }
+                        break;
+                    case 'selection_plan':
+                        {
+                            if ($presentation_list->getSelectionPlanId() > 0) {
+                                unset($values['selection_plan_id']);
+                                $values['selection_plan'] = SerializerRegistry::getInstance()->getSerializer($presentation_list->getSelectionPlan())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
                         }
                         break;

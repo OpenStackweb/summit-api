@@ -13,7 +13,6 @@
  **/
 
 use App\Models\Exceptions\AuthzException;
-use App\Models\Foundation\Summit\SelectionPlan;
 use App\Services\Model\AbstractService;
 use App\Services\Model\ISummitSelectedPresentationListService;
 use Illuminate\Support\Facades\Log;
@@ -76,11 +75,14 @@ final class SummitSelectedPresentationListService
     /**
      * @inheritDoc
      */
-    public function getTeamSelectionList(Summit $summit, int $track_id): SummitSelectedPresentationList
+    public function getTeamSelectionList(Summit $summit, int $selection_plan_id, int $track_id): SummitSelectedPresentationList
     {
-        return $this->tx_service->transaction(function () use ($summit, $track_id) {
-            $category = $summit->getPresentationCategory(intval($track_id));
-            if (is_null($category)) throw new EntityNotFoundException("track not found.");
+        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $track_id) {
+            $category = $summit->getPresentationCategory($track_id);
+            if (is_null($category)) throw new EntityNotFoundException("Track not found.");
+
+            $selectionPlan = $summit->getSelectionPlanById($selection_plan_id);
+            if (is_null($selectionPlan)) throw new EntityNotFoundException("Selection Plan not found.");
 
             $current_member = $this->resource_server_ctx->getCurrentUser();
 
@@ -88,12 +90,16 @@ final class SummitSelectedPresentationListService
                 throw new AuthzException("Current Member not found.");
 
             $auth = $summit->isTrackChair($current_member, $category);
+
             if(!$auth){
                 throw new AuthzException("Current user is not allowed to perform this operation.");
             }
 
-            $selection_list = $category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Group);
-            if (is_null($selection_list)) throw new EntityNotFoundException("list not found.");
+            $selection_list = $selectionPlan->getSelectionListByTrackAndTypeAndOwner($category, SummitSelectedPresentationList::Group);
+            if (is_null($selection_list))
+            {
+                return $this->createTeamSelectionList($summit, $selection_plan_id, $track_id);
+            }
 
             return $selection_list;
         });
@@ -102,12 +108,15 @@ final class SummitSelectedPresentationListService
     /**
      * @inheritDoc
      */
-    public function createTeamSelectionList(Summit $summit, int $track_id): SummitSelectedPresentationList
+    public function createTeamSelectionList(Summit $summit, int $selection_plan_id, int $track_id): SummitSelectedPresentationList
     {
-        return $this->tx_service->transaction(function () use ($summit, $track_id) {
+        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $track_id) {
 
             $category = $summit->getPresentationCategory(intval($track_id));
-            if (is_null($category)) throw new EntityNotFoundException("track not found.");
+            if (is_null($category)) throw new EntityNotFoundException("Track not found.");
+
+            $selectionPlan = $summit->getSelectionPlanById($selection_plan_id);
+            if (is_null($selectionPlan)) throw new EntityNotFoundException("Selection Plan not found.");
 
             $current_member = $this->resource_server_ctx->getCurrentUser();
 
@@ -119,18 +128,23 @@ final class SummitSelectedPresentationListService
                 throw new AuthzException("Current user is not allowed to perform this operation.");
             }
 
-            return $category->createTeamSelectionList();
+            return $selectionPlan->createTeamSelectionList($category);
         });
     }
 
     /**
      * @inheritDoc
      */
-    public function getIndividualSelectionList(Summit $summit, int $track_id, int $owner_id): SummitSelectedPresentationList
+    public function getIndividualSelectionList(Summit $summit, int $selection_plan_id,  int $track_id, int $owner_id): SummitSelectedPresentationList
     {
-        return $this->tx_service->transaction(function () use ($summit, $track_id, $owner_id) {
+        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $track_id, $owner_id) {
             $category = $summit->getPresentationCategory(intval($track_id));
-            if (is_null($category)) throw new EntityNotFoundException("track not found.");
+            if (is_null($category))
+                throw new EntityNotFoundException("track not found.");
+
+            $selectionPlan = $summit->getSelectionPlanById($selection_plan_id);
+            if (is_null($selectionPlan))
+                throw new EntityNotFoundException("selection plan not found.");
 
             $current_member = $this->resource_server_ctx->getCurrentUser();
 
@@ -145,8 +159,12 @@ final class SummitSelectedPresentationListService
             $member = $this->member_repository->getById(intval($owner_id));
             if (is_null($member)) throw new EntityNotFoundException("member not found.");
 
-            $selection_list = $category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $member);
-            if (is_null($selection_list)) throw new EntityNotFoundException("list not found.");
+            $selection_list = $selectionPlan->getSelectionListByTrackAndTypeAndOwner($category, SummitSelectedPresentationList::Individual, $member);
+            if (is_null($selection_list))
+            {
+                // create it
+                return $this->createIndividualSelectionList($summit, $selection_plan_id, $track_id, $owner_id);
+            }
 
             return $selection_list;
         });
@@ -155,14 +173,17 @@ final class SummitSelectedPresentationListService
     /**
      * @inheritDoc
      */
-    public function createIndividualSelectionList(Summit $summit, int $track_id): SummitSelectedPresentationList
+    public function createIndividualSelectionList(Summit $summit, int $selection_plan_id, int $track_id, int $member_id): SummitSelectedPresentationList
     {
-        return $this->tx_service->transaction(function () use ($summit, $track_id) {
+        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $track_id, $member_id) {
 
             $category = $summit->getPresentationCategory(intval($track_id));
             if (is_null($category)) throw new EntityNotFoundException("track not found.");
 
-            $current_member = $this->resource_server_ctx->getCurrentUser();
+            $selectionPlan = $summit->getSelectionPlanById($selection_plan_id);
+            if (is_null($selectionPlan)) throw new EntityNotFoundException("selection plan not found.");
+
+            $current_member = $this->member_repository->getById($member_id);
 
             if(is_null($current_member))
                 throw new AuthzException("Current Member not found.");
@@ -172,26 +193,54 @@ final class SummitSelectedPresentationListService
                 throw new AuthzException("Current user is not allowed to perform this operation.");
             }
 
-            return $category->createIndividualSelectionList($current_member);
+            return $selectionPlan->createIndividualSelectionList($category, $current_member);
         });
     }
 
     /**
      * @inheritDoc
      */
-    public function reorderList(Summit $summit, int $track_id, int $list_id, array $payload): SummitSelectedPresentationList
+    public function reorderList(Summit $summit, int $selection_plan_id, int $track_id, int $list_id, array $payload): SummitSelectedPresentationList
     {
-        return $this->tx_service->transaction(function () use ($summit, $track_id, $list_id, $payload) {
+        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $track_id, $list_id, $payload) {
 
             Log::debug(sprintf("SummitSelectedPresentationListService::reorderList track %s list %s payload %s.", $track_id, $list_id, json_encode($payload)));
 
-            $category = $summit->getPresentationCategory(intval($track_id));
+            $category = $summit->getPresentationCategory($track_id);
 
             if (is_null($category) || !$category instanceof PresentationCategory || !$category->isChairVisible()) throw new EntityNotFoundException("Track not found.");
 
-            $selection_list = $category->getSelectionListById($list_id);
+            $selectionPlan = $summit->getSelectionPlanById($selection_plan_id);
+            if (is_null($selectionPlan)) throw new EntityNotFoundException("selection plan not found.");
+
+            $selection_list = $selectionPlan->getSelectionListById($list_id);
             if (is_null($selection_list))
                 throw new EntityNotFoundException("List not found.");
+
+            if ($selection_list->getCategoryId() !== $track_id)
+                throw new EntityNotFoundException("List not found.");
+
+            if(!$selectionPlan->isSelectionOpen())
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        ' Presentation Plan "%s" (%s) is not on selection Phase.',
+                        $selectionPlan->getName(),
+                        $selectionPlan->getId()
+                    )
+                );
+
+            if(!$selectionPlan->IsEnabled())
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        'Presentation Plan "%s" (%s) is not enabled.',
+                        $selectionPlan->getName(),
+                        $selectionPlan->getId()
+                    )
+                );
 
             $current_member = $this->resource_server_ctx->getCurrentUser();
 
@@ -243,47 +292,8 @@ final class SummitSelectedPresentationListService
                     || $presentation->getProgress() !== Presentation::PHASE_COMPLETE)
                     throw new EntityNotFoundException(sprintf("Presentation %s not found.", $id));
 
-                $selection_plan = $presentation->getSelectionPlan();
 
-                if(is_null($selection_plan))
-                {
-                    throw new ValidationException
-                    (
-                        sprintf
-                        (
-                            'Presentation "%s" (%s) has not selection plan assigned.',
-                            $presentation->getTitle(),
-                            $presentation->getId()
-                        )
-                    );
-                }
-
-                if(!$selection_plan->isSelectionOpen())
-                    throw new ValidationException
-                    (
-                        sprintf
-                        (
-                            'Presentation "%s" (%s) has assigned Presentation Plan "%s" (%s) that is not on selection Phase.',
-                            $presentation->getTitle(),
-                            $presentation->getId(),
-                            $selection_plan->getName(),
-                            $selection_plan->getId()
-                        )
-                    );
-
-                if(!$selection_plan->IsEnabled())
-                    throw new ValidationException
-                    (
-                        sprintf
-                        (
-                            'Presentation "%s" (%s) has assigned Presentation Plan %s (%s) that is not enabled.',
-                            $presentation->getTitle(),
-                            $presentation->getId(),
-                            $selection_plan->getName(),
-                            $selection_plan->getId()
-                        )
-                    );
-
+                $presentation->setSelectionPlan($selectionPlan);
 
                 if($category->getId() !== $presentation->getCategoryId()){
                     throw new ValidationException(sprintf("Current member can not assign Presentation %s to his/her list [Presentation does not belong to category].", $id));
@@ -327,6 +337,7 @@ final class SummitSelectedPresentationListService
 
     /**
      * @param Summit $summit
+     * @param int $selection_plan_id
      * @param int $track_id
      * @param string $collection
      * @param int $presentation_id
@@ -336,19 +347,21 @@ final class SummitSelectedPresentationListService
     public function assignPresentationToMyIndividualList
     (
         Summit $summit,
+        int $selection_plan_id,
         int $track_id,
         string $collection,
         int $presentation_id
     ): SummitSelectedPresentationList
     {
-        return $this->tx_service->transaction(function () use ($summit, $track_id, $collection, $presentation_id) {
+        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $track_id, $collection, $presentation_id) {
 
             Log::debug
             (
                 sprintf
                 (
-                    "SummitSelectedPresentationListService::assignPresentationToMyIndividualList summit %s track %s collection %s presentation %s",
+                    "SummitSelectedPresentationListService::assignPresentationToMyIndividualList summit %s selection plan %s track %s collection %s presentation %s",
                     $summit->getId(),
+                    $selection_plan_id,
                     $track_id,
                     $collection,
                     $presentation_id
@@ -363,14 +376,39 @@ final class SummitSelectedPresentationListService
             if (is_null($category) || !$category instanceof PresentationCategory || !$category->isChairVisible())
                 throw new EntityNotFoundException("Track not found.");
 
+            $selectionPlan = $summit->getSelectionPlanById($selection_plan_id);
+            if (is_null($selectionPlan)) throw new EntityNotFoundException("selection plan not found.");
+
+            if(!$selectionPlan->isSelectionOpen())
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        ' Presentation Plan "%s" (%s) is not on selection Phase.',
+                        $selectionPlan->getName(),
+                        $selectionPlan->getId()
+                    )
+                );
+
+            if(!$selectionPlan->IsEnabled())
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        'Presentation Plan "%s" (%s) is not enabled.',
+                        $selectionPlan->getName(),
+                        $selectionPlan->getId()
+                    )
+                );
+
             $authz = $summit->isTrackChair($current_member, $category);
 
             if(!$authz)
                 throw new AuthzException("User is not authorized to perform this action");
 
-            $selection_list = $category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $current_member);
+            $selection_list = $selectionPlan->getSelectionListByTrackAndTypeAndOwner($category, SummitSelectedPresentationList::Individual, $current_member);
             if (is_null($selection_list))
-                throw new EntityNotFoundException(sprintf("Individual List not found for member %s and category %s", $current_member->getId(), $category->getId()));
+                $selection_list = $this->createIndividualSelectionList($summit, $selection_plan_id, $track_id, $current_member->getId());
 
             if(!$selection_list->canEdit($current_member)){
                 throw new ValidationException(sprintf("Member %s can not edit list %s", $current_member->getId(), $selection_list->getId()));
@@ -378,17 +416,13 @@ final class SummitSelectedPresentationListService
 
             $presentation = $summit->getEvent($presentation_id);
 
-
             if (is_null($presentation)
                 || !$presentation instanceof Presentation
                 || $presentation->getStatus() !== Presentation::STATUS_RECEIVED
                 || $presentation->getProgress() !== Presentation::PHASE_COMPLETE)
                 throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
 
-            $selection_plan = $presentation->getSelectionPlan();
-
-            if(is_null($selection_plan) || !$selection_plan->isSelectionOpen() || !$selection_plan->IsEnabled())
-                throw new ValidationException(sprintf("There is not current Selection Plan active on Selection Phase."));
+            $presentation->setSelectionPlan($selectionPlan);
 
             if($category->getId() !== $presentation->getCategoryId()){
                 throw new ValidationException(sprintf("Current member can not assign Presentation %s to his/her list [Presentation does not belong to category].", $presentation_id));
@@ -472,20 +506,22 @@ final class SummitSelectedPresentationListService
 
     /**
      * @param Summit $summit
+     * @param int $selection_plan_id
      * @param int $track_id
      * @param int $presentation_id
      * @return SummitSelectedPresentationList
      * @throws \Exception
      */
-    public function removePresentationFromMyIndividualList(Summit $summit, int $track_id, int $presentation_id): SummitSelectedPresentationList
+    public function removePresentationFromMyIndividualList(Summit $summit, int $selection_plan_id, int $track_id, int $presentation_id): SummitSelectedPresentationList
     {
-        return $this->tx_service->transaction(function () use ($summit, $track_id, $presentation_id) {
+        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $track_id, $presentation_id) {
             Log::debug
             (
                 sprintf
                 (
-                    "SummitSelectedPresentationListService::removePresentationFromMyIndividualList summit %s track %s presentation %s",
+                    "SummitSelectedPresentationListService::removePresentationFromMyIndividualList summit %s selection plan %s track %s presentation %s",
                     $summit->getId(),
+                    $selection_plan_id,
                     $track_id,
                     $presentation_id
                 )
@@ -504,7 +540,33 @@ final class SummitSelectedPresentationListService
                 throw new AuthzException("Current user is not allowed to perform this operation.");
             }
 
-            $selection_list = $category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $current_member);
+            $selectionPlan = $summit->getSelectionPlanById($selection_plan_id);
+            if (is_null($selectionPlan)) throw new EntityNotFoundException("selection plan not found.");
+
+            if(!$selectionPlan->isSelectionOpen())
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        ' Presentation Plan "%s" (%s) is not on selection Phase.',
+                        $selectionPlan->getName(),
+                        $selectionPlan->getId()
+                    )
+                );
+
+            if(!$selectionPlan->IsEnabled())
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        'Presentation Plan "%s" (%s) is not enabled.',
+                        $selectionPlan->getName(),
+                        $selectionPlan->getId()
+                    )
+                );
+
+
+            $selection_list = $selectionPlan->getSelectionListByTrackAndTypeAndOwner($category, SummitSelectedPresentationList::Individual, $current_member);
             if (is_null($selection_list))
                 throw new EntityNotFoundException(sprintf("Individual List not found for member %s and category %s", $current_member->getId(), $category->getId()));
 
@@ -517,11 +579,7 @@ final class SummitSelectedPresentationListService
             if (is_null($presentation) || !$presentation instanceof Presentation)
                 throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
 
-            $selection_plan = $presentation->getSelectionPlan();
-
-            if(is_null($selection_plan) || !$selection_plan->isSelectionOpen() || !$selection_plan->IsEnabled())
-                throw new ValidationException(sprintf("There is not current Selection Plan active on Selection Phase."));
-
+            $presentation->setSelectionPlan($selectionPlan);
 
             $selection = $selection_list->getSelectionByPresentation($presentation);
             if(is_null($selection))

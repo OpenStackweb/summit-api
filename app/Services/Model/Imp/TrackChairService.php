@@ -119,11 +119,6 @@ final class TrackChairService
 
             $track_chair =  $summit->addTrackChair($member, $categories);
 
-            foreach ($categories as $category) {
-                $category->createIndividualSelectionList($track_chair->getMember());
-                $category->createTeamSelectionList();
-            }
-
             return $track_chair;
 
         });
@@ -166,9 +161,6 @@ final class TrackChairService
                     throw new EntityNotFoundException(sprintf("Presentation Category %s not found.", $track_id));
 
                 $track_chair->addCategory($category);
-
-                $category->createIndividualSelectionList($track_chair->getMember());
-                $category->createTeamSelectionList();
             }
 
             foreach ($categories_2_remove as $category){
@@ -233,11 +225,7 @@ final class TrackChairService
             if(is_null($track))
                 throw new EntityNotFoundException(sprintf("Track %s not found.", $track_id));
 
-
             $track_chair->addCategory($track);
-
-            $track->createIndividualSelectionList($track_chair->getMember());
-            $track->createTeamSelectionList();
 
             return $track_chair;
         });

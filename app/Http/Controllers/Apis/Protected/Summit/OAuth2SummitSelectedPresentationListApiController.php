@@ -70,16 +70,17 @@ class OAuth2SummitSelectedPresentationListApiController
 
     /**
      * @param $summit_id
+     * @param $selection_plan_id
      * @param $track_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function getTeamSelectionList($summit_id, $track_id){
+    public function getTeamSelectionList($summit_id, $selection_plan_id, $track_id){
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $selection_list = $this->service->getTeamSelectionList($summit, intval($track_id));
+            $selection_list = $this->service->getTeamSelectionList($summit,intval($selection_plan_id), intval($track_id));
 
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize(Request::input('expand', '')));
         }
@@ -104,16 +105,17 @@ class OAuth2SummitSelectedPresentationListApiController
 
     /**
      * @param $summit_id
+     * @param $selection_plan_id
      * @param $track_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function createTeamSelectionList($summit_id, $track_id){
+    public function createTeamSelectionList($summit_id, $selection_plan_id, $track_id){
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $selection_list = $this->service->createTeamSelectionList($summit, intval($track_id));
+            $selection_list = $this->service->createTeamSelectionList($summit, intval($selection_plan_id), intval($track_id));
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize(Request::input('expand', '')));
         }
@@ -138,17 +140,18 @@ class OAuth2SummitSelectedPresentationListApiController
 
     /**
      * @param $summit_id
+     * @param $selection_plan_id
      * @param $track_id
      * @param $owner_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function getIndividualSelectionList($summit_id, $track_id, $owner_id){
+    public function getIndividualSelectionList($summit_id, $selection_plan_id, $track_id, $owner_id){
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $selection_list = $this->service->getIndividualSelectionList($summit, intval($track_id), intval($owner_id));
+            $selection_list = $this->service->getIndividualSelectionList($summit, intval($selection_plan_id), intval($track_id), intval($owner_id));
 
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize(Request::input('expand', '')));
         }
@@ -173,17 +176,18 @@ class OAuth2SummitSelectedPresentationListApiController
 
     /**
      * @param $summit_id
+     * @param $selection_plan_id
      * @param $track_id
      * @param $owner_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function createIndividualSelectionList($summit_id, $track_id){
+    public function createIndividualSelectionList($summit_id, $selection_plan_id, $track_id){
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $selection_list = $this->service->createIndividualSelectionList($summit, intval($track_id));
+            $selection_list = $this->service->createIndividualSelectionList($summit, intval($selection_plan_id), intval($track_id), $this->resource_server_context->getCurrentUserId());
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize(Request::input('expand', '')));
         }
@@ -206,7 +210,14 @@ class OAuth2SummitSelectedPresentationListApiController
         }
     }
 
-    public function reorderSelectionList($summit_id, $track_id, $list_id){
+    /**
+     * @param $summit_id
+     * @param $selection_plan_id
+     * @param $track_id
+     * @param $list_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function reorderSelectionList($summit_id, $selection_plan_id, $track_id, $list_id){
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -229,7 +240,7 @@ class OAuth2SummitSelectedPresentationListApiController
                 );
             }
 
-            $selection_list = $this->service->reorderList($summit, intval($track_id), intval($list_id), $payload);
+            $selection_list = $this->service->reorderList($summit, intval($selection_plan_id), intval($track_id), intval($list_id), $payload);
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize(Request::input('expand', '')));
         }
@@ -254,18 +265,19 @@ class OAuth2SummitSelectedPresentationListApiController
 
     /**
      * @param $summit_id
+     * @param $selection_plan_id
      * @param $track_id
      * @param $collection
      * @param $presentation_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function assignPresentationToMyIndividualList($summit_id, $track_id, $collection, $presentation_id){
+    public function assignPresentationToMyIndividualList($summit_id, $selection_plan_id, $track_id, $collection, $presentation_id){
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $selection_list = $this->service->assignPresentationToMyIndividualList($summit, intval($track_id), trim($collection), intval($presentation_id));
+            $selection_list = $this->service->assignPresentationToMyIndividualList($summit, intval($selection_plan_id), intval($track_id), trim($collection), intval($presentation_id));
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize(Request::input('expand', '')));
         }
@@ -290,18 +302,19 @@ class OAuth2SummitSelectedPresentationListApiController
 
     /**
      * @param $summit_id
+     * @param $selection_plan_id
      * @param $track_id
      * @param $collection
      * @param $presentation_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function removePresentationFromMyIndividualList($summit_id, $track_id, $collection, $presentation_id){
+    public function removePresentationFromMyIndividualList($summit_id, $selection_plan_id, $track_id, $collection, $presentation_id){
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $selection_list = $this->service->removePresentationFromMyIndividualList($summit, intval($track_id), intval($presentation_id));
+            $selection_list = $this->service->removePresentationFromMyIndividualList($summit, intval($selection_plan_id), intval($track_id), intval($presentation_id));
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize(Request::input('expand', '')));
         }

@@ -408,7 +408,7 @@ final class SummitSelectedPresentationListService
 
             $selection_list = $selectionPlan->getSelectionListByTrackAndTypeAndOwner($category, SummitSelectedPresentationList::Individual, $current_member);
             if (is_null($selection_list))
-                throw new EntityNotFoundException(sprintf("Individual List not found for member %s and category %s", $current_member->getId(), $category->getId()));
+                $selection_list = $this->createIndividualSelectionList($summit, $selection_plan_id, $track_id, $current_member->getId());
 
             if(!$selection_list->canEdit($current_member)){
                 throw new ValidationException(sprintf("Member %s can not edit list %s", $current_member->getId(), $selection_list->getId()));

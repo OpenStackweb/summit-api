@@ -26,17 +26,39 @@ final class Version20220405205916 extends AbstractMigration
      */
     public function up(Schema $schema): void
     {
-        $builder = new Builder($schema);
-        if($schema->hasTable("SummitSelectedPresentationList") && !$builder->hasColumn("SummitSelectedPresentationList", "SelectionPlanID")) {
-            $builder->table('SummitSelectedPresentationList', function (Table $table) {
-                $table->integer('SelectionPlanID')->setNotnull(false)->setDefault(null);
-                $table->index("SelectionPlanID", "SelectionPlanID");
-                // FK
-                $table->foreign("SelectionPlan", "SelectionPlanID", "ID", ["onDelete" => "CASCADE"]);
-                $table->foreign('Member', 'MemberID', 'ID',  ["onDelete" => "CASCADE"]);
-                $table->foreign('PresentationCategory', 'CategoryID', 'ID',  ["onDelete" => "CASCADE"]);
-            });
-        }
+        // clear tables from orphans
+
+        $sql = <<<SQL
+    DELETE FROM SummitSelectedPresentationList
+WHERE NOT EXISTS  (SELECT 1 FROM Member WHERE Member.ID = SummitSelectedPresentationList.MemberID) AND SummitSelectedPresentationList.MemberID IS NOT NULL;
+SQL;
+        $this->addSql($sql);
+
+        $sql = <<<SQL
+    DELETE FROM SummitSelectedPresentationList
+WHERE NOT EXISTS  (SELECT 1 FROM PresentationCategory WHERE PresentationCategory.ID = SummitSelectedPresentationList.CategoryID) AND SummitSelectedPresentationList.CategoryID IS NOT NULL;
+SQL;
+        $this->addSql($sql);
+
+        $sql = <<<SQL
+DELETE FROM SummitSelectedPresentation 
+WHERE NOT EXISTS (SELECT 1 FROM SummitSelectedPresentationList WHERE SummitSelectedPresentationList.ID = SummitSelectedPresentation.SummitSelectedPresentationListID) AND SummitSelectedPresentation.SummitSelectedPresentationListID IS NOT NULL;
+SQL;
+        $this->addSql($sql);
+
+        $sql = <<<SQL
+DELETE FROM SummitSelectedPresentation 
+WHERE NOT EXISTS (SELECT 1 FROM Member WHERE Member.ID = SummitSelectedPresentation.MemberID) AND SummitSelectedPresentation.MemberID IS NOT NULL;
+SQL;
+        $this->addSql($sql);
+
+        $sql = <<<SQL
+DELETE FROM SummitSelectedPresentation 
+WHERE NOT EXISTS (SELECT 1 FROM Presentation WHERE Presentation.ID = SummitSelectedPresentation.PresentationID) AND SummitSelectedPresentation.PresentationID IS NOT NULL;
+SQL;
+        $this->addSql($sql);
+
+
     }
 
     /**
@@ -44,11 +66,5 @@ final class Version20220405205916 extends AbstractMigration
      */
     public function down(Schema $schema): void
     {
-        $builder = new Builder($schema);
-        if($schema->hasTable("SummitSelectedPresentationList") && $builder->hasColumn("SummitSelectedPresentationList", "SelectionPlanID")) {
-            $builder->table('SummitSelectedPresentationList', function (Table $table) {
-                $table->dropColumn('SelectionPlanID');
-            });
-        }
     }
 }

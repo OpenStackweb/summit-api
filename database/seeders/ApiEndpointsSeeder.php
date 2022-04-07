@@ -6064,7 +6064,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'add-individual-selection-list',
-                'route' => '/api/v1/summits/{id}/tracks/{track_id}/selection-lists/individual/owner/me',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/individual/owner/me',
                 'http_method' => 'POST',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)
@@ -6078,7 +6078,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'get-individual-selection-list',
-                'route' => '/api/v1/summits/{id}/tracks/{track_id}/selection-lists/individual/owner/{owner_id}',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/individual/owner/{owner_id}',
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadSummitData, $current_realm)
@@ -6092,7 +6092,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
              [
                 'name' => 'add-presentation-to-individual-selection-list',
-                'route' => '/api/v1/summits/{id}/tracks/{track_id}/selection-lists/individual/presentation-selections/{collection}/presentations/{presentation_id}',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/individual/presentation-selections/{collection}/presentations/{presentation_id}',
                 'http_method' => 'POST',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)
@@ -6106,7 +6106,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'remove-presentation-from-individual-selection-list',
-                'route' => '/api/v1/summits/{id}/tracks/{track_id}/selection-lists/individual/presentation-selections/{collection}/presentations/{presentation_id}',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/individual/presentation-selections/{collection}/presentations/{presentation_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)
@@ -6120,7 +6120,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'get-team-selection-list',
-                'route' => '/api/v1/summits/{id}/tracks/{track_id}/selection-lists/team',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/team',
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadSummitData, $current_realm)
@@ -6134,7 +6134,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'add-team-selection-list',
-                'route' => '/api/v1/summits/{id}/tracks/{track_id}/selection-lists/team',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/team',
                 'http_method' => 'POST',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)
@@ -6148,7 +6148,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'reorder-selection-list',
-                'route' => '/api/v1/summits/{id}/tracks/{track_id}/selection-lists/{list_id}/reorder',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/{list_id}/reorder',
                 'http_method' => 'PUT',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)

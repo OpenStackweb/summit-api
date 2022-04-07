@@ -32,7 +32,10 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
         'SelectionEndDate'            => 'selection_end_date:datetime_epoch',
         'SummitId'                    => 'summit_id:json_int',
         'AllowNewPresentations'       => 'allow_new_presentations:json_boolean',
-        'SubmissionPeriodDisclaimer'  => 'submission_period_disclaimer:json_string'
+        'SubmissionPeriodDisclaimer'  => 'submission_period_disclaimer:json_string',
+        'PresentationCreatorNotificationEmailTemplate'      => 'presentation_creator_notification_email_template:json_string',
+        'PresentationModeratorNotificationEmailTemplate'    => 'presentation_moderator_notification_email_template:json_string',
+        'PresentationSpeakerNotificationEmailTemplate'      => 'presentation_speaker_notification_email_template:json_string',
     ];
 
     protected static $allowed_relations = [

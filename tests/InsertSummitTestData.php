@@ -324,6 +324,9 @@ trait InsertSummitTestData
 
         self::$default_selection_plan = new SelectionPlan();
         self::$default_selection_plan->setName("TEST_SELECTION_PLAN");
+        self::$default_selection_plan->setPresentationCreatorNotificationEmailTemplate("PRESENTATION_CREATOR_EMAIL_TEMPLATE");
+        self::$default_selection_plan->setPresentationModeratorNotificationEmailTemplate("PRESENTATION_MODERATOR_EMAIL_TEMPLATE");
+        self::$default_selection_plan->setPresentationSpeakerNotificationEmailTemplate("PRESENTATION_SPEAKER_EMAIL_TEMPLATE");
         $submission_begin_date = new DateTime('now', self::$summit->getTimeZone());
         $submission_end_date = (clone $submission_begin_date)->add(new DateInterval("P14D"));
         self::$default_selection_plan->setSummit(self::$summit);

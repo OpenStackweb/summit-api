@@ -423,12 +423,6 @@ final class PresentationService
                 );
             }
 
-            if (!$event_type->isShouldBeAvailableOnCfp()) {
-                throw new ValidationException(trans(
-                    'validation_errors.PresentationService.saveOrUpdatePresentation.notAvailableCFP',
-                    ['type_id' => $event_type->getIdentifier()]));
-            }
-
             if(!$selection_plan->hasEventType($event_type)){
                 throw new ValidationException
                 (

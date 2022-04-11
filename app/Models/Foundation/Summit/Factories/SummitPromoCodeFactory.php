@@ -97,7 +97,7 @@ final class SummitPromoCodeFactory
         }
 
         if(isset($data['external_id'])){
-            $promo_code->setExternalId(trim($params['external_id']));
+            $promo_code->setExternalId(trim($data['external_id']));
         }
 
         if(isset($data['code']))

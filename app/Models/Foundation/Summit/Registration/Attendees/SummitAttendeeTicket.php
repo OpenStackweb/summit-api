@@ -692,7 +692,10 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
             throw new ValidationException("Can not refund a Free Ticket.");
         }
 
-        if($this->getFinalAmount() < ($this->getRefundedAmount() + $amount) ){
+        $finalAmount = $this->getFinalAmount();
+        $alreadyRefundedAmount = $this->getRefundedAmount();
+        Log::debug(sprintf("SummitAttendeeTicket::canRefund amount %s finalAmount %s alreadyRefundedAmount %s", $amount, $finalAmount, $alreadyRefundedAmount));
+        if($finalAmount < ($alreadyRefundedAmount + $amount) ){
             throw new ValidationException("Can not refund an amount greater than Amount Paid.");
         }
 
@@ -782,6 +785,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      * @param float $amount
      * @param string|null $paymentGatewayRes
      * @param string|null $notes
+     * @param boolean $shouldSendEmail
      * @return SummitAttendeeTicketRefundRequest
      * @throws ValidationException
      */
@@ -790,7 +794,8 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         ?Member $approvedBy,
         float $amount,
         string $paymentGatewayRes = null,
-        string $notes = null
+        string $notes = null,
+        bool $shouldSendEmail = true
     ):SummitAttendeeTicketRefundRequest
     {
         if (!$this->canRefund($amount))
@@ -813,7 +818,8 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
 
         $request->approve($approvedBy, $amount, $paymentGatewayRes, $notes);
 
-        SummitTicketRefundAccepted::dispatch($this, $request);
+        if($shouldSendEmail)
+            SummitTicketRefundAccepted::dispatch($this, $request);
 
         return $request;
     }

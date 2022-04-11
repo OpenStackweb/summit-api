@@ -16,6 +16,7 @@ use App\Events\SummitTicketTypeDeleted;
 use App\Events\SummitTicketTypeUpdated;
 use App\Models\Foundation\Summit\Factories\SummitTicketTypeFactory;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -284,6 +285,16 @@ final class SummitTicketTypeService
                 );
             }
 
+            $apiFeedKey = $summit->getExternalRegistrationFeedApiKey();
+
+            if (empty($apiFeedKey)) {
+                throw new ValidationException(sprintf("external_registration_feed_api_key is empty for summit %s", $summit->getId()));
+            }
+
+            $this->eventbrite_api->setCredentials([
+                'token' => $apiFeedKey
+            ]);
+
             $response = $this->eventbrite_api->getTicketTypes($summit);
 
             if (!isset($response['ticket_classes'])) return $res;
@@ -291,6 +302,7 @@ final class SummitTicketTypeService
             $ticket_classes = $response['ticket_classes'];
 
             foreach ($ticket_classes as $ticket_class) {
+                Log::debug(sprintf("SummitTicketTypeService::seedSummitTicketTypesFromEventBrite external ticket class %s", json_encode($ticket_class)));
 
                 $id              = $ticket_class['id'];
                 $old_ticket_type = $summit->getTicketTypeByExternalId($id);
@@ -299,6 +311,10 @@ final class SummitTicketTypeService
 
                     $old_ticket_type->setName(trim($ticket_class['name']));
                     $old_ticket_type->setDescription(isset($ticket_class['description']) ? trim($ticket_class['description']) : '');
+                    if(isset($ticket_class['capacity']))
+                        $old_ticket_type->setQuantity2Sell(intval($ticket_class['capacity']));
+                    if(isset($ticket_class['cost']) && !is_null($ticket_class['cost']))
+                        $old_ticket_type->setCost(floatval($ticket_class['cost']['major_value']));
                     continue;
                 }
 
@@ -306,6 +322,11 @@ final class SummitTicketTypeService
                 $new_ticket_type->setExternalId($id);
                 $new_ticket_type->setName($ticket_class['name']);
                 $new_ticket_type->setDescription(isset($ticket_class['description']) ? trim($ticket_class['description']) : '');
+                if(isset($ticket_class['capacity']))
+                    $new_ticket_type->setQuantity2Sell(intval($ticket_class['capacity']));
+                if(isset($ticket_class['cost']) && !is_null($ticket_class['cost']))
+                    $new_ticket_type->setCost(floatval($ticket_class['cost']['major_value']));
+
                 $summit->addTicketType($new_ticket_type);
                 $res[] = $new_ticket_type;
             }

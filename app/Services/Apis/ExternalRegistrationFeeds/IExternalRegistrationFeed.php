@@ -20,7 +20,7 @@ interface IExternalRegistrationFeed
 {
     /**
      * @param int $page_nbr
-     * @return IExternalRegistrationFeedResponse
+     * @return IExternalRegistrationFeedResponse|null
      */
-    public function getAttendees(int $page_nbr = 1):IExternalRegistrationFeedResponse;
+    public function getAttendees(int $page_nbr = 1):?IExternalRegistrationFeedResponse;
 }

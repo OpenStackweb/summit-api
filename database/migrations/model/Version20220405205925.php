@@ -34,9 +34,9 @@ final class Version20220405205925 extends AbstractMigration
                 $table->integer('SelectionPlanID')->setNotnull(false)->setDefault(null);
                 $table->index("SelectionPlanID", "SelectionPlanID");
                 // FK
-                $table->foreign("SelectionPlan", "SelectionPlanID", "ID", ["onDelete" => "CASCADE"]);
-                $table->foreign('Member', 'MemberID', 'ID',  ["onDelete" => "CASCADE"]);
-                $table->foreign('PresentationCategory', 'CategoryID', 'ID',  ["onDelete" => "CASCADE"]);
+                $table->foreign("SelectionPlan", "SelectionPlanID", "ID", ["onDelete" => "CASCADE"], 'FK_SummitSelectedPresentationList_SelectionPlan');
+                $table->foreign('Member', 'MemberID', 'ID',  ["onDelete" => "CASCADE"], 'FK_SummitSelectedPresentationList_Member');
+                $table->foreign('PresentationCategory', 'CategoryID', 'ID',  ["onDelete" => "CASCADE"], 'FK_SummitSelectedPresentationList_Track');
             });
         }
     }

@@ -24,6 +24,7 @@ use libs\utils\ITransactionService;
 use models\exceptions\ValidationException;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
+use Exception;
 /**
  * Class IngestSummitExternalRegistrationData
  * @package App\Jobs
@@ -33,6 +34,8 @@ class IngestSummitExternalRegistrationData implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $tries = 2;
+
+    public $timeout = 0;
     /**
      * @var int
      */
@@ -69,16 +72,24 @@ class IngestSummitExternalRegistrationData implements ShouldQueue
         try {
             Log::debug("IngestSummitExternalRegistrationData::handle");
 
-            $tx_service->transaction(function () use ($summit_repository, $service) {
+            $summit = $tx_service->transaction(function () use ($summit_repository, $service) {
 
                 $summit = $summit_repository->getById($this->summit_id);
-                if (is_null($summit) || !$summit instanceof Summit) return;
-                $service->ingestSummit($summit);
-                if(!empty($this->email_to)) {
-                    Log::debug(sprintf("IngestSummitExternalRegistrationData::handle - sending result email to %s", $this->email_to));
-                    SuccessfulIIngestionEmail::dispatch($this->email_to, $summit);
-                }
+                if (is_null($summit) || !$summit instanceof Summit) return null;
+                return $summit;
             });
+
+            if(is_null($summit)){
+                Log::debug("IngestSummitExternalRegistrationData::handle summit is null");
+                return;
+            }
+
+            $service->ingestSummit($summit);
+            if(!empty($this->email_to)) {
+                Log::debug(sprintf("IngestSummitExternalRegistrationData::handle - sending result email to %s", $this->email_to));
+                SuccessfulIIngestionEmail::dispatch($this->email_to, $summit);
+            }
+
         }
         catch (ValidationException $ex){
             Log::warning($ex);
@@ -98,4 +109,8 @@ class IngestSummitExternalRegistrationData implements ShouldQueue
         }
     }
 
+    public function failed(Exception $exception)
+    {
+        Log::error(sprintf( "IngestSummitExternalRegistrationData::failed %s", $exception->getMessage()));
+    }
 }

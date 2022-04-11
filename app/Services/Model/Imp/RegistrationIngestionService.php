@@ -124,7 +124,7 @@ final class RegistrationIngestionService
             $summit_id = $summit->getId();
             $page = 1;
             $has_more_items = false;
-            Log::debug(sprintf("RegistrationIngestionService::ingestSummit: ingesting summit %s", $summit_id));
+            Log::debug(sprintf("RegistrationIngestionService::ingestSummit ingesting summit %s", $summit_id));
             $feed = $this->feed_factory->build($summit);
 
             if (is_null($feed))
@@ -134,187 +134,251 @@ final class RegistrationIngestionService
                 throw new ValidationException(sprintf("summit %s has not default badge type set", $summit_id));
 
             do {
-                Log::debug(sprintf("RegistrationIngestionService::ingestSummit: getting external attendees page %s", $page));
+                Log::debug(sprintf("RegistrationIngestionService::ingestSummit getting external attendees page %s", $page));
                 $response = $feed->getAttendees($page);
                 if (!$response->hasData()) return;
                 $has_more_items = $response->hasMoreItems();
 
+                Log::debug(sprintf("RegistrationIngestionService::ingestSummit response %s", $response->__toString()));
+
                 foreach ($response as $index => $external_attendee) {
 
-                    $this->tx_service->transaction(function () use ($summit_id, $external_attendee) {
-                        $summit = $this->summit_repository->getById($summit_id);
-                        if (!$summit instanceof Summit) return;
-                        $default_badge_type = $summit->getDefaultBadgeType();
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "RegistrationIngestionService::ingestSummit: processing index %s external attendee %s",
+                            $index,
+                            json_encode($external_attendee)
+                        )
+                    );
 
-                        if (!$summit instanceof Summit) return;
-                        $external_attendee_profile = $external_attendee['profile'];
-                        $external_promo_code = $external_attendee['promotional_code'];
-                        $ticket_class = $external_attendee['ticket_class'];
-                        $external_order = $external_attendee['order'];
-                        $refunded = $external_attendee['refunded'];
-                        $cancelled = $external_attendee['cancelled'];
+                    try {
+                        $this->tx_service->transaction(function () use ($summit_id, $external_attendee) {
 
-                        Log::debug(sprintf("RegistrationIngestionService::ingestSummit: proccessing external attendee %s - external order id %s", $external_attendee['id'], $external_order['id']));
+                            $summit = $this->summit_repository->getById($summit_id);
+                            if (!$summit instanceof Summit) return;
+                            $default_badge_type = $summit->getDefaultBadgeType();
 
-                        $ticket_type = $summit->getTicketTypeByExternalId($ticket_class['id']);
-                        if (is_null($ticket_type)) {
-                            // create ticket type if does not exists
-                            Log::debug(sprintf("RegistrationIngestionService::ingestSummit: ticket class %s does not exists", $ticket_class['id']));
-                            $ticket_type = SummitTicketTypeFactory::build(
-                                $summit, [
-                                    'name' => $ticket_class['name'],
-                                    'description' => $ticket_class['description'],
-                                    'external_id' => $ticket_class['id'],
-                                    'cost' => $ticket_class['cost']['major_value'],
-                                    'currency' => $ticket_class['cost']['currency'],
-                                    'quantity_2_sell' => $ticket_class['quantity_total'],
-                                ]
-                            );
+                            if (!$summit instanceof Summit) return;
 
-                            $summit->addTicketType($ticket_type);
-                        }
+                            $external_attendee_profile = $external_attendee['profile'] ?? null;
+                            $external_promo_code = $external_attendee['promotional_code'] ?? null;
+                            $ticket_class = $external_attendee['ticket_class'] ?? null;
+                            $external_order = $external_attendee['order'] ?? null;
+                            $refunded = $external_attendee['refunded'] ?? false;
+                            $cancelled = $external_attendee['cancelled'] ?? false;
 
-                        $order = $this->order_repository->getByExternalIdAndSummitLockExclusive($summit, $external_order['id']);
-                        if (is_null($order)) {
-                            Log::debug(sprintf("RegistrationIngestionService::ingestSummit: order %s does not exists", $external_order['id']));
-                            $order = SummitOrderFactory::build($summit, [
-                                'external_id' => $external_order['id'],
-                                'owner_first_name' => $external_order['first_name'],
-                                'owner_last_name' => $external_order['last_name'],
-                                'owner_email' => $external_order['email'],
-                            ]);
+                            $ticket_type = $summit->getTicketTypeByExternalId($ticket_class['id']);
+                            if (is_null($ticket_type)) {
+                                // create ticket type if does not exists
+                                Log::debug(sprintf("RegistrationIngestionService::ingestSummit: ticket class %s does not exists", $ticket_class['id']));
+                                $ticket_type = SummitTicketTypeFactory::build(
+                                    $summit, [
+                                        'name' => $ticket_class['name'],
+                                        'description' => $ticket_class['description'],
+                                        'external_id' => $ticket_class['id'],
+                                        'cost' => $ticket_class['cost']['major_value'],
+                                        'currency' => $ticket_class['cost']['currency'],
+                                        'quantity_2_sell' => $ticket_class['quantity_total'],
+                                    ]
+                                );
 
-                            $order->setSummit($summit);
-
-                            $order->generateNumber();
-
-                            $owner = $this->member_repository->getByEmail($external_order['email']);
-                            if (!is_null($owner)) {
-                                $owner->addSummitRegistrationOrder($order);
+                                $summit->addTicketType($ticket_type);
                             }
 
-                            do {
-                                if (!$summit->existOrderNumber($order->getNumber()))
-                                    break;
+                            $order = $this->order_repository->getByExternalIdAndSummitLockExclusive($summit, $external_order['id']);
+                            if (is_null($order)) {
+                                Log::debug(sprintf("RegistrationIngestionService::ingestSummit: order %s does not exists", $external_order['id']));
+
+                                $order = SummitOrderFactory::build($summit, [
+                                    'external_id' => $external_order['id'],
+                                    'owner_first_name' => $external_order['first_name'],
+                                    'owner_last_name' => $external_order['last_name'],
+                                    'owner_email' => $external_order['email'],
+                                ]);
+
+                                $order->setSummit($summit);
+
                                 $order->generateNumber();
-                            } while (1);
 
-                            // generate the key to access
-                            $order->generateHash();
-                            $order->generateQRCode();
-
-                            $summit->addOrder($order);
-                        }
-
-                        $ticket = $this->ticket_repository->getBySummitAndExternalOrderIdAndExternalAttendeeIdExclusiveLock
-                        (
-                            $summit,
-                            $external_order['id'],
-                            $external_attendee['id']
-                        );
-
-                        if (is_null($ticket)) {
-
-                            Log::debug(sprintf("RegistrationIngestionService::ingestSummit: ticket %s - %s does not exists", $external_order['id'], $external_attendee['id']));
-                            $ticket = new SummitAttendeeTicket();
-                            $ticket->setExternalAttendeeId($external_attendee['id']);
-                            $ticket->setExternalOrderId($external_order['id']);
-                            $ticket->setBoughtDate(new \DateTime($external_attendee['created'], new \DateTimeZone('UTC')));
-                            $ticket->setOrder($order);
-                            $ticket->generateNumber();
-
-                            do {
-
-                                if (!$this->ticket_repository->existNumber($ticket->getNumber()))
-                                    break;
-                                $ticket->generateNumber();
-                            } while (1);
-
-                            $ticket->setTicketType($ticket_type);
-                        }
-
-                        // default badge
-                        if (!$ticket->hasBadge()) {
-                            $ticket->setBadge(SummitBadgeType::buildBadgeFromType($default_badge_type));
-                        }
-
-                        if (count($external_promo_code)) {
-                            // has promo code
-                            $promo_code = $summit->getPromoCodeByCode($external_promo_code['code']);
-                            if (is_null($promo_code)) {
-
-                                Log::debug(sprintf("RegistrationIngestionService::ingestSummit: promo code %s - %s does not exists", $external_promo_code['id'], $external_promo_code['code']));
-
-                                $promo_code_params = [
-                                    'class_name' => $external_promo_code['promotion_type'] == 'discount' ? SummitRegistrationDiscountCode::ClassName : SummitRegistrationPromoCode::ClassName,
-                                    'code' => trim($external_promo_code['code']),
-                                    'external_id' => trim($external_promo_code['id'])
-                                ];
-
-                                if ($external_promo_code['promotion_type'] == 'discount') {
-                                    if (isset($external_promo_code['percent_off'])) {
-                                        $promo_code_params['rate'] = floatval($external_promo_code['percent_off']);
-                                    }
-                                    if (isset($external_promo_code['amount_off'])) {
-                                        $amount_off = $external_promo_code['amount_off'];
-                                        if (isset($amount_off['major_value']))
-                                            $promo_code_params['amount'] = floatval($amount_off['major_value']);
-                                    }
+                                $owner = $this->member_repository->getByEmail($external_order['email']);
+                                if (!is_null($owner)) {
+                                    $owner->addSummitRegistrationOrder($order);
                                 }
 
-                                $promo_code = SummitPromoCodeFactory::build($summit, $promo_code_params);
-                                $summit->addPromoCode($promo_code);
+                                do {
+                                    if (!$summit->existOrderNumber($order->getNumber()))
+                                        break;
+                                    $order->generateNumber();
+                                } while (1);
+
+                                // generate the key to access
+                                $order->generateHash();
+                                $order->generateQRCode();
+
+                                $summit->addOrder($order);
                             }
 
-                            $promo_code->applyTo($ticket);
-                        }
+                            $ticket = $this->ticket_repository->getBySummitAndExternalOrderIdAndExternalAttendeeIdExclusiveLock
+                            (
+                                $summit,
+                                $external_order['id'],
+                                $external_attendee['id']
+                            );
 
-                        // assign attendee
-                        // check if we have already an attendee on this summit
-                        $attendee_email = trim($external_attendee_profile['email']);
-                        $first_name     = trim($external_attendee_profile['first_name']);
-                        $last_name      = trim($external_attendee_profile['last_name']);
-                        $company        = isset($external_attendee_profile['company']) ? trim($external_attendee_profile['company']) : '';
-                        Log::debug(sprintf("RegistrationIngestionService::ingestSummit: looking for attendee %s , %s (%s)", $first_name, $last_name, $attendee_email));
-                        $attendee = $this->attendee_repository->getBySummitAndEmailAndFirstNameAndLastNameAndExternalId($summit, $attendee_email, $first_name, $last_name, $external_attendee['id']);
+                            if (is_null($ticket)) {
 
-                        if (is_null($attendee)) {
-                            Log::debug(sprintf("RegistrationIngestionService::ingestSummit: attendee %s does not exists", $attendee_email));
-                            $attendee = SummitAttendeeFactory::build($summit, [
-                                'external_id' => $external_attendee['id'],
-                                'first_name'  => $first_name,
-                                'last_name'   => $last_name,
-                                'company'     => $company,
-                                'email'       => $attendee_email
-                            ], $this->member_repository->getByEmail($attendee_email));
+                                Log::debug(sprintf("RegistrationIngestionService::ingestSummit ticket %s - %s does not exists", $external_order['id'], $external_attendee['id']));
+                                $ticket = new SummitAttendeeTicket();
+                                $ticket->setExternalAttendeeId($external_attendee['id']);
+                                $ticket->setExternalOrderId($external_order['id']);
+                                $ticket->setBoughtDate(new \DateTime($external_attendee['created'], new \DateTimeZone('UTC')));
+                                $ticket->setOrder($order);
+                                $ticket->generateNumber();
 
-                            $summit->addAttendee($attendee);
-                        } else {
-                            SummitAttendeeFactory::populate($summit, $attendee, [
-                                'external_id' => $external_attendee['id'],
-                                'first_name'  => $first_name,
-                                'last_name'   => $last_name,
-                                'company'     => $company,
-                                'email'       => $attendee_email
-                            ]);
-                        }
+                                do {
 
-                        $ticket->setOwner($attendee);
-                        if (!$cancelled && !$refunded) {
-                            $ticket->setPaid();
-                            $order->setPaidStatus();
-                        }
-                        if ($cancelled) {
-                            $ticket->setCancelled();
-                        }
-                        if ($refunded) {
-                            $ticket->setRefunded();
-                        }
-                        $attendee->updateStatus();
-                        $order->addTicket($ticket);
-                        $ticket->generateQRCode();
-                        $ticket->generateHash();
-                    });
+                                    if (!$this->ticket_repository->existNumber($ticket->getNumber()))
+                                        break;
+                                    $ticket->generateNumber();
+                                } while (1);
+
+                                $ticket->setTicketType($ticket_type);
+                            }
+
+                            // default badge
+                            if (!$ticket->hasBadge()) {
+                                $ticket->setBadge(SummitBadgeType::buildBadgeFromType($default_badge_type));
+                            }
+
+                            if (!is_null($external_promo_code)) {
+
+                                Log::debug(sprintf("RegistrationIngestionService::ingestSummit processing promo code %s", json_encode($external_promo_code)));
+                                // has promo code
+                                $promo_code = $summit->getPromoCodeByCode($external_promo_code['code']);
+                                if (is_null($promo_code)) {
+
+                                    Log::debug
+                                    (
+                                        sprintf
+                                        (
+                                            "RegistrationIngestionService::ingestSummit: promo code %s (%s) type %s does not exists"
+                                            , $external_promo_code['id']
+                                            , $external_promo_code['code']
+                                            , $external_promo_code['promotion_type']
+                                        )
+                                    );
+
+                                    $promo_code_params = [
+                                        'class_name' => $external_promo_code['promotion_type'] == 'discount' ?
+                                            SummitRegistrationDiscountCode::ClassName :
+                                            SummitRegistrationPromoCode::ClassName,
+                                        'code' => trim($external_promo_code['code']),
+                                        'external_id' => trim($external_promo_code['id'])
+                                    ];
+
+                                    if ($external_promo_code['promotion_type'] == 'discount') {
+                                        if (isset($external_promo_code['percent_off'])) {
+                                            $promo_code_params['rate'] = floatval($external_promo_code['percent_off']);
+                                        }
+                                        if (isset($external_promo_code['amount_off'])) {
+                                            $amount_off = $external_promo_code['amount_off'];
+                                            if (isset($amount_off['major_value']))
+                                                $promo_code_params['amount'] = floatval($amount_off['major_value']);
+                                        }
+                                    }
+
+                                    $promo_code = SummitPromoCodeFactory::build($summit, $promo_code_params);
+                                    $summit->addPromoCode($promo_code);
+                                }
+
+                                $promo_code->applyTo($ticket);
+                            }
+
+                            // assign attendee
+                            // check if we have already an attendee on this summit
+                            $attendee_email = trim($external_attendee_profile['email']);
+                            $first_name = trim($external_attendee_profile['first_name']);
+                            $last_name = trim($external_attendee_profile['last_name']);
+                            $company = isset($external_attendee_profile['company']) ? trim($external_attendee_profile['company']) : '';
+
+                            Log::debug
+                            (
+                                sprintf
+                                (
+                                    "RegistrationIngestionService::ingestSummit looking for attendee %s , %s (%s)"
+                                    , $first_name
+                                    , $last_name
+                                    , $attendee_email
+                                )
+                            );
+
+                            $attendee = $this->attendee_repository->getBySummitAndEmailAndFirstNameAndLastNameAndExternalId
+                            (
+                                $summit,
+                                $attendee_email,
+                                $first_name,
+                                $last_name,
+                                $external_attendee['id']
+                            );
+
+                            if(is_null($attendee)){
+                                // try to get it only by email
+                                $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $attendee_email);
+                            }
+
+                            if (is_null($attendee)) {
+                                Log::debug(sprintf("RegistrationIngestionService::ingestSummit: attendee %s does not exists", $attendee_email));
+                                $attendee = SummitAttendeeFactory::build($summit, [
+                                    'external_id' => $external_attendee['id'],
+                                    'first_name' => $first_name,
+                                    'last_name' => $last_name,
+                                    'company' => $company,
+                                    'email' => $attendee_email
+                                ], $this->member_repository->getByEmail($attendee_email));
+
+                                $summit->addAttendee($attendee);
+                            } else {
+                                SummitAttendeeFactory::populate($summit, $attendee, [
+                                    'first_name' => $first_name,
+                                    'last_name' => $last_name,
+                                    'company' => $company,
+                                    'email' => $attendee_email
+                                ]);
+                            }
+
+                            $ticket->setOwner($attendee);
+                            if (!$cancelled && !$refunded) {
+                                $ticket->setPaid();
+                                $order->setPaidStatus();
+                            }
+                            if ($cancelled) {
+                                $ticket->setCancelled();
+                            }
+                            if ($refunded) {
+                                if($ticket->canRefund($ticket->getFinalAmount())) {
+                                    $ticket->refund
+                                    (
+                                        null,
+                                        $ticket->getFinalAmount(),
+                                        null,
+                                        null,
+                                        false
+                                    );
+                                }
+                            }
+                            $attendee->updateStatus();
+                            $order->addTicket($ticket);
+                            $ticket->generateQRCode();
+                            $ticket->generateHash();
+
+                            Log::debug(sprintf( "RegistrationIngestionService::ingestSummit processed attendee %s", $external_attendee['id']));
+                        });
+                    }
+                    catch (Exception $ex){
+                        Log::warning($ex);
+                    }
                 }
 
                 ++$page;
@@ -322,7 +386,15 @@ final class RegistrationIngestionService
 
             $end = time();
             $delta = $end - $start;
-            log::debug(sprintf("RegistrationIngestionService::ingestSummit execution call %s seconds - summit %s", $delta, $summit_id));
+            log::debug
+            (
+                sprintf
+                (
+                    "RegistrationIngestionService::ingestSummit execution call %s seconds - summit %s"
+                    ,$delta
+                    ,$summit_id
+                )
+            );
         } catch (Exception $ex) {
             Log::warning(sprintf("error external feed for summit id %s", $summit->getId()));
             Log::warning($ex);

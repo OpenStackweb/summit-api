@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedResponse;
+use Illuminate\Support\Facades\Log;
+
 /**
  * Class EventbriteRegistrationFeedResponse
  * @package App\Services\Apis\ExternalRegistrationFeeds\implementations
@@ -29,9 +31,12 @@ final class EventbriteRegistrationFeedResponse implements IExternalRegistrationF
     public function __construct(array $data) {
         $this->position  = 0;
         $this->data      = $data;
+        $this->attendees = $data['attendees'] ?? [];
+    }
 
-        if(isset($data['attendees']))
-            $this->attendees = $data['attendees'];
+    public function __toString()
+    {
+       return json_encode($this->data);
     }
 
     public function rewind() {
@@ -51,7 +56,8 @@ final class EventbriteRegistrationFeedResponse implements IExternalRegistrationF
     }
 
     public function valid() {
-        return isset($this->attendees[$this->position]);
+        Log::debug(sprintf("EventbriteRegistrationFeedResponse::valid position %s count %s", $this->position, count($this->attendees)));
+        return $this->position < count($this->attendees);
     }
 
     public function hasData(): bool

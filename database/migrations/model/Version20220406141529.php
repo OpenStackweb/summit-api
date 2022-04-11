@@ -25,15 +25,18 @@ final class Version20220406141529 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $sql = <<<SQL
-   UPDATE SummitSelectedPresentationList A 
-   INNER JOIN ( SELECT SummitSelectedPresentationListID, MAX(SelectionPlanID) AS SelectionPlanID 
-       FROM ( SELECT DISTINCT SummitSelectedPresentationListID , Presentation.SelectionPlanID 
-       FROM `SummitSelectedPresentation` 
-       INNER JOIN Presentation ON Presentation.ID = SummitSelectedPresentation.PresentationID 
-       WHERE Presentation.SelectionPlanID IS NOT NULL ORDER BY SummitSelectedPresentationListID ) AS Q1 
-       GROUP BY SummitSelectedPresentationListID ) AS Q2 
-   ON Q2.SummitSelectedPresentationListID = A.ID 
-       SET A.SelectionPlanID = Q2.SelectionPlanID;
+UPDATE SummitSelectedPresentationList A
+INNER JOIN ( SELECT SummitSelectedPresentationListID, MAX(SelectionPlanID) AS SelectionPlanID
+    FROM ( SELECT DISTINCT SummitSelectedPresentationListID , Presentation.SelectionPlanID
+    FROM `SummitSelectedPresentation`
+    INNER JOIN Presentation ON Presentation.ID = SummitSelectedPresentation.PresentationID
+    WHERE Presentation.SelectionPlanID IS NOT NULL
+          AND EXISTS (SELECT 1 FROM SummitSelectedPresentationList B WHERE B.ID = SummitSelectedPresentation.SummitSelectedPresentationListID)
+          AND EXISTS (SELECT 1 FROM SelectionPlan WHERE SelectionPlan.ID = Presentation.SelectionPlanID )
+          ORDER BY SummitSelectedPresentationListID ) AS Q1
+    GROUP BY SummitSelectedPresentationListID ) AS Q2
+ON Q2.SummitSelectedPresentationListID = A.ID
+    SET A.SelectionPlanID = Q2.SelectionPlanID;
 SQL;
         $this->addSql($sql);
     }

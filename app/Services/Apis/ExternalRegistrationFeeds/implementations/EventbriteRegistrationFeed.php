@@ -30,7 +30,7 @@ final class EventbriteRegistrationFeed extends AbstractExternalFeed
      * @return IExternalRegistrationFeedResponse
      * @throws \Exception
      */
-    public function getAttendees(int $page_nbr = 1): IExternalRegistrationFeedResponse
+    public function getAttendees(int $page_nbr = 1): ?IExternalRegistrationFeedResponse
     {
         try {
             $apiFeedKey = $this->summit->getExternalRegistrationFeedApiKey();

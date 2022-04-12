@@ -83,6 +83,10 @@ return [
     'SummitSelectionPlanService.addTrackGroupToSelectionPlan.TrackGroupNotFound' => 'track group :track_group_id not found on summit :summit_id',
     'SummitSelectionPlanService.deleteTrackGroupToSelectionPlan.SelectionPlanNotFound' => 'selection plan :selection_plan_id not found on summit :summit_id',
     'SummitSelectionPlanService.deleteTrackGroupToSelectionPlan.TrackGroupNotFound' => 'track group :track_group_id not found on summit :summit_id',
+    // Selection Plans
+    'SummitSelectionPlanService.detachEventTypeFromSelectionPlan.SelectionPlanNotFound' => 'selection plan id :selection_plan_id not found on summit :summit_id',
+    'SummitSelectionPlanService.detachEventTypeFromSelectionPlan.EventTypeNotFound' => 'event type id :$event_type_id not found on summit :summit_id',
+
     // Presentations
     'PresentationService.saveOrUpdatePresentation.trackNotFound' => 'track :track_id not found.',
     'PresentationService.submitPresentation.eventTypeNotFound' => 'event type :type_id not found.',

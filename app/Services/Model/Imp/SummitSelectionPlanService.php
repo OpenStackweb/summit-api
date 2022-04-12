@@ -23,6 +23,7 @@ use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\Presentation;
+use models\summit\PresentationType;
 use models\summit\Summit;
 use models\summit\SummitCategoryChange;
 use models\summit\SummitPresentationComment;
@@ -502,6 +503,13 @@ final class SummitSelectionPlanService
             $event_type = $summit->getEventType($event_type_id);
             if (is_null($event_type))
                 throw new EntityNotFoundException("Event Type not found.");
+
+            if (!$event_type instanceof PresentationType) {
+                throw new ValidationException(trans(
+                        'validation_errors.SummitSelectionPlanService.attachEventTypeToSelectionPlan.invalidPresentationType',
+                        ['type_id' => $event_type->getIdentifier()])
+                );
+            }
 
             $selection_plan->addEventType($event_type);
         });

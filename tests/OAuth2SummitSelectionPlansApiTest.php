@@ -41,17 +41,19 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         parent::tearDown();
     }
 
+    private function getHeaders() {
+        return [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+    }
+
     public function testGetSelectionPlan(){
 
         $params = [
             'id'                => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
             'expand'            => 'track_groups,extra_questions,extra_questions.values,emails'
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
         ];
 
         $response = $this->action(
@@ -61,7 +63,7 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getHeaders()
         );
 
         $content = $response->getContent();
@@ -89,11 +91,6 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
             'presentation_speaker_notification_email_template'      => 'speaker_email_template',
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
-
         $response = $this->action(
             "POST",
             "OAuth2SummitSelectionPlansApiController@addSelectionPlan",
@@ -101,7 +98,7 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getHeaders(),
             json_encode($data)
         );
 
@@ -123,11 +120,6 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
             'presentation_speaker_notification_email_template'      => 'speaker_email_template',
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
-
         $response = $this->action(
             "PUT",
             "OAuth2SummitSelectionPlansApiController@updateSelectionPlan",
@@ -135,7 +127,7 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getHeaders(),
             json_encode($data)
         );
 
@@ -145,30 +137,45 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($selectionPlan));
     }
 
-    public function testAttachEventType(){
+    public function testAttachPresentationType(){
         $params = [
             'id'                => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
-            'event_type_id'     => self::$defaultEventType->getId(),
+            'event_type_id'     => self::$defaultPresentationType->getId(),
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
-
-        $response = $this->action(
+        $this->action(
             "PUT",
             "OAuth2SummitSelectionPlansApiController@attachEventType",
             $params,
             [],
             [],
             [],
-            $headers
+            $this->getHeaders()
         );
 
         $this->assertResponseStatus(201);
         $this->assertTrue(self::$default_selection_plan->getEventTypes()->count() >= 1);
+    }
+
+    public function testAttachNonPresentationEventType(){
+        $params = [
+            'id'                => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'event_type_id'     => self::$defaultEventType->getId(),
+        ];
+
+        $this->action(
+            "PUT",
+            "OAuth2SummitSelectionPlansApiController@attachEventType",
+            $params,
+            [],
+            [],
+            [],
+            $this->getHeaders()
+        );
+
+        $this->assertResponseStatus(412);
     }
 
     public function testDetachEventType(){
@@ -178,11 +185,6 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
             'event_type_id'     => self::$defaultEventType->getId(),
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
-
         $this->action(
             "PUT",
             "OAuth2SummitSelectionPlansApiController@attachEventType",
@@ -190,7 +192,7 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getHeaders()
         );
 
         $this->action(
@@ -200,7 +202,7 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getHeaders()
         );
 
         $this->assertResponseStatus(204);

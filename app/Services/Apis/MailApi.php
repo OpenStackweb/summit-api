@@ -144,6 +144,8 @@ final class MailApi extends AbstractOAuth2Api implements IMailApi
                 // retry
                 return $this->sendEmail($payload,  $template_identifier,  $to_email,  $subject);
             }
+            Log::error($ex);
+            throw $ex;
         }
         catch (\Exception $ex) {
             $this->cleanAccessToken();

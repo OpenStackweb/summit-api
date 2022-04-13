@@ -63,6 +63,7 @@ final class SummitAttendeeFactory
         $currentUserIsAdmin = is_null($currentUser)? false: ($currentUser->isAdmin() || $currentUser->isSummitAdmin());
 
         if (!is_null($member)) {
+            Log::debug(sprintf("SummitAttendeeFactory::populate setting member %s to attendee %s", $member->getId(), $member->getEmail()));
             $attendee->setEmail($member->getEmail());
             $attendee->setMember($member);
         }

@@ -302,7 +302,7 @@ final class RegistrationIngestionService
                             $first_name = trim($external_attendee_profile['first_name']);
                             $last_name = trim($external_attendee_profile['last_name']);
                             $company = isset($external_attendee_profile['company']) ? trim($external_attendee_profile['company']) : '';
-
+                            $attendee_owner = $this->member_repository->getByEmail($attendee_email);
                             Log::debug
                             (
                                 sprintf
@@ -336,7 +336,7 @@ final class RegistrationIngestionService
                                     'last_name' => $last_name,
                                     'company' => $company,
                                     'email' => $attendee_email
-                                ], $this->member_repository->getByEmail($attendee_email));
+                                ], $attendee_owner);
 
                                 $summit->addAttendee($attendee);
                             } else {
@@ -344,7 +344,8 @@ final class RegistrationIngestionService
                                     'first_name' => $first_name,
                                     'last_name' => $last_name,
                                     'company' => $company,
-                                    'email' => $attendee_email
+                                    'email' => $attendee_email,
+                                    $attendee_owner
                                 ]);
                             }
 
@@ -368,6 +369,8 @@ final class RegistrationIngestionService
                                     );
                                 }
                             }
+
+                            $attendee->setDisclaimerAcceptedDate(new \DateTime('now', new \DateTimeZone('UTC')));
                             $attendee->updateStatus();
                             $order->addTicket($ticket);
                             $ticket->generateQRCode();

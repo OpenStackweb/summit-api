@@ -893,6 +893,12 @@ class Presentation extends SummitEvent
      */
     public function setSelectionPlan($selection_plan)
     {
+        $oldSelectionPlan = $this->selection_plan;
+        // if selection plan changes
+        if(!is_null($oldSelectionPlan) && $oldSelectionPlan->getId() != $selection_plan->getId()){
+            // then clear all selections so far
+            $this->selected_presentations->clear();
+        }
         $this->selection_plan = $selection_plan;
     }
 
@@ -1828,4 +1834,20 @@ class Presentation extends SummitEvent
         $vote->clearVoter();
         $vote->clearPresentation();
     }
+
+    /**
+     * @param PresentationCategory $category
+     * @return $this
+     */
+    public function setCategory(PresentationCategory $category)
+    {
+        // check if we change the category
+        $oldCategory = $this->category;
+        if(!is_null($oldCategory) && $oldCategory->getId() != $category->getId()){
+            // then we need to clear up all selections ( individual / team)
+            $this->selected_presentations->clear();
+        }
+        return parent::setCategory($category);
+    }
+
 }

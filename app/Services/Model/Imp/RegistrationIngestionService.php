@@ -17,6 +17,8 @@ use App\Models\Foundation\Summit\Factories\SummitTicketTypeFactory;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedFactory;
 use App\Services\Model\AbstractService;
+use App\Services\Model\dto\ExternalUserDTO;
+use App\Services\Model\IMemberService;
 use App\Services\Model\IRegistrationIngestionService;
 use libs\utils\ITransactionService;
 use models\exceptions\ValidationException;
@@ -41,6 +43,10 @@ final class RegistrationIngestionService
     extends AbstractService implements IRegistrationIngestionService
 {
 
+    /**
+     * @var IMemberService
+     */
+    private $member_service;
     /**
      * @var ISummitRepository
      */
@@ -73,6 +79,7 @@ final class RegistrationIngestionService
 
     /**
      * RegistrationIngestionService constructor.
+     * @param IMemberService $member_service
      * @param ISummitRepository $summit_repository
      * @param IExternalRegistrationFeedFactory $feed_factory
      * @param ISummitOrderRepository $order_repository
@@ -83,6 +90,7 @@ final class RegistrationIngestionService
      */
     public function __construct
     (
+        IMemberService $member_service,
         ISummitRepository $summit_repository,
         IExternalRegistrationFeedFactory $feed_factory,
         ISummitOrderRepository $order_repository,
@@ -93,6 +101,7 @@ final class RegistrationIngestionService
     )
     {
         parent::__construct($tx_service);
+        $this->member_service = $member_service;
         $this->summit_repository = $summit_repository;
         $this->feed_factory = $feed_factory;
         $this->order_repository = $order_repository;
@@ -190,19 +199,72 @@ final class RegistrationIngestionService
                             $order = $this->order_repository->getByExternalIdAndSummitLockExclusive($summit, $external_order['id']);
                             if (is_null($order)) {
                                 Log::debug(sprintf("RegistrationIngestionService::ingestSummit: order %s does not exists", $external_order['id']));
-
+                                $owner_order_email = trim($external_order['email']);
                                 $order = SummitOrderFactory::build($summit, [
                                     'external_id' => $external_order['id'],
                                     'owner_first_name' => $external_order['first_name'],
                                     'owner_last_name' => $external_order['last_name'],
-                                    'owner_email' => $external_order['email'],
+                                    'owner_email' => $owner_order_email,
                                 ]);
 
                                 $order->setSummit($summit);
 
                                 $order->generateNumber();
 
-                                $owner = $this->member_repository->getByEmail($external_order['email']);
+                                $owner = $this->member_repository->getByEmail($owner_order_email);
+
+                                if(is_null($owner)){
+                                    // check if we have an external one
+                                    try{
+                                        Log::debug
+                                        (
+                                            sprintf
+                                            (
+                                                "RegistrationIngestionService::ingestSummit order owner does not exist for email %s, trying to get it externally"
+                                                ,$owner_order_email
+                                            )
+                                        );
+
+                                        $user = $this->member_service->checkExternalUser($owner_order_email);
+
+                                        if(!is_null($user)) {
+                                            // we have an user on idp
+                                            $external_id = $user['id'];
+                                            Log::debug
+                                            (
+                                                sprintf
+                                                (
+                                                    "RegistrationIngestionService::ingestSummit got external user %s for email %s",
+                                                    $external_id , $owner_order_email
+                                                )
+                                            );
+
+                                            try {
+                                                // possible race condition
+                                                $owner = $this->member_service->registerExternalUser
+                                                (
+                                                    new ExternalUserDTO
+                                                    (
+                                                        $external_id,
+                                                        $user['email'],
+                                                        $user['first_name'],
+                                                        $user['last_name'],
+                                                        boolval($user['active']),
+                                                        boolval($user['email_verified'])
+                                                    )
+                                                );
+                                            } catch (\Exception $ex) {
+                                                // race condition lost, try to get it
+                                                Log::warning($ex);
+                                                $owner = $this->member_repository->getByExternalIdExclusiveLock(intval($external_id));
+                                            }
+                                        }
+                                    }
+                                    catch (Exception $ex){
+                                        Log::warning($ex);
+                                    }
+                                }
+
                                 if (!is_null($owner)) {
                                     $owner->addSummitRegistrationOrder($order);
                                 }
@@ -263,7 +325,7 @@ final class RegistrationIngestionService
                                     (
                                         sprintf
                                         (
-                                            "RegistrationIngestionService::ingestSummit: promo code %s (%s) type %s does not exists"
+                                            "RegistrationIngestionService::ingestSummit promo code %s (%s) type %s does not exists"
                                             , $external_promo_code['id']
                                             , $external_promo_code['code']
                                             , $external_promo_code['promotion_type']
@@ -303,6 +365,59 @@ final class RegistrationIngestionService
                             $last_name = trim($external_attendee_profile['last_name']);
                             $company = isset($external_attendee_profile['company']) ? trim($external_attendee_profile['company']) : '';
                             $attendee_owner = $this->member_repository->getByEmail($attendee_email);
+
+                            if(is_null($attendee_owner)){
+                                // check if we have an external one
+                                try{
+                                    Log::debug
+                                    (
+                                        sprintf
+                                        (
+                                            "RegistrationIngestionService::ingestSummit attendee owner does not exist for email %s, trying to get it externally"
+                                            ,$attendee_email
+                                        )
+                                    );
+
+                                    $user = $this->member_service->checkExternalUser($attendee_email);
+
+                                    if(!is_null($user)) {
+                                        // we have an user on idp
+                                        $external_id = $user['id'];
+                                        Log::debug
+                                        (
+                                            sprintf
+                                            (
+                                                "RegistrationIngestionService::ingestSummit got external user %s for email %s",
+                                                $external_id , $attendee_email
+                                            )
+                                        );
+
+                                        try {
+                                            // possible race condition
+                                            $attendee_owner = $this->member_service->registerExternalUser
+                                            (
+                                                new ExternalUserDTO
+                                                (
+                                                    $external_id,
+                                                    $user['email'],
+                                                    $user['first_name'],
+                                                    $user['last_name'],
+                                                    boolval($user['active']),
+                                                    boolval($user['email_verified'])
+                                                )
+                                            );
+                                        } catch (\Exception $ex) {
+                                            // race condition lost, try to get it
+                                            Log::warning($ex);
+                                            $attendee_owner = $this->member_repository->getByExternalIdExclusiveLock(intval($external_id));
+                                        }
+                                    }
+                                }
+                                catch (Exception $ex){
+                                    Log::warning($ex);
+                                }
+                            }
+
                             Log::debug
                             (
                                 sprintf
@@ -337,7 +452,6 @@ final class RegistrationIngestionService
                                     'company' => $company,
                                     'email' => $attendee_email
                                 ], $attendee_owner);
-
                                 $summit->addAttendee($attendee);
                             } else {
                                 SummitAttendeeFactory::populate($summit, $attendee, [
@@ -345,8 +459,7 @@ final class RegistrationIngestionService
                                     'last_name' => $last_name,
                                     'company' => $company,
                                     'email' => $attendee_email,
-                                    $attendee_owner
-                                ]);
+                                ], $attendee_owner);
                             }
 
                             $ticket->setOwner($attendee);
@@ -358,19 +471,26 @@ final class RegistrationIngestionService
                                 $ticket->setCancelled();
                             }
                             if ($refunded) {
-                                if($ticket->canRefund($ticket->getFinalAmount())) {
-                                    $ticket->refund
-                                    (
-                                        null,
-                                        $ticket->getFinalAmount(),
-                                        null,
-                                        null,
-                                        false
-                                    );
+                                try {
+                                    if ($ticket->canRefund($ticket->getFinalAmount())) {
+                                        $ticket->refund
+                                        (
+                                            null,
+                                            $ticket->getFinalAmount(),
+                                            null,
+                                            null,
+                                            false
+                                        );
+                                    }
+                                }
+                                catch (Exception $ex){
+                                    Log::warning($ex);
                                 }
                             }
+                            // force the disclaimer
+                            if($summit->isRegistrationDisclaimerMandatory() && !$attendee->isDisclaimerAccepted())
+                                $attendee->setDisclaimerAcceptedDate(new \DateTime('now', new \DateTimeZone('UTC')));
 
-                            $attendee->setDisclaimerAcceptedDate(new \DateTime('now', new \DateTimeZone('UTC')));
                             $attendee->updateStatus();
                             $order->addTicket($ticket);
                             $ticket->generateQRCode();

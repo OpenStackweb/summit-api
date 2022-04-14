@@ -268,7 +268,6 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                     break;
                     case 'legal_agreements':{
                         if(!in_array('legal_agreements', $relations)) break;
-                        if(is_null($summit)) break;
                         $res = [];
                         foreach ($member->getLegalAgreements() as $agreement){
                             $res[] = SerializerRegistry::getInstance()

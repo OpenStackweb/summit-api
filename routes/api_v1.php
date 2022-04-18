@@ -1468,6 +1468,15 @@ Route::group(array('prefix' => 'summits'), function () {
             });
         });
 
+        // registration companies
+
+        Route::group(['prefix' => 'registration-companies'], function () {
+            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationCompaniesApiController@getAllBySummit']);
+            Route::group(['prefix' => '{company_id}'], function () {
+                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationCompaniesApiController@add']);
+                Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationCompaniesApiController@delete']);
+            });
+        });
     });
 });
 

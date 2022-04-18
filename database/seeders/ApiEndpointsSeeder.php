@@ -7047,6 +7047,50 @@ class ApiEndpointsSeeder extends Seeder
                         IGroup::SummitAdministrators,
                         IGroup::TrackChairsAdmins,
                     ]
+                ],
+                // registration companies
+                [
+                    'name' => 'get-registration-companies',
+                    'route' => '/api/v1/summits/{id}/registration-companies',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                        sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::TrackChairsAdmins,
+                    ]
+                ],
+                [
+                    'name' => 'add-registration-company',
+                    'route' => '/api/v1/summits/{id}/registration-companies/{company_id}',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::TrackChairsAdmins,
+                    ]
+                ],
+                [
+                    'name' => 'delete-registration-company',
+                    'route' => '/api/v1/summits/{id}/registration-companies/{company_id}',
+                    'http_method' => 'DELETE',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::TrackChairsAdmins,
+                    ]
                 ]
             ]
         );

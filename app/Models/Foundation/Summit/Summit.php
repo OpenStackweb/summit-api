@@ -708,6 +708,15 @@ class Summit extends SilverstripeBaseModel
      */
     private $presentation_action_types;
 
+    /**
+     * @ORM\ManyToMany(targetEntity="models\main\Company", fetch="EXTRA_LAZY")
+     * @ORM\JoinTable(name="Summit_RegistrationCompanies",
+     *      joinColumns={@ORM\JoinColumn(name="SummitID", referencedColumnName="ID")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="CompanyID", referencedColumnName="ID")}
+     * )
+     * @var Company[]
+     */
+    private $registration_companies;
 
     /**
      * @return string
@@ -1045,6 +1054,7 @@ class Summit extends SilverstripeBaseModel
         $this->registration_allow_automatic_reminder_emails = true;
         $this->registration_send_order_email_automatically = true;
         $this->allow_update_attendee_extra_questions = false;
+        $this->registration_companies = new ArrayCollection();
     }
 
     /**
@@ -6130,4 +6140,41 @@ SQL;
         return $res === false ? null : $res;
     }
 
+    /**
+     * @return Company[]
+     */
+    public function getRegistrationCompanies()
+    {
+        return $this->registration_companies;
+    }
+
+    /**
+     * @param int $id
+     * @return Company|null
+     */
+    public function getRegistrationCompanyById(int $id): ?Company
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $id));
+        $res = $this->registration_companies->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    /**
+     * @param Company $registrationCompany
+     */
+    public function addRegistrationCompany(Company $registrationCompany)
+    {
+        if($this->registration_companies->contains($registrationCompany)) return;
+        $this->registration_companies->add($registrationCompany);
+    }
+
+    /**
+     * @param Company $registrationCompany
+     */
+    public function removeRegistrationCompany(Company $registrationCompany)
+    {
+        if(!$this->registration_companies->contains($registrationCompany)) return;
+        $this->registration_companies->removeElement($registrationCompany);
+    }
 }

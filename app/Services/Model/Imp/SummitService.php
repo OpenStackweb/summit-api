@@ -63,6 +63,7 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use Models\foundation\summit\EntityEvents\EntityEventTypeFactory;
 use Models\foundation\summit\EntityEvents\SummitEntityEventProcessContext;
+use models\main\Company;
 use models\main\File;
 use models\main\ICompanyRepository;
 use models\main\IGroupRepository;
@@ -3353,6 +3354,43 @@ final class SummitService extends AbstractService implements ISummitService
                 throw new EntityNotFoundException("speaker not found");
 
             $summit->removeFeaturedSpeaker($speaker);
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function addCompany(int $summit_id, int $company_id): ?Company
+    {
+        return $this->tx_service->transaction(function () use ($summit_id, $company_id) {
+            $summit = $this->summit_repository->getById($summit_id);
+            if (is_null($summit) || !$summit instanceof Summit)
+                throw new EntityNotFoundException("summit not found");
+
+            $company = $this->company_repository->getById($company_id);
+            if (is_null($company) || !$company instanceof Company)
+                throw new EntityNotFoundException("company not found");
+
+            $summit->addRegistrationCompany($company);
+            return $company;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function removeCompany(int $summit_id, int $company_id): void
+    {
+        $this->tx_service->transaction(function () use ($summit_id, $company_id) {
+            $summit = $this->summit_repository->getById($summit_id);
+            if (is_null($summit) || !$summit instanceof Summit)
+                throw new EntityNotFoundException("summit not found");
+
+            $company = $this->company_repository->getById($company_id);
+            if (is_null($company) || !$company instanceof Company)
+                throw new EntityNotFoundException("company not found");
+
+            $summit->removeRegistrationCompany($company);
         });
     }
 

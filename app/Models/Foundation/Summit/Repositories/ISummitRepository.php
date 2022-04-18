@@ -12,6 +12,11 @@
  * limitations under the License.
  **/
 use models\utils\IBaseRepository;
+use utils\Filter;
+use utils\Order;
+use utils\PagingInfo;
+use utils\PagingResponse;
+
 /**
  * Interface ISummitRepository
  * @package models\summit
@@ -79,4 +84,13 @@ interface ISummitRepository extends IBaseRepository
      * @return array
      */
     public function getAllWithExternalRegistrationFeed():array;
+
+    /**
+     * @param Summit $summit
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getRegistrationCompanies(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null):PagingResponse;
 }

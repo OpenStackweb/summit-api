@@ -1501,7 +1501,17 @@ Route::group(['prefix' => 'speakers'], function () {
         Route::get('', 'OAuth2SummitSpeakersApiController@getMySpeaker');
         Route::post('', 'OAuth2SummitSpeakersApiController@createMySpeaker');
         Route::put('', 'OAuth2SummitSpeakersApiController@updateMySpeaker');
-        Route::post('/photo', 'OAuth2SummitSpeakersApiController@addMySpeakerPhoto');
+
+        // speaker photos
+        Route::group(['prefix' => 'photo'], function () {
+            Route::post('', ['uses' => 'OAuth2SummitSpeakersApiController@addMySpeakerPhoto']);
+            Route::delete('', ['uses' => 'OAuth2SummitSpeakersApiController@deleteMySpeakerPhoto']);
+        });
+
+        Route::group(['prefix' => 'big-photo'], function () {
+            Route::post('', ['uses' => 'OAuth2SummitSpeakersApiController@addMySpeakerBigPhoto']);
+            Route::delete('', ['uses' => 'OAuth2SummitSpeakersApiController@deleteMySpeakerBigPhoto']);
+        });
 
         Route::group(['prefix' => 'presentations'], function () {
 

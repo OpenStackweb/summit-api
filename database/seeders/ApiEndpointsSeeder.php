@@ -1745,6 +1745,19 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'seed-default-order-extra-questions',
+                'route' => '/api/v1/summits/{id}/order-extra-questions/seed-defaults',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
                 'name' => 'get-order-extra-question',
                 'route' => '/api/v1/summits/{id}/order-extra-questions/{question_id}',
                 'http_method' => 'GET',

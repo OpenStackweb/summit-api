@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use DateTime;
 /**
  * Interface IExternalRegistrationFeed
  * @package App\Services\Apis\ExternalRegistrationFeeds
@@ -19,8 +19,9 @@
 interface IExternalRegistrationFeed
 {
     /**
-     * @param int $page_nbr
+     * @param int $page
+     * @param DateTime|null $changed_since
      * @return IExternalRegistrationFeedResponse|null
      */
-    public function getAttendees(int $page_nbr = 1):?IExternalRegistrationFeedResponse;
+    public function getAttendees(int $page = 1, ?DateTime $changed_since = null):?IExternalRegistrationFeedResponse;
 }

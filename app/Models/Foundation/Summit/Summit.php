@@ -581,6 +581,12 @@ class Summit extends SilverstripeBaseModel
     private $external_registration_feed_api_key;
 
     /**
+     * @ORM\Column(name="ExternalRegistrationFeedLastIngestDate", type="datetime")
+     * @var DateTime
+     */
+    private $external_registration_feed_last_ingest_date;
+
+    /**
      * @ORM\OneToMany(targetEntity="models\summit\SummitEventType", mappedBy="summit",  cascade={"persist","remove"}, orphanRemoval=true)
      */
     private $event_types;
@@ -1045,6 +1051,7 @@ class Summit extends SilverstripeBaseModel
         $this->registration_allow_automatic_reminder_emails = true;
         $this->registration_send_order_email_automatically = true;
         $this->allow_update_attendee_extra_questions = false;
+        $this->external_registration_feed_last_ingest_date = null;
     }
 
     /**
@@ -1384,12 +1391,24 @@ class Summit extends SilverstripeBaseModel
      * @param string $ticket_type_external_id
      * @return SummitTicketType|null
      */
-    public function getTicketTypeByExternalId($ticket_type_external_id)
+    public function getTicketTypeByExternalId(string $ticket_type_external_id):?SummitTicketType
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('external_id', $ticket_type_external_id));
         $ticket_type = $this->ticket_types->matching($criteria)->first();
         return $ticket_type === false ? null : $ticket_type;
+    }
+
+    /**
+     * @param string $ticket_type_external_id
+     * @return SummitOrderExtraQuestionType|null
+     */
+    public function getExtraQuestionTypeByExternalId(string $extra_question_type_external_id):?SummitOrderExtraQuestionType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('external_id', $extra_question_type_external_id));
+        $question_type = $this->order_extra_questions->matching($criteria)->first();
+        return $question_type === false ? null : $question_type;
     }
 
     /**
@@ -6130,4 +6149,21 @@ SQL;
         return $res === false ? null : $res;
     }
 
+    /**
+     * @return DateTime
+     */
+    public function getExternalRegistrationFeedLastIngestDate(): ?DateTime
+    {
+        return $this->external_registration_feed_last_ingest_date;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function markExternalRegistrationFeedLastIngestDate():void{
+        $utcNow = new DateTime('now', new \DateTimeZone('UTC'));
+        // subtract skew time
+        $utcNow->sub(new \DateInterval('PT15M'));
+        $this->external_registration_feed_last_ingest_date = $utcNow;
+    }
 }

@@ -146,7 +146,16 @@ final class SummitAttendeeFactory
 
                             if ($question->allowsValues() && !$question->allowValue($value)) {
                                 Log::warning(sprintf("value %s is not allowed for question %s", $value, $question->getName()));
-                                throw new ValidationException("The answer you provided is invalid");
+                                throw new ValidationException
+                                (
+                                    sprintf
+                                    (
+                                        "The answer you provided (%s) for question '%s' (%s) is invalid",
+                                        $value,
+                                        $question->getName(),
+                                        $question->getId()
+                                    )
+                                );
                             }
 
                             $answer = new SummitOrderExtraQuestionAnswer();

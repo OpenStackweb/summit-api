@@ -11,11 +11,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedResponse;
+use App\Services\Apis\ExternalRegistrationFeeds\implementations\EventbriteResponse;
 use GuzzleHttp\Client;
 use Exception;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Log;
 use models\summit\Summit;
+use DateTime;
 /**
  * Class EventbriteAPI
  * @package services\apis
@@ -41,7 +45,7 @@ final class EventbriteAPI implements IEventbriteAPI
      * @return mixed
      * @throws Exception
      */
-    public function getEntity($api_url, array $params)
+    public function getEntity(string $api_url, array $params)
     {
         try {
             if (strstr($api_url, self::BaseUrl) === false)
@@ -95,23 +99,43 @@ final class EventbriteAPI implements IEventbriteAPI
 
     /**
      * @param Summit $summit
-     * @return mixed
+     * @param int $page
+     * @param string $expand
+     * @return IExternalRegistrationFeedResponse
      */
-    public function getTicketTypes(Summit $summit){
+    public function getTicketTypes(Summit $summit, int $page = 1, string $expand = 'ticket_classes'):IExternalRegistrationFeedResponse{
         $event_id = $summit->getExternalSummitId();
         $url      = sprintf('%s/events/%s', self::BaseUrl, $event_id);
-        return $this->getEntity($url, ['expand' => 'ticket_classes']);
+        return new EventbriteResponse($this->getEntity($url, ['expand' => $expand, 'page' => $page]), 'ticket_classes');
     }
 
     /**
      * @param Summit $summit
-     * @param int $page_nbr
+     * @param int $page
      * @param string $expand
-     * @return mixed
+     * @return IExternalRegistrationFeedResponse
      */
-    public function getAttendees(Summit $summit, $page_nbr, $expand = 'promotional_code'){
+    public function getAttendees(Summit $summit, int $page = 1, ?DateTime $changed_since = null, string $expand = 'promotional_code'):IExternalRegistrationFeedResponse{
         $event_id = $summit->getExternalSummitId();
         $url      = sprintf('%s/events/%s/attendees', self::BaseUrl, $event_id);
-        return $this->getEntity($url, ['expand' => $expand, 'page' => $page_nbr]);
+        $params = ['expand' => $expand, 'page' => $page];
+        if(!is_null($changed_since)){
+            $params['changed_since'] = $changed_since->format('Y-m-d\TH:i:s\Z');
+        }
+        Log::debug(sprintf("EventbriteAPI::getAttendees summit %s (%s) params %s", $summit->getId(), $event_id, json_encode($params)));
+        return new EventbriteResponse($this->getEntity($url, $params), 'attendees');
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $page
+     * @param string|null $expand
+     * @return IExternalRegistrationFeedResponse
+     */
+    public function getExtraQuestions(Summit $summit, int $page = 1, string $expand = null):IExternalRegistrationFeedResponse
+    {
+        $event_id = $summit->getExternalSummitId();
+        $url      = sprintf('%s/events/%s/questions', self::BaseUrl, $event_id);
+        return new EventbriteResponse($this->getEntity($url, ['page' => $page]), 'questions');
     }
 }

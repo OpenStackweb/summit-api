@@ -13,34 +13,25 @@
  **/
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
+use LaravelDoctrine\Migrations\Schema\Builder;
+use LaravelDoctrine\Migrations\Schema\Table;
 /**
- * Class Version20220412182357
+ * Class Version20220420155435
  * @package Database\Migrations\Model
  */
-final class Version20220412182357 extends AbstractMigration
+final class Version20220420155435 extends AbstractMigration
 {
     /**
      * @param Schema $schema
      */
     public function up(Schema $schema): void
     {
-        $sql = <<<SQL
-INSERT INTO SelectionPlan_SummitEventTypes (SelectionPlanID, SummitEventTypeID)
-SELECT SelectionPlan.ID, SummitEventType.ID
-FROM SelectionPlan, SummitEventType
-INNER JOIN PresentationType ON PresentationType.ID = SummitEventType.ID
-WHERE
-      SummitEventType.ClassName = 'PresentationType'
-      AND PresentationType.ShouldBeAvailableOnCFP = 1
-      AND SummitEventType.SummitID = SelectionPlan.SummitID
-      AND NOT EXISTS (
-            SELECT 1 FROM SelectionPlan_SummitEventTypes
-            WHERE
-                  SelectionPlan_SummitEventTypes.SelectionPlanID = SelectionPlan.ID
-                  AND SelectionPlan_SummitEventTypes.SummitEventTypeID = SummitEventType.ID
-    );
-SQL;
-        $this->addSql($sql);
+        $builder = new Builder($schema);
+        if($schema->hasTable("Summit") && !$builder->hasColumn("Summit", "ExternalRegistrationFeedLastIngestDate")) {
+            $builder->table('Summit', function (Table $table) {
+                $table->dateTime('ExternalRegistrationFeedLastIngestDate')->setNotnull(false)->setDefault(null);
+            });
+        }
     }
 
     /**
@@ -48,6 +39,11 @@ SQL;
      */
     public function down(Schema $schema): void
     {
-
+        $builder = new Builder($schema);
+        if($schema->hasTable("Summit") && $builder->hasColumn("Summit", "ExternalRegistrationFeedLastIngestDate")) {
+            $builder->table('Summit', function (Table $table) {
+                $table->dropColumn('ExternalRegistrationFeedLastIngestDate');
+            });
+        }
     }
 }

@@ -11,15 +11,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-
+use Iterator;
 /**
  * Interface IExternalRegistrationFeedResponse
  * @package App\Services\Apis\ExternalRegistrationFeeds
  */
-interface IExternalRegistrationFeedResponse extends \Iterator
+interface IExternalRegistrationFeedResponse extends Iterator
 {
     public function hasData():bool;
 
     public function hasMoreItems():bool;
+
+    public function pageCount():int;
 }

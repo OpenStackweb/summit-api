@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use Illuminate\Support\Facades\Log;
 use models\summit\Summit;
 
 /**
@@ -45,6 +46,14 @@ class SuccessfulIIngestionEmail extends AbstractEmailJob
         $payload['external_id'] = $summit->getExternalSummitId();
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
+        Log::debug
+        (
+            sprintf
+            (
+                "SuccessfulIIngestionEmail::__construct template_identifier %s email_to %s payload %s"
+                , $template_identifier, $email_to, json_encode($payload)
+            )
+        );
 
         parent::__construct($payload, $template_identifier, $email_to);
     }

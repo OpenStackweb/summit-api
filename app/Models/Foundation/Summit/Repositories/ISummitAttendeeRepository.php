@@ -67,4 +67,11 @@ interface ISummitAttendeeRepository extends IBaseRepository
      * @return mixed
      */
     public function getByEmailAndMemberNotSet(string $email);
+
+    /**
+     * @param Summit $summit
+     * @param null|string $external_id
+     * @return SummitAttendee|null
+     */
+    public function getBySummitAndExternalId(Summit $summit, string $external_id):?SummitAttendee;
 }

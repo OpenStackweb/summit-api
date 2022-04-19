@@ -340,6 +340,7 @@ SQL,
         if(!empty($last_name)){
             $query = $query->andWhere("e.surname = :surname")->setParameter("surname", $last_name);
         }
+
         if(!empty($external_id)){
             $query = $query->andWhere("e.external_id = :external_id")->setParameter("external_id", $external_id);
         }
@@ -348,6 +349,28 @@ SQL,
             $query
                 ->setParameter("summit_id", $summit->getId())
                 ->setParameter("email", trim($email));
+
+        return $query->getQuery()->getOneOrNullResult();
+    }
+
+
+    /**
+     * @param Summit $summit
+     * @param null|string $external_id
+     * @return SummitAttendee|null
+     */
+    public function getBySummitAndExternalId(Summit $summit, string $external_id):?SummitAttendee
+    {
+        $query  = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->leftJoin('e.summit', 's')
+            ->leftJoin('e.member', 'm')
+            ->where("s.id = :summit_id")
+            ->andWhere("e.external_id = :external_id");
+
+        $query = $query->setParameter("summit_id", $summit->getId())->setParameter("external_id", $external_id);
 
         return $query->getQuery()->getOneOrNullResult();
     }

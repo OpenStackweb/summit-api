@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Events\SummitTicketTypeInserted;
 use App\Events\SummitTicketTypeDeleted;
 use App\Events\SummitTicketTypeUpdated;
@@ -23,6 +24,7 @@ use models\exceptions\ValidationException;
 use models\summit\Summit;
 use models\summit\SummitTicketType;
 use services\apis\IEventbriteAPI;
+
 /**
  * Class SummitTicketTypeService
  * @package App\Services\Model
@@ -44,7 +46,7 @@ final class SummitTicketTypeService
      */
     public function __construct
     (
-        IEventbriteAPI $eventbrite_api,
+        IEventbriteAPI      $eventbrite_api,
         ITransactionService $tx_service
     )
     {
@@ -58,15 +60,17 @@ final class SummitTicketTypeService
      * @return array
      * @throws EntityNotFoundException
      */
-    static private function getTicketTypeParams(Summit $summit, array $data):array{
-        if(isset($data['badge_type_id'])){
+    static private function getTicketTypeParams(Summit $summit, array $data): array
+    {
+        if (isset($data['badge_type_id'])) {
             $badge_type = $summit->getBadgeTypeById(intval($data['badge_type_id']));
-            if(is_null($badge_type))
+            if (is_null($badge_type))
                 throw new EntityNotFoundException(sprintf("badge_type_id %s not found", $data['badge_type_id']));
             $data['badge_type'] = $badge_type;
         }
         return $data;
     }
+
     /**
      * @param Summit $summit
      * @param array $data
@@ -76,11 +80,11 @@ final class SummitTicketTypeService
      */
     public function addTicketType(Summit $summit, array $data)
     {
-        $ticket_type =  $this->tx_service->transaction(function() use ($summit, $data){
+        $ticket_type = $this->tx_service->transaction(function () use ($summit, $data) {
 
             $former_ticket_type = $summit->getTicketTypeByName(trim($data['name']));
 
-            if(!is_null($former_ticket_type)){
+            if (!is_null($former_ticket_type)) {
                 throw new ValidationException
                 (
                     trans
@@ -94,7 +98,7 @@ final class SummitTicketTypeService
                 );
             }
 
-            if(isset($data['external_id'])) {
+            if (isset($data['external_id'])) {
                 $former_ticket_type = $summit->getTicketTypeByExternalId(trim($data['external_id']));
                 if (!is_null($former_ticket_type)) {
                     throw new ValidationException
@@ -113,11 +117,11 @@ final class SummitTicketTypeService
 
             $ticket_type = SummitTicketTypeFactory::build($summit, self::getTicketTypeParams($summit, $data));
 
-            if($summit->hasTicketTypes()){
+            if ($summit->hasTicketTypes()) {
                 // before add check if we have the same currency
                 $currency = $ticket_type->getCurrency();
                 $summit_currency = $summit->getDefaultTicketTypeCurrency();
-                if(!empty($currency) && !empty($summit_currency) && $summit_currency != $currency)
+                if (!empty($currency) && !empty($summit_currency) && $summit_currency != $currency)
                     throw new ValidationException(sprintf("ticket type should have same currency as summit (%s)", $summit_currency));
             }
 
@@ -148,9 +152,9 @@ final class SummitTicketTypeService
      */
     public function updateTicketType(Summit $summit, $ticket_type_id, array $data)
     {
-        return $this->tx_service->transaction(function() use ($summit, $ticket_type_id, $data){
+        return $this->tx_service->transaction(function () use ($summit, $ticket_type_id, $data) {
 
-            if(isset($data['name'])) {
+            if (isset($data['name'])) {
                 $former_ticket_type = $summit->getTicketTypeByName(trim($data['name']));
 
                 if (!is_null($former_ticket_type) && $former_ticket_type->getId() != $ticket_type_id) {
@@ -168,7 +172,7 @@ final class SummitTicketTypeService
                 }
             }
 
-            if(isset($data['external_id'])) {
+            if (isset($data['external_id'])) {
                 $former_ticket_type = $summit->getTicketTypeByExternalId(trim($data['external_id']));
                 if (!is_null($former_ticket_type) && $former_ticket_type->getId() != $ticket_type_id) {
                     throw new ValidationException
@@ -187,7 +191,7 @@ final class SummitTicketTypeService
 
             $ticket_type = $summit->getTicketTypeById($ticket_type_id);
 
-            if(is_null($ticket_type)){
+            if (is_null($ticket_type)) {
                 throw new EntityNotFoundException
                 (
                     trans
@@ -195,7 +199,7 @@ final class SummitTicketTypeService
                         'not_found_errors.SummitTicketTypeService.updateTicketType.TicketTypeNotFound',
                         [
                             'ticket_type_id' => $ticket_type_id,
-                            'summit_id'      => $summit->getId()
+                            'summit_id' => $summit->getId()
                         ]
                     )
                 );
@@ -203,7 +207,7 @@ final class SummitTicketTypeService
 
             $summit_currency = $summit->getDefaultTicketTypeCurrency();
             $currency = $ticket_type->getCurrency();
-            if(!empty($currency) && !empty($summit_currency) && $summit_currency != $currency)
+            if (!empty($currency) && !empty($summit_currency) && $summit_currency != $currency)
                 throw new ValidationException(sprintf("ticket type should have same currency as summit (%s)", $summit_currency));
 
             $ticket_type = SummitTicketTypeFactory::populate($ticket_type, self::getTicketTypeParams($summit, $data));
@@ -230,11 +234,11 @@ final class SummitTicketTypeService
      */
     public function deleteTicketType(Summit $summit, $ticket_type_id)
     {
-        return $this->tx_service->transaction(function() use ($summit, $ticket_type_id){
+        return $this->tx_service->transaction(function () use ($summit, $ticket_type_id) {
 
             $ticket_type = $summit->getTicketTypeById($ticket_type_id);
 
-            if(is_null($ticket_type)){
+            if (is_null($ticket_type)) {
                 throw new EntityNotFoundException
                 (
                     trans
@@ -242,7 +246,7 @@ final class SummitTicketTypeService
                         'not_found_errors.SummitTicketTypeService.deleteTicketType.TicketTypeNotFound',
                         [
                             'ticket_type_id' => $ticket_type_id,
-                            'summit_id'      => $summit->getId()
+                            'summit_id' => $summit->getId()
                         ]
                     )
                 );
@@ -266,13 +270,13 @@ final class SummitTicketTypeService
      * @return SummitTicketType[]
      * @throws ValidationException
      */
-    public function seedSummitTicketTypesFromEventBrite(Summit $summit){
+    public function seedSummitTicketTypesFromEventBrite(Summit $summit)
+    {
+        return $this->tx_service->transaction(function () use ($summit) {
 
-        return $this->tx_service->transaction(function() use($summit){
-            $res                = [];
             $external_summit_id = $summit->getExternalSummitId();
 
-            if(empty($external_summit_id)){
+            if (empty($external_summit_id)) {
                 throw new ValidationException
                 (
                     trans
@@ -295,52 +299,61 @@ final class SummitTicketTypeService
                 'token' => $apiFeedKey
             ]);
 
-            $response = $this->eventbrite_api->getTicketTypes($summit);
+            $has_more_items = true;
+            $page = 1;
+            $res = [];
 
-            if (!isset($response['ticket_classes'])) return $res;
+            do {
 
-            $ticket_classes = $response['ticket_classes'];
+                $response = $this->eventbrite_api->getTicketTypes($summit);
 
-            foreach ($ticket_classes as $ticket_class) {
-                Log::debug(sprintf("SummitTicketTypeService::seedSummitTicketTypesFromEventBrite external ticket class %s", json_encode($ticket_class)));
+                $has_more_items = $response->hasMoreItems();
 
-                $id              = $ticket_class['id'];
-                $old_ticket_type = $summit->getTicketTypeByExternalId($id);
+                foreach ($response as $ticket_class) {
 
-                if (!is_null($old_ticket_type)) {
+                    Log::debug(sprintf("SummitTicketTypeService::seedSummitTicketTypesFromEventBrite external ticket class %s", json_encode($ticket_class)));
 
-                    $old_ticket_type->setName(trim($ticket_class['name']));
-                    $old_ticket_type->setDescription(isset($ticket_class['description']) ? trim($ticket_class['description']) : '');
-                    if(isset($ticket_class['capacity']))
-                        $old_ticket_type->setQuantity2Sell(intval($ticket_class['capacity']));
-                    if(isset($ticket_class['cost']) && !is_null($ticket_class['cost']))
-                        $old_ticket_type->setCost(floatval($ticket_class['cost']['major_value']));
-                    continue;
+                    $id = $ticket_class['id'];
+                    $old_ticket_type = $summit->getTicketTypeByExternalId($id);
+
+                    if (!is_null($old_ticket_type)) {
+
+                        $old_ticket_type->setName(trim($ticket_class['name']));
+                        $old_ticket_type->setDescription(isset($ticket_class['description']) ? trim($ticket_class['description']) : '');
+                        if (isset($ticket_class['capacity']))
+                            $old_ticket_type->setQuantity2Sell(intval($ticket_class['capacity']));
+                        if (isset($ticket_class['cost']) && !is_null($ticket_class['cost']))
+                            $old_ticket_type->setCost(floatval($ticket_class['cost']['major_value']));
+                        continue;
+                    }
+
+                    $new_ticket_type = new SummitTicketType();
+                    $new_ticket_type->setExternalId($id);
+                    $new_ticket_type->setName($ticket_class['name']);
+                    $new_ticket_type->setDescription(isset($ticket_class['description']) ? trim($ticket_class['description']) : '');
+
+                    if (isset($ticket_class['capacity']))
+                        $new_ticket_type->setQuantity2Sell(intval($ticket_class['capacity']));
+                    if (isset($ticket_class['cost']) && !is_null($ticket_class['cost']))
+                        $new_ticket_type->setCost(floatval($ticket_class['cost']['major_value']));
+
+                    $summit->addTicketType($new_ticket_type);
+                    $res[] = $new_ticket_type;
                 }
 
-                $new_ticket_type = new SummitTicketType();
-                $new_ticket_type->setExternalId($id);
-                $new_ticket_type->setName($ticket_class['name']);
-                $new_ticket_type->setDescription(isset($ticket_class['description']) ? trim($ticket_class['description']) : '');
-                if(isset($ticket_class['capacity']))
-                    $new_ticket_type->setQuantity2Sell(intval($ticket_class['capacity']));
-                if(isset($ticket_class['cost']) && !is_null($ticket_class['cost']))
-                    $new_ticket_type->setCost(floatval($ticket_class['cost']['major_value']));
-
-                $summit->addTicketType($new_ticket_type);
-                $res[] = $new_ticket_type;
-            }
-
-            foreach ($res as $ticket_type){
-                Event::dispatch
-                (
-                    new SummitTicketTypeInserted
+                foreach ($res as $ticket_type) {
+                    Event::dispatch
                     (
-                        $ticket_type->getId(),
-                        $ticket_type->getSummitId()
-                    )
-                );
-            }
+                        new SummitTicketTypeInserted
+                        (
+                            $ticket_type->getId(),
+                            $ticket_type->getSummitId()
+                        )
+                    );
+                }
+
+                ++$page;
+            } while ($has_more_items);
 
             return $res;
         });

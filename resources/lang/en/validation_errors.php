@@ -116,5 +116,7 @@ return [
     "SpeakerService.updateSpeakerRelations.InvalidLanguage" => "language :lang_id does not exists!",
     "SpeakerService.updateSpeakerRelations.InvalidCountryCode" => "country :country does not exists!",
     "SpeakerService.updateSpeakerRelations.InvalidOrganizationRole" => "organization role :role does not exists!",
-    "SpeakerService.updateSpeakerRelations.InvalidActiveInvolvement" => "involvement :involvement_id does not exists!"
+    "SpeakerService.updateSpeakerRelations.InvalidActiveInvolvement" => "involvement :involvement_id does not exists!",
+    // Summit Order Extra Questions
+    'SummitOrderExtraQuestionTypeService.seedSummitOrderExtraQuestionTypesFromEventBrite.MissingExternalId' => 'summit :summit_is has not set external id (eventbrite)',
 ];

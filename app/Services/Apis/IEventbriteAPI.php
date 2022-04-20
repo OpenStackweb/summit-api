@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use DateTime;
+use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedResponse;
 use models\summit\Summit;
 /**
  * Interface IEventbriteAPI
@@ -18,6 +20,7 @@ use models\summit\Summit;
  */
 interface IEventbriteAPI
 {
+    const QuestionChoicesCharSeparator = '|';
     /**
      * @param array $auth_info
      * @return $this
@@ -32,15 +35,26 @@ interface IEventbriteAPI
 
     /**
      * @param Summit $summit
-     * @return mixed
-     */
-    public function getTicketTypes(Summit $summit);
-
-    /**
-     * @param Summit $summit
-     * @param int $page_nbr
+     * @param int $page
      * @param string $expand
      * @return mixed
      */
-    public function getAttendees(Summit $summit, $page_nbr, $expand = 'promotional_code');
+    public function getTicketTypes(Summit $summit, int $page = 1, string $expand = 'ticket_classes'):IExternalRegistrationFeedResponse;
+
+    /**
+     * @param Summit $summit
+     * @param int $page
+     * @param string $expand
+     * @return mixed
+     */
+    public function getExtraQuestions(Summit $summit,int $page = 1, string $expand = null):IExternalRegistrationFeedResponse;
+
+    /**
+     * @param Summit $summit
+     * @param int $page
+     * @param DateTime|null $changed_since
+     * @param string $expand
+     * @return mixed
+     */
+    public function getAttendees(Summit $summit, int $page = 1, ?DateTime $changed_since = null, string $expand = 'promotional_code');
 }

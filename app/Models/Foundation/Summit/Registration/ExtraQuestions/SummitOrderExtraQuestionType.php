@@ -44,6 +44,12 @@ class SummitOrderExtraQuestionType extends ExtraQuestionType
     private $printable;
 
     /**
+     * @ORM\Column(name="`ExternalId`", type="string")
+     * @var string
+     */
+    private $external_id;
+
+    /**
      * @return string
      */
     public function getUsage(): string
@@ -82,6 +88,23 @@ class SummitOrderExtraQuestionType extends ExtraQuestionType
     {
         parent::__construct();
         $this->printable = false;
+        $this->external_id = null;
+    }
+
+    /**
+     * @return string
+     */
+    public function getExternalId(): ?string
+    {
+        return $this->external_id;
+    }
+
+    /**
+     * @param string $external_id
+     */
+    public function setExternalId(?string $external_id): void
+    {
+        $this->external_id = $external_id;
     }
 
 }

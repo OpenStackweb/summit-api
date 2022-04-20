@@ -79,4 +79,11 @@ interface ISummitOrderExtraQuestionTypeService extends IExtraQuestionTypeService
      */
     public function deleteOrderExtraQuestionValue(Summit $summit, int $question_id, int $value_id):void;
 
+    /**
+     * @param Summit $summit
+     * @return SummitOrderExtraQuestionType[]
+     * @throws ValidationException
+     */
+    public function seedSummitOrderExtraQuestionTypesFromEventBrite(Summit $summit):array;
+
 }

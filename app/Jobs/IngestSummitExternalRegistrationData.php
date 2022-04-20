@@ -14,6 +14,8 @@
 use App\Jobs\Emails\Registration\ExternalIngestion\SuccessfulIIngestionEmail;
 use App\Jobs\Emails\Registration\ExternalIngestion\UnsuccessfulIIngestionEmail;
 use App\Services\Model\IRegistrationIngestionService;
+use App\Services\Model\ISummitOrderExtraQuestionTypeService;
+use App\Services\Model\ISummitTicketTypeService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -33,7 +35,7 @@ class IngestSummitExternalRegistrationData implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 2;
+    public $tries = 1;
 
     public $timeout = 0;
     /**
@@ -59,12 +61,16 @@ class IngestSummitExternalRegistrationData implements ShouldQueue
 
     /**
      * @param ISummitRepository $summit_repository
+     * @param ISummitTicketTypeService $ticketTypeService
+     * @param ISummitOrderExtraQuestionTypeService $extraQuestionTypeService
      * @param IRegistrationIngestionService $service
      * @param ITransactionService $tx_service
      */
     public function handle
     (
         ISummitRepository $summit_repository,
+        ISummitTicketTypeService $ticketTypeService,
+        ISummitOrderExtraQuestionTypeService $extraQuestionTypeService,
         IRegistrationIngestionService $service,
         ITransactionService $tx_service
     )
@@ -84,7 +90,13 @@ class IngestSummitExternalRegistrationData implements ShouldQueue
                 return;
             }
 
+            // first re seed ticket types
+            $ticketTypeService->seedSummitTicketTypesFromEventBrite($summit);
+            // then re seed extra questions
+            $extraQuestionTypeService->seedSummitOrderExtraQuestionTypesFromEventBrite($summit);
+            // and finally ingest all data
             $service->ingestSummit($summit);
+
             if(!empty($this->email_to)) {
                 Log::debug(sprintf("IngestSummitExternalRegistrationData::handle - sending result email to %s", $this->email_to));
                 SuccessfulIIngestionEmail::dispatch($this->email_to, $summit);

@@ -3263,6 +3263,15 @@ final class SummitOrderService
     public function ingestExternalTicketData(Summit $summit, array $payload): void
     {
 
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitOrderService::ingestExternalTicketData summit %s payload %s",
+                $summit->getId(), json_encode($payload)
+            )
+        );
+
         $email_to = $payload['email_to'] ?? null;
 
         if (!$summit->hasDefaultBadgeType()) {

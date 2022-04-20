@@ -13,8 +13,6 @@
  **/
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
-use LaravelDoctrine\Migrations\Schema\Builder;
-use LaravelDoctrine\Migrations\Schema\Table;
 /**
  * Class Version20220405205916
  * @package Database\Migrations\Model

@@ -1745,6 +1745,19 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'seed-default-order-extra-questions',
+                'route' => '/api/v1/summits/{id}/order-extra-questions/seed-defaults',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
                 'name' => 'get-order-extra-question',
                 'route' => '/api/v1/summits/{id}/order-extra-questions/{question_id}',
                 'http_method' => 'GET',
@@ -2414,6 +2427,30 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'add-my-speaker-photo',
                 'route' => '/api/v1/speakers/me/photo',
                 'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteMySpeakersData, $current_realm),
+                ],
+            ],
+            [
+                'name' => 'delete-my-speaker-photo',
+                'route' => '/api/v1/speakers/me/photo',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteMySpeakersData, $current_realm),
+                ],
+            ],
+            [
+                'name' => 'add-my-speaker-big-photo',
+                'route' => '/api/v1/speakers/me/big-photo',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteMySpeakersData, $current_realm),
+                ],
+            ],
+            [
+                'name' => 'delete-my-speaker-big-photo',
+                'route' => '/api/v1/speakers/me/big-photo',
+                'http_method' => 'DELETE',
                 'scopes' => [
                     sprintf(SummitScopes::WriteMySpeakersData, $current_realm),
                 ],

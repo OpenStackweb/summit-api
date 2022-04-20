@@ -943,6 +943,7 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::get('metadata', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getMetadata']);
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getAllBySummit']);
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@add']);
+            Route::post('seed-defaults', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@seedDefaultSummitExtraOrderQuestionTypesBySummit']);
             Route::group(['prefix' => '{question_id}'], function () {
                 Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@get']);
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@update']);
@@ -1510,7 +1511,17 @@ Route::group(['prefix' => 'speakers'], function () {
         Route::get('', 'OAuth2SummitSpeakersApiController@getMySpeaker');
         Route::post('', 'OAuth2SummitSpeakersApiController@createMySpeaker');
         Route::put('', 'OAuth2SummitSpeakersApiController@updateMySpeaker');
-        Route::post('/photo', 'OAuth2SummitSpeakersApiController@addMySpeakerPhoto');
+
+        // speaker photos
+        Route::group(['prefix' => 'photo'], function () {
+            Route::post('', ['uses' => 'OAuth2SummitSpeakersApiController@addMySpeakerPhoto']);
+            Route::delete('', ['uses' => 'OAuth2SummitSpeakersApiController@deleteMySpeakerPhoto']);
+        });
+
+        Route::group(['prefix' => 'big-photo'], function () {
+            Route::post('', ['uses' => 'OAuth2SummitSpeakersApiController@addMySpeakerBigPhoto']);
+            Route::delete('', ['uses' => 'OAuth2SummitSpeakersApiController@deleteMySpeakerBigPhoto']);
+        });
 
         Route::group(['prefix' => 'presentations'], function () {
 

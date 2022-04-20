@@ -17,6 +17,7 @@ use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedRespons
 use Illuminate\Support\Facades\Log;
 use GuzzleHttp\Exception\RequestException;
 use services\apis\EventbriteAPI;
+use DateTime;
 /**
  * Class EventbriteRegistrationFeed
  * @package App\Services\Apis\ExternalRegistrationFeeds\implementations
@@ -26,11 +27,11 @@ final class EventbriteRegistrationFeed extends AbstractExternalFeed
 {
 
     /**
-     * @param int $page_nbr
-     * @return IExternalRegistrationFeedResponse
-     * @throws \Exception
+     * @param int $page
+     * @param DateTime|null $changed_since
+     * @return IExternalRegistrationFeedResponse|null
      */
-    public function getAttendees(int $page_nbr = 1): ?IExternalRegistrationFeedResponse
+    public function getAttendees(int $page = 1, ?DateTime $changed_since = null):?IExternalRegistrationFeedResponse
     {
         try {
             $apiFeedKey = $this->summit->getExternalRegistrationFeedApiKey();
@@ -46,12 +47,12 @@ final class EventbriteRegistrationFeed extends AbstractExternalFeed
             }
 
             $api = new EventbriteAPI();
+
             $api->setCredentials([
                 'token' => $apiFeedKey
             ]);
 
-            return new EventbriteRegistrationFeedResponse($api->getAttendees($this->summit, $page_nbr, 'promotional_code,order,ticket_class'));
-
+            return $api->getAttendees($this->summit, $page, $changed_since,'promotional_code,order,ticket_class');
         }
         catch(RequestException $ex){
             Log::warning($ex->getMessage());

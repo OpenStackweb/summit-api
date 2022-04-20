@@ -11,9 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Services\Model\ISummitOrderExtraQuestionTypeService;
+use App\Services\Model\ISummitTicketTypeService;
 use Illuminate\Support\Facades\App;
 use Mockery;
-use models\summit\ISummitRepository;
 use models\summit\Summit;
 use models\summit\SummitBadgeType;
 use models\summit\SummitVenue;
@@ -25,7 +27,7 @@ use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedTyp
  * Class ExternalRegistrationIngestionTest
  * @package Tests
  */
-class ExternalRegistrationIngestionTest extends TestCase
+class ExternalRegistrationIngestionTest extends \Tests\BrowserKitTestCase
 {
     public function tearDown():void
     {
@@ -44,7 +46,6 @@ class ExternalRegistrationIngestionTest extends TestCase
         $summit->setBeginDate(new \DateTime("2019-09-1"));
         $summit->setEndDate(new \DateTime("2019-09-30"));
 
-
         $mainVenue = new SummitVenue();
         $mainVenue->setIsMain(true);
         $summit->addLocation($mainVenue);
@@ -59,18 +60,19 @@ class ExternalRegistrationIngestionTest extends TestCase
         $em->flush();
 
         $service = App::make(IRegistrationIngestionService::class);
+        $ticketTypeService = App::make(ISummitTicketTypeService::class);
+        $extraOrderQuestionService = App::make(ISummitOrderExtraQuestionTypeService::class);
+
+        $extraOrderQuestionService->seedSummitOrderExtraQuestionTypesFromEventBrite($summit);
+
+        $this->assertTrue($summit->getOrderExtraQuestions()->count() > 0);
+
+        $ticketTypeService->seedSummitTicketTypesFromEventBrite($summit);
+
+        $this->assertTrue($summit->getTicketTypes()->count() > 0);
 
         $service->ingestSummit($summit);
-    }
 
-    /**
-     * @param int $summit_id
-     */
-    public function testIngestSummitById($summit_id = 29){
-        $repo = App::make(ISummitRepository::class);
-        $summit =  $repo->getById($summit_id);
-        $service = App::make(IRegistrationIngestionService::class);
-        $service->ingestSummit($summit);
+        $this->assertTrue($summit->getAttendeesCount() > 0);
     }
-
 }

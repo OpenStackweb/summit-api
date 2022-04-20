@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\Summit\Factories\SummitOrderFactory;
 use App\Models\Foundation\Summit\Factories\SummitPromoCodeFactory;
 use App\Models\Foundation\Summit\Factories\SummitTicketTypeFactory;
@@ -29,12 +32,14 @@ use models\summit\ISummitRepository;
 use models\summit\Summit;
 use Exception;
 use Illuminate\Support\Facades\Log;
-use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitBadgeType;
+use models\summit\SummitOrderExtraQuestionAnswer;
 use models\summit\SummitRegistrationDiscountCode;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\SummitRegistrationPromoCode;
+use services\apis\IEventbriteAPI;
+
 /**
  * Class RegistrationIngestionService
  * @package App\Services\Model\Imp
@@ -141,13 +146,29 @@ final class RegistrationIngestionService
 
             if (!$summit->hasDefaultBadgeType())
                 throw new ValidationException(sprintf("summit %s has not default badge type set", $summit_id));
-
+            $shouldMarkProcess = false;
             do {
                 Log::debug(sprintf("RegistrationIngestionService::ingestSummit getting external attendees page %s", $page));
-                $response = $feed->getAttendees($page);
-                if (!$response->hasData()) return;
+                $response = $feed->getAttendees($page, $summit->getExternalRegistrationFeedLastIngestDate());
+
+                if ($response->hasData()){
+                    $shouldMarkProcess = true;
+                }
+                else{
+                    log::debug
+                    (
+                        sprintf
+                        (
+                            "RegistrationIngestionService::ingestSummit page does not contains data for summit %s"
+                            ,$summit_id
+                        )
+                    );
+                    break;
+                }
+
                 $has_more_items = $response->hasMoreItems();
 
+                Log::debug(sprintf("RegistrationIngestionService::ingestSummit response got %s records on page", $response->pageCount()));
                 Log::debug(sprintf("RegistrationIngestionService::ingestSummit response %s", $response->__toString()));
 
                 foreach ($response as $index => $external_attendee) {
@@ -429,14 +450,7 @@ final class RegistrationIngestionService
                                 )
                             );
 
-                            $attendee = $this->attendee_repository->getBySummitAndEmailAndFirstNameAndLastNameAndExternalId
-                            (
-                                $summit,
-                                $attendee_email,
-                                $first_name,
-                                $last_name,
-                                $external_attendee['id']
-                            );
+                            $attendee = $this->attendee_repository->getBySummitAndExternalId($summit, $external_attendee['id']);
 
                             if(is_null($attendee)){
                                 // try to get it only by email
@@ -444,7 +458,7 @@ final class RegistrationIngestionService
                             }
 
                             if (is_null($attendee)) {
-                                Log::debug(sprintf("RegistrationIngestionService::ingestSummit: attendee %s does not exists", $attendee_email));
+                                Log::debug(sprintf("RegistrationIngestionService::ingestSummit attendee %s does not exists", $attendee_email));
                                 $attendee = SummitAttendeeFactory::build($summit, [
                                     'external_id' => $external_attendee['id'],
                                     'first_name' => $first_name,
@@ -460,6 +474,40 @@ final class RegistrationIngestionService
                                     'company' => $company,
                                     'email' => $attendee_email,
                                 ], $attendee_owner);
+                            }
+
+                            $attendee->clearExtraQuestionAnswers();
+                            $answers = $external_attendee['answers'] ?? [];
+
+                            foreach($answers as $answerDTO){
+                                $external_question_id = $answerDTO['question_id'];
+                                $value = $answerDTO['answer'] ?? null;
+                                if(empty($value)) continue;
+                                $question = $summit->getExtraQuestionTypeByExternalId($external_question_id);
+                                if(is_null($question)){
+                                    Log::debug(sprintf("RegistrationIngestionService::ingestSummit question not found ( external id %s )", $external_question_id));
+                                    continue;
+                                }
+
+                                if ($question->allowsValues()) {
+                                    $values = explode(IEventbriteAPI::QuestionChoicesCharSeparator, $value);
+                                    $res = [];
+                                    foreach ($values as $val){
+                                        $v = $question->getValueByName(trim($val));
+                                        if(!is_null($v))
+                                            $res[] = $v->getId();
+                                    }
+                                    $value = implode(ExtraQuestionType::QuestionChoicesCharSeparator, $res);
+                                }
+
+                                $answer = new SummitOrderExtraQuestionAnswer();
+                                $answer->setQuestion($question);
+                                if($question->getType() === ExtraQuestionTypeConstants::CheckBoxQuestionType){
+                                    // special case for waiver type
+                                    $value = $value === 'accepted' ? 'true':'false';
+                                }
+                                $answer->setValue($value);
+                                $attendee->addExtraQuestionAnswer($answer);
                             }
 
                             $ticket->setOwner($attendee);
@@ -506,6 +554,21 @@ final class RegistrationIngestionService
 
                 ++$page;
             } while ($has_more_items);
+
+            $this->tx_service->transaction(function() use($summit_id, $shouldMarkProcess){
+                if($shouldMarkProcess) {
+                    log::debug
+                    (
+                        sprintf
+                        (
+                            "RegistrationIngestionService::ingestSummit marking last ingest date for summit %s"
+                            ,$summit_id
+                        )
+                    );
+                    $summit = $this->summit_repository->getById($summit_id);
+                    $summit->markExternalRegistrationFeedLastIngestDate();
+                }
+            });
 
             $end = time();
             $delta = $end - $start;

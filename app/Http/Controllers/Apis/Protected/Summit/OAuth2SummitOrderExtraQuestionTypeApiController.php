@@ -25,6 +25,8 @@ use models\summit\Summit;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use Exception;
+use utils\PagingResponse;
+
 /**
  * Class OAuth2SummitOrderExtraQuestionTypeApiController
  * @package App\Http\Controllers
@@ -299,6 +301,44 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             $this->service->deleteOrderExtraQuestionValue($summit, $question_id, $value_id);
 
             return $this->deleted();
+        }
+        catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message'=> $ex2->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function seedDefaultSummitExtraOrderQuestionTypesBySummit($summit_id){
+        try {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $question_types = $this->service->seedSummitOrderExtraQuestionTypesFromEventBrite($summit);
+
+            $response = new PagingResponse
+            (
+                count($question_types),
+                count($question_types),
+                1,
+                1,
+                $question_types
+            );
+
+            return $this->created($response->toArray());
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);

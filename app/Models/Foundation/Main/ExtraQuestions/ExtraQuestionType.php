@@ -204,6 +204,10 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
         $value->setQuestion($this);
     }
 
+    public function clearValues():void{
+        $this->values->clear();
+    }
+
     /**
      * @return int
      */
@@ -262,7 +266,7 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
         if($this->type == ExtraQuestionTypeConstants::ComboBoxQuestionType)
             return !is_null($this->getValueById(intval($value)));
 
-        foreach (explode(',',$value) as $v)
+        foreach (explode(self::QuestionChoicesCharSeparator, $value) as $v)
         {
             if(is_null($this->getValueById(intval($v))))
                 return false;
@@ -301,7 +305,7 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
         if ($this->values->count() == 0) return $value;
         $niceValues = [];
         $dict = Cache::get($cacheKey);
-        $value = explode(',', $value);
+        $value = explode( self::QuestionChoicesCharSeparator, $value);
 
         if(!empty($dict))
             $dict = json_decode($dict, true);
@@ -321,7 +325,7 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
             }
         }
 
-        return implode(',', $niceValues);
+        return implode(self::QuestionChoicesCharSeparator, $niceValues);
     }
 
     /**
@@ -331,4 +335,5 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
         return $this->values;
     }
 
+    const QuestionChoicesCharSeparator = ',';
 }

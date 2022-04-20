@@ -943,6 +943,7 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::get('metadata', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getMetadata']);
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getAllBySummit']);
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@add']);
+            Route::post('seed-defaults', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@seedDefaultSummitExtraOrderQuestionTypesBySummit']);
             Route::group(['prefix' => '{question_id}'], function () {
                 Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@get']);
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@update']);

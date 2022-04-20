@@ -11,16 +11,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Summit\Factories\SummitOrderExtraQuestionTypeFactory;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderExtraQuestionTypeRepository;
+use App\Services\Apis\ExternalRegistrationFeeds\implementations\EventbriteResponse;
 use App\Services\Model\Imp\ExtraQuestionTypeService;
 use App\Services\Model\ISummitOrderExtraQuestionTypeService;
+use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\summit\Summit;
 use models\summit\SummitOrderExtraQuestionType;
+use models\summit\SummitOrderExtraQuestionTypeConstants;
+use services\apis\IEventbriteAPI;
+
 /**
  * Class SummitOrderExtraQuestionTypeService
  * @package App\Services
@@ -31,17 +38,24 @@ final class SummitOrderExtraQuestionTypeService
 {
 
     /**
-     * SummitOrderExtraQuestionTypeService constructor.
+     * @var IEventbriteAPI
+     */
+    private $eventbrite_api;
+
+    /**
+     * @param IEventbriteAPI $eventbrite_api
      * @param ISummitOrderExtraQuestionTypeRepository $repository
      * @param ITransactionService $tx_service
      */
     public function __construct
     (
+        IEventbriteAPI                          $eventbrite_api,
         ISummitOrderExtraQuestionTypeRepository $repository,
-        ITransactionService $tx_service
+        ITransactionService                     $tx_service
     )
     {
         parent::__construct($tx_service);
+        $this->eventbrite_api = $eventbrite_api;
         $this->repository = $repository;
     }
 
@@ -192,6 +206,128 @@ final class SummitOrderExtraQuestionTypeService
                 throw new EntityNotFoundException("Question not found.");
 
             parent::_deleteOrderExtraQuestionValue($question, $value_id);
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @return SummitOrderExtraQuestionType[]
+     * @throws ValidationException
+     */
+    public function seedSummitOrderExtraQuestionTypesFromEventBrite(Summit $summit): array
+    {
+        return $this->tx_service->transaction(function () use ($summit) {
+
+            $external_summit_id = $summit->getExternalSummitId();
+
+            if (empty($external_summit_id)) {
+                throw new ValidationException
+                (
+                    trans
+                    (
+                        'validation_errors.SummitOrderExtraQuestionTypeService.seedSummitOrderExtraQuestionTypesFromEventBrite',
+                        [
+                            'summit_id' => $summit->getId()
+                        ]
+                    )
+                );
+            }
+
+            $apiFeedKey = $summit->getExternalRegistrationFeedApiKey();
+
+            if (empty($apiFeedKey)) {
+                throw new ValidationException
+                (
+                    sprintf("external_registration_feed_api_key is empty for summit %s", $summit->getId())
+                );
+            }
+
+            $this->eventbrite_api->setCredentials([
+                'token' => $apiFeedKey
+            ]);
+
+            $has_more_items = true;
+            $page = 1;
+            $res = [];
+
+            do {
+
+                $response = $this->eventbrite_api->getExtraQuestions($summit);
+                $has_more_items = $response->hasMoreItems();
+
+                foreach ($response as $question) {
+                    Log::debug(sprintf("SummitOrderExtraQuestionTypeService::seedSummitOrderExtraQuestionTypesFromEventBrite external question  %s", json_encode($question)));
+
+                    $id = $question['id'];
+                    $question_type = $summit->getExtraQuestionTypeByExternalId($id);
+
+                    if(is_null($question_type)){
+                        Log::debug
+                        (
+                            sprintf
+                            (
+                                "SummitOrderExtraQuestionTypeService::seedSummitOrderExtraQuestionTypesFromEventBrite external question %s does not exists",
+                                $id
+                            )
+                        );
+
+                        $question_type = new SummitOrderExtraQuestionType();
+                    }
+
+                    $question_type->setLabel(trim($question['question']['html']));
+                    $question_type->setName(trim($question['question']['text']));
+                    $question_type->setExternalId($question['id']);
+                    $question_type->setMandatory(boolval($question['required']));
+                    $question_type->setOrder(intval($question['sorting']));
+                    $question_type->setUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+
+                    switch ($question['type']){
+                        case 'radio':
+                            $question_type->setType(ExtraQuestionTypeConstants::RadioButtonListQuestionType);
+                            break;
+                        case 'checkbox':
+                            $question_type->setType(ExtraQuestionTypeConstants::CheckBoxListQuestionType);
+                            break;
+                        case 'waiver':
+                            $question_type->setType(ExtraQuestionTypeConstants::CheckBoxQuestionType);
+                            $question_type->setLabel(trim($question['waiver']));
+                            break;
+                        case 'text':
+                            $question_type->setType(ExtraQuestionTypeConstants::TextQuestionType);
+                            break;
+                    }
+
+                    $values = $question['choices'] ?? [];
+                    $value_order = 1;
+                    $question_type->clearValues();
+                    foreach ($values as $opt){
+
+                        Log::debug
+                        (
+                            sprintf
+                            (
+                                "SummitOrderExtraQuestionTypeService::seedSummitOrderExtraQuestionTypesFromEventBrite question %s creating value %s",
+                                $id,
+                                json_encode($opt)
+                            )
+                        );
+
+                        $value = new ExtraQuestionTypeValue();
+                        $value->setValue(trim($opt['answer']['text']));
+                        $value->setLabel(trim($opt['answer']['html']));
+                        $value->setOrder($value_order);
+                        ++$value_order;
+                        $question_type->addValue($value);
+                    }
+
+                    $summit->addOrderExtraQuestion($question_type);
+
+                    $res[] = $question_type;
+                }
+                ++$page;
+            } while ($has_more_items);
+
+            return $res;
         });
     }
 }

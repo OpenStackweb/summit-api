@@ -1,4 +1,6 @@
-<?php namespace Database\Migrations\Model;
+<?php
+
+namespace Database\Migrations\Model;
 /**
  * Copyright 2019 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,34 +15,28 @@
  **/
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
+use LaravelDoctrine\ORM\Facades\Registry;
+use models\summit\Summit;
+use models\utils\SilverstripeBaseModel;
 /**
- * Class Version20220412182357
+ * Class Version20220420171940
  * @package Database\Migrations\Model
  */
-final class Version20220412182357 extends AbstractMigration
+final class Version20220420171940 extends AbstractMigration
 {
     /**
      * @param Schema $schema
      */
     public function up(Schema $schema): void
     {
-        $sql = <<<SQL
-INSERT INTO SelectionPlan_SummitEventTypes (SelectionPlanID, SummitEventTypeID)
-SELECT SelectionPlan.ID, SummitEventType.ID
-FROM SelectionPlan, SummitEventType
-INNER JOIN PresentationType ON PresentationType.ID = SummitEventType.ID
-WHERE
-      SummitEventType.ClassName = 'PresentationType'
-      AND PresentationType.ShouldBeAvailableOnCFP = 1
-      AND SummitEventType.SummitID = SelectionPlan.SummitID
-      AND NOT EXISTS (
-            SELECT 1 FROM SelectionPlan_SummitEventTypes
-            WHERE
-                  SelectionPlan_SummitEventTypes.SelectionPlanID = SelectionPlan.ID
-                  AND SelectionPlan_SummitEventTypes.SummitEventTypeID = SummitEventType.ID
-    );
-SQL;
-        $this->addSql($sql);
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $repository = $em->getRepository(Summit::class);
+        $summits = $repository->findAll();
+        foreach($summits as $summit){
+            $summit->seedDefaultEmailFlowEvents();
+            $em->persist($summit);
+        }
+        $em->flush();
     }
 
     /**

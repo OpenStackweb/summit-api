@@ -105,6 +105,7 @@ final class OAuth2SummitOrdersApiController
                 'tickets'          => 'required|ticket_dto_array',
                 'extra_questions'  => 'sometimes|extra_question_dto_array',
                 'owner_company'    => 'nullable|string|max:255',
+                'owner_company_id' => 'nullable|integer',
             ];
 
             if(is_null($owner)){

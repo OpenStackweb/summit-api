@@ -40,7 +40,7 @@ class SummitOrderRefundRequestAdmin extends AbstractEmailJob
         $summit = $order->getSummit();
         $payload['owner_full_name'] = $order->getOwnerFullName();
         $payload['owner_email']     = $order->getOwnerEmail();
-        $payload['owner_company']   = $order->getOwnerCompany();
+        $payload['owner_company']   = $order->getOwnerCompanyName();
         $payload['order_number']    = $order->getNumber();
         $payload['summit_name']     = $order->getSummit()->getName();
         $payload['summit_logo']     = $order->getSummit()->getLogoUrl();

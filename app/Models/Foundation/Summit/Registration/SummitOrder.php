@@ -91,14 +91,14 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      * @ORM\Column(name="OwnerCompany", type="string")
      * @var string
      */
-    private $owner_company;
+    private $owner_company_name;
 
     /**
      * @ORM\ManyToOne(targetEntity="models\main\Company")
-     * @ORM\JoinColumn(name="CompanyID", referencedColumnName="ID", nullable=true)
+     * @ORM\JoinColumn(name="OwnerCompanyID", referencedColumnName="ID", nullable=true)
      * @var Company
      */
-    private $company;
+    private $owner_company;
 
     /**
      * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="summit_registration_orders")
@@ -455,35 +455,35 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     /**
      * @return string
      */
-    public function getOwnerCompany(): ?string
+    public function getOwnerCompanyName(): ?string
     {
-        if($this->hasCompany())
-            return $this->company->getName();
-        return $this->owner_company;
+        if($this->hasOwnerCompany())
+            return $this->owner_company->getName();
+        return $this->owner_company_name;
     }
 
     /**
-     * @param string $owner_company
+     * @param string $owner_company_name
      */
-    public function setOwnerCompany(string $owner_company): void
+    public function setOwnerCompanyName(string $owner_company_name): void
     {
-        $this->owner_company = $owner_company;
+        $this->owner_company_name = $owner_company_name;
     }
 
     /**
      * @return Company
      */
-    public function getCompany(): Company
+    public function getOwnerCompany(): ?Company
     {
-        return $this->company;
+        return $this->owner_company;
     }
 
     /**
      * @param Company $company
      */
-    public function setCompany(Company $company): void
+    public function setOwnerCompany(Company $company): void
     {
-        $this->company = $company;
+        $this->owner_company = $company;
     }
 
     /**
@@ -757,16 +757,16 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     /**
      * @return bool
      */
-    public function hasCompany():bool{
+    public function hasOwnerCompany():bool{
         return $this->getCompanyId() > 0;
     }
 
     /**
      * @return int
      */
-    public function getCompanyId(){
+    public function getCompanyId():int{
         try {
-            return is_null($this->company) ? 0 : $this->company->getId();
+            return is_null($this->owner_company) ? 0 : $this->owner_company->getId();
         }
         catch(\Exception $ex){
             return 0;

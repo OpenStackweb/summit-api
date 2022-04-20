@@ -47,7 +47,7 @@ class SummitTicketRefundRequestOwner extends AbstractEmailJob
         $payload['order_number'] = $order->getNumber();
         $payload['owner_full_name'] = $order->getOwnerFullName();
         $payload['owner_email'] = $order->getOwnerEmail();
-        $payload['owner_company'] = $order->getOwnerCompany();
+        $payload['owner_company'] = $order->getOwnerCompanyName();
         $payload['summit_name'] = $summit->getName();
         $payload['summit_logo'] = $summit->getLogoUrl();
         $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();

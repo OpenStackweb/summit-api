@@ -22,15 +22,15 @@ use models\summit\SummitOrder;
 class SummitOrderBaseSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
-        'Number'         => 'number:json_string',
-        'Status'         => 'status:json_string',
-        'PaymentMethod'  => 'payment_method:json_string',
-        'OwnerFirstName' => 'owner_first_name:json_string',
-        'OwnerSurname'   => 'owner_last_name:json_string',
-        'OwnerEmail'     => 'owner_email:json_string',
-        'OwnerCompany'   => 'owner_company:json_string',
-        'OwnerId'        => 'owner_id:json_string',
-        'SummitId'       => 'summit_id:json_int',
+        'Number'            => 'number:json_string',
+        'Status'            => 'status:json_string',
+        'PaymentMethod'     => 'payment_method:json_string',
+        'OwnerFirstName'    => 'owner_first_name:json_string',
+        'OwnerSurname'      => 'owner_last_name:json_string',
+        'OwnerEmail'        => 'owner_email:json_string',
+        'OwnerCompanyName'  => 'owner_company:json_string',
+        'OwnerId'           => 'owner_id:json_string',
+        'SummitId'          => 'summit_id:json_int',
     ];
 
     protected static $allowed_relations = [
@@ -115,7 +115,7 @@ class SummitOrderBaseSerializer extends SilverStripeSerializer
                     case 'owner_company':
                         {
 
-                            if ($order->hasCompany()) {
+                            if ($order->hasOwnerCompany()) {
                                 unset($values['owner_company_id']);
                                 $values['owner_company'] = SerializerRegistry::getInstance()->getSerializer($order->getCompany())->serialize(AbstractSerializer::getExpandForPrefix('owner_company', $expand));
                             }

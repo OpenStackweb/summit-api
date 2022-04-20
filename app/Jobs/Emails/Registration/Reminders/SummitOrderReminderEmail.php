@@ -36,7 +36,7 @@ class SummitOrderReminderEmail extends AbstractEmailJob
         $summit = $order->getSummit();
         $payload['owner_full_name'] = $order->getOwnerFullName();
         $payload['owner_email'] = $order->getOwnerEmail();
-        $payload['owner_company'] = $order->getOwnerCompany();
+        $payload['owner_company'] = $order->getOwnerCompanyName();
 
         if(empty($payload['owner_full_name'])){
             $payload['owner_full_name'] = $payload['owner_email'];

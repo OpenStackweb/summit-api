@@ -12,13 +12,19 @@
  * limitations under the License.
  **/
 
+use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Illuminate\Support\Facades\Log;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
 use App\Repositories\SilverStripeDoctrineRepository;
 use utils\DoctrineHavingFilterMapping;
 use utils\Filter;
+use utils\Order;
+use utils\PagingInfo;
+use utils\PagingResponse;
 
 /**
  * Class DoctrineSummitRepository
@@ -297,5 +303,86 @@ final class DoctrineSummitRepository
             ->setParameter("now", new \DateTime('now', new \DateTimeZone('UTC')))
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * @param Summit $summit
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function getRegistrationCompanies(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null):PagingResponse
+    {
+        $extra_filters = '';
+        $extra_orders  = '';
+        $bindings      = [];
+
+        if(!is_null($filter))
+        {
+            $where_conditions = $filter->toRawSQL([
+                'name'  => 'Name',
+            ]);
+            if(!empty($where_conditions)) {
+                $extra_filters = " WHERE {$where_conditions}";
+                $bindings = array_merge($bindings, $filter->getSQLBindings());
+            }
+        }
+
+        if(!is_null($order))
+        {
+            $extra_orders = $order->toRawSQL(array
+            (
+                'name'  => 'Name',
+            ));
+        }
+
+        $query_count = <<<SQL
+SELECT COUNT(DISTINCT(ID)) AS QTY
+FROM (
+	SELECT C.ID, C.Name
+	FROM Summit_RegistrationCompanies SC
+	INNER JOIN Company C ON SC.CompanyID = C.ID AND SC.SummitID = {$summit->getId()}	
+)
+SUMMIT_COMPANIES
+{$extra_filters}
+SQL;
+
+        $stm   = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings);
+
+        $total = intval($stm->fetchColumn(0));
+
+        $bindings = array_merge( $bindings, array
+        (
+            'per_page'  => $paging_info->getPerPage(),
+            'offset'    => $paging_info->getOffset(),
+        ));
+
+        $query = <<<SQL
+SELECT *
+FROM (
+	SELECT C.ID, C.Name
+    FROM Summit_RegistrationCompanies SC
+	INNER JOIN Company C ON SC.CompanyID = C.ID AND SC.SummitID = {$summit->getId()}	
+)
+SUMMIT_COMPANIES
+{$extra_filters} {$extra_orders} limit :per_page offset :offset;
+SQL;
+
+        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
+        $rsm->addRootEntityFromClassMetadata(\models\main\Company::class, 'c');
+
+        // build rsm here
+        $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
+
+        foreach($bindings as $k => $v)
+            $native_query->setParameter($k, $v);
+
+        $companies = $native_query->getResult();
+
+        $last_page = (int) ceil($total / $paging_info->getPerPage());
+
+        return new PagingResponse($total, $paging_info->getPerPage(), $paging_info->getCurrentPage(), $last_page, $companies);
     }
 }

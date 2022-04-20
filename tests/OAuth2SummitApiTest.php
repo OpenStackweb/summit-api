@@ -1665,4 +1665,74 @@ CSV;
         $content = $response->getContent();
         $this->assertResponseStatus(200);
     }
+
+    public function testGetCurrentSummitCompanies()
+    {
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 15,
+            'filter'   => 'company_name==Intel',
+        ];
+
+        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitRegistrationCompaniesApiController@getAllBySummit",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $speakers = json_decode($content);
+        $this->assertTrue(!is_null($speakers));
+    }
+
+    public function testAddCompanyToSummit()
+    {
+        $params = array(
+            'id'            => self::$summit->getId(),
+            'company_id'    => 1,
+        );
+
+        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitRegistrationCompaniesApiController@add",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+    }
+
+    public function testRemoveCompanyFromSummit()
+    {
+        $params = array(
+            'id'            => self::$summit->getId(),
+            'company_id'    => 1,
+        );
+
+        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitRegistrationCompaniesApiController@delete",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+        $content = $response->getContent();
+        $this->assertResponseStatus(204);
+    }
 }

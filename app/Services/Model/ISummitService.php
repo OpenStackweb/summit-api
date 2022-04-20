@@ -17,6 +17,7 @@ use App\Models\Utils\IStorageTypesConstants;
 use Illuminate\Http\UploadedFile;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\Company;
 use models\main\File;
 use models\main\Member;
 use models\main\PersonalCalendarShareInfo;
@@ -523,6 +524,22 @@ interface ISummitService
      * @throws EntityNotFoundException
      */
     public function removeFeaturedSpeaker(int $summit_id, int $speaker_id):void;
+
+    /**
+     * @param int $summit_id
+     * @param int $company_id
+     * @return Company|null
+     * @throws EntityNotFoundException
+     */
+    public function addCompany(int $summit_id, int $company_id): ?Company;
+
+    /**
+     * @param int $summit_id
+     * @param int $company_id
+     * @return void
+     * @throws EntityNotFoundException
+     */
+    public function removeCompany(int $summit_id, int $company_id): void;
 
     /**
      * @param int $summit_id

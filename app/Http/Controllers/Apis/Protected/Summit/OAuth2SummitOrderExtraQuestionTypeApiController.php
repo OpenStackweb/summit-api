@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderExtraQuestionTypeRepository;
 use App\Services\Model\ISummitOrderExtraQuestionTypeService;
 use Illuminate\Support\Facades\Validator;
@@ -34,6 +36,8 @@ use utils\PagingResponse;
 final class OAuth2SummitOrderExtraQuestionTypeApiController
     extends OAuth2ProtectedController
 {
+
+    use GetAndValidateJsonPayload;
 
     /**
      * @var ISummitRepository
@@ -99,6 +103,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             'type'  => ['==', '=@'],
             'usage' => ['==', '=@'],
             'label' => ['==', '=@'],
+            'class' => ['==']
         ];
     }
 
@@ -111,6 +116,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             'type'  => 'sometimes|required|string',
             'usage' => 'sometimes|required|string',
             'label' => 'sometimes|required|string',
+            'class' => 'sometimes|required|string|in:'.implode(',', ExtraQuestionTypeConstants::AllowedQuestionClass),
         ];
     }
 
@@ -224,7 +230,15 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
 
             $value = $this->service->addOrderExtraQuestionValue($summit, $question_id, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($value)->serialize());
+            return $this->created
+            (
+                SerializerRegistry::getInstance()->getSerializer($value)->serialize
+                (
+                    self::getExpands(),
+                    self::getFields(),
+                    self::getRelations(),
+                )
+            );
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);
@@ -270,7 +284,12 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
 
             $value = $this->service->updateOrderExtraQuestionValue($summit, $question_id, $value_id, $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($value)->serialize());
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($value)->serialize
+            (
+                self::getExpands(),
+                self::getFields(),
+                self::getRelations(),
+            ));
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);
@@ -339,6 +358,210 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             );
 
             return $this->created($response->toArray());
+        }
+        catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message'=> $ex2->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * Sub Questions
+     */
+
+    /**
+     * @param $summit_id
+     * @param $question_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getSubQuestionRules($summit_id, $question_id){
+        try{
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $question = $summit->getOrderExtraQuestionById(intval($question_id));
+            if (is_null($question)) return $this->error404();
+
+            $rules = $question->getSubQuestionRules()->toArray();
+
+            $response = new PagingResponse
+            (
+                count($rules),
+                count($rules),
+                1,
+                1,
+                $rules
+            );
+
+            return $this->ok
+            (
+                $response->toArray
+                (
+                    self::getExpands(),
+                    self::getRelations(),
+                    self::getFields()
+                )
+            );
+        }
+        catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message'=> $ex2->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+    /**
+     * @param $summit_id
+     * @param $question_id
+     */
+    public function addSubQuestionRule($summit_id, $question_id){
+        try{
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonPayload(SubQuestionRuleValidationRulesFactory::build([]));
+
+            $sub_question_rule = $this->service->addSubQuestionRule($summit, intval($question_id), $payload);
+            return $this->created
+            (
+                SerializerRegistry::getInstance()
+                    ->getSerializer($sub_question_rule)
+                    ->serialize
+                    (
+                        self::getExpands(),
+                        self::getRelations(),
+                        self::getFields()
+                    )
+            );
+        }
+        catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message'=> $ex2->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $question_id
+     * @param $rule_id
+     */
+    public function updateSubQuestionRule($summit_id, $question_id, $rule_id){
+        try{
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonPayload(SubQuestionRuleValidationRulesFactory::build([], true));
+
+            $sub_question_rule = $this->service->updateSubQuestionRule($summit, intval($question_id), intval($rule_id), $payload);
+            return $this->updated
+            (
+                SerializerRegistry::getInstance()
+                    ->getSerializer($sub_question_rule)
+                    ->serialize
+                    (
+                        self::getExpands(),
+                        self::getRelations(),
+                        self::getFields()
+                    )
+            );
+        }
+        catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message'=> $ex2->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $question_id
+     * @param $rule_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getSubQuestionRule($summit_id, $question_id, $rule_id){
+        try{
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $question = $summit->getOrderExtraQuestionById(intval($question_id));
+            if (is_null($question)) return $this->error404();
+
+            $sub_question_rule = $question->getSubQuestionRulesById(intval($rule_id));
+            if (is_null($sub_question_rule)) return $this->error404();
+
+            return $this->ok
+            (
+                SerializerRegistry::getInstance()
+                    ->getSerializer($sub_question_rule)
+                    ->serialize
+                    (
+                        self::getExpands(),
+                        self::getRelations(),
+                        self::getFields()
+                    )
+            );
+        }
+        catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return $this->error412(array($ex1->getMessage()));
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(array('message'=> $ex2->getMessage()));
+        }
+        catch (Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $question_id
+     * @param $rule_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function deleteSubQuestionRule($summit_id, $question_id, $rule_id){
+        try{
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $this->service->deleteSubQuestionRule($summit, intval($question_id), intval($rule_id));
+            return $this->deleted();
         }
         catch (ValidationException $ex1) {
             Log::warning($ex1);

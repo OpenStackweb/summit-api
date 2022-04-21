@@ -1702,6 +1702,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
+
             // order-extra-questions
             [
                 'name' => 'get-order-extra-questions',
@@ -1829,6 +1830,74 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'DELETE',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            // sub question rules
+            [
+                'name' => 'get-sub-question-rules',
+                'route' => '/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-sub-question-rule',
+                'route' => '/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'update-sub-question-rule',
+                'route' => '/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules/{rule_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-sub-question-rule',
+                'route' => '/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules/{rule_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'get-sub-question-rule',
+                'route' => '/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules/{rule_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,

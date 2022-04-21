@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
@@ -85,11 +86,33 @@ abstract class ExtraQuestionAnswer extends SilverstripeBaseModel
     }
 
     /**
-     * @param string $value
+     * @param string|array $value
+     * @throws ValidationException
      */
-    public function setValue(string $value): void
+    public function setValue($value): void
     {
-        $this->value = $value;
+        if(is_null($this->question)){
+            throw new ValidationException("Question is not set.");
+        }
+
+        $res = $value;
+        if(is_array($res))
+        {
+            $res = implode(ExtraQuestionTypeConstants::AnswerCharDelimiter, $value);
+        }
+
+        if($this->question->allowsValues() && $this->question->getMaxSelectedValues() > 0 && $this->question->getMaxSelectedValues() < count(explode(ExtraQuestionTypeConstants::AnswerCharDelimiter, $value)))
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "You can select a Max. of %s values for Question %s.",
+                    $this->question->getMaxSelectedValues(),
+                    $this->question->getId()
+                )
+            );
+
+        $this->value = $res;
     }
 
     public function __toString():string
@@ -99,5 +122,14 @@ abstract class ExtraQuestionAnswer extends SilverstripeBaseModel
             $value = $this->question->getNiceValue($value);
         }
         return sprintf("%s : %s", strip_tags($this->question->getLabel()), $value);
+    }
+
+    /**
+     * @param string $val
+     * @return bool
+     */
+    public function contains(string $val):bool{
+        if(!$this->question->allowsValues()) return false;
+        return in_array($val, explode(ExtraQuestionTypeConstants::AnswerCharDelimiter, $this->value));
     }
 }

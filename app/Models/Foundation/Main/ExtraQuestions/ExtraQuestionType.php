@@ -12,10 +12,13 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\ExtraQuestions\ExtraQuestionAnswerSet;
+use App\Models\Foundation\Main\ExtraQuestions\SubQuestionRule;
 use App\Models\Foundation\Main\IOrderable;
 use App\Models\Foundation\Main\OrderableChilds;
 use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -73,10 +76,29 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
     protected $placeholder;
 
     /**
-     * @ORM\OneToMany(targetEntity="ExtraQuestionTypeValue", mappedBy="question", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\Column(name="`MaxSelectedValues`", type="integer")
+     * @var int
+     */
+    protected $max_selected_values;
+
+    /**
+     * @ORM\OneToMany(targetEntity="ExtraQuestionTypeValue", mappedBy="question", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var ExtraQuestionTypeValue[]
      */
     protected $values;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Main\ExtraQuestions\SubQuestionRule", mappedBy="parent_question", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var SubQuestionRule[]
+     */
+    protected $sub_question_rules;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Main\ExtraQuestions\SubQuestionRule", mappedBy="sub_question", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var SubQuestionRule[]
+     */
+    protected $parent_rules;
+
 
     public function __construct()
     {
@@ -84,8 +106,17 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
         $this->values = new ArrayCollection();
         $this->mandatory = false;
         $this->order = 1;
+        $this->sub_question_rules = new ArrayCollection();
+        $this->parent_rules = new ArrayCollection();
+        // zero means no limit
+        $this->max_selected_values = 0;
     }
 
+    public function getClass():string{
+        if($this->parent_rules->count() > 0)
+            return ExtraQuestionTypeConstants::QuestionClassSubQuestion;
+        return ExtraQuestionTypeConstants::QuestionClassMain;
+    }
     /**
      * @return string
      */
@@ -335,4 +366,134 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
     }
 
     const QuestionChoicesCharSeparator = ',';
+
+    /**
+     * @return SubQuestionRule[]
+     */
+    public function getSubQuestionRules()
+    {
+        return $this->sub_question_rules;
+    }
+
+    public function addSubQuestionRule(SubQuestionRule $rule):void{
+        if($this->sub_question_rules->contains($rule)) return;
+        $this->sub_question_rules->add($rule);
+        $rule->setParentQuestion($this);
+    }
+
+    public function removeSubQuestionRule(SubQuestionRule $rule):void{
+        if(!$this->sub_question_rules->contains($rule)) return;
+        $this->sub_question_rules->removeElement($rule);
+        $rule->clearParentQuestion();
+    }
+
+    /**
+     * @param int $ruleId
+     * @return SubQuestionRule|null
+     */
+    public function getSubQuestionRulesById(int $ruleId):?SubQuestionRule{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $ruleId));
+        $rule = $this->sub_question_rules->matching($criteria)->first();
+        return $rule === false ? null : $rule;
+    }
+
+    /**
+     * @return SubQuestionRule[]
+     */
+    public function getParentRules()
+    {
+        return $this->parent_rules;
+    }
+
+    /**
+     * @param SubQuestionRule $rule
+     */
+    public function addParentRule(SubQuestionRule $rule):void{
+        if($this->parent_rules->contains($rule)) return;
+        $this->parent_rules->add($rule);
+        $rule->setSubQuestion($this);
+    }
+
+    /**
+     * @param SubQuestionRule $rule
+     */
+    public function removeParentRule(SubQuestionRule $rule):void{
+        if(!$this->parent_rules->contains($rule)) return;
+        $this->parent_rules->removeElement($rule);
+        $rule->clearSubQuestion();
+    }
+
+    /**
+     * @return int
+     */
+    public function getMaxSelectedValues(): int
+    {
+        return $this->max_selected_values;
+    }
+
+    /**
+     * @param int $max_selected_values
+     */
+    public function setMaxSelectedValues(int $max_selected_values): void
+    {
+        $this->max_selected_values = $max_selected_values;
+    }
+
+    /**
+     * @param ExtraQuestionAnswerSet $answers
+     * @return bool
+     * @throws ValidationException
+     */
+    public function isAnswered(ExtraQuestionAnswerSet $answers):bool{
+        $answer = $answers->getAnswerFor($this);
+        // root question
+        if($this->getClass() === ExtraQuestionTypeConstants::QuestionClassMain){
+            if(!$this->isMandatory()) return true;
+
+            if(is_null($answer)) return false;
+            if(!$answer->hasValue()) return false;
+            $value = $answer->getValue();
+
+            if ($this->allowsValues() && !$this->allowValue($value)) {
+                Log::warning(sprintf("value %s is not allowed for question %s", $value, $this->getName()));
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "The answer you provided (%s) for question '%s' (%s) is invalid",
+                        $value,
+                        $this->getName(),
+                        $this->getId()
+                    )
+                );
+            }
+
+           return true;
+        }
+        // has parent rules , verify those ( its a sub question )
+        foreach ($this->parent_rules as $parent_rule){
+            if(!$parent_rule->isSubQuestionVisible($answers->getAnswerFor($parent_rule->getParentQuestion())))
+                continue;
+            if(!$this->isMandatory()) return true;
+            if(is_null($answer)) return false;
+            if(!$answer->hasValue()) return false;
+            $value = $answer->getValue();
+            if ($this->allowsValues() && !$this->allowValue($value)) {
+                Log::warning(sprintf("value %s is not allowed for question %s", $value, $this->getName()));
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "The answer you provided (%s) for question '%s' (%s) is invalid",
+                        $value,
+                        $this->getName(),
+                        $this->getId()
+                    )
+                );
+            }
+            return true;
+        }
+        return true;
+    }
 }

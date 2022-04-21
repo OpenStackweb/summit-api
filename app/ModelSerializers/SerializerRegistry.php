@@ -162,6 +162,7 @@ final class SerializerRegistry
 
         // extra questions base
         $this->registry['ExtraQuestionTypeValue'] = ExtraQuestionTypeValueSerializer::class;
+        $this->registry['SubQuestionRule'] = SubQuestionRuleSerializer::class;
         // metrics
 
         $this->registry['SummitMetric'] = SummitMetricSerializer::class;

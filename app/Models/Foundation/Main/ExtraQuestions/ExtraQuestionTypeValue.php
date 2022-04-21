@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\IOrderable;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
@@ -23,6 +24,15 @@ use Doctrine\ORM\Mapping AS ORM;
 class ExtraQuestionTypeValue extends SilverstripeBaseModel
 implements IOrderable
 {
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getQuestionId' => 'question',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasQuestion' => 'question',
+    ];
     /**
      * @ORM\Column(name="Label", type="string")
      * @var string
@@ -117,17 +127,4 @@ implements IOrderable
         parent::__construct();
         $this->order = 1;
     }
-
-    /**
-     * @return int
-     */
-    public function getQuestionId():int{
-        try {
-            return is_null($this->question) ? 0 : $this->question->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
 }

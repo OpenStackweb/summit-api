@@ -948,11 +948,24 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@get']);
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@update']);
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@delete']);
+
+                // values
                 Route::group(['prefix' => 'values'], function () {
                     Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@addQuestionValue']);
                     Route::group(['prefix' => '{value_id}'], function () {
                         Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@updateQuestionValue']);
                         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@deleteQuestionValue']);
+                    });
+                });
+
+                // sub questions
+                Route::group(['prefix' => 'sub-question-rules'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getSubQuestionRules']);
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@addSubQuestionRule']);
+                    Route::group(['prefix' => '{rule_id}'], function () {
+                        Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getSubQuestionRule']);
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@updateSubQuestionRule']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@deleteSubQuestionRule']);
                     });
                 });
             });

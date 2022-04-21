@@ -380,7 +380,7 @@ abstract class AbstractSerializer implements IModelSerializer
         if (!empty($expand) && count($mappings) > 0) {
             $exp_expand = explode(',', $expand);
             foreach ($exp_expand as $relation) {
-                $relation = trim($relation);
+                $relation = ltrim(trim($relation),'*');
                 $serializerSpec = $mappings[$relation] ?? null;
                 if (is_null($serializerSpec)) continue;
                 $serializerClass = $serializerSpec['type'] ?? null;
@@ -390,8 +390,9 @@ abstract class AbstractSerializer implements IModelSerializer
                 $getter = $serializerSpec['getter'] ?? null;
                 if(empty($getter)) continue;
                 $has = $serializerSpec['has'] ?? null;
+                $test_rule = $serializerSpec['test_rule'] ?? null;
                 $serializer_type = $serializerSpec['serializer_type'] ?? SerializerRegistry::SerializerType_Public;
-                $serializer = new $serializerClass($original_attribute, $attribute, $getter, $has, $serializer_type);
+                $serializer = new $serializerClass($original_attribute, $attribute, $getter, $has, $serializer_type, $test_rule);
                 $values = $serializer->serialize($this->object, $values, $expand, $fields, $relations, $params);
             }
         }
@@ -409,6 +410,7 @@ abstract class AbstractSerializer implements IModelSerializer
         if(empty($expand_str)) return '';
         $expand_to = explode(',', $expand_str);
         $filtered_expand = array_filter($expand_to, function ($element) use ($prefix) {
+            if(str_starts_with($element, '*')) return true;
             return preg_match('/^' . preg_quote($prefix, '/') . '\./', strtolower(trim($element))) > 0;
         });
         $res = '';

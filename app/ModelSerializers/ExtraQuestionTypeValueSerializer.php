@@ -1,4 +1,6 @@
 <?php namespace ModelSerializers;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
+
 /**
  * Copyright 2019 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,5 +25,14 @@ class ExtraQuestionTypeValueSerializer extends SilverStripeSerializer
         'Value'      => 'value:json_string',
         'Order'      => 'order:json_int',
         'QuestionId' => 'question_id:json_int',
+    ];
+
+    protected static $expand_mappings = [
+        'question' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'question_id',
+            'getter' => 'getQuestion',
+            'has' => 'hasQuestion'
+        ],
     ];
 }

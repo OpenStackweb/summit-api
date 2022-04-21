@@ -116,57 +116,9 @@ final class SummitAttendeeFactory
         $extra_questions = $payload['extra_questions'] ?? [];
 
         if (count($extra_questions)) {
-            // only check if question are populated
-            $mandatory_questions = $summit->getMandatoryOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
-            if (count($extra_questions) < $mandatory_questions->count()) {
+            $res = $attendee->hadCompletedExtraQuestions($extra_questions);
+            if (!$res) {
                 throw new ValidationException("You neglected to fill in all mandatory questions for the attendee.");
-            }
-            $questions = $summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
-            if ($questions->count() > 0) {
-                // save former answers ...
-                $formerAnswers = [];
-                foreach($attendee->getExtraQuestionAnswers() as $answer){
-                    $formerAnswers[$answer->getQuestion()->getName()] = $answer->getValue();
-                }
-
-                $attendee->clearExtraQuestionAnswers();
-                foreach ($questions as $question) {
-                    if (!$question instanceof SummitOrderExtraQuestionType) continue;
-                    foreach ($extra_questions as $question_answer) {
-                        if (intval($question_answer['question_id']) == $question->getId()) {
-                            $value = trim($question_answer['answer']);
-                            $formerValue = $formerAnswers[$question->getName()] ?? null;
-                            // check if we are allowed to change the answers that we already did ( bypass only if we are admin)
-                            if(!$currentUserIsAdmin && !empty($formerValue) && $formerValue != $value && !$summit->isAllowUpdateAttendeeExtraQuestions()){
-                                throw new ValidationException(sprintf("Answer can not be changed by this time. Original answer is %s.", $formerValue));
-                            }
-
-                            if (empty($value) && $question->isMandatory())
-                                throw new ValidationException(sprintf('Question "%s" is mandatory', $question->getLabel()));
-
-                            if ($question->allowsValues() && !$question->allowValue($value)) {
-                                Log::warning(sprintf("value %s is not allowed for question %s", $value, $question->getName()));
-                                throw new ValidationException
-                                (
-                                    sprintf
-                                    (
-                                        "The answer you provided (%s) for question '%s' (%s) is invalid",
-                                        $value,
-                                        $question->getName(),
-                                        $question->getId()
-                                    )
-                                );
-                            }
-
-                            $answer = new SummitOrderExtraQuestionAnswer();
-                            $answer->setQuestion($question);
-                            $attendee->addExtraQuestionAnswer($answer);
-                            $answer->setValue($value);
-
-                            break;
-                        }
-                    }
-                }
             }
         }
 

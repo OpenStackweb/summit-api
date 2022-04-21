@@ -3980,6 +3980,28 @@ SQL;
 
     /**
      * @param string $usage
+     * @return array
+     */
+    public function getMainOrderExtraQuestionsByUsage(string $usage):array
+    {
+        $dql = <<<DQL
+SELECT q from models\summit\SummitOrderExtraQuestionType q 
+JOIN q.summit s 
+WHERE s.id = :summit_id
+AND ( q.usage = :usage1 OR q.usage = :usage2 )
+AND not exists (select r from App\Models\Foundation\Main\ExtraQuestions\SubQuestionRule r where r.sub_question = q)
+DQL;
+
+        $query = $this->createQuery($dql);
+        return $query
+            ->setParameter('summit_id', $this->getIdentifier())
+            ->setParameter('usage1', $usage)
+            ->setParameter('usage2', SummitOrderExtraQuestionTypeConstants::BothQuestionUsage)
+            ->getResult();
+    }
+
+    /**
+     * @param string $usage
      * @return ArrayCollection|\Doctrine\Common\Collections\Collection
      */
     public function getOrderExtraQuestionsByUsage(string $usage)

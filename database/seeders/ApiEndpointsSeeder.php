@@ -2325,6 +2325,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/me',
                 'http_method' => 'GET',
                 'scopes' => [
+                    sprintf(SummitScopes::ReadMySpeakersData, $current_realm),
                     sprintf(SummitScopes::ReadSummitData, $current_realm),
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm)
                 ],

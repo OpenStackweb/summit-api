@@ -341,7 +341,7 @@ final class DoctrineSummitRepository
         $query_count = <<<SQL
 SELECT COUNT(DISTINCT(ID)) AS QTY
 FROM (
-	SELECT C.ID, C.Name
+	SELECT C.*
 	FROM Summit_RegistrationCompanies SC
 	INNER JOIN Company C ON SC.CompanyID = C.ID AND SC.SummitID = {$summit->getId()}	
 )
@@ -362,7 +362,7 @@ SQL;
         $query = <<<SQL
 SELECT *
 FROM (
-	SELECT C.ID, C.Name
+	SELECT C.*
     FROM Summit_RegistrationCompanies SC
 	INNER JOIN Company C ON SC.CompanyID = C.ID AND SC.SummitID = {$summit->getId()}	
 )

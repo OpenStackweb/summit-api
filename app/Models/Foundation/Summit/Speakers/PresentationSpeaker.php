@@ -278,7 +278,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
      */
     public function getTitle()
     {
-        return $this->title;
+        return html_entity_decode($this->title);
     }
 
     /**

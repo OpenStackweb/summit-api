@@ -3367,6 +3367,10 @@ final class SummitService extends AbstractService implements ISummitService
             if (is_null($summit) || !$summit instanceof Summit)
                 throw new EntityNotFoundException("summit not found");
 
+            $company = $summit->getRegistrationCompanyById($company_id);
+            if (!is_null($company))
+                throw new ValidationException(sprintf("summit %s already has a company with id %s.", $summit_id, $company_id));
+
             $company = $this->company_repository->getById($company_id);
             if (is_null($company) || !$company instanceof Company)
                 throw new EntityNotFoundException("company not found");

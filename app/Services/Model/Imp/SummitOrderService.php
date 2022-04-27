@@ -142,6 +142,23 @@ final class Saga
 }
 
 /**
+ * Class TaskUtils
+ * @package App\Services\Model
+ */
+final class TaskUtils
+{
+    public static function getOwnerCompanyName($summit, $payload): ?string {
+
+        $owner_company_id = $payload['owner_company_id'] ?? null;
+        if (!is_null($owner_company_id)) {
+            $company = $summit->getRegistrationCompanyById(intval($owner_company_id));
+            return !is_null($company) ? $company->getName() : null;
+        }
+        return $payload['owner_company'] ?? null;
+    }
+}
+
+/**
  * Class ReserveOrderTask
  * @package App\Services\Model
  */
@@ -235,7 +252,7 @@ final class ReserveOrderTask extends AbstractTask
             $owner_email = $this->payload['owner_email'];
             $owner_first_name = $this->payload['owner_first_name'];
             $owner_last_name = $this->payload['owner_last_name'];
-            $owner_company = $this->payload['owner_company'] ?? null;
+            $owner_company_name = TaskUtils::getOwnerCompanyName($this->summit, $this->payload);
             $tickets = $this->payload['tickets'];
 
             if (!is_null($this->owner) && strtolower($this->owner->getEmail()) != strtolower($owner_email)) {
@@ -251,7 +268,7 @@ final class ReserveOrderTask extends AbstractTask
                 throw new ValidationException(sprintf("Payment configuration is not set for summit %s", $this->summit->getId()));
             }
 
-            Log::info(sprintf("ReserveOrderTask::run - email %s first_name %s last_name %s company %s", $owner_email, $owner_first_name, $owner_last_name, $owner_company));
+            Log::info(sprintf("ReserveOrderTask::run - email %s first_name %s last_name %s company %s", $owner_email, $owner_first_name, $owner_last_name, $owner_company_name));
             $order = SummitOrderFactory::build($this->summit, $this->payload);
 
             $order->generateNumber();
@@ -281,7 +298,7 @@ final class ReserveOrderTask extends AbstractTask
                 // if attendee is order owner , and company is null , set the company order
                 if (!empty($attendee_email) && $attendee_email == $owner_email) {
                     if (empty($attendee_company))
-                        $attendee_company = $owner_company;
+                        $attendee_company = $owner_company_name;
                     if (empty($attendee_first_name))
                         $attendee_first_name = $owner_first_name;
                     if (empty($attendee_last_name))
@@ -475,11 +492,11 @@ final class ApplyPromoCodeTask extends AbstractTask
         $this->formerState = $formerState;
         $promo_codes_usage = $this->formerState['promo_codes_usage'];
         $owner_email = $this->payload['owner_email'];
-        $owner_company = $this->payload['owner_company'] ?? null;
+        $owner_company_name = TaskUtils::getOwnerCompanyName($this->summit, $this->payload);
 
         foreach ($promo_codes_usage as $promo_code_value => $info) {
 
-            $this->tx_service->transaction(function () use ($owner_email, $owner_company, $promo_code_value, $info) {
+            $this->tx_service->transaction(function () use ($owner_email, $owner_company_name, $promo_code_value, $info) {
 
                 $promo_code = $this->promo_code_repository->getByValueExclusiveLock($this->summit, $promo_code_value);
 
@@ -493,7 +510,7 @@ final class ApplyPromoCodeTask extends AbstractTask
 
                 $qty = $info['qty'];
 
-                $promo_code->checkSubject($owner_email, $owner_company);
+                $promo_code->checkSubject($owner_email, $owner_company_name);
 
                 if (!$promo_code->canUse()) {
                     throw new ValidationException(sprintf('The Promo Code “%s” is not a valid code.', $promo_code->getCode()));
@@ -1418,7 +1435,7 @@ final class SummitOrderService
                         $ownerEmail,
                         $order->getOwnerFirstName(),
                         $order->getOwnerSurname(),
-                        $order->getOwnerCompany()
+                        $order->getOwnerCompanyName()
                     ));
 
                     return $order;
@@ -3640,7 +3657,7 @@ final class SummitOrderService
                             $ownerEmail,
                             $order->getOwnerFirstName(),
                             $order->getOwnerSurname(),
-                            $order->getOwnerCompany()
+                            $order->getOwnerCompanyName()
                         ));
                     }
 

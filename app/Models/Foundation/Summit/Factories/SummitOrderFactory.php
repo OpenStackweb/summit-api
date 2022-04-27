@@ -13,6 +13,7 @@
  **/
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
+use models\main\Company;
 use models\summit\Summit;
 use models\summit\SummitOrder;
 use models\summit\SummitOrderExtraQuestionAnswer;
@@ -60,7 +61,18 @@ final class SummitOrderFactory
             $order->setOwnerEmail(trim($payload['owner_email']));
 
         if (isset($payload['owner_company']) && !is_null($payload['owner_company']))
-            $order->setOwnerCompany(trim($payload['owner_company']));
+            $order->setOwnerCompanyName(trim($payload['owner_company']));
+
+        if (isset($payload['owner_company_id']) && !is_null($payload['owner_company_id'])) {
+            $ownerCompanyId = intval($payload['owner_company_id']);
+            $company = $summit->getRegistrationCompanyById($ownerCompanyId);
+            if (is_null($company)) {
+                throw new ValidationException(sprintf('Owner company with id %d not found as a registered company for summit %d',
+                    $ownerCompanyId, $summit->getId()));
+            }
+            $order->setOwnerCompany($company);
+            $order->setOwnerCompanyName($company->getName());
+        }
 
         if (isset($payload['billing_address_1']) && !is_null($payload['billing_address_1']))
             $order->setBillingAddress1(trim($payload['billing_address_1']));

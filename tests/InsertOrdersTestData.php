@@ -97,7 +97,7 @@ trait InsertOrdersTestData
             $order->setBillingAddress1(sprintf( "ADDRESS %s", $i));
             $order->setBillingAddress2(sprintf("ADDRESS 2 %s", $i));
             $order->setNumber(sprintf("ORDER NBR %s", $i));
-            $order->setOwnerCompany(sprintf("COMPANY %s", $i));
+            $order->setOwnerCompanyName(sprintf("COMPANY %s", $i));
             $order->setOwnerFirstName(sprintf("FNAME %s", $i));
             $order->setOwnerSurname(sprintf("LNAME %s", $i));
             $order->setOwnerEmail(sprintf("test+%s@test.com", $i));

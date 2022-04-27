@@ -11,10 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\App;
 use models\summit\PaymentGatewayProfileFactory;
 use models\summit\IPaymentConstants;
 use App\Models\Foundation\Summit\Factories\SummitTicketTypeFactory;
 use App\Models\Foundation\Summit\Factories\SummitBadgeTypeFactory;
+use services\model\ISummitService;
+
 /**
  * Class OAuth2SummitOrdersApiTest
  */
@@ -305,17 +309,26 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
     public function testReserveWithSummit(){
 
         $res = memory_get_peak_usage(true);
+
+        $summitId = self::$summit->getId();
+        $companyId = 5;
+
+        $service = App::make(ISummitService::class);
+        $service->addCompany($summitId, $companyId);
+        $company = self::$summit->getRegistrationCompanyById($companyId);
+
         $params = [
-            'id' => 36,
+            'id' => $summitId,
         ];
 
         $data = [
-            "owner_email" => "smarcet@gmail.com",
-            "owner_first_name" => "Sebastian",
-            "owner_last_name" => "Marcet",
-            "owner_company"=>"Pumant",
+            "owner_email"       => "smarcet@gmail.com",
+            "owner_first_name"  => "Sebastian",
+            "owner_last_name"   => "Marcet",
+            "owner_company"     => $company->getName(),
+            "owner_company_id"  => $company->getId(),
             "tickets" => [
-                ["type_id" => 51],
+                ["type_id" => self::$ticketType->getId()],
             ]
         ];
 

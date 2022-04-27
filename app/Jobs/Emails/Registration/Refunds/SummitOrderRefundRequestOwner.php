@@ -41,7 +41,7 @@ class SummitOrderRefundRequestOwner extends AbstractEmailJob
         $payload['owner_full_name'] = $order->getOwnerFullName();
         $payload['owner_first_name'] = $order->getOwnerFirstName();
         $payload['owner_full_name'] = $order->getOwnerFullName();
-        $payload['owner_company'] = $order->getOwnerCompany();
+        $payload['owner_company'] = $order->getOwnerCompanyName();
         $payload['owner_email'] = $order->getOwnerEmail();
         $payload['order_number'] = $order->getNumber();
         $payload['summit_name'] = $summit->getName();

@@ -62,6 +62,7 @@ final class DoctrineSummitTrackRepository
             'code'  => 't.code',
             'name'  => 't.title',
             'id'    => 't.id',
+            'order' => 't.order',
         ];
     }
 

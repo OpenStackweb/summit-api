@@ -201,6 +201,10 @@ final class SummitTrackService
                     Log::debug(sprintf("SummitTrackService::UpdateTrack %s added access level %s", $track_id, $access_level_id));
                 }
             }
+            if (isset($data['order']) && intval($data['order']) != $track->getOrder()) {
+                // request to update order
+                $summit->recalculateTrackOrder($track, intval($data['order']));
+            }
 
             Event::dispatch(new TrackUpdated($track->getSummitId(), $track->getId()));
 
@@ -283,6 +287,7 @@ final class SummitTrackService
                     'lightning_alternate_count' => $track_2_copy->getLightningAlternateCount(),
                     'voting_visible'            => $track_2_copy->isVotingVisible(),
                     'chair_visible'             => $track_2_copy->isChairVisible(),
+                    'order'                     => $track_2_copy->getOrder(),
                 ];
 
                 $new_track = PresentationCategoryFactory::build($to_summit, $data);

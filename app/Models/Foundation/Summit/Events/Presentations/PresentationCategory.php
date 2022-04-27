@@ -12,8 +12,6 @@
  * limitations under the License.
  **/
 use Doctrine\ORM\Mapping AS ORM;
-use Doctrine\ORM\Event\PreUpdateEventArgs;
-use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplate;
 use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Log;
@@ -23,6 +21,7 @@ use models\main\Member;
 use models\main\Tag;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
+use App\Models\Foundation\Main\IOrderable;
 /**
  * Class PresentationCategory
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitTrackRepository")
@@ -36,6 +35,7 @@ use Doctrine\Common\Collections\ArrayCollection;
  * @package models\summit
  */
 class PresentationCategory extends SilverstripeBaseModel
+    implements IOrderable
 {
 
     use SummitOwned;
@@ -99,6 +99,12 @@ class PresentationCategory extends SilverstripeBaseModel
      * @var boolean
      */
     private $chair_visible;
+
+    /**
+     * @ORM\Column(name="`Order`", type="integer")
+     * @var int
+     */
+    protected $order;
 
     /**
      * @ORM\ManyToMany(targetEntity="models\summit\SummitAccessLevelType", fetch="EXTRA_LAZY")
@@ -282,6 +288,7 @@ class PresentationCategory extends SilverstripeBaseModel
         $this->lightning_count           = 0;
         $this->chair_visible             = false;
         $this->voting_visible            = false;
+        $this->order = 0;
     }
 
     /**
@@ -734,4 +741,21 @@ SQL;
     public function getAllowedAccessLevelsIds():array{
         return $this->allowed_access_levels->map(function($al){ return $al->getId();})->toArray();
     }
+
+    /**
+     * @return int
+     */
+    public function getOrder(): int
+    {
+        return $this->order;
+    }
+
+    /**
+     * @param int $order
+     */
+    public function setOrder($order): void
+    {
+        $this->order = $order;
+    }
+
 }

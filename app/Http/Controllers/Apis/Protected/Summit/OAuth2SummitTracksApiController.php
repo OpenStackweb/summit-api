@@ -135,7 +135,8 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
 
                     'id',
                     'code',
-                    'name'
+                    'name',
+                    'order',
                 ]);
             }
 
@@ -234,7 +235,8 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
 
                     'id',
                     'code',
-                    'title'
+                    'title',
+                    'order',
                 ]);
             }
 
@@ -463,6 +465,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                 'chair_visible'             => 'sometimes|boolean',
                 'allowed_tags'              => 'sometimes|string_array',
                 'allowed_access_levels'     => 'sometimes|int_array',
+                'order'                     => 'sometimes|integer|min:1',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -564,6 +567,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                 'chair_visible'             => 'sometimes|boolean',
                 'allowed_tags'              => 'sometimes|string_array',
                 'allowed_access_levels'     => 'sometimes|int_array',
+                'order'                     => 'sometimes|integer|min:1',
             ];
 
             // Creates a Validator instance and validates the data.

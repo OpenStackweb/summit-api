@@ -249,22 +249,196 @@ final class OAuth2TracksApiTest extends ProtectedApiTest
     /**
      * @return mixed
      */
-    public function testUpdateTrack(){
-
+    public function testAdd3Track(){
         $params = [
             'id'       => self::$summit->getId(),
-            'track_id' => self::$defaultTrack->getId()
-        ];
-
-        $name       = str_random(16).'_track';
-        $data = [
-            'description' => 'test desc updated',
-            'code'        => 'SMX' ,
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
             "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $name       = str_random(16).'_track';
+        $data = [
+            'name'       => $name,
+            'description' => 'test desc',
+            'code'        => 'CDB1',
+            'allowed_tags' => ['101','Case Study', 'Demo'],
+        ];
+
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitTracksApiController@addTrackBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $track1 = json_decode($content);
+        $this->assertTrue(!is_null($track1));
+        $this->assertTrue($track1->order > 0);
+
+        $name       = str_random(16).'_track';
+        $data = [
+            'name'       => $name,
+            'description' => 'test desc',
+            'code'        => 'CDB2',
+            'allowed_tags' => ['101','Case Study', 'Demo'],
+        ];
+
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitTracksApiController@addTrackBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $track2 = json_decode($content);
+        $this->assertTrue(!is_null($track2));
+        $this->assertTrue($track2->order > 0 && $track1->order < $track2->order);
+
+        $name       = str_random(16).'_track';
+        $data = [
+            'name'       => $name,
+            'description' => 'test desc',
+            'code'        => 'CDB3',
+            'allowed_tags' => ['101','Case Study', 'Demo'],
+        ];
+
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitTracksApiController@addTrackBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $track3 = json_decode($content);
+        $this->assertTrue(!is_null($track3));
+        $this->assertTrue($track3->order > 0 && $track2->order < $track3->order);
+    }
+
+
+    /**
+     * @return mixed
+     */
+    public function testUpdateTrack(){
+
+        $params = [
+            'id'       => self::$summit->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $name       = str_random(16).'_track';
+        $data = [
+            'name'       => $name,
+            'description' => 'test desc',
+            'code'        => 'CDB1',
+            'allowed_tags' => ['101','Case Study', 'Demo'],
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitTracksApiController@addTrackBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $track1 = json_decode($content);
+        $this->assertTrue(!is_null($track1));
+        $this->assertTrue($track1->order > 0);
+
+        $name       = str_random(16).'_track';
+        $data = [
+            'name'       => $name,
+            'description' => 'test desc',
+            'code'        => 'CDB2',
+            'allowed_tags' => ['101','Case Study', 'Demo'],
+        ];
+
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitTracksApiController@addTrackBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $track2 = json_decode($content);
+        $this->assertTrue(!is_null($track2));
+        $this->assertTrue($track2->order > 0 && $track1->order < $track2->order);
+
+        $name       = str_random(16).'_track';
+        $data = [
+            'name'       => $name,
+            'description' => 'test desc',
+            'code'        => 'CDB3',
+            'allowed_tags' => ['101','Case Study', 'Demo'],
+        ];
+
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitTracksApiController@addTrackBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $track3 = json_decode($content);
+        $this->assertTrue(!is_null($track3));
+        $this->assertTrue($track3->order > 0 && $track2->order < $track3->order);
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'track_id' => $track3->id
+        ];
+
+        $data = [
+            'description' => 'test desc updated',
+            'code'        => 'SMX' ,
+            'order' => 1
         ];
 
         $response = $this->action(
@@ -280,13 +454,12 @@ final class OAuth2TracksApiTest extends ProtectedApiTest
 
         $content = $response->getContent();
         $this->assertResponseStatus(201);
-        $track = json_decode($content);
-        $this->assertTrue(!is_null($track));
-        $this->assertTrue(!empty($track->description) && $track->description == 'test desc updated');
-        $this->assertTrue(!empty($track->code) && $track->code == 'SMX');
-        return $track;
+        $track3 = json_decode($content);
+        $this->assertTrue(!is_null($track3));
+        $this->assertTrue(!empty($track3->description) && $track3->description == 'test desc updated');
+        $this->assertTrue(!empty($track3->code) && $track3->code == 'SMX');
+        $this->assertTrue($track3->order == 1);
     }
-
 
     public function testDeleteNewTrack(){
 

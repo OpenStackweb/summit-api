@@ -11,9 +11,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Summit\SelectionPlan;
 use Doctrine\ORM\Mapping AS ORM;
 use models\main\File;
 use Doctrine\Common\Collections\ArrayCollection;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitDocumentRepository")
@@ -31,6 +34,15 @@ class SummitDocument extends SilverstripeBaseModel
 {
     use SummitOwned;
 
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getSelectionPlanId' => 'selection_plan',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasSelectionPlan' => 'selection_plan',
+    ];
     /**
      * @ORM\Column(name="Name", type="string")
      * @var string
@@ -54,6 +66,13 @@ class SummitDocument extends SilverstripeBaseModel
      * @var bool
      */
     private $show_always;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan")
+     * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
+     * @var SelectionPlan
+     */
+    private $selection_plan;
 
     /**
      * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist","remove"})
@@ -221,5 +240,24 @@ class SummitDocument extends SilverstripeBaseModel
         }
     }
 
+    /**
+     * @return SelectionPlan|null
+     */
+    public function getSelectionPlan(): ?SelectionPlan
+    {
+        return $this->selection_plan;
+    }
+
+    /**
+     * @param SelectionPlan $selection_plan
+     */
+    public function setSelectionPlan(SelectionPlan $selection_plan): void
+    {
+        $this->selection_plan = $selection_plan;
+    }
+
+    public function clearSelectionPlan():void{
+        $this->selection_plan = null;
+    }
 
 }

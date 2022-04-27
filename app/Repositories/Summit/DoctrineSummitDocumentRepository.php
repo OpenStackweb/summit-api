@@ -38,8 +38,12 @@ implements ISummitDocumentRepository
      * @return QueryBuilder
      */
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+
         $query = $query->join('e.summit', 's')
             ->leftJoin('e.event_types', 'et');
+        if($filter->hasFilter("selection_plan_id")){
+            $query = $query->leftJoin("e.selection_plan", "sp");
+        }
         return $query;
     }
 
@@ -53,6 +57,7 @@ implements ISummitDocumentRepository
             'description' => 'e.description:json_string',
             'label' => 'e.label:json_string',
             'event_type' =>  'et.type:json_string',
+            'selection_plan_id' => 'sp.id',
             'summit_id' => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value")
         ];
     }

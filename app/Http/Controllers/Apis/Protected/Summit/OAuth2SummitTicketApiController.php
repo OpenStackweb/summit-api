@@ -133,6 +133,9 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'id',
                     'number',
                     'status',
+                    'owner_name',
+                    'owner_first_name',
+                    'owner_last_name',
                 ];
             },
             function($filter) use($summit){

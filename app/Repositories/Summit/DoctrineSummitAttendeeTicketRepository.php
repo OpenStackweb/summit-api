@@ -136,6 +136,11 @@ final class DoctrineSummitAttendeeTicketRepository
             'id'     => 'e.id',
             'number' => 'e.number',
             'status' => 'e.status',
+            'owner_first_name'        => 'COALESCE(LOWER(m.first_name), LOWER(a.first_name))',
+            'owner_last_name'         => 'COALESCE(LOWER(m.last_name), LOWER(a.surname))',
+            "owner_name"         => <<<SQL
+COALESCE(LOWER(CONCAT(m.first_name, ' ', m.last_name)), LOWER(CONCAT(a.first_name, ' ', a.surname)))
+SQL,
         ];
     }
 

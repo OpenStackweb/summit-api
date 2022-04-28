@@ -37,6 +37,13 @@ final class DoctrineSummitAttendeeTicketRepository
     implements ISummitAttendeeTicketRepository
 {
 
+    /**
+     * @return string
+     */
+    protected function getBaseEntity()
+    {
+        return SummitAttendeeTicket::class;
+    }
 
     /**
      * @return array
@@ -85,7 +92,20 @@ final class DoctrineSummitAttendeeTicketRepository
                     ),
                 ]
             ),
-            'access_level_type_name' => 'al.name :operator :value'
+            'access_level_type_name' => 'al.name :operator :value',
+            'ticket_type_id' => 'tt.id:json_int',
+            'has_owner' =>  new DoctrineSwitchFilterMapping([
+                    '1' => new DoctrineCaseFilterMapping(
+                        'true',
+                        "e.owner is not null"
+                    ),
+                    '0' => new DoctrineCaseFilterMapping(
+                        'false',
+                        "e.owner is null"
+                    ),
+                ]
+            ),
+            'owner_status' => 'a.status',
         ];
     }
 
@@ -101,6 +121,9 @@ final class DoctrineSummitAttendeeTicketRepository
         $query->leftJoin("b.type","bt");
         $query->leftJoin("bt.access_levels","al");
         $query->leftJoin("a.member","m");
+        if($filter->hasFilter('ticket_type_id')){
+            $query = $query->join("e.ticket_type", "tt");
+        }
         return $query;
     }
 
@@ -162,14 +185,6 @@ final class DoctrineSummitAttendeeTicketRepository
             ->setLockMode(LockMode::PESSIMISTIC_WRITE)
             ->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)
             ->getOneOrNullResult();
-    }
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-       return SummitAttendeeTicket::class;
     }
 
     /**

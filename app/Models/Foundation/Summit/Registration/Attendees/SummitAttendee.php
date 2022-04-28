@@ -44,6 +44,8 @@ class SummitAttendee extends SilverstripeBaseModel
 
     const StatusIncomplete = 'Incomplete';
     const StatusComplete = 'Complete';
+    const AllowedStatus = [self::StatusComplete, self::StatusIncomplete];
+
     /**
      * @ORM\Column(name="FirstName", type="string")
      * @var string

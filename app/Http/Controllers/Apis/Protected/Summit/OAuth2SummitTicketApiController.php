@@ -24,6 +24,7 @@ use models\summit\IOrderConstants;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
+use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitOrderExtraQuestionTypeConstants;
 use models\utils\IEntity;
@@ -100,6 +101,9 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'is_active'           => ['=='],
                     'has_requested_refund_requests' => ['=='],
                     'access_level_type_name' => ['=='],
+                    'ticket_type' => ['=='],
+                    'has_owner' => ['=='],
+                    'owner_status' => ['=='],
                 ];
             },
             function(){
@@ -118,6 +122,9 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'is_active'           => 'sometimes|boolean',
                     'has_requested_refund_requests' => 'sometimes|boolean',
                     'access_level_type_name' => 'sometimes|string',
+                    'ticket_type_id' => 'sometimes|integer',
+                    'has_owner'  => 'sometimes|boolean',
+                    'owner_status' => 'sometimes|string|in:'.implode(',', SummitAttendee::AllowedStatus),
                 ];
             },
             function()

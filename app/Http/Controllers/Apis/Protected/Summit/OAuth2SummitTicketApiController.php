@@ -101,7 +101,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'is_active'           => ['=='],
                     'has_requested_refund_requests' => ['=='],
                     'access_level_type_name' => ['=='],
-                    'ticket_type' => ['=='],
+                    'ticket_type_id' => ['=='],
                     'has_owner' => ['=='],
                     'owner_status' => ['=='],
                 ];

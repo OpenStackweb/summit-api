@@ -5445,6 +5445,8 @@ SQL;
     public function isTrackChair(Member $member, PresentationCategory $category = null): bool
     {
         if ($member->isAdmin()) return true;
+        if($this->isTrackChairAdmin($member)) return true;
+        if($this->isSummitAdmin($member)) return true;
 
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('member', $member));

@@ -91,6 +91,7 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
                 'description'     => 'nullable|string',
                 'event_types'     => 'sometimes|int_array',
                 'show_always'     => 'sometimes|boolean',
+                'selection_plan_id' => 'sometimes|nullable|integer',
             ];
 
             $payload = MultipartFormDataCleaner::cleanBool('show_always', $payload);
@@ -156,6 +157,7 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
                 'description'     => 'nullable|string',
                 'event_types'     => 'sometimes|int_array',
                 'show_always'     => 'sometimes|boolean',
+                'selection_plan_id' => 'sometimes|nullable|integer',
             ];
 
             $payload = MultipartFormDataCleaner::cleanBool('show_always', $payload);
@@ -235,6 +237,7 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
             'description' => ['=@', '=='],
             'label' => ['=@', '=='],
             'event_type' => ['=@', '=='],
+            'selection_plan_id' => ['=='],
         ];
     }
 
@@ -247,6 +250,7 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
             'description' => 'sometimes|required|string',
             'label' => 'sometimes|required|string',
             'event_type' => 'sometimes|required|string',
+            'selection_plan_id' => 'sometimes|required|integer',
         ];
     }
     /**

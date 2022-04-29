@@ -15,6 +15,7 @@ use App\Http\Utils\IFileUploader;
 use App\Models\Foundation\Summit\Factories\SummitDocumentFactory;
 use App\Services\Model\AbstractService;
 use App\Services\Model\ISummitDocumentService;
+use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -106,6 +107,19 @@ final class SummitDocumentService
 
             $document->setFile($attachment);
 
+            if(isset($payload['selection_plan_id'])){
+                $document->clearSelectionPlan();
+                $selection_plan_id = intval($payload['selection_plan_id']);
+                if($selection_plan_id > 0) {
+
+                    $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
+                    if (is_null($selection_plan))
+                        throw new EntityNotFoundException(sprintf("Selection Plan %s not found.", $selection_plan_id));
+
+                    $document->setSelectionPlan($selection_plan);
+                }
+            }
+
             $summit->addSummitDocument($document);
 
             return $document;
@@ -123,6 +137,8 @@ final class SummitDocumentService
     public function updateSummitDocument(Summit $summit, int $document_id, array $payload): SummitDocument
     {
         return $this->tx_service->transaction(function() use($summit, $document_id, $payload){
+
+            Log::debug(sprintf("SummitDocumentService::updateSummitDocument document %s payload %s", $document_id, json_encode($payload) ));
 
             $document = $summit->getSummitDocumentById($document_id);
             if(is_null($document))
@@ -174,6 +190,19 @@ final class SummitDocumentService
                 );
 
                 $document->setFile($attachment);
+            }
+
+            if(isset($payload['selection_plan_id'])){
+                Log::debug(sprintf("SummitDocumentService::updateSummitDocument document %s selection plan id %s", $document_id, $payload['selection_plan_id'] ));
+                $document->clearSelectionPlan();
+                $selection_plan_id = intval($payload['selection_plan_id']);
+                if($selection_plan_id > 0) {
+                    $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
+                    if (is_null($selection_plan))
+                        throw new EntityNotFoundException(sprintf("Selection Plan %s not found.", $selection_plan_id));
+
+                    $document->setSelectionPlan($selection_plan);
+                }
             }
 
             return $document;

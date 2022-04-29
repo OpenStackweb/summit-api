@@ -27,6 +27,7 @@ class SummitDocumentSerializer extends SilverStripeSerializer
         'Label' => 'label:json_string',
         'SummitId' => 'summit_id:json_int',
         'FileUrl' => 'file:json_url',
+        'SelectionPlanId' => 'selection_plan_id:json_int',
     ];
 
     /**
@@ -65,6 +66,13 @@ class SummitDocumentSerializer extends SilverStripeSerializer
                     case 'summit':{
                         unset($values['summit_id']);
                         $values['summit'] = SerializerRegistry::getInstance()->getSerializer($summit_document->getSummit())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                    }
+                        break;
+                    case 'selection_plan':{
+                        if($summit_document->hasSelectionPlan()) {
+                            unset($values['selection_plan_id']);
+                            $values['selection_plan'] = SerializerRegistry::getInstance()->getSerializer($summit_document->getSelectionPlan())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
                     }
                         break;
                 }

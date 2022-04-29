@@ -64,7 +64,7 @@ final class DoctrineSummitOrderRepository
             ->leftJoin('t.owner','to')
             ->leftJoin('to.member', 'tom');
         if($filter->hasFilter("owner_company")){
-            $query = $query->leftJoin("e.company","oc");
+            $query = $query->leftJoin("e.owner_company","oc");
         }
         return $query;
     }

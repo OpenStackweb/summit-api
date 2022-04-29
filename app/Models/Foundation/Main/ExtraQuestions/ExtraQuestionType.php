@@ -16,7 +16,6 @@ use App\Models\Foundation\Main\IOrderable;
 use App\Models\Foundation\Main\OrderableChilds;
 use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;

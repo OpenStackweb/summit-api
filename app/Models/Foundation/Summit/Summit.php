@@ -1557,12 +1557,35 @@ class Summit extends SilverstripeBaseModel
     }
 
     /**
+     * @return int
+     */
+    private function getTrackMaxOrder():int
+    {
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'DESC']);
+        $track = $this->presentation_categories->matching($criteria)->first();
+        return $track === false ? 0 : $track->getOrder();
+    }
+
+    /**
+     * @param PresentationCategory $track
+     * @param int $new_order
+     * @throws ValidationException
+     */
+    public function recalculateTrackOrder(PresentationCategory $track, $new_order)
+    {
+        self::recalculateOrderForSelectable($this->presentation_categories, $track, $new_order);
+    }
+
+    /**
      * @param PresentationCategory $track
      * @return $this
      */
     public function addPresentationCategory(PresentationCategory $track)
     {
         $this->presentation_categories->add($track);
+        $track->setOrder($this->getTrackMaxOrder() + 1);
+
         $track->setSummit($this);
         return $this;
     }

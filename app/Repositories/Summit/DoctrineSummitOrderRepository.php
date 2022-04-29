@@ -42,24 +42,12 @@ final class DoctrineSummitOrderRepository
             'number'             => 'e.number:json_string',
             'summit_id'          =>  new DoctrineFilterMapping("s.id :operator :value"),
             'owner_id'           =>  new DoctrineFilterMapping("o.id :operator :value"),
-            'owner_name'         => [
-                "LOWER(CONCAT(o.first_name, ' ', o.last_name)) :operator :value" ,
-                "LOWER(CONCAT(e.owner_first_name, ' ', e.owner_surname)) :operator :value"
-            ],
-            'owner_email'        => [
-                "o.email :operator :value",
-                "e.owner_email :operator :value"
-            ],
+            'owner_name'         => "COALESCE(LOWER(CONCAT(o.first_name, ' ', o.last_name)), LOWER(CONCAT(e.owner_first_name, ' ', e.owner_surname)))",
+            'owner_email'        => "COALESCE(LOWER(o.email), LOWER(e.owner_email))",
             'owner_company'      => 'e.owner_company:json_string',
             'status'             => 'e.status:json_string',
-            'ticket_owner_name'  => [
-                "LOWER(CONCAT(to.first_name, ' ', to.surname)) :operator :value",
-                "LOWER(CONCAT(tom.first_name, ' ', tom.last_name)) :operator :value"
-            ],
-            'ticket_owner_email' => [
-                "to.email :operator :value",
-                "tom.email :operator :value"
-            ],
+            'ticket_owner_name'  => "COALESCE(LOWER(CONCAT(to.first_name, ' ', to.surname)), LOWER(CONCAT(tom.first_name, ' ', tom.last_name)))",
+            'ticket_owner_email' => "COALESCE(LOWER(to.email), LOWER(tom.email))",
             'ticket_number'      =>  new DoctrineFilterMapping("t.number :operator :value"),
         ];
     }

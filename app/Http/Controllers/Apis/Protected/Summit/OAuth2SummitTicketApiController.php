@@ -706,14 +706,24 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
+            $payload = $this->getJsonPayload([
+                'check_in' => 'sometimes|boolean',
+            ]);
+
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
-            $badge = $this->service->printAttendeeBadge($summit, $ticket_id, $current_member);
+            $badge = $this->service->printAttendeeBadge($summit, $ticket_id, $current_member, $payload);
 
             return $this->updated
             (
-                SerializerRegistry::getInstance()->getSerializer($badge)->serialize( Request::input('expand', ''))
+                SerializerRegistry::getInstance()->getSerializer($badge)
+                    ->serialize
+                    (
+                        self::getExpands(),
+                        self::getFields(),
+                        self::getRelations()
+                    )
             );
 
         } catch (ValidationException $ex) {

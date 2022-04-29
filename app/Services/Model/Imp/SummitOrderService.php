@@ -2437,13 +2437,14 @@ final class SummitOrderService
      * @param Summit $summit
      * @param int|string $ticket_id
      * @param Member $requestor
+     * @param array $payload
      * @return SummitAttendeeBadge
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function printAttendeeBadge(Summit $summit, $ticket_id, Member $requestor): SummitAttendeeBadge
+    public function printAttendeeBadge(Summit $summit, $ticket_id, Member $requestor, array $payload = []): SummitAttendeeBadge
     {
-        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $requestor) {
+        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $requestor, $payload) {
 
             $badge = $this->getAttendeeBadge($summit, $ticket_id, $requestor);
 
@@ -2453,7 +2454,8 @@ final class SummitOrderService
 
             // do checkin on print
             $attendee = $badge->getTicket()->getOwner();
-            if (!$attendee->hasCheckedIn()) {
+            $must_check_in = $payload['check_in'] ?? true;
+            if (boolval($must_check_in) && !$attendee->hasCheckedIn()) {
                 $attendee->setSummitHallCheckedIn(true);
             }
 

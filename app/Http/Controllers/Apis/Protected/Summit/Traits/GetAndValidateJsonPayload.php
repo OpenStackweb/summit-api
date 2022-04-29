@@ -27,7 +27,7 @@ trait GetAndValidateJsonPayload
      */
     public function getJsonPayload(array $validation_rules = []): array{
         if(!Request::isJson()){
-            throw new \InvalidArgumentException("invalid request format");
+            return [];
         }
         $data    = Request::json();
         $payload = $data->all();

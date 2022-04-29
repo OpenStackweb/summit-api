@@ -44,7 +44,7 @@ final class DoctrineSummitOrderRepository
             'owner_id'           =>  new DoctrineFilterMapping("o.id :operator :value"),
             'owner_name'         => "COALESCE(LOWER(CONCAT(o.first_name, ' ', o.last_name)), LOWER(CONCAT(e.owner_first_name, ' ', e.owner_surname)))",
             'owner_email'        => "COALESCE(LOWER(o.email), LOWER(e.owner_email))",
-            'owner_company'      => 'e.owner_company:json_string',
+            'owner_company'      => ['e.owner_company_name:json_string', 'oc.name:json_string'],
             'status'             => 'e.status:json_string',
             'ticket_owner_name'  => "COALESCE(LOWER(CONCAT(to.first_name, ' ', to.surname)), LOWER(CONCAT(tom.first_name, ' ', tom.last_name)))",
             'ticket_owner_email' => "COALESCE(LOWER(to.email), LOWER(tom.email))",
@@ -63,6 +63,9 @@ final class DoctrineSummitOrderRepository
             ->leftJoin('e.owner','o')
             ->leftJoin('t.owner','to')
             ->leftJoin('to.member', 'tom');
+        if($filter->hasFilter("owner_company")){
+            $query = $query->leftJoin("e.company","oc");
+        }
         return $query;
     }
 

@@ -54,16 +54,10 @@ final class DoctrineSummitAttendeeTicketRepository
             'number'              => 'e.number:json_string',
             'is_active'           => 'e.is_active',
             'order_number'        => 'o.number:json_string',
-            'owner_name'          => [
-                "concat(m.first_name, ' ', m.last_name) :operator :value",
-                "concat(a.first_name, ' ', a.surname) :operator :value"
-            ],
+            'owner_name'          => "COALESCE(LOWER(CONCAT(m.first_name, ' ', m.last_name)), LOWER(CONCAT(a.first_name, ' ', a.surname)))",
             'owner_company' => 'a.company_name:json_string',
-            'owner_first_name' => [
-                'm.first_name:json_string',
-                'a.first_name:json_string'
-            ],
-            'owner_last_name'     => ['m.last_name:json_string', 'a.surname:json_string'],
+            'owner_first_name' => "COALESCE(LOWER(m.first_name), LOWER(a.first_name))",
+            'owner_last_name'     =>"COALESCE(LOWER(m.last_name), LOWER(a.surname))",
             'owner_email'         => ['m.email:json_string', 'm.second_email:json_string', 'm.third_email:json_string','a.email:json_string'],
             'summit_id'           => 's.id:json_int',
             'owner_id'            => 'a.id:json_int',
@@ -97,11 +91,22 @@ final class DoctrineSummitAttendeeTicketRepository
             'has_owner' =>  new DoctrineSwitchFilterMapping([
                     '1' => new DoctrineCaseFilterMapping(
                         'true',
-                        "e.owner is not null"
+                        "a is not null"
                     ),
                     '0' => new DoctrineCaseFilterMapping(
                         'false',
-                        "e.owner is null"
+                        "a is null"
+                    ),
+                ]
+            ),
+            'has_badge' =>  new DoctrineSwitchFilterMapping([
+                    '1' => new DoctrineCaseFilterMapping(
+                        'true',
+                        "b is not null"
+                    ),
+                    '0' => new DoctrineCaseFilterMapping(
+                        'false',
+                        "b is null"
                     ),
                 ]
             ),

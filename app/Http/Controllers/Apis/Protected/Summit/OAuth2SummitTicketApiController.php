@@ -104,6 +104,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'ticket_type_id' => ['=='],
                     'has_owner' => ['=='],
                     'owner_status' => ['=='],
+                    'has_badge' => ['=='],
                 ];
             },
             function(){
@@ -125,6 +126,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'ticket_type_id' => 'sometimes|integer',
                     'has_owner'  => 'sometimes|boolean',
                     'owner_status' => 'sometimes|string|in:'.implode(',', SummitAttendee::AllowedStatus),
+                    'has_badge' => 'sometimes|boolean',
                 ];
             },
             function()

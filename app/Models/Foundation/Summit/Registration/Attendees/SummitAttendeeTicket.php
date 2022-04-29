@@ -928,7 +928,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      * @return string
      */
     public function getOwnerFullName():?string{
-        if(is_null($this->owner)) null;
+        if(is_null($this->owner)) return null;
         return $this->owner->getFullName();
     }
 

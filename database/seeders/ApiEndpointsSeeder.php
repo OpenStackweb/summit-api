@@ -7095,12 +7095,6 @@ class ApiEndpointsSeeder extends Seeder
                         sprintf(SummitScopes::ReadAllSummitData, $current_realm),
                         sprintf(SummitScopes::ReadSummitData, $current_realm)
                     ],
-                    'authz_groups' => [
-                        IGroup::SuperAdmins,
-                        IGroup::Administrators,
-                        IGroup::SummitAdministrators,
-                        IGroup::TrackChairsAdmins,
-                    ]
                 ],
                 [
                     'name' => 'add-registration-company',

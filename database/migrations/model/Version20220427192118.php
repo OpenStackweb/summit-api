@@ -30,7 +30,7 @@ final class Version20220427192118 extends AbstractMigration
         if($schema->hasTable("SummitDocument") && !$builder->hasColumn("SummitDocument", "SelectionPlanID")) {
             $builder->table('SummitDocument', function (Table $table) {
                 $table->integer('SelectionPlanID')->setNotnull(false)->setDefault(null);
-                $table->unique("SelectionPlanID", "IDX_SummitDocument_SelectionPlanID");
+                $table->index("SelectionPlanID", "IDX_SummitDocument_SelectionPlanID");
                 $table->foreign("SelectionPlan", "SelectionPlanID", "ID", ["onDelete" => "SET NULL"], 'FK_SummitDocument_SelectionPlan');
             });
         }

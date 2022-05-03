@@ -29,6 +29,7 @@ class SummitOrderBaseSerializer extends SilverStripeSerializer
         'OwnerSurname'      => 'owner_last_name:json_string',
         'OwnerEmail'        => 'owner_email:json_string',
         'OwnerCompanyName'  => 'owner_company:json_string',
+        'CompanyId'         => 'owner_company_id:json_int',
         'OwnerId'           => 'owner_id:json_string',
         'SummitId'          => 'summit_id:json_int',
     ];

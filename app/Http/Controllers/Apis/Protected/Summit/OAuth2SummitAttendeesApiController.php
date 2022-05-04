@@ -372,6 +372,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             'has_member' => ['=='],
             'has_tickets' => ['=='],
             'has_virtual_checkin' => ['=='],
+            'has_checkin' => ['=='],
             'tickets_count' => ['==', '>=', '<=', '>', '<'],
             'presentation_votes_date' => ['==', '>=', '<=', '>', '<'],
             'presentation_votes_count' => ['==', '>=', '<=', '>', '<'],
@@ -420,6 +421,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'has_member' => 'sometimes|required|string|in:true,false',
                     'has_tickets'=> 'sometimes|required|string|in:true,false',
                     'has_virtual_checkin'=> 'sometimes|required|string|in:true,false',
+                    'has_checkin'=> 'sometimes|required|string|in:true,false',
                     'tickets_count' => 'sometimes|integer',
                     'presentation_votes_date' => 'sometimes|date_format:U',
                     'presentation_votes_count' => 'sometimes|integer',
@@ -485,6 +487,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'has_tickets' => ['=='],
                     'tickets_count' => ['==', '>=', '<=', '>', '<'],
                     'has_virtual_checkin' => ['=='],
+                    'has_checkin' => ['=='],
                 ];
             },
             function () {
@@ -504,6 +507,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'has_tickets' => 'sometimes|required|string|in:true,false',
                     'has_virtual_checkin' => 'sometimes|required|string|in:true,false',
                     'tickets_count' => 'sometimes|integer',
+                    'has_checkin' => 'sometimes|required|string|in:true,false',
                 ];
             },
             function () {

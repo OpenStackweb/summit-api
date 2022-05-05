@@ -190,7 +190,7 @@ abstract class ExtraQuestionTypeService
                 (
                     sprintf
                     (
-                        "Rule %s does not belongs to question %s",
+                        "Rule %s does not belongs to question %s.",
                         $rule_id,
                         $parent_id
                     )

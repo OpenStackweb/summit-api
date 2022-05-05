@@ -126,9 +126,12 @@ class SubQuestionRule extends SilverstripeBaseModel
 
     /**
      * @param array|string[] $answer_values
+     * @throws ValidationException
      */
     public function setAnswerValues(array $answer_values): void
     {
+        if(count($answer_values) === 0)
+            throw new ValidationException("answer_values is mandatory.");
         $this->answer_values = implode(',', $answer_values);
     }
     /**

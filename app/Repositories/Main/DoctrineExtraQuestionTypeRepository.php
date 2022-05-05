@@ -14,11 +14,14 @@
 
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\ExtraQuestions\IExtraQuestionTypeRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
+use Doctrine\ORM\QueryBuilder;
 use Illuminate\Support\Facades\Log;
-use models\summit\SummitOrderExtraQuestionType;
-use utils\DoctrineLeftJoinFilterMapping;
+use utils\DoctrineCaseFilterMapping;
+use utils\DoctrineSwitchFilterMapping;
+use utils\Filter;
 
 /**
  * Class DoctrineExtraQuestionTypeRepository
@@ -28,6 +31,15 @@ abstract class DoctrineExtraQuestionTypeRepository
     extends SilverStripeDoctrineRepository
     implements IExtraQuestionTypeRepository
 {
+
+    /**
+     * @param QueryBuilder $query
+     * @return QueryBuilder
+     */
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+        return $query;
+    }
+
     /**
      * @return array
      */
@@ -37,6 +49,17 @@ abstract class DoctrineExtraQuestionTypeRepository
             'name'      => 'e.name:json_string',
             'type'      => 'e.type:json_string',
             'label'     => 'e.label:json_string',
+            'class'    => new DoctrineSwitchFilterMapping([
+                    ExtraQuestionTypeConstants::QuestionClassSubQuestion => new DoctrineCaseFilterMapping(
+                        ExtraQuestionTypeConstants::QuestionClassSubQuestion,
+                        "exists (select pr from App\Models\Foundation\Main\ExtraQuestions\SubQuestionRule pr inner join pr.sub_question sq where sq.id = e.id)"
+                    ),
+                    ExtraQuestionTypeConstants::QuestionClassMain => new DoctrineCaseFilterMapping(
+                        ExtraQuestionTypeConstants::QuestionClassMain,
+                        "not exists (select pr from App\Models\Foundation\Main\ExtraQuestions\SubQuestionRule pr inner join pr.sub_question sq where sq.id = e.id)"
+                    ),
+                ]
+            ),
         ];
     }
 
@@ -80,7 +103,6 @@ abstract class DoctrineExtraQuestionTypeRepository
                 'type' => 'RadioButtonList',
                 'values'  => 'array',
             ],
-
         ];
     }
 

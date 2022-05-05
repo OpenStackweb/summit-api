@@ -17,6 +17,7 @@ use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
 use App\Models\Foundation\Main\IGroup;
 use App\Services\Model\IAttendeeService;
 use Illuminate\Support\Facades\App;
+use LaravelDoctrine\ORM\Facades\EntityManager;
 /**
  * Class AttendeeServiceTest
  */

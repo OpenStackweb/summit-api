@@ -13,12 +13,17 @@
  **/
 
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\ExtraQuestions\IExtraQuestionTypeRepository;
 use App\Models\Foundation\Factories\ExtraQuestionTypeValueFactory;
+use App\Models\Foundation\Main\ExtraQuestions\Factories\SubQuestionRuleFactory;
+use App\Models\Foundation\Main\ExtraQuestions\SubQuestionRule;
 use App\Services\Model\AbstractService;
+use App\Services\Model\IExtraQuestionTypeService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\summit\Summit;
 
 /**
  * Class ExtraQuestionTypeService
@@ -26,6 +31,7 @@ use models\exceptions\ValidationException;
  */
 abstract class ExtraQuestionTypeService
     extends AbstractService
+    implements IExtraQuestionTypeService
 {
     /**
      * @var IExtraQuestionTypeRepository
@@ -127,4 +133,114 @@ abstract class ExtraQuestionTypeService
             $question->removeValue($value);
         });
     }
+
+    /**
+     * @param Summit $summit
+     * @param int $parent_id
+     * @param array $payload
+     * @return SubQuestionRule
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addSubQuestionRule(Summit $summit, int $parent_id, array $payload):SubQuestionRule{
+        return $this->tx_service->transaction(function () use ($summit, $parent_id, $payload) {
+            $sub_question_id = intval($payload['sub_question_id']);
+
+            if($parent_id === $sub_question_id)
+                throw new ValidationException("Parent Question can not be the same as the Sub Question.");
+
+            $parent = $summit->getOrderExtraQuestionById($parent_id);
+            if(is_null($parent))
+                throw new EntityNotFoundException(sprintf("Parent Question %s not found.", $parent_id));
+
+            $subQuestion = $summit->getOrderExtraQuestionById($sub_question_id);
+            if(is_null($subQuestion))
+                throw new EntityNotFoundException(sprintf("Sub Question %s not found.", $parent_id));
+
+            if($subQuestion->getClass() !== ExtraQuestionTypeConstants::QuestionClassMain)
+                throw new ValidationException(sprintf("Question %s is already a Sub Question of another main Question.", $sub_question_id));
+
+            if(!$parent->allowsValues()){
+                throw new ValidationException(sprintf("Parent Question %s does not allows MultiValues.", $parent_id));
+            }
+
+            return SubQuestionRuleFactory::build($parent, $subQuestion, $payload);
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $parent_id
+     * @param int $rule_id
+     * @param array $payload
+     * @return SubQuestionRule
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function updateSubQuestionRule(Summit $summit, int $parent_id, int $rule_id, array $payload):SubQuestionRule{
+        return $this->tx_service->transaction(function () use ($summit, $parent_id, $rule_id, $payload) {
+            $parent = $summit->getOrderExtraQuestionById($parent_id);
+            if(is_null($parent))
+                throw new EntityNotFoundException(sprintf("Parent Question %s not found.", $parent_id));
+
+            $rule = $parent->getSubQuestionRulesById($rule_id);
+
+            if(is_null($rule))
+                throw new EntityNotFoundException
+                (
+                    sprintf
+                    (
+                        "Rule %s does not belongs to question %s",
+                        $rule_id,
+                        $parent_id
+                    )
+                );
+
+            $subQuestion = $rule->getSubQuestion();
+            if(isset($payload['sub_question_id'])){
+                $sub_question_id = intval($payload['sub_question_id']);
+                if($subQuestion->getId() !== $sub_question_id){
+                    $subQuestion = $summit->getOrderExtraQuestionById($sub_question_id);
+                    if(is_null($subQuestion))
+                        throw new EntityNotFoundException(sprintf("Sub Question %s not found.", $sub_question_id));
+                }
+            }
+
+            return SubQuestionRuleFactory::populate($rule, $parent, $subQuestion, $payload);
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $parent_id
+     * @param int $rule_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function deleteSubQuestionRule(Summit $summit, int $parent_id, int $rule_id):void{
+         $this->tx_service->transaction(function () use ($summit, $parent_id, $rule_id) {
+             $parent = $summit->getOrderExtraQuestionById($parent_id);
+             if(is_null($parent))
+                 throw new EntityNotFoundException(sprintf("Parent Question %s not found.", $parent_id));
+
+             $rule = $parent->getSubQuestionRulesById($rule_id);
+
+             if(is_null($rule))
+                 throw new EntityNotFoundException
+                 (
+                     sprintf
+                     (
+                         "Rule %s does not belongs to question %s",
+                         $rule_id,
+                         $parent_id
+                     )
+                 );
+
+             $parent->removeSubQuestionRule($rule);
+             $subQuestion = $rule->getSubQuestion();
+             $subQuestion->removeParentRule($rule);
+        });
+    }
+
+
 }

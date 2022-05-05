@@ -15,15 +15,20 @@
 use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
 use App\Jobs\Emails\RevocationTicketEmail;
 use App\Jobs\Emails\SummitAttendeeTicketEmail;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+use App\Models\Foundation\Main\ExtraQuestions\ExtraQuestionAnswerHolder;
 use Carbon\Carbon;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\ArrayCollection;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Company;
 use models\main\Member;
 use models\main\SummitMemberSchedule;
+use models\oauth2\IResourceServerContext;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -41,6 +46,7 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class SummitAttendee extends SilverstripeBaseModel
 {
+    use ExtraQuestionAnswerHolder;
 
     const StatusIncomplete = 'Incomplete';
     const StatusComplete = 'Complete';
@@ -642,7 +648,7 @@ SQL;
     /**
      * @param SummitOrderExtraQuestionAnswer $answer
      */
-    public function addExtraQuestionAnswer(SummitOrderExtraQuestionAnswer $answer)
+    public function addExtraQuestionAnswer(SummitOrderExtraQuestionAnswer $answer):void
     {
         if ($this->extra_question_answers->contains($answer)) return;
         $this->extra_question_answers->add($answer);
@@ -756,28 +762,16 @@ SQL;
             $extra_questions_mandatory_questions_ids[] = $extra_mandatory_question->getId();
         }
 
-        // now check the answers
-        foreach ($this->extra_question_answers as $extra_question_answer) {
-            if (!$extra_question_answer->hasQuestion()) continue;
-            $question_type = $extra_question_answer->getQuestion();
-            if (in_array($question_type->getId(), $extra_questions_mandatory_questions_ids)) {
-                // is mandatory now check if we have value set
-                if (!$extra_question_answer->hasValue()) {
-                    $this->status = self::StatusIncomplete;
-                    Log::debug(sprintf("SummitAttendee::updateStatus StatusIncomplete for attendee %s ( mandatory extra question missing value )", $this->id));
-                    return $this->status;
-                }
-                // delete from ids due its already answeres
-                if (($key = array_search($question_type->getId(), $extra_questions_mandatory_questions_ids)) !== false) {
-                    unset($extra_questions_mandatory_questions_ids[$key]);
-                }
+        try {
+            $res = $this->hadCompletedExtraQuestions();
+            if(!$res){
+                $this->status = self::StatusIncomplete;
+                return $this->status;
             }
         }
-
-        // if we have mandatory questions without answer ...
-        if (count($extra_questions_mandatory_questions_ids) > 0) {
+        catch (ValidationException $ex){
+            Log::warning($ex);
             $this->status = self::StatusIncomplete;
-            Log::debug(sprintf("SummitAttendee::updateStatus StatusIncomplete for attendee %s ( mandatory extra questions )", $this->id));
             return $this->status;
         }
 
@@ -965,5 +959,34 @@ SQL;
         }
 
         return $res;
+    }
+
+    /**
+     * @return SummitOrderExtraQuestionAnswer[] | ArrayCollection
+     */
+    public function getExtraQuestions()
+    {
+       return $this->summit->getMainOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+    }
+
+    /**
+     * @param int $questionId
+     * @return ExtraQuestionType|null
+     */
+    public function getQuestionById(int $questionId): ?ExtraQuestionType
+    {
+        return $this->summit->getOrderExtraQuestionById($questionId);
+    }
+
+    /**
+     * @return bool
+     */
+    public function canChangeAnswerValue(): bool
+    {
+        $resource_server_ctx = App::make(IResourceServerContext::class);
+        $currentUser = $resource_server_ctx->getCurrentUser(false);
+        $currentUserIsAdmin = is_null($currentUser) ? false: ($currentUser->isAdmin() || $this->summit->isSummitAdmin($currentUser));
+        Log::debug(sprintf("SummitAttendee::canChangeAnswerValue currentUserIsAdmin %b", $currentUserIsAdmin));
+        return $currentUserIsAdmin || $this->summit->isAllowUpdateAttendeeExtraQuestions();
     }
 }

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
+use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
 use Doctrine\ORM\Mapping AS ORM;
 /**
@@ -91,9 +92,10 @@ class SummitOrderExtraQuestionAnswer extends ExtraQuestionAnswer
     }
 
     /**
-     * @param string $value
+     * @param string|array $value
+     * @throws ValidationException
      */
-    public function setValue(string $value): void
+    public function setValue($value): void
     {
         parent::setValue($value);
         if(!is_null($this->attendee))

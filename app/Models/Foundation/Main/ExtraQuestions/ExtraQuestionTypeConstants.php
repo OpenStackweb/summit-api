@@ -47,4 +47,38 @@ interface ExtraQuestionTypeConstants
         self::TextAreaQuestionType,
         self::TextQuestionType,
     ];
+
+    const QuestionClassMain = 'MainQuestion';
+    const QuestionClassSubQuestion = 'SubQuestion';
+
+    const AllowedQuestionClass = [
+        self::QuestionClassMain,
+        self::QuestionClassSubQuestion,
+    ];
+
+    const SubQuestionRuleVisibility_Visible = 'Visible';
+    const SubQuestionRuleVisibility_NotVisible = 'NotVisible';
+
+    const AllowedSubQuestionRuleVisibility = [
+        self::SubQuestionRuleVisibility_Visible,
+        self::SubQuestionRuleVisibility_NotVisible
+    ];
+
+    const SubQuestionRuleVisibilityCondition_Equal = 'Equal';
+    const SubQuestionRuleVisibilityCondition_NotEqual = 'NotEqual';
+
+    const AllowedSubQuestionRuleVisibilityCondition = [
+        self::SubQuestionRuleVisibilityCondition_Equal,
+        self::SubQuestionRuleVisibilityCondition_NotEqual,
+    ];
+
+    const SubQuestionRuleAnswerValuesOperator_And= 'And';
+    const SubQuestionRuleAnswerValuesOperator_Or= 'Or';
+
+    const AllowedSubQuestionRuleAnswerValuesOperator = [
+        self::SubQuestionRuleAnswerValuesOperator_And,
+        self::SubQuestionRuleAnswerValuesOperator_Or,
+    ];
+
+    const AnswerCharDelimiter = ',';
 }

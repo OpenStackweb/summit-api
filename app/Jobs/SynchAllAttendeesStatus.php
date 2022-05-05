@@ -19,7 +19,10 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
+use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitRepository;
+use models\summit\Summit;
+use models\summit\SummitAttendee;
 
 /**
  * Class SynchAllAttendeesStatus
@@ -27,7 +30,7 @@ use models\summit\ISummitRepository;
  */
 class SynchAllAttendeesStatus implements ShouldQueue
 {
-    public $tries = 2;
+    public $tries = 1;
 
     public $timeout = 0;
 
@@ -54,17 +57,30 @@ class SynchAllAttendeesStatus implements ShouldQueue
      */
     public function handle(
         ISummitRepository $repository,
+        ISummitAttendeeRepository $attendeeRepository,
         ITransactionService $tx_service
     )
     {
         Log::debug(sprintf("SynchAllAttendeesStatus::handle summit %s", $this->summit_id));
-        $tx_service->transaction(function() use($repository){
+        $attendees_ids = $tx_service->transaction(function() use($repository){
+            $attendees_ids = [];
             $summit = $repository->getById($this->summit_id);
-            if(is_null($summit))
+            if(!$summit instanceof Summit)
                 throw new EntityNotFoundException(sprintf("Summit %s not found", $this->summit_id));
 
-            $summit->synchAllAttendeesStatus();
+            foreach($summit->getAttendees() as $a)
+                $attendees_ids[] = $a->getId();
+
+            return $attendees_ids;
         });
+
+        foreach ($attendees_ids as $attendee_id){
+            $tx_service->transaction(function() use($attendeeRepository, $attendee_id){
+                $attendee = $attendeeRepository->getById($attendee_id);
+                if(!$attendee instanceof SummitAttendee) return;
+                $attendee->updateStatus();
+            });
+        }
     }
 }
 

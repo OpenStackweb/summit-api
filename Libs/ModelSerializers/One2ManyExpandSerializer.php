@@ -46,11 +46,16 @@ class One2ManyExpandSerializer implements IExpandSerializer
     protected $serializer_type;
 
     /**
+     * @var string
+     */
+    protected $test_rule;
+    /**
      * @param string $original_attribute
      * @param string $attribute
      * @param string $getter
      * @param string|null $has
      * @param string|null $serializer_type
+     * @param string|null $test_rule
      */
     public function __construct
     (
@@ -58,7 +63,8 @@ class One2ManyExpandSerializer implements IExpandSerializer
         string $attribute,
         string $getter,
         ?string $has = null,
-        ?string $serializer_type = SerializerRegistry::SerializerType_Public
+        ?string $serializer_type = SerializerRegistry::SerializerType_Public,
+        ?string $test_rule = null
     )
     {
         $this->original_attribute = $original_attribute;
@@ -66,6 +72,7 @@ class One2ManyExpandSerializer implements IExpandSerializer
         $this->getter = $getter;
         $this->has = $has;
         $this->serializer_type = $serializer_type;
+        $this->test_rule = $test_rule;
         Log::debug
         (
             sprintf
@@ -113,9 +120,9 @@ class One2ManyExpandSerializer implements IExpandSerializer
                 implode(',', $relations)
             )
         );
-
+        $testRuleRes = is_null($this->test_rule) ? true : call_user_func($this->test_rule, $entity);
         $res = $entity->{$this->has}();
-        if(boolval($res)){
+        if(boolval($res) && $testRuleRes){
             $values = $this->unsetOriginalAttribute($values);
             $values[$this->attribute] = SerializerRegistry::getInstance()->getSerializer
             (

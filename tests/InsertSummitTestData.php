@@ -21,6 +21,7 @@ use models\main\Tag;
 use models\summit\ISummitEventType;
 use models\summit\PresentationCategoryGroup;
 use models\summit\SummitAttendee;
+use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitBadgeType;
 use models\summit\SummitTicketType;
@@ -238,8 +239,12 @@ trait InsertSummitTestData
             $attendee->setFirstName(self::$defaultMember->getFirstName());
             $attendee->setSurname(self::$defaultMember->getLastName());
 
+            $summitAttendeeBadge = new SummitAttendeeBadge();
+            $summitAttendeeBadge->setType(self::$default_badge_type);
+
             $ticket = new SummitAttendeeTicket();
             $ticket->setTicketType(self::$default_ticket_type);
+            $ticket->setBadge($summitAttendeeBadge);
             $ticket->activate();
             $ticket->setPaid(true);
             $attendee->addTicket($ticket);

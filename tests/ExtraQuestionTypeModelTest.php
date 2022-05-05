@@ -44,7 +44,7 @@ class MockExtraQuestionAnswerHolder
         $answer1 = new SummitOrderExtraQuestionAnswer();
         $values1 = $questions[0]->getValues();
         $answer1->setQuestion($questions[0]);
-        $answer1->setValue(strval($values1[0]->getId()));
+        $answer1->setValue(strval($values1[1]->getId()));
         $this->answers[] = $answer1;
     }
 
@@ -208,7 +208,6 @@ class ExtraQuestionTypeModelTest extends BrowserKitTestCase
 
         self::$em->persist(self::$summit);
         self::$em->flush();
-
     }
 
     protected function tearDown(): void
@@ -240,6 +239,12 @@ class ExtraQuestionTypeModelTest extends BrowserKitTestCase
             ]
         ]);
 
+        $this->assertTrue($res);
+    }
+
+    public function testSameValidateAnswers(){
+        $mock = new MockExtraQuestionAnswerHolder(self::$summit);
+        $res = $mock->hadCompletedExtraQuestions();
         $this->assertTrue($res);
     }
 }

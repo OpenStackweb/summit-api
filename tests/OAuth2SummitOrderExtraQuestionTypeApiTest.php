@@ -158,6 +158,136 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
         return $question;
     }
 
+    public function testAddSubQuestionRule412():void{
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $params = [
+            'id' => self::$summit->getId()
+        ];
+
+        $name = str_random(16).'_question';
+
+        $data = [
+            'name' => $name,
+            'type' => SummitOrderExtraQuestionTypeConstants::ComboBoxQuestionType,
+            'label' => $name,
+            'usage' => SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage,
+            'mandatory' => true,
+            'printable' => true,
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitOrderExtraQuestionTypeApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $question1 = json_decode($content);
+        $this->assertTrue(!is_null($question1));
+
+        // add values to parent question
+        $params = [
+            'id' => self::$summit->getId(),
+            'question_id' => $question1->id,
+            'expand' => 'question'
+        ];
+
+        for($i = 1 ; $i <= 10; $i++){
+
+            $data = [
+                'value' => str_random(16).'_value_'.$i,
+                'label' => str_random(16).'_label_'.$i,
+            ];
+
+            $response = $this->action(
+                "POST",
+                "OAuth2SummitOrderExtraQuestionTypeApiController@addQuestionValue",
+                $params,
+                [],
+                [],
+                [],
+                $headers,
+                json_encode($data)
+            );
+
+            $content = $response->getContent();
+            $this->assertResponseStatus(201);
+            $value = json_decode($content);
+            $this->assertTrue(!is_null($value));
+            $question1 = $value->question;
+        }
+
+        $params = [
+            'id' => self::$summit->getId()
+        ];
+
+        $name = str_random(16).'_sub_question';
+
+        $data = [
+            'name' => $name,
+            'type' => SummitOrderExtraQuestionTypeConstants::TextQuestionType,
+            'label' => $name,
+            'usage' => SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage,
+            'mandatory' => true,
+            'printable' => true,
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitOrderExtraQuestionTypeApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $sub_question = json_decode($content);
+        $this->assertTrue(!is_null($sub_question));
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'question_id' => $question1->id,
+            'expand' => 'parent_question,sub_question',
+        ];
+
+        $data = [
+            'visibility' => ExtraQuestionTypeConstants::SubQuestionRuleVisibility_Visible,
+            'visibility_condition' => 'Invalid',
+            'answer_values_operator' => ExtraQuestionTypeConstants::SubQuestionRuleAnswerValuesOperator_Or,
+            'answer_values' => $question1->values,
+            'sub_question_id' => $sub_question->id
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitOrderExtraQuestionTypeApiController@addSubQuestionRule",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(412);
+    }
+
     public function testAddSubQuestionRule():void{
 
         $headers = [

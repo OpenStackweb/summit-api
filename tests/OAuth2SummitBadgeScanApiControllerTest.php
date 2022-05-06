@@ -1,4 +1,6 @@
 <?php namespace Tests;
+use App\Models\Foundation\Main\IGroup;
+
 /**
  * Copyright 2019 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,17 +19,40 @@
  */
 class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTest
 {
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testAddBadgeScan($summit_id = 1){
+    use InsertSummitTestData;
+
+    use InsertMemberTestData;
+
+    protected function setUp():void
+    {
+        parent::setUp();
+        self::insertMemberTestData(IGroup::TrackChairs);
+        self::$defaultMember = self::$member;
+        self::insertTestData();
+    }
+
+    protected function tearDown():void
+    {
+        self::clearTestData();
+        self::clearMemberTestData();
+        parent::tearDown();
+    }
+
+    public function testAddBadgeScan(){
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+
         $data = [
-            'qr_code' => "BADGE_REGISTRATIONDEVSUMMIT2019|REGISTRATIONDEVSUMMIT2019_TICKET_5D7BE0E518E8C161661586|santipalenque@gmail.com|Santiago, Palenque",
+            'qr_code' => sprintf(
+            "%s|%s|%s|%s",
+                self::$summit->getBadgeQRPrefix(),
+                $attendee->getTickets()[0]->getNumber(),
+                $attendee->getEmail(),
+                $attendee->getFullName(),
+            ),
             "scan_date" => 1572019200,
         ];
 
@@ -54,14 +79,10 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTest
         return $scan;
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testGetAllMyBadgeScans($summit_id = 1){
+    public function testGetAllMyBadgeScans(){
 
         $params = [
-            'id' => $summit_id,
+            'id'    =>  self::$summit->getId(),
             'filter'=> 'attendee_email=@santi',
             'expand' => 'sponsor,badge,badge.ticket,badge.ticket.owner'
         ];
@@ -88,4 +109,44 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTest
         return $data;
     }
 
+    public function testCheckInBadgeScan(){
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+
+        $data = [
+            'qr_code' => sprintf
+            (
+                "%s|%s|%s|%s",
+                self::$summit->getBadgeQRPrefix(),
+                $attendee->getTickets()[0]->getNumber(),
+                $attendee->getEmail(),
+                $attendee->getFullName(),
+            ),
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitBadgeScanApiController@checkIn",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $scan = json_decode($content);
+        $this->assertTrue(!is_null($scan));
+        return $scan;
+    }
 }

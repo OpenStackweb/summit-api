@@ -17,6 +17,8 @@ use models\main\Member;
 use models\summit\SponsorBadgeScan;
 use models\summit\SponsorUserInfoGrant;
 use models\summit\Summit;
+use models\summit\SummitAttendeeBadge;
+
 /**
  * Interface ISponsorBadgeScanService
  * @package App\Services\Model
@@ -64,5 +66,4 @@ interface ISponsorUserInfoGrantService
      * @throws ValidationException
      */
     public function getBadgeScan(Summit $summit, Member $current_member, int $scan_id):SponsorBadgeScan;
-
 }

@@ -116,4 +116,12 @@ interface IAttendeeService
      * @throws ValidationException
      */
     public function doVirtualCheckin(Summit $summit, int $attendee_id):?SummitAttendee;
+
+    /**
+     * @param Summit $summit_id
+     * @param String $qr_code
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function doCheckIn(Summit $summit, String $qr_code): void;
 }

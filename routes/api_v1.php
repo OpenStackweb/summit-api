@@ -990,6 +990,7 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::get('', 'OAuth2SummitBadgeScanApiController@getAllBySummit');
             Route::get('csv', 'OAuth2SummitBadgeScanApiController@getAllBySummitCSV');
             Route::post('', "OAuth2SummitBadgeScanApiController@add");
+            Route::put('checkin', "OAuth2SummitBadgeScanApiController@checkIn");
             Route::group(['prefix' => '{scan_id}'], function () {
                 Route::put('', "OAuth2SummitBadgeScanApiController@update");
                 Route::get('', "OAuth2SummitBadgeScanApiController@get");

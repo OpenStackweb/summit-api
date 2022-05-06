@@ -13,6 +13,7 @@
  **/
 
 use App\Jobs\Emails\ProcessAttendeesEmailRequestJob;
+use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Services\Model\Strategies\EmailActions\EmailActionsStrategyFactory;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
@@ -28,6 +29,7 @@ use models\summit\ISummitRepository;
 use models\summit\ISummitTicketTypeRepository;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
+use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
 use services\apis\IEventbriteAPI;
 use utils\Filter;
@@ -76,6 +78,10 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      */
     private $summit_repository;
 
+    /**
+     * @var ISummitAttendeeBadgeRepository
+     */
+    private $badge_repository;
 
     public function __construct
     (
@@ -85,6 +91,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         ISummitTicketTypeRepository $ticket_type_repository,
         ISummitRegistrationPromoCodeRepository $promo_code_repository,
         ISummitRepository $summit_repository,
+        ISummitAttendeeBadgeRepository $badge_repository,
         IEventbriteAPI $eventbrite_api,
         ITransactionService $tx_service
     )
@@ -97,6 +104,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         $this->promo_code_repository  = $promo_code_repository;
         $this->eventbrite_api         = $eventbrite_api;
         $this->summit_repository      = $summit_repository;
+        $this->badge_repository       = $badge_repository;
     }
 
     /**
@@ -467,6 +475,55 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             $attendee->doVirtualChecking();
 
             return $attendee;
+        });
+    }
+
+    public function doCheckIn(Summit $summit, String $qr_code): void
+    {
+        $this->tx_service->transaction(function() use($summit, $qr_code){
+
+            $fields        = SummitAttendeeBadge::parseQRCode($qr_code);
+            $ticket_number = $fields['ticket_number'];
+            $prefix        = $fields['prefix'];
+
+            if($summit->getBadgeQRPrefix() != $prefix)
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "%s qr code is not valid for summit %s.",
+                        $qr_code,
+                        $summit->getId()
+                    )
+                );
+
+            $badge = $this->badge_repository->getBadgeByTicketNumber($ticket_number);
+
+            if(is_null($badge))
+                throw new EntityNotFoundException("Badge not found.");
+
+            $ticket = $badge->getTicket();
+
+            if (is_null($ticket))
+                throw new EntityNotFoundException("Badge ticket not found.");
+
+            if (!$ticket->hasOwner())
+                throw new EntityNotFoundException("Badge ticket hasn't an owner.");
+
+            $owner = $ticket->getOwner();
+
+            if ($owner->hasCheckedIn())
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Attendee %s is already checked in for summit %s.",
+                        $owner->getFullName(),
+                        $summit->getId()
+                    )
+                );
+
+            $owner->setSummitHallCheckedIn(true);
         });
     }
 }

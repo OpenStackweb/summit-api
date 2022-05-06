@@ -24,6 +24,7 @@ use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitBadgeType;
+use models\summit\SummitOrder;
 use models\summit\SummitTicketType;
 use models\summit\SummitEvent;
 use models\utils\SilverstripeBaseModel;
@@ -242,14 +243,23 @@ trait InsertSummitTestData
             $summitAttendeeBadge = new SummitAttendeeBadge();
             $summitAttendeeBadge->setType(self::$default_badge_type);
 
+            $order = new SummitOrder();
+            $order->setOwner(self::$defaultMember);
             $ticket = new SummitAttendeeTicket();
             $ticket->setTicketType(self::$default_ticket_type);
             $ticket->setBadge($summitAttendeeBadge);
-            $ticket->activate();
-            $ticket->setPaid(true);
-            $attendee->addTicket($ticket);
 
+            $ticket->activate();
+            $attendee->addTicket($ticket);
+            $order->addTicket($ticket);
             self::$summit->addAttendee($attendee);
+            self::$summit->addOrder($order);
+            $order->setPaid();
+            $order->generateNumber();
+
+            $ticket->generateNumber();
+            $ticket->generateQRCode();
+            $summitAttendeeBadge->generateQRCode();
         }
 
         if (self::$defaultMember2 != null) {

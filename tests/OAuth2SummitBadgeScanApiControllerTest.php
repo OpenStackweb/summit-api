@@ -23,9 +23,6 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTest
 
     use InsertMemberTestData;
 
-    const QR_CODE =
-        'BADGE_TESTSUMMIT2022|BADGE_TESTSUMMIT2022_TICKET_5D7BE0E518E8C161661586|santipalenque@gmail.com|Santiago Palenque';
-
     protected function setUp():void
     {
         parent::setUp();
@@ -46,8 +43,16 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTest
             'id' => self::$summit->getId(),
         ];
 
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+
         $data = [
-            'qr_code' => OAuth2SummitBadgeScanApiControllerTest::QR_CODE,
+            'qr_code' => sprintf(
+            "%s|%s|%s|%s",
+                self::$summit->getBadgeQRPrefix(),
+                $attendee->getTickets()[0]->getNumber(),
+                $attendee->getEmail(),
+                $attendee->getFullName(),
+            ),
             "scan_date" => 1572019200,
         ];
 
@@ -114,8 +119,17 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTest
             "CONTENT_TYPE"        => "application/json"
         ];
 
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+
         $data = [
-            'qr_code' => OAuth2SummitBadgeScanApiControllerTest::QR_CODE,
+            'qr_code' => sprintf
+            (
+                "%s|%s|%s|%s",
+                self::$summit->getBadgeQRPrefix(),
+                $attendee->getTickets()[0]->getNumber(),
+                $attendee->getEmail(),
+                $attendee->getFullName(),
+            ),
         ];
 
         $response = $this->action(

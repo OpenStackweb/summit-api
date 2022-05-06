@@ -491,7 +491,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 (
                     sprintf
                     (
-                        "%s qr code is not valid for summit %s",
+                        "%s qr code is not valid for summit %s.",
                         $qr_code,
                         $summit->getId()
                     )
@@ -500,15 +500,15 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             $badge = $this->badge_repository->getBadgeByTicketNumber($ticket_number);
 
             if(is_null($badge))
-                throw new EntityNotFoundException("badge not found");
+                throw new EntityNotFoundException("Badge not found.");
 
             $ticket = $badge->getTicket();
 
             if (is_null($ticket))
-                throw new EntityNotFoundException("badge ticket not found");
+                throw new EntityNotFoundException("Badge ticket not found.");
 
             if (!$ticket->hasOwner())
-                throw new EntityNotFoundException("badge ticket hasn't an owner");
+                throw new EntityNotFoundException("Badge ticket hasn't an owner.");
 
             $owner = $ticket->getOwner();
 
@@ -517,7 +517,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 (
                     sprintf
                     (
-                        "attendee %s is already checked in for summit %s",
+                        "Attendee %s is already checked in for summit %s.",
                         $owner->getFullName(),
                         $summit->getId()
                     )

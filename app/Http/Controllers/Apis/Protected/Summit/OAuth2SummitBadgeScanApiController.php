@@ -13,8 +13,10 @@
  **/
 use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Http\Utils\EpochCellFormatter;
+use App\Services\Model\IAttendeeService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Validator;
 use models\exceptions\EntityNotFoundException;
 use models\summit\ISponsorUserInfoGrantRepository;
 use models\exceptions\ValidationException;
@@ -41,6 +43,11 @@ final class OAuth2SummitBadgeScanApiController
     private $service;
 
     /**
+     * @var IAttendeeService
+     */
+    private $attendee_service;
+
+    /**
      * @var ISummitRepository
      */
     private $summit_repository;
@@ -51,22 +58,29 @@ final class OAuth2SummitBadgeScanApiController
      * @param ISummitRepository $summit_repository
      * @param IResourceServerContext $resource_server_context
      * @param ISponsorUserInfoGrantService $service
+     * @param IAttendeeService $attendee_service
      */
     public function __construct
     (
         ISponsorUserInfoGrantRepository $repository,
         ISummitRepository $summit_repository,
         IResourceServerContext $resource_server_context,
-        ISponsorUserInfoGrantService $service
+        ISponsorUserInfoGrantService $service,
+        IAttendeeService $attendee_service
     )
     {
         parent::__construct($resource_server_context);
         $this->repository = $repository;
         $this->summit_repository = $summit_repository;
         $this->service = $service;
+        $this->attendee_service = $attendee_service;
     }
 
     use AddSummitChildElement;
+
+    use RequestProcessor;
+
+    use GetAndValidateJsonPayload;
 
     /**
      * @param array $payload
@@ -78,6 +92,16 @@ final class OAuth2SummitBadgeScanApiController
             'qr_code'   => 'required|string',
             'scan_date' => 'required|date_format:U',
             'notes' => 'sometimes|string|max:1024',
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    function getCheckInValidationRules(): array
+    {
+        return [
+            'qr_code'   => 'required|string',
         ];
     }
 
@@ -409,6 +433,24 @@ final class OAuth2SummitBadgeScanApiController
         );
     }
 
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    protected function checkIn($summit_id) {
+        return $this->processRequest(function () use ($summit_id) {
+            if(!Request::isJson()) return $this->error400();
+            $payload = $this->getJsonPayload($this->getCheckInValidationRules());
+
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $this->attendee_service->doCheckIn($summit, trim($payload["qr_code"]));
+
+            return $this->updated();
+        });
+    }
+
     use GetSummitChildElementById;
 
     /**
@@ -421,5 +463,4 @@ final class OAuth2SummitBadgeScanApiController
 
         return $this->service->getBadgeScan($summit, $current_member, $child_id);
     }
-
 }

@@ -7012,6 +7012,16 @@ class ApiEndpointsSeeder extends Seeder
                         sprintf(SummitScopes::ReadBadgeScan, $current_realm)
                     ],
                 ],
+                [
+                    'name' => 'badge-scan-checkin',
+                    'route' => '/api/v1/summits/{id}/badge-scans/checkin',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                        sprintf(SummitScopes::WriteBadgeScan, $current_realm)
+                    ],
+                ],
+
                 // featured speakers
 
                 [

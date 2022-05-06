@@ -613,4 +613,39 @@ final class OAuth2SummitScheduleSettingsApiTest extends ProtectedApiTest
         $this->assertTrue($res->total > 0);
         return $config;
     }
+
+    public function testGetAllSimple(){
+
+        $params = [
+            'id' => 1025,
+            'page'     => 1,
+            'per_page' => 10,
+            'filter'   => [
+                'key=@schedule-main'
+            ],
+            'order'    => '+key'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitScheduleSettingsApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $res = json_decode($content);
+        $this->assertTrue(!is_null($res));
+        $this->assertTrue($res->total > 0);
+        return $config;
+    }
 }

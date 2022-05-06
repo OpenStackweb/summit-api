@@ -65,7 +65,6 @@ trait OrderableChilds
     private static function recalculateOrderForSelectable(Selectable $collection, IOrderable $element, $new_order){
         $criteria     = Criteria::create();
         $criteria->orderBy(['order'=> 'ASC']);
-
         self::recalculateOrderForCollection( $collection->matching($criteria)->toArray(), $element, $new_order);
     }
 

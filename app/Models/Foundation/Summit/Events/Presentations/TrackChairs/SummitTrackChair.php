@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType;
+use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
@@ -49,7 +51,13 @@ class SummitTrackChair extends SilverstripeBaseModel
      * )
      * @var PresentationCategory[]
      */
-    protected $categories;
+    private $categories;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore", mappedBy="track_chair", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var PresentationTrackChairScore[]
+     */
+    private $scores;
 
     /**
      * @return PresentationCategory[]
@@ -145,6 +153,7 @@ class SummitTrackChair extends SilverstripeBaseModel
     {
         parent::__construct();
         $this->categories = new ArrayCollection();
+        $this->scores = new ArrayCollection();
     }
 
     public function clearMember():void{
@@ -157,5 +166,41 @@ class SummitTrackChair extends SilverstripeBaseModel
             $res[] = $c->getId();
         }
         return $res;
+    }
+
+    /**
+     * @param PresentationTrackChairRatingType $type
+     * @return bool
+     */
+    public function hasScoreRatingType(PresentationTrackChairRatingType $type):bool{
+        return $this->scores->filter(function($e) use($type){
+            return $e->getType()->getType()->getId() === $type->getId();
+        })->count() > 0;
+    }
+
+    /**
+     * @param PresentationTrackChairScore $score
+     * @throws ValidationException
+     */
+    public function addScore(PresentationTrackChairScore $score):void{
+        if($this->scores->contains($score)) return;
+        if($this->hasScoreRatingType($score->getType()->getType()))
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Track chair %s already has a score rating type %s.",
+                    $this->getId(),
+                    $score->getType()->getType()->getName()
+                )
+            );
+        $this->scores->add($score);
+        $score->setTrackChair($this);
+    }
+
+    public function removeScore(PresentationTrackChairScore $score):void{
+        if(!$this->scores->contains($score)) return;
+        $this->scores->removeElement($score);
+        $score->clearTrackChair();
     }
 }

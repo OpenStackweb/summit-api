@@ -30,7 +30,9 @@ final class Version20220421184854 extends AbstractMigration
         $builder = new Builder($schema);
         if(!$schema->hasTable("SubQuestionRule")) {
             $builder->create('SubQuestionRule', function (Table $table) {
-                $table->increments('ID');
+                $table->integer("ID", true, false);
+                $table->primary("ID");
+
                 $table->dateTime("Created")->setNotnull(true);
                 $table->dateTime("LastEdited")->setNotnull(true);
 

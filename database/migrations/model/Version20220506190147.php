@@ -30,13 +30,14 @@ final class Version20220506190147 extends AbstractMigration
         $builder = new Builder($schema);
         if(!$schema->hasTable("PresentationTrackChairScoreType")) {
             $builder->create('PresentationTrackChairScoreType', function (Table $table) {
-                $table->increments('ID');
+                $table->integer("ID", true, false);
+                $table->primary("ID");
                 $table->dateTime("Created")->setNotnull(true);
                 $table->dateTime("LastEdited")->setNotnull(true);
                 $table->string("ClassName", 50)->setDefault("PresentationTrackChairScoreType");
 
                 $table->string("Name")->setNotnull(true);
-                $table->text("Description")->setNotnull(true);
+                $table->text("Description")->setNotnull(true)->setDefault('');
                 $table->integer("`Score`" )->setNotnull(true)->setDefault(1);
 
                 $table->integer("TypeID" );

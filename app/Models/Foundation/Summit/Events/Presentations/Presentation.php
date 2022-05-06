@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore;
+use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use App\Models\Foundation\Main\OrderableChilds;
 use App\Models\Utils\IStorageTypesConstants;
@@ -237,6 +239,12 @@ class Presentation extends SummitEvent
     private $extra_question_answers;
 
     /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore", mappedBy="presentation", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var PresentationTrackChairScore[]
+     */
+    private $track_chairs_scores;
+
+    /**
      * @return bool
      */
     public function isToRecord()
@@ -283,6 +291,7 @@ class Presentation extends SummitEvent
         $this->will_all_speakers_attend = false;
         $this->disclaimer_accepted_date = null;
         $this->custom_order = 0;
+        $this->track_chairs_scores = new ArrayCollection();
     }
 
     /**
@@ -1850,4 +1859,93 @@ class Presentation extends SummitEvent
         return parent::setCategory($category);
     }
 
+    public function addTrackChairScore(PresentationTrackChairScore $score):void{
+        if($this->track_chairs_scores->contains($score)) return;
+        $this->track_chairs_scores->add($score);
+        $score->setPresentation($this);
+    }
+
+    public function removeTrackChairScore(PresentationTrackChairScore $score):void{
+        if(!$this->track_chairs_scores->contains($score)) return;
+        $this->track_chairs_scores->removeElement($score);
+        $score->clearPresentation();
+    }
+
+    /**
+     * @return float
+     */
+    public function getTrackChairAvgScore():float{
+
+        Log::debug(sprintf("Presentation::getTrackChairAvgScore presentation %s", $this->getId()));
+
+        $query = <<<SQL
+     SELECT AVG(Score) FROM (select PresentationTrackChairScore.TrackChairID,
+       PresentationTrackChairScore.PresentationID,
+       SUM(PresentationTrackChairScoreType.Score * PresentationTrackChairRatingType.Weight) As Score
+       from PresentationTrackChairScore
+inner join PresentationTrackChairScoreType on PresentationTrackChairScoreType.ID = PresentationTrackChairScore.TypeID
+inner join PresentationTrackChairRatingType on PresentationTrackChairRatingType.ID = PresentationTrackChairScoreType.TypeID
+WHERE PresentationID = :presentation_id
+GROUP BY TrackChairID,PresentationID ) AS Presentation_Scores
+SQL;
+        try{
+            $stmt = $this->prepareRawSQL($query);
+            $stmt->execute(
+                [
+                    'presentation_id' => $this->getId(),
+                ]
+            );
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $score = count($res) > 0 ? $res[0] : 0;
+            return floatval($score);
+        }
+        catch (\Exception $ex){
+            Log::error($ex);
+        }
+        return 0.0;
+    }
+
+    /**
+     * @param SummitTrackChair $trackChair
+     * @return float
+     */
+    public function getTrackChairScoreFor(SummitTrackChair $trackChair):float{
+
+        Log::debug
+        (
+            sprintf
+            (
+                "Presentation::getTrackChairScoreFor presentation %s track chair %s",
+                        $this->getId(),
+                        $trackChair->getId()
+            )
+        );
+
+        $query = <<<SQL
+select
+       SUM(PresentationTrackChairScoreType.Score * PresentationTrackChairRatingType.Weight) As Score
+       from PresentationTrackChairScore
+inner join PresentationTrackChairScoreType on PresentationTrackChairScoreType.ID = PresentationTrackChairScore.TypeID
+inner join PresentationTrackChairRatingType on PresentationTrackChairRatingType.ID = PresentationTrackChairScoreType.TypeID
+WHERE PresentationID = :presentation_id and TrackChairID = :track_chair_id
+GROUP BY TrackChairID,PresentationID
+
+SQL;
+        try{
+            $stmt = $this->prepareRawSQL($query);
+            $stmt->execute(
+                [
+                    'presentation_id' => $this->getId(),
+                    'track_chair_id' => $trackChair->getId()
+                ]
+            );
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $score = count($res) > 0 ? $res[0] : 0;
+            return floatval($score);
+        }
+        catch (\Exception $ex){
+            Log::error($ex);
+        }
+        return 0.0;
+    }
 }

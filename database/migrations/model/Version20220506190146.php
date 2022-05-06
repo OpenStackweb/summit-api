@@ -29,7 +29,9 @@ final class Version20220506190146 extends AbstractMigration
         $builder = new Builder($schema);
         if(!$schema->hasTable("PresentationTrackChairRatingType")) {
             $builder->create('PresentationTrackChairRatingType', function (Table $table) {
-                $table->increments('ID');
+
+                $table->integer("ID", true, false);
+                $table->primary("ID");
                 $table->dateTime("Created")->setNotnull(true);
                 $table->dateTime("LastEdited")->setNotnull(true);
                 $table->string("ClassName", 50)->setDefault("PresentationTrackChairRatingType");

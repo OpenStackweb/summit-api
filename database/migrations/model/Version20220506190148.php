@@ -29,7 +29,8 @@ final class Version20220506190148 extends AbstractMigration
         $builder = new Builder($schema);
         if(!$schema->hasTable("PresentationTrackChairScore")) {
             $builder->create('PresentationTrackChairScore', function (Table $table) {
-                $table->increments('ID');
+                $table->integer("ID", true, false);
+                $table->primary("ID");
                 $table->dateTime("Created")->setNotnull(true);
                 $table->dateTime("LastEdited")->setNotnull(true);
                 $table->string("ClassName", 50)->setDefault("PresentationTrackChairScore");
@@ -38,14 +39,15 @@ final class Version20220506190148 extends AbstractMigration
                 $table->index("TypeID", "TypeID");
                 $table->foreign("PresentationTrackChairScoreType", "TypeID", "ID", ["onDelete" => "CASCADE"], "FK_PresentationTrackChairScore_Type");
 
-                $table->integer("MemberID" );
-                $table->index("MemberID", "MemberID");
-                $table->foreign("Member", "MemberID", "ID", ["onDelete" => "CASCADE"], "FK_PresentationTrackChairScore_Member");
+                $table->integer("TrackChairID" );
+                $table->index("TrackChairID", "TrackChairID");
+                $table->foreign("SummitTrackChair", "TrackChairID", "ID", ["onDelete" => "CASCADE"], "FK_PresentationTrackChairScore_SummitTrackChair");
 
                 $table->integer("PresentationID" );
                 $table->index("PresentationID", "PresentationID");
                 $table->foreign("Presentation", "PresentationID", "ID", ["onDelete" => "CASCADE"], "FK_PresentationTrackChairScore_Presentation");
 
+                $table->unique(['TypeID', 'PresentationID','TrackChairID'], 'IDX_PresentationTrackChairScore_Unique');
             });
         }
     }

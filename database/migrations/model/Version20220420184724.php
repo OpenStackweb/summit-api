@@ -28,7 +28,7 @@ final class Version20220420184724 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $sql = <<<SQL
-ALTER TABLE `SummitOrder` RENAME COLUMN CompanyID TO OwnerCompanyID;
+ALTER TABLE `SummitOrder` CHANGE CompanyID OwnerCompanyID INT NULL DEFAULT NULL;
 SQL;
         $this->addSql($sql);
     }

@@ -502,7 +502,28 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             if(is_null($badge))
                 throw new EntityNotFoundException("badge not found");
 
-            $badge->getTicket()->getOwner()->setSummitHallCheckedIn(true);
+            $ticket = $badge->getTicket();
+
+            if (is_null($ticket))
+                throw new EntityNotFoundException("badge ticket not found");
+
+            if (!$ticket->hasOwner())
+                throw new EntityNotFoundException("badge ticket hasn't an owner");
+
+            $owner = $ticket->getOwner();
+
+            if ($owner->hasCheckedIn())
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "attendee %s is already checked in for summit %s",
+                        $owner->getFullName(),
+                        $summit->getId()
+                    )
+                );
+
+            $owner->setSummitHallCheckedIn(true);
         });
     }
 }

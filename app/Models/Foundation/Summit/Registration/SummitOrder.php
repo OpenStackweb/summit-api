@@ -100,8 +100,6 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     private $owner_company;
 
-    private $company;
-
     /**
      * @ORM\ManyToOne(targetEntity="models\main\Member", inversedBy="summit_registration_orders")
      * @ORM\JoinColumn(name="OwnerID", referencedColumnName="ID", nullable=true)

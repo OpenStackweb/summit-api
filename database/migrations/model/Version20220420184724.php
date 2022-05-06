@@ -39,7 +39,7 @@ SQL;
     public function down(Schema $schema): void
     {
         $sql = <<<SQL
-ALTER TABLE `SummitOrder` RENAME COLUMN OwnerCompanyID TO CompanyID;
+ALTER TABLE `SummitOrder` CHANGE OwnerCompanyID CompanyID INT NULL DEFAULT NULL;
 SQL;
         $this->addSql($sql);
     }

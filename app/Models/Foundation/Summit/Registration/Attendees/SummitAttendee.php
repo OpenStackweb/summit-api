@@ -760,14 +760,6 @@ SQL;
 
         // check mandatory questions
 
-        // get mandatory question ids
-        $extra_questions_mandatory_questions = $this->summit->getMandatoryOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
-        $extra_questions_mandatory_questions_ids = [];
-
-        foreach ($extra_questions_mandatory_questions as $extra_mandatory_question) {
-            $extra_questions_mandatory_questions_ids[] = $extra_mandatory_question->getId();
-        }
-
         try {
             $res = $this->hadCompletedExtraQuestions();
             if(!$res){

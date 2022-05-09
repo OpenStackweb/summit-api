@@ -723,8 +723,14 @@ SQL;
 
     public function updateStatus(): string
     {
-
         Log::debug(sprintf("SummitAttendee::updateStatus original status %s", $this->status));
+        // ingested attendee
+        if(!empty($this->external_id)){
+            $this->status = self::StatusComplete;
+            Log::debug(sprintf("SummitAttendee::updateStatus StatusComplete for attendee %s (External).", $this->id));
+            return $this->status;
+        }
+
         $is_disclaimer_mandatory = $this->summit->isRegistrationDisclaimerMandatory();
 
         // mandatory fields

@@ -133,11 +133,11 @@ final class DoctrineSummitAttendeeRepository
             'has_checkin' => new DoctrineSwitchFilterMapping([
                     'true' => new DoctrineCaseFilterMapping(
                         'true',
-                        "e.summit_hall_checked_in is not null"
+                        "e.summit_hall_checked_in = 1"
                     ),
                     'false' => new DoctrineCaseFilterMapping(
                         'false',
-                        "e.summit_hall_checked_in is null"
+                        "e.summit_hall_checked_in = 0"
                     ),
                 ]
             ),

@@ -372,7 +372,10 @@ class SummitTicketType extends SilverstripeBaseModel
      * @return bool
      */
     public function isSoldOut():bool{
-        return $this->quantity_2_sell == $this->quantity_sold;
+        $quantity_2_sell = $this->quantity_2_sell;
+        $quantity_sold = $this->quantity_sold;
+        if($quantity_2_sell === 0) return false;
+        return $quantity_2_sell <= $quantity_sold;
     }
 
     /**
@@ -399,27 +402,39 @@ class SummitTicketType extends SilverstripeBaseModel
      */
     public function sell(int $qty = 1):int {
 
+        $quantity_sold = $this->quantity_sold;
+        $quantity_2_sell = $this->quantity_2_sell;
+        $max_quantity_per_order = $this->max_quantity_per_order;
         Log::debug
         (
             sprintf
             (
-                "SummitTicketType::sell id %s qty %s quantity_sold %s quantity_2_sell %s",
+                "SummitTicketType::sell id %s qty %s quantity_sold %s quantity_2_sell %s max_quantity_per_order %s",
                 $this->id,
                 $qty,
-                $this->quantity_sold,
-                $this->quantity_2_sell
+                $quantity_sold,
+                $quantity_2_sell,
+                $max_quantity_per_order
             )
         );
+        $unlimited = $quantity_2_sell === 0;
+        $unlimited_per_order = $max_quantity_per_order === 0;
+        if(!$unlimited_per_order){
+            if($qty > $max_quantity_per_order){
+                throw new ValidationException(sprintf("Can not sell more tickets than max available per order (%s).", $max_quantity_per_order));
+            }
+        }
+        if(!$unlimited) {
+            if ($qty > $quantity_2_sell) {
+                throw new ValidationException(sprintf("Can not sell more tickets than max available (%s).", $quantity_2_sell));
+            }
 
-        if($qty > $this->quantity_2_sell){
-            throw new ValidationException(sprintf("Can not sell more tickets than max available."));
+            if (($quantity_sold + $qty) > $quantity_2_sell) {
+                throw new ValidationException(sprintf("Can not sell more ticket than available ones (%s).", ($quantity_2_sell - $quantity_sold)));
+            }
         }
 
-        if(($this->quantity_sold + $qty) > $this->quantity_2_sell){
-            throw new ValidationException(sprintf("Can not sell more ticket than available ones."));
-        }
-
-        $this->quantity_sold = $this->quantity_sold + $qty;
+        $this->quantity_sold = $quantity_sold + $qty;
 
         return $this->quantity_sold;
     }
@@ -431,6 +446,8 @@ class SummitTicketType extends SilverstripeBaseModel
      */
     public function restore(int $qty):int{
 
+        $quantity_sold = $this->quantity_sold;
+
         Log::debug
         (
             sprintf
@@ -438,23 +455,23 @@ class SummitTicketType extends SilverstripeBaseModel
                 "SummitTicketType::restore qty %s ticket type %s quantity_sold %s",
                 $qty,
                 $this->id,
-                $this->quantity_sold
+                $quantity_sold
             )
         );
 
-        if(($this->quantity_sold - $qty) < 0)
+        if(($quantity_sold - $qty) < 0)
             throw new ValidationException
             (
                 sprintf
                 (
                     "Can not restore a greater qty than sold one quantity_sold %s qty %s id %s",
-                    $this->quantity_sold,
+                    $quantity_sold,
                     $qty,
                     $this->id
                 )
             );
 
-        $this->quantity_sold  = $this->quantity_sold - $qty;
+        $this->quantity_sold  = $quantity_sold - $qty;
 
         Log::info(sprintf("SummitTicketType::restore qty_2_restore %s final qty %s", $qty, $this->quantity_sold));
 

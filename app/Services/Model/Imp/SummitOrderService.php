@@ -32,6 +32,7 @@ use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Utils\CSVReader;
+use App\Services\Utils\ILockManagerService;
 use Google\Service\AccessContextManager\AccessLevel;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
@@ -526,6 +527,7 @@ final class ApplyPromoCodeTask extends AbstractTask
                     }
                 }
                 Log::debug(sprintf("adding %s usage to promo code %s", $qty, $promo_code->getId()));
+
                 $promo_code->addUsage($qty);
             });
             // mark a done
@@ -578,14 +580,26 @@ final class ReserveTicketsTask extends AbstractTask
     private $ticket_type_repository;
 
     /**
+     * @var ILockManagerService
+     */
+    private $lock_service;
+
+    /**
      * ReserveTicketsTask constructor.
      * @param Summit $summit
      * @param ISummitTicketTypeRepository $ticket_type_repository
      * @param ITransactionService $tx_service
      */
-    public function __construct(Summit $summit, ISummitTicketTypeRepository $ticket_type_repository, ITransactionService $tx_service)
+    public function __construct
+    (
+        Summit $summit,
+        ISummitTicketTypeRepository $ticket_type_repository,
+        ITransactionService $tx_service,
+        ILockManagerService $lock_service
+    )
     {
         $this->tx_service = $tx_service;
+        $this->lock_service = $lock_service;
         $this->summit = $summit;
         $this->ticket_type_repository = $ticket_type_repository;
     }
@@ -613,7 +627,11 @@ final class ReserveTicketsTask extends AbstractTask
                 if (!$ticket_type->canSell()) {
                     throw new ValidationException(sprintf('The ticket “%s” is not available. Please go back and select a different ticket.', $ticket_type->getName()));
                 }
-                $ticket_type->sell($reservations[$ticket_type->getId()]);
+
+                $this->lock_service->lock('ticket_type.'.$ticket_type->getId().'.sell.lock',function() use($ticket_type, $reservations) {
+                    $ticket_type->sell($reservations[$ticket_type->getId()]);
+                });
+
             }
         });
         return $formerState;
@@ -627,7 +645,9 @@ final class ReserveTicketsTask extends AbstractTask
             $this->tx_service->transaction(function () use ($ticket_id, $qty) {
                 $ticket_type = $this->ticket_type_repository->getByIdExclusiveLock($ticket_id);
                 if (is_null($ticket_type)) return;
-                $ticket_type->restore($qty);
+                $this->lock_service->lock('ticket_type.'.$ticket_type->getId().'.sell.lock', function() use($ticket_type, $qty){
+                    $ticket_type->restore($qty);
+                });
             });
         }
     }
@@ -918,6 +938,10 @@ final class SummitOrderService
     private $download_strategy;
 
     /**
+     * @var ILockManagerService
+     */
+    private $lock_service;
+    /**
      * @param ISummitTicketTypeRepository $ticket_type_repository
      * @param IMemberRepository $member_repository
      * @param ISummitRegistrationPromoCodeRepository $promo_code_repository
@@ -932,6 +956,7 @@ final class SummitOrderService
      * @param IFileUploadStrategy $upload_strategy
      * @param IFileDownloadStrategy $download_strategy
      * @param ITransactionService $tx_service
+     * @param ILockManagerService $lock_service
      */
     public function __construct
     (
@@ -948,7 +973,8 @@ final class SummitOrderService
         IBuildDefaultPaymentGatewayProfileStrategy $default_payment_gateway_strategy,
         IFileUploadStrategy                        $upload_strategy,
         IFileDownloadStrategy                      $download_strategy,
-        ITransactionService $tx_service
+        ITransactionService $tx_service,
+        ILockManagerService  $lock_service
     )
     {
         parent::__construct($tx_service);
@@ -965,6 +991,7 @@ final class SummitOrderService
         $this->default_payment_gateway_strategy = $default_payment_gateway_strategy;
         $this->upload_strategy = $upload_strategy;
         $this->download_strategy = $download_strategy;
+        $this->lock_service = $lock_service;
     }
 
     /**
@@ -1023,7 +1050,7 @@ final class SummitOrderService
             $state = Saga::start()
                 ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))
                 ->addTask(new PreProcessReservationTask($payload))
-                ->addTask(new ReserveTicketsTask($summit, $this->ticket_type_repository, $this->tx_service))
+                ->addTask(new ReserveTicketsTask($summit, $this->ticket_type_repository, $this->tx_service, $this->lock_service))
                 ->addTask(new ApplyPromoCodeTask($summit, $payload, $this->promo_code_repository, $this->tx_service))
                 ->addTask(new ReserveOrderTask
                     (

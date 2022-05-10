@@ -21,6 +21,8 @@ use App\Services\Apis\IMailApi;
 use App\Services\Apis\MailApi;
 use App\Services\Model\FolderService;
 use App\Services\Model\IFolderService;
+use App\Services\Utils\ILockManagerService;
+use App\Services\Utils\LockManagerService;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use Illuminate\Support\Facades\App;
@@ -115,6 +117,11 @@ final class BaseServicesProvider extends ServiceProvider
             MailApi::class
         );
 
+        App::singleton(
+            ILockManagerService::class,
+            LockManagerService::class
+        );
+
     }
 
     /**
@@ -135,7 +142,8 @@ final class BaseServicesProvider extends ServiceProvider
             IPushNotificationApi::class,
             IGeoCodingAPI::class,
             IExternalUserApi::class,
-            IFolderService::class
+            IFolderService::class,
+            ILockManagerService::class,
         ];
     }
 }

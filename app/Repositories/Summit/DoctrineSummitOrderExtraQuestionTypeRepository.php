@@ -31,7 +31,7 @@ final class DoctrineSummitOrderExtraQuestionTypeRepository
     {
         return array_merge(parent::getFilterMappings() , [
             'printable' => 'e.printable;:json_boolean',
-            'usage'     => 'e.usage;:json_string',
+            'usage'     => 'e.usage:json_string',
             'summit_id' => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value")
         ]);
     }

@@ -23,8 +23,8 @@ use Closure;
 final class LockManagerService implements ILockManagerService {
 
     const MaxRetries = 3;
-    const BackOffMultiplier = 10;
-    const BackOffBaseInterval = 1000;
+    const BackOffMultiplier = 2.0;
+    const BackOffBaseInterval = 100000; // 1 ms
     /**
      * @var ICacheService
      */
@@ -52,15 +52,15 @@ final class LockManagerService implements ILockManagerService {
             $time = time() + $lifetime + 1;
             $success = $this->cache_service->addSingleValue($name, $time, $time);
             if($success) return $this;
-            ++$attempt;
-            $wait_interval = self::BackOffBaseInterval * self::BackOffMultiplier ^ $attempt;
-            Log::debug(sprintf("LockManagerService::acquireLock name %s retrying in %s attempt %s", $name, $wait_interval, $attempt));
+            $wait_interval = self::BackOffBaseInterval * ( self::BackOffMultiplier ^ $attempt );
+            Log::debug(sprintf("LockManagerService::acquireLock name %s retrying in %s microseconds (%s).", $name, $wait_interval, $attempt));
             usleep($wait_interval);
-            if($attempt > self::MaxRetries) {
+            if($attempt >= (self::MaxRetries - 1 )) {
                 // only one time we could use this handle
                 Log::error(sprintf("LockManagerService::acquireLock name %s lifetime %s ERROR MAX RETRIES attempt %s", $name, $lifetime, $attempt));
                 throw new UnacquiredLockException(sprintf("lock name %s", $name));
             }
+            ++$attempt;
         } while(1);
     }
 

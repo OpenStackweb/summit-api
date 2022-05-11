@@ -253,7 +253,11 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      * @return bool
      */
     public function canUse():bool {
-        if($this->quantity_available > 0 && $this->quantity_available  == $this->quantity_used) return false;
+        $quantity_available = $this->quantity_available;
+        $quantity_used = $this->quantity_used;
+
+        if($quantity_available > 0 && $quantity_available  <= $quantity_used) return false;
+
         return $this->isLive();
     }
 
@@ -284,22 +288,37 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      * @throws ValidationException
      */
     public function addUsage(int $usage){
+
+        $quantity_used = $this->quantity_used;
+        $quantity_available = $this->quantity_available;
+
         Log::debug
         (
             sprintf
             (
-                "SummitRegistrationPromoCode::addUsage code %s usage %s quantity_used %s quantity_available %s",
+                "SummitRegistrationPromoCode::addUsage code %s usage %s quantity_used %s quantity_available %s.",
                 $this->code,
                 $usage,
-                $this->quantity_used,
-                $this->quantity_available
+                $quantity_used,
+                $quantity_available
             )
         );
-        $new_value = $this->quantity_used + $usage;
-        if($this->quantity_available > 0 && $new_value > $this->quantity_available){
-            throw new ValidationException(sprintf("promo code %s has reached max usage", $this->code));
+
+        $newVal = $quantity_used + $usage;
+
+        if($quantity_available > 0 && $newVal > $quantity_available){
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Promo code %s has reached max. usage (%s).",
+                    $this->code,
+                    $quantity_available
+                )
+            );
         }
-        $this->quantity_used  = $new_value;
+
+        $this->quantity_used  = $newVal;
     }
 
     /**
@@ -307,6 +326,10 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      * @throws ValidationException
      */
     public function removeUsage(int $to_restore){
+
+        $quantity_used = $this->quantity_used;
+        $quantity_available = $this->quantity_available;
+
         Log::debug
         (
             sprintf
@@ -314,21 +337,26 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
                 "SummitRegistrationPromoCode::removeUsage code %s to_restore %s quantity_used %s quantity_available %s",
                 $this->code,
                 $to_restore,
-                $this->quantity_used,
-                $this->quantity_available
+                $quantity_used,
+                $quantity_available
             )
         );
 
-      if(($this->quantity_used - $to_restore) < 0)
+      $newVal = $quantity_used - $to_restore;
+      if($newVal < 0) // we want to restore more than we used
           throw new ValidationException
           (
               sprintf
               (
-                  "Can not restore %s usages to promo code %s - current usages %s", $to_restore, $this->code, $this->quantity_used
+
+                  "Can not restore %s usages from Promo Code %s (%s).",
+                  $to_restore,
+                  $this->code,
+                  $quantity_used
               )
           );
 
-        $this->quantity_used -= $to_restore;
+        $this->quantity_used = $newVal;
 
         Log::info(sprintf("SummitRegistrationPromoCode::removeUsage quantity_used %s", $this->quantity_used));
     }
@@ -426,9 +454,12 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
 
     /**
      * @param int $quantity_available
+     * @throws ValidationException
      */
     public function setQuantityAvailable(int $quantity_available): void
     {
+        if($quantity_available < 0)
+            throw new ValidationException("quantity_available should be greater than zero.");
         $this->quantity_available = $quantity_available;
     }
 

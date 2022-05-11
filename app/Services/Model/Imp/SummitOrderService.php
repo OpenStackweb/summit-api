@@ -463,24 +463,32 @@ final class ApplyPromoCodeTask extends AbstractTask
     private $promo_code_repository;
 
     /**
+     * @var ILockManagerService
+     */
+    private $lock_service;
+
+    /**
      * ApplyPromoCodeTask constructor.
      * @param Summit $summit
      * @param array $payload
      * @param ISummitRegistrationPromoCodeRepository $promo_code_repository
      * @param ITransactionService $tx_service
+     * @param ILockManagerService $lock_service
      */
     public function __construct
     (
         Summit $summit,
         array $payload,
         ISummitRegistrationPromoCodeRepository $promo_code_repository,
-        ITransactionService $tx_service
+        ITransactionService $tx_service,
+        ILockManagerService $lock_service
     )
     {
         $this->tx_service = $tx_service;
         $this->summit = $summit;
         $this->payload = $payload;
         $this->promo_code_repository = $promo_code_repository;
+        $this->lock_service = $lock_service;
     }
 
     /**
@@ -528,7 +536,10 @@ final class ApplyPromoCodeTask extends AbstractTask
                 }
                 Log::debug(sprintf("adding %s usage to promo code %s", $qty, $promo_code->getId()));
 
-                $promo_code->addUsage($qty);
+                $this->lock_service->lock('promocode.'.$promo_code->getId().'.usage.lock', function() use($promo_code, $qty){
+                    $promo_code->addUsage($qty);
+                });
+
             });
             // mark a done
             $promo_codes_usage[$promo_code_value]['redeem'] = true;
@@ -546,7 +557,11 @@ final class ApplyPromoCodeTask extends AbstractTask
                 $promo_code = $this->promo_code_repository->getByValueExclusiveLock($this->summit, $code);
                 if (is_null($promo_code)) return;
                 if (!isset($info['redeem'])) return;
-                $promo_code->removeUsage($info['qty']);
+
+                $this->lock_service->lock('promocode.'.$promo_code->getId().'.usage.lock', function() use($promo_code, $info){
+                    $promo_code->removeUsage(intval($info['qty']));
+                });
+
             });
         }
     }
@@ -1051,7 +1066,7 @@ final class SummitOrderService
                 ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))
                 ->addTask(new PreProcessReservationTask($payload))
                 ->addTask(new ReserveTicketsTask($summit, $this->ticket_type_repository, $this->tx_service, $this->lock_service))
-                ->addTask(new ApplyPromoCodeTask($summit, $payload, $this->promo_code_repository, $this->tx_service))
+                ->addTask(new ApplyPromoCodeTask($summit, $payload, $this->promo_code_repository, $this->tx_service, $this->lock_service))
                 ->addTask(new ReserveOrderTask
                     (
                         $owner,

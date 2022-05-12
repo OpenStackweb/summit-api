@@ -31,11 +31,13 @@ final class SponsorValidationRulesFactory
                 'company_id'     => 'sometimes|integer',
                 'sponsorship_id' => 'sometimes|integer',
                 'order'          => 'sometimes|integer|min:1',
+                'is_published'   => 'sometimes|boolean',
             ];
         }
         return [
             'company_id' => 'required|integer',
             'sponsorship_id' => 'required|integer',
+            'is_published'   => 'sometimes|boolean',
         ];
     }
 }

@@ -40,6 +40,7 @@ implements ISponsorRepository
             'sponsorship_size'  => new DoctrineJoinFilterMapping("e.sponsorship", "sp" ,"sp.size :operator :value"),
             'summit_id'         => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value"),
             'badge_scans_count' => new DoctrineHavingFilterMapping("", "bs.sponsor", "count(bs.id) :operator :value"),
+            'is_published' => Filter::buildBooleanField('e.is_published'),
         ];
     }
 
@@ -48,7 +49,8 @@ implements ISponsorRepository
      * @return QueryBuilder
      */
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
-        $query = $query->leftJoin("e.user_info_grants", "bs");
+        if($filter->hasFilter("badge_scans_count"))
+            $query = $query->leftJoin("e.user_info_grants", "bs");
         return $query;
     }
 

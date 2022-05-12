@@ -24,6 +24,7 @@ final class SponsorSerializer extends SilverStripeSerializer
         'SummitId'      => 'summit_id:json_int',
         'CompanyId'     => 'company_id:json_int',
         'SponsorshipId' => 'sponsorship_id:json_int',
+        'Published'     => 'is_published:json_boolean',
     ];
 
     protected static $allowed_relations = [

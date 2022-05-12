@@ -39,6 +39,9 @@ final class SponsorFactory
         if(isset($data['sponsorship']))
             $sponsor->setSponsorship($data['sponsorship']);
 
+        if(isset($data['is_published']))
+            $sponsor->setIsPublished(boolval($data['is_published']));
+
         return $sponsor;
     }
 }

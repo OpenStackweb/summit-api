@@ -3822,6 +3822,12 @@ SQL;
         return $this->summit_sponsors;
     }
 
+    public function getPublishedSummitSponsors(){
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('is_published', true));
+        return $this->summit_sponsors->matching($criteria);
+    }
+
     /**
      * @param Company $company
      * @return Sponsor|null

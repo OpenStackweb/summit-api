@@ -48,6 +48,12 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     protected $company;
 
     /**
+     * @ORM\Column(name="IsPublished", type="boolean")
+     * @var boolean
+     */
+    protected $is_published;
+
+    /**
      * @ORM\ManyToOne(targetEntity="SponsorshipType")
      * @ORM\JoinColumn(name="SponsorshipTypeID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SponsorshipType
@@ -78,6 +84,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         parent::__construct();
         $this->members = new ArrayCollection();
         $this->user_info_grants = new ArrayCollection();
+        $this->is_published = true;
     }
 
     /**
@@ -226,6 +233,22 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     public function removeUser(Member $user){
         if(!$this->members->contains($user)) return;
         $this->members->removeElement($user);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPublished(): bool
+    {
+        return $this->is_published;
+    }
+
+    /**
+     * @param bool $is_published
+     */
+    public function setIsPublished(bool $is_published): void
+    {
+        $this->is_published = $is_published;
     }
 
 }

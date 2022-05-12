@@ -25,6 +25,10 @@ use models\exceptions\ValidationException;
  */
 final class Filter
 {
+    const Int = 'json_int';
+    const String = 'json_string';
+    const DateTimeEpoch = 'datetime_epoch';
+
     /**
      * @var array
      */
@@ -430,7 +434,7 @@ final class Filter
     {
         $original_format_parts = explode('|', $original_format);
         switch ($original_format_parts[0]) {
-            case 'datetime_epoch':
+            case self::DateTimeEpoch:
                 Log::debug(sprintf("Filter::convertValue datetime_epoch %s", $original_format));
                 $timezone = null;
                 if(count($original_format_parts) > 1){
@@ -454,7 +458,7 @@ final class Filter
                 Log::debug(sprintf("Filter::convertValue final date %s", $datetime->format("Y-m-d H:i:s")));
                 return  $datetime->format("Y-m-d H:i:s");
                 break;
-            case 'json_int':
+            case self::Int:
                 if(is_array($value)){
                     $res = [];
                     foreach ($value as $val){
@@ -464,7 +468,7 @@ final class Filter
                 }
                 return intval($value);
                 break;
-            case 'json_string':
+            case self::String:
                 if(is_array($value)){
                     $res = [];
                     foreach ($value as $val){
@@ -606,5 +610,46 @@ final class Filter
             }
         }
         return $res;
+    }
+
+    /**
+     * @param string $field
+     * @param string $type
+     * @return string
+     */
+    private static function buildField(string $field, string $type):string{
+        return sprintf("%s:%s", $field, $type);
+    }
+
+    /**
+     * @param string $field
+     * @return string
+     */
+    public static function buildStringField(string $field):string{
+        return self::buildField($field, self::String);
+    }
+
+    /**
+     * @param string $field
+     * @return string
+     */
+    public static function buildIntField(string $field):string{
+        return self::buildField($field, self::Int);
+    }
+
+    /**
+     * @param string $field
+     * @return string
+     */
+    public static function buildBooleanField(string $field):string{
+        return self::buildField($field, self::Int);
+    }
+
+    /**
+     * @param string $field
+     * @return string
+     */
+    public static function buildDateTimeEpochField(string $field):string{
+        return self::buildField($field, self::DateTimeEpoch);
     }
 }

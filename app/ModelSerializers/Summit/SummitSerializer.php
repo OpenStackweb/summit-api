@@ -274,7 +274,8 @@ class SummitSerializer extends SilverStripeSerializer
         // summit sponsors
         if (in_array('summit_sponsors', $relations)) {
             $summit_sponsors = [];
-            foreach ($summit->getSummitSponsors() as $sponsor) {
+            // only get published ones
+            foreach ($summit->getPublishedSummitSponsors() as $sponsor) {
                 $summit_sponsors[] = SerializerRegistry::getInstance()->getSerializer($sponsor)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'summit_sponsors'));
             }
             $values['summit_sponsors'] = $summit_sponsors;

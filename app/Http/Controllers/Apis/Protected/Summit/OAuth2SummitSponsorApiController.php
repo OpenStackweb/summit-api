@@ -68,6 +68,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             'sponsorship_name'  => ['==', '=@'],
             'sponsorship_size'  => ['==', '=@'],
             'badge_scans_count' => ['==', '<','>','<=','>=','<>'],
+            'is_published' => ['=='],
         ];
     }
 
@@ -80,6 +81,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             'sponsorship_name'  => 'sometimes|required|string',
             'sponsorship_size'  => 'sometimes|required|string',
             'badge_scans_count' => 'sometimes|required|integer',
+            'is_published' => 'sometimes|required|boolean',
         ];
     }
     /**

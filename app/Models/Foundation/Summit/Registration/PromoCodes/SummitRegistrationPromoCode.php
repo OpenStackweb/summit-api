@@ -253,12 +253,16 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      * @return bool
      */
     public function canUse():bool {
+        if(!$this->hasQuantityAvailable()) return false;
+        return $this->isLive();
+    }
+
+    public function hasQuantityAvailable():bool{
         $quantity_available = $this->quantity_available;
         $quantity_used = $this->quantity_used;
 
         if($quantity_available > 0 && $quantity_available  <= $quantity_used) return false;
-
-        return $this->isLive();
+        return true;
     }
 
     /**
@@ -362,6 +366,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     }
 
     public function canBeAppliedTo(SummitTicketType $ticketType):bool{
+        Log::debug(sprintf("SummitRegistrationPromoCode::canBeAppliedTo Ticket type %s.", $ticketType->getId()));
         if($this->allowed_ticket_types->count() > 0){
             $criteria = Criteria::create();
             $criteria->where(Criteria::expr()->eq('id', intval($ticketType->getId())));

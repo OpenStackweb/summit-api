@@ -517,11 +517,23 @@ final class ApplyPromoCodeTask extends AbstractTask
                     throw new EntityNotFoundException(sprintf("promo code %s not found on summit %s", $promo_code->getCode(), $this->summit->getId()));
                 }
 
-                $qty = $info['qty'];
+                $qty = intval($info['qty']);
 
                 $promo_code->checkSubject($owner_email, $owner_company_name);
 
-                if (!$promo_code->canUse()) {
+                if (!$promo_code->hasQuantityAvailable()) {
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "Promo code %s has reached max. usage (%s).",
+                            $promo_code->getCode(),
+                            $promo_code->getQuantityAvailable()
+                        )
+                    );
+                }
+
+                if (!$promo_code->isLive()) {
                     throw new ValidationException(sprintf('The Promo Code “%s” is not a valid code.', $promo_code->getCode()));
                 }
 
@@ -531,9 +543,11 @@ final class ApplyPromoCodeTask extends AbstractTask
                         throw new ValidationException(sprintf("ticket type %s not found on summit %s", $ticket_type_id, $this->summit->getId()));
                     }
                     if (!$promo_code->canBeAppliedTo($ticket_type)) {
+                        Log::debug(sprintf("promo code %s can not be applied to ticket type %s", $promo_code->getCode(), $ticket_type->getName()));
                         throw new ValidationException(sprintf("promo code %s can not be applied to ticket type %s", $promo_code->getCode(), $ticket_type->getName()));
                     }
                 }
+
                 Log::debug(sprintf("adding %s usage to promo code %s", $qty, $promo_code->getId()));
 
                 $this->lock_service->lock('promocode.'.$promo_code->getId().'.usage.lock', function() use($promo_code, $qty){

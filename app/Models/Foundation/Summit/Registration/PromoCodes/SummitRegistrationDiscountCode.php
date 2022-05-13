@@ -117,6 +117,7 @@ class SummitRegistrationDiscountCode extends SummitRegistrationPromoCode
                 sprintf('ticket type %s already belongs to discount code %s rules.', $rule->getTicketType()->getId(), $this->getId())
             );
         $this->ticket_types_rules->add($rule);
+        $this->allowed_ticket_types->add($rule->getTicketType());
     }
 
     /**
@@ -157,6 +158,7 @@ class SummitRegistrationDiscountCode extends SummitRegistrationPromoCode
                 sprintf('ticket type %s does not belongs to discount code %s rules.', $ticketType->getId(), $this->getId())
             );
         $this->ticket_types_rules->removeElement($rule);
+        $this->allowed_ticket_types->removeElement($rule->getTicketType());
         $rule->clearDiscountCode();
     }
 
@@ -166,6 +168,7 @@ class SummitRegistrationDiscountCode extends SummitRegistrationPromoCode
     public function removeTicketTypeRule(SummitRegistrationDiscountCodeTicketTypeRule $rule){
         if(!$this->ticket_types_rules->contains($rule)) return;
         $this->ticket_types_rules->removeElement($rule);
+        $this->allowed_ticket_types->add($rule->getTicketType());
     }
 
     const ClassName = 'SUMMIT_DISCOUNT_CODE';

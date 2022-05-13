@@ -51,7 +51,7 @@ class PresentationTrackChairScore
      * @ORM\JoinColumn(name="TrackChairID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SummitTrackChair
      */
-    private $track_chair;
+    private $reviewer;
 
     /**
      * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="track_chairs_scores")
@@ -79,17 +79,17 @@ class PresentationTrackChairScore
     /**
      * @return SummitTrackChair
      */
-    public function getTrackChair(): SummitTrackChair
+    public function getReviewer(): SummitTrackChair
     {
-        return $this->track_chair;
+        return $this->reviewer;
     }
 
     /**
-     * @param SummitTrackChair $track_chair
+     * @param SummitTrackChair $reviewer
      */
-    public function setTrackChair(SummitTrackChair $track_chair): void
+    public function setReviewer(SummitTrackChair $reviewer): void
     {
-        $this->track_chair = $track_chair;
+        $this->reviewer = $reviewer;
     }
 
     /**
@@ -108,8 +108,8 @@ class PresentationTrackChairScore
         $this->presentation = $presentation;
     }
 
-    public function clearTrackChair():void{
-        $this->track_chair = null;
+    public function clearReviewers():void{
+        $this->reviewer = null;
     }
 
     public function clearPresentation():void{

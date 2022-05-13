@@ -47,6 +47,7 @@ use App\Services\Model\Imp\SummitPresentationActionTypeService;
 use App\Services\Model\Imp\SummitRegistrationInvitationService;
 use App\Services\Model\Imp\SummitScheduleSettingsService;
 use App\Services\Model\Imp\SummitSelectedPresentationListService;
+use App\Services\Model\Imp\TrackChairRankingService;
 use App\Services\Model\Imp\TrackChairService;
 use App\Services\Model\IOrganizationService;
 use App\Services\Model\IPaymentGatewayProfileService;
@@ -84,6 +85,7 @@ use App\Services\Model\ISummitTicketTypeService;
 use App\Services\Model\ISummitTrackService;
 use App\Services\Model\ISummitTrackTagGroupService;
 use App\Services\Model\ITagService;
+use App\Services\Model\ITrackChairRankingService;
 use App\Services\Model\ITrackChairService;
 use App\Services\Model\ITrackQuestionTemplateService;
 use App\Services\Model\MemberService;
@@ -408,6 +410,10 @@ final class ModelServicesProvider extends ServiceProvider
             SummitScheduleSettingsService::class
         );
 
+        App::singleton(
+            ITrackChairRankingService::class,
+            TrackChairRankingService::class
+        );
    }
 
     /**

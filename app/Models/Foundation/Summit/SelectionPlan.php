@@ -837,6 +837,17 @@ class SelectionPlan extends SilverstripeBaseModel
     }
 
     /**
+     * @return ?PresentationTrackChairRatingType
+     */
+    public function getTrackChairRatingTypeById(int $id): ?PresentationTrackChairRatingType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $id));
+        $res = $this->track_chair_rating_types->matching($criteria)->first();
+        return !$res ? null : $res;
+    }
+
+    /**
      * @return ArrayCollection|PresentationTrackChairRatingType[]
      */
     public function getTrackChairRatingTypes()
@@ -860,6 +871,7 @@ class SelectionPlan extends SilverstripeBaseModel
     public function addTrackChairRatingType(PresentationTrackChairRatingType $ratingType):void{
         if($this->track_chair_rating_types->contains($ratingType)) return;
         $ratingType->setOrder($this->getTrackChairRatingTypeMaxOrder() + 1);
+        $ratingType->setSelectionPlan($this);
         $this->track_chair_rating_types->add($ratingType);
     }
 

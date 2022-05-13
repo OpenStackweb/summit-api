@@ -1948,4 +1948,14 @@ SQL;
         }
         return 0.0;
     }
+
+    /**
+     * @param SummitTrackChair $trackChair
+     * @return PresentationTrackChairScore[]
+     */
+    public function getTrackChairScoresBy(SummitTrackChair $trackChair){
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('reviewer', $trackChair));
+        return $this->track_chairs_scores->matching($criteria);
+    }
 }

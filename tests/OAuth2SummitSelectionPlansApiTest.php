@@ -25,12 +25,15 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
 
     protected function setUp():void
     {
+        $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
         self::insertTestData();
-        self::insertMemberTestData(IGroup::TrackChairs);
         self::$summit_permission_group->addMember(self::$member);
         self::$em->persist(self::$summit);
         self::$em->persist(self::$summit_permission_group);
+        self::$em->flush();
+        self::$summit->addTrackChair(self::$member, [ self::$defaultTrack ] );
+        self::$em->persist(self::$summit);
         self::$em->flush();
     }
 
@@ -206,5 +209,36 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         );
 
         $this->assertResponseStatus(204);
+    }
+
+    public function testGetPresentationWithRatingTypes() {
+
+        $params = [
+            'id'                => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'page'              => 1,
+            'per_page'          => 10,
+            'expand'            => 'track_chair_scores,track_chair_scores.type,track_chair_scores.type.type'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSelectionPlansApiController@getSelectionPlanPresentations",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $rating_types = json_decode($content);
+        $this->assertTrue(!is_null($rating_types));
     }
 }

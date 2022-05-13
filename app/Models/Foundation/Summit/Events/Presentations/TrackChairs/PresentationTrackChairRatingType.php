@@ -20,7 +20,7 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrinePresentationTrackChairRatingTypeRepository")
  * @ORM\Table(name="PresentationTrackChairRatingType")
  * Class PresentationTrackChairRatingType
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackChairs
@@ -156,6 +156,17 @@ class PresentationTrackChairRatingType
     }
 
     /**
+     * @return ?PresentationTrackChairScoreType
+     */
+    public function getScoreTypeById(int $id): ?PresentationTrackChairScoreType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $id));
+        $res = $this->score_types->matching($criteria)->first();
+        return !$res ? null : $res;
+    }
+
+    /**
      * @return int
      */
     private function getScoreTypeMaxOrder(): int
@@ -184,7 +195,7 @@ class PresentationTrackChairRatingType
     {
         if (!$this->score_types->contains($score)) return;
         $score->setOrder($this->getScoreTypeMaxOrder() + 1);
-        $this->score_types->remove($score);
+        $this->score_types->removeElement($score);
         $score->clearType();
         self::resetOrderForSelectable($this->score_types);
     }

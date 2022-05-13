@@ -17,7 +17,7 @@ use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrinePresentationTrackChairScoreTypeRepository")
  * @ORM\Table(name="PresentationTrackChairScoreType")
  * Class PresentationTrackChairScoreType
  * @package App\Models\Foundation\Summit\Events\Presentations\TrackChairs

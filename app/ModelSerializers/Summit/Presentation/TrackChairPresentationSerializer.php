@@ -29,6 +29,7 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
         'VotesCount'      => 'votes_count:json_int',
         'VotesAverage' => 'votes_average:json_float',
         'VotesTotalPoints' => 'votes_total_points:json_int',
+        'TrackChairCcores' => 'track_chairs_scores:json_int',
      ];
 
     protected static $allowed_fields = [
@@ -82,7 +83,11 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
 
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        $values['remaining_selections'] = $presentation->getRemainingSelectionsForMember($this->resource_server_context->getCurrentUser(false));
+        $member = $this->resource_server_context->getCurrentUser(false);
+
+        $values['remaining_selections'] = $presentation->getRemainingSelectionsForMember($member);
+
+        $summit_track_chair = $presentation->getSummit()->getTrackChairByMember($member);
 
         if(in_array('selectors', $relations))
         {
@@ -188,6 +193,14 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
                             $category_changes_requests[] = SerializerRegistry::getInstance()->getSerializer($request)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['category_changes_requests'] = $category_changes_requests;
+                    }
+                        break;
+                    case 'track_chair_scores':{
+                        $track_chair_scores = [];
+                        foreach ($presentation->getTrackChairScoresBy($summit_track_chair) as $score) {
+                            $track_chair_scores[] = SerializerRegistry::getInstance()->getSerializer($score)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $values['track_chair_scores'] = $track_chair_scores;
                     }
                         break;
                 }

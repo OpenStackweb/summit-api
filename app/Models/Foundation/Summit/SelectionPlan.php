@@ -165,7 +165,7 @@ class SelectionPlan extends SilverstripeBaseModel
     private $presentations;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType", mappedBy="selection_plan", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType", mappedBy="selection_plan", cascade={"persist","remove"}, orphanRemoval=true)
      * @var PresentationTrackChairRatingType
      */
     private $track_chair_rating_types;
@@ -843,6 +843,17 @@ class SelectionPlan extends SilverstripeBaseModel
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $id));
+        $res = $this->track_chair_rating_types->matching($criteria)->first();
+        return !$res ? null : $res;
+    }
+
+    /**
+     * @return ?PresentationTrackChairRatingType
+     */
+    public function getTrackChairRatingTypeByName(string $name): ?PresentationTrackChairRatingType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('name', trim($name)));
         $res = $this->track_chair_rating_types->matching($criteria)->first();
         return !$res ? null : $res;
     }

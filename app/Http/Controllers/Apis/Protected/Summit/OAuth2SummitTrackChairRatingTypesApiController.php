@@ -82,18 +82,6 @@ final class OAuth2SummitTrackChairRatingTypesApiController
     use ParametrizedGetAll;
 
     /**
-     * @return array
-     */
-    private function getRatingTypeValidationRules(): array
-    {
-        return [
-            'weight'  => 'required|numeric',
-            'name'    => 'required|string',
-            'order'   => 'required|int',
-        ];
-    }
-
-    /**
      * @return IBaseRepository
      */
     protected function getRepository(): IBaseRepository
@@ -108,7 +96,7 @@ final class OAuth2SummitTrackChairRatingTypesApiController
      */
     public function getTrackChairRatingTypes($summit_id, $selection_plan_id) {
 
-        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
         if (is_null($summit)) return $this->error404();
 
         $selection_plan = $this->selection_plan_repository->getById(intval($selection_plan_id));
@@ -128,7 +116,10 @@ final class OAuth2SummitTrackChairRatingTypesApiController
                 ];
             },
             function () {
-                return [];
+                return [
+                    'id',
+                    'order',
+                ];
             },
             function ($filter) use ($summit, $selection_plan) {
                 if ($filter instanceof Filter) {
@@ -137,9 +128,9 @@ final class OAuth2SummitTrackChairRatingTypesApiController
                 }
                 return $filter;
             },
-            function () {
+            function () use ($summit) {
                 $current_user = $this->resource_server_context->getCurrentUser();
-                if(!is_null($current_user)){
+                if(!is_null($current_user) && $summit->isSummitAdmin($current_user)) {
                     if(
                         $current_user->isOnGroup(IGroup::Administrators) ||
                         $current_user->isOnGroup(IGroup::SuperAdmins) ||
@@ -162,7 +153,7 @@ final class OAuth2SummitTrackChairRatingTypesApiController
     public function getTrackChairRatingType($summit_id, $selection_plan_id, $type_id) {
 
         return $this->processRequest(function () use ($summit_id, $selection_plan_id, $type_id) {
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
             if (is_null($summit)) return $this->error404();
 
             $selection_plan = $this->selection_plan_repository->getById(intval($selection_plan_id));
@@ -183,13 +174,13 @@ final class OAuth2SummitTrackChairRatingTypesApiController
     public function addTrackChairRatingType($summit_id, $selection_plan_id) {
 
         return $this->processRequest(function () use ($summit_id, $selection_plan_id) {
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
             if (is_null($summit)) return $this->error404();
 
             $selection_plan = $this->selection_plan_repository->getById(intval($selection_plan_id));
             if (is_null($selection_plan)) return $this->error404();
 
-            $payload = $this->getJsonPayload($this->getRatingTypeValidationRules());
+            $payload = $this->getJsonPayload(RatingTypeValidationRulesFactory::build(RatingTypeValidationRulesFactory::build([])));
 
             $track_chair_rating_type = $this->service->addTrackChairRatingType($selection_plan, $payload);
 
@@ -206,13 +197,13 @@ final class OAuth2SummitTrackChairRatingTypesApiController
     public function updateTrackChairRatingType($summit_id, $selection_plan_id, $type_id) {
 
         return $this->processRequest(function () use ($summit_id, $selection_plan_id, $type_id) {
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
             if (is_null($summit)) return $this->error404();
 
             $selection_plan = $this->selection_plan_repository->getById(intval($selection_plan_id));
             if (is_null($selection_plan)) return $this->error404();
 
-            $payload = $this->getJsonPayload($this->getRatingTypeValidationRules());
+            $payload = $this->getJsonPayload(RatingTypeValidationRulesFactory::build(RatingTypeValidationRulesFactory::build([])));
 
             $track_chair_rating_type = $this->service->updateTrackChairRatingType($selection_plan, intval($type_id), $payload);
 
@@ -229,7 +220,7 @@ final class OAuth2SummitTrackChairRatingTypesApiController
     public function deleteTrackChairRatingType($summit_id, $selection_plan_id, $type_id) {
 
         return $this->processRequest(function () use ($summit_id, $selection_plan_id, $type_id) {
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
             if (is_null($summit)) return $this->error404();
 
             $selection_plan = $this->selection_plan_repository->getById(intval($selection_plan_id));

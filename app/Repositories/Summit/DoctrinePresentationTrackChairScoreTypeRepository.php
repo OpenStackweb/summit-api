@@ -31,4 +31,15 @@ final class DoctrinePresentationTrackChairScoreTypeRepository
     {
         return PresentationTrackChairScoreType::class;
     }
+
+    /**
+     * @return array
+     */
+    protected function getOrderMappings()
+    {
+        return [
+            'id'    => 'e.id',
+            'score' => 'e.score',
+        ];
+    }
 }

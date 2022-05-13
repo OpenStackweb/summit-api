@@ -14,6 +14,7 @@
 
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore;
+use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
@@ -202,5 +203,12 @@ class SummitTrackChair extends SilverstripeBaseModel
         if(!$this->scores->contains($score)) return;
         $this->scores->removeElement($score);
         $score->clearTrackChair();
+    }
+
+    public function getScoreByType(int $rating_type_id):?PresentationTrackChairScore{
+        $res = $this->scores->filter(function($e) use($rating_type_id){
+            return $e->getType()->getType()->getId() === $rating_type_id;
+        })->first();
+        return $res == false ? null : $res;
     }
 }

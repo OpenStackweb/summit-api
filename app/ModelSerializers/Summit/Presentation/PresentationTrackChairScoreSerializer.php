@@ -15,36 +15,25 @@ use Libs\ModelSerializers\AbstractSerializer;
  * limitations under the License.
  **/
 
+use Libs\ModelSerializers\One2ManyExpandSerializer;
+
 /**
  * Class PresentationTrackChairScoreSerializer
  * @package ModelSerializers
  */
 final class PresentationTrackChairScoreSerializer extends SilverStripeSerializer
 {
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
-    {
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $track_chairs_score  = $this->object;
-        if(!$track_chairs_score instanceof PresentationTrackChairScore) return [];
+    protected static $array_mappings = [
+        'TypeId'         => 'type_id:json_int',
+        'PresentationId' => 'presentation_id:json_int',
+    ];
 
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                $relation = trim($relation);
-                if ($relation == 'type') {
-                    $track_chair_score_type = $track_chairs_score->getType();
-                    $values['type'] = SerializerRegistry::getInstance()
-                        ->getSerializer($track_chair_score_type)
-                        ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                }
-            }
-        }
-        return $values;
-    }
+    protected static $expand_mappings = [
+        'type' => [
+            'type'                  => One2ManyExpandSerializer::class,
+            'original_attribute'    => 'type',
+            'getter'                => 'getType',
+            'has'                   => 'hasType'
+        ],
+    ];
 }

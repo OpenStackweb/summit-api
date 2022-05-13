@@ -29,7 +29,7 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
         'VotesCount'      => 'votes_count:json_int',
         'VotesAverage' => 'votes_average:json_float',
         'VotesTotalPoints' => 'votes_total_points:json_int',
-        'TrackChairCcores' => 'track_chairs_scores:json_int',
+        'TrackChairAvgScore' => 'track_chair_avg_score:json_float',
      ];
 
     protected static $allowed_fields = [
@@ -40,6 +40,7 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
         'votes_count',
         'votes_average',
         'votes_total_points',
+        'track_chair_avg_score',
         'remaining_selections',
     ];
 

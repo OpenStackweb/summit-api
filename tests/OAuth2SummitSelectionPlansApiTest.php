@@ -56,7 +56,7 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         $params = [
             'id'                => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
-            'expand'            => 'track_groups,extra_questions,extra_questions.values,emails'
+            'expand'            => 'track_groups,extra_questions,extra_questions.values,emails,track_chair_rating_types'
         ];
 
         $response = $this->action(
@@ -238,7 +238,7 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
 
         $content = $response->getContent();
         $this->assertResponseStatus(200);
-        $rating_types = json_decode($content);
-        $this->assertTrue(!is_null($rating_types));
+        $presentations = json_decode($content);
+        $this->assertTrue(!is_null($presentations));
     }
 }

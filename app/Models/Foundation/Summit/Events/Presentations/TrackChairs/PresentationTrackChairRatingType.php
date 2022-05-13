@@ -167,6 +167,17 @@ class PresentationTrackChairRatingType
     }
 
     /**
+     * @return ?PresentationTrackChairScoreType
+     */
+    public function getScoreTypeByName(string $name): ?PresentationTrackChairScoreType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('name', trim($name)));
+        $res = $this->score_types->matching($criteria)->first();
+        return !$res ? null : $res;
+    }
+
+    /**
      * @return int
      */
     private function getScoreTypeMaxOrder(): int
@@ -194,7 +205,6 @@ class PresentationTrackChairRatingType
     public function removeScoreType(PresentationTrackChairScoreType $score):void
     {
         if (!$this->score_types->contains($score)) return;
-        $score->setOrder($this->getScoreTypeMaxOrder() + 1);
         $this->score_types->removeElement($score);
         $score->clearType();
         self::resetOrderForSelectable($this->score_types);

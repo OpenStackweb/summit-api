@@ -6289,12 +6289,6 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadSummitData, $current_realm)
-                ],
-                'authz_groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::TrackChairs,
-                    IGroup::TrackChairsAdmins,
                 ]
             ],
             [
@@ -6317,12 +6311,6 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadSummitData, $current_realm)
-                ],
-                'authz_groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::TrackChairs,
-                    IGroup::TrackChairsAdmins,
                 ]
             ],
             [

@@ -93,9 +93,15 @@ final class TrackChairRankingService
             $current_member = $this->resource_server_ctx->getCurrentUser();
             $this->checkPermissions($selection_plan->getSummit(), $current_member);
 
+            $rating_type_name = $payload['name'];
+            $track_chair_rating_type = $selection_plan->getTrackChairRatingTypeByName($rating_type_name);
+
+            if (!is_null($track_chair_rating_type))
+                throw new ValidationException("There is another rating type with the same name.");
+
             $track_chair_rating_type = new PresentationTrackChairRatingType();
             $track_chair_rating_type->setWeight(floatval($payload['weight']));
-            $track_chair_rating_type->setName($payload['name']);
+            $track_chair_rating_type->setName($rating_type_name);
             $track_chair_rating_type->setOrder(intval($payload['order']));
 
             $selection_plan->addTrackChairRatingType($track_chair_rating_type);
@@ -119,10 +125,18 @@ final class TrackChairRankingService
             if (is_null($track_chair_rating_type))
                 throw new EntityNotFoundException("Track chair rating type not found.");
 
-            $track_chair_rating_type->setWeight(floatval($payload['weight']));
-            $track_chair_rating_type->setName($payload['name']);
-            $track_chair_rating_type->setOrder(intval($payload['order']));
+            $rating_type_name = $payload['name'];
+            $track_chair_rating_type_by_name = $selection_plan->getTrackChairRatingTypeByName($rating_type_name);
 
+            if (!is_null($track_chair_rating_type_by_name) && $track_chair_rating_type_by_name->getId() != $track_chair_rating_type_id)
+                throw new ValidationException("There is another rating type with the same name.");
+
+            $track_chair_rating_type->setName($rating_type_name);
+            $track_chair_rating_type->setWeight(floatval($payload['weight']));
+
+            if (isset($payload['order']) && intval($payload['order']) != $track_chair_rating_type->getOrder()) {
+                $track_chair_rating_type->setOrder(intval($payload['order']));
+            }
             return $track_chair_rating_type;
         });
     }
@@ -160,9 +174,15 @@ final class TrackChairRankingService
             if (is_null($track_chair_rating_type))
                 throw new EntityNotFoundException("Track chair rating type not found.");
 
+            $score_type_name = $payload['name'];
+            $track_chair_score_type = $track_chair_rating_type->getScoreTypeByName($score_type_name);
+
+            if (!is_null($track_chair_score_type))
+                throw new ValidationException("There is another score type with the same name.");
+
             $track_chair_score_type = new PresentationTrackChairScoreType();
             $track_chair_score_type->setScore(intval($payload['score']));
-            $track_chair_score_type->setName($payload['name']);
+            $track_chair_score_type->setName($score_type_name);
             $track_chair_score_type->setDescription($payload['description']);
 
             $track_chair_rating_type->addScoreType($track_chair_score_type);
@@ -191,10 +211,18 @@ final class TrackChairRankingService
             if (is_null($track_chair_score_type))
                 throw new EntityNotFoundException("Track chair score type not found.");
 
-            $track_chair_score_type->setScore(intval($payload['score']));
-            $track_chair_score_type->setName($payload['name']);
+            $score_type_name = $payload['name'];
+            $track_chair_score_type_by_name = $track_chair_rating_type->getScoreTypeByName($score_type_name);
+
+            if (!is_null($track_chair_score_type_by_name) && $track_chair_score_type_by_name->getId() != $track_chair_score_type_id)
+                throw new ValidationException("There is another score type with the same name.");
+
+            $track_chair_score_type->setName($score_type_name);
             $track_chair_score_type->setDescription($payload['description']);
 
+            if (isset($payload['score']) && intval($payload['score']) != $track_chair_score_type->getScore()) {
+                $track_chair_score_type->setScore(intval($payload['score']));
+            }
             return $track_chair_score_type;
         });
     }

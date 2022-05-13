@@ -1,7 +1,4 @@
 <?php namespace ModelSerializers;
-use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
-use Libs\ModelSerializers\AbstractSerializer;
-
 /**
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +12,10 @@ use Libs\ModelSerializers\AbstractSerializer;
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
+use Libs\ModelSerializers\AbstractSerializer;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
+
 /**
  * Class PresentationTrackChairScoreTypeSerializer
  * @package ModelSerializers
@@ -25,32 +26,15 @@ final class PresentationTrackChairScoreTypeSerializer extends SilverStripeSerial
         'Score'         => 'score:json_int',
         'Name'          => 'name:json_string',
         'Description'   => 'description:json_string',
+        'TypeId'        => 'type_id:json_int',
     ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
-    {
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        $track_chairs_score_type  = $this->object;
-        if(!$track_chairs_score_type instanceof PresentationTrackChairScoreType) return [];
-
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                $relation = trim($relation);
-                if ($relation == 'type') {
-                    $track_chair_rating_type = $track_chairs_score_type->getType();
-                    $values['type'] = SerializerRegistry::getInstance()
-                        ->getSerializer($track_chair_rating_type)
-                        ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                }
-            }
-        }
-        return $values;
-    }
+    protected static $expand_mappings = [
+        'type' => [
+            'type'                  => One2ManyExpandSerializer::class,
+            'original_attribute'    => 'type_id',
+            'getter'                => 'getType',
+            'has'                   => 'hasType'
+        ],
+    ];
 }

@@ -38,8 +38,10 @@ final class OAuth2SummitTrackChairsRankingApiTest extends ProtectedApiTest
         $params = [
             'id'                => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
+            'order'             => '+order',
             'page'              => 1,
             'per_page'          => 10,
+            'expand'            => 'score_types,selection_plan'
         ];
 
         $headers = [
@@ -188,7 +190,7 @@ final class OAuth2SummitTrackChairsRankingApiTest extends ProtectedApiTest
             $headers
         );
 
-        $this->assertResponseStatus(500);
+        $this->assertResponseStatus(204);
     }
 
     // Track Chair Score Types
@@ -199,8 +201,10 @@ final class OAuth2SummitTrackChairsRankingApiTest extends ProtectedApiTest
             'id'                => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
             'type_id'           => self::$default_selection_plan->getTrackChairRatingTypes()[0]->getId(),
+            'order'             => '-score',
             'page'              => 1,
             'per_page'          => 10,
+            'expand'            => 'type'
         ];
 
         $headers = [

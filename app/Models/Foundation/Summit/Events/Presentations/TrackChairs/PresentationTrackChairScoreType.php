@@ -30,10 +30,12 @@ class PresentationTrackChairScoreType
 
     protected $getIdMappings = [
         'getSelectionPlanId' => 'selection_plan',
+        'getTypeId'          => 'type',
     ];
 
     protected $hasPropertyMappings = [
         'hasSelectionPlan' => 'selection_plan',
+        'hasType'          => 'type',
     ];
 
     /**

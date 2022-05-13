@@ -1282,13 +1282,17 @@ final class PresentationService
             if(is_null($score_type) || !$score_type instanceof PresentationTrackChairScoreType)
                 throw new EntityNotFoundException("Score type not found.");
 
-            $track_chair_score = new PresentationTrackChairScore();
-            $track_chair_score->setType($score_type);
-            $track_chair_score->setReviewer($summit_track_chair);
-
-            $presentation->addTrackChairScore($track_chair_score);
-
-            $summit_track_chair->addScore($track_chair_score);
+            //Check if exists a score of the same type for this track chair, if so replace it by this new one
+            $track_chair_score = $summit_track_chair->getScoreByType($score_type->getType()->getId());
+            if (is_null($track_chair_score)) {
+                $track_chair_score = new PresentationTrackChairScore();
+                $track_chair_score->setType($score_type);
+                $track_chair_score->setReviewer($summit_track_chair);
+                $presentation->addTrackChairScore($track_chair_score);
+                $summit_track_chair->addScore($track_chair_score);
+            } else {
+                $track_chair_score->setType($score_type);
+            }
         });
     }
 }

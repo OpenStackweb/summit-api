@@ -113,7 +113,6 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
             $values['team_memberships'] = $res;
         }
 
-
         if(in_array('sponsor_memberships', $relations)){
             $res = [];
             foreach ($member->getSponsorMemberships() as $sponsor_membership){
@@ -195,10 +194,14 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                         if (!is_null($attendee))
                         {
                             unset($values['attendee_id']);
-                            $values['attendee'] = SerializerRegistry::getInstance()->getSerializer($attendee)->serialize
-                            (
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),[],['none']
-                            );
+                            $values['attendee'] = SerializerRegistry::getInstance()
+                                ->getSerializer($attendee)
+                                ->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                );
                         }
                     }
                     break;

@@ -38,7 +38,10 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
     protected static $allowed_relations = [
         'extra_questions',
         'tickets',
-        'presentation_votes'
+        'presentation_votes',
+        'ticket_types',
+        'allowed_access_levels',
+        'allowed_features',
     ];
 
     /**
@@ -110,6 +113,24 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
         $endVotingDate = $params['end_attendee_voting_period_date'] ?? null;
         $values['votes_count'] = $attendee->getVotesCount($beginVotingDate, $endVotingDate, $track_group_id);
 
+        if (in_array('ticket_types', $relations)) {
+            $values['ticket_types'] = $attendee->getBoughtTicketTypes();
+        }
+        if (in_array('allowed_access_levels', $relations)) {
+            $allowed_access_levels = [];
+            foreach($attendee->getAllowedAccessLevels() as $al){
+                $allowed_access_levels[] = $al->getId();
+            }
+            $values['allowed_access_levels'] = $allowed_access_levels;
+        }
+        if (in_array('allowed_features', $relations)) {
+            $allowed_features = [];
+            foreach($attendee->getAllowedBadgeFeatures() as $f){
+                $allowed_features[] = $f->getId();
+            }
+            $values['allowed_features'] = $allowed_features;
+        }
+
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);
             foreach ($exp_expand as $relation) {
@@ -155,6 +176,40 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                         $values['presentation_votes'] = $presentation_votes;
                     }
                         break;
+                    case 'allowed_features':{
+                        if (!in_array('allowed_features', $relations)) break;
+                        unset($values['allowed_features']);
+                        $allowed_features = [];
+                        foreach($attendee->getAllowedBadgeFeatures() as $f){
+                            $allowed_features[] = SerializerRegistry::getInstance()
+                                ->getSerializer($f)
+                                ->serialize(
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
+                        }
+                        $values['allowed_features'] = $allowed_features;
+                    }
+                    break;
+                    case 'allowed_access_levels':{
+                        if (!in_array('allowed_access_levels', $relations)) break;
+                        unset($values['allowed_access_levels']);
+                        $allowed_access_levels = [];
+                        foreach($attendee->getAllowedAccessLevels() as $al){
+                            $allowed_access_levels[] = SerializerRegistry::getInstance()
+                                ->getSerializer($al)
+                                ->serialize(
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
+                        }
+                        $values['allowed_access_levels'] = $allowed_access_levels;
+                    }
+                    break;
                     case 'speaker': {
                         if (!is_null($speaker))
                         {

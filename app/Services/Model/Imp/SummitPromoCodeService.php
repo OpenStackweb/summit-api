@@ -306,6 +306,9 @@ final class SummitPromoCodeService
 
             if ($promo_code instanceof SummitRegistrationDiscountCode) {
                 $data['ticket_type'] = $ticket_type;
+                if($ticket_type->isFree())
+                    throw new ValidationException(sprintf("Ticket Type %s (Free) can not be added on added on Discount Code.", $ticket_type_id ));
+
                 $rule = SummitRegistrationDiscountCodeTicketTypeRuleFactory::build($data);
                 $promo_code->addTicketTypeRule($rule);
 

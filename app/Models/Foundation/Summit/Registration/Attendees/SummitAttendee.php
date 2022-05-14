@@ -21,6 +21,7 @@ use App\Models\Foundation\Main\ExtraQuestions\ExtraQuestionAnswerHolder;
 use Carbon\Carbon;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -987,4 +988,85 @@ SQL;
         Log::debug(sprintf("SummitAttendee::canChangeAnswerValue currentUserIsAdmin %b", $currentUserIsAdmin));
         return $currentUserIsAdmin || $this->summit->isAllowUpdateAttendeeExtraQuestions();
     }
+
+
+    /**
+     * @return array
+     */
+    public function getBoughtTicketTypes(): array
+    {
+        try {
+            $sql = <<<SQL
+
+SELECT TicketTypeID As type_id, COUNT(ID) As qty FROM `SummitAttendeeTicket` 
+where OwnerID = :owner_id AND
+SummitAttendeeTicket.IsActive = 1 AND
+SummitAttendeeTicket.Status = 'Paid'
+GROUP BY OwnerID, TicketTypeID;
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['owner_id' => $this->id]);
+            $res = $stmt->fetchAll();
+            $res = count($res) > 0 ? $res : [];
+            return $res;
+        } catch (\Exception $ex) {
+
+        }
+        return [];
+    }
+
+    public function getAllowedAccessLevels():array{
+        $bindings      = [
+            'owner_id' => $this->id
+        ];
+
+        $query = <<<SQL
+SELECT DISTINCT SummitAccessLevelType.* FROM SummitAccessLevelType
+INNER JOIN SummitBadgeType_AccessLevels ON SummitBadgeType_AccessLevels.SummitAccessLevelTypeID = SummitAccessLevelType.ID
+INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType_AccessLevels.SummitBadgeTypeID
+INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
+WHERE SummitAttendeeTicket.OwnerID = :owner_id
+SQL;
+        $rsm = new ResultSetMappingBuilder($this->getEM());
+        $rsm->addRootEntityFromClassMetadata(SummitAccessLevelType::class);
+
+        // build rsm here
+        $native_query = $this->getEM()->createNativeQuery($query, $rsm);
+
+        foreach($bindings as $k => $v)
+            $native_query->setParameter($k, $v);
+
+        return $native_query->getResult();
+    }
+
+    public function getAllowedBadgeFeatures():array{
+        $bindings      = [
+            'owner_id' => $this->id
+        ];
+
+        $query = <<<SQL
+SELECT DISTINCT SummitBadgeFeatureType.* FROM SummitBadgeFeatureType
+INNER JOIN SummitAttendeeBadge_Features ON SummitAttendeeBadge_Features.SummitBadgeFeatureTypeID = SummitBadgeFeatureType.ID
+INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.ID = SummitAttendeeBadge_Features.SummitAttendeeBadgeID
+INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
+WHERE SummitAttendeeTicket.OwnerID = :owner_id
+UNION
+SELECT DISTINCT SummitBadgeFeatureType.* FROM SummitBadgeFeatureType
+INNER JOIN SummitBadgeType_BadgeFeatures ON SummitBadgeType_BadgeFeatures.SummitBadgeTypeID = SummitBadgeFeatureType.ID
+INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType_BadgeFeatures.SummitBadgeFeatureTypeID
+INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
+WHERE SummitAttendeeTicket.OwnerID = :owner_id
+SQL;
+        $rsm = new ResultSetMappingBuilder($this->getEM());
+        $rsm->addRootEntityFromClassMetadata(SummitBadgeFeatureType::class);
+
+        // build rsm here
+        $native_query = $this->getEM()->createNativeQuery($query, $rsm);
+
+        foreach($bindings as $k => $v)
+            $native_query->setParameter($k, $v);
+
+        return $native_query->getResult();
+    }
+
 }

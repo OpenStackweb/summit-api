@@ -564,4 +564,8 @@ class SummitTicketType extends SilverstripeBaseModel
         }
         return $ticket;
     }
+
+    public function isFree():bool{
+        return $this->getCost() === 0.0;
+    }
 }

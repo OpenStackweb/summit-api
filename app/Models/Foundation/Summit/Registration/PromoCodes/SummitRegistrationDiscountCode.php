@@ -16,6 +16,7 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 /**
  * @ORM\Entity
@@ -225,5 +226,12 @@ class SummitRegistrationDiscountCode extends SummitRegistrationPromoCode
         return $ticket;
     }
 
+    public function canBeAppliedTo(SummitTicketType $ticketType):bool{
+        Log::debug(sprintf("SummitRegistrationDiscountCode::canBeAppliedTo Ticket type %s.", $ticketType->getId()));
+        if($ticketType->isFree()){
+            return false;
+        }
+        return parent::canBeAppliedTo($ticketType);
+    }
 
 }

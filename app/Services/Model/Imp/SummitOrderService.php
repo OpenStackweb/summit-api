@@ -514,7 +514,7 @@ final class ApplyPromoCodeTask extends AbstractTask
                 }
 
                 if ($promo_code->getSummitId() != $this->summit->getId()) {
-                    throw new EntityNotFoundException(sprintf("promo code %s not found on summit %s", $promo_code->getCode(), $this->summit->getId()));
+                    throw new EntityNotFoundException(sprintf("Promo Code %s not found on summit %s.", $promo_code->getCode(), $this->summit->getId()));
                 }
 
                 $qty = intval($info['qty']);
@@ -540,11 +540,11 @@ final class ApplyPromoCodeTask extends AbstractTask
                 foreach ($info['types'] as $ticket_type_id) {
                     $ticket_type = $this->summit->getTicketTypeById($ticket_type_id);
                     if (is_null($ticket_type)) {
-                        throw new ValidationException(sprintf("ticket type %s not found on summit %s", $ticket_type_id, $this->summit->getId()));
+                        throw new ValidationException(sprintf("Ticket Type %s not found on summit %s.", $ticket_type_id, $this->summit->getId()));
                     }
                     if (!$promo_code->canBeAppliedTo($ticket_type)) {
-                        Log::debug(sprintf("promo code %s can not be applied to ticket type %s", $promo_code->getCode(), $ticket_type->getName()));
-                        throw new ValidationException(sprintf("promo code %s can not be applied to ticket type %s", $promo_code->getCode(), $ticket_type->getName()));
+                        Log::debug(sprintf("Promo code %s can not be applied to ticket type %s", $promo_code->getCode(), $ticket_type->getName()));
+                        throw new ValidationException(sprintf("Promo code %s can not be applied to Ticket Type %s.", $promo_code->getCode(), $ticket_type->getName()));
                     }
                 }
 

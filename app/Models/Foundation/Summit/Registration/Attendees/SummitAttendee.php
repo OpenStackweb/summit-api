@@ -1021,14 +1021,15 @@ SQL;
         ];
 
         $query = <<<SQL
-SELECT DISTINCT SummitAccessLevelType.* FROM SummitAccessLevelType
-INNER JOIN SummitBadgeType_AccessLevels ON SummitBadgeType_AccessLevels.SummitAccessLevelTypeID = SummitAccessLevelType.ID
+SELECT DISTINCT E.*
+                FROM SummitAccessLevelType E
+INNER JOIN SummitBadgeType_AccessLevels ON SummitBadgeType_AccessLevels.SummitAccessLevelTypeID = E.ID
 INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType_AccessLevels.SummitBadgeTypeID
 INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
 WHERE SummitAttendeeTicket.OwnerID = :owner_id
 SQL;
         $rsm = new ResultSetMappingBuilder($this->getEM());
-        $rsm->addRootEntityFromClassMetadata(SummitAccessLevelType::class);
+        $rsm->addRootEntityFromClassMetadata(SummitAccessLevelType::class, 'E');
 
         // build rsm here
         $native_query = $this->getEM()->createNativeQuery($query, $rsm);
@@ -1045,20 +1046,22 @@ SQL;
         ];
 
         $query = <<<SQL
-SELECT DISTINCT SummitBadgeFeatureType.* FROM SummitBadgeFeatureType
-INNER JOIN SummitAttendeeBadge_Features ON SummitAttendeeBadge_Features.SummitBadgeFeatureTypeID = SummitBadgeFeatureType.ID
+SELECT DISTINCT E.* 
+FROM SummitBadgeFeatureType E
+INNER JOIN SummitAttendeeBadge_Features ON SummitAttendeeBadge_Features.SummitBadgeFeatureTypeID = E.ID
 INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.ID = SummitAttendeeBadge_Features.SummitAttendeeBadgeID
 INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
 WHERE SummitAttendeeTicket.OwnerID = :owner_id
 UNION
-SELECT DISTINCT SummitBadgeFeatureType.* FROM SummitBadgeFeatureType
-INNER JOIN SummitBadgeType_BadgeFeatures ON SummitBadgeType_BadgeFeatures.SummitBadgeTypeID = SummitBadgeFeatureType.ID
+SELECT DISTINCT E.* 
+FROM SummitBadgeFeatureType E
+INNER JOIN SummitBadgeType_BadgeFeatures ON SummitBadgeType_BadgeFeatures.SummitBadgeTypeID = E.ID
 INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType_BadgeFeatures.SummitBadgeFeatureTypeID
 INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
 WHERE SummitAttendeeTicket.OwnerID = :owner_id
 SQL;
         $rsm = new ResultSetMappingBuilder($this->getEM());
-        $rsm->addRootEntityFromClassMetadata(SummitBadgeFeatureType::class);
+        $rsm->addRootEntityFromClassMetadata(SummitBadgeFeatureType::class, 'E');
 
         // build rsm here
         $native_query = $this->getEM()->createNativeQuery($query, $rsm);

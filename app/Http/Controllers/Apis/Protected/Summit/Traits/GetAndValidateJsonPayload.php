@@ -35,7 +35,7 @@ trait GetAndValidateJsonPayload
         $validation = Validator::make($payload, $validation_rules);
 
         if ($validation->fails()) {
-            throw new ValidationException($validation->messages()->all());
+            throw new ValidationException($validation->messages()->toArray());
         }
 
         return $payload;

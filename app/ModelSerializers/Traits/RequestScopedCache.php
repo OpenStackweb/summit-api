@@ -56,7 +56,7 @@ trait RequestScopedCache
                 )
             );
 
-            $request->headers()->add('X-Request-ID', $requestId);
+            $request->headers->set('X-Request-ID', $requestId);
 
             $_SERVER['HTTP_X_REQUEST_ID'] = $requestId;
 

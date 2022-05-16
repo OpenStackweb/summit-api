@@ -147,10 +147,10 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
             foreach ($member->getPaidSummitTicketsIds($summit) as $ticket_id){
                 $res[] = intval($ticket_id);
                 $count++;
-                if (AbstractSerializer::MaxCollectionPage < $count) {
+                /*if (AbstractSerializer::MaxCollectionPage < $count) {
                     $values['summit_tickets_has_more'] = true;
                     break;
-                }
+                }*/
             }
             $values['summit_tickets'] = $res;
         }
@@ -261,10 +261,10 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
                                 ->getSerializer($ticket)
                                 ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             $count++;
-                            if (AbstractSerializer::MaxCollectionPage < $count){
+                            /*if (AbstractSerializer::MaxCollectionPage < $count){
                                 $values['summit_tickets_has_more'] = true;
                                 break;
-                            }
+                            }*/
                         }
                         $values['summit_tickets'] = $summit_tickets;
                     }

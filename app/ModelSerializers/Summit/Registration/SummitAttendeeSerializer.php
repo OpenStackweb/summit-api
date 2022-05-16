@@ -71,11 +71,17 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
         $speaker         = null;
 
         if (in_array('tickets', $relations)) {
+            $count = 0;
             $tickets = [];
             foreach ($attendee->getTickets() as $t) {
                 if (!$t->hasTicketType()) continue;
                 if ($t->isCancelled()) continue;
-                $tickets[] = intval($t->getTicketType()->getId());
+                $tickets[] = intval($t->getId());
+                $count++;
+                /*if (AbstractSerializer::MaxCollectionPage < $count) {
+                    $values['tickets_has_more'] = true;
+                    break;
+                }*/
             }
             $values['tickets'] = $tickets;
         }
@@ -116,6 +122,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
         if (in_array('ticket_types', $relations)) {
             $values['ticket_types'] = $attendee->getBoughtTicketTypes();
         }
+
         if (in_array('allowed_access_levels', $relations)) {
             $allowed_access_levels = [];
             foreach($attendee->getAllowedAccessLevels() as $al){
@@ -123,6 +130,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
             }
             $values['allowed_access_levels'] = $allowed_access_levels;
         }
+
         if (in_array('allowed_features', $relations)) {
             $allowed_features = [];
             foreach($attendee->getAllowedBadgeFeatures() as $f){
@@ -139,11 +147,17 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                         if (!in_array('tickets', $relations)) break;
                         unset($values['tickets']);
                         $tickets = [];
+                        $count = 0;
                         foreach($attendee->getTickets() as $t)
                         {
                             if (!$t->hasTicketType()) continue;
                             if ($t->isCancelled()) continue;
                             $tickets[] = SerializerRegistry::getInstance()->getSerializer($t)->serialize(AbstractSerializer::getExpandForPrefix('tickets', $expand));
+                            $count++;
+                            /*if (AbstractSerializer::MaxCollectionPage < $count) {
+                                $values['tickets_has_more'] = true;
+                                break;
+                            }*/
                         }
                         $values['tickets'] = $tickets;
                     }

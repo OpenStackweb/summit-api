@@ -1008,6 +1008,12 @@ SQL;
             $stmt->execute(['owner_id' => $this->id]);
             $res = $stmt->fetchAll();
             $res = count($res) > 0 ? $res : [];
+            if(count($res) > 0){
+                $res = array_map(function($e){
+                    $e['type_id'] = intval($e['type_id']);
+                    $e['qty'] = intval($e['qty']);
+                    return $e; }, $res);
+            }
             return $res;
         } catch (\Exception $ex) {
 

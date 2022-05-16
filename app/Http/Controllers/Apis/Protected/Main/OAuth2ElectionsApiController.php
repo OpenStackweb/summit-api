@@ -253,7 +253,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
             );
         } catch (ValidationException $ex1) {
             Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
+            return $this->error412($ex1->getMessage());
         } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
             return $this->error404($ex2->getMessage());

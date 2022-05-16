@@ -32,7 +32,7 @@ trait RequestProcessor
         }
         catch (ValidationException $ex) {
             Log::warning($ex);
-            return $this->error412(array($ex->getMessages()));
+            return $this->error412($ex->getMessages());
         }
         catch(EntityNotFoundException $ex)
         {

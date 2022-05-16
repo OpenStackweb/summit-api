@@ -12,8 +12,7 @@
  * limitations under the License.
  **/
 
-use Illuminate\Support\Facades\Log;
-use Libs\ModelSerializers\AbstractSerializer;
+use App\ModelSerializers\Traits\RequestScopedCache;
 use Libs\ModelSerializers\Many2OneExpandSerializer;
 use Libs\ModelSerializers\One2ManyExpandSerializer;
 use models\summit\SummitAttendeeTicket;
@@ -82,6 +81,9 @@ class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer
             'getter' => 'getAppliedTaxes',
         ],
     ];
+
+    use RequestScopedCache;
+
     /**
      * @param null $expand
      * @param array $fields
@@ -91,28 +93,38 @@ class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer
      */
     public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
     {
-        $ticket = $this->object;
-        if (!$ticket instanceof SummitAttendeeTicket) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
+        return $this->cache(
+            $this->getRequestKey
+            (
+                "BaseSummitAttendeeTicketSerializer",
+                $this->object->getIdentifier(),
+                $expand,
+                $fields,
+                $relations
+            ), function () use ($expand, $fields, $relations, $params) {
 
-        if (!count($relations)) $relations = $this->getAllowedRelations();
+            if (!count($relations)) $relations = $this->getAllowedRelations();
+            $ticket = $this->object;
+            if (!$ticket instanceof SummitAttendeeTicket) return [];
+            $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if (in_array('applied_taxes', $relations) && !isset($values['applied_taxes'])) {
-            $applied_taxes = [];
-            foreach ($ticket->getAppliedTaxes() as $tax) {
-                $applied_taxes[] = $tax->getId();
+            if (in_array('applied_taxes', $relations) && !isset($values['applied_taxes'])) {
+                $applied_taxes = [];
+                foreach ($ticket->getAppliedTaxes() as $tax) {
+                    $applied_taxes[] = $tax->getId();
+                }
+                $values['applied_taxes'] = $applied_taxes;
             }
-            $values['applied_taxes'] = $applied_taxes;
-        }
 
-        if (in_array('refund_requests', $relations) && !isset($values['refund_requests'])) {
-            $refund_requests = [];
-            foreach ($ticket->getRefundedRequests() as $request) {
-                $refund_requests[] = $request->getId();
+            if (in_array('refund_requests', $relations) && !isset($values['refund_requests'])) {
+                $refund_requests = [];
+                foreach ($ticket->getRefundedRequests() as $request) {
+                    $refund_requests[] = $request->getId();
+                }
+                $values['refund_requests'] = $refund_requests;
             }
-            $values['refund_requests'] = $refund_requests;
-        }
 
-        return $values;
+            return $values;
+        });
     }
 }

@@ -11,8 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\ModelSerializers\Traits\RequestScopedCache;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SummitTicketType;
+
 /**
  * Class SummitTicketTypeSerializer
  * @package ModelSerializers
@@ -20,23 +23,25 @@ use models\summit\SummitTicketType;
 final class SummitTicketTypeSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
-        'Name'                => 'name:json_string',
-        'Description'         => 'description:json_string',
-        'ExternalId'          => 'external_id:json_string',
-        'SummitId'            => 'summit_id:json_int',
-        'Cost'                => 'cost:json_float',
-        'Currency'            => 'currency:json_string',
-        'Quantity2Sell'       => 'quantity_2_sell:json_int',
+        'Name' => 'name:json_string',
+        'Description' => 'description:json_string',
+        'ExternalId' => 'external_id:json_string',
+        'SummitId' => 'summit_id:json_int',
+        'Cost' => 'cost:json_float',
+        'Currency' => 'currency:json_string',
+        'Quantity2Sell' => 'quantity_2_sell:json_int',
         'MaxQuantityPerOrder' => 'max_quantity_per_order:json_int',
-        'SalesStartDate'      => 'sales_start_date:datetime_epoch',
-        'SalesEndDate'        => 'sales_end_date:datetime_epoch',
-        'BadgeTypeId'         => 'badge_type_id:json_int',
-        'QuantitySold'        => 'quantity_sold:json_int',
+        'SalesStartDate' => 'sales_start_date:datetime_epoch',
+        'SalesEndDate' => 'sales_end_date:datetime_epoch',
+        'BadgeTypeId' => 'badge_type_id:json_int',
+        'QuantitySold' => 'quantity_sold:json_int',
     ];
 
     protected static $allowed_relations = [
         'applied_taxes',
     ];
+
+    use RequestScopedCache;
 
     /**
      * @param null $expand
@@ -45,46 +50,60 @@ final class SummitTicketTypeSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
     {
-        $ticket_type = $this->object;
-        if (!$ticket_type instanceof SummitTicketType) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
+        return $this->cache(
+            $this->getRequestKey
+            (
+                "SummitTicketTypeSerializer",
+                $this->object->getIdentifier(),
+                $expand,
+                $fields,
+                $relations
+            ), function () use ($expand, $fields, $relations, $params) {
 
-        // applied_taxes
-        if(in_array('applied_taxes', $relations)) {
-            $applied_taxes = [];
-            foreach ($ticket_type->getAppliedTaxes() as $tax) {
-                $applied_taxes[] = $tax->getId();
-            }
-            $values['applied_taxes'] = $applied_taxes;
-        }
+            $ticket_type = $this->object;
+            if (!$ticket_type instanceof SummitTicketType) return [];
+            $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-                    case 'applied_taxes': {
-                        unset($values['applied_taxes']);
-                        $applied_taxes = [];
-                        foreach ($ticket_type->getAppliedTaxes() as $tax) {
-                            $applied_taxes[] = SerializerRegistry::getInstance()->getSerializer($tax)->serialize(AbstractSerializer::filterExpandByPrefix($expand, "applied_taxes"));
-                        }
-                        $values['applied_taxes'] = $applied_taxes;
-                    }
-                    break;
-
-                    case 'badge_type': {
-                        if($ticket_type->hasBadgeType()) {
-                            unset($values['badge_type_id']);
-                            $values['badge_type'] = SerializerRegistry::getInstance()->getSerializer($ticket_type->getBadgeType())->serialize(AbstractSerializer::filterExpandByPrefix($expand, "badge_type"));
-                        }
-                    }
-                        break;
+            // applied_taxes
+            if (in_array('applied_taxes', $relations)) {
+                $applied_taxes = [];
+                foreach ($ticket_type->getAppliedTaxes() as $tax) {
+                    $applied_taxes[] = $tax->getId();
                 }
-
+                $values['applied_taxes'] = $applied_taxes;
             }
-        }
-        return $values;
+
+            if (!empty($expand)) {
+                $exp_expand = explode(',', $expand);
+                foreach ($exp_expand as $relation) {
+                    switch (trim($relation)) {
+                        case 'applied_taxes':
+                            {
+                                unset($values['applied_taxes']);
+                                $applied_taxes = [];
+                                foreach ($ticket_type->getAppliedTaxes() as $tax) {
+                                    $applied_taxes[] = SerializerRegistry::getInstance()->getSerializer($tax)->serialize(AbstractSerializer::filterExpandByPrefix($expand, "applied_taxes"));
+                                }
+                                $values['applied_taxes'] = $applied_taxes;
+                            }
+                            break;
+
+                        case 'badge_type':
+                            {
+                                if ($ticket_type->hasBadgeType()) {
+                                    unset($values['badge_type_id']);
+                                    $values['badge_type'] = SerializerRegistry::getInstance()->getSerializer($ticket_type->getBadgeType())->serialize(AbstractSerializer::filterExpandByPrefix($expand, "badge_type"));
+                                }
+                            }
+                            break;
+                    }
+
+                }
+            }
+            return $values;
+        });
+
     }
 }

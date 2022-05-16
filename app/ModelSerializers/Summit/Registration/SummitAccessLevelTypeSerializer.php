@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use App\ModelSerializers\Traits\RequestScopedCache;
 /**
  * Class SummitAccessLevelTypeSerializer
  * @package ModelSerializers
@@ -25,4 +25,27 @@ final class SummitAccessLevelTypeSerializer extends SilverStripeSerializer
         'Default'           => 'is_default:json_boolean',
         'SummitId'          => 'summit_id:json_int',
     ];
+
+    use RequestScopedCache;
+
+    /**
+     * @param null $expand
+     * @param array $fields
+     * @param array $relations
+     * @param array $params
+     * @return array
+     */
+    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    {
+        return $this->cache($this->getRequestKey
+        (
+            "SummitAccessLevelTypeSerializer",
+            $this->object->getIdentifier(),
+            $expand,
+            $fields,
+            $relations
+        ), function () use ($expand, $fields, $relations, $params) {
+            return parent::serialize($expand, $fields, $relations, $params);
+        });
+    }
 }

@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\ModelSerializers\Traits\RequestScopedCache;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SummitBadgeType;
 /**
@@ -32,6 +34,8 @@ final class SummitBadgeTypeSerializer extends SilverStripeSerializer
         'badge_features',
     ];
 
+    use RequestScopedCache;
+
     /**
      * @param null $expand
      * @param array $fields
@@ -41,55 +45,64 @@ final class SummitBadgeTypeSerializer extends SilverStripeSerializer
      */
     public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
     {
-        $badge_type = $this->object;
-        if (!$badge_type instanceof SummitBadgeType) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
+        return $this->cache($this->getRequestKey
+        (
+            "SummitBadgeTypeSerializer",
+            $this->object->getIdentifier(),
+            $expand,
+            $fields,
+            $relations
+        ), function () use ($expand, $fields, $relations, $params) {
+            $badge_type = $this->object;
+            if (!$badge_type instanceof SummitBadgeType) return [];
+            $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if(!count($relations)) $relations = $this->getAllowedRelations();
-        // access_levels
-        if(in_array('access_levels', $relations)) {
-            $access_levels = [];
-            foreach ($badge_type->getAccessLevels() as $access_level) {
-                $access_levels[] = $access_level->getId();
-            }
-            $values['access_levels'] = $access_levels;
-        }
-
-        // badge_features
-        if(in_array('badge_features', $relations)) {
-            $features = [];
-            foreach ($badge_type->getBadgeFeatures() as $feature) {
-                $features[] = $feature->getId();
-            }
-            $values['badge_features'] = $features;
-        }
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-                    case 'access_levels': {
-                        unset($values['access_levels']);
-                        $access_levels = [];
-                        foreach ($badge_type->getAccessLevels() as $access_level) {
-                            $access_levels[] = SerializerRegistry::getInstance()->getSerializer($access_level)->serialize(AbstractSerializer::getExpandForPrefix('access_levels', $expand));
-                        }
-                        $values['access_levels'] = $access_levels;
-                    }
-                        break;
-                    case 'badge_features': {
-                        unset($values['badge_features']);
-                        $badge_features = [];
-                        foreach ($badge_type->getBadgeFeatures() as $feature) {
-                            $badge_features[] = SerializerRegistry::getInstance()->getSerializer($feature)->serialize(AbstractSerializer::getExpandForPrefix('badge_features', $expand));
-                        }
-                        $values['badge_features'] = $badge_features;
-                    }
-                    break;
+            if(!count($relations)) $relations = $this->getAllowedRelations();
+            // access_levels
+            if(in_array('access_levels', $relations)) {
+                $access_levels = [];
+                foreach ($badge_type->getAccessLevels() as $access_level) {
+                    $access_levels[] = $access_level->getId();
                 }
-
+                $values['access_levels'] = $access_levels;
             }
-        }
-        return $values;
+
+            // badge_features
+            if(in_array('badge_features', $relations)) {
+                $features = [];
+                foreach ($badge_type->getBadgeFeatures() as $feature) {
+                    $features[] = $feature->getId();
+                }
+                $values['badge_features'] = $features;
+            }
+
+            if (!empty($expand)) {
+                $exp_expand = explode(',', $expand);
+                foreach ($exp_expand as $relation) {
+                    switch (trim($relation)) {
+                        case 'access_levels': {
+                            unset($values['access_levels']);
+                            $access_levels = [];
+                            foreach ($badge_type->getAccessLevels() as $access_level) {
+                                $access_levels[] = SerializerRegistry::getInstance()->getSerializer($access_level)->serialize(AbstractSerializer::getExpandForPrefix('access_levels', $expand));
+                            }
+                            $values['access_levels'] = $access_levels;
+                        }
+                            break;
+                        case 'badge_features': {
+                            unset($values['badge_features']);
+                            $badge_features = [];
+                            foreach ($badge_type->getBadgeFeatures() as $feature) {
+                                $badge_features[] = SerializerRegistry::getInstance()->getSerializer($feature)->serialize(AbstractSerializer::getExpandForPrefix('badge_features', $expand));
+                            }
+                            $values['badge_features'] = $badge_features;
+                        }
+                            break;
+                    }
+
+                }
+            }
+            return $values;
+        });
     }
 }

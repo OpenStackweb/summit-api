@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\ModelSerializers\Traits\RequestScopedCache;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SummitAttendeeBadge;
 use ModelSerializers\SerializerRegistry;
@@ -34,6 +36,8 @@ class SummitAttendeeBadgeSerializer extends SilverStripeSerializer
         'features',
     ];
 
+    use RequestScopedCache;
+
     /**
      * @param null $expand
      * @param array $fields
@@ -43,58 +47,68 @@ class SummitAttendeeBadgeSerializer extends SilverStripeSerializer
      */
     public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
     {
-        if(!count($relations)) $relations = $this->getAllowedRelations();
-        $badge = $this->object;
-        if(!$badge instanceof SummitAttendeeBadge) return [];
-        $values  = parent::serialize($expand, $fields, $relations, $params);
 
-        if (in_array('features', $relations)) {
-            $features = [];
+        return $this->cache($this->getRequestKey
+        (
+            "SummitAttendeeBadgeSerializer",
+            $this->object->getIdentifier(),
+            $expand,
+            $fields,
+            $relations
+        ), function () use ($expand, $fields, $relations, $params) {
+            if(!count($relations)) $relations = $this->getAllowedRelations();
+            $badge = $this->object;
+            if(!$badge instanceof SummitAttendeeBadge) return [];
+            $values  = parent::serialize($expand, $fields, $relations, $params);
 
-            foreach ($badge->getAllFeatures() as $feature) {
-                $features[] = $feature->getId();
+            if (in_array('features', $relations)) {
+                $features = [];
+
+                foreach ($badge->getAllFeatures() as $feature) {
+                    $features[] = $feature->getId();
+                }
+                $values['features'] = $features;
             }
-            $values['features'] = $features;
-        }
 
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
+            if (!empty($expand)) {
+                $exp_expand = explode(',', $expand);
+                foreach ($exp_expand as $relation) {
+                    switch (trim($relation)) {
 
-                    case 'ticket': {
-                        if ($badge->hasTicket())
-                        {
-                            unset($values['ticket_id']);
-                            $values['ticket'] = SerializerRegistry::getInstance()->getSerializer($badge->getTicket())->serialize(AbstractSerializer::getExpandForPrefix('ticket', $expand));
-                        }
-                    }
-                        break;
-                    case 'type': {
-                        if ($badge->hasType())
-                        {
-                            unset($values['type_id']);
-                            $values['type'] = SerializerRegistry::getInstance()->getSerializer($badge->getType())->serialize(AbstractSerializer::getExpandForPrefix('type', $expand));
-                        }
-                    }
-                        break;
-                    case 'features': {
-                        if (in_array('features', $relations)) {
-                            unset( $values['features']);
-                            $features = [];
-
-                            foreach ($badge->getAllFeatures() as $feature) {
-                                $features[] = SerializerRegistry::getInstance()->getSerializer($feature)->serialize(AbstractSerializer::getExpandForPrefix('features', $expand));
+                        case 'ticket': {
+                            if ($badge->hasTicket())
+                            {
+                                unset($values['ticket_id']);
+                                $values['ticket'] = SerializerRegistry::getInstance()->getSerializer($badge->getTicket())->serialize(AbstractSerializer::getExpandForPrefix('ticket', $expand));
                             }
-                            $values['features'] = $features;
                         }
-                    }
-                        break;
+                            break;
+                        case 'type': {
+                            if ($badge->hasType())
+                            {
+                                unset($values['type_id']);
+                                $values['type'] = SerializerRegistry::getInstance()->getSerializer($badge->getType())->serialize(AbstractSerializer::getExpandForPrefix('type', $expand));
+                            }
+                        }
+                            break;
+                        case 'features': {
+                            if (in_array('features', $relations)) {
+                                unset( $values['features']);
+                                $features = [];
 
+                                foreach ($badge->getAllFeatures() as $feature) {
+                                    $features[] = SerializerRegistry::getInstance()->getSerializer($feature)->serialize(AbstractSerializer::getExpandForPrefix('features', $expand));
+                                }
+                                $values['features'] = $features;
+                            }
+                        }
+                            break;
+
+                    }
                 }
             }
-        }
 
-        return $values;
+            return $values;
+        });
     }
 }

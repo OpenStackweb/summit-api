@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Member;
@@ -217,4 +219,15 @@ interface IPresentationService
      */
     public function unCastAttendeeVote(Summit $summit, Member $member, int $presentation_id):void;
 
+    /**
+     * @param Summit $summit
+     * @param Member $member
+     * @param int $selection_plan_id
+     * @param int $presentation_id
+     * @param int $score_type_id
+     * @return PresentationTrackChairScore
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addTrackChairScore(Summit $summit, Member $member, int $selection_plan_id , int $presentation_id, int $score_type_id):PresentationTrackChairScore;
 }

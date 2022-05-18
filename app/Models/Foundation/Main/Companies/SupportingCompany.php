@@ -50,7 +50,7 @@ class SupportingCompany extends BaseEntity implements IOrderable
     private $sponsorship_type;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
+     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
     private $order;

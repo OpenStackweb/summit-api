@@ -221,7 +221,7 @@ Route::group(array('prefix' => 'summits'), function () {
         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@deleteSummit']);
         Route::get('', ['middleware' => 'cache:' . Config::get('cache_api_response.get_summit_response_lifetime', 1200), 'uses' => 'OAuth2SummitApiController@getSummit'])->where('id', 'current|[0-9]+');
 
-        // selection plans crud
+        // selection plans
         Route::group(['prefix' => 'selection-plans'], function () {
             Route::get('', ['uses' => 'OAuth2SummitSelectionPlansApiController@getAll']);
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addSelectionPlan']);
@@ -302,6 +302,11 @@ Route::group(array('prefix' => 'summits'), function () {
                             });
                         });
 
+                        // track chair rating
+
+                        Route::group(['prefix' => 'track-chair-scores'], function () {
+                            Route::post('{score_type_id}', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@addTrackChairScore']);
+                        });
                     });
                 });
 
@@ -378,6 +383,40 @@ Route::group(array('prefix' => 'summits'), function () {
                                     'middleware' => 'auth.user',
                                     'uses' => 'OAuth2SummitSelectedPresentationListApiController@reorderSelectionList'
                                 ]);
+                            });
+                        });
+                    });
+                });
+
+                // track chair rating types and score types crud
+
+                Route::group(['prefix' => 'track-chair-rating-types'], function () {
+
+                    Route::get('', [ 'uses' => 'OAuth2SummitTrackChairRatingTypesApiController@getTrackChairRatingTypes']);
+
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTrackChairRatingTypesApiController@addTrackChairRatingType']);
+
+                    Route::group(['prefix' => '{type_id}'], function () {
+
+                        Route::get('', ['uses' => 'OAuth2SummitTrackChairRatingTypesApiController@getTrackChairRatingType']);
+
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTrackChairRatingTypesApiController@updateTrackChairRatingType']);
+
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTrackChairRatingTypesApiController@deleteTrackChairRatingType']);
+
+                        Route::group(['prefix' => 'score-types'], function () {
+
+                            Route::get('', ['uses' => 'OAuth2SummitTrackChairScoreTypesApiController@getTrackChairScoreTypes']);
+
+                            Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTrackChairScoreTypesApiController@addTrackChairScoreType']);
+
+                            Route::group(['prefix' => '{score_type_id}'], function () {
+
+                                Route::get('', ['uses' => 'OAuth2SummitTrackChairScoreTypesApiController@getTrackChairScoreType']);
+
+                                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTrackChairScoreTypesApiController@updateTrackChairScoreType']);
+
+                                Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTrackChairScoreTypesApiController@deleteTrackChairScoreType']);
                             });
                         });
                     });

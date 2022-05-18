@@ -34,7 +34,7 @@ class SummitLocationImage extends SilverstripeBaseModel
     protected $description;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
+     * @ORM\Column(name="`CustomOrder`", type="integer")
      */
     protected $order;
 

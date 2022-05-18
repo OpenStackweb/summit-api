@@ -12,6 +12,9 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType;
+use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore;
+use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
@@ -42,14 +45,20 @@ class SummitTrackChair extends SilverstripeBaseModel
 
     /**
      * owning side
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategory", inversedBy="track_chairs")
+     * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategory", inversedBy="track_chairs",  fetch="EXTRA_LAZY")
      * @ORM\JoinTable(name="SummitTrackChair_Categories",
      *      joinColumns={@ORM\JoinColumn(name="SummitTrackChairID", referencedColumnName="ID")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="PresentationCategoryID", referencedColumnName="ID")}
      * )
      * @var PresentationCategory[]
      */
-    protected $categories;
+    private $categories;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore", mappedBy="reviewer", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var PresentationTrackChairScore[]
+     */
+    private $scores;
 
     /**
      * @return PresentationCategory[]
@@ -120,10 +129,8 @@ class SummitTrackChair extends SilverstripeBaseModel
     public function isCategoryAllowed(PresentationCategory $category):bool{
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $category->getId()));
-        $category = $this->categories->matching($criteria)->first();
-        return $category === false ? false : true;
+        return $this->categories->matching($criteria)->count() > 0;
     }
-
 
     public function clearCategories():void{
         $this->categories->clear();
@@ -145,6 +152,7 @@ class SummitTrackChair extends SilverstripeBaseModel
     {
         parent::__construct();
         $this->categories = new ArrayCollection();
+        $this->scores = new ArrayCollection();
     }
 
     public function clearMember():void{
@@ -157,5 +165,56 @@ class SummitTrackChair extends SilverstripeBaseModel
             $res[] = $c->getId();
         }
         return $res;
+    }
+
+    /**
+     * @param PresentationTrackChairRatingType $type
+     * @param Presentation $presentation
+     * @return bool
+     */
+    public function hasScoreByRatingTypeAndPresentation(PresentationTrackChairRatingType $type, Presentation $presentation):bool{
+       return $this->getScoreByRatingTypeAndPresentation($type, $presentation) !== null;
+    }
+
+    /**
+     * @param PresentationTrackChairScore $score
+     * @throws ValidationException
+     */
+    public function addScore(PresentationTrackChairScore $score):void{
+        if($this->scores->contains($score)) return;
+
+        if($this->hasScoreByRatingTypeAndPresentation($score->getType()->getType(), $score->getPresentation()))
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Track chair %s already has a score rating type %s.",
+                    $this->getId(),
+                    $score->getType()->getType()->getName()
+                )
+            );
+
+        $this->scores->add($score);
+        $score->setReviewer($this);
+    }
+
+    public function removeScore(PresentationTrackChairScore $score):void{
+        if(!$this->scores->contains($score)) return;
+        $this->scores->removeElement($score);
+        $score->clearReviewer();
+    }
+
+    /**
+     * @param PresentationTrackChairRatingType $ratingType
+     * @param Presentation $presentation
+     * @return PresentationTrackChairScore|null
+     */
+    public function getScoreByRatingTypeAndPresentation(PresentationTrackChairRatingType $ratingType, Presentation $presentation):?PresentationTrackChairScore{
+
+        $score = $this->scores->filter(function($e) use($ratingType, $presentation){
+            return $e instanceof PresentationTrackChairScore && $e->getType()->getType()->getId() === $ratingType->getId()
+                && $e->getPresentation()->getId() === $presentation->getId();
+        })->first();
+        return $score === false ? null : $score;
     }
 }

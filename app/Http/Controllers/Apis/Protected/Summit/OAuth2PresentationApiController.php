@@ -40,6 +40,8 @@ use services\model\IPresentationService;
  */
 final class OAuth2PresentationApiController extends OAuth2ProtectedController
 {
+    use RequestProcessor;
+
     /**
      * @var ISummitRepository
      */
@@ -1381,5 +1383,39 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             Log::error($ex);
             return $this->error500($ex);
         }
+    }
+
+    /**
+     * @param $summit_id
+     * @param $selection_plan_id
+     * @param $presentation_id
+     * @param $score_type_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function addTrackChairScore($summit_id, $selection_plan_id, $presentation_id, $score_type_id) {
+
+        return $this->processRequest(function () use ($summit_id, $selection_plan_id, $presentation_id, $score_type_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit))
+                return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member))
+                return $this->error403();
+
+            $score =  $this->presentation_service->addTrackChairScore($summit, $current_member, intval($selection_plan_id), intval($presentation_id), intval($score_type_id));
+
+            return $this->created(
+                SerializerRegistry::getInstance()->getSerializer
+                ($score)
+                    ->serialize
+                    (
+                        self::getExpands(),
+                        self::getFields(),
+                        self::getRelations()
+                    )
+            );
+        });
     }
 }

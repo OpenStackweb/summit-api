@@ -5822,6 +5822,21 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::TrackChairsAdmins,
                 ]
             ],
+            // track chair rating
+            [
+                'name' => 'add-track-chair-score',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/track-chair-scores/{score_type_id}',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
             // track tag groups
             [
                 'name' => 'get-track-tag-groups',
@@ -6257,6 +6272,135 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'reorder-selection-list',
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/{list_id}/reorder',
                 'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            //track chair rating types & score types
+            [
+                'name' => 'get-track-chair-rating-types',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ]
+            ],
+            [
+                'name' => 'add-track-chair-rating-type',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
+                'name' => 'get-track-chair-rating-type',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ]
+            ],
+            [
+                'name' => 'update-track-chair-rating-type',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
+                'name' => 'remove-track-chair-rating-type',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
+                'name' => 'get-track-chair-scope-types',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}/score-types',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
+                'name' => 'add-track-chair-scope-type',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}/score-types',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
+                'name' => 'get-track-chair-scope-type',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}/score-types/{score_type_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
+                'name' => 'update-track-chair-scope-type',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}/score-types/{score_type_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
+                'name' => 'remove-track-chair-scope-type',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}/score-types/{score_type_id}',
+                'http_method' => 'DELETE',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)
                 ],

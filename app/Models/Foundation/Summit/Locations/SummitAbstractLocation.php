@@ -84,7 +84,7 @@ class SummitAbstractLocation extends SilverstripeBaseModel implements IOrderable
     protected $type;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
+     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
     protected $order;

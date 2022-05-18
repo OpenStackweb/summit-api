@@ -42,6 +42,7 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
         'track_groups',
         'extra_questions',
         'event_types',
+        'track_chair_rating_types'
     ];
 
 
@@ -83,6 +84,14 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
             $values['event_types'] = $event_types;
         }
 
+        if (in_array('track_chair_rating_types', $relations) && !isset($values['track_chair_rating_types'])) {
+            $track_chair_rating_types = [];
+            foreach ($selection_plan->getTrackChairRatingTypes() as $ratingType) {
+                $track_chair_rating_types[] = $ratingType->getId();
+            }
+            $values['track_chair_rating_types'] = $track_chair_rating_types;
+        }
+
         return $values;
     }
 
@@ -98,6 +107,10 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
         'event_types' => [
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getEventTypes',
+        ],
+        'track_chair_rating_types' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getTrackChairRatingTypes',
         ],
         'summit' => [
             'type' => One2ManyExpandSerializer::class,

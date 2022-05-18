@@ -20,11 +20,14 @@ use App\Http\Utils\FileUploadInfo;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
+use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore;
+use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
 use App\Models\Foundation\Summit\Factories\PresentationFactory;
 use App\Models\Foundation\Summit\Factories\PresentationLinkFactory;
 use App\Models\Foundation\Summit\Factories\PresentationMediaUploadFactory;
 use App\Models\Foundation\Summit\Factories\PresentationSlideFactory;
 use App\Models\Foundation\Summit\Factories\PresentationVideoFactory;
+use App\Models\Foundation\Summit\Repositories\IPresentationTrackChairScoreTypeRepository;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Utils\IStorageTypesConstants;
 use App\Services\Filesystem\FileUploadStrategyFactory;
@@ -90,6 +93,11 @@ final class PresentationService
     private $folder_repository;
 
     /**
+     * @var IPresentationTrackChairScoreTypeRepository
+     */
+    private $presentation_track_chair_score_type_repository;
+
+    /**
      * PresentationService constructor.
      * @param ISummitEventRepository $presentation_repository
      * @param ISpeakerRepository $speaker_repository
@@ -97,6 +105,7 @@ final class PresentationService
      * @param IFolderService $folder_service
      * @param IFileUploader $file_uploader
      * @param IFolderRepository $folder_repository
+     * @param IPresentationTrackChairScoreTypeRepository $presentation_track_chair_score_type_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -107,6 +116,7 @@ final class PresentationService
         IFolderService $folder_service,
         IFileUploader $file_uploader,
         IFolderRepository $folder_repository,
+        IPresentationTrackChairScoreTypeRepository $presentation_track_chair_score_type_repository,
         ITransactionService $tx_service
     )
     {
@@ -117,6 +127,7 @@ final class PresentationService
         $this->folder_service = $folder_service;
         $this->file_uploader = $file_uploader;
         $this->folder_repository = $folder_repository;
+        $this->presentation_track_chair_score_type_repository = $presentation_track_chair_score_type_repository;
     }
 
     /**
@@ -1245,6 +1256,69 @@ final class PresentationService
                 throw new ValidationException(sprintf("Current Member is not an attendee at Summit %s.", $summit->getId()));
 
             $presentation->unCastAttendeeVote($attendee);
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function addTrackChairScore(Summit $summit, Member $member, int $selection_plan_id, int $presentation_id, int $score_type_id):PresentationTrackChairScore
+    {
+        return $this->tx_service->transaction(function () use($summit, $member, $selection_plan_id, $presentation_id, $score_type_id){
+
+            $selectionPlan = $summit->getSelectionPlanById($selection_plan_id);
+
+            if(is_null($selectionPlan))
+                throw new EntityNotFoundException("Selection Plan not found.");
+
+            if(!$selectionPlan->isSelectionOpen())
+                throw new ValidationException(sprintf("Selection Period is over for Selection Plan %s", $selection_plan_id));
+
+            $presentation = $this->presentation_repository->getById($presentation_id);
+            if(is_null($presentation) || !$presentation instanceof Presentation)
+                throw new EntityNotFoundException("Presentation not found.");
+
+            if($presentation->getSummitId() !== $summit->getId())
+                throw new EntityNotFoundException("Presentation not found.");
+
+            if($presentation->getSelectionPlanId() !== $selection_plan_id)
+                throw new EntityNotFoundException("Presentation not found.");
+
+            $summit_track_chair = $summit->getTrackChairByMember($member);
+
+            if(is_null($summit_track_chair))
+                throw new ValidationException(sprintf("Can't find a track chair for current member at Summit %s.", $summit->getId()));
+
+            if(!$summit_track_chair->isCategoryAllowed($presentation->getCategory())){
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Track %s is not allowed for Track Chair %s.",
+                        $presentation->getCategory()->getTitle(),
+                        $summit_track_chair->getMember()->getFullName()
+                    )
+                );
+            }
+            $score_type = $this->presentation_track_chair_score_type_repository->getById($score_type_id);
+
+            if(is_null($score_type) || !$score_type instanceof PresentationTrackChairScoreType)
+                throw new EntityNotFoundException("Score type not found.");
+
+            //Check if exists a score of the same rating type/presentation for this track chair, if so replace it by this new one
+            $track_chair_score = $summit_track_chair->getScoreByRatingTypeAndPresentation($score_type->getType(), $presentation);
+
+            if (!is_null($track_chair_score)) {
+                $summit_track_chair->removeScore($track_chair_score);
+                $track_chair_score = null;
+            }
+
+            $track_chair_score = new PresentationTrackChairScore();
+            $track_chair_score->setType($score_type);
+            $track_chair_score->setReviewer($summit_track_chair);
+            $presentation->addTrackChairScore($track_chair_score);
+            $summit_track_chair->addScore($track_chair_score);
+            return $track_chair_score;
         });
     }
 }

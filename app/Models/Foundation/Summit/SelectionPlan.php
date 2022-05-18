@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\Main\OrderableChilds;
+use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
@@ -162,6 +163,12 @@ class SelectionPlan extends SilverstripeBaseModel
      * @var Presentation[]
      */
     private $presentations;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType", mappedBy="selection_plan", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var PresentationTrackChairRatingType
+     */
+    private $track_chair_rating_types;
 
     /**
      * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType", mappedBy="selection_plan",  cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
@@ -360,6 +367,7 @@ class SelectionPlan extends SilverstripeBaseModel
         $this->max_submission_allowed_per_user = Summit::DefaultMaxSubmissionAllowedPerUser;
         $this->submission_period_disclaimer    = null;
         $this->selection_lists = new ArrayCollection;
+        $this->track_chair_rating_types = new ArrayCollection();
     }
 
     /**
@@ -826,6 +834,67 @@ class SelectionPlan extends SilverstripeBaseModel
             }
         }
         return $individual_selection_list;
+    }
+
+    /**
+     * @return ?PresentationTrackChairRatingType
+     */
+    public function getTrackChairRatingTypeById(int $id): ?PresentationTrackChairRatingType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $id));
+        $res = $this->track_chair_rating_types->matching($criteria)->first();
+        return !$res ? null : $res;
+    }
+
+    /**
+     * @return ?PresentationTrackChairRatingType
+     */
+    public function getTrackChairRatingTypeByName(string $name): ?PresentationTrackChairRatingType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('name', trim($name)));
+        $res = $this->track_chair_rating_types->matching($criteria)->first();
+        return !$res ? null : $res;
+    }
+
+    /**
+     * @return ArrayCollection|PresentationTrackChairRatingType[]
+     */
+    public function getTrackChairRatingTypes()
+    {
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'ASC']);
+        return $this->track_chair_rating_types->matching($criteria);
+    }
+
+    /**
+     * @return int
+     */
+    private function getTrackChairRatingTypeMaxOrder(): int
+    {
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'DESC']);
+        $rating = $this->track_chair_rating_types->matching($criteria)->first();
+        return $rating === false ? 0 : $rating->getOrder();
+    }
+
+    public function addTrackChairRatingType(PresentationTrackChairRatingType $ratingType):void{
+        if($this->track_chair_rating_types->contains($ratingType)) return;
+        $ratingType->setOrder($this->getTrackChairRatingTypeMaxOrder() + 1);
+        $ratingType->setSelectionPlan($this);
+        $this->track_chair_rating_types->add($ratingType);
+    }
+
+    public function removeTrackChairRatingType(PresentationTrackChairRatingType $ratingType):void{
+        if(!$this->track_chair_rating_types->contains($ratingType)) return;
+        $this->track_chair_rating_types->removeElement($ratingType);
+        $ratingType->clearSelectionPlan();
+        self::resetOrderForSelectable($this->track_chair_rating_types);
+    }
+
+    public function clearTrackChairRatingType():void{
+        $this->track_chair_rating_types->clear();
     }
 
 }

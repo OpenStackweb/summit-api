@@ -159,7 +159,7 @@ abstract class PresentationMaterial extends SilverstripeBaseModel implements IOr
     protected $display_on_site;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
+     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
     protected $order;

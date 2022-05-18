@@ -26,6 +26,8 @@ use App\Models\Foundation\Software\Repositories\IOpenStackReleaseRepository;
 use App\Models\Foundation\Summit\Defaults\DefaultSummitEventType;
 use App\Models\Foundation\Summit\DefaultTrackTagGroup;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlow;
+use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType;
+use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplate;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
@@ -37,6 +39,8 @@ use App\Models\Foundation\Summit\Repositories\IPresentationActionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationCategoryGroupRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationMediaUploadRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationSpeakerSummitAssistanceConfirmationRequestRepository;
+use App\Models\Foundation\Summit\Repositories\IPresentationTrackChairRatingTypeRepository;
+use App\Models\Foundation\Summit\Repositories\IPresentationTrackChairScoreTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IRSVPTemplateRepository;
 use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerActiveInvolvementRepository;
@@ -716,5 +720,18 @@ final class RepositoriesProvider extends ServiceProvider
             }
         );
 
+        App::singleton(
+            IPresentationTrackChairRatingTypeRepository::class,
+            function(){
+                return  EntityManager::getRepository(PresentationTrackChairRatingType::class);
+            }
+        );
+
+        App::singleton(
+            IPresentationTrackChairScoreTypeRepository::class,
+            function(){
+                return  EntityManager::getRepository(PresentationTrackChairScoreType::class);
+            }
+        );
     }
 }

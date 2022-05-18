@@ -13,6 +13,8 @@
  **/
 
 use App\Models\Foundation\Main\IGroup;
+use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType;
+use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
 use App\Models\Foundation\Summit\TrackTagGroup;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use LaravelDoctrine\ORM\Facades\Registry;
@@ -352,6 +354,34 @@ trait InsertSummitTestData
         self::$default_selection_plan->setSelectionEndDate($submission_end_date);
         self::$default_selection_plan->setIsEnabled(true);
         self::$default_selection_plan->addTrackGroup(self::$defaultTrackGroup);
+
+        $track_chair_score_type = new PresentationTrackChairScoreType();
+        $track_chair_score_type->setScore(1);
+        $track_chair_score_type->setName("TEST_SCORE_TYPE");
+        $track_chair_score_type->setDescription("SCORE TYPE TEST");
+
+        $track_chair_score_type2 = new PresentationTrackChairScoreType();
+        $track_chair_score_type2->setScore(2);
+        $track_chair_score_type2->setName("TEST_SCORE_TYPE2");
+        $track_chair_score_type2->setDescription("SCORE TYPE TEST2");
+
+        $track_chair_score_type3 = new PresentationTrackChairScoreType();
+        $track_chair_score_type3->setScore(3);
+        $track_chair_score_type3->setName("TEST_SCORE_TYPE3");
+        $track_chair_score_type3->setDescription("SCORE TYPE TEST3");
+
+        $track_chair_rating_type = new PresentationTrackChairRatingType();
+        $track_chair_rating_type->setWeight(1.5);
+        $track_chair_rating_type->setName("TEST_RATING_TYPE");
+        $track_chair_rating_type->setOrder(1);
+
+        $track_chair_rating_type->addScoreType($track_chair_score_type);
+        $track_chair_rating_type->addScoreType($track_chair_score_type3);
+        $track_chair_rating_type->addScoreType($track_chair_score_type2);
+
+        $track_chair_rating_type->setSelectionPlan(self::$default_selection_plan);
+
+        self::$default_selection_plan->addTrackChairRatingType($track_chair_rating_type);
 
         self::$summit->addSelectionPlan(self::$default_selection_plan);
 

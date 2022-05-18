@@ -1,6 +1,6 @@
 <?php namespace Database\Migrations\Model;
 /**
- * Copyright 2019 OpenStack Foundation
+ * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,10 +17,10 @@ use LaravelDoctrine\Migrations\Schema\Builder;
 use LaravelDoctrine\Migrations\Schema\Table;
 
 /**
- * Class Version20220421184854
+ * Class Version20220506190147
  * @package Database\Migrations\Model
  */
-final class Version20220421184854 extends AbstractMigration
+final class Version20220506190147 extends AbstractMigration
 {
     /**
      * @param Schema $schema
@@ -28,28 +28,21 @@ final class Version20220421184854 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $builder = new Builder($schema);
-        if(!$schema->hasTable("SubQuestionRule")) {
-            $builder->create('SubQuestionRule', function (Table $table) {
+        if(!$schema->hasTable("PresentationTrackChairScoreType")) {
+            $builder->create('PresentationTrackChairScoreType', function (Table $table) {
                 $table->integer("ID", true, false);
                 $table->primary("ID");
-
                 $table->dateTime("Created")->setNotnull(true);
                 $table->dateTime("LastEdited")->setNotnull(true);
+                $table->string("ClassName", 50)->setDefault("PresentationTrackChairScoreType");
 
-                $table->string("Visibility")->setNotnull(true)->setDefault("Visible");
-                $table->string('VisibilityCondition')->setNotnull(true)->setDefault("Equal");
-                $table->text("AnswerValues")->setNotnull(true)->setDefault('');
-                $table->string('AnswerValuesOperator')->setNotnull(true)->setDefault('Or');
+                $table->string("Name")->setNotnull(true);
+                $table->text("Description")->setNotnull(true)->setDefault('');
+                $table->integer("`Score`" )->setNotnull(true)->setDefault(1);
 
-                $table->integer("ParentQuestionID" );
-                $table->index("ParentQuestionID", "ParentQuestionID");
-                $table->foreign("ExtraQuestionType", "ParentQuestionID", "ID", ["onDelete" => "CASCADE"], "FK_SubQuestionRule_ParentQuestion");
-
-                $table->integer("SubQuestionID" );
-                $table->index("SubQuestionID", "SubQuestionID");
-                $table->foreign("ExtraQuestionType", "SubQuestionID", "ID", ["onDelete" => "CASCADE"],"FK_SubQuestionRule_SubQuestion");
-
-                $table->unique(['ParentQuestionID','SubQuestionID']);
+                $table->integer("TypeID" );
+                $table->index("TypeID", "TypeID");
+                $table->foreign("PresentationTrackChairRatingType", "TypeID", "ID", ["onDelete" => "CASCADE"], "FK_PresentationTrackChairScoreType_Type");
             });
         }
     }
@@ -59,6 +52,6 @@ final class Version20220421184854 extends AbstractMigration
      */
     public function down(Schema $schema): void
     {
-        $schema->dropTable("SubQuestionRule");
+        $schema->dropTable("PresentationTrackChairScoreType");
     }
 }

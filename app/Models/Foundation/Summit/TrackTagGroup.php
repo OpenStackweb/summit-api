@@ -46,7 +46,7 @@ class TrackTagGroup extends SilverstripeBaseModel implements IOrderable
     private $label;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
+     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
     private $order;

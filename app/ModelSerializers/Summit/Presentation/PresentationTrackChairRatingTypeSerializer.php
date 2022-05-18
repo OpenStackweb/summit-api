@@ -65,7 +65,7 @@ final class PresentationTrackChairRatingTypeSerializer extends SilverStripeSeria
         ],
         'selection_plan' => [
             'type'                  => One2ManyExpandSerializer::class,
-            'original_attribute'    => 'selection_plan',
+            'original_attribute'    => 'selection_plan_id',
             'getter'                => 'getSelectionPlan',
             'has'                   => 'hasSelectionPlan'
         ]

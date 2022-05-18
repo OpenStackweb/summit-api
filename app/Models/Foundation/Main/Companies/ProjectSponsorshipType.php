@@ -48,7 +48,7 @@ class ProjectSponsorshipType extends SilverstripeBaseModel implements IOrderable
     private $is_active;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
+     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
     private $order;

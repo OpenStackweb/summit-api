@@ -58,6 +58,7 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
         'comments',
         'viewers',
         'category_changes_requests',
+        'track_chair_scores',
     ];
 
     /**
@@ -143,6 +144,14 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
             }
             $values['category_changes_requests'] = $category_changes_requests;
         }
+
+        if(in_array('track_chair_scores', $relations)){
+            $track_chair_scores = [];
+            foreach ($presentation->getTrackChairScoresBy($summit_track_chair) as $score) {
+                $track_chair_scores[] = $score->getId();
+            }
+            $values['track_chair_scores'] = $track_chair_scores;
+        };
 
         if (!empty($expand)) {
             foreach (explode(',', $expand) as $relation) {

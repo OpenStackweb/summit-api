@@ -58,7 +58,7 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
     protected $label;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
+     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
     protected $order;

@@ -63,6 +63,8 @@ final class OAuth2SummitTrackChairsRankingApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
         $rating_types = json_decode($content);
         $this->assertTrue(!is_null($rating_types));
+        $this->assertTrue($rating_types->total > 0);
+        $this->assertTrue(count($rating_types->data[0]->score_types) > 0);
     }
 
     public function testGetTrackChairRatingType() {

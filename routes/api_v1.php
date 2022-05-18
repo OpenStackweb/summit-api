@@ -392,13 +392,13 @@ Route::group(array('prefix' => 'summits'), function () {
 
                 Route::group(['prefix' => 'track-chair-rating-types'], function () {
 
-                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTrackChairRatingTypesApiController@getTrackChairRatingTypes']);
+                    Route::get('', [ 'uses' => 'OAuth2SummitTrackChairRatingTypesApiController@getTrackChairRatingTypes']);
 
                     Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTrackChairRatingTypesApiController@addTrackChairRatingType']);
 
                     Route::group(['prefix' => '{type_id}'], function () {
 
-                        Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTrackChairRatingTypesApiController@getTrackChairRatingType']);
+                        Route::get('', ['uses' => 'OAuth2SummitTrackChairRatingTypesApiController@getTrackChairRatingType']);
 
                         Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTrackChairRatingTypesApiController@updateTrackChairRatingType']);
 

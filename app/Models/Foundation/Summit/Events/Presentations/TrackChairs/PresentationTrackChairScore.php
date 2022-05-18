@@ -29,13 +29,13 @@ class PresentationTrackChairScore
 
     protected $getIdMappings = [
         'getTypeId' => 'type',
-        'getTrackChairId' => 'track_chair',
+        'getReviewerId' => 'reviewer',
         'getPresentationId' => 'presentation',
     ];
 
     protected $hasPropertyMappings = [
         'hasType' => 'type',
-        'hasTrackChair' => 'track_chair',
+        'hasReviewer' => 'reviewer',
         'hasPresentation' => 'presentation',
     ];
 
@@ -108,7 +108,7 @@ class PresentationTrackChairScore
         $this->presentation = $presentation;
     }
 
-    public function clearReviewers():void{
+    public function clearReviewer():void{
         $this->reviewer = null;
     }
 

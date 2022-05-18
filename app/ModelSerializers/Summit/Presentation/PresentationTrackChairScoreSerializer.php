@@ -1,7 +1,4 @@
 <?php namespace ModelSerializers;
-use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore;
-use Libs\ModelSerializers\AbstractSerializer;
-
 /**
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,9 +11,7 @@ use Libs\ModelSerializers\AbstractSerializer;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use Libs\ModelSerializers\One2ManyExpandSerializer;
-
 /**
  * Class PresentationTrackChairScoreSerializer
  * @package ModelSerializers
@@ -26,14 +21,27 @@ final class PresentationTrackChairScoreSerializer extends SilverStripeSerializer
     protected static $array_mappings = [
         'TypeId'         => 'type_id:json_int',
         'PresentationId' => 'presentation_id:json_int',
+        'ReviewerId' => 'reviewer_id:json_int'
     ];
 
     protected static $expand_mappings = [
         'type' => [
             'type'                  => One2ManyExpandSerializer::class,
-            'original_attribute'    => 'type',
+            'original_attribute'    => 'type_id',
             'getter'                => 'getType',
             'has'                   => 'hasType'
+        ],
+        'presentation' => [
+            'type'                  => One2ManyExpandSerializer::class,
+            'original_attribute'    => 'presentation_id',
+            'getter'                => 'getPresentation',
+            'has'                   => 'hasPresentation'
+        ],
+        'reviewer' => [
+            'type'                  => One2ManyExpandSerializer::class,
+            'original_attribute'    => 'reviewer_id',
+            'getter'                => 'getReviewer',
+            'has'                   => 'hasReviewer'
         ],
     ];
 }

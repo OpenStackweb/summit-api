@@ -263,9 +263,9 @@ final class SerializerRegistry
             self::SerializerType_CSV => SummitTrackChairCSVSerializer::class
         ];
 
-        $this->registry['PresentationTrackChairScore'] = PresentationTrackChairScoreSerializer::class;
         $this->registry['PresentationTrackChairRatingType'] = PresentationTrackChairRatingTypeSerializer::class;
         $this->registry['PresentationTrackChairScoreType'] = PresentationTrackChairScoreTypeSerializer::class;
+        $this->registry['PresentationTrackChairScore'] = PresentationTrackChairScoreSerializer::class;
 
         $this->registry['SummitPresentationComment'] = SummitPresentationCommentSerializer::class;
         $this->registry['SummitMediaFileType'] = SummitMediaFileTypeSerializer::class;

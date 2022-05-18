@@ -128,17 +128,7 @@ final class OAuth2SummitTrackChairRatingTypesApiController
                 }
                 return $filter;
             },
-            function () use ($summit) {
-                $current_user = $this->resource_server_context->getCurrentUser();
-                if(!is_null($current_user) && $summit->isSummitAdmin($current_user)) {
-                    if(
-                        $current_user->isOnGroup(IGroup::Administrators) ||
-                        $current_user->isOnGroup(IGroup::SuperAdmins) ||
-                        $current_user->isOnGroup(IGroup::TrackChairsAdmins) ||
-                        $current_user->isOnGroup(IGroup::SummitAdministrators)
-                    )
-                        return SerializerRegistry::SerializerType_Private;
-                }
+            function () {
                 return SerializerRegistry::SerializerType_Public;
             }
         );

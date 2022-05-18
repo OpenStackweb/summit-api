@@ -222,10 +222,12 @@ interface IPresentationService
     /**
      * @param Summit $summit
      * @param Member $member
+     * @param int $selection_plan_id
      * @param int $presentation_id
      * @param int $score_type_id
+     * @return PresentationTrackChairScore
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function addTrackChairScore(Summit $summit, Member $member, int $presentation_id, int $score_type_id):void;
+    public function addTrackChairScore(Summit $summit, Member $member, int $selection_plan_id , int $presentation_id, int $score_type_id):PresentationTrackChairScore;
 }

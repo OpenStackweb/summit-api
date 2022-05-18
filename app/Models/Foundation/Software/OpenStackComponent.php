@@ -46,7 +46,7 @@ class OpenStackComponent extends SilverstripeBaseModel
     private $is_core_service;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
+     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
     private $order;

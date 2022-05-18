@@ -58,7 +58,7 @@ class RSVPQuestionTemplate extends SilverstripeBaseModel implements IOrderable
     protected $is_mandatory;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
+     * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
     protected $order;

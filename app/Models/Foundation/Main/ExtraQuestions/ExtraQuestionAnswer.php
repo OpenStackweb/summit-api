@@ -160,6 +160,6 @@ abstract class ExtraQuestionAnswer extends SilverstripeBaseModel
     }
 
     public function shouldDeleteIt():bool{
-        return $this->should_delete_it;
+        return !is_null($this->should_delete_it) ? $this->should_delete_it: false;
     }
 }

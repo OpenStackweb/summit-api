@@ -980,11 +980,11 @@ Route::group(array('prefix' => 'summits'), function () {
         // order-extra-questions
         Route::group(['prefix' => 'order-extra-questions'], function () {
             Route::get('metadata', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getMetadata']);
-            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getAllBySummit']);
+            Route::get('', ['uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getAllBySummit']);
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@add']);
             Route::post('seed-defaults', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@seedDefaultSummitExtraOrderQuestionTypesBySummit']);
             Route::group(['prefix' => '{question_id}'], function () {
-                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@get']);
+                Route::get('', ['uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@get']);
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@update']);
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@delete']);
 
@@ -999,10 +999,10 @@ Route::group(array('prefix' => 'summits'), function () {
 
                 // sub questions
                 Route::group(['prefix' => 'sub-question-rules'], function () {
-                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getSubQuestionRules']);
+                    Route::get('', ['uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getSubQuestionRules']);
                     Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@addSubQuestionRule']);
                     Route::group(['prefix' => '{rule_id}'], function () {
-                        Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getSubQuestionRule']);
+                        Route::get('', ['uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getSubQuestionRule']);
                         Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@updateSubQuestionRule']);
                         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@deleteSubQuestionRule']);
                     });

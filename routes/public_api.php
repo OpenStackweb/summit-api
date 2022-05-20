@@ -194,6 +194,12 @@ Route::group(['prefix' => 'summits'], function () {
             });
         });
 
+        // order-extra-questions
+
+        Route::group(['prefix' => 'order-extra-questions'], function () {
+            Route::get('', ['uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getAllBySummit']);
+        });
+
         // taxes types -- only dev
 
         if(\Illuminate\Support\Facades\App::environment("dev")){

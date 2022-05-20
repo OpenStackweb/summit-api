@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
@@ -44,6 +44,11 @@ abstract class ExtraQuestionAnswer extends SilverstripeBaseModel
      */
     protected $value;
 
+    /**
+     * @var bool
+     */
+    private $should_delete_it;
+
     use One2ManyPropertyTrait;
 
     protected $getIdMappings = [
@@ -53,6 +58,13 @@ abstract class ExtraQuestionAnswer extends SilverstripeBaseModel
     protected $hasPropertyMappings = [
         'hasQuestion' => 'question',
     ];
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->value = "";
+        $this->should_delete_it = false;
+    }
 
     /**
      * @return bool
@@ -131,5 +143,23 @@ abstract class ExtraQuestionAnswer extends SilverstripeBaseModel
     public function contains(string $val):bool{
         if(!$this->question->allowsValues()) return false;
         return in_array($val, explode(ExtraQuestionTypeConstants::AnswerCharDelimiter, $this->value));
+    }
+
+    public function markForDeletion():void{
+        Log::debug
+        (
+            sprintf
+            (
+                "ExtraQuestionAnswer::markForDeletion id %s value %s question %s",
+                $this->id,
+                $this->value,
+                $this->getQuestionId()
+            )
+        );
+        $this->should_delete_it = true;
+    }
+
+    public function shouldDeleteIt():bool{
+        return $this->should_delete_it;
     }
 }

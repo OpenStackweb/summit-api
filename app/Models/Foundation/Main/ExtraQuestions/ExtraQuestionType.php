@@ -473,8 +473,13 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
         }
         // has parent rules , verify those ( its a sub question )
         foreach ($this->parent_rules as $parent_rule){
-            if(!$parent_rule->isSubQuestionVisible($answers->getAnswerFor($parent_rule->getParentQuestion())))
+            if(!$parent_rule->isSubQuestionVisible($answers->getAnswerFor($parent_rule->getParentQuestion()))) {
+                // we should disregard the answer if we have one
+                if(!is_null($answer)){
+                    $answer->markForDeletion();
+                }
                 continue;
+            }
             if(!$this->isMandatory()) return true;
             if(is_null($answer)) return false;
             if(!$answer->hasValue()) return false;

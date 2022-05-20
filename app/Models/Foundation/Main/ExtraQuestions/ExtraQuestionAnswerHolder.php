@@ -110,7 +110,6 @@ trait ExtraQuestionAnswerHolder
                 $question = $this->getQuestionById(intval($questionId));
                 if (is_null($question))
                     throw new ValidationException(sprintf("Question %s does not exists.", $questionId));
-
                 $value = trim($answer['answer'] ?? '');
                 $answer = new SummitOrderExtraQuestionAnswer();
                 $answer->setQuestion($question);
@@ -123,6 +122,24 @@ trait ExtraQuestionAnswerHolder
 
         foreach($this->getExtraQuestions() as $q) {
             $res &= $this->checkQuestion($q, $formerAnswers, $currentAnswers);
+        }
+
+        $answersToDelete = $currentAnswers->getAnswersToDelete();
+        if(count($answersToDelete) > 0){
+            Log::debug(sprintf("ExtraQuestionAnswerHolder::hadCompletedExtraQuestions we have answers to delete."));
+            foreach ($answersToDelete as $a) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "ExtraQuestionAnswerHolder::hadCompletedExtraQuestions deleting answer %s for question %s.",
+                        $a->getValue(),
+                        $a->getQuestionId()
+                    )
+                );
+
+                $this->removeExtraQuestionAnswer($a);
+            }
         }
 
         return $res;

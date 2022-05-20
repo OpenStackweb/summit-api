@@ -36,6 +36,15 @@ final class ExtraQuestionAnswerSet
         }
     }
 
+    public function getAnswersToDelete():array{
+        $res = [];
+        foreach ($this->snapshot as $key => $val){
+            if($val->shouldDeleteIt())
+                $res[] = $val;
+        }
+        return $res;
+    }
+
     /**
      * @param ExtraQuestionType $question
      * @return ExtraQuestionAnswer|null

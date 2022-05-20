@@ -192,7 +192,7 @@ final class OAuth2SummitTrackChairScoreTypesApiController
             $selection_plan = $this->selection_plan_repository->getById(intval($selection_plan_id));
             if (is_null($selection_plan)) return $this->error404();
 
-            $payload = $this->getJsonPayload(ScoreTypeValidationRulesFactory::build(ScoreTypeValidationRulesFactory::build([])));
+            $payload = $this->getJsonPayload(ScoreTypeValidationRulesFactory::buildForAdd());
 
             $track_chair_score_type = $this->service->addTrackChairScoreType($selection_plan, intval($type_id), $payload);
 
@@ -216,7 +216,7 @@ final class OAuth2SummitTrackChairScoreTypesApiController
             $selection_plan = $this->selection_plan_repository->getById(intval($selection_plan_id));
             if (is_null($selection_plan)) return $this->error404();
 
-            $payload = $this->getJsonPayload(ScoreTypeValidationRulesFactory::build(ScoreTypeValidationRulesFactory::build([])));
+            $payload = $this->getJsonPayload(ScoreTypeValidationRulesFactory::buildForUpdate());
 
             $track_chair_score_type = $this->service->updateTrackChairScoreType($selection_plan, intval($type_id), intval($score_type_id), $payload);
 

@@ -12,19 +12,15 @@
  * limitations under the License.
  **/
 
-use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
+use App\Models\Foundation\Summit\Factories\PresentationTrackChairRatingTypeFactory;
+use App\Models\Foundation\Summit\Factories\PresentationTrackChairScoreTypeFactory;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\Services\Model\AbstractService;
 use App\Services\Model\ITrackChairRankingService;
-use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
-use models\main\Member;
-use models\oauth2\IResourceServerContext;
-use models\summit\Summit;
-use models\summit\SummitTrackChair;
 
 /**
  * Class TrackChairRankingService
@@ -34,36 +30,6 @@ final class TrackChairRankingService
     extends AbstractService
     implements ITrackChairRankingService
 {
-    /**
-     * @var IResourceServerContext
-     */
-    private $resource_server_ctx;
-
-    /**
-     * TrackChairRankingService constructor.
-     * @param IResourceServerContext $resource_server_ctx
-     * @param ITransactionService $tx_service
-     */
-    public function __construct
-    (
-        IResourceServerContext $resource_server_ctx,
-        ITransactionService $tx_service
-    )
-    {
-        parent::__construct($tx_service);
-        $this->resource_server_ctx = $resource_server_ctx;
-    }
-
-    private function checkPermissions(Summit $summit, ?Member $member): void
-    {
-        if (is_null($member))
-            throw new AuthzException("User not Found.");
-
-        $isAuth = $summit->isTrackChairAdmin($member);
-
-        if (!$isAuth)
-            throw new AuthzException(sprintf("User %s is not authorized to perform this action.", $member->getId()));
-    }
 
     /**
      * @inheritDoc
@@ -72,9 +38,6 @@ final class TrackChairRankingService
     {
         return $this->tx_service->transaction(function () use ($selection_plan, $track_chair_rating_type_id)
         {
-            $current_member = $this->resource_server_ctx->getCurrentUser();
-            $this->checkPermissions($selection_plan->getSummit(), $current_member);
-
             $track_chair_rating_type = $selection_plan->getTrackChairRatingTypeById($track_chair_rating_type_id);
             if (is_null($track_chair_rating_type))
                 throw new EntityNotFoundException("Track chair rating type not found.");
@@ -90,19 +53,13 @@ final class TrackChairRankingService
     {
         return $this->tx_service->transaction(function () use ($selection_plan, $payload)
         {
-            $current_member = $this->resource_server_ctx->getCurrentUser();
-            $this->checkPermissions($selection_plan->getSummit(), $current_member);
-
             $rating_type_name = $payload['name'];
             $track_chair_rating_type = $selection_plan->getTrackChairRatingTypeByName($rating_type_name);
 
             if (!is_null($track_chair_rating_type))
                 throw new ValidationException("There is another rating type with the same name.");
 
-            $track_chair_rating_type = new PresentationTrackChairRatingType();
-            $track_chair_rating_type->setWeight(floatval($payload['weight']));
-            $track_chair_rating_type->setName($rating_type_name);
-            $track_chair_rating_type->setOrder(intval($payload['order']));
+            $track_chair_rating_type = PresentationTrackChairRatingTypeFactory::build($payload);
 
             $selection_plan->addTrackChairRatingType($track_chair_rating_type);
 
@@ -113,26 +70,28 @@ final class TrackChairRankingService
     /**
      * @inheritDoc
      */
-    public function updateTrackChairRatingType(
-        SelectionPlan $selection_plan, int $track_chair_rating_type_id, array $payload): PresentationTrackChairRatingType
+    public function updateTrackChairRatingType
+    (
+        SelectionPlan $selection_plan,
+        int $track_chair_rating_type_id,
+        array $payload
+    ): PresentationTrackChairRatingType
     {
         return $this->tx_service->transaction(function () use ($selection_plan, $track_chair_rating_type_id, $payload)
         {
-            $current_member = $this->resource_server_ctx->getCurrentUser();
-            $this->checkPermissions($selection_plan->getSummit(), $current_member);
-
             $track_chair_rating_type = $selection_plan->getTrackChairRatingTypeById($track_chair_rating_type_id);
             if (is_null($track_chair_rating_type))
                 throw new EntityNotFoundException("Track chair rating type not found.");
 
-            $rating_type_name = $payload['name'];
-            $track_chair_rating_type_by_name = $selection_plan->getTrackChairRatingTypeByName($rating_type_name);
+            if(isset($payload['name'])) {
+                $rating_type_name = $payload['name'];
+                $track_chair_rating_type_by_name = $selection_plan->getTrackChairRatingTypeByName($rating_type_name);
 
-            if (!is_null($track_chair_rating_type_by_name) && $track_chair_rating_type_by_name->getId() != $track_chair_rating_type_id)
-                throw new ValidationException("There is another rating type with the same name.");
+                if (!is_null($track_chair_rating_type_by_name) && $track_chair_rating_type_by_name->getId() != $track_chair_rating_type_id)
+                    throw new ValidationException("There is another rating type with the same name.");
+            }
 
-            $track_chair_rating_type->setName($rating_type_name);
-            $track_chair_rating_type->setWeight(floatval($payload['weight']));
+            $track_chair_rating_type = PresentationTrackChairRatingTypeFactory::populate($track_chair_rating_type, $payload);
 
             if (isset($payload['order']) && intval($payload['order']) != $track_chair_rating_type->getOrder()) {
                 $track_chair_rating_type->setOrder(intval($payload['order']));
@@ -148,9 +107,6 @@ final class TrackChairRankingService
     {
         $this->tx_service->transaction(function () use ($selection_plan, $track_chair_rating_type_id)
         {
-            $current_member = $this->resource_server_ctx->getCurrentUser();
-            $this->checkPermissions($selection_plan->getSummit(), $current_member);
-
             $track_chair_rating_type = $selection_plan->getTrackChairRatingTypeById($track_chair_rating_type_id);
             if (is_null($track_chair_rating_type))
                 throw new EntityNotFoundException("Track chair rating type not found.");
@@ -162,13 +118,15 @@ final class TrackChairRankingService
     /**
      * @inheritDoc
      */
-    public function addTrackChairScoreType(
-        SelectionPlan $selection_plan, int $track_chair_rating_type_id, array $payload): PresentationTrackChairScoreType
+    public function addTrackChairScoreType
+    (
+        SelectionPlan $selection_plan,
+        int $track_chair_rating_type_id,
+        array $payload
+    ): PresentationTrackChairScoreType
     {
         return $this->tx_service->transaction(function () use ($selection_plan, $track_chair_rating_type_id,  $payload)
         {
-            $current_member = $this->resource_server_ctx->getCurrentUser();
-            $this->checkPermissions($selection_plan->getSummit(), $current_member);
 
             $track_chair_rating_type = $selection_plan->getTrackChairRatingTypeById($track_chair_rating_type_id);
             if (is_null($track_chair_rating_type))
@@ -180,10 +138,7 @@ final class TrackChairRankingService
             if (!is_null($track_chair_score_type))
                 throw new ValidationException("There is another score type with the same name.");
 
-            $track_chair_score_type = new PresentationTrackChairScoreType();
-            $track_chair_score_type->setScore(intval($payload['score']));
-            $track_chair_score_type->setName($score_type_name);
-            $track_chair_score_type->setDescription($payload['description']);
+            $track_chair_score_type = PresentationTrackChairScoreTypeFactory::build($payload);
 
             $track_chair_rating_type->addScoreType($track_chair_score_type);
 
@@ -194,13 +149,16 @@ final class TrackChairRankingService
     /**
      * @inheritDoc
      */
-    public function updateTrackChairScoreType(
-        SelectionPlan $selection_plan, int $track_chair_rating_type_id, int $track_chair_score_type_id, array $payload): PresentationTrackChairScoreType
+    public function updateTrackChairScoreType
+    (
+        SelectionPlan $selection_plan,
+        int $track_chair_rating_type_id,
+        int $track_chair_score_type_id,
+        array $payload
+    ): PresentationTrackChairScoreType
     {
         return $this->tx_service->transaction(function () use ($selection_plan, $track_chair_rating_type_id, $track_chair_score_type_id, $payload)
         {
-            $current_member = $this->resource_server_ctx->getCurrentUser();
-            $this->checkPermissions($selection_plan->getSummit(), $current_member);
 
             $track_chair_rating_type = $selection_plan->getTrackChairRatingTypeById($track_chair_rating_type_id);
             if (is_null($track_chair_rating_type))
@@ -211,14 +169,15 @@ final class TrackChairRankingService
             if (is_null($track_chair_score_type))
                 throw new EntityNotFoundException("Track chair score type not found.");
 
-            $score_type_name = $payload['name'];
-            $track_chair_score_type_by_name = $track_chair_rating_type->getScoreTypeByName($score_type_name);
+            if(isset($payload['name'])) {
+                $score_type_name = $payload['name'];
+                $track_chair_score_type_by_name = $track_chair_rating_type->getScoreTypeByName($score_type_name);
 
-            if (!is_null($track_chair_score_type_by_name) && $track_chair_score_type_by_name->getId() != $track_chair_score_type_id)
-                throw new ValidationException("There is another score type with the same name.");
+                if (!is_null($track_chair_score_type_by_name) && $track_chair_score_type_by_name->getId() != $track_chair_score_type_id)
+                    throw new ValidationException("There is another score type with the same name.");
+            }
 
-            $track_chair_score_type->setName($score_type_name);
-            $track_chair_score_type->setDescription($payload['description']);
+            $track_chair_score_type = PresentationTrackChairScoreTypeFactory::populate($track_chair_score_type, $payload);
 
             if (isset($payload['score']) && intval($payload['score']) != $track_chair_score_type->getScore()) {
                 $track_chair_score_type->setScore(intval($payload['score']));
@@ -235,8 +194,6 @@ final class TrackChairRankingService
     {
         $this->tx_service->transaction(function () use ($selection_plan, $track_chair_rating_type_id, $track_chair_score_type_id)
         {
-            $current_member = $this->resource_server_ctx->getCurrentUser();
-            $this->checkPermissions($selection_plan->getSummit(), $current_member);
 
             $track_chair_rating_type = $selection_plan->getTrackChairRatingTypeById($track_chair_rating_type_id);
             if (is_null($track_chair_rating_type))

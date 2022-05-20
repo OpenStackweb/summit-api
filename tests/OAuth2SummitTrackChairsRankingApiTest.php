@@ -106,7 +106,6 @@ final class OAuth2SummitTrackChairsRankingApiTest extends ProtectedApiTest
         $data = [
             'weight' => 1.5,
             'name'   => 'Rating Type Test',
-            'order'  => 1,
         ];
 
         $headers = [
@@ -129,6 +128,51 @@ final class OAuth2SummitTrackChairsRankingApiTest extends ProtectedApiTest
         $this->assertResponseStatus(201);
         $rating_type = json_decode($content);
         $this->assertTrue(!is_null($rating_type));
+    }
+
+    public function testAddTrackChairRatingTypeNTimes(int $n = 5)
+    {
+
+        $params = [
+             'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $formerRakingType = null;
+
+        for ($i = 1; $i < $n+1;  $i++){
+
+            $data = [
+                'weight' => 1.5 * $i,
+                'name' => 'Rating Type Test ' . $i,
+            ];
+
+            $response = $this->action(
+                "POST",
+                "OAuth2SummitTrackChairRatingTypesApiController@addTrackChairRatingType",
+                $params,
+                [],
+                [],
+                [],
+                $headers,
+                json_encode($data)
+            );
+
+            $content = $response->getContent();
+            $this->assertResponseStatus(201);
+            $rating_type = json_decode($content);
+            $this->assertTrue(!is_null($rating_type));
+            if(!is_null($formerRakingType))
+            {
+                $this->assertTrue($formerRakingType->order < $rating_type->order);
+            }
+            $formerRakingType = $rating_type;
+        }
     }
 
     public function testUpdateTrackChairRatingType() {
@@ -271,7 +315,6 @@ final class OAuth2SummitTrackChairsRankingApiTest extends ProtectedApiTest
         ];
 
         $data = [
-            'score'         => 1,
             'name'          => 'Score Type Name Test',
             'description'   => 'Score Type Description Test',
         ];
@@ -296,6 +339,9 @@ final class OAuth2SummitTrackChairsRankingApiTest extends ProtectedApiTest
         $this->assertResponseStatus(201);
         $score_type = json_decode($content);
         $this->assertTrue(!is_null($score_type));
+        $this->assertTrue($score_type->name == 'Score Type Name Test');
+        $this->assertTrue($score_type->description == 'Score Type Description Test');
+        $this->assertTrue($score_type->score > 0);
     }
 
     public function testUpdateTrackChairScoreType() {
@@ -311,7 +357,7 @@ final class OAuth2SummitTrackChairsRankingApiTest extends ProtectedApiTest
         ];
 
         $data = [
-            'score'         => 1,
+            'score'         => 3,
             'name'          => $name,
             'description'   => 'Score Type Description Updated Test',
         ];
@@ -337,6 +383,45 @@ final class OAuth2SummitTrackChairsRankingApiTest extends ProtectedApiTest
         $score_type = json_decode($content);
         $this->assertTrue(!is_null($score_type));
         $this->assertTrue($score_type->name == $name);
+        $this->assertTrue($score_type->score == 3);
+    }
+
+    public function testUpdateTrackChairScoreTypeOnlyScore() {
+
+        $rating_type = self::$default_selection_plan->getTrackChairRatingTypes()[0];
+
+        $params = [
+            'id'                => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'type_id'           => $rating_type->getId(),
+            'score_type_id'     => $rating_type->getScoreTypes()[0]->getId(),
+        ];
+
+        $data = [
+            'score' => 2,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitTrackChairScoreTypesApiController@updateTrackChairScoreType",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $score_type = json_decode($content);
+        $this->assertTrue(!is_null($score_type));
+        $this->assertTrue($score_type->score == 2);
     }
 
     public function testDeleteTrackChairScoreType() {

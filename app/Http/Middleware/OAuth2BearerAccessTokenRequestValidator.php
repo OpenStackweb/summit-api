@@ -260,7 +260,7 @@ class OAuth2BearerAccessTokenRequestValidator
     /**
      * @return array
      */
-    protected function getHeaders()
+    protected function getHeaders():array
     {
         $headers = [];
         if (function_exists('getallheaders')) {
@@ -269,8 +269,7 @@ class OAuth2BearerAccessTokenRequestValidator
             }
         }
 
-        if(count($headers) == 0 )
-        {
+        if(!isset($this->headers['authorization'])) {
 
             foreach ($_SERVER as $name => $value) {
                 if (substr($name, 0, 5) == 'HTTP_') {

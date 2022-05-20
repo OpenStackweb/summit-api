@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 
-use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\IPresentationTrackChairRatingTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\Services\Model\ITrackChairRankingService;
@@ -170,7 +169,7 @@ final class OAuth2SummitTrackChairRatingTypesApiController
             $selection_plan = $this->selection_plan_repository->getById(intval($selection_plan_id));
             if (is_null($selection_plan)) return $this->error404();
 
-            $payload = $this->getJsonPayload(RatingTypeValidationRulesFactory::build(RatingTypeValidationRulesFactory::build([])));
+            $payload = $this->getJsonPayload(RatingTypeValidationRulesFactory::buildForAdd());
 
             $track_chair_rating_type = $this->service->addTrackChairRatingType($selection_plan, $payload);
 
@@ -193,7 +192,7 @@ final class OAuth2SummitTrackChairRatingTypesApiController
             $selection_plan = $this->selection_plan_repository->getById(intval($selection_plan_id));
             if (is_null($selection_plan)) return $this->error404();
 
-            $payload = $this->getJsonPayload(RatingTypeValidationRulesFactory::build(RatingTypeValidationRulesFactory::build([])));
+            $payload = $this->getJsonPayload(RatingTypeValidationRulesFactory::buildForUpdate());
 
             $track_chair_rating_type = $this->service->updateTrackChairRatingType($selection_plan, intval($type_id), $payload);
 

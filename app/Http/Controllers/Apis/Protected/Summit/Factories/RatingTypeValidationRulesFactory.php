@@ -1,5 +1,4 @@
 <?php namespace App\Http\Controllers;
-
 /**
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,23 +12,36 @@
  * limitations under the License.
  **/
 
+use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
 /**
  * Class RatingTypeValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class RatingTypeValidationRulesFactory
+final class RatingTypeValidationRulesFactory extends AbstractValidationRulesFactory
 {
     /**
-     * @param array $data
-     * @param bool $update
+     * @param array $payload
      * @return array
      */
-    public static function build(array $data, $update = false)
+    public static function buildForAdd(array $payload = []): array
     {
         return [
             'weight'  => 'required|numeric|min:0',
             'name'    => 'required|string',
-            'order'   => 'required|integer|min:1',
+            'order'   => 'sometimes|integer|min:1',
+        ];
+    }
+
+    /**
+     * @param array $payload
+     * @return array
+     */
+    public static function buildForUpdate(array $payload = []): array
+    {
+        return [
+            'weight'  => 'sometimes|numeric|min:0',
+            'name'    => 'sometimes|string',
+            'order'   => 'sometimes|required|integer|min:1',
         ];
     }
 }

@@ -464,8 +464,24 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name'        => 'get-all-my-registration-order-by-summit',
+                'route'       => '/api/v1/summits/{id}/orders/me',
+                'http_method' => 'GET',
+                'scopes'      => [
+                    sprintf(SummitScopes::ReadMyRegistrationOrders, $current_realm),
+                ],
+            ],
+            [
                 'name'        => 'get-all-my-tickets',
                 'route'       => '/api/v1/summits/all/orders/all/tickets/me',
+                'http_method' => 'GET',
+                'scopes'      => [
+                    sprintf(SummitScopes::ReadMyRegistrationOrders, $current_realm),
+                ],
+            ],
+            [
+                'name'        => 'get-all-my-tickets-by-summit',
+                'route'       => '/api/v1/summits/{id}/orders/all/tickets/me',
                 'http_method' => 'GET',
                 'scopes'      => [
                     sprintf(SummitScopes::ReadMyRegistrationOrders, $current_realm),

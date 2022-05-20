@@ -400,7 +400,16 @@ final class OAuth2SummitOrdersApiController
     /**
      * @return mixed
      */
+
     public function getAllMyOrders(){
+        return $this->getAllMyOrdersBySummit('all');
+    }
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function getAllMyOrdersBySummit($summit_id){
         $owner = $this->getResourceServerContext()->getCurrentUser();
         return $this->_getAll(
             function(){
@@ -425,8 +434,11 @@ final class OAuth2SummitOrdersApiController
                     'status',
                 ];
             },
-            function($filter) use($owner){
+            function($filter) use($owner, $summit_id){
                 if($filter instanceof Filter){
+                    if(is_numeric($summit_id)){
+                        $filter->addFilterCondition(FilterElement::makeEqual('summit_id', intval($summit_id)));
+                    }
                     $filter->addFilterCondition(FilterElement::makeEqual('owner_id', $owner->getId()));
                 }
                 return $filter;

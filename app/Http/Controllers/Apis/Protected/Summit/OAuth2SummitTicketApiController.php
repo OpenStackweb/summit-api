@@ -438,6 +438,10 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
      * @return mixed
      */
     public function getAllMyTickets(){
+        return $this->getAllMyTicketsBySummit('all');
+    }
+
+    public function getAllMyTicketsBySummit($summit_id){
         $owner = $this->getResourceServerContext()->getCurrentUser();
         return $this->_getAll(
             function(){
@@ -466,8 +470,11 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'status',
                 ];
             },
-            function($filter) use($owner){
+            function($filter) use($owner, $summit_id){
                 if($filter instanceof Filter){
+                    if(is_numeric($summit_id)){
+                        $filter->addFilterCondition(FilterElement::makeEqual('summit_id', intval($summit_id)));
+                    }
                     $filter->addFilterCondition(FilterElement::makeEqual('member_id', $owner->getId()));
                     $filter->addFilterCondition(FilterElement::makeEqual('is_active', true));
                 }

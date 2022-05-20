@@ -1075,9 +1075,19 @@ Route::group(array('prefix' => 'summits'), function () {
 
         // orders
         Route::group(['prefix' => 'orders'], function () {
+            Route::get('me', 'OAuth2SummitOrdersApiController@getAllMyOrdersBySummit');
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrdersApiController@getAllBySummit']);
             Route::get('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrdersApiController@getAllBySummitCSV']);
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrdersApiController@add']);
+
+            Route::group(['prefix' => 'all'], function () {
+                Route::group(['prefix' => 'tickets'], function () {
+                    Route::group(['prefix' => 'me'], function () {
+                        Route::get('', 'OAuth2SummitTicketApiController@getAllMyTicketsBySummit');
+                    });
+                });
+            });
+
             Route::group(['prefix' => '{order_id}', 'where' => [
                 'order_id' => '[0-9]+'
             ]], function () {

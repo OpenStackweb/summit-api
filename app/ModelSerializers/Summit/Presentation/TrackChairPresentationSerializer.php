@@ -206,7 +206,7 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
                     }
                         break;
                     case 'track_chair_scores':{
-                        if(is_null($summit_track_chair)) {
+                        if(!is_null($summit_track_chair)) {
                             $track_chair_scores = [];
                             foreach ($presentation->getTrackChairScoresBy($summit_track_chair) as $score) {
                                 $track_chair_scores[] = SerializerRegistry::getInstance()->getSerializer($score)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));

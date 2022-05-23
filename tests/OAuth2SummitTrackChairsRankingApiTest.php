@@ -73,6 +73,7 @@ final class OAuth2SummitTrackChairsRankingApiTest extends ProtectedApiTest
             'id'                => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
             'type_id'           => self::$default_selection_plan->getTrackChairRatingTypes()[0]->getId(),
+            'expand'            => 'score_types,selection_plan'
         ];
 
         $headers = [
@@ -101,6 +102,7 @@ final class OAuth2SummitTrackChairsRankingApiTest extends ProtectedApiTest
         $params = [
             'id'                => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
+            'expand'            => 'score_types,selection_plan'
         ];
 
         $data = [
@@ -182,6 +184,7 @@ final class OAuth2SummitTrackChairsRankingApiTest extends ProtectedApiTest
             'id'                => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
             'type_id'           => self::$default_selection_plan->getTrackChairRatingTypes()[0]->getId(),
+            'expand'            => 'score_types,selection_plan'
         ];
 
         $data = [

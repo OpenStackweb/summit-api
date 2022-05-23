@@ -173,7 +173,13 @@ final class OAuth2SummitTrackChairScoreTypesApiController
             $track_chair_score_type = $track_chair_rating_type->getScoreTypeById($score_type_id);
             if (is_null($track_chair_score_type)) return $this->error404();
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($track_chair_score_type)->serialize());
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($track_chair_score_type)
+                ->serialize
+                (
+                    self::getExpands(),
+                    self::getFields(),
+                    self::getRelations()
+                ));
         });
     }
 
@@ -196,7 +202,13 @@ final class OAuth2SummitTrackChairScoreTypesApiController
 
             $track_chair_score_type = $this->service->addTrackChairScoreType($selection_plan, intval($type_id), $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($track_chair_score_type)->serialize());
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($track_chair_score_type)
+                ->serialize
+                (
+                    self::getExpands(),
+                    self::getFields(),
+                    self::getRelations()
+                ));
         });
     }
 
@@ -220,7 +232,13 @@ final class OAuth2SummitTrackChairScoreTypesApiController
 
             $track_chair_score_type = $this->service->updateTrackChairScoreType($selection_plan, intval($type_id), intval($score_type_id), $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($track_chair_score_type)->serialize());
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($track_chair_score_type)
+                ->serialize
+                (
+                    self::getExpands(),
+                    self::getFields(),
+                    self::getRelations()
+                ));
         });
     }
 

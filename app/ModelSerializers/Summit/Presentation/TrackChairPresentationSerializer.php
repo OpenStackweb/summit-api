@@ -101,11 +101,18 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
 
         $summit_track_chair = $presentation->getSummit()->getTrackChairByMember($member);
 
-        // track chairs fields
-        $values['viewed'] = $presentation->viewedBy($summit_track_chair->getMember());
-        $values['selected'] = $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionSelected);
-        $values['liked'] = $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionMaybe);
-        $values['passed'] =  $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionPass);
+        $values['viewed'] = false;
+        $values['selected'] = false;
+        $values['liked'] = false;
+        $values['passed'] = false;
+
+        if($summit_track_chair) {
+            // track chairs fields
+            $values['viewed'] = $presentation->viewedBy($summit_track_chair->getMember());
+            $values['selected'] = $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionSelected);
+            $values['liked'] = $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionMaybe);
+            $values['passed'] = $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionPass);
+        }
 
         if(in_array('selectors', $relations))
         {

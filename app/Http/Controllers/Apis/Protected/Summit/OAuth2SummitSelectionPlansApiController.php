@@ -678,8 +678,8 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IPresentationSerializerTypes::TrackChairs
             )->serialize(
                 self::getExpands(),
-                self::getRelations(),
-                self::getFields()
+                self::getFields(),
+                self::getRelations()
             ));
 
         } catch (ValidationException $ex) {

@@ -1478,6 +1478,10 @@ class Presentation extends SummitEvent
         return $this->category_changes_requests->matching($criteria);
     }
 
+    public function getPendingCategoryChangeRequestsCount():int{
+        return $this->getPendingCategoryChangeRequests()->count();
+    }
+
     /**
      * @param Member $requester
      * @param PresentationCategory $newCategory

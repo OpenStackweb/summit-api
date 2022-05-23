@@ -31,6 +31,9 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
         'VotesTotalPoints' => 'votes_total_points:json_int',
         'TrackChairAvgScore' => 'track_chair_avg_score:json_float',
         'PassersCount' => 'passers_count:json_int',
+        'LikersCount' => 'likers_count:json_int',
+        'SelectorsCount' => 'selectors_count:json_int',
+        'PendingCategoryChangeRequestsCount' => 'pending_category_change_requests_count:json_int',
      ];
 
     protected static $allowed_fields = [
@@ -43,6 +46,10 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
         'votes_total_points',
         'track_chair_avg_score',
         'remaining_selections',
+        'passers_count',
+        'likers_count',
+        'selectors_count',
+        'pending_category_change_requests_count',
     ];
 
     protected static $allowed_relations = [

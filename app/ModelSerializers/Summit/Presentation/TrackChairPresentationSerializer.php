@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 use Libs\ModelSerializers\AbstractSerializer;
-use models\main\Member;
 use models\summit\Presentation;
 use models\summit\SummitSelectedPresentation;
 
@@ -103,15 +102,15 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
 
         $values['viewed'] = false;
         $values['selected'] = false;
-        $values['liked'] = false;
-        $values['passed'] = false;
+        $values['maybe'] = false;
+        $values['pass'] = false;
 
         if($summit_track_chair) {
             // track chairs fields
             $values['viewed'] = $presentation->viewedBy($summit_track_chair->getMember());
             $values['selected'] = $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionSelected);
-            $values['liked'] = $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionMaybe);
-            $values['passed'] = $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionPass);
+            $values['maybe'] = $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionMaybe);
+            $values['pass'] = $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionPass);
         }
 
         if(in_array('selectors', $relations))

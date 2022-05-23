@@ -677,8 +677,10 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 $presentation,
                 IPresentationSerializerTypes::TrackChairs
             )->serialize(
-                Request::input('expand', ''
-                )));
+                self::getExpands(),
+                self::getRelations(),
+                self::getFields()
+            ));
 
         } catch (ValidationException $ex) {
             Log::warning($ex);
@@ -713,7 +715,11 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
             (
                 $presentation,
                 IPresentationSerializerTypes::TrackChairs
-            )->serialize(Request::input('expand', '')));
+            )->serialize(
+                self::getExpands(),
+                self::getFields(),
+                self::getRelations()
+            ));
         } catch (ValidationException $ex) {
             Log::warning($ex);
             return $this->error412($ex->getMessages());

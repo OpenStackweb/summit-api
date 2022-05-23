@@ -94,7 +94,7 @@ final class TrackChairRankingService
             $track_chair_rating_type = PresentationTrackChairRatingTypeFactory::populate($track_chair_rating_type, $payload);
 
             if (isset($payload['order']) && intval($payload['order']) != $track_chair_rating_type->getOrder()) {
-                $track_chair_rating_type->setOrder(intval($payload['order']));
+                $selection_plan->recalculateTrackChairRatingTypeOrder($track_chair_rating_type, intval($payload['order']));
             }
             return $track_chair_rating_type;
         });
@@ -180,7 +180,7 @@ final class TrackChairRankingService
             $track_chair_score_type = PresentationTrackChairScoreTypeFactory::populate($track_chair_score_type, $payload);
 
             if (isset($payload['score']) && intval($payload['score']) != $track_chair_score_type->getScore()) {
-                $track_chair_score_type->setScore(intval($payload['score']));
+                $track_chair_rating_type->recalculateScoreTypeScore($track_chair_score_type, intval($payload['score']));
             }
             return $track_chair_score_type;
         });

@@ -13,10 +13,12 @@
  **/
 use App\Models\Foundation\Main\IOrderable;
 use App\Models\Foundation\Main\OrderableChilds;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use App\Models\Foundation\Summit\SelectionPlan;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
+use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
@@ -218,4 +220,12 @@ class PresentationTrackChairRatingType
         $this->selection_plan = null;
     }
 
+    /**
+     * @param PresentationTrackChairScoreType $scoreType
+     * @param int $new_score
+     * @throws ValidationException
+     */
+    public function recalculateScoreTypeScore(PresentationTrackChairScoreType $scoreType, $new_score){
+        self::recalculateOrderForSelectable($this->score_types, $scoreType, $new_score);
+    }
 }

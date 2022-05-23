@@ -897,4 +897,13 @@ class SelectionPlan extends SilverstripeBaseModel
         $this->track_chair_rating_types->clear();
     }
 
+    /**
+     * @param SummitSelectionPlanExtraQuestionType $question
+     * @param int $new_order
+     * @throws ValidationException
+     */
+    public function recalculateTrackChairRatingTypeOrder(PresentationTrackChairRatingType $ratingType, $new_order){
+        self::recalculateOrderForSelectable($this->track_chair_rating_types, $ratingType, $new_order);
+    }
+
 }

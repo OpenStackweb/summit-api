@@ -21,6 +21,14 @@ use models\exceptions\ValidationException;
 trait OrderableChilds
 {
     /**
+     * @param string|null $className
+     * @return string
+     */
+    protected static function getOrderFieldForOrderableChild(?string $className = null):string{
+        return 'order';
+    }
+
+    /**
      * @param array $collection
      * @param IOrderable $entity
      * @param int $new_order
@@ -59,21 +67,23 @@ trait OrderableChilds
     /**
      * @param Selectable $collection
      * @param IOrderable $element
-     * @param $new_order
+     * @param int $new_order
+     * @param string $className
      * @throws ValidationException
      */
-    private static function recalculateOrderForSelectable(Selectable $collection, IOrderable $element, $new_order){
+    private static function recalculateOrderForSelectable(Selectable $collection, IOrderable $element, int $new_order, string $className = null){
         $criteria     = Criteria::create();
-        $criteria->orderBy(['order'=> 'ASC']);
+        $criteria->orderBy([static::getOrderFieldForOrderableChild($className) => 'ASC']);
         self::recalculateOrderForCollection( $collection->matching($criteria)->toArray(), $element, $new_order);
     }
 
     /**
      * @param Selectable $collection
+     * @param string $className
      */
-    private static function resetOrderForSelectable(Selectable $collection):void{
+    private static function resetOrderForSelectable(Selectable $collection, string $className = null):void{
         $criteria = Criteria::create();
-        $criteria->orderBy(['order' => 'ASC']);
+        $criteria->orderBy([static::getOrderFieldForOrderableChild($className) => 'ASC']);
         $order = 1;
         foreach($collection->matching($criteria) as $e){
             $e->setOrder($order);

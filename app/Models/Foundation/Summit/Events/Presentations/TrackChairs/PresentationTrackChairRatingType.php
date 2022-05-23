@@ -17,6 +17,7 @@ use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestion
 use App\Models\Foundation\Summit\SelectionPlan;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\Common\Collections\Selectable;
 use Doctrine\ORM\Mapping AS ORM;
 use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
@@ -209,7 +210,7 @@ class PresentationTrackChairRatingType
         if (!$this->score_types->contains($score)) return;
         $this->score_types->removeElement($score);
         $score->clearType();
-        self::resetOrderForSelectable($this->score_types);
+        self::resetOrderForSelectable($this->score_types, PresentationTrackChairScoreType::class);
     }
 
     public function clearScoreTypes():void{
@@ -230,6 +231,16 @@ class PresentationTrackChairRatingType
         if($new_score > $max)
             $new_score = $max;
 
-        self::recalculateOrderForSelectable($this->score_types, $scoreType, $new_score);
+        self::recalculateOrderForSelectable($this->score_types, $scoreType, $new_score, PresentationTrackChairScoreType::class);
+    }
+
+    /**
+     * @param string|null $className
+     * @return string
+     */
+    protected static function getOrderFieldForOrderableChild(?string $className = null):string{
+        if(!empty($className) && $className === PresentationTrackChairScoreType::class)
+            return 'score';
+        return 'order';
     }
 }

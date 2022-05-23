@@ -145,7 +145,7 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
             $values['category_changes_requests'] = $category_changes_requests;
         }
 
-        if(in_array('track_chair_scores', $relations)){
+        if(in_array('track_chair_scores', $relations) && !is_null($summit_track_chair)){
             $track_chair_scores = [];
             foreach ($presentation->getTrackChairScoresBy($summit_track_chair) as $score) {
                 $track_chair_scores[] = $score->getId();
@@ -206,11 +206,13 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
                     }
                         break;
                     case 'track_chair_scores':{
-                        $track_chair_scores = [];
-                        foreach ($presentation->getTrackChairScoresBy($summit_track_chair) as $score) {
-                            $track_chair_scores[] = SerializerRegistry::getInstance()->getSerializer($score)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        if(is_null($summit_track_chair)) {
+                            $track_chair_scores = [];
+                            foreach ($presentation->getTrackChairScoresBy($summit_track_chair) as $score) {
+                                $track_chair_scores[] = SerializerRegistry::getInstance()->getSerializer($score)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            }
+                            $values['track_chair_scores'] = $track_chair_scores;
                         }
-                        $values['track_chair_scores'] = $track_chair_scores;
                     }
                         break;
                 }

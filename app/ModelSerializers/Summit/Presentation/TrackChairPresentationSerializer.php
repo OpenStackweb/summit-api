@@ -14,6 +14,8 @@
 use Libs\ModelSerializers\AbstractSerializer;
 use models\main\Member;
 use models\summit\Presentation;
+use models\summit\SummitSelectedPresentation;
+
 /**
  * Class TrackChairPresentationSerializer
  * @package ModelSerializers
@@ -98,6 +100,12 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
         $values['remaining_selections'] = $presentation->getRemainingSelectionsForMember($member);
 
         $summit_track_chair = $presentation->getSummit()->getTrackChairByMember($member);
+
+        // track chairs fields
+        $values['viewed'] = $presentation->viewedBy($summit_track_chair->getMember());
+        $values['selected'] = $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionSelected);
+        $values['liked'] = $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionMaybe);
+        $values['passed'] =  $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionPass);
 
         if(in_array('selectors', $relations))
         {

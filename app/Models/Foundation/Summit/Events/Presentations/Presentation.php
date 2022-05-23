@@ -1196,11 +1196,7 @@ class Presentation extends SummitEvent
      */
     public function addTrackChairView(Member $viewer)
     {
-
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('viewer', $viewer));
-        if($this->track_chair_views->matching($criteria)->count() > 0)
-            return;
+        if($this->viewedBy($viewer)) return;
         $view = PresentationTrackChairView::build($viewer, $this);
         $this->track_chair_views->add($view);
     }
@@ -1274,6 +1270,12 @@ class Presentation extends SummitEvent
         $this->track_chair_views->clear();
     }
 
+    public function viewedBy(Member $member):bool{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('viewer', $member));
+        return $this->track_chair_views->matching($criteria)->count() > 0;
+    }
+
     /**
      * @param string $list_class
      * @return bool
@@ -1341,6 +1343,19 @@ class Presentation extends SummitEvent
         return array_map(function ($selection) {
             return $selection->getMember();
         }, $selections);
+    }
+
+    /**
+     * @param Member $member
+     * @param string $collection_type
+     * @return bool
+     */
+    public function hasMemberSelectionFor(Member $member, string $collection_type):bool{
+        return $this->selected_presentations->filter(function ($selection) use ($collection_type, $member) {
+            $list = $selection->getList();
+            return $list->getListType() === SummitSelectedPresentationList::Individual
+                && $selection->getCollection() == $collection_type && $selection->getMemberId() == $member->getId();
+        })->count() > 0;
     }
 
     /**

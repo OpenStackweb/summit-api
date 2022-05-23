@@ -226,6 +226,10 @@ class PresentationTrackChairRatingType
      * @throws ValidationException
      */
     public function recalculateScoreTypeScore(PresentationTrackChairScoreType $scoreType, $new_score){
+        $max = $this->getScoreTypeMaxOrder();
+        if($new_score > $max)
+            $new_score = $max;
+
         self::recalculateOrderForSelectable($this->score_types, $scoreType, $new_score);
     }
 }

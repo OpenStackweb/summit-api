@@ -39,7 +39,7 @@ trait OrderableChilds
         $max_order  = count($collection);
 
         if($new_order > $max_order)
-            throw new ValidationException(sprintf("max order is %s", $max_order));
+            throw new ValidationException(sprintf("Max Allowed order is %s.", $max_order));
 
         unset($collection[$former_order - 1]);
 

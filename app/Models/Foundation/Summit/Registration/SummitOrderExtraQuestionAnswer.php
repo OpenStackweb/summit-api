@@ -102,4 +102,8 @@ class SummitOrderExtraQuestionAnswer extends ExtraQuestionAnswer
             $this->attendee->updateLastEdited();
     }
 
+    public function __toString():string
+    {
+        return sprintf("SummitOrderExtraQuestionAnswer attendee %s question %s value %s", $this->attendee->getId(), $this->question->getId(), $this->value);
+    }
 }

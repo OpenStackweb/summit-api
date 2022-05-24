@@ -508,6 +508,7 @@ final class RegistrationIngestionService
                                 }
                                 $answer->setValue($value);
                                 $attendee->addExtraQuestionAnswer($answer);
+                                Log::debug(sprintf("RegistrationIngestionService::ingestSummit added answer %s", $answer));
                             }
 
                             $ticket->setOwner($attendee);

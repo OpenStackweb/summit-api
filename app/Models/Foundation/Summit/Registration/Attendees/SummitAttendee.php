@@ -637,6 +637,7 @@ SQL;
 
     public function clearExtraQuestionAnswers()
     {
+        Log::debug(sprintf("SummitAttendee::clearExtraQuestionAnswers for attendee %s", $this->getId()));
         return $this->extra_question_answers->clear();
     }
 

@@ -22,10 +22,15 @@ interface IBaseRepository
 {
     /**
      * @param int $id
-     * @param bool $refresh
      * @return IEntity
      */
-    public function getById($id, $refresh = true);
+    public function getById($id);
+
+    /**
+     * @param int $id
+     * @return IEntity
+     */
+    public function getByIdRefreshed($id);
 
     /**
      * @param int $id

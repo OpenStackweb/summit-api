@@ -47,9 +47,17 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
         return Registry::getManager($this->manager_name);
     }
 
-    public function getById($id, $refresh = false)
+    public function getById($id)
     {
-        return $this->find($id, null, null, $refresh);
+        return $this->find($id);
+    }
+
+    /**
+     * @param int $id
+     * @return IEntity
+     */
+    public function getByIdRefreshed($id){
+        return $this->find($id, null, null, true);
     }
 
     /**

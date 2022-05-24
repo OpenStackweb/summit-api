@@ -3617,7 +3617,7 @@ final class SummitOrderService
                 Log::warning(sprintf("SummitOrderService::processOrderPaymentConfirmation order %s not found.", $orderId));
             }
 
-            $summit = $this->summit_repository->getById($order->getSummitId(), true);
+            $summit = $this->summit_repository->getByIdRefreshed($order->getSummitId());
 
             $shouldSendOrderEmail = $summit->isRegistrationSendOrderEmailAutomatically();
             $shouldSendTicketEmail = $summit->isRegistrationSendTicketEmailAutomatically();

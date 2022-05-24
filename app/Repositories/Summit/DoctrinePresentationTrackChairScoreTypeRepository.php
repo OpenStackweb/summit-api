@@ -15,6 +15,9 @@
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
 use App\Models\Foundation\Summit\Repositories\IPresentationTrackChairScoreTypeRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
+use Doctrine\ORM\QueryBuilder;
+use utils\Filter;
+
 /**
  * Class DoctrinePresentationScoreTypeRepository
  * @package App\Repositories\Summit
@@ -33,6 +36,26 @@ final class DoctrinePresentationTrackChairScoreTypeRepository
     }
 
     /**
+     * @param QueryBuilder $query
+     * @return QueryBuilder
+     */
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
+    {
+        if($filter->hasFilter('type_id'))
+            $query->join('e.type', 't');
+        return $query;
+    }
+
+
+    protected function getFilterMappings()
+    {
+        return [
+            'type_id' => 't.id',
+            'name' => "e.name",
+        ];
+    }
+
+    /**
      * @return array
      */
     protected function getOrderMappings()
@@ -40,6 +63,7 @@ final class DoctrinePresentationTrackChairScoreTypeRepository
         return [
             'id'    => 'e.id',
             'score' => 'e.score',
+            'name' => 'e.name',
         ];
     }
 }

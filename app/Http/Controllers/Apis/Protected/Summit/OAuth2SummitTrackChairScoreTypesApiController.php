@@ -109,43 +109,30 @@ final class OAuth2SummitTrackChairScoreTypesApiController
         return $this->_getAll(
             function () {
                 return [
-                    'summit_id' => ['=='],
-                    'selection_plan_id' => ['=='],
                     'type_id' => ['=='],
+                    'name' => ['@@','=@','==']
                 ];
             },
             function () {
                 return [
-                    'summit_id' => 'sometimes|integer',
-                    'selection_plan_id' => 'sometimes|integer',
                     'type_id' => 'sometimes|integer',
+                    'name'=> 'sometimes|string',
                 ];
             },
             function () {
                 return [
                     'id',
                     'score',
+                    'name',
                 ];
             },
-            function ($filter) use ($summit, $selection_plan, $track_chair_rating_type) {
+            function ($filter) use ($track_chair_rating_type) {
                 if ($filter instanceof Filter) {
-                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
-                    $filter->addFilterCondition(FilterElement::makeEqual('selection_plan_id', $selection_plan->getId()));
                     $filter->addFilterCondition(FilterElement::makeEqual('type_id', $track_chair_rating_type->getId()));
                 }
                 return $filter;
             },
-            function () use ($summit) {
-                $current_user = $this->resource_server_context->getCurrentUser();
-                if(!is_null($current_user) && $summit->isSummitAdmin($current_user)){
-                    if(
-                        $current_user->isOnGroup(IGroup::Administrators) ||
-                        $current_user->isOnGroup(IGroup::SuperAdmins) ||
-                        $current_user->isOnGroup(IGroup::TrackChairsAdmins) ||
-                        $current_user->isOnGroup(IGroup::SummitAdministrators)
-                    )
-                        return SerializerRegistry::SerializerType_Private;
-                }
+            function () {
                 return SerializerRegistry::SerializerType_Public;
             }
         );

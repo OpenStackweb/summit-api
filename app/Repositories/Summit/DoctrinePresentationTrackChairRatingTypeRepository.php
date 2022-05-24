@@ -15,6 +15,9 @@
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType;
 use App\Models\Foundation\Summit\Repositories\IPresentationTrackChairRatingTypeRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
+use Doctrine\ORM\QueryBuilder;
+use utils\Filter;
+
 /**
  * Class DoctrinePresentationTrackChairRatingTypeRepository
  * @package App\Repositories\Summit
@@ -33,6 +36,25 @@ final class DoctrinePresentationTrackChairRatingTypeRepository
     }
 
     /**
+     * @param QueryBuilder $query
+     * @return QueryBuilder
+     */
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
+    {
+        if($filter->hasFilter('selection_plan_id'))
+            $query->join('e.selection_plan', 'sp');
+        return $query;
+    }
+
+
+    protected function getFilterMappings()
+    {
+        return [
+            'selection_plan_id' => 'sp.id',
+            'name' => "e.name",
+        ];
+    }
+    /**
      * @return array
      */
     protected function getOrderMappings()
@@ -40,6 +62,7 @@ final class DoctrinePresentationTrackChairRatingTypeRepository
         return [
             'id'    => 'e.id',
             'order' => 'e.order',
+            'name' => 'e.name'
         ];
     }
 }

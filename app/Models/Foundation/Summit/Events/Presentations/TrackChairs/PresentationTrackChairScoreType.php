@@ -29,13 +29,11 @@ class PresentationTrackChairScoreType
     use One2ManyPropertyTrait;
 
     protected $getIdMappings = [
-        'getSelectionPlanId' => 'selection_plan',
-        'getTypeId'          => 'type',
+        'getTypeId' => 'type',
     ];
 
     protected $hasPropertyMappings = [
-        'hasSelectionPlan' => 'selection_plan',
-        'hasType'          => 'type',
+        'hasType' => 'type',
     ];
 
     /**

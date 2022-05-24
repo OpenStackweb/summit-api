@@ -105,24 +105,24 @@ final class OAuth2SummitTrackChairRatingTypesApiController
             function () {
                 return [
                     'selection_plan_id' => ['=='],
-                    'summit_id' => ['=='],
+                    'name' => ['@@','=@','==']
                 ];
             },
             function () {
                 return [
                     'selection_plan_id' => 'sometimes|integer',
-                    'summit_id' => 'sometimes|integer',
+                    'name'=> 'sometimes|string',
                 ];
             },
             function () {
                 return [
                     'id',
                     'order',
+                    'name'
                 ];
             },
-            function ($filter) use ($summit, $selection_plan) {
+            function ($filter) use ($selection_plan) {
                 if ($filter instanceof Filter) {
-                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
                     $filter->addFilterCondition(FilterElement::makeEqual('selection_plan_id', $selection_plan->getId()));
                 }
                 return $filter;

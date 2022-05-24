@@ -299,8 +299,8 @@ final class SummitOrderExtraQuestionTypeService
 
                     $values = $question['choices'] ?? [];
                     $value_order = 1;
-                    $question_type->clearValues();
-                    foreach ($values as $opt){
+                    //$question_type->clearValues();
+                    foreach ($values as $opt) {
 
                         Log::debug
                         (
@@ -312,11 +312,28 @@ final class SummitOrderExtraQuestionTypeService
                             )
                         );
 
-                        $value = new ExtraQuestionTypeValue();
-                        $value->setValue(trim($opt['answer']['text']));
-                        $value->setLabel(trim($opt['answer']['html']));
+                        $answer_text = trim($opt['answer']['text']);
+                        $answer_label = trim($opt['answer']['html']);
+
+                        $value = $question_type->getValueByName($answer_text);
+                        if (is_null($value)) {
+                            Log::debug
+                            (
+                                sprintf
+                                (
+                                    "SummitOrderExtraQuestionTypeService::seedSummitOrderExtraQuestionTypesFromEventBrite answer %s does not exist for question %s",
+                                    $answer_text,
+                                    $question_type->getExternalId()
+                                )
+                            );
+                            $value = new ExtraQuestionTypeValue();
+                            $value->setValue($answer_text);
+                            ++$value_order;
+                        }
+
+                        $value->setLabel($answer_label);
                         $value->setOrder($value_order);
-                        ++$value_order;
+
                         $question_type->addValue($value);
                     }
 

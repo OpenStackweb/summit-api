@@ -2446,6 +2446,17 @@ final class SummitOrderService
     {
         return $this->tx_service->transaction(function () use ($summit, $ticket_id, $requestor, $payload) {
 
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitOrderService::printAttendeeBadge summit %s ticket %s payload %s",
+                    $summit->getId(),
+                    $ticket_id,
+                    json_encode($payload)
+                )
+            );
+
             $badge = $this->getAttendeeBadge($summit, $ticket_id, $requestor);
 
             $this->checkPrintingRights($requestor, $badge);
@@ -2455,7 +2466,7 @@ final class SummitOrderService
             // do checkin on print
             $attendee = $badge->getTicket()->getOwner();
             $must_check_in = $payload['check_in'] ?? true;
-            if (boolval($must_check_in) && !$attendee->hasCheckedIn()) {
+            if ($must_check_in && !$attendee->hasCheckedIn()) {
                 $attendee->setSummitHallCheckedIn(true);
             }
 

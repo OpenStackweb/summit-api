@@ -3672,7 +3672,8 @@ final class SummitOrderService
             if (is_null($order) || !$order instanceof SummitOrder) {
                 Log::warning(sprintf("SummitOrderService::processOrderPaymentConfirmation order %s not found.", $orderId));
             }
-            $summit = $order->getSummit();
+
+            $summit = $this->summit_repository->getById($order->getSummitId(), true);
 
             Log::debug(sprintf("SummitOrderService::processOrderPaymentConfirmation - got order id %s nbr %s", $orderId, $order->getNumber()));
             $order->generateQRCode();

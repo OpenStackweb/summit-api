@@ -220,7 +220,7 @@ return [
         'namespace'              => null,
         'second_level'           => [
             'enabled'                => true,
-            'region_lifetime'        => 3600,
+            'region_lifetime'        => 180,
             'region_lock_lifetime'   => 60,
             'regions'                => [
                 'summit_event_feedback_region' => [

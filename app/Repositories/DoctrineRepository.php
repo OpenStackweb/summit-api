@@ -47,9 +47,9 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
         return Registry::getManager($this->manager_name);
     }
 
-    public function getById($id)
+    public function getById($id, $refresh = false)
     {
-        return $this->find($id);
+        return $this->find($id, null, null, $refresh);
     }
 
     /**
@@ -280,9 +280,12 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
      *
      * @return object|null The entity instance or NULL if the entity can not be found.
      */
-    public function find($id, $lockMode = null, $lockVersion = null)
+    public function find($id, $lockMode = null, $lockVersion = null, $refresh = false)
     {
-        return $this->getEntityManager()->find($this->_entityName, $id, $lockMode, $lockVersion);
+        $res = $this->getEntityManager()->find($this->_entityName, $id, $lockMode, $lockVersion);
+        if($refresh)
+            $this->getEntityManager()->refresh($res);
+        return $res;
     }
 
     /**

@@ -216,8 +216,17 @@ class PresentationSpeakerSummitAssistanceConfirmationRequest extends Silverstrip
 
     public function __construct()
     {
+        parent::__construct();
         $this->registered   = false;
         $this->is_confirmed = false;
         $this->checked_in   = false;
+    }
+
+    public function getSpeakerEmail():?string{
+        return $this->speaker->getEmail();
+    }
+
+    public function getSpeakerFullName():?string{
+        return $this->speaker->getFullName();
     }
 }

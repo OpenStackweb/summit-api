@@ -25,6 +25,8 @@ final class PresentationSpeakerSummitAssistanceConfirmationRequestSerializer
         'Confirmed'        => 'is_confirmed:json_boolean',
         'CheckedIn'        => 'checked_in:json_boolean',
         'SummitId'         => 'summit_id:json_int',
+        'SpeakerEmail'     => 'speaker_email:json_string',
+        'SpeakerFullName'  => 'speaker_full_name:json_string',
         'SpeakerId'        => 'speaker_id:json_int',
         'ConfirmationDate' => 'confirmation_date:datetime_epoch',
     ];

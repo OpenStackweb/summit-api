@@ -1300,6 +1300,7 @@ final class PresentationService
                     )
                 );
             }
+
             $score_type = $this->presentation_track_chair_score_type_repository->getById($score_type_id);
 
             if(is_null($score_type) || !$score_type instanceof PresentationTrackChairScoreType)
@@ -1309,6 +1310,11 @@ final class PresentationService
             $track_chair_score = $summit_track_chair->getScoreByRatingTypeAndPresentation($score_type->getType(), $presentation);
 
             if (!is_null($track_chair_score)) {
+
+                // check if its the same type
+                if($track_chair_score->getType()->getId() === $score_type_id)
+                    return $track_chair_score;
+                // if not delete it
                 $summit_track_chair->removeScore($track_chair_score);
                 $track_chair_score = null;
             }

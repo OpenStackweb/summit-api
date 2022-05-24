@@ -87,6 +87,7 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
     public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
     {
         if(!count($relations)) $relations = $this->getAllowedRelations();
+        if(!count($fields)) $fields = $this->getAllowedFields();
 
         $presentation = $this->object;
 
@@ -96,21 +97,30 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
 
         $member = $this->resource_server_context->getCurrentUser(false);
 
-        $values['remaining_selections'] = $presentation->getRemainingSelectionsForMember($member);
+        if(in_array("remaining_selections",$fields))
+            $values['remaining_selections'] = $presentation->getRemainingSelectionsForMember($member);
 
         $summit_track_chair = $presentation->getSummit()->getTrackChairByMember($member);
 
-        $values['viewed'] = false;
-        $values['selected'] = false;
-        $values['maybe'] = false;
-        $values['pass'] = false;
+        if(in_array("viewed",$fields))
+            $values['viewed'] = false;
+        if(in_array("selected",$fields))
+            $values['selected'] = false;
+        if(in_array("maybe",$fields))
+            $values['maybe'] = false;
+        if(in_array("pass",$fields))
+            $values['pass'] = false;
 
         if($summit_track_chair) {
             // track chairs fields
-            $values['viewed'] = $presentation->viewedBy($summit_track_chair->getMember());
-            $values['selected'] = $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionSelected);
-            $values['maybe'] = $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionMaybe);
-            $values['pass'] = $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionPass);
+            if(in_array("viewed",$fields))
+                $values['viewed'] = $presentation->viewedBy($summit_track_chair->getMember());
+            if(in_array("selected",$fields))
+                $values['selected'] = $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionSelected);
+            if(in_array("maybe",$fields))
+                $values['maybe'] = $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionMaybe);
+            if(in_array("pass",$fields))
+                $values['pass'] = $presentation->hasMemberSelectionFor($summit_track_chair->getMember(), SummitSelectedPresentation::CollectionPass);
         }
 
         if(in_array('selectors', $relations))

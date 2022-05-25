@@ -233,7 +233,7 @@ final class OAuth2SummitTrackChairRatingTypesApiController
             $selection_plan = $this->selection_plan_repository->getById(intval($selection_plan_id));
             if (is_null($selection_plan)) return $this->error404();
 
-            $this->service->deleteTrackChairRatingType($selection_plan, $type_id);
+            $this->service->deleteTrackChairRatingType($selection_plan, intval($type_id));
 
             return $this->deleted();
         });

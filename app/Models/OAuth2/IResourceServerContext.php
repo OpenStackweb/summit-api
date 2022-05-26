@@ -20,6 +20,12 @@ use models\main\Member;
 interface IResourceServerContext
 {
 
+    const UserId = 'user_id';
+    const UserFirstName = 'user_first_name';
+    const UserLastName = 'user_last_name';
+    const UserEmail = 'user_email';
+    const UserEmailVerified = 'user_email_verified';
+
     /**
      * returns given scopes for current request
      * @return array
@@ -78,13 +84,25 @@ interface IResourceServerContext
 
     /**
      * @param bool $synch_groups
+     * @param bool $update_member_fields
      * @return Member|null
      */
-    public function getCurrentUser(bool $synch_groups = true):?Member;
+    public function getCurrentUser(bool $synch_groups = true, bool $update_member_fields = true):?Member;
 
     /**
      * @return array
      */
     public function getCurrentUserGroups():array;
+
+    /**
+     * @param string $varName
+     * @param mixed $value
+     */
+    public function updateAuthContextVar(string $varName, $value):void;
+
+    /**
+     * @return string
+     */
+    public function getCurrentUserEmail():string;
 
 }

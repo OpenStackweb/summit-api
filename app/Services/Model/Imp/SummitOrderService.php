@@ -14,7 +14,6 @@
 
 use App\Events\CreatedSummitRegistrationOrder;
 use App\Events\MemberUpdated;
-use App\Events\NewMember;
 use App\Events\OrderDeleted;
 use App\Events\TicketUpdated;
 use App\Http\Renderers\SummitAttendeeTicketPDFRenderer;
@@ -33,19 +32,17 @@ use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Utils\CSVReader;
 use App\Services\Utils\ILockManagerService;
-use Google\Service\AccessContextManager\AccessLevel;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\IMemberRepository;
 use models\main\Member;
+use models\oauth2\IResourceServerContext;
 use models\summit\factories\SummitAttendeeFactory;
-use models\summit\factories\SummitAttendeeTicketFactory;
 use models\summit\IPaymentConstants;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitAttendeeTicketRepository;
@@ -56,7 +53,6 @@ use models\summit\Summit;
 use models\summit\SummitAccessLevelType;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
-use models\summit\SummitAttendeeBadgePrintRule;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitBadgeType;
 use models\summit\SummitOrder;
@@ -360,7 +356,7 @@ final class ReserveOrderTask extends AbstractTask
                 if (!empty($attendee_email)) {
 
                     $attendee_email = strtolower(trim($attendee_email));
-                    Log::debug(sprintf("ReserveOrderTask::run - attendee_email %s", $attendee_email));
+                    Log::debug(sprintf("ReserveOrderTask::run - processing attendee_email %s", $attendee_email));
                     // assign attendee
                     // check if we have already an attendee on this summit
                     $attendee = $this->attendee_repository->getBySummitAndEmail($this->summit, $attendee_email);
@@ -371,14 +367,17 @@ final class ReserveOrderTask extends AbstractTask
                         $attendee = $local_attendees[$attendee_email];
                     }
 
+                    $attendee_owner = $this->owner->getEmail() === $attendee_email ? $this->owner : $this->member_repository->getByEmail($attendee_email);
+
                     if (is_null($attendee)) {
+
                         Log::debug(sprintf("ReserveOrderTask::run - creating attendee %s for summit %s", $attendee_email, $this->summit->getId()));
                         $attendee = SummitAttendeeFactory::build($this->summit, [
                             'first_name' => $attendee_first_name,
                             'last_name' => $attendee_last_name,
                             'email' => $attendee_email,
                             'company' => $attendee_company
-                        ], $this->member_repository->getByEmail($attendee_email));
+                        ], $attendee_owner);
                     }
 
                     $attendee = SummitAttendeeFactory::populate
@@ -391,7 +390,7 @@ final class ReserveOrderTask extends AbstractTask
                             'email' => $attendee_email,
                             'company' => $attendee_company
                         ],
-                        $this->member_repository->getByEmail($attendee_email)
+                        $attendee_owner
                     );
                     $attendee->updateStatus();
                     $local_attendees[$attendee_email] = $attendee;
@@ -1001,6 +1000,12 @@ final class SummitOrderService
      * @var ILockManagerService
      */
     private $lock_service;
+
+    /**
+     * @var IResourceServerContext
+     */
+    private $resource_ctx_service;
+
     /**
      * @param ISummitTicketTypeRepository $ticket_type_repository
      * @param IMemberRepository $member_repository

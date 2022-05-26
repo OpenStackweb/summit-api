@@ -70,13 +70,15 @@ trait ExtraQuestionAnswerHolder
         $formerAnswer = $formerAnswers->getAnswerFor($q);
         $currentAnswer = $answers->getAnswerFor($q);
         // check if we are allowed to change the answers that we already did ( bypass only if we are admin)
-        if(!is_null($formerAnswer) && (is_null($currentAnswer) ||  $formerAnswer->getValue() != $currentAnswer->getValue()) && !$this->canChangeAnswerValue()){
+        if((!is_null($formerAnswer) && (is_null($currentAnswer)) ||
+            (!is_null($formerAnswer) && !is_null($currentAnswer) &&  $formerAnswer->getValue() != $currentAnswer->getValue()))
+            && !$this->canChangeAnswerValue()){
             throw new ValidationException
             (
                 sprintf
                 (
                     "Answer can not be changed by this time. Original answer is %s.",
-                    $formerAnswer->getValue()
+                    $formerAnswer->getQuestion()->getNiceValue($formerAnswer->getValue())
                 )
             );
         }

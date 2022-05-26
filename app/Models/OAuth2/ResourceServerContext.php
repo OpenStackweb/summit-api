@@ -150,19 +150,31 @@ final class ResourceServerContext implements IResourceServerContext
     }
 
     /**
+     * @param string $varName
+     * @param mixed $value
+     */
+    public function updateAuthContextVar(string $varName, $value):void {
+        if(isset($this->auth_context[$varName])){
+            $this->auth_context[$varName] = $value;
+        }
+    }
+
+    /**
      * @param bool $synch_groups
+     * @param bool $update_member_fields
      * @return Member|null
      * @throws \Exception
      */
-    public function getCurrentUser(bool $synch_groups = true): ?Member
+    public function getCurrentUser(bool $synch_groups = true, bool $update_member_fields = true): ?Member
     {
         $member = null;
         // try to get by external id
-        $user_external_id = $this->getAuthContextVar('user_id');
-        $user_first_name = $this->getAuthContextVar('user_first_name');
-        $user_last_name = $this->getAuthContextVar('user_last_name');
-        $user_email = $this->getAuthContextVar('user_email');
-        $user_email_verified = boolval($this->getAuthContextVar('user_email_verified'));
+        $user_external_id = $this->getAuthContextVar(IResourceServerContext::UserId);
+        $user_first_name = $this->getAuthContextVar(IResourceServerContext::UserFirstName);
+        $user_last_name = $this->getAuthContextVar(IResourceServerContext::UserLastName);
+        $user_email = $this->getAuthContextVar(IResourceServerContext::UserEmail);
+        $user_email_verified = boolval($this->getAuthContextVar(IResourceServerContext::UserEmailVerified));
+
         if (is_null($user_external_id)) {
             return null;
         }
@@ -170,16 +182,18 @@ final class ResourceServerContext implements IResourceServerContext
         $member = $this->tx_service->transaction(function () use ($user_external_id) {
             return $this->member_repository->getByExternalIdExclusiveLock(intval($user_external_id));
         });
+
         if (is_null($member)) {
             // then by primary email
             $member = $this->tx_service->transaction(function () use ($user_email) {
                 // we assume that is new idp version and claims already exists on context
-                $user_email = $this->getAuthContextVar('user_email');
+                $user_email = $this->getAuthContextVar(IResourceServerContext::UserEmail);
                 // at last resort try to get by email
                 Log::debug(sprintf("ResourceServerContext::getCurrentUser getting user by email %s", $user_email));
                 return $this->member_repository->getByEmailExclusiveLock($user_email);
             });
         }
+
         if (is_null($member)) {// user exist on IDP but not in our local DB, proceed to create it
             Log::debug
             (
@@ -228,15 +242,27 @@ final class ResourceServerContext implements IResourceServerContext
             $user_last_name,
             $user_external_id,
             $user_email_verified,
-            $synch_groups
+            $synch_groups,
+            $update_member_fields
         ) {
-            // update member fields
-            if (!empty($user_email))
-                $member->setEmail($user_email);
-            if (!empty($user_first_name))
-                $member->setFirstName($user_first_name);
-            if (!empty($user_last_name))
-                $member->setLastName($user_last_name);
+            if($update_member_fields) {
+                // update member fields
+                if (!empty($user_email)) {
+                    Log::debug(sprintf("ResourceServerContext::getCurrentUser setting email for member %s", $member->getId()));
+                    $member->setEmail($user_email);
+                }
+
+                if (!empty($user_first_name)) {
+                    Log::debug(sprintf("ResourceServerContext::getCurrentUser setting first name for member %s", $member->getId()));
+                    $member->setFirstName($user_first_name);
+                }
+
+                if (!empty($user_last_name)) {
+                    Log::debug(sprintf("ResourceServerContext::getCurrentUser setting last name for member %s", $member->getId()));
+                    $member->setLastName($user_last_name);
+                }
+            }
+
             $member->setUserExternalId($user_external_id);
             $member->setEmailVerified($user_email_verified);
             MemberAssocSummitOrders::dispatch($member->getId());
@@ -277,5 +303,13 @@ final class ResourceServerContext implements IResourceServerContext
             return [];
         }
         return $res;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCurrentUserEmail(): string
+    {
+        return $this->getAuthContextVar(IResourceServerContext::UserEmail);
     }
 }

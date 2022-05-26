@@ -984,11 +984,23 @@ SQL;
      */
     public function canChangeAnswerValue(): bool
     {
+        // caching it to avoid calculation costs
+        $key = sprintf("SummitAttendee.canChangeAnswerValue.%s", $this->id);
+        $res = Cache::get($key, null);
+        if(!is_null($res)) {
+            Log::debug(sprintf("SummitAttendee::canChangeAnswerValue cache hit id %s res %b", $this->id, $res));
+            return $res;
+        }
+
         $resource_server_ctx = App::make(IResourceServerContext::class);
-        $currentUser = $resource_server_ctx->getCurrentUser(false);
+        $currentUser = $resource_server_ctx->getCurrentUser(false, false);
         $currentUserIsAdmin = is_null($currentUser) ? false: ($currentUser->isAdmin() || $this->summit->isSummitAdmin($currentUser));
         Log::debug(sprintf("SummitAttendee::canChangeAnswerValue currentUserIsAdmin %b", $currentUserIsAdmin));
-        return $currentUserIsAdmin || $this->summit->isAllowUpdateAttendeeExtraQuestions();
+        $res = $currentUserIsAdmin || $this->summit->isAllowUpdateAttendeeExtraQuestions();
+
+        Log::debug(sprintf("SummitAttendee::canChangeAnswerValue storing in cache id %s res %b", $this->id, $res));
+        Cache::add($key, $res, 60);
+        return $res;
     }
 
 

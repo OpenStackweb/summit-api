@@ -11,18 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
-use Mockery\CountValidator\Exception;
 use models\exceptions\ValidationException;
 use models\main\Member;
-use models\oauth2\IResourceServerContext;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
-use models\summit\SummitOrderExtraQuestionAnswer;
-use models\summit\SummitOrderExtraQuestionType;
-use models\summit\SummitOrderExtraQuestionTypeConstants;
 /**
  * Class SummitAttendeeFactory
  * @package models\summit\factories
@@ -57,10 +50,6 @@ final class SummitAttendeeFactory
         ?Member $member = null
     )
     {
-
-        $resource_server_ctx = App::make(IResourceServerContext::class);
-        $currentUser = $resource_server_ctx->getCurrentUser(false);
-        $currentUserIsAdmin = is_null($currentUser)? false: ($currentUser->isAdmin() || $currentUser->isSummitAdmin());
 
         if (!is_null($member)) {
             Log::debug(sprintf("SummitAttendeeFactory::populate setting member %s to attendee %s", $member->getId(), $member->getEmail()));

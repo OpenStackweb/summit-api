@@ -624,6 +624,7 @@ class Member extends SilverstripeBaseModel
      */
     public function setEmail($email)
     {
+        Log::debug(sprintf("Member::setEmail %s (%s)", $email, $this->id));
         $this->email = $email;
     }
 
@@ -1586,6 +1587,11 @@ SQL;
     public function setFirstName(?string $first_name): void
     {
         Log::debug(sprintf("Member::setFirstName %s (%s)", $first_name, $this->id));
+        $resource_server_ctx = App::make(IResourceServerContext::class);
+        if($resource_server_ctx->getCurrentUserEmail() === $this->email){
+            // if this member is current user , then update it also on auth context to avoid unwanted overwrites
+            $resource_server_ctx->updateAuthContextVar(IResourceServerContext::UserFirstName, $first_name);
+        }
         $this->first_name = $first_name;
     }
 
@@ -1603,6 +1609,11 @@ SQL;
     public function setLastName(?string $last_name): void
     {
         Log::debug(sprintf("Member::setLastName %s (%s)", $last_name, $this->id));
+        $resource_server_ctx = App::make(IResourceServerContext::class);
+        if($resource_server_ctx->getCurrentUserEmail() === $this->email){
+            // if this member is current user , then update it also on auth context to avoid unwanted overwrites
+            $resource_server_ctx->updateAuthContextVar(IResourceServerContext::UserLastName, $last_name);
+        }
         $this->last_name = $last_name;
     }
 

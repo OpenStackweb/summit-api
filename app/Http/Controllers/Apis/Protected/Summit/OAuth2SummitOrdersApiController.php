@@ -143,7 +143,18 @@ final class OAuth2SummitOrdersApiController
 
             $order = $this->service->reserve($owner, $summit, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($order, ISummitOrderSerializerTypes::ReservationType)->serialize(Request::input('expand', '')));
+            return $this->created
+            (
+                SerializerRegistry::getInstance()->getSerializer
+                (
+                    $order, ISummitOrderSerializerTypes::ReservationType
+                )->serialize
+                (
+                    self::getExpands(),
+                    self::getFields(),
+                    self::getRelations()
+                )
+            );
 
         }
         catch(\InvalidArgumentException $ex){

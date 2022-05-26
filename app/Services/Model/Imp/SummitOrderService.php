@@ -253,6 +253,9 @@ final class ReserveOrderTask extends AbstractTask
             $owner_email = $this->payload['owner_email'];
             $owner_first_name = $this->payload['owner_first_name'];
             $owner_last_name = $this->payload['owner_last_name'];
+
+            Log::debug(sprintf("ReserveOrderTask::run payload %s", json_encode($this->payload)));
+
             $owner_company_name = TaskUtils::getOwnerCompanyName($this->summit, $this->payload);
             $tickets = $this->payload['tickets'];
 
@@ -265,11 +268,30 @@ final class ReserveOrderTask extends AbstractTask
                 IPaymentConstants::ApplicationTypeRegistration,
                 $this->default_payment_gateway_strategy
             );
+
             if (is_null($payment_gateway)) {
-                throw new ValidationException(sprintf("Payment configuration is not set for summit %s", $this->summit->getId()));
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Payment configuration is not set for summit %s",
+                        $this->summit->getId()
+                    )
+                );
             }
 
-            Log::info(sprintf("ReserveOrderTask::run - email %s first_name %s last_name %s company %s", $owner_email, $owner_first_name, $owner_last_name, $owner_company_name));
+            Log::info
+            (
+                sprintf
+                (
+                    "ReserveOrderTask::run - email %s first_name %s last_name %s company %s",
+                    $owner_email,
+                    $owner_first_name,
+                    $owner_last_name,
+                    $owner_company_name
+                )
+            );
+
             $order = SummitOrderFactory::build($this->summit, $this->payload);
 
             $order->generateNumber();

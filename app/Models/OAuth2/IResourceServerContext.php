@@ -101,8 +101,8 @@ interface IResourceServerContext
     public function updateAuthContextVar(string $varName, $value):void;
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getCurrentUserEmail():string;
+    public function getCurrentUserEmail():?string;
 
 }

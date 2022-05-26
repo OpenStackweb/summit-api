@@ -306,9 +306,9 @@ final class ResourceServerContext implements IResourceServerContext
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getCurrentUserEmail(): string
+    public function getCurrentUserEmail(): ?string
     {
         return $this->getAuthContextVar(IResourceServerContext::UserEmail);
     }

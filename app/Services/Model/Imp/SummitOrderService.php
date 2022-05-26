@@ -409,7 +409,16 @@ final class ReserveOrderTask extends AbstractTask
             }
 
             if (!is_null($this->owner)) {
-                Log::debug(sprintf("ReserveOrderTask::run owner is set to owner id %s", $this->owner->getId()));
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "ReserveOrderTask::run owner is set to owner id %s %s %s",
+                        $this->owner->getId(),
+                        $this->owner->getFirstName(),
+                        $this->owner->getLastName()
+                    )
+                );
                 $this->owner->addSummitRegistrationOrder($order);
             }
 
@@ -1071,11 +1080,13 @@ final class SummitOrderService
                 // if we have an owner check if his name is empty amd set with what is on the payload
                 if (isset($payload['owner_first_name']) && !empty($payload['owner_first_name'])) {
                     $first_name = trim($payload['owner_first_name']);
+                    Log::debug(sprintf("SummitOrderService::reserve setting first name %s to member %s", $first_name, $owner->getId()));
                     $owner->setFirstName($first_name);
                 }
 
                 if (isset($payload['owner_last_name']) && !empty($payload['owner_last_name'])) {
                     $last_name = trim($payload['owner_last_name']);
+                    Log::debug(sprintf("SummitOrderService::reserve setting last name %s to member %s", $last_name, $owner->getId()));
                     $owner->setLastName($last_name);
                 }
 
@@ -1097,6 +1108,9 @@ final class SummitOrderService
 
                 return $owner;
             });
+
+            if(!is_null($owner) && $owner instanceof Member)
+                Log::debug(sprintf("SummitOrderService::reserve owner %s %s %s", $owner->getId(), $owner->getFirstName(), $owner->getLastName()));
 
             $state = Saga::start()
                 ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))

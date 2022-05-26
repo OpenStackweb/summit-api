@@ -93,14 +93,16 @@ trait RequestScopedCache
 
         $res = Cache::tags($scope)->get($key);
         if(!empty($res)){
-            $res = gzinflate($res);
-            Log::debug(sprintf("RequestScopedCache::cache scope %s key %s cache hit res %s.", $scope, $key, $res));
-            return json_decode($res,true);
+            $json_res = gzinflate($res);
+            $res = json_decode($json_res,true);
+            Log::debug(sprintf("RequestScopedCache::cache scope %s key %s cache hit res %s.", $scope, $key, $json_res));
+            return $res;
         }
 
         $res = $callback();
-        Log::debug(sprintf("RequestScopedCache::cache scope %s key %s adding to cache.", $scope, $key));
-        Cache::tags($scope)->add($key, gzdeflate(json_encode($res), 9));
+        $json = json_encode($res);
+        Log::debug(sprintf("RequestScopedCache::cache scope %s key %s res %s adding to cache.", $scope, $key, $json));
+        Cache::tags($scope)->add($key, gzdeflate($json, 9));
         return $res;
     }
 }

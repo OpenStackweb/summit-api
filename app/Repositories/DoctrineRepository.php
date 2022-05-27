@@ -159,9 +159,6 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
 
         $paginator = new Paginator($query, $fetchJoinCollection = true);
         $total     = $paginator->count();
-        if(($paging_info->getCurrentPage() * $paging_info->getPerPage()) > $total)
-            throw new ValidationException(sprintf("You can not request more items than total (%s)", $total));
-
         $data      = [];
 
         foreach($paginator as $entity)

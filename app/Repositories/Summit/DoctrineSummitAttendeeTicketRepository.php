@@ -60,6 +60,7 @@ final class DoctrineSummitAttendeeTicketRepository
             'owner_last_name'     => "COALESCE(LOWER(m.last_name), LOWER(a.surname))",
             'owner_email'         => ['m.email:json_string', 'm.second_email:json_string', 'm.third_email:json_string','a.email:json_string'],
             'summit_id'           => 's.id:json_int',
+            'order_owner_id'      => 'ord_m.id:json_int',
             'owner_id'            => 'a.id:json_int',
             'member_id'           => 'm.id:json_int',
             'order_id'            => 'o.id:json_int',
@@ -99,6 +100,17 @@ final class DoctrineSummitAttendeeTicketRepository
                     ),
                 ]
             ),
+            'has_order_owner' =>  new DoctrineSwitchFilterMapping([
+                    '1' => new DoctrineCaseFilterMapping(
+                        'true',
+                        "ord_m is not null"
+                    ),
+                    '0' => new DoctrineCaseFilterMapping(
+                        'false',
+                        "ord_m is null"
+                    ),
+                ]
+            ),
             'has_badge' =>  new DoctrineSwitchFilterMapping([
                     '1' => new DoctrineCaseFilterMapping(
                         'true',
@@ -120,6 +132,7 @@ final class DoctrineSummitAttendeeTicketRepository
      */
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
         $query->join("e.order","o");
+        $query->join("o.owner","ord_m");
         $query->join("o.summit","s");
         $query->leftJoin("e.owner","a");
         $query->leftJoin("e.badge","b");

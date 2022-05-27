@@ -451,6 +451,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'summit_id'           => ['=='],
                     'order_id'            => ['=='],
                     'status'              => ['==','<>'],
+                    'order_owner_id'      => ['==','<>'],
+                    'has_order_owner'     => ['=='],
                 ];
             },
             function(){
@@ -459,6 +461,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'order_number'          => 'sometimes|string',
                     'summit_id'             => 'sometimes|integer',
                     'order_id'              => 'sometimes|integer',
+                    'order_owner_id'        => 'sometimes|integer',
+                    'has_order_owner'       => 'sometimes|boolean',
                     'status'                => sprintf('sometimes|in:%s',implode(',', IOrderConstants::ValidStatus)),
                 ];
             },

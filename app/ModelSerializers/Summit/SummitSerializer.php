@@ -158,7 +158,32 @@ class SummitSerializer extends SilverStripeSerializer
             $time_zone_info = $timezone->getLocation();
             $time_zone_info['name'] = $timezone->getName();
             $summit_start = $summit->getLocalBeginDate() ?? new DateTime('now', $timezone);
+            // main offset
             $time_zone_info['offset'] = $timezone->getOffset($summit_start);
+            // get all possible offsets ...
+            $start_date = $summit->getBeginDate();
+            $end_date = $summit->getEndDate();
+            if(!is_null($start_date) && !is_null($end_date)) {
+                $offsets = [];
+                $res = $timezone->getTransitions($start_date->getTimestamp(), $end_date->getTimestamp());
+
+                if ($res && count($res) > 0) {
+                    $i = 0;
+                    foreach ($res as $t) {
+                        $offsets[] = [
+                            'from' => $t['ts'] * 1000,
+                            'offset' => $t['offset'],
+                            'abbr' => $t['abbr']
+                        ];
+                        if ($i > 0) {
+                            $offsets[$i - 1]['to'] = $t['ts'] * 1000;
+                        }
+                        $i++;
+                    }
+                }
+
+                $time_zone_info['offsets'] = $offsets;
+            }
             $values['time_zone'] = $time_zone_info;
         }
 

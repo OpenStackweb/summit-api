@@ -18,6 +18,7 @@ use Doctrine\ORM\NativeQuery;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use LaravelDoctrine\ORM\Facades\Registry;
+use models\exceptions\ValidationException;
 use models\utils\IBaseRepository;
 use models\utils\IEntity;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
@@ -158,7 +159,10 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
 
         $paginator = new Paginator($query, $fetchJoinCollection = true);
         $total     = $paginator->count();
-        $data      = array();
+        if(($paging_info->getCurrentPage() * $paging_info->getPerPage()) > $total)
+            throw new ValidationException(sprintf("You can not request more items than total (%s)", $total));
+
+        $data      = [];
 
         foreach($paginator as $entity)
             array_push($data, $entity);

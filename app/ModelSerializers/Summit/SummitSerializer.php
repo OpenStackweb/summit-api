@@ -165,21 +165,25 @@ class SummitSerializer extends SilverStripeSerializer
             $end_date = $summit->getEndDate();
             if(!is_null($start_date) && !is_null($end_date)) {
                 $offsets = [];
-                $res = $timezone->getTransitions($start_date->getTimestamp(), $end_date->getTimestamp());
+                $start_date_epoch = $start_date->getTimestamp();
+                $end_date_epoch = $end_date->getTimestamp();
+                $res = $timezone->getTransitions($start_date_epoch, $end_date_epoch);
 
                 if ($res && count($res) > 0) {
                     $i = 0;
                     foreach ($res as $t) {
                         $offsets[] = [
-                            'from' => $t['ts'] * 1000,
+                            'from' => $t['ts'],
                             'offset' => $t['offset'],
                             'abbr' => $t['abbr']
                         ];
                         if ($i > 0) {
-                            $offsets[$i - 1]['to'] = $t['ts'] * 1000;
+                            $offsets[$i - 1]['to'] = $t['ts'];
                         }
                         $i++;
                     }
+                    // set the last "to" = $end_date_epoch
+                    $offsets[count($offsets) - 1]['to'] = $end_date_epoch;
                 }
 
                 $time_zone_info['offsets'] = $offsets;

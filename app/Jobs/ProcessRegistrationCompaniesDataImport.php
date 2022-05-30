@@ -1,6 +1,6 @@
 <?php namespace App\Jobs;
-/**
- * Copyright 2020 OpenStack Foundation
+/*
+ * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,10 +21,10 @@ use models\exceptions\ValidationException;
 use services\model\ISummitService;
 use Exception;
 /**
- * Class ProcessEventDataImport
+ * Class ProcessRegistrationCompaniesDataImport
  * @package App\Jobs
  */
-class ProcessEventDataImport implements ShouldQueue
+class ProcessRegistrationCompaniesDataImport implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -34,8 +34,8 @@ class ProcessEventDataImport implements ShouldQueue
     public $timeout = 0;
 
     /*
-     * @var int
-     */
+   * @var int
+   */
     private $summit_id;
 
     /**
@@ -44,22 +44,15 @@ class ProcessEventDataImport implements ShouldQueue
     private $filename;
 
     /**
-     * @var boolean
-     */
-    private $send_speaker_email;
-
-    /**
-     * ProcessEventDataImport constructor.
+     * ProcessRegistrationCompaniesDataImport constructor.
      * @param int $summit_id
      * @param string $filename
-     * @param array $payload
      */
-    public function __construct(int $summit_id, string $filename, array $payload)
+    public function __construct(int $summit_id, string $filename)
     {
-        Log::debug(sprintf("ProcessEventDataImport::__construct"));
+        Log::debug(sprintf("ProcessRegistrationCompaniesDataImport::__construct"));
         $this->summit_id = $summit_id;
         $this->filename = $filename;
-        $this->send_speaker_email = boolval($payload['send_speaker_email']);
     }
 
     /**
@@ -71,8 +64,8 @@ class ProcessEventDataImport implements ShouldQueue
     )
     {
         try {
-            Log::debug(sprintf("ProcessEventDataImport::handle summit %s filename %s send_speaker_email %s", $this->summit_id, $this->filename, $this->send_speaker_email));
-            $service->processEventData($this->summit_id, $this->filename, $this->send_speaker_email);
+            Log::debug(sprintf("ProcessRegistrationCompaniesDataImport::handle summit %s filename %s", $this->summit_id, $this->filename));
+            $service->processRegistrationCompaniesData($this->summit_id, $this->filename);
         } catch (ValidationException $ex) {
             Log::warning($ex);
         } catch (\Exception $ex) {
@@ -80,8 +73,11 @@ class ProcessEventDataImport implements ShouldQueue
         }
     }
 
+    /**
+     * @param Exception $exception
+     */
     public function failed(Exception $exception)
     {
-        Log::error(sprintf( "ProcessEventDataImport::failed %s", $exception->getMessage()));
+        Log::error(sprintf( "ProcessRegistrationCompaniesDataImport::failed %s", $exception->getMessage()));
     }
 }

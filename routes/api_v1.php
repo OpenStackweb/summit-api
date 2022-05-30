@@ -1536,6 +1536,7 @@ Route::group(array('prefix' => 'summits'), function () {
 
         Route::group(['prefix' => 'registration-companies'], function () {
             Route::get('', ['uses' => 'OAuth2SummitRegistrationCompaniesApiController@getAllBySummit']);
+            Route::post('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationCompaniesApiController@import']);
             Route::group(['prefix' => '{company_id}'], function () {
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationCompaniesApiController@add']);
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationCompaniesApiController@delete']);

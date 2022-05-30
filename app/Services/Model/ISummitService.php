@@ -557,4 +557,20 @@ interface ISummitService
      * @throws EntityNotFoundException
      */
     public function regenerateTemporalUrlsForMediaUploads(int $summit_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param UploadedFile $csv_file
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function importRegistrationCompanies(Summit $summit,  UploadedFile $csv_file):void;
+
+    /**
+     * @param int $summit_id
+     * @param string $filename
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function processRegistrationCompaniesData(int $summit_id, string $filename):void;
 }

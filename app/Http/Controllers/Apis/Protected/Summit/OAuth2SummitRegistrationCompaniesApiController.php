@@ -12,19 +12,13 @@
  * limitations under the License.
  **/
 
-use Exception;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Request;
-use models\exceptions\EntityNotFoundException;
+use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Support\Facades\Validator;
 use models\exceptions\ValidationException;
-use models\main\ICompanyRepository;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISummitService;
-use utils\Filter;
-use utils\FilterElement;
-use utils\FilterParser;
 use utils\PagingInfo;
 
 /**
@@ -34,6 +28,7 @@ use utils\PagingInfo;
 final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2ProtectedController
 {
     use GetAndValidateJsonPayload;
+    use RequestProcessor;
 
     /**
      * @var ISummitService
@@ -118,22 +113,11 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
      */
     public function add($summit_id, $company_id)
     {
-        try {
-            $this->summit_service->addCompany($summit_id, $company_id);
+
+        return $this->processRequest(function() use($summit_id, $company_id){
+            $this->summit_service->addCompany(intval($summit_id), intval($company_id));
             return $this->created();
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412($ex1->getMessages());
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -143,15 +127,43 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
      */
     public function delete($summit_id, $company_id)
     {
-        try {
-            $this->summit_service->removeCompany($summit_id, $company_id);
+        return $this->processRequest(function() use($summit_id, $company_id){
+            $this->summit_service->removeCompany(intval($summit_id), intval($company_id));
             return $this->deleted();
-        } catch (EntityNotFoundException $ex) {
-            Log::warning($ex);
-            return $this->error404(array('message' => $ex->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
+    }
+
+    /**
+     * @param LaravelRequest $request
+     * @param $summit_id
+     * @return mixed
+     */
+    public function import(LaravelRequest $request,$summit_id){
+        return $this->processRequest(function() use($request, $summit_id){
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $payload = $request->all();
+
+            $rules = [
+                'file' => 'required',
+            ];
+            // Creates a Validator instance and validates the data.
+            $validation = Validator::make($payload, $rules);
+
+            if ($validation->fails()) {
+                throw new ValidationException($validation->messages()->toArray());
+            }
+
+            $file = $request->file('file');
+
+            $this->summit_service->importRegistrationCompanies($summit, $file);
+
+            return $this->ok();
+
+        });
     }
 }

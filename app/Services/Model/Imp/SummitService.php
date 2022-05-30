@@ -27,10 +27,11 @@ use App\Jobs\Emails\PresentationSubmissions\PresentationModeratorNotificationEma
 use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
 use App\Jobs\Emails\Schedule\ShareEventEmail;
 use App\Jobs\ProcessEventDataImport;
+use App\Jobs\ProcessRegistrationCompaniesDataImport;
+use App\Models\Foundation\Main\Factories\CompanyFactory;
 use App\Models\Foundation\Summit\Factories\PresentationFactory;
 use App\Models\Foundation\Summit\Factories\SummitEventFeedbackFactory;
 use App\Models\Foundation\Summit\Factories\SummitFactory;
-use App\Models\Foundation\Summit\Factories\SummitOrderExtraQuestionTypeFactory;
 use App\Models\Foundation\Summit\Factories\SummitRSVPFactory;
 use App\Models\Foundation\Summit\Repositories\IDefaultSummitEventTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationMediaUploadRepository;
@@ -42,8 +43,6 @@ use App\Services\Filesystem\FileDownloadStrategyFactory;
 use App\Services\Filesystem\FileUploadStrategyFactory;
 use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
-use App\Services\FileSystem\Swift\SwiftStorageFileDownloadStrategy;
-use App\Services\FileSystem\Swift\SwiftStorageFileUploadStrategy;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IMemberService;
 use DateInterval;
@@ -55,7 +54,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use League\Csv\Reader;
 use libs\utils\ICalTimeZoneBuilder;
 use libs\utils\ITransactionService;
@@ -102,6 +100,7 @@ use models\summit\SummitGeoLocatedLocation;
 use models\summit\SummitGroupEvent;
 use models\summit\SummitMediaUploadType;
 use models\summit\SummitScheduleEmptySpot;
+use phpseclib3\File\ASN1\Maps\PrivateKeyInfo;
 use services\apis\IEventbriteAPI;
 use utils\Filter;
 use utils\FilterElement;
@@ -3550,5 +3549,140 @@ final class SummitService extends AbstractService implements ISummitService
             } while(true);
         }
         Log::debug(sprintf("SummitService::regenerateTemporalUrlsForMediaUploads processed summit %s", $summit_id));
+    }
+
+    /**
+     * @param Summit $summit
+     * @param UploadedFile $csv_file
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function importRegistrationCompanies(Summit $summit, UploadedFile $csv_file): void
+    {
+        Log::debug(sprintf("SummitService::importRegistrationCompanies summit %s", $summit->getId()));
+
+        $allowed_extensions = ['txt'];
+
+        if (!in_array($csv_file->extension(), $allowed_extensions)) {
+            Log::warning
+            (
+                sprintf
+                (
+                    "SummitService::importRegistrationCompanies %s is not allowed extension",
+                    $csv_file->extension()
+                )
+            );
+            throw new ValidationException("file does not has a valid extension ('csv').");
+        }
+
+        $real_path = $csv_file->getRealPath();
+        $filename = pathinfo($real_path);
+        $filename = $filename['filename'] ?? sprintf("file%s", time());
+        $basename = sprintf("%s_%s.csv", $filename, time());
+
+        Log::debug(sprintf("SummitService::importRegistrationCompanies trying to read file data from %s", $real_path));
+        $csv_data = \Illuminate\Support\Facades\File::get($real_path);
+
+        if (empty($csv_data)) {
+            Log::warning(sprintf("SummitService::importRegistrationCompanies file %s has empty content.", $real_path));
+            throw new ValidationException("file content is empty!");
+        }
+
+        // upload to distribute storage
+        Log::debug(sprintf("SummitService::importRegistrationCompanies uploading file %s to storage %s", $basename, $this->upload_strategy->getDriver()));
+
+        $this->upload_strategy->save($csv_file, "tmp/registration_companies_import", $basename);
+
+        $csv = Reader::createFromString($csv_data);
+        $csv->setHeaderOffset(0);
+
+        $header = $csv->getHeader(); //returns the CSV header record
+
+        Log::debug(sprintf("SummitService::importRegistrationCompanies validating header %s", json_encode($header)));
+
+        // check needed columns (headers names)
+        /*
+            columns (min)
+            * name
+         */
+
+        if (!in_array("name", $header)) {
+           Log::warning("SummitService::importRegistrationCompanies name column is missing.");
+            throw new ValidationException('name column missing.');
+        }
+
+        ProcessRegistrationCompaniesDataImport::dispatch($summit->getId(), $basename);
+    }
+
+    /**
+     * @param int $summit_id
+     * @param string $filename
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function processRegistrationCompaniesData(int $summit_id, string $filename): void
+    {
+        Log::debug(sprintf("SummitService::processRegistrationCompaniesData summit %s filename %s", $summit_id, $filename));
+        $path = sprintf("tmp/registration_companies_import/%s", $filename);
+
+        if (!$this->download_strategy->exists($path)) {
+            Log::warning(sprintf("SummitService::processRegistrationCompaniesData file %s does not exists on storage %s.", $filename, $this->download_strategy->getDriver()));
+            throw new ValidationException(sprintf("file %s does not exists.", $filename));
+        }
+
+        $csv_data = $this->download_strategy->get($path);
+        if (empty($csv_data)) {
+            Log::warning(sprintf("SummitService::processRegistrationCompaniesData file %s is empty.", $filename));
+            throw new ValidationException(sprintf("file %s does not exists.", $filename));
+        }
+
+        $csv = Reader::createFromString($csv_data);
+        $csv->setHeaderOffset(0);
+
+        $header = $csv->getHeader(); //returns the CSV header record
+        $records = $csv->getRecords();
+
+        foreach ($records as $idx => $row) {
+            try{
+            $this->tx_service->transaction(function() use($row, $summit_id){
+
+                $companyName = $row['name'];
+
+                $company =  $this->company_repository->getByName(trim($companyName));
+
+                if(is_null($company)){
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitService::processRegistrationCompaniesData company %s does not exists. creating it...",
+                            $companyName
+                        )
+                    );
+
+                    $company = CompanyFactory::build(['name' => $companyName]);
+
+                    $this->company_repository->add($company, true);
+                }
+
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitService::processRegistrationCompaniesData adding company %s to summit %s",
+                        $company->getId(),
+                        $summit_id
+                    )
+                );
+
+                $this->addCompany($summit_id, $company->getId());
+            });
+            } catch (Exception $ex) {
+                Log::warning($ex);
+            }
+        }
+
+        Log::debug(sprintf("SummitService::processRegistrationCompaniesData deleting file %s from cloud storage %s", $path, $this->download_strategy->getDriver()));
+        $this->download_strategy->delete($path);
     }
 }

@@ -7316,6 +7316,20 @@ class ApiEndpointsSeeder extends Seeder
                     ],
                 ],
                 [
+                    'name' => 'import-registration-company',
+                    'route' => '/api/v1/summits/{id}/registration-companies/csv',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::TrackChairsAdmins,
+                    ]
+                ],
+                [
                     'name' => 'add-registration-company',
                     'route' => '/api/v1/summits/{id}/registration-companies/{company_id}',
                     'http_method' => 'PUT',

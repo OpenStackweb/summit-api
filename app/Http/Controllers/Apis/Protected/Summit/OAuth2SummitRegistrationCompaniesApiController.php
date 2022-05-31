@@ -140,7 +140,7 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
      */
     public function import(LaravelRequest $request,$summit_id){
         return $this->processRequest(function() use($request, $summit_id){
-            $summit = SummitFinderStrategyFactory::build($this->repository, $this->getResourceServerContext())->find($summit_id);
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $current_member = $this->resource_server_context->getCurrentUser();

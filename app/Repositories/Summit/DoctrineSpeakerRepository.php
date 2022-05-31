@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Query\ResultSetMapping;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Illuminate\Support\Facades\Log;
 use models\main\Member;
@@ -899,7 +898,7 @@ SQL;
                 'first_name' => 'FirstName',
                 'last_name'  => 'LastName',
                 'full_name'  => 'FullName',
-                'order'      => '`Order`'
+                'order'      => '`CustomOrder`'
             ));
         }
 
@@ -957,7 +956,7 @@ FROM (
     S.PhotoID,
     S.BigPhotoID,
     R.ID AS RegistrationRequestID,
-	FS.`Order` AS `Order`
+	FS.`CustomOrder` AS `CustomOrder`
     FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
 	LEFT JOIN File F ON F.ID = S.PhotoID

@@ -50,19 +50,19 @@ final class SponsorBadgeScanSerializer extends SilverStripeSerializer
             foreach ($exp_expand as $relation) {
                 switch (trim($relation)) {
                     case 'sponsor': {
-                        if(!$scan->hasSponsor()) continue;
+                        if(!$scan->hasSponsor()) break;
                         unset($values['sponsor_id']);
                         $values['sponsor'] = SerializerRegistry::getInstance()->getSerializer($scan->getSponsor())->serialize(AbstractSerializer::filterExpandByPrefix($expand, "sponsor"));
                     }
                     break;
                     case 'scanned_by_id': {
-                        if(!$scan->hasUser()) continue;
+                        if(!$scan->hasUser()) break;
                         unset($values['scanned_by_id']);
                         $values['scanned_by'] = SerializerRegistry::getInstance()->getSerializer($scan->getUser())->serialize(AbstractSerializer::filterExpandByPrefix($expand, "user"));
                     }
                         break;
                     case 'badge': {
-                        if(!$scan->hasBadge()) continue;
+                        if(!$scan->hasBadge()) break;
                         unset($values['badge_id']);
                         $values['badge'] = SerializerRegistry::getInstance()->getSerializer($scan->getBadge())->serialize(AbstractSerializer::filterExpandByPrefix($expand, "badge"));
                     }

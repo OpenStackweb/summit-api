@@ -63,12 +63,23 @@ final class DoctrineSummitAttendeeRepository
             $filter->hasFilter("has_tickets") ||
             $filter->hasFilter("tickets_count") ||
             $filter->hasFilter("ticket_type") ||
-            $filter->hasFilter("badge_type")
+            $filter->hasFilter("badge_type") ||
+            $filter->hasFilter('features') ||
+            $filter->hasFilter('access_levels')
         ) {
             $query = $query->leftJoin('e.tickets', 't')
                 ->leftJoin('t.badge', 'b')
                 ->leftJoin('b.type', 'bt')
                 ->leftJoin('t.ticket_type', 'tt');
+        }
+
+        if($filter->hasFilter('features')) {
+            $query = $query->leftJoin('b.features', 'bf')
+                ->leftJoin("bt.badge_features","btf");
+        }
+
+        if($filter->hasFilter('access_levels')){
+            $query = $query->leftJoin("bt.access_levels","bac");
         }
 
         return $query;
@@ -163,6 +174,11 @@ final class DoctrineSummitAttendeeRepository
             'presentation_votes_date' => 'pv.created:datetime_epoch|'.SilverstripeBaseModel::DefaultTimeZone,
             'presentation_votes_count' => new DoctrineHavingFilterMapping("", "pv.voter", "count(pv.id) :operator :value"),
             'presentation_votes_track_group_id' => new DoctrineFilterMapping("pcg.id :operator :value"),
+            'features' => [
+                'bf.name :operator :value',
+                'btf.name :operator :value',
+            ],
+            'access_levels' => 'bac.name :operator :value',
         ];
     }
 

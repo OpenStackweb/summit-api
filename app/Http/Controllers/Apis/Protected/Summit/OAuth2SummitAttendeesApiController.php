@@ -368,6 +368,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             'member_id' => ['==', '>'],
             'ticket_type' => ['=@', '=='],
             'badge_type' => ['=@', '=='],
+            'features' => ['=@', '=='],
+            'access_levels' => ['=@', '=='],
             'status' => ['=@', '=='],
             'has_member' => ['=='],
             'has_tickets' => ['=='],
@@ -417,6 +419,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'member_id' => 'sometimes|integer',
                     'ticket_type' => 'sometimes|string',
                     'badge_type' => 'sometimes|string',
+                    'features' => 'sometimes|string',
+                    'access_levels' => 'sometimes|string',
                     'status' => 'sometimes|string',
                     'has_member' => 'sometimes|required|string|in:true,false',
                     'has_tickets'=> 'sometimes|required|string|in:true,false',
@@ -488,6 +492,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'tickets_count' => ['==', '>=', '<=', '>', '<'],
                     'has_virtual_checkin' => ['=='],
                     'has_checkin' => ['=='],
+                    'features' => ['=@', '=='],
+                    'access_levels' => ['=@', '=='],
                 ];
             },
             function () {
@@ -508,6 +514,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'has_virtual_checkin' => 'sometimes|required|string|in:true,false',
                     'tickets_count' => 'sometimes|integer',
                     'has_checkin' => 'sometimes|required|string|in:true,false',
+                    'features' => 'sometimes|string',
+                    'access_levels' => 'sometimes|string',
                 ];
             },
             function () {

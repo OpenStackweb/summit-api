@@ -568,6 +568,29 @@ class PresentationSpeaker extends SilverstripeBaseModel
      * @param string $role
      * @param bool $include_sub_roles
      * @param array $excluded_tracks
+     * @return array
+     */
+    public function getPublishedRegularPresentationIds
+    (
+        Summit $summit,
+        string $role = PresentationSpeaker::RoleSpeaker,
+        bool $include_sub_roles = false,
+        array $excluded_tracks = []
+    )
+    {
+        $ids = [];
+        $alternatePresentations = $this->getPublishedRegularPresentations($summit, $role, $include_sub_roles, $excluded_tracks);
+        foreach ($alternatePresentations as $p) {
+            $ids[] = intval($p->getId());
+        }
+        return $ids;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param string $role
+     * @param bool $include_sub_roles
+     * @param array $excluded_tracks
      * @return bool
      */
     public function hasPublishedLightningPresentations
@@ -707,6 +730,31 @@ class PresentationSpeaker extends SilverstripeBaseModel
     }
 
     /**
+     * @param Summit $summit
+     * @param string $role
+     * @param bool $include_sub_roles
+     * @param array $excluded_tracks
+     * @param bool $published_ones
+     * @return array
+     */
+    public function getAlternatePresentationIds
+    (
+        Summit $summit,
+        string $role = PresentationSpeaker::RoleSpeaker,
+        bool $include_sub_roles = false,
+        array $excluded_tracks = [],
+        bool $published_ones = false
+    )
+    {
+        $ids = [];
+        $alternatePresentations = $this->getAlternatePresentations($summit, $role, $include_sub_roles, $excluded_tracks, $published_ones);
+        foreach ($alternatePresentations as $p) {
+            $ids[] = intval($p->getId());
+        }
+        return $ids;
+    }
+
+    /**
      * @param Summit $summit,
      * @param string $role
      * @param bool $include_sub_roles
@@ -748,6 +796,29 @@ class PresentationSpeaker extends SilverstripeBaseModel
             }
         }
         return $list;
+    }
+
+    /**
+     * @param Summit $summit,
+     * @param string $role
+     * @param bool $include_sub_roles
+     * @param array $excluded_tracks
+     * @return array
+     */
+    public function getRejectedPresentationIds
+    (
+        Summit $summit,
+        string $role = PresentationSpeaker::RoleSpeaker,
+        bool $include_sub_roles = false,
+        array $excluded_tracks = []
+    )
+    {
+        $ids = [];
+        $rejectedPresentations = $this->getRejectedPresentations($summit, $role, $include_sub_roles, $excluded_tracks);
+        foreach ($rejectedPresentations as $p) {
+            $ids[] = intval($p->getId());
+        }
+        return $ids;
     }
 
     /**

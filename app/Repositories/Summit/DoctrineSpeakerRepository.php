@@ -18,6 +18,8 @@ use models\summit\ISpeakerRepository;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use App\Repositories\SilverStripeDoctrineRepository;
+use models\summit\SummitSelectedPresentation;
+use models\summit\SummitSelectedPresentationList;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
@@ -33,25 +35,53 @@ final class DoctrineSpeakerRepository
     private function buildHasPresentationSubQuery(Filter $filter)
     {
         $list_in_conditions = [];
+        $list_not_in_conditions = [];
 
-        if ($filter->hasFilter("has_accepted_presentations") &&
-            $filter->getFilter("has_accepted_presentations")[0]->getValue() == "true") {
-            $list_in_conditions[] = "'accepted'";
+        if ($filter->hasFilter("has_accepted_presentations")) {
+            if ($filter->getFilter("has_accepted_presentations")[0]->getValue() == "true") {
+                $list_in_conditions[] = "'accepted'";
+            } else {
+                $list_not_in_conditions[] = "'accepted'";
+            }
         }
 
-        if ($filter->hasFilter("has_alternate_presentations") &&
-            $filter->getFilter("has_alternate_presentations")[0]->getValue() == "true") {
-            $list_in_conditions[] = "'alternate'";
+        if ($filter->hasFilter("has_alternate_presentations")) {
+            if ($filter->getFilter("has_alternate_presentations")[0]->getValue() == "true") {
+                $list_in_conditions[] = "'alternate'";
+            } else {
+                $list_not_in_conditions[] = "'alternate'";
+            }
         }
 
-        if ($filter->hasFilter("has_rejected_presentations") &&
-            $filter->getFilter("has_rejected_presentations")[0]->getValue() == "true") {
-            $list_in_conditions[] = "'unaccepted'";
+        if ($filter->hasFilter("has_rejected_presentations")) {
+            if ($filter->getFilter("has_rejected_presentations")[0]->getValue() == "true") {
+                $list_in_conditions[] = "'unaccepted'";
+            } else {
+                $list_not_in_conditions[] = "'unaccepted'";
+            }
         }
 
-        if (count($list_in_conditions) == 0) return "";
+        $where_condition = '';
+        if (count($list_in_conditions) > 0) {
+            $where_in_condition = join(",", $list_in_conditions);
+            $where_condition .= "SelectionStatus IN ({$where_in_condition})";
+        }
+        if (count($list_not_in_conditions) > 0) {
+            $where_not_in_condition = join(",", $list_not_in_conditions);
+            $where_not_in_condition = "SelectionStatus NOT IN ({$where_not_in_condition})";
+            $where_condition .= $where_condition == '' ? $where_not_in_condition : " AND {$where_not_in_condition}";
+        }
 
-        $in_condition = join(",", $list_in_conditions);
+        if ($where_condition == '') return '';
+
+        $collection_selected = SummitSelectedPresentation::CollectionSelected;
+        $group = SummitSelectedPresentationList::Group;
+        $session = SummitSelectedPresentationList::Session;
+
+        //Next query behavior is:
+        //- If no rows returned, selection status will be Presentation::SelectionStatus_Unaccepted
+        //- If Presentation.CustomOrder <= PresentationCategory.SessionCount, selection status will be Presentation::SelectionStatus_Accepted
+        //- Otherwise selection status will be Presentation::SelectionStatus_Alternate
 
         return " AND EXISTS (
                     SELECT *
@@ -67,13 +97,16 @@ final class DoctrineSpeakerRepository
                                             LEFT JOIN SummitSelectedPresentation sp ON sp.PresentationID = p2.ID
                                             LEFT JOIN SummitSelectedPresentationList l ON sp.SummitSelectedPresentationListID = l.ID
                                             LEFT JOIN PresentationCategory pc on l.CategoryID = pc.ID
-                                   WHERE p2.ID = P.ID AND sp.Collection = 'selected'
+                                   WHERE p2.ID = P.ID 
+                                        AND sp.Collection = '{$collection_selected}'
+                                        AND l.ListType = '{$group}'
+                                        AND l.ListClass = '{$session}'
                                    UNION
-                                   SELECT null, null
+                                   SELECT null, null  /*This act as a fallback to resolve to 'unaccepted' in case the first select returns no rows*/
                                ) S
                           LIMIT 1
                     ) T
-                    WHERE SelectionStatus IN ({$in_condition})
+                    WHERE {$where_condition}
                 )";
     }
 
@@ -124,8 +157,8 @@ final class DoctrineSpeakerRepository
             }
 
             if ($filter->hasFilter("has_accepted_presentations") ||
-                $filter->hasFilter("has_accepted_presentations") ||
-                $filter->hasFilter("has_accepted_presentations")) {
+                $filter->hasFilter("has_alternate_presentations") ||
+                $filter->hasFilter("has_rejected_presentations")) {
                 $sub_query_extra_filters .= $this->buildHasPresentationSubQuery($filter);
             }
         }

@@ -15,28 +15,6 @@ use App\Models\Foundation\Main\IGroup;
  **/
 final class OAuth2SpeakersApiTest extends ProtectedApiTest
 {
-    use InsertSummitTestData;
-
-    use InsertMemberTestData;
-
-    protected function setUp():void
-    {
-        parent::setUp();
-        self::insertTestData();
-        self::insertMemberTestData(IGroup::TrackChairs);
-        self::$summit_permission_group->addMember(self::$member);
-        self::$em->persist(self::$summit);
-        self::$em->persist(self::$summit_permission_group);
-        self::$em->flush();
-    }
-
-    protected function tearDown():void
-    {
-        self::clearMemberTestData();
-        self::clearTestData();
-        parent::tearDown();
-    }
-
     public function testPostSpeakerBySummit($summit_id = 23)
     {
         $params = [
@@ -456,17 +434,50 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($speakers));
     }
 
-    public function testGetCurrentSummitSpeakersWithAcceptedPresentations()
+    public function testGetCurrentSummitSpeakersWithAcceptedPresentations($summit_id = 1587)
     {
         $params = [
-            'id'        => 1587, //self::$summit->getId(),
+            'id'        => $summit_id,
             'page'      => 1,
             'per_page'  => 10,
             'filter'    => [
                 'has_accepted_presentations==true',
-                'has_alternate_presentations==false',
             ],
             'expand' => 'presentations,accepted_presentations',
+            'order'     => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakers",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $speakers = json_decode($content);
+        $this->assertTrue(!is_null($speakers));
+    }
+
+    public function testGetCurrentSummitSpeakersWithRejectedPresentations($summit_id = 1587)
+    {
+        $params = [
+            'id'        => $summit_id,
+            'page'      => 1,
+            'per_page'  => 10,
+            'filter'    => [
+                'has_rejected_presentations==true',
+            ],
+            'expand' => 'rejected_presentations',
             'order'     => '+id'
         ];
 

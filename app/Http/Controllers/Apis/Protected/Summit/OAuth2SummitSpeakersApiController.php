@@ -143,6 +143,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'email' => ['=@', '=='],
                     'id' => ['=='],
                     'full_name' => ['=@', '=='],
+                    'has_accepted_presentations' => ['=='],
+                    'has_alternate_presentations' => ['=='],
+                    'has_rejected_presentations' => ['=='],
+                    'presentations_track_id' => ['=='],
                 ];
             },
             function () {
@@ -152,6 +156,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'email' => 'sometimes|string',
                     'id' => 'sometimes|integer',
                     'full_name' => 'sometimes|string',
+                    'has_accepted_presentations' => 'sometimes|required|string|in:true,false',
+                    'has_alternate_presentations' => 'sometimes|required|string|in:true,false',
+                    'has_rejected_presentations' => 'sometimes|required|string|in:true,false',
+                    'presentations_track_id' => 'sometimes|integer',
                 ];
             },
             function () {

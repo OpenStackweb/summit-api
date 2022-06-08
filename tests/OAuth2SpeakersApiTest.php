@@ -1,4 +1,6 @@
 <?php namespace Tests;
+use App\Models\Foundation\Main\IGroup;
+
 /**
  * Copyright 2017 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +15,27 @@
  **/
 final class OAuth2SpeakersApiTest extends ProtectedApiTest
 {
+    use InsertSummitTestData;
+
+    use InsertMemberTestData;
+
+    protected function setUp():void
+    {
+        parent::setUp();
+        self::insertTestData();
+        self::insertMemberTestData(IGroup::TrackChairs);
+        self::$summit_permission_group->addMember(self::$member);
+        self::$em->persist(self::$summit);
+        self::$em->persist(self::$summit_permission_group);
+        self::$em->flush();
+    }
+
+    protected function tearDown():void
+    {
+        self::clearMemberTestData();
+        self::clearTestData();
+        parent::tearDown();
+    }
 
     public function testPostSpeakerBySummit($summit_id = 23)
     {
@@ -410,6 +433,41 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
                 'first_name=@b||a,last_name=@b,email=@b'
             ],
             'order' => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakers",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $speakers = json_decode($content);
+        $this->assertTrue(!is_null($speakers));
+    }
+
+    public function testGetCurrentSummitSpeakersWithAcceptedPresentations()
+    {
+        $params = [
+            'id'        => 1587, //self::$summit->getId(),
+            'page'      => 1,
+            'per_page'  => 10,
+            'filter'    => [
+                'has_accepted_presentations==true',
+                'has_alternate_presentations==false',
+            ],
+            'expand' => 'presentations,accepted_presentations',
+            'order'     => '+id'
         ];
 
         $headers = [

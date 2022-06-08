@@ -844,7 +844,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
         array $excluded_tracks   = []
     )
     {
-        $query = $this->createQuery("SELECT pt from models\summit\PresentationType pt JOIN pt.summit s 
+        $query = $this->createQuery("SELECT pt from models\summit\PresentationType pt JOIN pt.summit s
         WHERE s.id = :summit_id and pt.type IN (:types) ");
         $types = $query
             ->setParameter('summit_id', $summit->getIdentifier())

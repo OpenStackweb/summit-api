@@ -60,6 +60,8 @@ class SummitEventSerializer extends SilverStripeSerializer
 
     protected static $allowed_fields = [
         'id',
+        'created',
+        'last_edited',
         'title',
         'description',
         'social_description',

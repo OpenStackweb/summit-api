@@ -72,7 +72,7 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
         return $this->_getAll(
             function(){
                 return [
-                    'name' => ['=@', '=='],
+                    'name' => ['=@', '@@', '=='],
                 ];
             },
             function(){

@@ -52,7 +52,7 @@ class SummitEventSerializer extends SilverStripeSerializer
         'CurrentAttendanceCount' => 'current_attendance_count:json_int',
         'ImageUrl' => 'image:json_url',
         "StreamThumbnailUrl" => "stream_thumbnail:json_url",
-        'Level' => 'level',
+        'Level' => 'level:json_string',
         'CreatedById' => 'created_by_id:json_int',
         'UpdatedById' => 'updated_by_id:json_int',
         'ShowSponsors' => 'show_sponsors:json_boolean',

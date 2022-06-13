@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Illuminate\Support\Facades\Log;
@@ -59,6 +60,21 @@ trait ExtraQuestionAnswerHolder
     }
 
     /**
+     * @param ExtraQuestionAnswer|null $formerAnswer
+     * @param ExtraQuestionAnswer|null $currentAnswer
+     * @return bool
+     */
+    private function answerChanged(?ExtraQuestionAnswer $formerAnswer, ?ExtraQuestionAnswer $currentAnswer):bool{
+        $formerAnswerValue = !is_null($formerAnswer) ? $formerAnswer->getValue() : "";
+        $currentAnswerValue = !is_null($currentAnswer) ? $currentAnswer->getValue() : "";
+        if(empty($formerAnswerValue)){
+            // was not answered yet
+            return false;
+        }
+        return $formerAnswerValue != $currentAnswerValue;
+    }
+
+    /**
      * @param ExtraQuestionType $q
      * @param ExtraQuestionAnswerSet $formerAnswers
      * @param ExtraQuestionAnswerSet $answers
@@ -70,9 +86,7 @@ trait ExtraQuestionAnswerHolder
         $formerAnswer = $formerAnswers->getAnswerFor($q);
         $currentAnswer = $answers->getAnswerFor($q);
         // check if we are allowed to change the answers that we already did ( bypass only if we are admin)
-        if((!is_null($formerAnswer) && (is_null($currentAnswer)) ||
-            (!is_null($formerAnswer) && !is_null($currentAnswer) &&  $formerAnswer->getValue() != $currentAnswer->getValue()))
-            && !$this->canChangeAnswerValue()){
+        if(!$this->canChangeAnswerValue() && $this->answerChanged($formerAnswer, $currentAnswer)){
             throw new ValidationException
             (
                 sprintf

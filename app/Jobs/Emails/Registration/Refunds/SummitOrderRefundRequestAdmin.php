@@ -46,6 +46,8 @@ class SummitOrderRefundRequestAdmin extends AbstractEmailJob
         $payload['summit_logo']     = $order->getSummit()->getLogoUrl();
         $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
         $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
+        $payload['raw_summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
+        $payload['raw_summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 

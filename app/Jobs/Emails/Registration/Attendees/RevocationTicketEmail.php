@@ -65,6 +65,8 @@ class RevocationTicketEmail extends AbstractEmailJob
         $payload['summit_logo'] = $summit->getLogoUrl();
         $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
         $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
+        $payload['raw_summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
+        $payload['raw_summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
 
         $support_email = $summit->getSupportEmail();
         $payload['support_email'] = !empty($support_email) ? $support_email: Config::get("registration.support_email", null);

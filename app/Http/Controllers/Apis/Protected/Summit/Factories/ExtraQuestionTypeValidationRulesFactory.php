@@ -35,6 +35,7 @@ abstract class ExtraQuestionTypeValidationRulesFactory
                 'mandatory'   => 'sometimes|boolean',
                 'placeholder' => 'sometimes|nullable|string',
                 'order'       => 'sometimes|integer|min:1',
+                'max_selected_values' => 'sometimes|integer|min:0',
             ];
         }
 
@@ -44,6 +45,7 @@ abstract class ExtraQuestionTypeValidationRulesFactory
             'label'       => 'required|string',
             'mandatory'   => 'required|boolean',
             'placeholder' => 'sometimes|nullable|string',
+            'max_selected_values' => 'sometimes|integer|min:0',
         ];
     }
 }

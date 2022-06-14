@@ -50,6 +50,9 @@ abstract class ExtraQuestionTypeFactory
         if(isset($data['mandatory']))
             $question->setMandatory(boolval($data['mandatory']));
 
+        if(isset($data['max_selected_values']))
+            $question->setMaxSelectedValues(intval($data['max_selected_values']));
+
         return $question;
     }
 }

@@ -60,6 +60,8 @@ class SummitTicketReminderEmail extends AbstractEmailJob
         $payload['summit_logo'] = $summit->getLogoUrl();
         $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
         $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
+        $payload['raw_summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
+        $payload['raw_summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
 
         $base_url = Config::get('registration.dashboard_base_url', null);
         $edit_ticket_link = Config::get('registration.dashboard_attendee_edit_form_url', null);

@@ -57,6 +57,8 @@ class RegisteredMemberOrderPaidMail extends AbstractEmailJob
         $payload['summit_logo'] = $summit->getLogoUrl();
         $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
         $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
+        $payload['raw_summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
+        $payload['raw_summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
 
         $summit_reassign_ticket_till_date = $summit->getReassignTicketTillDateLocal();
         if(!is_null($summit_reassign_ticket_till_date)) {

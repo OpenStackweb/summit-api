@@ -75,6 +75,8 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
 
         $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
         $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
+        $payload['raw_summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
+        $payload['raw_summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
         $payload['summit_virtual_site_oauth2_client_id'] = $summit->getVirtualSiteOAuth2ClientId();
         $payload['summit_marketing_site_oauth2_client_id'] = $summit->getMarketingSiteOAuth2ClientId();
 

@@ -48,6 +48,9 @@ class SummitOrderRefundRequestOwner extends AbstractEmailJob
         $payload['summit_logo'] = $summit->getLogoUrl();
         $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
         $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
+        $payload['raw_summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
+        $payload['raw_summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
+
         $payload['order_amount'] = FormatUtils::getNiceFloat($order->getFinalAmount());
         $payload['order_currency'] = $order->getCurrency();
         $payload['order_currency_symbol'] = $order->getCurrencySymbol();

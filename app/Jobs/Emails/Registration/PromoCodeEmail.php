@@ -37,6 +37,9 @@ abstract class PromoCodeEmail extends AbstractEmailJob
         $payload['summit_logo'] = $summit->getLogoUrl();
         $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
         $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
+        $payload['raw_summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
+        $payload['raw_summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
+
         $payload['promo_code'] = $promo_code->getCode();
 
         $payload['owner_email'] = $promo_code->getOwnerEmail();

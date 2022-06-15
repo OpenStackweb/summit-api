@@ -28,12 +28,14 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
      * @param SummitRegistrationPromoCode|null $promo_code
+     * @param string|null $test_email_recipient
      */
     public function __construct
     (
         Summit $summit,
         PresentationSpeaker $speaker,
-        ?SummitRegistrationPromoCode $promo_code = null
+        ?SummitRegistrationPromoCode $promo_code = null,
+        ?string $test_email_recipient = null
     ){
         $payload = [];
         $payload['summit_name'] = $summit->getName();
@@ -42,6 +44,11 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
         $payload['summit_site_url'] = $summit->getDefaultPageUrl();
         $payload['speaker_full_name'] = $speaker->getFullName();
         $payload['speaker_email'] = $speaker->getEmail();
+
+        if (!is_null($test_email_recipient)) {
+            $payload['speaker_email'] = $test_email_recipient;
+        }
+
         $speaker_management_base_url = Config::get('cfp.base_url');
         if(empty($speaker_management_base_url))
             throw new \InvalidArgumentException('cfp.base_url is null.');

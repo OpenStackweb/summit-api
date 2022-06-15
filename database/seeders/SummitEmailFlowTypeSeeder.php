@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessExcerptEmail;
 use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -314,6 +315,11 @@ final class SummitEmailFlowTypeSeeder extends Seeder
                 'name' => ImportEventSpeakerEmail::EVENT_NAME,
                 'slug' => ImportEventSpeakerEmail::EVENT_SLUG,
                 'default_email_template' => ImportEventSpeakerEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => PresentationSpeakerSelectionProcessExcerptEmail::EVENT_NAME,
+                'slug' => PresentationSpeakerSelectionProcessExcerptEmail::EVENT_SLUG,
+                'default_email_template' => PresentationSpeakerSelectionProcessExcerptEmail::DEFAULT_TEMPLATE
             ],
 
         ], $flow);

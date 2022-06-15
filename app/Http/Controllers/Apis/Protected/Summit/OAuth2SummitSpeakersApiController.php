@@ -31,6 +31,8 @@ use ModelSerializers\ISerializerTypeSelector;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISpeakerService;
 use services\model\ISummitService;
+use utils\Filter;
+use utils\FilterParser;
 use utils\PagingInfo;
 use Illuminate\Http\Request as LaravelRequest;
 use utils\PagingResponse;
@@ -125,6 +127,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      */
 
     use ParametrizedGetAll;
+
+    use GetAndValidateJsonPayload;
+
+    use RequestProcessor;
 
     /**
      * @param $summit_id
@@ -1567,4 +1573,46 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         }
     }
 
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function send($summit_id)
+    {
+        return $this->processRequest(function () use ($summit_id) {
+            if (!Request::isJson()) return $this->error400();
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404(['message' => 'missing selection summit']);
+
+            $payload = $this->getJsonPayload(SummitSpeakerValidationRulesFactory::build());
+
+            $filter = null;
+
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
+                    'first_name' => ['=@', '=='],
+                    'last_name' => ['=@', '=='],
+                    'full_name' => ['=@', '=='],
+                    'email' => ['=@', '=='],
+                    'company' => ['=@', '=='],
+                ]);
+            }
+
+            if (is_null($filter))
+                $filter = new Filter();
+
+            $filter->validate([
+                'first_name' => 'sometimes|string',
+                'last_name' => 'sometimes|string',
+                'full_name' => 'sometimes|string',
+                'email'     => 'sometimes|string',
+                'company'   => 'sometimes|string',
+            ]);
+
+            $this->service->triggerSend($summit, $payload, $filter);
+
+            return $this->ok();
+        });
+    }
 }

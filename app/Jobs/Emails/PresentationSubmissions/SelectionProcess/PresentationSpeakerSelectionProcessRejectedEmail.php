@@ -34,15 +34,17 @@ class PresentationSpeakerSelectionProcessRejectedEmail extends PresentationSpeak
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
      * @param string $speaker_role
+     * @param string|null $test_email_recipient
      */
     public function __construct
     (
         Summit $summit,
         PresentationSpeaker $speaker,
-        string $speaker_role
+        string $speaker_role,
+        ?string $test_email_recipient
     )
     {
-        parent::__construct($summit, $speaker);
+        parent::__construct($summit, $speaker, null, $test_email_recipient);
 
         $this->payload['rejected_presentations'] = [];
         foreach($speaker->getRejectedPresentations($summit, $speaker_role) as $p){

@@ -21,6 +21,8 @@ use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
 use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\Summit;
 use Illuminate\Http\UploadedFile;
+use utils\Filter;
+
 /**
  * Interface ISpeakerService
  * @package services\model
@@ -193,4 +195,18 @@ interface ISpeakerService
      * @throws EntityNotFoundException
      */
     public function deleteSpeakerBigPhoto($speaker_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param array $payload
+     * @param mixed $filter
+     */
+    public function triggerSend(Summit $summit, array $payload, $filter = null):void;
+
+    /**
+     * @param Summit $summit
+     * @param array $payload
+     * @param Filter|null $filter
+     */
+    public function send(Summit $summit, array $payload, Filter $filter = null):void;
 }

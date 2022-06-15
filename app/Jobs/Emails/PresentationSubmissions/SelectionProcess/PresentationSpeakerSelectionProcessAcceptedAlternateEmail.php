@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use models\summit\SummitRegistrationPromoCode;
@@ -37,6 +38,7 @@ class PresentationSpeakerSelectionProcessAcceptedAlternateEmail extends Presenta
      * @param PresentationSpeaker $speaker
      * @param string $speaker_role
      * @param string $confirmation_token
+     * @param string|null $test_email_recipient
      */
     public function __construct
     (
@@ -44,9 +46,10 @@ class PresentationSpeakerSelectionProcessAcceptedAlternateEmail extends Presenta
         SummitRegistrationPromoCode $promo_code,
         PresentationSpeaker $speaker,
         string $speaker_role,
-        string $confirmation_token
+        string $confirmation_token,
+        ?string $test_email_recipient
     ){
-        parent::__construct($summit, $speaker, $promo_code);
+        parent::__construct($summit, $speaker, $promo_code, $test_email_recipient);
 
         $summit = $promo_code->getSummit();
         $this->payload['accepted_presentations'] = [];

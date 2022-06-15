@@ -102,19 +102,19 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
             }
         }
 
-        if (in_array('accepted_presentations', $relations)) {
-            $accepted_presentation_ids = $speaker->getPublishedRegularPresentationIds($summit);
-            $moderated_accepted_presentation_ids = $speaker->getPublishedRegularPresentationIds($summit, PresentationSpeaker::RoleModerator);
+        if (in_array('accepted_presentations', $relations) && !is_null($summit)) {
+            $accepted_presentation_ids = $speaker->getAcceptedPresentationIds($summit);
+            $moderated_accepted_presentation_ids = $speaker->getAcceptedPresentationIds($summit, PresentationSpeaker::RoleModerator);
             $values['accepted_presentations'] = array_merge($accepted_presentation_ids, $moderated_accepted_presentation_ids);
         }
 
-        if (in_array('alternate_presentations', $relations)) {
+        if (in_array('alternate_presentations', $relations) && !is_null($summit)) {
             $alternate_presentation_ids = $speaker->getAlternatePresentationIds($summit);
             $moderated_alternate_presentation_ids = $speaker->getAlternatePresentationIds($summit, PresentationSpeaker::RoleModerator);
             $values['alternate_presentations'] = array_merge($alternate_presentation_ids, $moderated_alternate_presentation_ids);
         }
 
-        if (in_array('rejected_presentations', $relations)) {
+        if (in_array('rejected_presentations', $relations) && !is_null($summit)) {
             $rejected_presentation_ids = $speaker->getRejectedPresentationIds($summit);
             $moderated_rejected_presentation_ids = $speaker->getRejectedPresentationIds($summit, PresentationSpeaker::RoleModerator);
             $values['rejected_presentations'] = array_merge($rejected_presentation_ids, $moderated_rejected_presentation_ids);
@@ -200,11 +200,11 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
                     break;
                     case 'accepted_presentations': {
                         $accepted_presentations = [];
-                        foreach ($speaker->getPublishedRegularPresentations($summit) as $p) {
+                        foreach ($speaker->getAcceptedPresentations($summit) as $p) {
                             $accepted_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $moderated_accepted_presentations = [];
-                        foreach ($speaker->getPublishedRegularPresentations($summit, PresentationSpeaker::RoleModerator) as $p) {
+                        foreach ($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleModerator) as $p) {
                             $moderated_accepted_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         $values['accepted_presentations'] = array_merge($accepted_presentations, $moderated_accepted_presentations);

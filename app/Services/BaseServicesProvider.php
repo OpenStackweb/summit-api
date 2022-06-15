@@ -21,6 +21,8 @@ use App\Services\Apis\IMailApi;
 use App\Services\Apis\MailApi;
 use App\Services\Model\FolderService;
 use App\Services\Model\IFolderService;
+use App\Services\utils\EmailExcerptService;
+use App\Services\Utils\Facades\EmailExcerpt;
 use App\Services\Utils\ILockManagerService;
 use App\Services\Utils\LockManagerService;
 use GuzzleHttp\Client;
@@ -79,6 +81,10 @@ final class BaseServicesProvider extends ServiceProvider
                 Config::get("server.ss_encrypt_key", ''),
                 Config::get("server.ss_encrypt_cypher", '')
             );
+        });
+
+        App::singleton(EmailExcerpt::class, function ($app) {
+            return new EmailExcerptService();
         });
 
         App::singleton(ISerializerTypeSelector::class, BaseSerializerTypeSelector::class);

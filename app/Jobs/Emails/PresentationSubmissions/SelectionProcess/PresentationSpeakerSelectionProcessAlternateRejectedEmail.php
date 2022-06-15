@@ -37,6 +37,7 @@ class PresentationSpeakerSelectionProcessAlternateRejectedEmail extends Presenta
      * @param PresentationSpeaker $speaker
      * @param string $speaker_role
      * @param string $confirmation_token
+     * @param string|null $test_email_recipient
      */
     public function __construct
     (
@@ -44,10 +45,11 @@ class PresentationSpeakerSelectionProcessAlternateRejectedEmail extends Presenta
         SummitRegistrationPromoCode $promo_code,
         PresentationSpeaker $speaker,
         string $speaker_role,
-        string $confirmation_token
+        string $confirmation_token,
+        ?string $test_email_recipient
     )
     {
-        parent::__construct($summit, $speaker, $promo_code);
+        parent::__construct($summit, $speaker, $promo_code, $test_email_recipient);
 
         $summit = $promo_code->getSummit();
         $this->payload['alternate_presentations'] = [];

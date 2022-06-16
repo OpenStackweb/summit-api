@@ -53,7 +53,10 @@ final class TrackChairRankingService
     {
         return $this->tx_service->transaction(function () use ($selection_plan, $payload)
         {
-            $rating_type_name = $payload['name'];
+            $rating_type_name = trim($payload['name']);
+            if(empty($rating_type_name)){
+                throw new ValidationException("name can not be empty.");
+            }
             $track_chair_rating_type = $selection_plan->getTrackChairRatingTypeByName($rating_type_name);
 
             if (!is_null($track_chair_rating_type))
@@ -84,7 +87,10 @@ final class TrackChairRankingService
                 throw new EntityNotFoundException("Track chair rating type not found.");
 
             if(isset($payload['name'])) {
-                $rating_type_name = $payload['name'];
+                $rating_type_name = trim($payload['name']);
+                if(empty($rating_type_name)){
+                    throw new ValidationException("name can not be empty.");
+                }
                 $track_chair_rating_type_by_name = $selection_plan->getTrackChairRatingTypeByName($rating_type_name);
 
                 if (!is_null($track_chair_rating_type_by_name) && $track_chair_rating_type_by_name->getId() != $track_chair_rating_type_id)
@@ -132,7 +138,10 @@ final class TrackChairRankingService
             if (is_null($track_chair_rating_type))
                 throw new EntityNotFoundException("Track chair rating type not found.");
 
-            $score_type_name = $payload['name'];
+            $score_type_name = trim($payload['name']);
+            if(empty($score_type_name)){
+                throw new ValidationException("name can not be empty.");
+            }
             $track_chair_score_type = $track_chair_rating_type->getScoreTypeByName($score_type_name);
 
             if (!is_null($track_chair_score_type))
@@ -170,7 +179,10 @@ final class TrackChairRankingService
                 throw new EntityNotFoundException("Track chair score type not found.");
 
             if(isset($payload['name'])) {
-                $score_type_name = $payload['name'];
+                $score_type_name = trim($payload['name']);
+                if(empty($score_type_name)){
+                    throw new ValidationException("name can not be empty.");
+                }
                 $track_chair_score_type_by_name = $track_chair_rating_type->getScoreTypeByName($score_type_name);
 
                 if (!is_null($track_chair_score_type_by_name) && $track_chair_score_type_by_name->getId() != $track_chair_score_type_id)

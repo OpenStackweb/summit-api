@@ -110,9 +110,12 @@ class PresentationTrackChairRatingType
 
     /**
      * @param string $name
+     * @throws ValidationException
      */
     public function setName(string $name): void
     {
+        if(empty($name))
+            throw new ValidationException("name cannot be empty.");
         $this->name = $name;
     }
 
@@ -129,6 +132,8 @@ class PresentationTrackChairRatingType
      */
     public function setWeight(float $weight): void
     {
+        if($weight <= 0.0)
+            throw new ValidationException("weight should be greater than 0.0.");
         $this->weight = $weight;
     }
 

@@ -55,7 +55,7 @@ final class TrackChairRankingService
         {
             $rating_type_name = trim($payload['name']);
             if(empty($rating_type_name)){
-                throw new ValidationException("name can not be empty.");
+                throw new ValidationException("name cannot be empty.");
             }
             $track_chair_rating_type = $selection_plan->getTrackChairRatingTypeByName($rating_type_name);
 
@@ -89,7 +89,7 @@ final class TrackChairRankingService
             if(isset($payload['name'])) {
                 $rating_type_name = trim($payload['name']);
                 if(empty($rating_type_name)){
-                    throw new ValidationException("name can not be empty.");
+                    throw new ValidationException("name cannot be empty.");
                 }
                 $track_chair_rating_type_by_name = $selection_plan->getTrackChairRatingTypeByName($rating_type_name);
 
@@ -140,7 +140,7 @@ final class TrackChairRankingService
 
             $score_type_name = trim($payload['name']);
             if(empty($score_type_name)){
-                throw new ValidationException("name can not be empty.");
+                throw new ValidationException("name cannot be empty.");
             }
             $track_chair_score_type = $track_chair_rating_type->getScoreTypeByName($score_type_name);
 
@@ -181,7 +181,7 @@ final class TrackChairRankingService
             if(isset($payload['name'])) {
                 $score_type_name = trim($payload['name']);
                 if(empty($score_type_name)){
-                    throw new ValidationException("name can not be empty.");
+                    throw new ValidationException("name cannot be empty.");
                 }
                 $track_chair_score_type_by_name = $track_chair_rating_type->getScoreTypeByName($score_type_name);
 

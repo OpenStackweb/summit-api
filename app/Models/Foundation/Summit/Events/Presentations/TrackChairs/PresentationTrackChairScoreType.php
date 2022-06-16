@@ -94,9 +94,12 @@ class PresentationTrackChairScoreType
 
     /**
      * @param string $name
+     * @throws ValidationException
      */
     public function setName(string $name): void
     {
+        if(empty($name))
+            throw new ValidationException("name cannot be empty.");
         $this->name = $name;
     }
 

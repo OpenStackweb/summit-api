@@ -32,19 +32,15 @@ class SpeakerActionsEmailStrategy
 
     private $flow_event;
 
-    private $test_email_recipient;
-
     /**
      * SpeakerActionsEmailStrategy constructor.
      * @param Summit $summit
      * @param String $flow_event
-     * @param String|null $test_email_recipient
      */
-    public function __construct(Summit $summit, String $flow_event, String $test_email_recipient = null)
+    public function __construct(Summit $summit, String $flow_event)
     {
         $this->summit = $summit;
         $this->flow_event = $flow_event;
-        $this->test_email_recipient = $test_email_recipient;
     }
 
     public function process(PresentationSpeaker $speaker,
@@ -56,22 +52,34 @@ class SpeakerActionsEmailStrategy
 
             Log::debug("SpeakerActionsEmailStrategy::send processing speaker {$speaker->getEmail()} - original flow event {$this->flow_event}");
 
-            $role = $speaker->isModeratorFor($this->summit) ?
-                PresentationSpeaker::RoleModerator : PresentationSpeaker::RoleSpeaker;
-
-            $has_accepted_presentations = $speaker->hasAcceptedPresentations(
-                    $this->summit, $role, true,
+            $has_accepted_presentations =
+                $speaker->hasAcceptedPresentations(
+                    $this->summit, PresentationSpeaker::RoleModerator, true,
+                    $this->summit->getExcludedCategoriesForAcceptedPresentations()
+                ) ||
+                $speaker->hasAcceptedPresentations(
+                    $this->summit, PresentationSpeaker::RoleSpeaker, true,
                     $this->summit->getExcludedCategoriesForAcceptedPresentations()
                 );
 
-            $has_alternate_presentations = $speaker->hasAlternatePresentations(
-                    $this->summit, $role, true,
-                    $this->summit->getExcludedCategoriesForAcceptedPresentations()
+            $has_alternate_presentations =
+                $speaker->hasAlternatePresentations(
+                    $this->summit, PresentationSpeaker::RoleModerator, true,
+                    $this->summit->getExcludedCategoriesForAlternatePresentations()
+                ) ||
+                $speaker->hasAlternatePresentations(
+                    $this->summit, PresentationSpeaker::RoleSpeaker, true,
+                    $this->summit->getExcludedCategoriesForAlternatePresentations()
                 );
 
-            $has_rejected_presentations = $speaker->hasRejectedPresentations(
-                    $this->summit, $role, true,
-                    $this->summit->getExcludedCategoriesForAcceptedPresentations()
+            $has_rejected_presentations =
+                $speaker->hasRejectedPresentations(
+                    $this->summit, PresentationSpeaker::RoleModerator, true,
+                    $this->summit->getExcludedCategoriesForRejectedPresentations()
+                ) ||
+                $speaker->hasRejectedPresentations(
+                    $this->summit, PresentationSpeaker::RoleSpeaker, true,
+                    $this->summit->getExcludedCategoriesForRejectedPresentations()
                 );
 
             switch ($this->flow_event) {
@@ -110,6 +118,9 @@ class SpeakerActionsEmailStrategy
             }
 
             if (!is_null($type)) {
+                $role = $speaker->isModeratorFor($this->summit) ?
+                    PresentationSpeaker::RoleModerator : PresentationSpeaker::RoleSpeaker;
+
                 PresentationSpeakerSelectionProcessEmailFactory::send
                 (
                     $this->summit,
@@ -117,8 +128,7 @@ class SpeakerActionsEmailStrategy
                     $role,
                     $type,
                     $promo_code,
-                    $assistance,
-                    $this->test_email_recipient
+                    $assistance
                 );
             }
         } catch (\Exception $ex) {

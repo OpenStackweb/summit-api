@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Services\Utils\Facades\EmailTest;
 use Illuminate\Support\Facades\Config;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
@@ -28,14 +29,12 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
      * @param SummitRegistrationPromoCode|null $promo_code
-     * @param string|null $test_email_recipient
      */
     public function __construct
     (
         Summit $summit,
         PresentationSpeaker $speaker,
-        ?SummitRegistrationPromoCode $promo_code = null,
-        ?string $test_email_recipient = null
+        ?SummitRegistrationPromoCode $promo_code = null
     ){
         $payload = [];
         $payload['summit_name'] = $summit->getName();
@@ -44,6 +43,8 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
         $payload['summit_site_url'] = $summit->getDefaultPageUrl();
         $payload['speaker_full_name'] = $speaker->getFullName();
         $payload['speaker_email'] = $speaker->getEmail();
+
+        $test_email_recipient = EmailTest::getEmailAddress();
 
         if (!is_null($test_email_recipient)) {
             $payload['speaker_email'] = $test_email_recipient;

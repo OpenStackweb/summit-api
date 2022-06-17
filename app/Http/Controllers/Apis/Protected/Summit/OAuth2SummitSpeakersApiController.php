@@ -1593,9 +1593,13 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 $filter = FilterParser::parse(Request::input('filter'), [
                     'first_name' => ['=@', '=='],
                     'last_name' => ['=@', '=='],
-                    'full_name' => ['=@', '=='],
                     'email' => ['=@', '=='],
-                    'company' => ['=@', '=='],
+                    'id' => ['=='],
+                    'full_name' => ['=@', '=='],
+                    'has_accepted_presentations' => ['=='],
+                    'has_alternate_presentations' => ['=='],
+                    'has_rejected_presentations' => ['=='],
+                    'presentations_track_id' => ['=='],
                 ]);
             }
 
@@ -1605,9 +1609,13 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             $filter->validate([
                 'first_name' => 'sometimes|string',
                 'last_name' => 'sometimes|string',
+                'email' => 'sometimes|string',
+                'id' => 'sometimes|integer',
                 'full_name' => 'sometimes|string',
-                'email'     => 'sometimes|string',
-                'company'   => 'sometimes|string',
+                'has_accepted_presentations' => 'sometimes|required|string|in:true,false',
+                'has_alternate_presentations' => 'sometimes|required|string|in:true,false',
+                'has_rejected_presentations' => 'sometimes|required|string|in:true,false',
+                'presentations_track_id' => 'sometimes|integer',
             ]);
 
             $this->service->triggerSend($summit, $payload, $filter);

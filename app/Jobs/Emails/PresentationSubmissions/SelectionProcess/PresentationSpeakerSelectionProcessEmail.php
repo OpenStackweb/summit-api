@@ -46,7 +46,7 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
 
         $test_email_recipient = EmailTest::getEmailAddress();
 
-        if (!is_null($test_email_recipient)) {
+        if (!empty($test_email_recipient)) {
             $payload['speaker_email'] = $test_email_recipient;
         }
 

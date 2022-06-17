@@ -1,6 +1,6 @@
 <?php namespace ModelSerializers;
 /**
- * Copyright 2021 OpenStack Foundation
+ * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,12 +13,12 @@
  **/
 
 /**
- * Interface IPresentationSerializerTypes
+ * Class PresentationEmailSerializer
  * @package ModelSerializers
  */
-interface IPresentationSerializerTypes
+final class SpeakerPresentationEmailSerializer extends SilverStripeSerializer
 {
-    const TrackChairs = "TRACK_CHAIRS";
-    const TrackChairs_CSV = "TRACK_CHAIRS_CSV";
-    const SpeakerEmails = "SPEAKER_EMAILS";
+    protected static $array_mappings = [
+        'Title' => 'title:json_string',
+    ];
 }

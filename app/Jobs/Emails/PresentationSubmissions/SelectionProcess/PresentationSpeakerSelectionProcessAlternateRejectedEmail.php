@@ -14,6 +14,9 @@
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use models\summit\SummitRegistrationPromoCode;
+use ModelSerializers\IPresentationSerializerTypes;
+use ModelSerializers\SerializerRegistry;
+
 /**
  * Class PresentationSpeakerSelectionProcessAlternateRejectedEmail
  * @package App\Jobs\Emails\PresentationSubmissions\SelectionProcess
@@ -35,7 +38,6 @@ class PresentationSpeakerSelectionProcessAlternateRejectedEmail extends Presenta
      * @param Summit $summit
      * @param SummitRegistrationPromoCode $promo_code
      * @param PresentationSpeaker $speaker
-     * @param string $speaker_role
      * @param string $confirmation_token
      */
     public function __construct
@@ -43,20 +45,33 @@ class PresentationSpeakerSelectionProcessAlternateRejectedEmail extends Presenta
         Summit $summit,
         SummitRegistrationPromoCode $promo_code,
         PresentationSpeaker $speaker,
-        string $speaker_role,
         string $confirmation_token
     )
     {
         parent::__construct($summit, $speaker, $promo_code);
 
-        $summit = $promo_code->getSummit();
         $this->payload['alternate_presentations'] = [];
-        foreach($speaker->getAlternatePresentations($summit, $speaker_role) as $p){
-            $this->payload['alternate_presentations'][] = ['title' => $p->getTitle()];
+        foreach($speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleSpeaker) as $p){
+            $this->payload['alternate_presentations'][] =
+                SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
+
+        $this->payload['alternate_moderated_presentations'] = [];
+        foreach($speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleModerator) as $p){
+            $this->payload['alternate_moderated_presentations'][] =
+                SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
+        }
+
         $this->payload['rejected_presentations'] = [];
-        foreach($speaker->getRejectedPresentations($summit, $speaker_role) as $p){
-            $this->payload['rejected_presentations'][] = ['title' => $p->getTitle()];
+        foreach($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleSpeaker) as $p){
+            $this->payload['rejected_presentations'][] =
+                SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
+        }
+
+        $this->payload['rejected_moderated_presentations'] = [];
+        foreach($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleModerator) as $p){
+            $this->payload['rejected_moderated_presentations'][] =
+                SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
 
         $payload['speaker_confirmation_link'] = sprintf("%s?t=%s", $this->payload['speaker_confirmation_link'], base64_encode($confirmation_token));

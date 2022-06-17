@@ -13,6 +13,9 @@
  **/
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
+use ModelSerializers\IPresentationSerializerTypes;
+use ModelSerializers\SerializerRegistry;
+
 /**
  * Class PresentationSpeakerSelectionProcessRejectedEmail
  * @package App\Jobs\Emails\PresentationSubmissions\SelectionProcess
@@ -33,20 +36,25 @@ class PresentationSpeakerSelectionProcessRejectedEmail extends PresentationSpeak
      * PresentationSpeakerSelectionProcessRejectedEmail constructor.
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
-     * @param string $speaker_role
      */
     public function __construct
     (
         Summit $summit,
-        PresentationSpeaker $speaker,
-        string $speaker_role
+        PresentationSpeaker $speaker
     )
     {
         parent::__construct($summit, $speaker, null);
 
         $this->payload['rejected_presentations'] = [];
-        foreach($speaker->getRejectedPresentations($summit, $speaker_role) as $p){
-            $this->payload['rejected_presentations'][] = ['title' => $p->getTitle()];
+        foreach($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleSpeaker) as $p){
+            $this->payload['rejected_presentations'][] =
+                SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
+        }
+
+        $this->payload['rejected_moderated_presentations'] = [];
+        foreach($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleModerator) as $p){
+            $this->payload['rejected_moderated_presentations'][] =
+                SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
     }
 }

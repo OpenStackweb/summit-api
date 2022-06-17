@@ -15,8 +15,10 @@
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedAlternateEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedOnlyEmail;
 use App\Models\Foundation\Main\IGroup;
+use App\Services\Utils\Facades\EmailExcerpt;
 use Illuminate\Support\Facades\App;
 use LaravelDoctrine\ORM\Facades\EntityManager;
+use models\summit\SpeakerAnnouncementSummitEmail;
 use services\model\ISpeakerService;
 
 /**
@@ -57,5 +59,10 @@ final class SpeakerServiceTest extends TestCase
         ];
 
         $service->send($summit, $payload);
+
+        $report = EmailExcerpt::getReport();
+
+        $this->assertTrue(count($report) > 0);
+        $this->assertTrue($report[0]['email_type'] == SpeakerAnnouncementSummitEmail::TypeAccepted);
     }
 }

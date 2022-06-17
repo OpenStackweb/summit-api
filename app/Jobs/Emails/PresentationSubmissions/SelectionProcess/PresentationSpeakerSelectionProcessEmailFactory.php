@@ -50,7 +50,6 @@ final class PresentationSpeakerSelectionProcessEmailFactory
      * @param string $type
      * @param SummitRegistrationPromoCode|null $promo_code
      * @param PresentationSpeakerSummitAssistanceConfirmationRequest|null $speaker_assistance
-     * @param string|null $test_email_recipient
      */
     public static function send
     (
@@ -59,8 +58,7 @@ final class PresentationSpeakerSelectionProcessEmailFactory
         string $speaker_role,
         string $type,
         ?SummitRegistrationPromoCode $promo_code,
-        ?PresentationSpeakerSummitAssistanceConfirmationRequest $speaker_assistance,
-        ?string $test_email_recipient = null
+        ?PresentationSpeakerSummitAssistanceConfirmationRequest $speaker_assistance
     ){
 
         switch ($type){
@@ -71,8 +69,7 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $promo_code,
                     $speaker,
                     $speaker_role,
-                    $speaker_assistance->getToken(),
-                    $test_email_recipient
+                    $speaker_assistance->getToken()
                 );
             break;
             case SpeakerAnnouncementSummitEmail::TypeRejected:
@@ -80,8 +77,7 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                 (
                     $summit,
                     $speaker,
-                    $speaker_role,
-                    $test_email_recipient
+                    $speaker_role
                 );
             break;
             case SpeakerAnnouncementSummitEmail::TypeAcceptedAlternate:
@@ -91,8 +87,7 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $promo_code,
                     $speaker,
                     $speaker_role,
-                    $speaker_assistance->getToken(),
-                    $test_email_recipient
+                    $speaker_assistance->getToken()
                 );
                 break;
             case SpeakerAnnouncementSummitEmail::TypeAcceptedRejected:
@@ -102,8 +97,7 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $promo_code,
                     $speaker,
                     $speaker_role,
-                    $speaker_assistance->getToken(),
-                    $test_email_recipient
+                    $speaker_assistance->getToken()
                 );
                 break;
             case SpeakerAnnouncementSummitEmail::TypeAlternate:
@@ -113,8 +107,7 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $promo_code,
                     $speaker,
                     $speaker_role,
-                    $speaker_assistance->getToken(),
-                    $test_email_recipient
+                    $speaker_assistance->getToken()
                 );
                 break;
             case SpeakerAnnouncementSummitEmail::TypeAlternateRejected:
@@ -124,8 +117,7 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $promo_code,
                     $speaker,
                     $speaker_role,
-                    $speaker_assistance->getToken(),
-                    $test_email_recipient
+                    $speaker_assistance->getToken()
                 );
                 break;
         }

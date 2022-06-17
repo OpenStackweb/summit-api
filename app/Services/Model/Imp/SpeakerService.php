@@ -34,6 +34,7 @@ use App\Services\Model\AbstractService;
 use App\Services\Model\IFolderService;
 use App\Services\Model\Strategies\EmailActions\SpeakerActionsEmailStrategy;
 use App\Services\Utils\Facades\EmailExcerpt;
+use App\Services\Utils\Facades\EmailTest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
@@ -617,15 +618,15 @@ final class SpeakerService
         if (is_null($promo_code)) {
             // try to get a new one
 
-            $role = $speaker->isModeratorFor($summit) ?
-                PresentationSpeaker::RoleModerator : PresentationSpeaker::RoleSpeaker;
+            $has_accepted =
+                $speaker->hasAcceptedPresentations($summit, PresentationSpeaker::RoleModerator, true, $summit->getExcludedCategoriesForAcceptedPresentations()) ||
+                $speaker->hasAcceptedPresentations($summit, PresentationSpeaker::RoleSpeaker, true, $summit->getExcludedCategoriesForAcceptedPresentations());
 
-            $has_published =
-                $speaker->hasPublishedRegularPresentations($summit, $role, true, $summit->getExcludedCategoriesForAcceptedPresentations()) ||
-                $speaker->hasPublishedLightningPresentations($summit, $role, true, $summit->getExcludedCategoriesForAcceptedPresentations());
-            $has_alternate = $speaker->hasAlternatePresentations($summit, $role, true, $summit->getExcludedCategoriesForAlternatePresentations());
+            $has_alternate =
+                $speaker->hasAlternatePresentations($summit, PresentationSpeaker::RoleModerator, true, $summit->getExcludedCategoriesForAlternatePresentations()) ||
+                $speaker->hasAlternatePresentations($summit, PresentationSpeaker::RoleSpeaker, true, $summit->getExcludedCategoriesForAlternatePresentations());
 
-            if ($has_published) //get approved code
+            if ($has_accepted) //get approved code
             {
                 $promo_code = $this->registration_code_repository->getNextAvailableByType
                 (
@@ -1298,10 +1299,10 @@ final class SpeakerService
     {
         $flow_event = trim($payload['email_flow_event']);
         $done = isset($payload['speaker_ids']); // we have provided only ids and not a criteria
-        $test_email_recipient = $payload['test_email_recipient'];
         $outcome_email_recipient = $payload['outcome_email_recipient'];
-        $email_strategy = new SpeakerActionsEmailStrategy($summit, $flow_event, $test_email_recipient);
         $summit_id = $summit->getId();
+        EmailTest::setEmailAddress($payload['test_email_recipient']);
+        $email_strategy = new SpeakerActionsEmailStrategy($summit, $flow_event);
 
         $page = 1;
         $count = 0;
@@ -1340,8 +1341,7 @@ final class SpeakerService
 
             foreach ($ids as $speaker_id) {
                 try {
-                    $this->tx_service->transaction(function () use ($flow_event, $test_email_recipient,
-                        $summit, $speaker_id, $email_strategy) {
+                    $this->tx_service->transaction(function () use ($flow_event, $summit, $speaker_id, $email_strategy) {
 
                         Log::debug(sprintf("SpeakerService::send processing speaker id %s", $speaker_id));
 

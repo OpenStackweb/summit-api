@@ -32,7 +32,11 @@ final class DoctrineSpeakerRepository
     extends SilverStripeDoctrineRepository
     implements ISpeakerRepository
 {
-    private function buildHasPresentationSubQuery(Filter $filter)
+    /**
+     * @param Filter $filter
+     * @return string
+     */
+    private function buildHasPresentationSubQuery(Filter $filter) : string
     {
         $list_in_conditions = [];
         $list_not_in_conditions = [];
@@ -116,6 +120,7 @@ final class DoctrineSpeakerRepository
      * @param Filter|null $filter
      * @param Order|null $order
      * @return PagingResponse
+     * @throws \Doctrine\DBAL\Exception
      */
     public function getSpeakersBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null)
     {

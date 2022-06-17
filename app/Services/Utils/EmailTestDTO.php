@@ -19,13 +19,23 @@
  */
 final class EmailTestDTO
 {
+    /**
+     * @var string
+     */
     private $email_address;
 
+    /**
+     * @return string
+     */
     public function getEmailAddress(): string {
         return $this->email_address;
     }
 
-    public function setEmailAddress(string $email_address) {
+    /**
+     * @param string $email_address
+     * @return void
+     */
+    public function setEmailAddress(string $email_address) : void {
         $this->email_address = $email_address;
     }
 }

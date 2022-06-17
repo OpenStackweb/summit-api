@@ -46,11 +46,10 @@ class PresentationSpeakerSelectionProcessExcerptEmail extends AbstractEmailJob
         $report_lines = [];
         $itemsCount = count($report);
 
-        if ($itemsCount > 0) {
-            foreach ($report as $reportItem) {
-                $report_lines[] = "Email type {$reportItem['email_type']} sent to speaker {$reportItem['speaker_email']}";
-            }
+        foreach ($report as $reportItem) {
+            $report_lines[] = "Email type {$reportItem['email_type']} sent to speaker {$reportItem['speaker_email']}";
         }
+
         $payload['report'] = $report_lines;
         $payload['report_summary'] = "A total of {$itemsCount} emails were sent";
 

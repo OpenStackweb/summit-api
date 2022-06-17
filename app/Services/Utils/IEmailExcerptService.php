@@ -14,14 +14,24 @@
  **/
 
 /**
- * Class EmailExcerptService
+ * Interface EmailExcerptService
  * @package App\Services\utils
  */
 interface IEmailExcerptService
 {
-    public function add($value);
+    /**
+     * @param array $value
+     * @return void
+     */
+    public function add(array $value) : void;
 
-    public function clearReport();
+    /**
+     * @return void
+     */
+    public function clearReport() : void;
 
+    /**
+     * @return array
+     */
     public function getReport(): array;
 }

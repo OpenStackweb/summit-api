@@ -19,18 +19,32 @@
  */
 final class EmailExcerptService implements IEmailExcerptService
 {
+    /**
+     * Report lines holder
+     *
+     * @var array
+     */
     private $report = [];
 
-    public function add($value)
+    /**
+     * @inheritDoc
+     */
+    public function add(array $value) : void
     {
-        return $this->report[] = $value;
+        $this->report[] = $value;
     }
 
-    public function clearReport()
+    /**
+     * @inheritDoc
+     */
+    public function clearReport() : void
     {
         $this->report = [];
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getReport(): array
     {
         return $this->report;

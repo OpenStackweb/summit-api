@@ -14,6 +14,9 @@
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use models\summit\SummitRegistrationPromoCode;
+use ModelSerializers\IPresentationSerializerTypes;
+use ModelSerializers\SerializerRegistry;
+
 /**
  * Class PresentationSpeakerSelectionProcessAcceptedOnlyEmail
  * @package App\Jobs\Emails\PresentationSubmissions\SelectionProcess
@@ -35,7 +38,6 @@ class PresentationSpeakerSelectionProcessAcceptedOnlyEmail extends PresentationS
      * @param Summit $summit
      * @param SummitRegistrationPromoCode $promo_code
      * @param PresentationSpeaker $speaker
-     * @param string $speaker_role
      * @param string $confirmation_token
      */
     public function __construct
@@ -43,18 +45,24 @@ class PresentationSpeakerSelectionProcessAcceptedOnlyEmail extends PresentationS
         Summit $summit,
         SummitRegistrationPromoCode $promo_code,
         PresentationSpeaker $speaker,
-        string $speaker_role,
         string $confirmation_token
     )
     {
         parent::__construct($summit, $speaker, $promo_code);
 
-        $summit = $promo_code->getSummit();
         $this->payload['accepted_presentations'] = [];
-        foreach($speaker->getPublishedRegularPresentations($summit, $speaker_role) as $p){
-            $this->payload['accepted_presentations'][] = ['title' => $p->getTitle()];
+        foreach($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleSpeaker) as $p){
+            $this->payload['accepted_presentations'][] =
+                SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
 
-        $payload['speaker_confirmation_link'] = sprintf("%s?t=%s", $this->payload['speaker_confirmation_link'], base64_encode($confirmation_token));
+        $this->payload['accepted_moderated_presentations'] = [];
+        foreach($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleModerator) as $p){
+            $this->payload['accepted_moderated_presentations'][] =
+                SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
+        }
+
+        $this->payload['speaker_confirmation_link'] =
+            sprintf("%s?t=%s", $this->payload['speaker_confirmation_link'], base64_encode($confirmation_token));
     }
 }

@@ -1036,7 +1036,6 @@ final class SpeakerService
             (
                 $summit,
                 $speaker,
-                $role,
                 $type,
                 $promo_code,
                 $assistance
@@ -1287,7 +1286,7 @@ final class SpeakerService
     /**
      * @inheritDoc
      */
-    public function triggerSend(Summit $summit, array $payload, $filter = null): void
+    public function triggerSend(Summit $summit, array $payload, Filter $filter = null): void
     {
         ProcessSpeakersEmailRequestJob::dispatch($summit, $payload, $filter);
     }

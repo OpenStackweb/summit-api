@@ -19,6 +19,7 @@ use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeaker
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessEmailFactory;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedEmail;
+use App\Services\Utils\Facades\EmailExcerpt;
 use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
 use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
@@ -28,8 +29,14 @@ use models\summit\Summit;
 
 class SpeakerActionsEmailStrategy
 {
+    /**
+     * @var Summit
+     */
     private $summit;
 
+    /**
+     * @var string
+     */
     private $flow_event;
 
     /**
@@ -114,18 +121,20 @@ class SpeakerActionsEmailStrategy
                     }
                     break;
                 default:
+                    EmailExcerpt::add(
+                        [
+                            'speaker_email' => $speaker->getEmail(),
+                            'email_type'    => SpeakerAnnouncementSummitEmail::TypeNone
+                        ]
+                    );
                     return null;
             }
 
             if (!is_null($type)) {
-                $role = $speaker->isModeratorFor($this->summit) ?
-                    PresentationSpeaker::RoleModerator : PresentationSpeaker::RoleSpeaker;
-
                 PresentationSpeakerSelectionProcessEmailFactory::send
                 (
                     $this->summit,
                     $speaker,
-                    $role,
                     $type,
                     $promo_code,
                     $assistance

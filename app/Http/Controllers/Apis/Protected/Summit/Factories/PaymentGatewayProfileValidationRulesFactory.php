@@ -35,6 +35,7 @@ final class PaymentGatewayProfileValidationRulesFactory
                 'application_type'   => 'sometimes|string|in:'.implode(',',IPaymentConstants::ValidApplicationTypes),
                 'provider'           => 'required|string|in:'.implode(',',IPaymentConstants::ValidProviderTypes),
             ];
+
             if(isset($data['provider']) && $data['provider'] == IPaymentConstants::ProviderStripe){
                 $rules = array_merge($rules, [
                     'test_mode_enabled'    => 'required|boolean',
@@ -43,6 +44,12 @@ final class PaymentGatewayProfileValidationRulesFactory
                     'test_secret_key'      => 'sometimes|string',
                     'test_publishable_key' => 'required_with:test_secret_key|string',
                     'send_email_receipt'   => 'sometimes|boolean',
+                ]);
+            }
+
+            if(isset($data['provider']) && $data['provider'] == IPaymentConstants::ProviderLawPay){
+                $rules = array_merge($rules, [
+                    'merchant_account_id' => 'sometimes|string',
                 ]);
             }
             return $rules;
@@ -64,6 +71,13 @@ final class PaymentGatewayProfileValidationRulesFactory
                 'send_email_receipt'   => 'sometimes|boolean',
             ]);
         }
+
+        if(isset($data['provider']) && $data['provider'] == IPaymentConstants::ProviderLawPay){
+            $rules = array_merge($rules, [
+                'merchant_account_id' => 'sometimes|string',
+            ]);
+        }
+
         return $rules;
     }
 }

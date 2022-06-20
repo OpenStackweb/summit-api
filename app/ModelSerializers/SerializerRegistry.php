@@ -56,8 +56,10 @@ use App\ModelSerializers\ResourceServer\ApiSerializer;
 use App\ModelSerializers\Software\OpenStackComponentSerializer;
 use App\ModelSerializers\Software\OpenStackReleaseComponentSerializer;
 use App\ModelSerializers\Software\OpenStackReleaseSerializer;
+use App\ModelSerializers\Summit\AdminLawPayPaymentProfileSerializer;
 use App\ModelSerializers\Summit\AdminStripePaymentProfileSerializer;
 use App\ModelSerializers\Summit\AdminSummitSerializer;
+use App\ModelSerializers\Summit\LawPayPaymentProfileSerializer;
 use App\ModelSerializers\Summit\PersonalCalendarShareInfoSerializer;
 use App\ModelSerializers\Summit\Presentation\SummitPresentationCommentSerializer;
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackAnswerSerializer;
@@ -173,6 +175,13 @@ final class SerializerRegistry
         $this->registry['StripePaymentProfile'] = [
             self::SerializerType_Public => StripePaymentProfileSerializer::class,
             self::SerializerType_Private => AdminStripePaymentProfileSerializer::class,
+        ];
+
+        // law pay
+
+        $this->registry['LawPayPaymentProfile'] = [
+            self::SerializerType_Public => LawPayPaymentProfileSerializer::class,
+            self::SerializerType_Private => AdminLawPayPaymentProfileSerializer::class,
         ];
 
         $this->registry['SummitAdministratorPermissionGroup'] = SummitAdministratorPermissionGroupSerializer::class;

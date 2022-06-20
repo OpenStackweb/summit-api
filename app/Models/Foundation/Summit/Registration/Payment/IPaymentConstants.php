@@ -27,8 +27,10 @@ interface IPaymentConstants
     ];
 
     const ProviderStripe = 'Stripe';
+    const ProviderLawPay = 'LawPay';
 
     const ValidProviderTypes = [
-        self::ProviderStripe
+        self::ProviderStripe,
+        self::ProviderLawPay,
     ];
 }

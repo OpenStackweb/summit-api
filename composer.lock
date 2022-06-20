@@ -4,8 +4,38 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "28981ce4bb460396b7a0685d7cc4a052",
+    "content-hash": "14e899bbf87b8ccedacda5f616a39e16",
     "packages": [
+        {
+            "name": "affinipay/chargeio-php",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/affinipay/chargeio-php.git",
+                "reference": "082b5f997dcb09dd92ce8b42ef5db7ad12bdde03"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/affinipay/chargeio-php/zipball/082b5f997dcb09dd92ce8b42ef5db7ad12bdde03",
+                "reference": "082b5f997dcb09dd92ce8b42ef5db7ad12bdde03",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "AffiniPay PHP Library",
+            "support": {
+                "issues": "https://github.com/affinipay/chargeio-php/issues",
+                "source": "https://github.com/affinipay/chargeio-php/tree/master"
+            },
+            "time": "2019-07-29T17:49:34+00:00"
+        },
         {
             "name": "asm89/stack-cors",
             "version": "v2.0.5",
@@ -12128,6 +12158,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
+        "affinipay/chargeio-php": 20,
         "php-opencloud/openstack": 20
     },
     "prefer-stable": true,

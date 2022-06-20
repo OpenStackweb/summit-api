@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Services\Apis\IPaymentGatewayAPI;
 use App\Services\Apis\PaymentGateways\StripeApi;
 use Illuminate\Support\Facades\Log;
@@ -26,23 +25,6 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class StripePaymentProfile extends PaymentGatewayProfile
 {
-    /**
-     * @ORM\Column(name="IsTestModeEnabled", type="boolean")
-     * @var bool
-     */
-    protected $test_mode_enabled;
-
-    /**
-     * @ORM\Column(name="LiveSecretKey", type="string")
-     * @var string
-     */
-    protected $live_secret_key;
-
-    /**
-     * @ORM\Column(name="LivePublishableKey", type="string")
-     * @var string
-     */
-    protected $live_publishable_key;
 
     /**
      * @ORM\Column(name="LiveWebHookId", type="string")
@@ -55,18 +37,6 @@ class StripePaymentProfile extends PaymentGatewayProfile
      * @var string
      */
     protected $live_webhook_secret_key;
-
-    /**
-     * @ORM\Column(name="TestSecretKey", type="string")
-     * @var string
-     */
-    protected $test_secret_key;
-
-    /**
-     * @ORM\Column(name="TestPublishableKey", type="string")
-     * @var string
-     */
-    protected $test_publishable_key;
 
     /**
      * @ORM\Column(name="TestWebHookId", type="string")
@@ -92,41 +62,12 @@ class StripePaymentProfile extends PaymentGatewayProfile
     public function __construct()
     {
         parent::__construct();
-        $this->test_mode_enabled = true;
         $this->send_email_receipt = false;
         $this->provider = IPaymentConstants::ProviderStripe;
         $this->live_webhook_id = '';
         $this->live_webhook_secret_key = '';
-        $this->live_publishable_key = '';
-        $this->live_secret_key = '';
         $this->test_webhook_id = '';
         $this->test_webhook_secret_key = '';
-        $this->test_publishable_key = '';
-        $this->test_secret_key = '';
-    }
-
-    /**
-     * @return bool
-     */
-    public function isTestModeEnabled(): bool
-    {
-        return $this->test_mode_enabled;
-    }
-
-    /**
-     * @return string
-     */
-    public function getLiveSecretKey(): ?string
-    {
-        return $this->live_secret_key;
-    }
-
-    /**
-     * @return string
-     */
-    public function getLivePublishableKey(): ?string
-    {
-        return $this->live_publishable_key;
     }
 
     /**
@@ -148,22 +89,6 @@ class StripePaymentProfile extends PaymentGatewayProfile
     /**
      * @return string
      */
-    public function getTestSecretKey(): ?string
-    {
-        return $this->test_secret_key;
-    }
-
-    /**
-     * @return string
-     */
-    public function getTestPublishableKey(): ?string
-    {
-        return $this->test_publishable_key;
-    }
-
-    /**
-     * @return string
-     */
     public function getTestWebhookId(): ?string
     {
         return $this->test_webhook_id;
@@ -175,68 +100,6 @@ class StripePaymentProfile extends PaymentGatewayProfile
     public function getTestWebhookSecretKey(): ?string
     {
         return $this->test_webhook_secret_key;
-    }
-
-    /**
-     * @param array $keys
-     */
-    public function setLiveKeys(array $keys): void
-    {
-        $this->live_publishable_key = $keys['publishable_key'];
-        $this->live_secret_key = $keys['secret_key'];
-    }
-
-    /**
-     * @param string $live_secret_key
-     */
-    public function setLiveSecretKey(string $live_secret_key): void
-    {
-        $this->live_secret_key = $live_secret_key;
-    }
-
-    /**
-     * @param string $live_publishable_key
-     */
-    public function setLivePublishableKey(string $live_publishable_key): void
-    {
-        $this->live_publishable_key = $live_publishable_key;
-    }
-
-    /**
-     * @param string $test_secret_key
-     */
-    public function setTestSecretKey(string $test_secret_key): void
-    {
-        $this->test_secret_key = $test_secret_key;
-    }
-
-    /**
-     * @param string $test_publishable_key
-     */
-    public function setTestPublishableKey(string $test_publishable_key): void
-    {
-        $this->test_publishable_key = $test_publishable_key;
-    }
-
-    /**
-     * @param array $keys
-     */
-    public function setTestKeys(array $keys): void
-    {
-        $this->test_publishable_key = $keys['publishable_key'];
-        $this->test_secret_key = $keys['secret_key'];
-    }
-
-    public function setLiveMode(): void
-    {
-        $this->test_mode_enabled = false;
-        $this->buildWebHook();
-    }
-
-    public function setTestMode(): void
-    {
-        $this->test_mode_enabled = true;
-        $this->buildWebHook();
     }
 
     /**
@@ -260,23 +123,10 @@ class StripePaymentProfile extends PaymentGatewayProfile
     /**
      * @return array
      */
-    private function createConfiguration(): array
+    protected function createTestConfiguration(): array
     {
-        if ($this->test_mode_enabled) {
-            return $this->createTestConfiguration();
-        }
-        return $this->createLiveConfiguration();
-    }
-
-    /**
-     * @return array
-     */
-    private function createTestConfiguration(): array
-    {
-        $params = [
-            'secret_key' => $this->test_secret_key,
-            'send_email_receipt' => $this->send_email_receipt
-        ];
+        $params = parent::createTestConfiguration();
+        $params['send_email_receipt' ] = $this->send_email_receipt;
 
         if (!empty($this->test_webhook_secret_key)) {
             $params['webhook_secret_key'] = $this->test_webhook_secret_key;
@@ -288,63 +138,15 @@ class StripePaymentProfile extends PaymentGatewayProfile
     /**
      * @return array
      */
-    private function createLiveConfiguration(): array
+    protected function createLiveConfiguration(): array
     {
-        $params = [
-            'secret_key' => $this->live_secret_key,
-            'send_email_receipt' => $this->send_email_receipt
-        ];
+        $params = parent::createLiveConfiguration();
+        $params['send_email_receipt' ] = $this->send_email_receipt;
 
         if (!empty($this->live_webhook_secret_key)) {
             $params['webhook_secret_key'] = $this->live_webhook_secret_key;
         }
         return $params;
-    }
-
-    /**
-     * @throws ValidationException
-     */
-    public function activate(): void
-    {
-        if (!$this->hasSecretKey()) {
-            throw new ValidationException("You can not activate a profile without a secret key set.");
-        }
-
-        if (!$this->hasPublicKey()) {
-            throw new ValidationException("You can not activate a profile without a published key set.");
-        }
-
-        parent::activate();
-
-        $this->buildWebHook();
-    }
-
-    public function disable(): void
-    {
-        parent::disable();
-        $this->clearWebHooks();
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasSecretKey(): bool
-    {
-        if ($this->test_mode_enabled) {
-            return !empty($this->test_secret_key);
-        }
-        return !empty($this->live_secret_key);
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasPublicKey(): bool
-    {
-        if ($this->test_mode_enabled) {
-            return !empty($this->test_publishable_key);
-        }
-        return !empty($this->live_publishable_key);
     }
 
     /**
@@ -441,7 +243,7 @@ class StripePaymentProfile extends PaymentGatewayProfile
         return $api;
     }
 
-    private function clearTestWebHook(): void
+    protected function clearTestWebHook(): void
     {
         try {
             Log::debug("StripePaymentProfile::clearTestWebHook");
@@ -458,7 +260,7 @@ class StripePaymentProfile extends PaymentGatewayProfile
         }
     }
 
-    private function clearLiveWebHook(): void
+    protected function clearLiveWebHook(): void
     {
         try {
             Log::debug("StripePaymentProfile::clearLiveWebHook");
@@ -476,7 +278,7 @@ class StripePaymentProfile extends PaymentGatewayProfile
         }
     }
 
-    private function clearWebHooks(): void
+    protected function clearWebHooks(): void
     {
         Log::debug(sprintf("StripePaymentProfile::clearWebHooks"));
         $this->clearLiveWebHook();

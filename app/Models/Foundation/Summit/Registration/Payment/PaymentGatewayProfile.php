@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use App\Services\Apis\IPaymentGatewayAPI;
+use App\Services\Apis\PaymentGateways\StripeApi;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
@@ -27,7 +29,8 @@ use Doctrine\ORM\Mapping AS ORM;
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="ClassName", type="string")
  * @ORM\DiscriminatorMap({"PaymentGatewayProfile" = "PaymentGatewayProfile",
- *     "StripePaymentProfile" = "StripePaymentProfile"
+ *     "StripePaymentProfile" = "StripePaymentProfile",
+ *      "LawPayPaymentProfile" = "LawPayPaymentProfile"
  * })
  * Class PaymentGatewayProfile
  * @package models\summit
@@ -56,13 +59,48 @@ abstract class PaymentGatewayProfile extends SilverstripeBaseModel
     protected $provider;
 
     /**
+     * @ORM\Column(name="IsTestModeEnabled", type="boolean")
+     * @var bool
+     */
+    protected $test_mode_enabled;
+
+    /**
+     * @ORM\Column(name="LiveSecretKey", type="string")
+     * @var string
+     */
+    protected $live_secret_key;
+
+    /**
+     * @ORM\Column(name="LivePublishableKey", type="string")
+     * @var string
+     */
+    protected $live_publishable_key;
+
+    /**
+     * @ORM\Column(name="TestSecretKey", type="string")
+     * @var string
+     */
+    protected $test_secret_key;
+
+    /**
+     * @ORM\Column(name="TestPublishableKey", type="string")
+     * @var string
+     */
+    protected $test_publishable_key;
+
+    /**
      * PaymentGatewayProfile constructor.
      */
     public function __construct()
     {
         parent::__construct();
-        $this->active           = false;
+        $this->active = false;
+        $this->test_mode_enabled = true;
         $this->application_type = IPaymentConstants::ApplicationTypeRegistration;
+        $this->live_publishable_key = '';
+        $this->live_secret_key = '';
+        $this->test_publishable_key = '';
+        $this->test_secret_key = '';
     }
 
     /**
@@ -73,12 +111,26 @@ abstract class PaymentGatewayProfile extends SilverstripeBaseModel
         return $this->active;
     }
 
-    public function activate():void{
+    /**
+     * @throws ValidationException
+     */
+    public function activate(): void
+    {
+        if (!$this->hasSecretKey()) {
+            throw new ValidationException("You can not activate a profile without a secret key set.");
+        }
+
+        if (!$this->hasPublicKey()) {
+            throw new ValidationException("You can not activate a profile without a published key set.");
+        }
         $this->active = true;
+
+        $this->buildWebHook();
     }
 
     public function disable():void{
         $this->active = false;
+        $this->clearWebHooks();
     }
 
     /**
@@ -114,4 +166,167 @@ abstract class PaymentGatewayProfile extends SilverstripeBaseModel
      */
     abstract public function buildPaymentGatewayApi():IPaymentGatewayAPI;
 
+    /**
+     * @return bool
+     */
+    public function isTestModeEnabled(): bool
+    {
+        return $this->test_mode_enabled;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLiveSecretKey(): ?string
+    {
+        return $this->live_secret_key;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLivePublishableKey(): ?string
+    {
+        return $this->live_publishable_key;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasSecretKey(): bool
+    {
+        if ($this->test_mode_enabled) {
+            return !empty($this->test_secret_key);
+        }
+        return !empty($this->live_secret_key);
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasPublicKey(): bool
+    {
+        if ($this->test_mode_enabled) {
+            return !empty($this->test_publishable_key);
+        }
+        return !empty($this->live_publishable_key);
+    }
+
+
+    /**
+     * @return array
+     */
+    protected function createConfiguration(): array
+    {
+        if ($this->test_mode_enabled) {
+            return $this->createTestConfiguration();
+        }
+        return $this->createLiveConfiguration();
+    }
+
+    /**
+     * @return array
+     */
+    protected function createTestConfiguration(): array
+    {
+        $params = [
+            'secret_key' => $this->test_secret_key,
+        ];
+
+        return $params;
+    }
+
+    /**
+     * @return array
+     */
+    protected function createLiveConfiguration(): array
+    {
+        $params = [
+            'secret_key' => $this->live_secret_key,
+        ];
+
+        return $params;
+    }
+
+    /**
+     * @param array $keys
+     */
+    public function setLiveKeys(array $keys): void
+    {
+        $this->live_publishable_key = $keys['publishable_key'];
+        $this->live_secret_key = $keys['secret_key'];
+    }
+
+    /**
+     * @param string $live_secret_key
+     */
+    public function setLiveSecretKey(string $live_secret_key): void
+    {
+        $this->live_secret_key = $live_secret_key;
+    }
+
+    /**
+     * @param string $live_publishable_key
+     */
+    public function setLivePublishableKey(string $live_publishable_key): void
+    {
+        $this->live_publishable_key = $live_publishable_key;
+    }
+
+    /**
+     * @param string $test_secret_key
+     */
+    public function setTestSecretKey(string $test_secret_key): void
+    {
+        $this->test_secret_key = $test_secret_key;
+    }
+
+    /**
+     * @param string $test_publishable_key
+     */
+    public function setTestPublishableKey(string $test_publishable_key): void
+    {
+        $this->test_publishable_key = $test_publishable_key;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTestSecretKey(): ?string
+    {
+        return $this->test_secret_key;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTestPublishableKey(): ?string
+    {
+        return $this->test_publishable_key;
+    }
+
+    /**
+     * @param array $keys
+     */
+    public function setTestKeys(array $keys): void
+    {
+        $this->test_publishable_key = $keys['publishable_key'];
+        $this->test_secret_key = $keys['secret_key'];
+    }
+
+    public function setLiveMode(): void
+    {
+        $this->test_mode_enabled = false;
+        $this->buildWebHook();
+    }
+
+    public function setTestMode(): void
+    {
+        $this->test_mode_enabled = true;
+        $this->buildWebHook();
+    }
+
+    abstract public function buildWebHook(): void;
+
+    abstract protected function clearWebHooks():void;
 }

@@ -424,26 +424,7 @@ final class ReserveOrderTask extends AbstractTask
             $this->summit->addOrder($order);
             // generate payment if cost > 0
             if ($order->getFinalAmount() > 0) {
-                $result = $payment_gateway->generatePayment(
-                    [
-                        "amount" => $order->getFinalAmount(),
-                        "currency" => $order->getCurrency(),
-                        "receipt_email" => $order->getOwnerEmail(),
-                        "metadata" => [
-                            "type" => IPaymentConstants::ApplicationTypeRegistration,
-                            "summit_id" => $this->summit->getId(),
-                        ]
-                    ]
-                );
-
-                if (!isset($result['cart_id']))
-                    throw new ValidationException("payment gateway error");
-
-                if (!isset($result['client_token']))
-                    throw new ValidationException("payment gateway error");
-
-                $order->setPaymentGatewayCartId($result['cart_id']);
-                $order->setPaymentGatewayClientToken($result['client_token']);
+               $payment_gateway->preProcessOrder($order);
             }
 
             // generate the key to access
@@ -1174,6 +1155,7 @@ final class SummitOrderService
                 throw new ValidationException("order is canceled, please retry it.");
 
             SummitOrderFactory::populate($summit, $order, $payload);
+
             if ($order->isFree()) {
                 // free order
                 $order->setPaid();
@@ -1182,12 +1164,26 @@ final class SummitOrderService
 
             // validation of zip code its only for paid events
             if (!$order->isFree() && empty($order->getBillingAddressZipCode()))
-                throw new ValidationException(sprintf("Zip Code is mandatory."));
+                throw new ValidationException("Zip Code is mandatory.");
 
-            $order->setConfirmed();
+            $payment_gateway = $summit->getPaymentGateWayPerApp
+            (
+                IPaymentConstants::ApplicationTypeRegistration,
+                $this->default_payment_gateway_strategy
+            );
 
-            return $order;
+            if (is_null($payment_gateway)) {
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Payment configuration is not set for summit %s.",
+                        $summit->getId()
+                    )
+                );
+            }
 
+            return $payment_gateway->postProcessOrder($order,$payload);
         });
     }
 
@@ -1898,6 +1894,7 @@ final class SummitOrderService
                         IPaymentConstants::ApplicationTypeRegistration,
                         $this->default_payment_gateway_strategy
                     );
+
                     if (is_null($payment_gateway)) {
                         Log::warning(sprintf("SummitOrderService::revokeReservedOrdersOlderThanNMinutes Payment configuration is not set for summit %s", $summit->getId()));
                         return;

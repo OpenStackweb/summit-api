@@ -1,6 +1,6 @@
 <?php namespace App\ModelSerializers\Summit;
-/**
- * Copyright 2020 OpenStack Foundation
+/*
+ * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,12 +13,14 @@
  **/
 
 /**
- * Class StripePaymentProfileSerializer
+ * Class AdminLawPayPaymentProfileSerializer
  * @package App\ModelSerializers\Summit
  */
-class StripePaymentProfileSerializer extends PaymentGatewayProfileSerializer
+final class AdminLawPayPaymentProfileSerializer extends LawPayPaymentProfileSerializer
 {
     protected static $array_mappings = [
-        'SendEmailReceipt'    => 'send_email_receipt:json_boolean',
+        'LiveSecretKey'     => 'live_secret_key:json_string',
+        'TestSecretKey'     => 'test_secret_key:json_string',
+        'MerchantAccountId' => 'merchant_account_id:json_string',
     ];
 }

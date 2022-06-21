@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use models\exceptions\ValidationException;
 /**
  * Class PaymentGatewayProfileFactory
@@ -31,6 +32,10 @@ final class PaymentGatewayProfileFactory
             $profile = static::populate(new StripePaymentProfile, $params);
         }
 
+        if ($provider == IPaymentConstants::ProviderLawPay) {
+            $profile = static::populate(new LawPayPaymentProfile, $params);
+        }
+
         if(is_null($profile))
             throw new ValidationException("Profile type does not exists.");
 
@@ -45,30 +50,43 @@ final class PaymentGatewayProfileFactory
      */
     public static function populate(PaymentGatewayProfile $profile, array $params): PaymentGatewayProfile
     {
+        $test_publishable_key = $params['test_publishable_key'] ?? null;
+        $test_secret_key      = $params['test_secret_key'] ?? null;
+
+        if(isset($params['summit']))
+        {
+            $profile->setSummit($params['summit']);
+        }
+
+        $profile->setTestKeys([
+            'publishable_key' => $test_publishable_key,
+            'secret_key'      => $test_secret_key
+        ]);
+
+        $live_publishable_key = $params['live_publishable_key'] ?? null;
+        $live_secret_key      = $params['live_secret_key'] ?? null;
+        $profile->setLiveKeys(
+            [
+                'publishable_key' => $live_publishable_key,
+                'secret_key' => $live_secret_key,
+            ]
+        );
+
+        if (isset($params['test_mode_enabled']))
+            boolval($params['test_mode_enabled']) == true ? $profile->setTestMode() : $profile->setLiveMode();
+
+        if( $profile instanceof LawPayPaymentProfile){
+            if(isset($params['merchant_account_id']))
+                $profile->setMerchantAccountId(trim($params['merchant_account_id']));
+        }
+
         if ($profile instanceof StripePaymentProfile) {
-
-            $test_publishable_key = $params['test_publishable_key'] ?? null;
-            $test_secret_key      = $params['test_secret_key'] ?? null;
-
-            $profile->setTestKeys([
-                'publishable_key' => $test_publishable_key,
-                'secret_key'      => $test_secret_key
-            ]);
-
-            $live_publishable_key = $params['live_publishable_key'] ?? null;
-            $live_secret_key      = $params['live_secret_key'] ?? null;
-            $profile->setLiveKeys(
-                [
-                    'publishable_key' => $live_publishable_key,
-                    'secret_key' => $live_secret_key,
-                ]
-            );
 
             $profile->setTestWebhookSecretKey($params['test_web_hook_secret'] ?? '');
             $profile->setLiveWebhookSecretKey($params['live_web_hook_secret'] ?? '');
 
-            if (isset($params['test_mode_enabled']))
-                boolval($params['test_mode_enabled']) == true ? $profile->setTestMode() : $profile->setLiveMode();
+            if (isset($params['send_email_receipt']))
+                $profile->setSendEmailReceipt(boolval($params['send_email_receipt']));
         }
 
         // common properties
@@ -77,9 +95,6 @@ final class PaymentGatewayProfileFactory
 
         if (isset($params['active']))
             boolval(['active']) == true ? $profile->activate() : $profile->disable();
-
-        if (isset($params['send_email_receipt']))
-            $profile->setSendEmailReceipt(boolval($params['send_email_receipt']));
 
         return $profile;
     }

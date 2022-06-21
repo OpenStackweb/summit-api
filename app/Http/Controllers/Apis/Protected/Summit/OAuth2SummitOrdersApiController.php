@@ -194,11 +194,20 @@ final class OAuth2SummitOrdersApiController
                 'billing_address_city'      => 'nullable|sometimes|string|max:255',
                 'billing_address_state'     => 'nullable|sometimes|string|max:255',
                 'billing_address_country'   => 'nullable|sometimes|string|country_iso_alpha2_code',
+                'payment_method_id'         => 'nullable|sometimes|string',
             ]);
 
             $order = $this->service->checkout($summit, $hash, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($order, ISummitOrderSerializerTypes::CheckOutType)->serialize( Request::input('expand', '')));
+            return $this->created(SerializerRegistry::getInstance()->getSerializer
+            (
+                $order,
+                ISummitOrderSerializerTypes::CheckOutType
+            )->serialize(
+             self::getExpands(),
+             self::getFields(),
+             self::getRelations()
+            ));
 
         }
         catch(\InvalidArgumentException $ex){

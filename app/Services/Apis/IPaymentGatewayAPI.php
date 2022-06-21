@@ -13,6 +13,8 @@
  **/
 use Illuminate\Http\Request as LaravelRequest;
 use Exception;
+use models\exceptions\ValidationException;
+use models\summit\SummitOrder;
 
 /**
  * Class CartAlreadyPaidException
@@ -27,6 +29,21 @@ class CartAlreadyPaidException extends Exception {
  */
 interface IPaymentGatewayAPI
 {
+    /**
+     * @param SummitOrder $order
+     * @throws ValidationException
+     * @return SummitOrder
+     */
+    public function preProcessOrder(SummitOrder $order):SummitOrder;
+
+    /**
+     * @param SummitOrder $order
+     * @param array $payload
+     * @throws ValidationException
+     * @return SummitOrder
+     */
+    public function postProcessOrder(SummitOrder $order, array $payload = []):SummitOrder;
+
     /**
      * @param array $info
      * @return array
@@ -84,4 +101,13 @@ interface IPaymentGatewayAPI
      * @return bool
      */
     public function isSucceeded(string $status):bool;
+
+    /**
+     * @param string $webhook_endpoint_url
+     * @return array
+     */
+    public function createWebHook(string $webhook_endpoint_url): array;
+
+
+    public function clearWebHooks():void;
 }

@@ -16,6 +16,8 @@ use App\Services\Apis\CartAlreadyPaidException;
 use App\Services\Apis\IPaymentGatewayAPI;
 use Illuminate\Http\Request as LaravelRequest;
 use models\exceptions\ValidationException;
+use models\summit\IPaymentConstants;
+use models\summit\SummitOrder;
 use Stripe\Charge;
 use Exception;
 use Stripe\Exception\SignatureVerificationException;
@@ -463,5 +465,53 @@ final class StripeApi implements IPaymentGatewayAPI
             Log::error($ex);
             throw $ex;
         }
+    }
+
+    /**
+     * @param SummitOrder $order
+     * @return SummitOrder
+     * @throws ValidationException
+     */
+    public function preProcessOrder(SummitOrder $order): SummitOrder
+    {
+        $summit_id = $order->getSummitId();
+        $result = $this->generatePayment(
+            [
+                "amount" => $order->getFinalAmount(),
+                "currency" => $order->getCurrency(),
+                "receipt_email" => $order->getOwnerEmail(),
+                "metadata" => [
+                    "type" => IPaymentConstants::ApplicationTypeRegistration,
+                    "summit_id" => $summit_id,
+                ]
+            ]
+        );
+
+        if (!isset($result['cart_id']))
+            throw new ValidationException("payment gateway error");
+
+        if (!isset($result['client_token']))
+            throw new ValidationException("payment gateway error");
+
+        $order->setPaymentGatewayCartId($result['cart_id']);
+        $order->setPaymentGatewayClientToken($result['client_token']);
+        return $order;
+    }
+
+    /**
+     * @param SummitOrder $order
+     * @param array $payload
+     * @throws ValidationException
+     * @return SummitOrder
+     */
+    public function postProcessOrder(SummitOrder $order, array $payload = []):SummitOrder
+    {
+        $order->setConfirmed();
+        return $order;
+    }
+
+    public function clearWebHooks(): void
+    {
+        // TODO: Implement clearWebHooks() method.
     }
 }

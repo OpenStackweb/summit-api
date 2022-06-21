@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Log;
 use models\summit\PaymentGatewayProfileFactory;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IPaymentGatewayProfileService;
@@ -33,6 +35,7 @@ final class PaymentGatewayProfileService
     public function addPaymentProfile(Summit $summit, array $payload): ?PaymentGatewayProfile
     {
         return $this->tx_service->transaction(function() use($summit, $payload){
+            $payload['summit'] = $summit;
             $profile = PaymentGatewayProfileFactory::build($payload['provider'], $payload);
             $formerProfile = $summit->getPaymentGateWayProfilePerApp($profile->getApplicationType());
             if($profile->isActive() && !is_null($formerProfile) && $formerProfile->isActive()){
@@ -70,6 +73,17 @@ final class PaymentGatewayProfileService
     {
         return $this->tx_service->transaction(function() use($summit, $child_id, $payload){
 
+            Log::debug
+            (
+                sprintf
+                (
+                    "PaymentGatewayProfileService::updatePaymentProfile summit %s profile %s payload %s",
+                    $summit->getId(),
+                    $child_id,
+                    json_encode($payload)
+                )
+            );
+
             $profile = $summit->getPaymentProfileById($child_id);
             if(is_null($profile))
                 throw new EntityNotFoundException();
@@ -84,10 +98,8 @@ final class PaymentGatewayProfileService
                     sprintf("There is already an active Payment Profile for application type %s.", $formerProfile->getApplicationType())
                 );
             }
-
-            $profile = PaymentGatewayProfileFactory::populate($profile, $payload);
-
-            return $profile;
+            $payload['summit'] = $summit;
+            return PaymentGatewayProfileFactory::populate($profile, $payload);
         });
     }
 }

@@ -93,8 +93,12 @@ final class PaymentGatewayProfileFactory
         if (isset($params['application_type']))
             $profile->setApplicationType($params['application_type']);
 
-        if (isset($params['active']))
-            boolval(['active']) == true ? $profile->activate() : $profile->disable();
+        if (isset($params['active'])) {
+            if(boolval($params['active']) == true)
+                $profile->activate();
+            else
+                $profile->disable();
+        }
 
         return $profile;
     }

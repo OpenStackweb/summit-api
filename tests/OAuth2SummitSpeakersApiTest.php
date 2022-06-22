@@ -1,4 +1,6 @@
 <?php namespace Tests;
+use App\Models\Foundation\Main\IGroup;
+
 /**
  * Copyright 2017 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,8 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-final class OAuth2SpeakersApiTest extends ProtectedApiTest
+final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
 {
+    use InsertSummitTestData;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        self::insertTestData();
+    }
+
+    protected function tearDown(): void
+    {
+        self::clearTestData();
+        parent::tearDown();
+    }
 
     public function testPostSpeakerBySummit($summit_id = 23)
     {
@@ -433,6 +448,144 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($speakers));
     }
 
+    public function testGetCurrentSummitSpeakersWithAcceptedPresentations($summit_id = 1723)
+    {
+        $params = [
+            'id'        => $summit_id,
+            'page'      => 1,
+            'per_page'  => 10,
+            'filter'    => [
+                'has_accepted_presentations==true',
+            ],
+            'expand' => 'presentations,accepted_presentations',
+            'order'     => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakers",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $speakers = json_decode($content);
+        $this->assertTrue(!is_null($speakers));
+    }
+
+    public function testGetCurrentSummitSpeakersWithRejectedPresentations($summit_id = 1587)
+    {
+        $params = [
+            'id'        => $summit_id,
+            'page'      => 1,
+            'per_page'  => 10,
+            'filter'    => [
+                'has_rejected_presentations==true',
+            ],
+            'expand' => 'rejected_presentations',
+            'order'     => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakers",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $speakers = json_decode($content);
+        $this->assertTrue(!is_null($speakers));
+    }
+
+    public function testExportCurrentSummitSpeakersWithAcceptedPresentations($summit_id = 1723)
+    {
+        $params = [
+            'id'        => $summit_id,
+            'page'      => 1,
+            'per_page'  => 10,
+            'filter'    => [
+                'has_accepted_presentations==true',
+            ],
+            'expand'    => 'presentations,accepted_presentations',
+            'order'     => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakersCSV",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $csv = $response->getContent();
+        $this->assertResponseStatus(200);
+        $this->assertTrue(!empty($csv));
+    }
+
+    public function testSendSpeakersBulkEmail() {
+        $params = [
+            'id' => self::$summit->getId(),
+            'filter'    => [
+                'first_name=@b||a,last_name=@b,email=@b',
+            ],
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $data = [
+            'email_flow_event'  => 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ACCEPTED_ALTERNATE',
+            'speaker_ids'       => [
+                9161
+            ],
+            'test_email_recipient'      => 'test_recip@nomail.com',
+            'outcome_email_recipient'   => 'outcome_recip@nomail.com',
+        ];
+
+        $response = $this->action
+        (
+            "PUT",
+            "OAuth2SummitSpeakersApiController@send",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(200);
+    }
+
     public function testGetCurrentSummitSpeakersOrderByEmail()
     {
         $params = [
@@ -638,7 +791,6 @@ final class OAuth2SpeakersApiTest extends ProtectedApiTest
         $error = json_decode($content);
         $this->assertTrue(!is_null($error));
     }
-
 
     public function testMergeSpeakers()
     {

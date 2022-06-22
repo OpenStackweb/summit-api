@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Illuminate\Support\Facades\Config;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\PresentationSpeaker;
 
@@ -19,32 +18,14 @@ use models\summit\PresentationSpeaker;
  * Class PresentationSpeakerSerializer
  * @package ModelSerializers
  */
-class PresentationSpeakerSerializer extends SilverStripeSerializer
+class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
 {
-    protected static $array_mappings = [
-        'FirstName'               => 'first_name:json_string',
-        'LastName'                => 'last_name:json_string',
-        'Title'                   => 'title:json_string',
-        'Bio'                     => 'bio:json_string',
-        'IRCHandle'               => 'irc:json_string',
-        'TwitterName'             => 'twitter:json_string',
-        'OrgHasCloud'             => 'org_has_cloud:json_boolean',
-        'Country'                 => 'country:json_string',
-        'AvailableForBureau'      => 'available_for_bureau:json_boolean',
-        'FundedTravel'            => 'funded_travel:json_boolean',
-        'WillingToTravel'         => 'willing_to_travel:json_boolean',
-        'WillingToPresentVideo'   => 'willing_to_present_video:json_boolean',
-        'Email'                   => 'email:json_obfuscated_email',
-        'MemberID'                => 'member_id:json_int',
-        'RegistrationRequestId'   => 'registration_request_id:json_int',
-        'ProfilePhotoUrl'         => 'pic:json_url',
-        'BigProfilePhotoUrl'      => 'big_pic:json_url',
-        'Company'                 => 'company:json_string',
-        'PhoneNumber'             => 'phone_number:json_string',
-    ];
 
     protected static $allowed_relations = [
         'member',
+        'accepted_presentations',
+        'alternate_presentations',
+        'rejected_presentations',
     ];
 
     protected function getMemberSerializerType():string{
@@ -58,17 +39,16 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = []) : array
     {
-        if(!count($relations)) $relations  = $this->getAllowedRelations();
-        $speaker                           = $this->object;
+        if(!count($relations)) $relations = $this->getAllowedRelations();
+        $speaker                          = $this->object;
 
         if(!$speaker instanceof PresentationSpeaker) return [];
-
-        $values                            = parent::serialize($expand, $fields, $relations, $params);
-        $summit                            = isset($params['summit'])? $params['summit']:null;
-        $summit_id                         = isset($params['summit_id'])? intval($params['summit_id']):null;
-        $published                         = isset($params['published'])? intval($params['published']):true;
+        $values                           = parent::serialize($expand, $fields, $relations, $params);
+        $summit                           = isset($params['summit'])? $params['summit']:null;
+        $summit_id                        = isset($params['summit_id'])? intval($params['summit_id']):null;
+        $published                        = isset($params['published'])? intval($params['published']):true;
 
         if(!is_null($summit)) {
             $featured = $summit->getFeatureSpeaker($speaker);
@@ -99,18 +79,23 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
             }
         }
 
-        if(empty($values['first_name']) || empty($values['last_name'])){
 
-            $first_name = '';
-            $last_name  = '';
-            if ($speaker->hasMember())
-            {
-                $member     = $speaker->getMember();
-                $first_name = $member->getFirstName();
-                $last_name  = $member->getLastName();
-            }
-            $values['first_name'] = $first_name;
-            $values['last_name']  = $last_name;
+        if (in_array('accepted_presentations', $relations) && !is_null($summit)) {
+            $accepted_presentation_ids = $speaker->getAcceptedPresentationIds($summit);
+            $moderated_accepted_presentation_ids = $speaker->getAcceptedPresentationIds($summit, PresentationSpeaker::RoleModerator);
+            $values['accepted_presentations'] = array_merge($accepted_presentation_ids, $moderated_accepted_presentation_ids);
+        }
+
+        if (in_array('alternate_presentations', $relations) && !is_null($summit)) {
+            $alternate_presentation_ids = $speaker->getAlternatePresentationIds($summit);
+            $moderated_alternate_presentation_ids = $speaker->getAlternatePresentationIds($summit, PresentationSpeaker::RoleModerator);
+            $values['alternate_presentations'] = array_merge($alternate_presentation_ids, $moderated_alternate_presentation_ids);
+        }
+
+        if (in_array('rejected_presentations', $relations) && !is_null($summit)) {
+            $rejected_presentation_ids = $speaker->getRejectedPresentationIds($summit);
+            $moderated_rejected_presentation_ids = $speaker->getRejectedPresentationIds($summit, PresentationSpeaker::RoleModerator);
+            $values['rejected_presentations'] = array_merge($rejected_presentation_ids, $moderated_rejected_presentation_ids);
         }
 
         $affiliations = [];
@@ -176,18 +161,54 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
                         }
                         $values['moderated_presentations'] = $moderated_presentations;
                     }
-                    break;
+                        break;
                     case 'member': {
-                       if($speaker->hasMember()){
-                           unset($values['member_id']);
-                           $values['member'] =  SerializerRegistry::getInstance()->getSerializer
-                           (
-                               $speaker->getMember(),
-                               $this->getMemberSerializerType()
-                           )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                       }
+                        if($speaker->hasMember()){
+                            unset($values['member_id']);
+                            $values['member'] =  SerializerRegistry::getInstance()->getSerializer
+                            (
+                                $speaker->getMember(),
+                                $this->getMemberSerializerType()
+                            )->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
                     }
-                    break;
+                        break;
+                    case 'accepted_presentations': {
+                        $accepted_presentations = [];
+                        foreach ($speaker->getAcceptedPresentations($summit) as $p) {
+                            $accepted_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $moderated_accepted_presentations = [];
+                        foreach ($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleModerator) as $p) {
+                            $moderated_accepted_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $values['accepted_presentations'] = array_merge($accepted_presentations, $moderated_accepted_presentations);
+                    }
+                        break;
+                    case 'alternate_presentations': {
+                        $alternate_presentations = [];
+                        foreach ($speaker->getAlternatePresentations($summit) as $p) {
+                            $alternate_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $moderated_alternate_presentations = [];
+                        foreach ($speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleModerator) as $p) {
+                            $moderated_alternate_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $values['alternate_presentations'] = array_merge($alternate_presentations, $moderated_alternate_presentations);
+                    }
+                        break;
+                    case 'rejected_presentations': {
+                        $rejected_presentations = [];
+                        foreach ($speaker->getRejectedPresentations($summit) as $p) {
+                            $rejected_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $moderated_rejected_presentations = [];
+                        foreach ($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleModerator) as $p) {
+                            $moderated_rejected_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        }
+                        $values['rejected_presentations'] = array_merge($rejected_presentations, $moderated_rejected_presentations);
+                    }
+                        break;
                 }
             }
         }

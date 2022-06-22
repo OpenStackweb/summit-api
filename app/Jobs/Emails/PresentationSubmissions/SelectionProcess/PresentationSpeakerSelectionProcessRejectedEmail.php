@@ -11,8 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
+use ModelSerializers\IPresentationSerializerTypes;
+use ModelSerializers\SerializerRegistry;
+
 /**
  * Class PresentationSpeakerSelectionProcessRejectedEmail
  * @package App\Jobs\Emails\PresentationSubmissions\SelectionProcess
@@ -33,20 +38,29 @@ class PresentationSpeakerSelectionProcessRejectedEmail extends PresentationSpeak
      * PresentationSpeakerSelectionProcessRejectedEmail constructor.
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
-     * @param string $speaker_role
      */
     public function __construct
     (
         Summit $summit,
-        PresentationSpeaker $speaker,
-        string $speaker_role
+        PresentationSpeaker $speaker
     )
     {
-        parent::__construct($summit, $speaker);
-
-        $this->payload['rejected_presentations'] = [];
-        foreach($speaker->getRejectedPresentations($summit, $speaker_role) as $p){
-            $this->payload['rejected_presentations'][] = ['title' => $p->getTitle()];
+        $payload = [];
+        $payload['rejected_presentations'] = [];
+        foreach($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleSpeaker) as $p){
+            $payload['rejected_presentations'][] =
+                SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
+
+        $payload['rejected_moderated_presentations'] = [];
+        foreach($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleModerator) as $p){
+            $payload['rejected_moderated_presentations'][] =
+                SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
+        }
+
+        parent::__construct($payload, $summit, $speaker, null);
+
+        Log::debug(sprintf("PresentationSpeakerSelectionProcessRejectedEmail::__construct payload %s", json_encode($payload)));
+
     }
 }

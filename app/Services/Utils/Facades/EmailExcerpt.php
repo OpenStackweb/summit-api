@@ -1,6 +1,6 @@
-<?php namespace ModelSerializers;
+<?php namespace App\Services\Utils\Facades;
 /**
- * Copyright 2021 OpenStack Foundation
+ * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,13 +12,16 @@
  * limitations under the License.
  **/
 
+use Illuminate\Support\Facades\Facade;
+
 /**
- * Interface IPresentationSerializerTypes
- * @package ModelSerializers
+ * Class EmailExcerpt
+ * @package services\utils\Facades
  */
-interface IPresentationSerializerTypes
+class EmailExcerpt extends Facade
 {
-    const TrackChairs = "TRACK_CHAIRS";
-    const TrackChairs_CSV = "TRACK_CHAIRS_CSV";
-    const SpeakerEmails = "SPEAKER_EMAILS";
+    protected static function getFacadeAccessor(): string
+    {
+        return EmailExcerpt::class;
+    }
 }

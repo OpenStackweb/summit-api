@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Services\Utils\Facades\EmailExcerpt;
 use models\summit\PresentationSpeaker;
 use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
 use models\summit\SpeakerAnnouncementSummitEmail;
@@ -44,7 +46,6 @@ final class PresentationSpeakerSelectionProcessEmailFactory
     /**
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
-     * @param string $speaker_role
      * @param string $type
      * @param SummitRegistrationPromoCode|null $promo_code
      * @param PresentationSpeakerSummitAssistanceConfirmationRequest|null $speaker_assistance
@@ -53,7 +54,6 @@ final class PresentationSpeakerSelectionProcessEmailFactory
     (
         Summit $summit,
         PresentationSpeaker $speaker,
-        string $speaker_role,
         string $type,
         ?SummitRegistrationPromoCode $promo_code,
         ?PresentationSpeakerSummitAssistanceConfirmationRequest $speaker_assistance
@@ -66,7 +66,6 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
-                    $speaker_role,
                     $speaker_assistance->getToken()
                 );
             break;
@@ -74,8 +73,7 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                 PresentationSpeakerSelectionProcessRejectedEmail::dispatch
                 (
                     $summit,
-                    $speaker,
-                    $speaker_role
+                    $speaker
                 );
             break;
             case SpeakerAnnouncementSummitEmail::TypeAcceptedAlternate:
@@ -84,7 +82,6 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
-                    $speaker_role,
                     $speaker_assistance->getToken()
                 );
                 break;
@@ -94,7 +91,6 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
-                    $speaker_role,
                     $speaker_assistance->getToken()
                 );
                 break;
@@ -104,7 +100,6 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
-                    $speaker_role,
                     $speaker_assistance->getToken()
                 );
                 break;
@@ -114,10 +109,16 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
-                    $speaker_role,
                     $speaker_assistance->getToken()
                 );
                 break;
         }
+
+        EmailExcerpt::add(
+            [
+                'speaker_email' => $speaker->getEmail(),
+                'email_type'    => $type
+            ]
+        );
     }
 }

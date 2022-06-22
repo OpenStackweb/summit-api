@@ -18,6 +18,8 @@ use models\summit\ISpeakerRepository;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use App\Repositories\SilverStripeDoctrineRepository;
+use models\summit\SummitSelectedPresentation;
+use models\summit\SummitSelectedPresentationList;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
@@ -31,16 +33,100 @@ final class DoctrineSpeakerRepository
     implements ISpeakerRepository
 {
     /**
+     * @param Filter $filter
+     * @return string
+     */
+    private function buildHasPresentationSubQuery(Filter $filter) : string
+    {
+        $list_in_conditions = [];
+        $list_not_in_conditions = [];
+
+        if ($filter->hasFilter("has_accepted_presentations")) {
+            if ($filter->getFilter("has_accepted_presentations")[0]->getValue() == "true") {
+                $list_in_conditions[] = "'accepted'";
+            } else {
+                $list_not_in_conditions[] = "'accepted'";
+            }
+        }
+
+        if ($filter->hasFilter("has_alternate_presentations")) {
+            if ($filter->getFilter("has_alternate_presentations")[0]->getValue() == "true") {
+                $list_in_conditions[] = "'alternate'";
+            } else {
+                $list_not_in_conditions[] = "'alternate'";
+            }
+        }
+
+        if ($filter->hasFilter("has_rejected_presentations")) {
+            if ($filter->getFilter("has_rejected_presentations")[0]->getValue() == "true") {
+                $list_in_conditions[] = "'unaccepted'";
+            } else {
+                $list_not_in_conditions[] = "'unaccepted'";
+            }
+        }
+
+        $where_condition = '';
+        if (count($list_in_conditions) > 0) {
+            $where_in_condition = join(",", $list_in_conditions);
+            $where_condition .= "SelectionStatus IN ({$where_in_condition})";
+        }
+        if (count($list_not_in_conditions) > 0) {
+            $where_not_in_condition = join(",", $list_not_in_conditions);
+            $where_not_in_condition = "SelectionStatus NOT IN ({$where_not_in_condition})";
+            $where_condition .= $where_condition == '' ? $where_not_in_condition : " AND {$where_not_in_condition}";
+        }
+
+        if ($where_condition == '') return '';
+
+        $collection_selected = SummitSelectedPresentation::CollectionSelected;
+        $group = SummitSelectedPresentationList::Group;
+        $session = SummitSelectedPresentationList::Session;
+
+        //Next query behavior is:
+        //- If no rows returned, selection status will be Presentation::SelectionStatus_Unaccepted
+        //- If Presentation.CustomOrder <= PresentationCategory.SessionCount, selection status will be Presentation::SelectionStatus_Accepted
+        //- Otherwise selection status will be Presentation::SelectionStatus_Alternate
+
+        return " AND EXISTS (
+                    SELECT *
+                    FROM (
+                          SELECT CASE
+                                     WHEN CustomOrder IS NULL THEN 'unaccepted'
+                                     WHEN CustomOrder <= SessionCount THEN 'accepted'
+                                     ELSE 'alternate'
+                                 END AS SelectionStatus
+                          FROM (
+                                   SELECT p2.CustomOrder AS CustomOrder, pc.SessionCount AS SessionCount
+                                   FROM Presentation p2
+                                            LEFT JOIN SummitSelectedPresentation sp ON sp.PresentationID = p2.ID
+                                            LEFT JOIN SummitSelectedPresentationList l ON sp.SummitSelectedPresentationListID = l.ID
+                                            LEFT JOIN PresentationCategory pc on l.CategoryID = pc.ID
+                                   WHERE p2.ID = P.ID 
+                                        AND sp.Collection = '{$collection_selected}'
+                                        AND l.ListType = '{$group}'
+                                        AND l.ListClass = '{$session}'
+                                   UNION
+                                   SELECT null, null  /*This act as a fallback to resolve to 'unaccepted' in case the first select returns no rows*/
+                               ) S
+                          LIMIT 1
+                    ) T
+                    WHERE {$where_condition}
+                )";
+    }
+
+    /**
      * @param Summit $summit
      * @param PagingInfo $paging_info
      * @param Filter|null $filter
      * @param Order|null $order
      * @return PagingResponse
+     * @throws \Doctrine\DBAL\Exception
      */
     public function getSpeakersBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null)
     {
 
         $extra_filters = '';
+        $sub_query_extra_filters = '';
         $extra_orders  = '';
         $bindings      = [];
 
@@ -53,9 +139,32 @@ final class DoctrineSpeakerRepository
                 'email'      => 'Email',
                 'id'         => 'ID'
             ]);
+
             if(!empty($where_conditions)) {
                 $extra_filters = " WHERE {$where_conditions}";
                 $bindings = array_merge($bindings, $filter->getSQLBindings());
+            }
+
+            $sub_query_where_conditions = $filter->toRawSQL([
+                'presentations_track_id'  => 'E.CategoryID',
+            ], count($bindings) + 1);
+
+            if(!empty($sub_query_where_conditions)) {
+                $sub_query_extra_filters = " AND {$sub_query_where_conditions}";
+                $bindings = array_merge($bindings, $filter->getSQLBindings());
+            }
+
+            foreach ($bindings as $key => $value){
+                if($value == 'true')
+                    $bindings[$key] =  1;
+                if($value == 'false')
+                    $bindings[$key] =  0;
+            }
+
+            if ($filter->hasFilter("has_accepted_presentations") ||
+                $filter->hasFilter("has_alternate_presentations") ||
+                $filter->hasFilter("has_rejected_presentations")) {
+                $sub_query_extra_filters .= $this->buildHasPresentationSubQuery($filter);
             }
         }
 
@@ -74,11 +183,7 @@ final class DoctrineSpeakerRepository
         $query_count = <<<SQL
 SELECT COUNT(DISTINCT(ID)) AS QTY
 FROM (
-	SELECT S.ID,
-	IFNULL(S.FirstName, M.FirstName) AS FirstName,
-	IFNULL(S.LastName, M.Surname) AS LastName,
-	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-	IFNULL(M.Email, R.Email) AS Email
+	SELECT S.ID
 	FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
 	LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
@@ -88,14 +193,10 @@ FROM (
 		SELECT E.ID FROM SummitEvent E
 		INNER JOIN Presentation P ON E.ID = P.ID
 		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
-		WHERE E.SummitID = {$summit->getId()} AND PS.PresentationSpeakerID = S.ID
+		WHERE E.SummitID = {$summit->getId()} AND PS.PresentationSpeakerID = S.ID {$sub_query_extra_filters}
 	)
 	UNION
-	SELECT S.ID,
-	IFNULL(S.FirstName, M.FirstName) AS FirstName,
-	IFNULL(S.LastName, M.Surname) AS LastName,
-	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-	IFNULL(M.Email, R.Email) AS Email
+	SELECT S.ID
 	FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
 	LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
@@ -105,31 +206,10 @@ FROM (
 		SELECT E.ID FROM SummitEvent E
 		INNER JOIN Presentation P ON E.ID = P.ID
 		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
-		WHERE E.SummitID = {$summit->getId()} AND P.ModeratorID = S.ID
+		WHERE E.SummitID = {$summit->getId()} AND P.ModeratorID = S.ID {$sub_query_extra_filters}
 	)
 	UNION
-	SELECT S.ID,
-	IFNULL(S.FirstName, M.FirstName) AS FirstName,
-	IFNULL(S.LastName, M.Surname) AS LastName,
-	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-	IFNULL(M.Email, R.Email) AS Email
-	FROM PresentationSpeaker S
-	LEFT JOIN Member M ON M.ID = S.MemberID
-	LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-	WHERE
-	EXISTS
-	(
-		SELECT E.ID FROM SummitEvent E
-		INNER JOIN Presentation P ON E.ID = P.ID
-		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
-		WHERE E.SummitID = {$summit->getId()} AND P.ModeratorID = S.ID
-	)
-	UNION
-	SELECT S.ID,
-	IFNULL(S.FirstName, M.FirstName) AS FirstName,
-	IFNULL(S.LastName, M.Surname) AS LastName,
-	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-	IFNULL(M.Email, R.Email) AS Email
+	SELECT S.ID
 	FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
 	LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
@@ -143,7 +223,6 @@ FROM (
 SUMMIT_SPEAKERS
 {$extra_filters}
 SQL;
-
 
         $stm   = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings);
 
@@ -191,7 +270,7 @@ FROM (
 		SELECT E.ID FROM SummitEvent E
 		INNER JOIN Presentation P ON E.ID = P.ID
 		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
-		WHERE E.SummitID = {$summit->getId()} AND PS.PresentationSpeakerID = S.ID
+		WHERE E.SummitID = {$summit->getId()} AND PS.PresentationSpeakerID = S.ID {$sub_query_extra_filters}
 	)
 	UNION
 	SELECT
@@ -226,42 +305,7 @@ FROM (
 		SELECT E.ID FROM SummitEvent E
 		INNER JOIN Presentation P ON E.ID = P.ID
 		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
-		WHERE E.SummitID = {$summit->getId()} AND P.ModeratorID = S.ID
-	)
-	UNION
-	SELECT
-    S.ID,
-    S.ClassName,
-    S.Created,
-    S.LastEdited,
-    S.Title AS SpeakerTitle,
-    S.Bio,
-    S.IRCHandle,
-    S.AvailableForBureau,
-    S.FundedTravel,
-    S.Country,
-    S.MemberID,
-    S.WillingToTravel,
-    S.WillingToPresentVideo,
-    S.Notes,
-    S.TwitterName,
-    IFNULL(S.FirstName, M.FirstName) AS FirstName,
-	IFNULL(S.LastName, M.Surname) AS LastName,
-	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-    IFNULL(M.Email,R.Email) AS Email,
-    S.PhotoID,
-    S.BigPhotoID,
-    R.ID AS RegistrationRequestID
-    FROM PresentationSpeaker S
-	LEFT JOIN Member M ON M.ID = S.MemberID
-    LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-    WHERE
-	EXISTS
-	(
-		SELECT E.ID FROM SummitEvent E
-		INNER JOIN Presentation P ON E.ID = P.ID
-		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
-		WHERE E.SummitID = {$summit->getId()} AND P.ModeratorID = S.ID
+		WHERE E.SummitID = {$summit->getId()} AND P.ModeratorID = S.ID {$sub_query_extra_filters}
 	)
 	UNION
 	SELECT

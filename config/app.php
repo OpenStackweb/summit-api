@@ -217,7 +217,7 @@ return [
         'EntityManager' => LaravelDoctrine\ORM\Facades\EntityManager::class,
         'Registry'      => LaravelDoctrine\ORM\Facades\Registry::class,
         'Doctrine'      => LaravelDoctrine\ORM\Facades\Doctrine::class,
-        'Encryption'    => services\utils\Facades\Encryption::class,
+        'Encryption'    => App\Services\Utils\Facades\Encryption::class,
         'QrCode'        => SimpleSoftwareIO\QrCode\Facades\QrCode::class,
         'ResourceServerContext' => \App\Facades\ResourceServerContext::class,
     ],

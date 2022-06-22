@@ -12,7 +12,9 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Services\Utils\Facades\EmailTest;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use models\summit\SummitRegistrationPromoCode;
@@ -24,24 +26,41 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
 {
 
     /**
-     * PresentationSpeakerSelectionProcessEmail constructor.
+     * @param array $payload
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
      * @param SummitRegistrationPromoCode|null $promo_code
      */
     public function __construct
     (
+        array $payload,
         Summit $summit,
         PresentationSpeaker $speaker,
         ?SummitRegistrationPromoCode $promo_code = null
     ){
-        $payload = [];
         $payload['summit_name'] = $summit->getName();
         $payload['summit_logo'] = $summit->getLogoUrl();
         $payload['summit_schedule_url'] = $summit->getScheduleDefaultPageUrl();
         $payload['summit_site_url'] = $summit->getDefaultPageUrl();
         $payload['speaker_full_name'] = $speaker->getFullName();
         $payload['speaker_email'] = $speaker->getEmail();
+
+        $test_email_recipient = EmailTest::getEmailAddress();
+
+        if (!empty($test_email_recipient)) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "PresentationSpeakerSelectionProcessEmail::__construct replacing original email %s by %s",
+                    $payload['speaker_email'],
+                    $test_email_recipient
+                )
+            );
+
+            $payload['speaker_email'] = $test_email_recipient;
+        }
+
         $speaker_management_base_url = Config::get('cfp.base_url');
         if(empty($speaker_management_base_url))
             throw new \InvalidArgumentException('cfp.base_url is null.');

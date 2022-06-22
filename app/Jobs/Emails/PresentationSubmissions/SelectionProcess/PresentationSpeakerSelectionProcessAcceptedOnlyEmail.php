@@ -11,9 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use models\summit\SummitRegistrationPromoCode;
+use ModelSerializers\IPresentationSerializerTypes;
+use ModelSerializers\SerializerRegistry;
+
 /**
  * Class PresentationSpeakerSelectionProcessAcceptedOnlyEmail
  * @package App\Jobs\Emails\PresentationSubmissions\SelectionProcess
@@ -35,25 +40,35 @@ class PresentationSpeakerSelectionProcessAcceptedOnlyEmail extends PresentationS
      * @param Summit $summit
      * @param SummitRegistrationPromoCode $promo_code
      * @param PresentationSpeaker $speaker
-     * @param string $speaker_role
+     * @param string $confirmation_token
      */
     public function __construct
     (
         Summit $summit,
         SummitRegistrationPromoCode $promo_code,
         PresentationSpeaker $speaker,
-        string $speaker_role,
         string $confirmation_token
     )
     {
-        parent::__construct($summit, $speaker, $promo_code);
-
-        $summit = $promo_code->getSummit();
-        $this->payload['accepted_presentations'] = [];
-        foreach($speaker->getPublishedRegularPresentations($summit, $speaker_role) as $p){
-            $this->payload['accepted_presentations'][] = ['title' => $p->getTitle()];
+        $payload = [];
+        $payload['accepted_presentations'] = [];
+        foreach($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleSpeaker) as $p){
+            $payload['accepted_presentations'][] =
+                SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
 
-        $payload['speaker_confirmation_link'] = sprintf("%s?t=%s", $this->payload['speaker_confirmation_link'], base64_encode($confirmation_token));
+        $payload['accepted_moderated_presentations'] = [];
+        foreach($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleModerator) as $p){
+            $payload['accepted_moderated_presentations'][] =
+                SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
+        }
+
+        $payload['speaker_confirmation_link'] =
+            sprintf("%s?t=%s", $payload['speaker_confirmation_link'], base64_encode($confirmation_token));
+
+        parent::__construct($payload, $summit, $speaker, $promo_code);
+
+        Log::debug(sprintf("PresentationSpeakerSelectionProcessAcceptedOnlyEmail::__construct payload %s", json_encode($payload)));
+
     }
 }

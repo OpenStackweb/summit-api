@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use models\summit\SummitRegistrationPromoCode;
@@ -48,21 +50,25 @@ class PresentationSpeakerSelectionProcessAcceptedOnlyEmail extends PresentationS
         string $confirmation_token
     )
     {
-        parent::__construct($summit, $speaker, $promo_code);
-
-        $this->payload['accepted_presentations'] = [];
+        $payload = [];
+        $payload['accepted_presentations'] = [];
         foreach($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleSpeaker) as $p){
-            $this->payload['accepted_presentations'][] =
+            $payload['accepted_presentations'][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
 
-        $this->payload['accepted_moderated_presentations'] = [];
+        $payload['accepted_moderated_presentations'] = [];
         foreach($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleModerator) as $p){
-            $this->payload['accepted_moderated_presentations'][] =
+            $payload['accepted_moderated_presentations'][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
 
-        $this->payload['speaker_confirmation_link'] =
-            sprintf("%s?t=%s", $this->payload['speaker_confirmation_link'], base64_encode($confirmation_token));
+        $payload['speaker_confirmation_link'] =
+            sprintf("%s?t=%s", $payload['speaker_confirmation_link'], base64_encode($confirmation_token));
+
+        parent::__construct($payload, $summit, $speaker, $promo_code);
+
+        Log::debug(sprintf("PresentationSpeakerSelectionProcessAcceptedOnlyEmail::__construct payload %s", json_encode($payload)));
+
     }
 }

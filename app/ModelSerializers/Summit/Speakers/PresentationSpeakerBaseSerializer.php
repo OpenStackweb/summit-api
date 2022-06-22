@@ -12,18 +12,32 @@
  * limitations under the License.
  **/
 use models\summit\PresentationSpeaker;
-
 /**
  * Class PresentationSpeakerBaseSerializer
  * @package ModelSerializers
  */
 abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
 {
-    protected static $allowed_relations = [
-        'member',
-        'accepted_presentations',
-        'alternate_presentations',
-        'rejected_presentations'
+    protected static $array_mappings = [
+        'FirstName'               => 'first_name:json_string',
+        'LastName'                => 'last_name:json_string',
+        'Title'                   => 'title:json_string',
+        'Bio'                     => 'bio:json_string',
+        'IRCHandle'               => 'irc:json_string',
+        'TwitterName'             => 'twitter:json_string',
+        'OrgHasCloud'             => 'org_has_cloud:json_boolean',
+        'Country'                 => 'country:json_string',
+        'AvailableForBureau'      => 'available_for_bureau:json_boolean',
+        'FundedTravel'            => 'funded_travel:json_boolean',
+        'WillingToTravel'         => 'willing_to_travel:json_boolean',
+        'WillingToPresentVideo'   => 'willing_to_present_video:json_boolean',
+        'Email'                   => 'email:json_obfuscated_email',
+        'MemberID'                => 'member_id:json_int',
+        'RegistrationRequestId'   => 'registration_request_id:json_int',
+        'ProfilePhotoUrl'         => 'pic:json_url',
+        'BigProfilePhotoUrl'      => 'big_pic:json_url',
+        'Company'                 => 'company:json_string',
+        'PhoneNumber'             => 'phone_number:json_string',
     ];
 
     /**
@@ -33,32 +47,14 @@ abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = []) : array
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
     {
-        if(!count($relations)) $relations = $this->getAllowedRelations();
-        $speaker                          = $this->object;
+        if(!count($relations)) $relations  = $this->getAllowedRelations();
+        $speaker                           = $this->object;
 
         if(!$speaker instanceof PresentationSpeaker) return [];
 
-        $values     = parent::serialize($expand, $fields, $relations, $params);
-        $summit     = isset($params['summit'])? $params['summit']:null;
-        $published  = isset($params['published'])? intval($params['published']):true;
-
-        if(!is_null($summit)) {
-            $featured = $summit->getFeatureSpeaker($speaker);
-            $values['featured']                = !is_null($featured);
-            $values['order']                   = is_null($featured) ? 0 : $featured->getOrder();
-            $values['presentations']           = $speaker->getPresentationIds($summit->getId(), $published);
-            $values['moderated_presentations'] = $speaker->getModeratedPresentationIds($summit->getId(), $published);
-        }
-
-        if (in_array('member', $relations) && $speaker->hasMember())
-        {
-            $member                         = $speaker->getMember();
-            $values['gender']               = $member->getGender();
-            $values['member_id']            = intval($member->getId());
-            $values['member_external_id']   = intval($member->getUserExternalId());
-        }
+        $values                            = parent::serialize($expand, $fields, $relations, $params);
 
         if(empty($values['first_name']) || empty($values['last_name'])){
 

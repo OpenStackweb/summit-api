@@ -34,7 +34,7 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = []) : array
     {
         if(!count($relations)) $relations  = $this->getAllowedRelations();
 

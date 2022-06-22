@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use ModelSerializers\IPresentationSerializerTypes;
@@ -43,18 +45,22 @@ class PresentationSpeakerSelectionProcessRejectedEmail extends PresentationSpeak
         PresentationSpeaker $speaker
     )
     {
-        parent::__construct($summit, $speaker, null);
-
-        $this->payload['rejected_presentations'] = [];
+        $payload = [];
+        $payload['rejected_presentations'] = [];
         foreach($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleSpeaker) as $p){
-            $this->payload['rejected_presentations'][] =
+            $payload['rejected_presentations'][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
 
-        $this->payload['rejected_moderated_presentations'] = [];
+        $payload['rejected_moderated_presentations'] = [];
         foreach($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleModerator) as $p){
-            $this->payload['rejected_moderated_presentations'][] =
+            $payload['rejected_moderated_presentations'][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
+
+        parent::__construct($payload, $summit, $speaker, null);
+
+        Log::debug(sprintf("PresentationSpeakerSelectionProcessRejectedEmail::__construct payload %s", json_encode($payload)));
+
     }
 }

@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\BooleanCellFormatter;
+use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use Exception;
 use Illuminate\Support\Facades\Log;
@@ -32,7 +34,9 @@ use ModelSerializers\SerializerRegistry;
 use services\model\ISpeakerService;
 use services\model\ISummitService;
 use utils\Filter;
+use utils\FilterElement;
 use utils\FilterParser;
+use utils\OrderParser;
 use utils\PagingInfo;
 use Illuminate\Http\Request as LaravelRequest;
 use utils\PagingResponse;
@@ -144,28 +148,28 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         return $this->_getAll(
             function () {
                 return [
-                    'first_name' => ['=@', '=='],
-                    'last_name' => ['=@', '=='],
-                    'email' => ['=@', '=='],
-                    'id' => ['=='],
-                    'full_name' => ['=@', '=='],
-                    'has_accepted_presentations' => ['=='],
-                    'has_alternate_presentations' => ['=='],
-                    'has_rejected_presentations' => ['=='],
-                    'presentations_track_id' => ['=='],
+                    'first_name'                    => ['=@', '=='],
+                    'last_name'                     => ['=@', '=='],
+                    'email'                         => ['=@', '=='],
+                    'id'                            => ['=='],
+                    'full_name'                     => ['=@', '=='],
+                    'has_accepted_presentations'    => ['=='],
+                    'has_alternate_presentations'   => ['=='],
+                    'has_rejected_presentations'    => ['=='],
+                    'presentations_track_id'        => ['=='],
                 ];
             },
             function () {
                 return [
-                    'first_name' => 'sometimes|string',
-                    'last_name' => 'sometimes|string',
-                    'email' => 'sometimes|string',
-                    'id' => 'sometimes|integer',
-                    'full_name' => 'sometimes|string',
-                    'has_accepted_presentations' => 'sometimes|required|string|in:true,false',
-                    'has_alternate_presentations' => 'sometimes|required|string|in:true,false',
-                    'has_rejected_presentations' => 'sometimes|required|string|in:true,false',
-                    'presentations_track_id' => 'sometimes|integer',
+                    'first_name'                    => 'sometimes|string',
+                    'last_name'                     => 'sometimes|string',
+                    'email'                         => 'sometimes|string',
+                    'id'                            => 'sometimes|integer',
+                    'full_name'                     => 'sometimes|string',
+                    'has_accepted_presentations'    => 'sometimes|required|string|in:true,false',
+                    'has_alternate_presentations'   => 'sometimes|required|string|in:true,false',
+                    'has_rejected_presentations'    => 'sometimes|required|string|in:true,false',
+                    'presentations_track_id'        => 'sometimes|integer',
                 ];
             },
             function () {
@@ -205,6 +209,91 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'published' => true,
                 'summit' => $summit
             ]
+        );
+    }
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function getSpeakersCSV($summit_id){
+        $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        return $this->_getAllCSV(
+            function(){
+                return [
+                    'first_name'                    => ['=@', '=='],
+                    'last_name'                     => ['=@', '=='],
+                    'email'                         => ['=@', '=='],
+                    'id'                            => ['=='],
+                    'full_name'                     => ['=@', '=='],
+                    'has_accepted_presentations'    => ['=='],
+                    'has_alternate_presentations'   => ['=='],
+                    'has_rejected_presentations'    => ['=='],
+                    'presentations_track_id'        => ['=='],
+                ];
+            },
+            function(){
+                return [
+                    'first_name'                    => 'sometimes|string',
+                    'last_name'                     => 'sometimes|string',
+                    'email'                         => 'sometimes|string',
+                    'id'                            => 'sometimes|integer',
+                    'full_name'                     => 'sometimes|string',
+                    'has_accepted_presentations'    => 'sometimes|required|string|in:true,false',
+                    'has_alternate_presentations'   => 'sometimes|required|string|in:true,false',
+                    'has_rejected_presentations'    => 'sometimes|required|string|in:true,false',
+                    'presentations_track_id'        => 'sometimes|integer',
+                ];
+            },
+            function()
+            {
+                return [
+                    'first_name',
+                    'last_name',
+                    'id',
+                    'email',
+                ];
+            },
+            function ($filter) use ($summit) {
+                return $filter;
+            },
+            function(){
+                return SerializerRegistry::SerializerType_CSV;
+            },
+            function(){
+                return [];
+            },
+            function(){
+                return [
+                    'id',
+                    'first_name',
+                    'last_name',
+                    'email',
+                    'accepted_presentations',
+                    'accepted_presentations_count',
+                    'alternate_presentations',
+                    'alternate_presentations_count',
+                    'rejected_presentations',
+                    'rejected_presentations_count'
+                ];
+            },
+            'speakers-',
+            [
+                'summit_id' => $summit_id,
+                'published' => true,
+                'summit' => $summit
+            ],
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
+                return $this->speaker_repository->getSpeakersBySummit
+                (
+                    $summit,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            },
         );
     }
 

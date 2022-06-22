@@ -91,8 +91,8 @@ final class DoctrineSpeakerRepository
                     SELECT *
                     FROM (
                           SELECT CASE
-                                     WHEN CustomOrder IS NULL THEN 'unaccepted'
-                                     WHEN CustomOrder <= SessionCount THEN 'accepted'
+                                     WHEN CustomOrder IS NULL AND E.Published = 0 THEN 'unaccepted'
+                                     WHEN CustomOrder <= SessionCount OR E.Published = 1 THEN 'accepted'
                                      ELSE 'alternate'
                                  END AS SelectionStatus
                           FROM (
@@ -208,17 +208,6 @@ FROM (
 		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
 		WHERE E.SummitID = {$summit->getId()} AND P.ModeratorID = S.ID {$sub_query_extra_filters}
 	)
-	UNION
-	SELECT S.ID
-	FROM PresentationSpeaker S
-	LEFT JOIN Member M ON M.ID = S.MemberID
-	LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-	WHERE
-	EXISTS
-	(
-		SELECT A.ID FROM PresentationSpeakerSummitAssistanceConfirmationRequest A
-		WHERE A.SummitID = {$summit->getId()} AND A.SpeakerID = S.ID {$sub_query_extra_filters}
-	)
 )
 SUMMIT_SPEAKERS
 {$extra_filters}
@@ -306,39 +295,6 @@ FROM (
 		INNER JOIN Presentation P ON E.ID = P.ID
 		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
 		WHERE E.SummitID = {$summit->getId()} AND P.ModeratorID = S.ID {$sub_query_extra_filters}
-	)
-	UNION
-	SELECT
-    S.ID,
-    S.ClassName,
-    S.Created,
-    S.LastEdited,
-    S.Title AS SpeakerTitle,
-    S.Bio,
-    S.IRCHandle,
-    S.AvailableForBureau,
-    S.FundedTravel,
-    S.Country,
-    S.MemberID,
-    S.WillingToTravel,
-    S.WillingToPresentVideo,
-    S.Notes,
-    S.TwitterName,
-    IFNULL(S.FirstName, M.FirstName) AS FirstName,
-	IFNULL(S.LastName, M.Surname) AS LastName,
-    IFNULL(M.Email,R.Email) AS Email,
-    CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-    S.PhotoID,
-    S.BigPhotoID,
-    R.ID AS RegistrationRequestID
-    FROM PresentationSpeaker S
-	LEFT JOIN Member M ON M.ID = S.MemberID
-    LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-    WHERE
-	EXISTS
-	(
-		SELECT A.ID FROM PresentationSpeakerSummitAssistanceConfirmationRequest A
-		WHERE A.SummitID = {$summit->getId()} AND A.SpeakerID = S.ID {$sub_query_extra_filters}
 	)
 )
 SUMMIT_SPEAKERS

@@ -662,6 +662,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
      * @param string $role
      * @param bool $exclude_privates_tracks
      * @param array $excluded_tracks
+     * @param bool $included_published
      * @return array
      */
     public function getAcceptedPresentations
@@ -669,7 +670,8 @@ class PresentationSpeaker extends SilverstripeBaseModel
         Summit $summit,
         string $role = PresentationSpeaker::RoleSpeaker,
         bool   $exclude_privates_tracks = true,
-        array  $excluded_tracks = []
+        array  $excluded_tracks = [],
+        bool $included_published = true
     )
     {
         $accepted_presentations = [];
@@ -703,7 +705,6 @@ class PresentationSpeaker extends SilverstripeBaseModel
             JOIN p.summit s
             JOIN p.speakers sp 
             WHERE s.id = :summit_id 
-            AND p.published = 1
             AND sp.id = :speaker_id".$exclude_category_dql);
         }
         else{
@@ -711,7 +712,6 @@ class PresentationSpeaker extends SilverstripeBaseModel
             JOIN p.summit s
             JOIN p.moderator m 
             WHERE s.id = :summit_id 
-            AND p.published = 1
             AND m.id = :speaker_id".$exclude_category_dql);
         }
 
@@ -725,7 +725,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
         $presentations = $query->getResult();
 
         foreach ($presentations as $p) {
-            if ($p->getSelectionStatus() == Presentation::SelectionStatus_Accepted) {
+            if ($p->getSelectionStatus() == Presentation::SelectionStatus_Accepted || ($included_published && $p->isPublished())) {
                 $accepted_presentations[] = $p;
             }
         }
@@ -738,6 +738,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
      * @param string $role
      * @param bool $include_sub_roles
      * @param array $excluded_tracks
+     * @param bool $excluded_tracks
      * @return array
      */
     public function getAcceptedPresentationIds
@@ -745,11 +746,12 @@ class PresentationSpeaker extends SilverstripeBaseModel
         Summit $summit,
         string $role = PresentationSpeaker::RoleSpeaker,
         bool $include_sub_roles = false,
-        array $excluded_tracks = []
+        array $excluded_tracks = [],
+        bool $included_published = true
     )
     {
         $ids = [];
-        $acceptedPresentations = $this->getAcceptedPresentations($summit, $role, $include_sub_roles, $excluded_tracks);
+        $acceptedPresentations = $this->getAcceptedPresentations($summit, $role, $include_sub_roles, $excluded_tracks, $included_published);
         foreach ($acceptedPresentations as $p) {
             $ids[] = intval($p->getId());
         }

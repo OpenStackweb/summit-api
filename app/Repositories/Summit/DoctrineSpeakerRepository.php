@@ -217,7 +217,7 @@ FROM (
 	EXISTS
 	(
 		SELECT A.ID FROM PresentationSpeakerSummitAssistanceConfirmationRequest A
-		WHERE A.SummitID = {$summit->getId()} AND A.SpeakerID = S.ID
+		WHERE A.SummitID = {$summit->getId()} AND A.SpeakerID = S.ID {$sub_query_extra_filters}
 	)
 )
 SUMMIT_SPEAKERS
@@ -338,7 +338,7 @@ FROM (
 	EXISTS
 	(
 		SELECT A.ID FROM PresentationSpeakerSummitAssistanceConfirmationRequest A
-		WHERE A.SummitID = {$summit->getId()} AND A.SpeakerID = S.ID
+		WHERE A.SummitID = {$summit->getId()} AND A.SpeakerID = S.ID {$sub_query_extra_filters}
 	)
 )
 SUMMIT_SPEAKERS

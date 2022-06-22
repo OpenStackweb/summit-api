@@ -23,6 +23,16 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
         'Email' => 'email:json_string',
     ];
 
+    protected static $allowed_relations = [
+        'all_presentations',
+        'all_moderated_presentations',
+        'affiliations',
+        'registration_codes',
+        'summit_assistances',
+        'summit_assistance',
+        'registration_code',
+    ];
+
     protected function getMemberSerializerType():string{
         return SerializerRegistry::SerializerType_Admin;
     }
@@ -45,44 +55,57 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
         $summit          = isset($params['summit'])? $params['summit']:null;
 
         if(!is_null($summit)){
-            $summit_assistance = $speaker->getAssistanceFor($summit);
-            if($summit_assistance){
-                $values['summit_assistance'] = SerializerRegistry::getInstance()->getSerializer($summit_assistance)->serialize();
+            if(in_array('summit_assistance', $relations)) {
+                $summit_assistance = $speaker->getAssistanceFor($summit);
+                if ($summit_assistance) {
+                    $values['summit_assistance'] = SerializerRegistry::getInstance()->getSerializer($summit_assistance)->serialize();
+                }
             }
-            $registration_code = $speaker->getPromoCodeFor($summit);
-            if($registration_code){
-                $values['registration_code'] = SerializerRegistry::getInstance()->getSerializer($registration_code)->serialize();
+            if(in_array('registration_code', $relations)) {
+                $registration_code = $speaker->getPromoCodeFor($summit);
+                if ($registration_code) {
+                    $values['registration_code'] = SerializerRegistry::getInstance()->getSerializer($registration_code)->serialize();
+                }
             }
-
-            $values['all_presentations']           = $speaker->getPresentationIds($summit->getId() ,false);
-            $values['all_moderated_presentations'] = $speaker->getModeratedPresentationIds($summit->getId(), false);
+            if(in_array('all_presentations', $relations))
+                 $values['all_presentations']           = $speaker->getPresentationIds($summit->getId() ,false);
+            if(in_array('all_moderated_presentations', $relations))
+                $values['all_moderated_presentations'] = $speaker->getModeratedPresentationIds($summit->getId(), false);
         }
         else{
             // get all summits info
-            $summit_assistances = [];
-            foreach ($speaker->getSummitAssistances() as $assistance){
-                $summit_assistances[] = SerializerRegistry::getInstance()->getSerializer($assistance)->serialize();
+            if(in_array('summit_assistances', $relations)) {
+                $summit_assistances = [];
+                foreach ($speaker->getSummitAssistances() as $assistance) {
+                    $summit_assistances[] = SerializerRegistry::getInstance()->getSerializer($assistance)->serialize();
+                }
+                $values['summit_assistances'] = $summit_assistances;
             }
-            $values['summit_assistances'] = $summit_assistances;
 
-            $registration_codes = [];
-            foreach ($speaker->getPromoCodes() as $promo_code){
-                $registration_codes[] = SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize();
+            if(in_array('registration_codes', $relations)) {
+                $registration_codes = [];
+                foreach ($speaker->getPromoCodes() as $promo_code) {
+                    $registration_codes[] = SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize();
+                }
+                $values['registration_codes'] = $registration_codes;
             }
-            $values['registration_codes'] = $registration_codes;
 
-            $values['all_presentations']           = $speaker->getAllPresentationIds(false);
-            $values['all_moderated_presentations'] = $speaker->getAllModeratedPresentationIds( false);
+            if(in_array('all_presentations', $relations))
+                $values['all_presentations']           = $speaker->getAllPresentationIds(false);
+            if(in_array('all_moderated_presentations', $relations))
+                $values['all_moderated_presentations'] = $speaker->getAllModeratedPresentationIds( false);
         }
 
-        $affiliations = [];
-        if($speaker->hasMember()) {
-            $member = $speaker->getMember();
-            foreach ($member->getAllAffiliations() as $affiliation) {
-                $affiliations[] = SerializerRegistry::getInstance()->getSerializer($affiliation)->serialize('organization');
+        if(in_array('affiliations', $relations)) {
+            $affiliations = [];
+            if ($speaker->hasMember()) {
+                $member = $speaker->getMember();
+                foreach ($member->getAllAffiliations() as $affiliation) {
+                    $affiliations[] = SerializerRegistry::getInstance()->getSerializer($affiliation)->serialize('organization');
+                }
             }
+            $values['affiliations'] = $affiliations;
         }
-        $values['affiliations'] = $affiliations;
 
         if (!empty($expand)) {
             foreach (explode(',', $expand) as $relation) {
@@ -109,9 +132,10 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
                                 $moderated_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize();
                             }
                         }
-
-                        $values['all_presentations']           = $presentations;
-                        $values['all_moderated_presentations'] = $moderated_presentations;
+                        if(in_array('all_presentations', $relations))
+                            $values['all_presentations']           = $presentations;
+                        if(in_array('all_moderated_presentations', $relations))
+                            $values['all_moderated_presentations'] = $moderated_presentations;
                     }
                     break;
                 }

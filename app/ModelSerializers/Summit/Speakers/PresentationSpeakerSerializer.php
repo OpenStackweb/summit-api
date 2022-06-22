@@ -26,6 +26,16 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
         'accepted_presentations',
         'alternate_presentations',
         'rejected_presentations',
+        'presentations',
+        'moderated_presentations',
+        'affiliations',
+        'languages',
+        'other_presentation_links',
+        'areas_of_expertise',
+        'travel_preferences',
+        'active_involvements',
+        'organizational_roles',
+        'badge_features',
     ];
 
     protected function getMemberSerializerType():string{
@@ -45,6 +55,7 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
         $speaker                          = $this->object;
 
         if(!$speaker instanceof PresentationSpeaker) return [];
+
         $values                           = parent::serialize($expand, $fields, $relations, $params);
         $summit                           = isset($params['summit'])? $params['summit']:null;
         $summit_id                        = isset($params['summit_id'])? intval($params['summit_id']):null;
@@ -54,8 +65,10 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
             $featured = $summit->getFeatureSpeaker($speaker);
             $values['featured']                = !is_null($featured);
             $values['order']                   = is_null($featured) ? 0 : $featured->getOrder();
-            $values['presentations']           = $speaker->getPresentationIds($summit->getId(), $published);
-            $values['moderated_presentations'] = $speaker->getModeratedPresentationIds($summit->getId(), $published);
+            if(in_array('presentations', $relations))
+                $values['presentations']           = $speaker->getPresentationIds($summit->getId(), $published);
+            if(in_array('moderated_presentations', $relations))
+                $values['moderated_presentations'] = $speaker->getModeratedPresentationIds($summit->getId(), $published);
         }
 
         if (in_array('member', $relations) && $speaker->hasMember())
@@ -65,20 +78,21 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
             $values['member_id'] = intval($member->getId());
             $values['member_external_id'] = intval($member->getUserExternalId());
             if(!is_null($summit_id)) {
-                // check badges if the speaker user has tickets
-                $badge_features = [];
-                $already_processed_features= [];
-                foreach($member->getPaidSummitTicketsBySummitId($summit_id) as $ticket){
-                    foreach($ticket->getBadgeFeatures() as $feature) {
-                        if(in_array($feature->getId(), $already_processed_features)) continue;
-                        $already_processed_features[] = $feature->getId();
-                        $badge_features[] = SerializerRegistry::getInstance()->getSerializer($feature)->serialize();
+                if(in_array('badge_features', $relations)) {
+                    // check badges if the speaker user has tickets
+                    $badge_features = [];
+                    $already_processed_features = [];
+                    foreach ($member->getPaidSummitTicketsBySummitId($summit_id) as $ticket) {
+                        foreach ($ticket->getBadgeFeatures() as $feature) {
+                            if (in_array($feature->getId(), $already_processed_features)) continue;
+                            $already_processed_features[] = $feature->getId();
+                            $badge_features[] = SerializerRegistry::getInstance()->getSerializer($feature)->serialize();
+                        }
                     }
+                    $values['badge_features'] = $badge_features;
                 }
-                $values['badge_features'] = $badge_features;
             }
         }
-
 
         if (in_array('accepted_presentations', $relations) && !is_null($summit)) {
             $accepted_presentation_ids = $speaker->getAcceptedPresentationIds($summit);
@@ -98,50 +112,64 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
             $values['rejected_presentations'] = array_merge($rejected_presentation_ids, $moderated_rejected_presentation_ids);
         }
 
-        $affiliations = [];
-        if($speaker->hasMember()) {
-            $member = $speaker->getMember();
-            foreach ($member->getCurrentAffiliations() as $affiliation) {
-                $affiliations[] = SerializerRegistry::getInstance()->getSerializer($affiliation)->serialize('organization');
+        if(in_array('affiliations', $relations)) {
+            $affiliations = [];
+            if ($speaker->hasMember()) {
+                $member = $speaker->getMember();
+                foreach ($member->getCurrentAffiliations() as $affiliation) {
+                    $affiliations[] = SerializerRegistry::getInstance()->getSerializer($affiliation)->serialize('organization');
+                }
             }
+            $values['affiliations'] = $affiliations;
         }
-        $values['affiliations'] = $affiliations;
 
-        $languages = [];
-        foreach ($speaker->getLanguages() as $language){
-            $languages[] = SerializerRegistry::getInstance()->getSerializer($language)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'languages'));
+        if(in_array('languages', $relations)) {
+            $languages = [];
+            foreach ($speaker->getLanguages() as $language) {
+                $languages[] = SerializerRegistry::getInstance()->getSerializer($language)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'languages'));
+            }
+            $values['languages'] = $languages;
         }
-        $values['languages'] = $languages;
 
-        $other_presentation_links = [];
-        foreach ($speaker->getOtherPresentationLinks() as $link){
-            $other_presentation_links[] = SerializerRegistry::getInstance()->getSerializer($link)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'other_presentation_links'));
+        if(in_array('other_presentation_links', $relations)) {
+            $other_presentation_links = [];
+            foreach ($speaker->getOtherPresentationLinks() as $link) {
+                $other_presentation_links[] = SerializerRegistry::getInstance()->getSerializer($link)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'other_presentation_links'));
+            }
+            $values['other_presentation_links'] = $other_presentation_links;
         }
-        $values['other_presentation_links'] = $other_presentation_links;
 
-        $areas_of_expertise = [];
-        foreach ($speaker->getAreasOfExpertise() as $exp){
-            $areas_of_expertise[] = SerializerRegistry::getInstance()->getSerializer($exp)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'areas_of_expertise'));
+        if(in_array('areas_of_expertise', $relations)) {
+            $areas_of_expertise = [];
+            foreach ($speaker->getAreasOfExpertise() as $exp) {
+                $areas_of_expertise[] = SerializerRegistry::getInstance()->getSerializer($exp)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'areas_of_expertise'));
+            }
+            $values['areas_of_expertise'] = $areas_of_expertise;
         }
-        $values['areas_of_expertise'] = $areas_of_expertise;
 
-        $travel_preferences = [];
-        foreach ($speaker->getTravelPreferences() as $tp){
-            $travel_preferences[] = SerializerRegistry::getInstance()->getSerializer($tp)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'travel_preferences'));
+        if(in_array('travel_preferences', $relations)) {
+            $travel_preferences = [];
+            foreach ($speaker->getTravelPreferences() as $tp) {
+                $travel_preferences[] = SerializerRegistry::getInstance()->getSerializer($tp)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'travel_preferences'));
+            }
+            $values['travel_preferences'] = $travel_preferences;
         }
-        $values['travel_preferences'] = $travel_preferences;
 
-        $active_involvements = [];
-        foreach ($speaker->getActiveInvolvements() as $ai){
-            $active_involvements[] = SerializerRegistry::getInstance()->getSerializer($ai)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'active_involvements'));
+        if(in_array('active_involvements', $relations)) {
+            $active_involvements = [];
+            foreach ($speaker->getActiveInvolvements() as $ai) {
+                $active_involvements[] = SerializerRegistry::getInstance()->getSerializer($ai)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'active_involvements'));
+            }
+            $values['active_involvements'] = $active_involvements;
         }
-        $values['active_involvements'] = $active_involvements;
 
-        $organizational_roles = [];
-        foreach ($speaker->getOrganizationalRoles() as $or){
-            $organizational_roles[] = SerializerRegistry::getInstance()->getSerializer($or)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'organizational_roles'));
+        if(in_array('organizational_roles', $relations)) {
+            $organizational_roles = [];
+            foreach ($speaker->getOrganizationalRoles() as $or) {
+                $organizational_roles[] = SerializerRegistry::getInstance()->getSerializer($or)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'organizational_roles'));
+            }
+            $values['organizational_roles'] = $organizational_roles;
         }
-        $values['organizational_roles'] = $organizational_roles;
 
         if (!empty($expand)) {
             foreach (explode(',', $expand) as $relation) {

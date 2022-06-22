@@ -145,12 +145,33 @@ final class DoctrineSpeakerRepository
                 $bindings = array_merge($bindings, $filter->getSQLBindings());
             }
 
+            // track id
             $sub_query_where_conditions = $filter->toRawSQL([
                 'presentations_track_id'  => 'E.CategoryID',
             ], count($bindings) + 1);
 
             if(!empty($sub_query_where_conditions)) {
                 $sub_query_extra_filters = " AND {$sub_query_where_conditions}";
+                $bindings = array_merge($bindings, $filter->getSQLBindings());
+            }
+
+            // selection plan id
+            $sub_query_where_conditions = $filter->toRawSQL([
+                'presentations_selection_plan_id'  => 'P.SelectionPlanID',
+            ], count($bindings) + 1);
+
+            if(!empty($sub_query_where_conditions)) {
+                $sub_query_extra_filters .= " AND {$sub_query_where_conditions}";
+                $bindings = array_merge($bindings, $filter->getSQLBindings());
+            }
+
+            // type id
+            $sub_query_where_conditions = $filter->toRawSQL([
+                'presentations_type_id'  => 'E.TypeID',
+            ], count($bindings) + 1);
+
+            if(!empty($sub_query_where_conditions)) {
+                $sub_query_extra_filters .= " AND {$sub_query_where_conditions}";
                 $bindings = array_merge($bindings, $filter->getSQLBindings());
             }
 

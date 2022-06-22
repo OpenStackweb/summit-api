@@ -148,28 +148,32 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         return $this->_getAll(
             function () {
                 return [
-                    'first_name'                    => ['=@', '=='],
-                    'last_name'                     => ['=@', '=='],
-                    'email'                         => ['=@', '=='],
-                    'id'                            => ['=='],
-                    'full_name'                     => ['=@', '=='],
-                    'has_accepted_presentations'    => ['=='],
-                    'has_alternate_presentations'   => ['=='],
-                    'has_rejected_presentations'    => ['=='],
-                    'presentations_track_id'        => ['=='],
+                    'first_name'                      => ['=@', '@@', '=='],
+                    'last_name'                       => ['=@', '@@', '=='],
+                    'email'                           => ['=@', '@@', '=='],
+                    'id'                              => ['=='],
+                    'full_name'                       => ['=@', '@@', '=='],
+                    'has_accepted_presentations'      => ['=='],
+                    'has_alternate_presentations'     => ['=='],
+                    'has_rejected_presentations'      => ['=='],
+                    'presentations_track_id'          => ['=='],
+                    'presentations_selection_plan_id' => ['=='],
+                    'presentations_type_id'           => ['==']
                 ];
             },
             function () {
                 return [
-                    'first_name'                    => 'sometimes|string',
-                    'last_name'                     => 'sometimes|string',
-                    'email'                         => 'sometimes|string',
-                    'id'                            => 'sometimes|integer',
-                    'full_name'                     => 'sometimes|string',
-                    'has_accepted_presentations'    => 'sometimes|required|string|in:true,false',
-                    'has_alternate_presentations'   => 'sometimes|required|string|in:true,false',
-                    'has_rejected_presentations'    => 'sometimes|required|string|in:true,false',
-                    'presentations_track_id'        => 'sometimes|integer',
+                    'first_name'                      => 'sometimes|string',
+                    'last_name'                       => 'sometimes|string',
+                    'email'                           => 'sometimes|string',
+                    'id'                              => 'sometimes|integer',
+                    'full_name'                       => 'sometimes|string',
+                    'has_accepted_presentations'      => 'sometimes|required|string|in:true,false',
+                    'has_alternate_presentations'     => 'sometimes|required|string|in:true,false',
+                    'has_rejected_presentations'      => 'sometimes|required|string|in:true,false',
+                    'presentations_track_id'          => 'sometimes|integer',
+                    'presentations_selection_plan_id' => 'sometimes|integer',
+                    'presentations_type_id'           => 'sometimes|integer',
                 ];
             },
             function () {
@@ -223,28 +227,32 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         return $this->_getAllCSV(
             function(){
                 return [
-                    'first_name'                    => ['=@', '=='],
-                    'last_name'                     => ['=@', '=='],
-                    'email'                         => ['=@', '=='],
-                    'id'                            => ['=='],
-                    'full_name'                     => ['=@', '=='],
-                    'has_accepted_presentations'    => ['=='],
-                    'has_alternate_presentations'   => ['=='],
-                    'has_rejected_presentations'    => ['=='],
-                    'presentations_track_id'        => ['=='],
+                    'first_name'                      => ['=@','@@', '=='],
+                    'last_name'                       => ['=@','@@', '=='],
+                    'email'                           => ['=@','@@', '=='],
+                    'id'                              => ['=='],
+                    'full_name'                       => ['=@','@@', '=='],
+                    'has_accepted_presentations'      => ['=='],
+                    'has_alternate_presentations'     => ['=='],
+                    'has_rejected_presentations'      => ['=='],
+                    'presentations_track_id'          => ['=='],
+                    'presentations_selection_plan_id' => ['=='],
+                    'presentations_type_id'           => ['==']
                 ];
             },
             function(){
                 return [
-                    'first_name'                    => 'sometimes|string',
-                    'last_name'                     => 'sometimes|string',
-                    'email'                         => 'sometimes|string',
-                    'id'                            => 'sometimes|integer',
-                    'full_name'                     => 'sometimes|string',
-                    'has_accepted_presentations'    => 'sometimes|required|string|in:true,false',
-                    'has_alternate_presentations'   => 'sometimes|required|string|in:true,false',
-                    'has_rejected_presentations'    => 'sometimes|required|string|in:true,false',
-                    'presentations_track_id'        => 'sometimes|integer',
+                    'first_name'                      => 'sometimes|string',
+                    'last_name'                       => 'sometimes|string',
+                    'email'                           => 'sometimes|string',
+                    'id'                              => 'sometimes|integer',
+                    'full_name'                       => 'sometimes|string',
+                    'has_accepted_presentations'      => 'sometimes|required|string|in:true,false',
+                    'has_alternate_presentations'     => 'sometimes|required|string|in:true,false',
+                    'has_rejected_presentations'      => 'sometimes|required|string|in:true,false',
+                    'presentations_track_id'          => 'sometimes|integer',
+                    'presentations_selection_plan_id' => 'sometimes|integer',
+                    'presentations_type_id'           => 'sometimes|integer',
                 ];
             },
             function()
@@ -1680,15 +1688,17 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
 
             if (Request::has('filter')) {
                 $filter = FilterParser::parse(Request::input('filter'), [
-                    'first_name' => ['=@', '=='],
-                    'last_name' => ['=@', '=='],
-                    'email' => ['=@', '=='],
+                    'first_name' => ['=@', '@@', '=='],
+                    'last_name' => ['=@', '@@', '=='],
+                    'email' => ['=@', '@@', '=='],
                     'id' => ['=='],
-                    'full_name' => ['=@', '=='],
+                    'full_name' => ['=@', '@@', '=='],
                     'has_accepted_presentations' => ['=='],
                     'has_alternate_presentations' => ['=='],
                     'has_rejected_presentations' => ['=='],
                     'presentations_track_id' => ['=='],
+                    'presentations_selection_plan_id' =>  ['=='],
+                    'presentations_type_id'           =>  ['=='],
                 ]);
             }
 
@@ -1704,7 +1714,9 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'has_accepted_presentations' => 'sometimes|required|string|in:true,false',
                 'has_alternate_presentations' => 'sometimes|required|string|in:true,false',
                 'has_rejected_presentations' => 'sometimes|required|string|in:true,false',
-                'presentations_track_id' => 'sometimes|integer',
+                'presentations_track_id'          => 'sometimes|integer',
+                'presentations_selection_plan_id' => 'sometimes|integer',
+                'presentations_type_id'           => 'sometimes|integer',
             ]);
 
             $this->service->triggerSend($summit, $payload, $filter);

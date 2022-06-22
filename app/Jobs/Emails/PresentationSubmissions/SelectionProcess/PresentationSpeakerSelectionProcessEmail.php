@@ -14,6 +14,7 @@
 use App\Jobs\Emails\AbstractEmailJob;
 use App\Services\Utils\Facades\EmailTest;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use models\summit\SummitRegistrationPromoCode;
@@ -25,18 +26,18 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
 {
 
     /**
-     * PresentationSpeakerSelectionProcessEmail constructor.
+     * @param array $payload
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
      * @param SummitRegistrationPromoCode|null $promo_code
      */
     public function __construct
     (
+        array $payload,
         Summit $summit,
         PresentationSpeaker $speaker,
         ?SummitRegistrationPromoCode $promo_code = null
     ){
-        $payload = [];
         $payload['summit_name'] = $summit->getName();
         $payload['summit_logo'] = $summit->getLogoUrl();
         $payload['summit_schedule_url'] = $summit->getScheduleDefaultPageUrl();
@@ -47,6 +48,16 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
         $test_email_recipient = EmailTest::getEmailAddress();
 
         if (!empty($test_email_recipient)) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "PresentationSpeakerSelectionProcessEmail::__construct replacing original email %s by %s",
+                    $payload['speaker_email'],
+                    $test_email_recipient
+                )
+            );
+
             $payload['speaker_email'] = $test_email_recipient;
         }
 

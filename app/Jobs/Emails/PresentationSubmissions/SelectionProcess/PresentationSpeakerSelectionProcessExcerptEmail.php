@@ -14,6 +14,7 @@
 
 use App\Jobs\Emails\AbstractEmailJob;
 use App\Services\Utils\Facades\EmailExcerpt;
+use Illuminate\Support\Facades\Log;
 use models\summit\Summit;
 /**
  * Class PresentationSpeakerSelectionProcessExcerptEmail
@@ -56,5 +57,8 @@ class PresentationSpeakerSelectionProcessExcerptEmail extends AbstractEmailJob
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
         parent::__construct($payload, $template_identifier, $outcome_email_recipient);
+
+        Log::debug(sprintf("PresentationSpeakerSelectionProcessExcerptEmail::__construct payload %s", json_encode($payload)));
+
     }
 }

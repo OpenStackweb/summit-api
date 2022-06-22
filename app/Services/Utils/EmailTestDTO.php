@@ -1,5 +1,4 @@
 <?php namespace App\Services\utils;
-
 /**
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use Illuminate\Support\Facades\Log;
 /**
  * Class EmailTestDTO
  * @package App\Services\utils
@@ -28,6 +27,7 @@ final class EmailTestDTO
      * @return string
      */
     public function getEmailAddress(): string {
+        Log::debug(sprintf("EmailTestDTO::setEmailAddress getEmailAddress %s", $this->email_address));
         return $this->email_address;
     }
 
@@ -36,6 +36,7 @@ final class EmailTestDTO
      * @return void
      */
     public function setEmailAddress(string $email_address) : void {
+        Log::debug(sprintf("EmailTestDTO::setEmailAddress email_address %s", $email_address));
         $this->email_address = $email_address;
     }
 }

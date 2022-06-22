@@ -22,6 +22,13 @@ final class AdminPresentationSpeakerCSVSerializer extends PresentationSpeakerBas
 {
     protected static $array_mappings = [
         'Email' => 'email:json_string',
+        'Notes' => 'notes:json_string',
+    ];
+
+    protected static $allowed_relations = [
+        'accepted_presentations',
+        'alternate_presentations',
+        'rejected_presentations'
     ];
 
     /**

@@ -19,7 +19,7 @@ use models\summit\PresentationSpeaker;
  * Class PresentationSpeakerSerializer
  * @package ModelSerializers
  */
-class PresentationSpeakerSerializer extends SilverStripeSerializer
+class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
 {
     protected static $array_mappings = [
         'FirstName'               => 'first_name:json_string',
@@ -43,13 +43,6 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
         'PhoneNumber'             => 'phone_number:json_string',
     ];
 
-    protected static $allowed_relations = [
-        'member',
-        'accepted_presentations',
-        'alternate_presentations',
-        'rejected_presentations'
-    ];
-
     protected function getMemberSerializerType():string{
         return SerializerRegistry::SerializerType_Public;
     }
@@ -61,45 +54,32 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = []) : array
     {
-        if(!count($relations)) $relations  = $this->getAllowedRelations();
-        $speaker                           = $this->object;
+        if(!count($relations)) $relations = $this->getAllowedRelations();
+        $speaker                          = $this->object;
 
         if(!$speaker instanceof PresentationSpeaker) return [];
 
-        $values                            = parent::serialize($expand, $fields, $relations, $params);
-        $summit                            = isset($params['summit'])? $params['summit']:null;
-        $summit_id                         = isset($params['summit_id'])? intval($params['summit_id']):null;
-        $published                         = isset($params['published'])? intval($params['published']):true;
+        $values     = parent::serialize($expand, $fields, $relations, $params);
+        $summit     = isset($params['summit'])? $params['summit']:null;
+        $summit_id  = isset($params['summit_id'])? intval($params['summit_id']):null;
+        $published  = isset($params['published'])? intval($params['published']):true;
 
-        if(!is_null($summit)) {
-            $featured = $summit->getFeatureSpeaker($speaker);
-            $values['featured']                = !is_null($featured);
-            $values['order']                   = is_null($featured) ? 0 : $featured->getOrder();
-            $values['presentations']           = $speaker->getPresentationIds($summit->getId(), $published);
-            $values['moderated_presentations'] = $speaker->getModeratedPresentationIds($summit->getId(), $published);
-        }
-
-        if (in_array('member', $relations) && $speaker->hasMember())
+        if (in_array('member', $relations) && $speaker->hasMember() && !is_null($summit_id))
         {
-            $member              = $speaker->getMember();
-            $values['gender']    = $member->getGender();
-            $values['member_id'] = intval($member->getId());
-            $values['member_external_id'] = intval($member->getUserExternalId());
-            if(!is_null($summit_id)) {
-                // check badges if the speaker user has tickets
-                $badge_features = [];
-                $already_processed_features= [];
-                foreach($member->getPaidSummitTicketsBySummitId($summit_id) as $ticket){
-                    foreach($ticket->getBadgeFeatures() as $feature) {
-                        if(in_array($feature->getId(), $already_processed_features)) continue;
-                        $already_processed_features[] = $feature->getId();
-                        $badge_features[] = SerializerRegistry::getInstance()->getSerializer($feature)->serialize();
-                    }
+            // check badges if the speaker user has tickets
+            $badge_features = [];
+            $already_processed_features = [];
+            $member = $speaker->getMember();
+            foreach($member->getPaidSummitTicketsBySummitId($summit_id) as $ticket){
+                foreach($ticket->getBadgeFeatures() as $feature) {
+                    if(in_array($feature->getId(), $already_processed_features)) continue;
+                    $already_processed_features[] = $feature->getId();
+                    $badge_features[] = SerializerRegistry::getInstance()->getSerializer($feature)->serialize();
                 }
-                $values['badge_features'] = $badge_features;
             }
+            $values['badge_features'] = $badge_features;
         }
 
         if (in_array('accepted_presentations', $relations) && !is_null($summit)) {
@@ -118,20 +98,6 @@ class PresentationSpeakerSerializer extends SilverStripeSerializer
             $rejected_presentation_ids = $speaker->getRejectedPresentationIds($summit);
             $moderated_rejected_presentation_ids = $speaker->getRejectedPresentationIds($summit, PresentationSpeaker::RoleModerator);
             $values['rejected_presentations'] = array_merge($rejected_presentation_ids, $moderated_rejected_presentation_ids);
-        }
-
-        if(empty($values['first_name']) || empty($values['last_name'])){
-
-            $first_name = '';
-            $last_name  = '';
-            if ($speaker->hasMember())
-            {
-                $member     = $speaker->getMember();
-                $first_name = $member->getFirstName();
-                $last_name  = $member->getLastName();
-            }
-            $values['first_name'] = $first_name;
-            $values['last_name']  = $last_name;
         }
 
         $affiliations = [];

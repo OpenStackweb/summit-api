@@ -2243,6 +2243,20 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'get-speakers-csv',
+                'route' => '/api/v1/summits/{id}/speakers/csv',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
                 'name' => 'get-speakers-on-schedule',
                 'route' => '/api/v1/summits/{id}/speakers/on-schedule',
                 'http_method' => 'GET',

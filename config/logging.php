@@ -35,22 +35,19 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['daily'],
+            'channels' => ['daily', 'stderr'],
         ],
-
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
             'level' =>  env('LOG_LEVEL', 'error'),
         ],
-
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
             'level' =>  env('LOG_LEVEL', 'error'),
             'days' => 7,
         ],
-
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),
@@ -58,20 +55,26 @@ return [
             'emoji' => ':boom:',
             'level' => 'critical',
         ],
-
         'stderr' => [
             'driver' => 'monolog',
             'handler' => StreamHandler::class,
+            'level' =>  env('LOG_LEVEL', 'error'),
             'with' => [
                 'stream' => 'php://stderr',
             ],
         ],
-
+        'stdout' => [
+            'driver' => 'monolog',
+            'handler' => StreamHandler::class,
+            'level' =>  env('LOG_LEVEL', 'error'),
+            'with' => [
+                'stream' => 'php://stdout',
+            ],
+        ],
         'syslog' => [
             'driver' => 'syslog',
             'level' =>  env('LOG_LEVEL', 'error'),
         ],
-
         'errorlog' => [
             'driver' => 'errorlog',
             'level' =>  env('LOG_LEVEL', 'error'),

@@ -564,6 +564,46 @@ final class Filter
                         $sql_or .= $cond;
                     }
                 }
+                $sql = !empty($sql_or) ? "{$sql}{$sql_or})" : "";
+            }
+        }
+        return $sql;
+    }
+
+    /**
+     * @param array $mappings
+     * @return string
+     */
+    public function toRawSQLExistsTemplate(array $mappings)
+    {
+        $sql = '';
+
+        foreach ($this->filters as $filter) {
+            if ($filter instanceof FilterElement) {
+                if (isset($mappings[$filter->getField()])) {
+                    $mapping = $mappings[$filter->getField()];
+                    $value   = $filter->getValue();
+                    $op      = $value == 'true' ? 'EXISTS' : 'NOT EXISTS';
+                    $cond = sprintf(' %s (%s)', $op, $mapping);
+
+                    if (!empty($sql)) $sql .= " AND ";
+                    $sql .= $cond;
+                }
+            } else if (is_array($filter)) {
+                // OR
+                $sql .= " ( ";
+                $sql_or = '';
+                foreach ($filter as $e) {
+                    if ($e instanceof FilterElement && isset($mappings[$e->getField()])) {
+                        $mapping = $mappings[$e->getField()];
+                        $value   = $e->getValue();
+                        $op      = $value == 'true' ? 'EXISTS' : 'NOT EXISTS';
+                        $cond = sprintf(" %s (%s)", $op, $mapping);
+
+                        if (!empty($sql_or)) $sql_or .= " OR ";
+                        $sql_or .= $cond;
+                    }
+                }
                 $sql .= $sql_or . " ) ";
             }
         }

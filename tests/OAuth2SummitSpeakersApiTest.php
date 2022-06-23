@@ -448,7 +448,7 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($speakers));
     }
 
-    public function testGetCurrentSummitSpeakersWithAcceptedPresentations($summit_id = 1723)
+    public function testGetCurrentSummitSpeakersWithOnlyAcceptedPresentations($summit_id = 1723)
     {
         $params = [
             'id'        => $summit_id,
@@ -456,8 +456,11 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
             'per_page'  => 10,
             'filter'    => [
                 'has_accepted_presentations==true',
+                'has_alternate_presentations==false',
+                'has_rejected_presentations==false',
             ],
-            'expand' => 'presentations,accepted_presentations',
+//            'filter'    => 'has_accepted_presentations==true,has_rejected_presentations==false',
+            'expand'    => 'presentations,accepted_presentations',
             'order'     => '+id'
         ];
 

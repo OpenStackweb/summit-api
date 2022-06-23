@@ -33,51 +33,16 @@ final class DoctrineSpeakerRepository
     implements ISpeakerRepository
 {
     /**
-     * @param Filter $filter
+     * @var array
+     */
+    private $bindings = [];
+
+    /**
+     * @param string $filter_value
      * @return string
      */
-    private function buildHasPresentationSubQuery(Filter $filter) : string
+    private function buildSelectionStatusQuery(string $filter_value) : string
     {
-        $list_in_conditions = [];
-        $list_not_in_conditions = [];
-
-        if ($filter->hasFilter("has_accepted_presentations")) {
-            if ($filter->getFilter("has_accepted_presentations")[0]->getValue() == "true") {
-                $list_in_conditions[] = "'accepted'";
-            } else {
-                $list_not_in_conditions[] = "'accepted'";
-            }
-        }
-
-        if ($filter->hasFilter("has_alternate_presentations")) {
-            if ($filter->getFilter("has_alternate_presentations")[0]->getValue() == "true") {
-                $list_in_conditions[] = "'alternate'";
-            } else {
-                $list_not_in_conditions[] = "'alternate'";
-            }
-        }
-
-        if ($filter->hasFilter("has_rejected_presentations")) {
-            if ($filter->getFilter("has_rejected_presentations")[0]->getValue() == "true") {
-                $list_in_conditions[] = "'unaccepted'";
-            } else {
-                $list_not_in_conditions[] = "'unaccepted'";
-            }
-        }
-
-        $where_condition = '';
-        if (count($list_in_conditions) > 0) {
-            $where_in_condition = join(",", $list_in_conditions);
-            $where_condition .= "SelectionStatus IN ({$where_in_condition})";
-        }
-        if (count($list_not_in_conditions) > 0) {
-            $where_not_in_condition = join(",", $list_not_in_conditions);
-            $where_not_in_condition = "SelectionStatus NOT IN ({$where_not_in_condition})";
-            $where_condition .= $where_condition == '' ? $where_not_in_condition : " AND {$where_not_in_condition}";
-        }
-
-        if ($where_condition == '') return '';
-
         $collection_selected = SummitSelectedPresentation::CollectionSelected;
         $group = SummitSelectedPresentationList::Group;
         $session = SummitSelectedPresentationList::Session;
@@ -87,31 +52,139 @@ final class DoctrineSpeakerRepository
         //- If Presentation.CustomOrder <= PresentationCategory.SessionCount, selection status will be Presentation::SelectionStatus_Accepted
         //- Otherwise selection status will be Presentation::SelectionStatus_Alternate
 
-        return " AND EXISTS (
-                    SELECT *
-                    FROM (
-                          SELECT CASE
-                                     WHEN CustomOrder IS NULL AND E.Published = 0 THEN 'unaccepted'
-                                     WHEN CustomOrder <= SessionCount OR E.Published = 1 THEN 'accepted'
-                                     ELSE 'alternate'
-                                 END AS SelectionStatus
-                          FROM (
-                                   SELECT p2.CustomOrder AS CustomOrder, pc.SessionCount AS SessionCount
-                                   FROM Presentation p2
-                                            LEFT JOIN SummitSelectedPresentation sp ON sp.PresentationID = p2.ID
-                                            LEFT JOIN SummitSelectedPresentationList l ON sp.SummitSelectedPresentationListID = l.ID
-                                            LEFT JOIN PresentationCategory pc on l.CategoryID = pc.ID
-                                   WHERE p2.ID = P.ID 
-                                        AND sp.Collection = '{$collection_selected}'
-                                        AND l.ListType = '{$group}'
-                                        AND l.ListClass = '{$session}'
-                                   UNION
-                                   SELECT null, null  /*This act as a fallback to resolve to 'unaccepted' in case the first select returns no rows*/
-                               ) S
-                          LIMIT 1
-                    ) T
-                    WHERE {$where_condition}
-                )";
+        return <<<SQL
+AND EXISTS (
+    SELECT *
+    FROM (
+          SELECT CASE
+                     WHEN CustomOrder IS NULL AND E.Published = 0 THEN 'unaccepted'
+                     WHEN CustomOrder <= SessionCount OR E.Published = 1 THEN 'accepted'
+                     ELSE 'alternate'
+                 END AS SelectionStatus
+          FROM (
+                   SELECT p2.CustomOrder AS CustomOrder, pc.SessionCount AS SessionCount
+                   FROM Presentation p2
+                            LEFT JOIN SummitSelectedPresentation sp ON sp.PresentationID = p2.ID
+                            LEFT JOIN SummitSelectedPresentationList l ON sp.SummitSelectedPresentationListID = l.ID
+                            LEFT JOIN PresentationCategory pc on l.CategoryID = pc.ID
+                   WHERE p2.ID = P.ID 
+                        AND sp.Collection = '{$collection_selected}'
+                        AND l.ListType = '{$group}'
+                        AND l.ListClass = '{$session}'
+                   UNION
+                   SELECT null, null  /*This act as a fallback to resolve to 'unaccepted' in case the first select returns no rows*/
+               ) S
+          LIMIT 1
+    ) T
+    WHERE SelectionStatus = {$filter_value}
+)
+SQL;
+    }
+
+    /**
+     * @param Filter $filter
+     * @return string
+     */
+    private function buildSubQueryExtraFilters(Filter $filter) : string
+    {
+        $query_extra_filters = '';
+
+        // track id
+        $sub_query_where_conditions = $filter->toRawSQL([
+            'presentations_track_id'  => 'E.CategoryID',
+        ], count($this->bindings) + 1);
+
+        if(!empty($sub_query_where_conditions)) {
+            $query_extra_filters = " AND {$sub_query_where_conditions}";
+            $this->bindings = array_merge($this->bindings, $filter->getSQLBindings());
+        }
+
+        // selection plan id
+        $sub_query_where_conditions = $filter->toRawSQL([
+            'presentations_selection_plan_id'  => 'P.SelectionPlanID',
+        ], count($this->bindings) + 1);
+
+        if(!empty($sub_query_where_conditions)) {
+            $query_extra_filters .= " AND {$sub_query_where_conditions}";
+            $this->bindings = array_merge($this->bindings, $filter->getSQLBindings());
+        }
+
+        // type id
+        $sub_query_where_conditions = $filter->toRawSQL([
+            'presentations_type_id'  => 'E.TypeID',
+        ], count($this->bindings) + 1);
+
+        if(!empty($sub_query_where_conditions)) {
+            $query_extra_filters .= " AND {$sub_query_where_conditions}";
+            $this->bindings = array_merge($this->bindings, $filter->getSQLBindings());
+        }
+
+        return $query_extra_filters;
+    }
+
+    /**
+     * @param string $sub_query
+     * @param string $query_extra_filters
+     * @param Summit $summit
+     * @param bool $is_moderator
+     * @return string
+     */
+    private function buildEventExistsSubQuery(string $sub_query, string $query_extra_filters, Summit $summit, bool $is_moderator = false) : string
+    {
+        $paring_column = $is_moderator ? 'P.ModeratorID' : 'PS.PresentationSpeakerID';
+
+        return <<<SQL
+SELECT E.ID FROM SummitEvent E
+INNER JOIN Presentation P ON E.ID = P.ID
+INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
+WHERE E.SummitID = {$summit->getId()} AND {$paring_column} = S.ID {$query_extra_filters} {$sub_query}
+SQL;
+    }
+
+    /**
+     * @param Filter $filter
+     * @param Summit $summit
+     * @param bool $is_moderator
+     * @return string
+     */
+    private function buildHasPresentationSubQuery(Filter $filter, Summit $summit, bool $is_moderator = false) : string
+    {
+        $paring_column = $is_moderator ? 'P.ModeratorID' : 'PS.PresentationSpeakerID';
+
+        $query_extra_filters = $this->buildSubQueryExtraFilters($filter);
+
+        //Presentation status constraint subqueries
+
+        $result = $filter->toRawSQLExistsTemplate([
+            'has_accepted_presentations'  => $this->buildEventExistsSubQuery(
+                $this->buildSelectionStatusQuery("'accepted'"),
+                $query_extra_filters,
+                $summit,
+                $is_moderator),
+            'has_alternate_presentations' => $this->buildEventExistsSubQuery(
+                $this->buildSelectionStatusQuery("'alternate'"),
+                $query_extra_filters,
+                $summit,
+                $is_moderator),
+            'has_rejected_presentations'  => $this->buildEventExistsSubQuery(
+                $this->buildSelectionStatusQuery("'unaccepted'"),
+                $query_extra_filters,
+                $summit,
+                $is_moderator),
+        ]);
+
+        if (empty($result)) {
+            return <<<SQL
+EXISTS (
+    SELECT E.ID FROM SummitEvent E
+    INNER JOIN Presentation P ON E.ID = P.ID
+    INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
+    WHERE E.SummitID = {$summit->getId()} AND {$paring_column} = S.ID {$query_extra_filters})
+)
+SQL;
+        }
+
+        return $result;
     }
 
     /**
@@ -124,11 +197,11 @@ final class DoctrineSpeakerRepository
      */
     public function getSpeakersBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null)
     {
-
         $extra_filters = '';
-        $sub_query_extra_filters = '';
         $extra_orders  = '';
-        $bindings      = [];
+
+        $speaker_subquery = '';
+        $moderator_subquery = '';
 
         if(!is_null($filter))
         {
@@ -142,51 +215,18 @@ final class DoctrineSpeakerRepository
 
             if(!empty($where_conditions)) {
                 $extra_filters = " WHERE {$where_conditions}";
-                $bindings = array_merge($bindings, $filter->getSQLBindings());
+                $this->bindings = array_merge($this->bindings, $filter->getSQLBindings());
             }
 
-            // track id
-            $sub_query_where_conditions = $filter->toRawSQL([
-                'presentations_track_id'  => 'E.CategoryID',
-            ], count($bindings) + 1);
-
-            if(!empty($sub_query_where_conditions)) {
-                $sub_query_extra_filters = " AND {$sub_query_where_conditions}";
-                $bindings = array_merge($bindings, $filter->getSQLBindings());
-            }
-
-            // selection plan id
-            $sub_query_where_conditions = $filter->toRawSQL([
-                'presentations_selection_plan_id'  => 'P.SelectionPlanID',
-            ], count($bindings) + 1);
-
-            if(!empty($sub_query_where_conditions)) {
-                $sub_query_extra_filters .= " AND {$sub_query_where_conditions}";
-                $bindings = array_merge($bindings, $filter->getSQLBindings());
-            }
-
-            // type id
-            $sub_query_where_conditions = $filter->toRawSQL([
-                'presentations_type_id'  => 'E.TypeID',
-            ], count($bindings) + 1);
-
-            if(!empty($sub_query_where_conditions)) {
-                $sub_query_extra_filters .= " AND {$sub_query_where_conditions}";
-                $bindings = array_merge($bindings, $filter->getSQLBindings());
-            }
-
-            foreach ($bindings as $key => $value){
+            foreach ($this->bindings as $key => $value){
                 if($value == 'true')
-                    $bindings[$key] =  1;
+                    $this->bindings[$key] =  1;
                 if($value == 'false')
-                    $bindings[$key] =  0;
+                    $this->bindings[$key] =  0;
             }
 
-            if ($filter->hasFilter("has_accepted_presentations") ||
-                $filter->hasFilter("has_alternate_presentations") ||
-                $filter->hasFilter("has_rejected_presentations")) {
-                $sub_query_extra_filters .= $this->buildHasPresentationSubQuery($filter);
-            }
+            $speaker_subquery = $this->buildHasPresentationSubQuery($filter, $summit);
+            $moderator_subquery = $this->buildHasPresentationSubQuery($filter, $summit, true);
         }
 
         if(!is_null($order))
@@ -208,37 +248,23 @@ FROM (
 	FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
 	LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-	WHERE
-	EXISTS
-	(
-		SELECT E.ID FROM SummitEvent E
-		INNER JOIN Presentation P ON E.ID = P.ID
-		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
-		WHERE E.SummitID = {$summit->getId()} AND PS.PresentationSpeakerID = S.ID {$sub_query_extra_filters}
-	)
+	WHERE {$speaker_subquery}
 	UNION
 	SELECT S.ID
 	FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
 	LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-	WHERE
-	EXISTS
-	(
-		SELECT E.ID FROM SummitEvent E
-		INNER JOIN Presentation P ON E.ID = P.ID
-		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
-		WHERE E.SummitID = {$summit->getId()} AND P.ModeratorID = S.ID {$sub_query_extra_filters}
-	)
+	WHERE {$moderator_subquery}
 )
 SUMMIT_SPEAKERS
 {$extra_filters}
 SQL;
 
-        $stm   = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings);
+        $stm   = $this->getEntityManager()->getConnection()->executeQuery($query_count, $this->bindings);
 
         $total = intval($stm->fetchColumn(0));
 
-        $bindings = array_merge( $bindings, array
+        $this->bindings = array_merge( $this->bindings, array
         (
             'per_page'  => $paging_info->getPerPage(),
             'offset'    => $paging_info->getOffset(),
@@ -274,14 +300,7 @@ FROM (
 	LEFT JOIN Member M ON M.ID = S.MemberID
 	LEFT JOIN File F ON F.ID = S.PhotoID
     LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-	WHERE
-	EXISTS
-	(
-		SELECT E.ID FROM SummitEvent E
-		INNER JOIN Presentation P ON E.ID = P.ID
-		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
-		WHERE E.SummitID = {$summit->getId()} AND PS.PresentationSpeakerID = S.ID {$sub_query_extra_filters}
-	)
+	WHERE {$speaker_subquery}
 	UNION
 	SELECT
     S.ID,
@@ -309,14 +328,7 @@ FROM (
     FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
     LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-    WHERE
-	EXISTS
-	(
-		SELECT E.ID FROM SummitEvent E
-		INNER JOIN Presentation P ON E.ID = P.ID
-		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
-		WHERE E.SummitID = {$summit->getId()} AND P.ModeratorID = S.ID {$sub_query_extra_filters}
-	)
+    WHERE {$moderator_subquery}
 )
 SUMMIT_SPEAKERS
 {$extra_filters} {$extra_orders} limit :per_page offset :offset;
@@ -344,7 +356,7 @@ SQL;
         // build rsm here
         $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
 
-        foreach($bindings as $k => $v)
+        foreach($this->bindings as $k => $v)
             $native_query->setParameter($k, $v);
 
         $speakers = $native_query->getResult();

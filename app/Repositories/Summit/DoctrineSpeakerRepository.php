@@ -101,39 +101,27 @@ final class DoctrineSpeakerRepository
                             'true',
                             sprintf('
                                      EXISTS (
-                                        SELECT __p11.id FROM models\summit\Presentation __p11 
-                                        JOIN __p11.speakers __spk11 WITH __spk11.id = e.id 
-                                        WHERE __p11.summit = :summit AND __p11.published = 1
-                                     )
-                                     OR
-                                     EXISTS (
                                         SELECT __p12.id FROM models\summit\Presentation __p12 
                                         JOIN __p12.speakers __spk12 WITH __spk12.id = e.id 
                                         JOIN __p12.category __cat12
-                                        JOIN __p12.selected_presentations __sp12 WITH __sp12.collection = \'%1$s\'
+                                        LEFT JOIN __p12.selected_presentations __sp12 WITH __sp12.collection = \'%1$s\'
                                         JOIN __sp12.list __spl12 WITH __spl12.list_type = \'%2$s\' AND __spl12.list_class = \'%3$s\'
                                         WHERE 
                                         __p12.summit = :summit AND
-                                        __sp12.order is not null AND
-                                        __sp12.order <= __cat12.session_count
-                                     )
-                                     OR
-                                     EXISTS (
-                                        SELECT __p13.id FROM models\summit\Presentation __p13 
-                                        JOIN __p13.moderator __md13 WITH __md13.id = e.id 
-                                        WHERE __p13.summit = :summit AND __p13.published = 1
+                                        ((__sp12.order is not null AND
+                                        __sp12.order <= __cat12.session_count) OR __p12.published = 1)
                                      )
                                      OR
                                      EXISTS (
                                         SELECT __p14.id FROM models\summit\Presentation __p14 
                                         JOIN __p14.moderator __md14 WITH __md14.id = e.id 
                                         JOIN __p14.category __cat14
-                                        JOIN __p14.selected_presentations __sp14 WITH __sp14.collection = \'%1$s\'
+                                        LEFT JOIN __p14.selected_presentations __sp14 WITH __sp14.collection = \'%1$s\'
                                         JOIN __sp14.list __spl14 WITH __spl14.list_type = \'%2$s\' AND __spl14.list_class = \'%3$s\'
                                         WHERE 
                                         __p14.summit = :summit AND
-                                        __sp14.order is not null AND
-                                        __sp14.order <= __cat14.session_count
+                                        ((__sp14.order is not null AND
+                                        __sp14.order <= __cat14.session_count) OR __p14.published = 1)
                                      )
                                 ',
                                 SummitSelectedPresentation::CollectionSelected,

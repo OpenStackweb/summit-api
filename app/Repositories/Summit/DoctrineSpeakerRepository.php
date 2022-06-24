@@ -105,7 +105,7 @@ final class DoctrineSpeakerRepository
                                         JOIN __p12.speakers __spk12 WITH __spk12.id = e.id 
                                         JOIN __p12.category __cat12
                                         LEFT JOIN __p12.selected_presentations __sp12 WITH __sp12.collection = \'%1$s\'
-                                        JOIN __sp12.list __spl12 WITH __spl12.list_type = \'%2$s\' AND __spl12.list_class = \'%3$s\'
+                                        LEFT JOIN __sp12.list __spl12 WITH __spl12.list_type = \'%2$s\' AND __spl12.list_class = \'%3$s\'
                                         WHERE 
                                         __p12.summit = :summit AND
                                         ((__sp12.order is not null AND
@@ -117,7 +117,7 @@ final class DoctrineSpeakerRepository
                                         JOIN __p14.moderator __md14 WITH __md14.id = e.id 
                                         JOIN __p14.category __cat14
                                         LEFT JOIN __p14.selected_presentations __sp14 WITH __sp14.collection = \'%1$s\'
-                                        JOIN __sp14.list __spl14 WITH __spl14.list_type = \'%2$s\' AND __spl14.list_class = \'%3$s\'
+                                        LEFT JOIN __sp14.list __spl14 WITH __spl14.list_type = \'%2$s\' AND __spl14.list_class = \'%3$s\'
                                         WHERE 
                                         __p14.summit = :summit AND
                                         ((__sp14.order is not null AND
@@ -137,7 +137,7 @@ final class DoctrineSpeakerRepository
                                         JOIN __p12.speakers __spk12 WITH __spk12.id = e.id 
                                         JOIN __p12.category __cat12
                                         LEFT JOIN __p12.selected_presentations __sp12 WITH __sp12.collection = \'%1$s\'
-                                        JOIN __sp12.list __spl12 WITH __spl12.list_type = \'%2$s\' AND __spl12.list_class = \'%3$s\'
+                                        LEFT JOIN __sp12.list __spl12 WITH __spl12.list_type = \'%2$s\' AND __spl12.list_class = \'%3$s\'
                                         WHERE 
                                         __p12.summit = :summit AND
                                         ((__sp12.order is not null AND
@@ -149,7 +149,7 @@ final class DoctrineSpeakerRepository
                                         JOIN __p14.moderator __md14 WITH __md14.id = e.id 
                                         JOIN __p14.category __cat14
                                         LEFT JOIN __p14.selected_presentations __sp14 WITH __sp14.collection = \'%1$s\'
-                                        JOIN __sp14.list __spl14 WITH __spl14.list_type = \'%2$s\' AND __spl14.list_class = \'%3$s\'
+                                        LEFT JOIN __sp14.list __spl14 WITH __spl14.list_type = \'%2$s\' AND __spl14.list_class = \'%3$s\'
                                         WHERE 
                                         __p14.summit = :summit AND
                                         ((__sp14.order is not null AND

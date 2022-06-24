@@ -702,15 +702,17 @@ class PresentationSpeaker extends SilverstripeBaseModel
             JOIN p.summit s
             JOIN p.speakers sp 
             JOIN p.category cat
-            LEFT JOIN p.selected_presentations ssp WITH ssp.collection = '%s'
-            LEFT JOIN ssp.list sspl WITH sspl.list_type = '%s' AND sspl.list_class = '%s'
+            LEFT JOIN p.selected_presentations ssp 
+            LEFT JOIN ssp.list sspl 
             WHERE s.id = :summit_id 
             AND sp.id = :speaker_id
             AND 
             (
                 ( 
                     ssp.order is not null AND
-                    ssp.order <= cat.session_count 
+                    ssp.order <= cat.session_count AND
+                    ssp.collection = '%s' AND
+                    sspl.list_type = '%s' AND sspl.list_class = '%s'
                 )
                 OR p.published = 1 
             )
@@ -726,8 +728,8 @@ class PresentationSpeaker extends SilverstripeBaseModel
             JOIN p.summit s
             JOIN p.moderator m
             JOIN p.category cat
-            LEFT JOIN p.selected_presentations ssp WITH ssp.collection = '%s'
-            LEFT JOIN ssp.list sspl WITH sspl.list_type = '%s' AND sspl.list_class = '%s'
+            LEFT JOIN p.selected_presentations ssp 
+            LEFT JOIN ssp.list sspl 
             WHERE 
             s.id = :summit_id 
             AND m.id = :speaker_id
@@ -735,7 +737,9 @@ class PresentationSpeaker extends SilverstripeBaseModel
             (
                 ( 
                     ssp.order is not null AND
-                    ssp.order <= cat.session_count 
+                    ssp.order <= cat.session_count AND
+                    ssp.collection = '%s' AND
+                    sspl.list_type = '%s' AND sspl.list_class = '%s'
                 )
                 OR p.published = 1 
             )

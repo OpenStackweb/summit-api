@@ -99,7 +99,7 @@ final class DoctrineSpeakerRepository
                 new DoctrineSwitchFilterMapping([
                         'true' => new DoctrineCaseFilterMapping(
                             'true',
-                            sprintf('(
+                            sprintf('
                                      EXISTS (
                                         SELECT __p11.id FROM models\summit\Presentation __p11 
                                         JOIN __p11.speakers __spk11 WITH __spk11.id = e.id 
@@ -135,7 +135,7 @@ final class DoctrineSpeakerRepository
                                         __sp14.order is not null AND
                                         __sp14.order <= __cat14.session_count
                                      )
-                                )',
+                                ',
                                 SummitSelectedPresentation::CollectionSelected,
                                 SummitSelectedPresentationList::Group,
                                 SummitSelectedPresentationList::Session
@@ -143,7 +143,7 @@ final class DoctrineSpeakerRepository
                         ),
                         'false' => new DoctrineCaseFilterMapping(
                             'false',
-                            sprintf('(
+                            sprintf('
                                      NOT EXISTS (
                                         SELECT __p11.id FROM models\summit\Presentation __p11 
                                         JOIN __p11.speakers __spk11 WITH __spk11.id = e.id 
@@ -179,7 +179,7 @@ final class DoctrineSpeakerRepository
                                         __sp14.order is not null AND
                                         __sp14.order <= __cat14.session_count
                                      )
-                                )',
+                                ',
                                 SummitSelectedPresentation::CollectionSelected,
                                 SummitSelectedPresentationList::Group,
                                 SummitSelectedPresentationList::Session
@@ -192,7 +192,7 @@ final class DoctrineSpeakerRepository
                 new DoctrineSwitchFilterMapping([
                         'true' => new DoctrineCaseFilterMapping(
                             'true',
-                            sprintf('(
+                            sprintf('
                                      EXISTS (
                                         SELECT __p21.id FROM models\summit\Presentation __p21 
                                         JOIN __p21.speakers __spk21 WITH __spk21.id = e.id 
@@ -216,7 +216,7 @@ final class DoctrineSpeakerRepository
                                         __sp22.order is not null AND
                                         __sp22.order > __cat22.session_count
                                      )
-                                )',
+                                ',
                                 SummitSelectedPresentation::CollectionSelected,
                                 SummitSelectedPresentationList::Group,
                                 SummitSelectedPresentationList::Session
@@ -224,7 +224,7 @@ final class DoctrineSpeakerRepository
                         ),
                         'false' => new DoctrineCaseFilterMapping(
                             'false',
-                            sprintf('(
+                            sprintf('
                                      NOT EXISTS (
                                         SELECT __p21.id FROM models\summit\Presentation __p21 
                                         JOIN __p21.speakers __spk21 WITH __spk21.id = e.id 
@@ -248,7 +248,7 @@ final class DoctrineSpeakerRepository
                                         __sp22.order is not null AND
                                         __sp22.order > __cat22.session_count
                                      )
-                                )',
+                                ',
                                 SummitSelectedPresentation::CollectionSelected,
                                 SummitSelectedPresentationList::Group,
                                 SummitSelectedPresentationList::Session
@@ -260,7 +260,7 @@ final class DoctrineSpeakerRepository
                 new DoctrineSwitchFilterMapping([
                         'true' => new DoctrineCaseFilterMapping(
                             'true',
-                            sprintf('(
+                            sprintf('
                                      EXISTS (
                                         SELECT __p31.id FROM models\summit\Presentation __p31 
                                         JOIN __p31.speakers __spk31 WITH __spk31.id = e.id 
@@ -290,7 +290,7 @@ final class DoctrineSpeakerRepository
                                             WHERE ___p32.id = __p32.id AND ___sp32.collection = \'%1$s\'
                                         )
                                      )
-                                )',
+                                ',
                                 SummitSelectedPresentation::CollectionSelected,
                                 SummitSelectedPresentationList::Group,
                                 SummitSelectedPresentationList::Session
@@ -298,7 +298,7 @@ final class DoctrineSpeakerRepository
                         ),
                         'false' => new DoctrineCaseFilterMapping(
                             'false',
-                            sprintf('(
+                            sprintf('
                                      NOT EXISTS (
                                         SELECT __p31.id FROM models\summit\Presentation __p31 
                                         JOIN __p31.speakers __spk31 WITH __spk31.id = e.id 
@@ -328,7 +328,7 @@ final class DoctrineSpeakerRepository
                                             WHERE ___p32.id = __p32.id AND ___sp32.collection = \'%1$s\'
                                         )
                                      )
-                                )',
+                                ',
                                 SummitSelectedPresentation::CollectionSelected,
                                 SummitSelectedPresentationList::Group,
                                 SummitSelectedPresentationList::Session
@@ -380,7 +380,7 @@ SQL,
                 ->leftJoin("e.registration_request", "rr")
                 ->leftJoin("e.member", "m")
                 // we need to have SIZE(e.presentations) > 0 OR SIZE(e.moderated_presentations) > 0 for a particular summit
-                ->where(" ( 
+                ->where(" 
                          EXISTS (
                             SELECT __p.id FROM models\summit\Presentation __p JOIN __p.speakers __spk WITH __spk.id = e.id 
                             WHERE __p.summit = :summit
@@ -388,7 +388,7 @@ SQL,
                          EXISTS (
                             SELECT __p1.id FROM models\summit\Presentation __p1 JOIN __p1.moderator __md WITH __md.id = e.id 
                             WHERE __p1.summit = :summit
-                         )) ")
+                          )")
                 ->setParameter("summit", $summit);
             },
             $paging_info,

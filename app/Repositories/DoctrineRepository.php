@@ -128,6 +128,61 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
      */
     protected abstract function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null);
 
+
+    /**
+     * @param callable $fnQuery
+     *  @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @param callable|null $fnDefaultFilter
+     * @return PagingResponse
+     */
+    protected function getParametrizedAllByPage
+    (
+        callable $fnQuery,
+        PagingInfo $paging_info,
+        Filter $filter = null,
+        Order $order = null,
+        callable $fnDefaultFilter = null
+    ){
+
+        $query  = call_user_func($fnQuery);
+
+        $query = $this->applyExtraJoins($query, $filter);
+
+        $query = $this->applyExtraFilters($query);
+
+        if(!is_null($filter)){
+            $filter->apply2Query($query, $this->getFilterMappings());
+        }
+
+        if(!is_null($order)){
+            $order->apply2Query($query, $this->getOrderMappings());
+        }
+        else if(!is_null($fnDefaultFilter)){
+            $query = call_user_func($fnDefaultFilter, $query);
+        }
+
+        $query = $query
+            ->setFirstResult($paging_info->getOffset())
+            ->setMaxResults($paging_info->getPerPage());
+
+        $paginator = new Paginator($query, $fetchJoinCollection = true);
+        $total     = $paginator->count();
+        $data      = [];
+
+        foreach($paginator as $entity)
+            array_push($data, $entity);
+
+        return new PagingResponse
+        (
+            $total,
+            $paging_info->getPerPage(),
+            $paging_info->getCurrentPage(),
+            $paging_info->getLastPage($total),
+            $data
+        );
+    }
     /**
      * @param PagingInfo $paging_info
      * @param Filter|null $filter

@@ -658,23 +658,20 @@ class PresentationSpeaker extends SilverstripeBaseModel
     }
 
     /**
-     * @param Summit $summit,
+     * @param Summit $summit
      * @param string $role
      * @param bool $exclude_privates_tracks
      * @param array $excluded_tracks
-     * @param bool $included_published
-     * @return array
+     * @return int|mixed|string
      */
     public function getAcceptedPresentations
     (
         Summit $summit,
         string $role = PresentationSpeaker::RoleSpeaker,
         bool   $exclude_privates_tracks = true,
-        array  $excluded_tracks = [],
-        bool $included_published = true
+        array  $excluded_tracks = []
     )
     {
-        $accepted_presentations = [];
         $private_tracks         = [];
 
         if($exclude_privates_tracks){
@@ -701,18 +698,48 @@ class PresentationSpeaker extends SilverstripeBaseModel
         }
 
         if($role == PresentationSpeaker::RoleSpeaker) {
-            $query = $this->createQuery("SELECT p from models\summit\Presentation p 
+            $query = $this->createQuery(sprintf("SELECT p from models\summit\Presentation p 
             JOIN p.summit s
             JOIN p.speakers sp 
+            JOIN p.category cat
+            LEFT JOIN p.selected_presentations ssp WITH ssp.collection = '%s'
+            LEFT JOIN ssp.list sspl WITH sspl.list_type = '%s' AND sspl.list_class = '%s'
             WHERE s.id = :summit_id 
-            AND sp.id = :speaker_id".$exclude_category_dql);
+            AND sp.id = :speaker_id
+            AND 
+            (
+                ( 
+                    ssp.order is not null AND
+                    ssp.order <= cat.session_count 
+                )
+                OR p.published = 1 
+            )
+            ".$exclude_category_dql,
+                SummitSelectedPresentation::CollectionSelected,
+                SummitSelectedPresentationList::Group,
+                SummitSelectedPresentationList::Session
+            ));
         }
         else{
-            $query = $this->createQuery("SELECT p from models\summit\Presentation p 
+            $query = $this->createQuery(
+                "SELECT p from models\summit\Presentation p 
             JOIN p.summit s
-            JOIN p.moderator m 
-            WHERE s.id = :summit_id 
-            AND m.id = :speaker_id".$exclude_category_dql);
+            JOIN p.moderator m
+            JOIN p.category cat
+            LEFT JOIN p.selected_presentations ssp WITH ssp.collection = '%s'
+            LEFT JOIN ssp.list sspl WITH sspl.list_type = '%s' AND sspl.list_class = '%s'
+            WHERE 
+            s.id = :summit_id 
+            AND m.id = :speaker_id
+            AND 
+            (
+                ( 
+                    ssp.order is not null AND
+                    ssp.order <= cat.session_count 
+                )
+                OR p.published = 1 
+            )
+            ".$exclude_category_dql);
         }
 
         $query = $query
@@ -722,15 +749,8 @@ class PresentationSpeaker extends SilverstripeBaseModel
         if(count($excluded_tracks) > 0){
             $query = $query->setParameter('exclude_tracks', $excluded_tracks);
         }
-        $presentations = $query->getResult();
 
-        foreach ($presentations as $p) {
-            if ($p->getSelectionStatus() == Presentation::SelectionStatus_Accepted || ($included_published && $p->isPublished())) {
-                $accepted_presentations[] = $p;
-            }
-        }
-
-        return $accepted_presentations;
+        return $query->getResult();
     }
 
     /**
@@ -746,12 +766,11 @@ class PresentationSpeaker extends SilverstripeBaseModel
         Summit $summit,
         string $role = PresentationSpeaker::RoleSpeaker,
         bool $include_sub_roles = false,
-        array $excluded_tracks = [],
-        bool $included_published = true
+        array $excluded_tracks = []
     )
     {
         $ids = [];
-        $acceptedPresentations = $this->getAcceptedPresentations($summit, $role, $include_sub_roles, $excluded_tracks, $included_published);
+        $acceptedPresentations = $this->getAcceptedPresentations($summit, $role, $include_sub_roles, $excluded_tracks);
         foreach ($acceptedPresentations as $p) {
             $ids[] = intval($p->getId());
         }

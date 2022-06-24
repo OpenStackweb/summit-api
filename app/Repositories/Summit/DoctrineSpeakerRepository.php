@@ -162,7 +162,7 @@ final class DoctrineSpeakerRepository
                                         __sp12.order <= __cat12.session_count
                                      )
                                      AND
-                                     EXISTS (
+                                     NOT EXISTS (
                                         SELECT __p13.id FROM models\summit\Presentation __p13 
                                         JOIN __p13.moderator __md13 WITH __md13.id = e.id 
                                         WHERE __p13.summit = :summit AND __p13.published = 1

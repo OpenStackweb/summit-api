@@ -721,7 +721,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             ));
         }
         else{
-            $query = $this->createQuery(
+            $query = $this->createQuery(sprintf(
                 "SELECT p from models\summit\Presentation p 
             JOIN p.summit s
             JOIN p.moderator m
@@ -739,7 +739,11 @@ class PresentationSpeaker extends SilverstripeBaseModel
                 )
                 OR p.published = 1 
             )
-            ".$exclude_category_dql);
+            ".$exclude_category_dql,
+                SummitSelectedPresentation::CollectionSelected,
+                SummitSelectedPresentationList::Group,
+                SummitSelectedPresentationList::Session
+            ));
         }
 
         $query = $query

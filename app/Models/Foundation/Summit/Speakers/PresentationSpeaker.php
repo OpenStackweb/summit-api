@@ -703,7 +703,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             JOIN p.speakers sp 
             JOIN p.category cat
             LEFT JOIN p.selected_presentations ssp WITH ssp.collection = '%s'
-            LEFT JOIN ssp.list sspl WITH sspl.list_type = '%s' AND sspl.list_class = '%s'
+            INNER JOIN ssp.list sspl WITH sspl.list_type = '%s' AND sspl.list_class = '%s'
             WHERE s.id = :summit_id 
             AND sp.id = :speaker_id
             AND 
@@ -727,7 +727,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             JOIN p.moderator m
             JOIN p.category cat
             LEFT JOIN p.selected_presentations ssp WITH ssp.collection = '%s'
-            LEFT JOIN ssp.list sspl WITH sspl.list_type = '%s' AND sspl.list_class = '%s'
+            INNER JOIN ssp.list sspl WITH sspl.list_type = '%s' AND sspl.list_class = '%s'
             WHERE 
             s.id = :summit_id 
             AND m.id = :speaker_id

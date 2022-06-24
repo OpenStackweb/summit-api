@@ -265,30 +265,30 @@ final class DoctrineSpeakerRepository
                                         SELECT __p31.id FROM models\summit\Presentation __p31 
                                         JOIN __p31.speakers __spk31 WITH __spk31.id = e.id 
                                         WHERE 
-                                        __p31.summit = :summit AND 
-                                        (
-                                            SELECT COUNT(__ssp31.id) 
-                                            FROM models\summit\SummitSelectedPresentation ___sp31 WITH ___sp31.collection = \'%1$s\'
+                                        __p31.summit = :summit 
+                                        AND __p31.published = 0
+                                        AND NOT EXISTS (
+                                            SELECT ___sp31.id 
+                                            FROM models\summit\SummitSelectedPresentation ___sp31
                                             JOIN ___sp31.presentation ___p31
                                             JOIN ___sp31.list ___spl31 WITH ___spl31.list_type = \'%2$s\' AND ___spl31.list_class = \'%3$s\'
-                                            WHERE ___p31.id = __p31.id 
-                                        ) = 0 AND
-                                        __p31.published = 0
+                                            WHERE ___p31.id = __p31.id AND ___sp31.collection = \'%1$s\'
+                                        )
                                      )
                                      OR
                                      EXISTS (
                                         SELECT __p32.id FROM models\summit\Presentation __p32 
                                         JOIN __p32.moderator __md32 WITH __md32.id = e.id 
                                         WHERE 
-                                        __p32.summit = :summit AND 
-                                        (
-                                            SELECT COUNT(__ssp32.id) 
-                                            FROM models\summit\SummitSelectedPresentation ___sp32 WITH ___sp32.collection = \'%1$s\'
+                                        __p32.summit = :summit 
+                                        AND __p32.published = 0
+                                        AND NOT EXISTS  (
+                                            SELECT ___sp32.id 
+                                            FROM models\summit\SummitSelectedPresentation ___sp32 
                                             JOIN ___sp32.presentation ___p32
                                             JOIN ___sp32.list ___spl32 WITH ___spl32.list_type = \'%2$s\' AND ___spl32.list_class = \'%3$s\'
-                                            WHERE ___p32.id = __p32.id 
-                                        ) = 0 AND
-                                        __p32.published = 0
+                                            WHERE ___p32.id = __p32.id AND ___sp32.collection = \'%1$s\'
+                                        )
                                      )
                                 )',
                                 SummitSelectedPresentation::CollectionSelected,
@@ -303,30 +303,30 @@ final class DoctrineSpeakerRepository
                                         SELECT __p31.id FROM models\summit\Presentation __p31 
                                         JOIN __p31.speakers __spk31 WITH __spk31.id = e.id 
                                         WHERE 
-                                        __p31.summit = :summit AND 
-                                        (
-                                            SELECT COUNT(__ssp31.id) 
-                                            FROM models\summit\SummitSelectedPresentation ___sp31 WITH ___sp31.collection = \'%1$s\'
+                                        __p31.summit = :summit  
+                                        AND __p31.published = 0
+                                        AND NOT EXISTS (
+                                            SELECT ___sp31.id 
+                                            FROM models\summit\SummitSelectedPresentation ___sp31
                                             JOIN ___sp31.presentation ___p31
                                             JOIN ___sp31.list ___spl31 WITH ___spl31.list_type = \'%2$s\' AND ___spl31.list_class = \'%3$s\'
-                                            WHERE ___p31.id = __p31.id 
-                                        ) = 0 AND
-                                        __p31.published = 0
+                                            WHERE ___p31.id = __p31.id AND ___sp31.collection = \'%1$s\'
+                                        )
                                      )
                                      AND
                                      NOT EXISTS (
                                         SELECT __p32.id FROM models\summit\Presentation __p32 
                                         JOIN __p32.moderator __md32 WITH __md32.id = e.id 
                                         WHERE 
-                                        __p32.summit = :summit AND 
-                                        (
-                                            SELECT COUNT(__ssp32.id) 
-                                            FROM models\summit\SummitSelectedPresentation ___sp32 WITH ___sp32.collection = \'%1$s\'
+                                        __p32.summit = :summit 
+                                        AND __p32.published = 0
+                                        AND NOT EXISTS  (
+                                            SELECT ___sp32.id 
+                                            FROM models\summit\SummitSelectedPresentation ___sp32 
                                             JOIN ___sp32.presentation ___p32
                                             JOIN ___sp32.list ___spl32 WITH ___spl32.list_type = \'%2$s\' AND ___spl32.list_class = \'%3$s\'
-                                            WHERE ___p32.id = __p32.id 
-                                        ) = 0 AND
-                                        __p32.published = 0
+                                            WHERE ___p32.id = __p32.id AND ___sp32.collection = \'%1$s\'
+                                        )
                                      )
                                 )',
                                 SummitSelectedPresentation::CollectionSelected,

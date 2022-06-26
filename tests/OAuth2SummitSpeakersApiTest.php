@@ -390,6 +390,7 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
             'order' => '+id',
             'filter' => [
                     'has_alternate_presentations==false',
+                    'presentations_selection_plan_id==1',
                 ]
            /* 'filter' => [
                 'has_accepted_presentations==true',

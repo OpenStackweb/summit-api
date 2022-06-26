@@ -158,7 +158,9 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'has_rejected_presentations'      => ['=='],
                     'presentations_track_id'          => ['=='],
                     'presentations_selection_plan_id' => ['=='],
-                    'presentations_type_id'           => ['==']
+                    'presentations_type_id'           => ['=='],
+                    'presentations_title'             => ['=@', '@@', '=='],
+                    'presentations_abstract'          => ['=@', '@@', '=='],
                 ];
             },
             function () {
@@ -174,6 +176,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'presentations_track_id'          => 'sometimes|integer',
                     'presentations_selection_plan_id' => 'sometimes|integer',
                     'presentations_type_id'           => 'sometimes|integer',
+                    'presentations_title'             => 'sometimes|string',
+                    'presentations_abstract'          => 'sometimes|string',
                 ];
             },
             function () {
@@ -237,7 +241,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'has_rejected_presentations'      => ['=='],
                     'presentations_track_id'          => ['=='],
                     'presentations_selection_plan_id' => ['=='],
-                    'presentations_type_id'           => ['==']
+                    'presentations_type_id'           => ['=='],
+                    'presentations_title'             => ['=@', '@@', '=='],
+                    'presentations_abstract'          => ['=@', '@@', '=='],
+
                 ];
             },
             function(){
@@ -253,6 +260,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'presentations_track_id'          => 'sometimes|integer',
                     'presentations_selection_plan_id' => 'sometimes|integer',
                     'presentations_type_id'           => 'sometimes|integer',
+                    'presentations_title'             => 'sometimes|string',
+                    'presentations_abstract'          => 'sometimes|string',
                 ];
             },
             function()
@@ -1699,6 +1708,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'presentations_track_id' => ['=='],
                     'presentations_selection_plan_id' =>  ['=='],
                     'presentations_type_id'           =>  ['=='],
+                    'presentations_title'             => ['=@', '@@', '=='],
+                    'presentations_abstract'          => ['=@', '@@', '=='],
                 ]);
             }
 
@@ -1717,6 +1728,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'presentations_track_id'          => 'sometimes|integer',
                 'presentations_selection_plan_id' => 'sometimes|integer',
                 'presentations_type_id'           => 'sometimes|integer',
+                'presentations_title'             => 'sometimes|string',
+                'presentations_abstract'          => 'sometimes|string',
             ]);
 
             $this->service->triggerSend($summit, $payload, $filter);

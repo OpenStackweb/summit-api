@@ -22,6 +22,7 @@ use models\summit\Summit;
 use models\summit\SummitSelectedPresentation;
 use models\summit\SummitSelectedPresentationList;
 use utils\DoctrineCaseFilterMapping;
+use utils\DoctrineFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
 use utils\Order;
@@ -60,41 +61,83 @@ final class DoctrineSpeakerRepository
                 "rr.email :operator :value"
             ],
             'id' => 'e.id',
-            'presentations_track_id' => [
+            'presentations_track_id' => new DoctrineFilterMapping(
                 'EXISTS ( 
                               SELECT __p41.id FROM models\summit\Presentation __p41 
                               JOIN __p41.speakers __spk41 WITH __spk41.id = e.id 
                               JOIN __p41.category __tr41 
                               WHERE 
                               __p41.summit = :summit AND
-                              __tr41.id :operator :value )',
-                'EXISTS ( 
+                              __tr41.id :operator :value )'.
+                'OR EXISTS ( 
                               SELECT __p42.id FROM models\summit\Presentation __p42 
                               JOIN __p42.moderator __md42 WITH __md42.id = e.id 
                               JOIN __p42.category __tr42 
                               WHERE 
                               __p42.summit = :summit AND
-                              __tr42.id :operator :value )',
-            ],
-            'presentations_selection_plan_id' => [
+                              __tr42.id :operator :value )'
+            ),
+            'presentations_selection_plan_id' => new DoctrineFilterMapping(
                 'EXISTS ( 
                               SELECT __p51.id FROM models\summit\Presentation __p51 
                               JOIN __p51.speakers __spk51 WITH __spk51.id = e.id 
                               JOIN __p51.selection_plan __sel_plan51 
                               WHERE 
                               __p51.summit = :summit AND
-                              __sel_plan51.id :operator :value )',
-                'EXISTS ( 
+                              __sel_plan51.id :operator :value )'.
+                ' OR EXISTS ( 
                               SELECT __p52.id FROM models\summit\Presentation __p52 
                               JOIN __p52.moderator __md52 WITH __md52.id = e.id 
                               JOIN __p52.selection_plan __sel_plan52
                               WHERE 
                               __p52.summit = :summit AND
                               __sel_plan52.id :operator :value )',
-            ],
-            'presentations_type_id' => [
+            ),
+            'presentations_type_id' =>  new DoctrineFilterMapping(
+                'EXISTS ( 
+                              SELECT __p61.id FROM models\summit\Presentation __p61 
+                              JOIN __p61.speakers __spk61 WITH __spk61.id = e.id 
+                              JOIN __p61.type __type61 
+                              WHERE 
+                              __p61.summit = :summit AND
+                              __type61.id :operator :value )'.
+                ' OR EXISTS ( 
+                              SELECT __p62.id FROM models\summit\Presentation __p62
+                              JOIN __p62.moderator __md62 WITH __md62.id = e.id 
+                              JOIN __p62.type __type62
+                              WHERE 
+                              __p62.summit = :summit AND
+                              __type62.id :operator :value )',
+            ),
+            'presentations_title' =>  new DoctrineFilterMapping(
+                'EXISTS ( 
+                              SELECT __p71.id FROM models\summit\Presentation __p71
+                              JOIN __p71.speakers __spk71 WITH __spk71.id = e.id 
+                              WHERE 
+                              __p71.summit = :summit AND
+                              __p71.title :operator :value )'.
+                ' OR EXISTS ( 
+                              SELECT __p72.id FROM models\summit\Presentation __p72
+                              JOIN __p72.moderator __md72 WITH __md72.id = e.id 
+                              WHERE 
+                              __p72.summit = :summit AND
+                              __p72.title :operator :value )',
 
-            ],
+            ),
+            'presentations_abstract' =>  new DoctrineFilterMapping(
+                'EXISTS ( 
+                              SELECT __p81.id FROM models\summit\Presentation __p81
+                              JOIN __p81.speakers __spk81 WITH __spk81.id = e.id 
+                              WHERE 
+                              __p81.summit = :summit AND
+                              __p81.abstract :operator :value )'.
+                ' OR EXISTS ( 
+                              SELECT __p82.id FROM models\summit\Presentation __p82
+                              JOIN __p82.moderator __md82 WITH __md82.id = e.id 
+                              WHERE 
+                              __p82.summit = :summit AND
+                              __p82.abstract :operator :value )',
+            ),
             'has_accepted_presentations' =>
                 new DoctrineSwitchFilterMapping([
                         'true' => new DoctrineCaseFilterMapping(

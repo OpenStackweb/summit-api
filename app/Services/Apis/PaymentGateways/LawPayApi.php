@@ -12,8 +12,6 @@
  * limitations under the License.
  **/
 
-//require_once __DIR__. '/../../../../vendor/affinipay/chargeio-php/lib/ChargeIO.php';
-
 use App\Services\Apis\CartAlreadyPaidException;
 use App\Services\Apis\IPaymentGatewayAPI;
 use Illuminate\Http\Request as LaravelRequest;
@@ -23,6 +21,7 @@ use ChargeIO_Credentials;
 use ChargeIO_Charge;
 use ChargeIO_PaymentMethodReference;
 use ChargeIO_Merchant;
+use ChargeIO_InvalidRequestError;
 use Exception;
 use models\exceptions\ValidationException;
 use models\summit\IPaymentConstants;
@@ -132,6 +131,7 @@ final class LawPayApi implements IPaymentGatewayAPI
         if (empty($this->public_key))
             throw new \InvalidArgumentException();
 
+        Log::debug(sprintf("LawPayApi::generatePayment payload %s ",json_encode($payload)));
         try {
             ChargeIO::setCredentials(new ChargeIO_Credentials(
                 $this->public_key,
@@ -145,10 +145,14 @@ final class LawPayApi implements IPaymentGatewayAPI
             if (empty($token_id))
                 throw new \InvalidArgumentException();
 
-            $params = [];
+            $params = [
+            ];
 
-            if (!empty($this->account_id))
+            if (!empty($this->account_id)) {
+                Log::debug(sprintf("LawPayApi::generatePayment setting merchant account id %s.",$this->account_id));
                 $params['account_id'] = $this->account_id;
+            }
+            //ChargeIO::setDebug(true);
 
             $charge = ChargeIO_Charge::create
             (
@@ -161,6 +165,11 @@ final class LawPayApi implements IPaymentGatewayAPI
             return [
                 'cart_id' => $charge->id,
             ];
+        }
+        catch (ChargeIO_InvalidRequestError $ex){
+            Log::warning($ex->getJson());
+            Log::error($ex);
+            throw $ex;
         }
         catch (Exception $ex){
             Log::error($ex);
@@ -261,6 +270,18 @@ final class LawPayApi implements IPaymentGatewayAPI
         if (empty($this->public_key))
             throw new \InvalidArgumentException();
 
+        Log::debug
+        (
+            sprintf
+            (
+                "LawPayApi::refundPayment cart_id %s amount %s currency %s reason %s.",
+                $cart_id,
+                $amount,
+                $currency,
+                $reason
+            )
+        );
+
         try {
             ChargeIO::setCredentials(new ChargeIO_Credentials(
                 $this->public_key,
@@ -284,6 +305,11 @@ final class LawPayApi implements IPaymentGatewayAPI
             Log::debug(sprintf("LawPayApi::refundPayment refund requested for cart_id %s amount %s response %s", $cart_id, $amount, $res));
             return $res;
         }
+        catch (ChargeIO_InvalidRequestError $ex){
+            Log::warning($ex->getJson());
+            Log::error($ex);
+            throw $ex;
+        }
         catch(Exception $ex){
             Log::error($ex);
             throw $ex;
@@ -304,6 +330,8 @@ final class LawPayApi implements IPaymentGatewayAPI
             throw new \InvalidArgumentException();
 
         try {
+            Log::debug(sprintf("LawPayApi::abandonCart %s", $cart_id));
+
             ChargeIO::setCredentials(new ChargeIO_Credentials(
                 $this->public_key,
                 $this->secret_key
@@ -317,6 +345,11 @@ final class LawPayApi implements IPaymentGatewayAPI
                 throw new CartAlreadyPaidException(sprintf("cart id %s has status %s", $cart_id, $charge->status));
 
             $charge->void();
+        }
+        catch (ChargeIO_InvalidRequestError $ex){
+            Log::warning($ex->getJson());
+            Log::error($ex);
+            throw $ex;
         }
         catch(Exception $ex){
             Log::warning(sprintf("LawPayApi::abandonCart cart_id %s code %s message %s", $cart_id, $ex->getCode(), $ex->getMessage()));
@@ -348,6 +381,8 @@ final class LawPayApi implements IPaymentGatewayAPI
             throw new \InvalidArgumentException();
 
         try {
+            Log::debug(sprintf("LawPayApi::getCartStatus %s", $cart_id));
+
             ChargeIO::setCredentials(new ChargeIO_Credentials(
                 $this->public_key,
                 $this->secret_key
@@ -357,6 +392,11 @@ final class LawPayApi implements IPaymentGatewayAPI
             if (is_null($charge))
                 throw new \InvalidArgumentException();
             return $charge->status;
+        }
+        catch (ChargeIO_InvalidRequestError $ex){
+            Log::warning($ex->getJson());
+            Log::error($ex);
+            throw $ex;
         }
         catch(Exception $ex){
             Log::warning(sprintf("LawPayApi::getCartStatus cart_id %s code %s message %s", $cart_id, $ex->getCode(), $ex->getMessage()));
@@ -386,6 +426,8 @@ final class LawPayApi implements IPaymentGatewayAPI
             throw new \InvalidArgumentException();
 
         try {
+            Log::debug(sprintf("LawPayApi::createWebHook %s", $webhook_endpoint_url));
+
             ChargeIO::setCredentials(new ChargeIO_Credentials(
                 $this->public_key,
                 $this->secret_key
@@ -408,6 +450,11 @@ final class LawPayApi implements IPaymentGatewayAPI
 
             return [];
         }
+        catch (ChargeIO_InvalidRequestError $ex){
+            Log::warning($ex->getJson());
+            Log::error($ex);
+            throw $ex;
+        }
         catch(Exception $ex){
             Log::warning(sprintf("LawPayApi::createWebHook code %s message %s", $ex->getCode(), $ex->getMessage()));
             return [];
@@ -421,17 +468,26 @@ final class LawPayApi implements IPaymentGatewayAPI
         if (empty($this->public_key))
             throw new \InvalidArgumentException();
 
-        ChargeIO::setCredentials(new ChargeIO_Credentials(
-            $this->public_key,
-            $this->secret_key
-        ));
         try {
+
+            Log::debug("LawPayApi::clearWebHooks");
+
+            ChargeIO::setCredentials(new ChargeIO_Credentials(
+                $this->public_key,
+                $this->secret_key
+            ));
+
             $current_merchant = ChargeIO_Merchant::findCurrent();
             if (is_null($current_merchant))
                 throw new \InvalidArgumentException();
 
             $attributes = ['test_events_urls' => '', 'live_events_urls' => ''];
             $current_merchant->update($attributes);
+        }
+        catch (ChargeIO_InvalidRequestError $ex){
+            Log::warning($ex->getJson());
+            Log::error($ex);
+            throw $ex;
         }
         catch(Exception $ex){
             Log::warning(sprintf("LawPayApi::createWebHook code %s message %s", $ex->getCode(), $ex->getMessage()));

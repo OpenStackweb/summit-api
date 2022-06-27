@@ -20,6 +20,7 @@ use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeaker
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessEmailFactory;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedEmail;
 use App\Services\Utils\Facades\EmailExcerpt;
+use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
 use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
@@ -50,9 +51,14 @@ class SpeakerActionsEmailStrategy
         $this->flow_event = $flow_event;
     }
 
+    /**
+     * @param PresentationSpeaker $speaker
+     * @param SpeakerSummitRegistrationPromoCode|null $promo_code
+     * @param PresentationSpeakerSummitAssistanceConfirmationRequest|null $assistance
+     */
     public function process(PresentationSpeaker $speaker,
-                            PresentationSpeakerSummitAssistanceConfirmationRequest $assistance,
-                            SpeakerSummitRegistrationPromoCode $promo_code)
+                            ?SpeakerSummitRegistrationPromoCode $promo_code = null,
+                            ?PresentationSpeakerSummitAssistanceConfirmationRequest $assistance = null):void
     {
         try {
             $type = null;
@@ -89,6 +95,23 @@ class SpeakerActionsEmailStrategy
                     $this->summit->getExcludedCategoriesForRejectedPresentations()
                 );
 
+            $has_promo_code = !is_null($promo_code);
+            $has_assistance = !is_null($assistance);
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SpeakerActionsEmailStrategy::send speaker %s accepted %b alternates %b rejected %b has_promo_code %b has_summit_assistance %b.",
+                    $speaker->getEmail(),
+                    $has_accepted_presentations,
+                    $has_alternate_presentations,
+                    $has_rejected_presentations,
+                    $has_promo_code,
+                    $has_assistance
+                )
+            );
+
             switch ($this->flow_event) {
                 case PresentationSpeakerSelectionProcessAcceptedAlternateEmail::EVENT_SLUG:
                     if ($has_accepted_presentations && $has_alternate_presentations && !$has_rejected_presentations) {
@@ -123,11 +146,12 @@ class SpeakerActionsEmailStrategy
                 default:
                     EmailExcerpt::add(
                         [
+                            'type' => IEmailExcerptService::SpeakerEmailType,
                             'speaker_email' => $speaker->getEmail(),
                             'email_type'    => SpeakerAnnouncementSummitEmail::TypeNone
                         ]
                     );
-                    return null;
+                    return;
             }
 
             if (!is_null($type)) {
@@ -139,7 +163,23 @@ class SpeakerActionsEmailStrategy
                     $promo_code,
                     $assistance
                 );
+                return;
             }
+
+            EmailExcerpt::add(
+                [
+                    'type' => IEmailExcerptService::InfoType,
+                    'message' => sprintf
+                    (
+                        "exclude speaker %s accepted %b alternate %b rejected %b original email %s",
+                        $speaker->getEmail(),
+                        $has_accepted_presentations,
+                        $has_alternate_presentations,
+                        $has_rejected_presentations,
+                        $this->flow_event
+                    )
+                ]
+            );
         } catch (\Exception $ex) {
             Log::error($ex);
         }

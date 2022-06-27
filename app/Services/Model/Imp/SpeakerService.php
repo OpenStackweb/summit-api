@@ -35,6 +35,7 @@ use App\Services\Model\IFolderService;
 use App\Services\Model\Strategies\EmailActions\SpeakerActionsEmailStrategy;
 use App\Services\Utils\Facades\EmailExcerpt;
 use App\Services\Utils\Facades\EmailTest;
+use App\Services\utils\IEmailExcerptService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
@@ -47,6 +48,7 @@ use models\summit\factories\SpeakerSelectionAnnouncementEmailTypeFactory;
 use models\summit\ISpeakerRegistrationRequestRepository;
 use models\summit\ISpeakerRepository;
 use models\summit\ISpeakerSummitRegistrationPromoCodeRepository;
+use models\summit\ISummitRepository;
 use models\summit\PresentationSpeaker;
 use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
 use models\summit\SpeakerExpertise;
@@ -125,6 +127,11 @@ final class SpeakerService
     private $speaker_edit_permisssion_repository;
 
     /**
+     * @var ISummitRepository
+     */
+    private $summit_repository;
+
+    /**
      * SpeakerService constructor.
      * @param ISpeakerRepository $speaker_repository
      * @param IMemberRepository $member_repository
@@ -137,22 +144,24 @@ final class SpeakerService
      * @param ISpeakerActiveInvolvementRepository $speaker_involvement_repository
      * @param IFileUploader $file_uploader
      * @param ISpeakerEditPermissionRequestRepository $speaker_edit_permisssion_repository
+     * @param ISummitRepository $summit_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
     (
-        ISpeakerRepository $speaker_repository,
-        IMemberRepository $member_repository,
-        ISpeakerRegistrationRequestRepository $speaker_registration_request_repository,
-        ISpeakerSummitRegistrationPromoCodeRepository $registration_code_repository,
-        IFolderService $folder_service,
+        ISpeakerRepository                                                $speaker_repository,
+        IMemberRepository                                                 $member_repository,
+        ISpeakerRegistrationRequestRepository                             $speaker_registration_request_repository,
+        ISpeakerSummitRegistrationPromoCodeRepository                     $registration_code_repository,
+        IFolderService                                                    $folder_service,
         IPresentationSpeakerSummitAssistanceConfirmationRequestRepository $speakers_assistance_repository,
-        ILanguageRepository $language_repository,
-        ISpeakerOrganizationalRoleRepository $speaker_organizational_role_repository,
-        ISpeakerActiveInvolvementRepository $speaker_involvement_repository,
-        IFileUploader $file_uploader,
-        ISpeakerEditPermissionRequestRepository $speaker_edit_permisssion_repository,
-        ITransactionService $tx_service
+        ILanguageRepository                                               $language_repository,
+        ISpeakerOrganizationalRoleRepository                              $speaker_organizational_role_repository,
+        ISpeakerActiveInvolvementRepository                               $speaker_involvement_repository,
+        IFileUploader                                                     $file_uploader,
+        ISpeakerEditPermissionRequestRepository                           $speaker_edit_permisssion_repository,
+        ISummitRepository                                                 $summit_repository,
+        ITransactionService                                               $tx_service
     )
     {
         parent::__construct($tx_service);
@@ -166,6 +175,7 @@ final class SpeakerService
         $this->speaker_organizational_role_repository = $speaker_organizational_role_repository;
         $this->speaker_involvement_repository = $speaker_involvement_repository;
         $this->file_uploader = $file_uploader;
+        $this->summit_repository = $summit_repository;
         $this->speaker_edit_permisssion_repository = $speaker_edit_permisssion_repository;
     }
 
@@ -183,7 +193,7 @@ final class SpeakerService
 
 
             $member_id = intval($data['member_id'] ?? 0);
-            $email = trim($data['email'] ??  '');
+            $email = trim($data['email'] ?? '');
 
             Log::debug(sprintf("SpeakerService::addSpeaker: member id %s email %s", $member_id, $email));
 
@@ -198,10 +208,10 @@ final class SpeakerService
             // check if we have a previous registration request and user it
 
             $formerRegistrationRequest = null;
-            if(!empty($email)) {
+            if (!empty($email)) {
                 $formerRegistrationRequest = $this->speaker_registration_request_repository->getByEmail($email);
-                if(!is_null($formerRegistrationRequest)){
-                    if($formerRegistrationRequest->isConfirmed()){
+                if (!is_null($formerRegistrationRequest)) {
+                    if ($formerRegistrationRequest->isConfirmed()) {
                         throw new ValidationException(sprintf("Speaker already exists and its confirmed."));
                     }
                     $speaker = $formerRegistrationRequest->getSpeaker();
@@ -251,7 +261,7 @@ final class SpeakerService
                 if (is_null($member) && is_null($formerRegistrationRequest)) {
                     Log::debug(sprintf("SpeakerService::addSpeaker: member %s not found", $email));
                     $request = $this->registerSpeaker($speaker, $email);
-                    if(!is_null($creator))
+                    if (!is_null($creator))
                         $request->setProposer($creator);
                 }
             }
@@ -264,11 +274,11 @@ final class SpeakerService
             //if(is_null($formerRegistrationRequest) && $send_email)
             //    SpeakerCreationEmail::dispatch($speaker);
 
-            if(!is_null($formerRegistrationRequest)){
+            if (!is_null($formerRegistrationRequest)) {
                 $formerRegistrationRequest->confirm();
             }
 
-            if(!is_null($creator)){
+            if (!is_null($creator)) {
                 // create edit permission for creator
                 $request = SpeakerEditPermissionRequestFactory::build($speaker, $creator);
                 $request->approve();
@@ -281,8 +291,8 @@ final class SpeakerService
     /**
      * @param Summit $summit
      * @param array $data
-     * @throws ValidationException
      * @return PresentationSpeaker
+     * @throws ValidationException
      */
     public function addSpeakerBySummit(Summit $summit, array $data)
     {
@@ -390,7 +400,7 @@ final class SpeakerService
 
         do {
             $registration_request->generateConfirmationToken();
-        } while($this->speaker_registration_request_repository->existByHash($registration_request->getConfirmationHash()));
+        } while ($this->speaker_registration_request_repository->existByHash($registration_request->getConfirmationHash()));
 
         $speaker->setRegistrationRequest($registration_request);
         return $registration_request;
@@ -542,11 +552,11 @@ final class SpeakerService
         if (isset($data['travel_preferences']) && is_array($data['travel_preferences'])) {
             $speaker->clearTravelPreferences();
             foreach ($data['travel_preferences'] as $country) {
-                if (!isset(CountryCodes::$iso_3166_countryCodes[$country])){
+                if (!isset(CountryCodes::$iso_3166_countryCodes[$country])) {
                     throw new ValidationException(
-                    trans("validation_errors.SpeakerService.updateSpeakerRelations.InvalidCountryCode", [
-                        'country' => $country
-                    ]));
+                        trans("validation_errors.SpeakerService.updateSpeakerRelations.InvalidCountryCode", [
+                            'country' => $country
+                        ]));
                 }
                 $speaker->addTravelPreference(new SpeakerTravelPreference($country));
             }
@@ -566,7 +576,7 @@ final class SpeakerService
             $speaker->clearOrganizationalRoles();
             foreach ($data['organizational_roles'] as $org_role_id) {
                 $role = $this->speaker_organizational_role_repository->getById(intval($org_role_id));
-                if (is_null($role)){
+                if (is_null($role)) {
                     throw new ValidationException(
                         trans("validation_errors.SpeakerService.updateSpeakerRelations.InvalidOrganizationRole", [
                             'role' => $role
@@ -593,7 +603,7 @@ final class SpeakerService
             $speaker->clearActiveInvolvements();
             foreach ($data['active_involvements'] as $involvement_id) {
                 $involvement = $this->speaker_involvement_repository->getById(intval($involvement_id));
-                if (is_null($involvement)){
+                if (is_null($involvement)) {
                     throw new ValidationException(
                         trans("validation_errors.SpeakerService.updateSpeakerRelations.InvalidActiveInvolvement", [
                             'involvement_id' => $involvement_id
@@ -609,10 +619,11 @@ final class SpeakerService
     /**
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
-     * @return SpeakerSummitRegistrationPromoCode
+     * @return SpeakerSummitRegistrationPromoCode|null
      * @throws ValidationException
      */
-    private function getPromoCode(Summit $summit, PresentationSpeaker $speaker) : SpeakerSummitRegistrationPromoCode {
+    private function getPromoCode(Summit $summit, PresentationSpeaker $speaker): ?SpeakerSummitRegistrationPromoCode
+    {
         $promo_code = $speaker->getPromoCodeFor($summit);
 
         if (is_null($promo_code)) {
@@ -735,7 +746,7 @@ final class SpeakerService
                 if (!isset($data['pic'])) throw new ValidationException("pic field is required");
                 $speaker_id = intval($data['pic']);
                 $photo = $speaker_id == $speaker_from->getId() ? $speaker_from->getPhoto() : $speaker_to->getPhoto();
-                if(!is_null($photo))
+                if (!is_null($photo))
                     $speaker_to->setPhoto($photo);
             } catch (\Exception $ex) {
 
@@ -745,7 +756,7 @@ final class SpeakerService
                 if (!isset($data['registration_request'])) throw new ValidationException("registration_request field is required");
                 $speaker_id = intval($data['registration_request']);
                 $registration_request = $speaker_id == $speaker_from->getId() ? $speaker_from->getRegistrationRequest() : $speaker_to->getRegistrationRequest();
-                if(!is_null($registration_request))
+                if (!is_null($registration_request))
                     $speaker_to->setRegistrationRequest($registration_request);
             } catch (\Exception $ex) {
 
@@ -755,7 +766,7 @@ final class SpeakerService
                 if (!isset($data['member'])) throw new ValidationException("member field is required");
                 $speaker_id = intval($data['member']);
                 $member = $speaker_id == $speaker_from->getId() ? $speaker_from->getMember() : $speaker_to->getMember();
-                if(!is_null($member))
+                if (!is_null($member))
                     $speaker_to->setMember($member);
             } catch (\Exception $ex) {
 
@@ -827,9 +838,9 @@ final class SpeakerService
 
     /**
      * @param int $speaker_id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return void
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function deleteSpeaker($speaker_id)
     {
@@ -845,9 +856,9 @@ final class SpeakerService
     /**
      * @param Summit $summit
      * @param array $data
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return PresentationSpeakerSummitAssistanceConfirmationRequest
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function addSpeakerAssistance(Summit $summit, array $data)
     {
@@ -893,9 +904,9 @@ final class SpeakerService
      * @param Summit $summit
      * @param int $assistance_id
      * @param array $data
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return PresentationSpeakerSummitAssistanceConfirmationRequest
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function updateSpeakerAssistance(Summit $summit, $assistance_id, array $data)
     {
@@ -930,9 +941,9 @@ final class SpeakerService
     /**
      * @param Summit $summit
      * @param int $assistance_id
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return void
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function deleteSpeakerAssistance(Summit $summit, $assistance_id)
     {
@@ -1031,7 +1042,7 @@ final class SpeakerService
                     )
                 );
 
-            $assistance = $this->generateSpeakerAssistance($summit, $speaker);
+            $assistance = $this->generateSpeakerAssistance($summit->getId(), $speaker->getId());
             PresentationSpeakerSelectionProcessEmailFactory::send
             (
                 $summit,
@@ -1048,26 +1059,103 @@ final class SpeakerService
     /**
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
-     * @return PresentationSpeakerSummitAssistanceConfirmationRequest
+     * @return PresentationSpeakerSummitAssistanceConfirmationRequest|null
      * @throws \Exception
      */
-    public function generateSpeakerAssistance(Summit $summit, PresentationSpeaker $speaker):PresentationSpeakerSummitAssistanceConfirmationRequest{
-        return $this->tx_service->transaction(function () use ($summit, $speaker) {
-            $assistance = $this->speakers_assistance_repository->getBySpeaker($speaker, $summit);
+    public function generateSpeakerAssistance(int $summit_id, int $speaker_id): ?PresentationSpeakerSummitAssistanceConfirmationRequest
+    {
+        return $this->tx_service->transaction(function () use ($summit_id, $speaker_id) {
 
-            if (is_null($assistance)){
-                $assistance = new PresentationSpeakerSummitAssistanceConfirmationRequest();
-                $assistance->setSummit($summit);
-                $assistance->setSpeaker($speaker);
+            $speaker = $this->speaker_repository->getById($speaker_id);
+            $summit = $this->summit_repository->getById($summit_id);
+
+            if(is_null($speaker))
+                throw new EntityNotFoundException();
+            if(is_null($summit))
+                throw new EntityNotFoundException();
+
+            $has_accepted_presentations =
+                $speaker->hasAcceptedPresentations(
+                    $summit, PresentationSpeaker::RoleModerator, true,
+                    $summit->getExcludedCategoriesForAcceptedPresentations()
+                ) ||
+                $speaker->hasAcceptedPresentations(
+                    $summit, PresentationSpeaker::RoleSpeaker, true,
+                    $summit->getExcludedCategoriesForAcceptedPresentations()
+                );
+
+            $has_alternate_presentations =
+                $speaker->hasAlternatePresentations(
+                    $summit, PresentationSpeaker::RoleModerator, true,
+                    $summit->getExcludedCategoriesForAlternatePresentations()
+                ) ||
+                $speaker->hasAlternatePresentations(
+                    $summit, PresentationSpeaker::RoleSpeaker, true,
+                    $summit->getExcludedCategoriesForAlternatePresentations()
+                );
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SpeakerService::generateSpeakerAssistance speaker %s (%s) accepted %b alternate %b"
+                    , $speaker->getEmail()
+                    , $speaker->getId()
+                    , $has_accepted_presentations
+                    , $has_alternate_presentations
+                )
+            );
+
+            if (!$has_accepted_presentations && !$has_alternate_presentations) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SpeakerService::generateSpeakerAssistance speaker %s (%s) has not accepted neither alternate presentations for summit %s."
+                        , $speaker->getEmail()
+                        , $speaker->getId()
+                        , $summit->getId()
+                    )
+                );
+                return null;
             }
 
-            do {
-               $assistance->generateConfirmationToken();
-            } while($this->speakers_assistance_repository->existByHash($assistance));
+            try {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SpeakerService::generateSpeakerAssistance trying to get speaker assistance for speaker %s summit %s.",
+                        $speaker->getId(), $summit->getId()
+                    )
+                );
 
-            $speaker->addSummitAssistance($assistance);
+                $assistance = $this->speakers_assistance_repository->getBySpeaker($speaker, $summit);
 
-            return $assistance;
+                if (is_null($assistance)) {
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SpeakerService::generateSpeakerAssistance speaker assistance for speaker %s summit %s does not exists. creating one ...",
+                            $speaker->getId(), $summit->getId()
+                        )
+                    );
+                    $assistance = new PresentationSpeakerSummitAssistanceConfirmationRequest();
+                    $speaker->addSummitAssistance($assistance);
+                    $summit->addSpeakerAssistance($assistance);
+                }
+
+                do {
+                    $assistance->generateConfirmationToken();
+                } while ($this->speakers_assistance_repository->existByHash($assistance));
+
+
+                return $assistance;
+            } catch (\Exception $ex) {
+                Log::warning($ex);
+                return null;
+            }
         });
     }
 
@@ -1083,15 +1171,15 @@ final class SpeakerService
         return $this->tx_service->transaction(function () use ($requested_by_id, $speaker_id) {
 
             $requestor = $this->member_repository->getById($requested_by_id);
-            if(is_null($requestor))
+            if (is_null($requestor))
                 throw new EntityNotFoundException();
 
-            $speaker   = $this->speaker_repository->getById($speaker_id);
-            if(is_null($speaker))
+            $speaker = $this->speaker_repository->getById($speaker_id);
+            if (is_null($speaker))
                 throw new EntityNotFoundException();
 
             $request = $this->speaker_edit_permisssion_repository->getBySpeakerAndRequestor($speaker, $requestor);
-            if(!is_null($request) && $request->isActionTaken())
+            if (!is_null($request) && $request->isActionTaken())
                 throw new ValidationException("there is another permission edit request already redeem!");
 
             // build request with factory
@@ -1116,23 +1204,23 @@ final class SpeakerService
         return $this->tx_service->transaction(function () use ($requested_by_id, $speaker_id) {
 
             $requestor = $this->member_repository->getById($requested_by_id);
-            if(is_null($requestor))
+            if (is_null($requestor))
                 throw new EntityNotFoundException();
 
-            $speaker   = $this->speaker_repository->getById($speaker_id);
-            if(is_null($speaker))
+            $speaker = $this->speaker_repository->getById($speaker_id);
+            if (is_null($speaker))
                 throw new EntityNotFoundException();
 
             $request = $this->speaker_edit_permisssion_repository->getBySpeakerAndRequestor($speaker, $requestor);
 
-            if(is_null($request) && $speaker->canBeEditedBy($requestor)){
+            if (is_null($request) && $speaker->canBeEditedBy($requestor)) {
                 $request = SpeakerEditPermissionRequestFactory::build($speaker, $requestor);
                 $request->approve();
                 $this->speaker_edit_permisssion_repository->add($request);
                 return $request;
             }
 
-            if(is_null($request))
+            if (is_null($request))
                 throw new EntityNotFoundException();
 
             return $request;
@@ -1150,9 +1238,9 @@ final class SpeakerService
     {
         return $this->tx_service->transaction(function () use ($token, $speaker_id) {
             $request = $this->speaker_edit_permisssion_repository->getByToken($token);
-            if(is_null($request))
+            if (is_null($request))
                 throw new EntityNotFoundException();
-            if($request->isApproved())
+            if ($request->isApproved())
                 throw new ValidationException();
             $request->approve();
             SpeakerEditPermissionApprovedEmail::dispatch($request);
@@ -1171,9 +1259,9 @@ final class SpeakerService
     {
         return $this->tx_service->transaction(function () use ($token, $speaker_id) {
             $request = $this->speaker_edit_permisssion_repository->getByToken($token);
-            if(is_null($request))
+            if (is_null($request))
                 throw new EntityNotFoundException();
-            if($request->isActionTaken())
+            if ($request->isActionTaken())
                 throw new ValidationException();
             $request->reject();
             SpeakerEditPermissionRejectedEmail::dispatch($request);
@@ -1185,9 +1273,9 @@ final class SpeakerService
      * @param int $speaker_id
      * @param UploadedFile $file
      * @param int $max_file_size
-     * @throws ValidationException
-     * @throws EntityNotFoundException
      * @return File
+     * @throws EntityNotFoundException
+     * @throws ValidationException
      */
     public function addSpeakerPhoto($speaker_id, UploadedFile $file, $max_file_size = 10485760)
     {
@@ -1286,7 +1374,7 @@ final class SpeakerService
     /**
      * @inheritDoc
      */
-    public function triggerSend(Summit $summit, array $payload, Filter $filter = null): void
+    public function triggerSend(Summit $summit, array $payload, $filter = null): void
     {
         ProcessSpeakersEmailRequestJob::dispatch($summit, $payload, $filter);
     }
@@ -1296,9 +1384,20 @@ final class SpeakerService
      */
     public function send(Summit $summit, array $payload, Filter $filter = null): void
     {
+        Log::debug
+        (
+            sprintf
+            (
+                "SpeakerService::send summit %s payload %s filter %s",
+                $summit->getId(),
+                json_encode($payload),
+                is_null($filter) ? "" : $filter->__toString()
+            )
+        );
+
         $flow_event = trim($payload['email_flow_event']);
         $done = isset($payload['speaker_ids']); // we have provided only ids and not a criteria
-        $outcome_email_recipient = $payload['outcome_email_recipient'];
+        $outcome_email_recipient = $payload['outcome_email_recipient'] ?? null;
         $summit_id = $summit->getId();
         EmailTest::setEmailAddress($payload['test_email_recipient']);
         $email_strategy = new SpeakerActionsEmailStrategy($summit, $flow_event);
@@ -1311,20 +1410,26 @@ final class SpeakerService
             Log::debug(sprintf("SpeakerService::send summit id %s flow_event %s filter %s",
                 $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString()));
 
-            $ids = $this->tx_service->transaction(function () use ($summit_id, $payload, $filter, $page, $maxPageSize) {
+            EmailExcerpt::add(
+                [
+                    'type' => IEmailExcerptService::InfoType,
+                    'message' => sprintf("Processing EMAIL %s for summit %s", $flow_event, $summit->getId())
+                ]
+            );
+
+            $ids = $this->tx_service->transaction(function () use ($summit, $payload, $filter, $page, $maxPageSize) {
                 if (isset($payload['speaker_ids'])) {
-                    Log::debug(sprintf("SpeakerService::send summit id %s speakers_ids %s", $summit_id,
+                    Log::debug(sprintf("SpeakerService::send summit id %s speakers_ids %s", $summit->getId(),
                         json_encode($payload['speaker_ids'])));
                     return $payload['speaker_ids'];
                 }
-                Log::debug(sprintf("SpeakerService::send summit id %s getting by filter", $summit_id));
+                Log::debug(sprintf("SpeakerService::send summit id %s getting by filter", $summit->getId()));
                 if (is_null($filter)) {
                     $filter = new Filter();
                 }
-                if (!$filter->hasFilter("summit_id"))
-                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
+
                 Log::debug(sprintf("SpeakerService::send page %s", $page));
-                return $this->speaker_repository->getAllIdsByPage(new PagingInfo($page, $maxPageSize), $filter);
+                return $this->speaker_repository->getSpeakersIdsBySummit($summit, new PagingInfo($page, $maxPageSize), $filter);
             });
 
             Log::debug(sprintf("SpeakerService::send summit id %s flow_event %s filter %s page %s got %s records",
@@ -1339,30 +1444,62 @@ final class SpeakerService
             EmailExcerpt::clearReport();
 
             foreach ($ids as $speaker_id) {
-                try {
-                    $this->tx_service->transaction(function () use ($flow_event, $summit, $speaker_id, $email_strategy) {
 
-                        Log::debug(sprintf("SpeakerService::send processing speaker id %s", $speaker_id));
-
+                $promo_code = $this->tx_service->transaction(function() use ($summit, $speaker_id){
+                    try{
                         $speaker = $this->speaker_repository->getByIdExclusiveLock(intval($speaker_id));
                         if (is_null($speaker) || !$speaker instanceof PresentationSpeaker) {
                             throw new EntityNotFoundException('speaker not found!');
                         }
+                        return $this->getPromoCode($summit, $speaker);
+                    }
+                    catch (\Exception $ex){
+                        Log::warning($ex);
+                        return null;
+                    }
+                });
 
-                        $assistance = $this->generateSpeakerAssistance($summit, $speaker);
-                        $promo_code = $this->getPromoCode($summit, $speaker);
+                $assistance = $this->generateSpeakerAssistance($summit_id, $speaker_id);
 
-                        $email_strategy->process($speaker, $assistance, $promo_code);
+                try {
+                    $this->tx_service->transaction(function () use
+                    (
+                        $flow_event,
+                        $summit,
+                        $speaker_id,
+                        $email_strategy,
+                        $promo_code,
+                        $assistance
+                    ) {
+
+                        Log::debug(sprintf("SpeakerService::send processing speaker id %s", $speaker_id));
+
+                        $speaker = $this->speaker_repository->getByIdExclusiveLock(intval($speaker_id));
+
+                        if (is_null($speaker) || !$speaker instanceof PresentationSpeaker) {
+                            throw new EntityNotFoundException('speaker not found!');
+                        }
+
+                        $email_strategy->process
+                        (
+                            $speaker,
+                            $promo_code,
+                            $assistance
+                        );
                     });
                 } catch (\Exception $ex) {
                     Log::warning($ex);
+                    EmailExcerpt::add(['type' => IEmailExcerptService::ErrorType, 'message' => $ex->getMessage()]);
                 }
                 $count++;
             }
             $page++;
-        } while(!$done);
+        } while (!$done);
 
-        PresentationSpeakerSelectionProcessExcerptEmail::dispatch($summit, $outcome_email_recipient);
+        EmailExcerpt::add(['type' => IEmailExcerptService::InfoType, 'message' => sprintf("TOTAL of %s emails sent.", $count)]);
+
+        if (!empty($outcome_email_recipient))
+            PresentationSpeakerSelectionProcessExcerptEmail::dispatch($summit, $outcome_email_recipient);
 
         Log::debug(sprintf("SpeakerService::send summit id %s flow_event %s filter %s had processed %s records",
             $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $count));

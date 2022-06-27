@@ -183,6 +183,41 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
             $data
         );
     }
+
+    /**
+     * @param callable $fnQuery
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @param callable|null $fnDefaultFilter
+     * @return array
+     */
+    public function getParametrizedAllIdsByPage(callable $fnQuery,PagingInfo $paging_info, Filter $filter = null, Order $order = null, callable $fnDefaultFilter = null):array {
+
+        $query  = call_user_func($fnQuery);
+
+        $query = $this->applyExtraJoins($query, $filter);
+
+        $query = $this->applyExtraFilters($query);
+
+        if(!is_null($filter)){
+            $filter->apply2Query($query, $this->getFilterMappings());
+        }
+
+        if(!is_null($order)){
+            $order->apply2Query($query, $this->getOrderMappings());
+        }
+        else if(!is_null($fnDefaultFilter)){
+            $query = call_user_func($fnDefaultFilter, $query);
+        }
+
+        $query = $query
+            ->setFirstResult($paging_info->getOffset())
+            ->setMaxResults($paging_info->getPerPage());
+
+        $res = $query->getQuery()->getArrayResult();
+        return array_column($res, 'id');
+    }
     /**
      * @param PagingInfo $paging_info
      * @param Filter|null $filter

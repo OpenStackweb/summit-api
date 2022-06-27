@@ -26,6 +26,8 @@ final class FilterParser
      */
     public static function parse($filters, $allowed_fields = array())
     {
+        Log::debug(sprintf("FilterParser::parse allowed_fields %s", json_encode($allowed_fields)));
+
         $res                 = [];
         $matches             = [];
 

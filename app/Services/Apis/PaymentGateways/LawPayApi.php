@@ -195,7 +195,7 @@ final class LawPayApi implements IPaymentGatewayAPI
                 )
             );
 
-            $event = json_decode($requestContent, true);
+            $event = json_decode($requestContent, false);
             $transaction = $event->data;
             if ($event->type == ILawPayApiEventType::TransactionCompleted) {
                 Log::debug("LawPayApi::processCallback: transaction.completed");

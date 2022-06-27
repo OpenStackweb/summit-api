@@ -472,7 +472,7 @@ class Summit extends SilverstripeBaseModel
     private $promo_codes;
 
     /**
-     * @ORM\OneToMany(targetEntity="PresentationSpeakerSummitAssistanceConfirmationRequest", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="PresentationSpeakerSummitAssistanceConfirmationRequest", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationSpeakerSummitAssistanceConfirmationRequest[]
      */
     private $speaker_assistances;
@@ -1074,6 +1074,12 @@ class Summit extends SilverstripeBaseModel
         $criteria->where(Criteria::expr()->eq('id', intval($assistance_id)));
         $speaker_assistance = $this->speaker_assistances->matching($criteria)->first();
         return $speaker_assistance === false ? null : $speaker_assistance;
+    }
+
+    public function addSpeakerAssistance(PresentationSpeakerSummitAssistanceConfirmationRequest $assistanceConfirmationRequest){
+        if($this->speaker_assistances->contains($assistanceConfirmationRequest)) return;
+        $this->speaker_assistances->add($assistanceConfirmationRequest);
+        $assistanceConfirmationRequest->setSummit($this);
     }
 
     /**

@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Doctrine\ORM\EntityNotFoundException;
 use Doctrine\ORM\Mapping AS ORM;
 use App\Models\Foundation\Main\Language;
 use App\Models\Foundation\Summit\SelectionPlan;
@@ -136,13 +138,13 @@ class PresentationSpeaker extends SilverstripeBaseModel
     private $registration_request;
 
     /**
-     * @ORM\OneToMany(targetEntity="PresentationSpeakerSummitAssistanceConfirmationRequest", mappedBy="speaker", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="PresentationSpeakerSummitAssistanceConfirmationRequest", mappedBy="speaker", cascade={"persist","remove"}), orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var PresentationSpeakerSummitAssistanceConfirmationRequest[]
      */
     private $summit_assistances;
 
     /**
-     * @ORM\OneToMany(targetEntity="SpeakerSummitRegistrationPromoCode", mappedBy="speaker", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="SpeakerSummitRegistrationPromoCode", mappedBy="speaker", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SpeakerSummitRegistrationPromoCode[]
      */
     private $promo_codes;
@@ -1258,7 +1260,17 @@ class PresentationSpeaker extends SilverstripeBaseModel
      */
     public function getPhoto():?File
     {
-        return $this->photo;
+        try {
+            return $this->photo;
+        }
+        catch (EntityNotFoundException $ex){
+            Log::warning($ex);
+            return null;
+        }
+        catch (\Exception $ex){
+            Log::warning($ex);
+            return null;
+        }
     }
 
     /**
@@ -1987,7 +1999,17 @@ SQL;
     }
 
     public function getBigPhoto():?File{
-        return $this->big_photo;
+        try {
+            return $this->big_photo;
+        }
+        catch (EntityNotFoundException $ex){
+            Log::warning($ex);
+            return null;
+        }
+        catch (\Exception $ex){
+            Log::warning($ex);
+            return null;
+        }
     }
 
     /**

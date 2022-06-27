@@ -199,9 +199,9 @@ interface ISpeakerService
     /**
      * @param Summit $summit
      * @param array $payload
-     * @param Filter|null $filter
+     * @param mixed $filter
      */
-    public function triggerSend(Summit $summit, array $payload, Filter $filter = null):void;
+    public function triggerSend(Summit $summit, array $payload, $filter = null):void;
 
     /**
      * @param Summit $summit

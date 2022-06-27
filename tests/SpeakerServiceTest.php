@@ -26,25 +26,25 @@ use services\model\ISpeakerService;
  */
 final class SpeakerServiceTest extends TestCase
 {
-    use InsertSummitTestData;
+    //use InsertSummitTestData;
 
-    use InsertMemberTestData;
+    //use InsertMemberTestData;
 
     protected function setUp(): void
     {
         parent::setUp();
-        self::insertMemberTestData(IGroup::TrackChairs);
-        self::insertTestData();
+        //self::insertMemberTestData(IGroup::TrackChairs);
+        //self::insertTestData();
     }
 
     protected function tearDown(): void
     {
-        self::clearTestData();
-        self::clearMemberTestData();
+        //self::clearTestData();
+        //self::clearMemberTestData();
         parent::tearDown();
     }
 
-    public function testSendAcceptedAlternateEmailBySpeakerIds($summit_id = 1723) {
+    public function testSendAcceptedAlternateEmailBySpeakerIds($summit_id = 31) {
 
         $service = App::make(ISpeakerService::class);
 
@@ -52,10 +52,10 @@ final class SpeakerServiceTest extends TestCase
         $summit = $summit_repo->getById($summit_id);
 
         $payload = [
-            "email_flow_event"          => PresentationSpeakerSelectionProcessAcceptedOnlyEmail::EVENT_SLUG,
-            "speaker_ids"               => [29350],
-            "test_email_recipient"      => self::$member->getEmail(),
-            "outcome_email_recipient"   => self::$member2->getEmail(),
+            "email_flow_event"          => 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ACCEPTED_REJECTED',
+            "speaker_ids"               => [28297],
+            "test_email_recipient"      => "smarcet@gmail.com",
+            "outcome_email_recipient"   => "smarcet@gmail.com"
         ];
 
         $service->send($summit, $payload);

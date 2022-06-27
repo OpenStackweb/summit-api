@@ -33,7 +33,7 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
      */
     public function __construct
     (
-        array $payload,
+        array &$payload,
         Summit $summit,
         PresentationSpeaker $speaker,
         ?SummitRegistrationPromoCode $promo_code = null
@@ -68,6 +68,7 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
         $payload['promo_code'] = '';
         $payload['promo_code_until_date'] = '';
         $payload['ticket_type'] = '';
+        $payload['registration_link'] = $summit->getRegistrationLink();
 
         if(!is_null($promo_code)){
             $payload['promo_code'] = $promo_code->getCode();

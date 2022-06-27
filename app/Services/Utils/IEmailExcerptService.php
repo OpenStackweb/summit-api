@@ -19,6 +19,9 @@
  */
 interface IEmailExcerptService
 {
+    const InfoType = 'INFO';
+    const ErrorType = 'ERROR';
+    const SpeakerEmailType = 'SPEAKER';
     /**
      * @param array $value
      * @return void

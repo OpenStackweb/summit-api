@@ -161,6 +161,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'presentations_type_id'           => ['=='],
                     'presentations_title'             => ['=@', '@@', '=='],
                     'presentations_abstract'          => ['=@', '@@', '=='],
+                    'presentations_submitter_full_name' => ['=@', '@@', '=='],
+                    'presentations_submitter_email' => ['=@', '@@', '=='],
                 ];
             },
             function () {
@@ -178,10 +180,13 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'presentations_type_id'           => 'sometimes|integer',
                     'presentations_title'             => 'sometimes|string',
                     'presentations_abstract'          => 'sometimes|string',
+                    'presentations_submitter_full_name' => 'sometimes|string',
+                    'presentations_submitter_email' => 'sometimes|string',
                 ];
             },
             function () {
                 return [
+                    'full_name',
                     'first_name',
                     'last_name',
                     'id',
@@ -244,7 +249,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'presentations_type_id'           => ['=='],
                     'presentations_title'             => ['=@', '@@', '=='],
                     'presentations_abstract'          => ['=@', '@@', '=='],
-
+                    'presentations_submitter_full_name' => ['=@', '@@', '=='],
+                    'presentations_submitter_email' => ['=@', '@@', '=='],
                 ];
             },
             function(){
@@ -262,11 +268,14 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'presentations_type_id'           => 'sometimes|integer',
                     'presentations_title'             => 'sometimes|string',
                     'presentations_abstract'          => 'sometimes|string',
+                    'presentations_submitter_full_name' => 'sometimes|string',
+                    'presentations_submitter_email' => 'sometimes|string',
                 ];
             },
             function()
             {
                 return [
+                    'full_name',
                     'first_name',
                     'last_name',
                     'id',
@@ -1691,7 +1700,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404(['message' => 'missing selection summit']);
 
-            $payload = $this->getJsonPayload(SummitSpeakerValidationRulesFactory::build());
+            $payload = $this->getJsonPayload(SummitSpeakerEmailsValidationRulesFactory::build());
 
             $filter = null;
 
@@ -1710,6 +1719,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'presentations_type_id'           =>  ['=='],
                     'presentations_title'             => ['=@', '@@', '=='],
                     'presentations_abstract'          => ['=@', '@@', '=='],
+                    'presentations_submitter_full_name' => ['=@', '@@', '=='],
+                    'presentations_submitter_email' => ['=@', '@@', '=='],
                 ]);
             }
 
@@ -1730,9 +1741,11 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'presentations_type_id'           => 'sometimes|integer',
                 'presentations_title'             => 'sometimes|string',
                 'presentations_abstract'          => 'sometimes|string',
+                'presentations_submitter_full_name' => 'sometimes|string',
+                'presentations_submitter_email' => 'sometimes|string',
             ]);
 
-            $this->service->triggerSend($summit, $payload, $filter);
+            $this->service->triggerSend($summit, $payload, Request::input('filter'));
 
             return $this->ok();
         });

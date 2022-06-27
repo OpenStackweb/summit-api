@@ -75,4 +75,14 @@ interface ISpeakerRepository extends IBaseRepository
      * @return bool
      */
     public function speakerBelongsToSummitSchedule(int $speaker_id, int $summit_id):bool;
+
+    /**
+     * @param Summit $summit
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function getSpeakersIdsBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null);
 }

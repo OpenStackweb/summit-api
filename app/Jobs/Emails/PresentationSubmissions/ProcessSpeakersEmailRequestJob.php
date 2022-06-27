@@ -63,15 +63,21 @@ final class ProcessSpeakersEmailRequestJob implements ShouldQueue
         );
 
         $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, [
-            'first_name' => ['=@', '=='],
-            'last_name' => ['=@', '=='],
-            'email' => ['=@', '=='],
+            'first_name' => ['=@', '@@', '=='],
+            'last_name' => ['=@', '@@', '=='],
+            'email' => ['=@', '@@', '=='],
             'id' => ['=='],
-            'full_name' => ['=@', '=='],
+            'full_name' => ['=@', '@@', '=='],
             'has_accepted_presentations' => ['=='],
             'has_alternate_presentations' => ['=='],
             'has_rejected_presentations' => ['=='],
-            'presentations_track_id' => ['==']
+            'presentations_track_id' => ['=='],
+            'presentations_selection_plan_id' =>  ['=='],
+            'presentations_type_id'           =>  ['=='],
+            'presentations_title'             => ['=@', '@@', '=='],
+            'presentations_abstract'          => ['=@', '@@', '=='],
+            'presentations_submitter_full_name' => ['=@', '@@', '=='],
+            'presentations_submitter_email' => ['=@', '@@', '=='],
         ]) : null;
 
         $service->send($this->summit, $this->payload, $filter);

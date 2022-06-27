@@ -36,18 +36,17 @@ class PresentationSpeakerSelectionProcessAlternateOnlyEmail extends Presentation
     const DEFAULT_TEMPLATE = 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ALTERNATE_ONLY';
 
     /**
-     * PresentationSpeakerSelectionProcessAlternateOnlyEmail constructor.
      * @param Summit $summit
      * @param SummitRegistrationPromoCode $promo_code
      * @param PresentationSpeaker $speaker
-     * @param string $confirmation_token
+     * @param string|null $confirmation_token
      */
     public function __construct
     (
         Summit $summit,
         SummitRegistrationPromoCode $promo_code,
         PresentationSpeaker $speaker,
-        string $confirmation_token
+        ?string $confirmation_token = null
     )
     {
       
@@ -64,9 +63,11 @@ class PresentationSpeakerSelectionProcessAlternateOnlyEmail extends Presentation
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
 
-        $payload['speaker_confirmation_link'] = sprintf("%s?t=%s", $payload['speaker_confirmation_link'], base64_encode($confirmation_token));
-
         parent::__construct($payload, $summit, $speaker, $promo_code);
+
+        if(!empty($confirmation_token)) {
+            $this->payload['speaker_confirmation_link'] = sprintf("%s?t=%s", $this->payload['speaker_confirmation_link'], base64_encode($confirmation_token));
+        }
 
         Log::debug(sprintf("PresentationSpeakerSelectionProcessAlternateOnlyEmail::__construct payload %s", json_encode($payload)));
 

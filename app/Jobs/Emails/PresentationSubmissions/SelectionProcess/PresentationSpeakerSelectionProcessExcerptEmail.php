@@ -14,6 +14,7 @@
 
 use App\Jobs\Emails\AbstractEmailJob;
 use App\Services\Utils\Facades\EmailExcerpt;
+use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
 use models\summit\Summit;
 /**
@@ -48,11 +49,16 @@ class PresentationSpeakerSelectionProcessExcerptEmail extends AbstractEmailJob
         $itemsCount = count($report);
 
         foreach ($report as $reportItem) {
-            $report_lines[] = "Email type {$reportItem['email_type']} sent to speaker {$reportItem['speaker_email']}";
+            $type = $reportItem['type']  ?? null;
+            if($type == IEmailExcerptService::SpeakerEmailType)
+                $report_lines[] = "Email type {$reportItem['email_type']} sent to speaker {$reportItem['speaker_email']}.";
+            else if($type == IEmailExcerptService::ErrorType)
+                $report_lines[] = "ERROR {$reportItem['message']}.";
+            else if($type == IEmailExcerptService::InfoType)
+                $report_lines[] = "INFO {$reportItem['message']}.";
         }
 
         $payload['report'] = $report_lines;
-        $payload['report_summary'] = "A total of {$itemsCount} emails were sent";
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 

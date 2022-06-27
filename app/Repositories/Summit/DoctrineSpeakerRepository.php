@@ -44,22 +44,22 @@ final class DoctrineSpeakerRepository
     protected function getFilterMappings()
     {
         return [
-            'last_name' => [
-                "m.last_name :operator :value",
-                "e.last_name :operator :value"
-            ],
-            'full_name' => [
-                "concat(m.first_name, ' ', m.last_name) :operator :value",
-                "concat(e.first_name, ' ', e.last_name) :operator :value"
-            ],
-            'first_name' => [
-                "m.first_name :operator :value",
-                "e.first_name :operator :value"
-            ],
-            'email' => [
-                "m.email :operator :value",
-                "rr.email :operator :value"
-            ],
+            'last_name' => new DoctrineFilterMapping(
+                "( LOWER(m.last_name) :operator LOWER(:value) )".
+                " OR ( LOWER(e.last_name) :operator LOWER(:value) )"
+            ),
+            'full_name' => new DoctrineFilterMapping(
+                "( CONCAT(LOWER(m.first_name), ' ', LOWER(m.last_name)) :operator LOWER(:value) )".
+                " OR ( CONCAT(LOWER(e.first_name), ' ', LOWER(e.last_name)) :operator LOWER(:value) )"
+            ),
+            'first_name' => new DoctrineFilterMapping(
+                "( LOWER(m.first_name) :operator LOWER(:value) )".
+                "OR ( LOWER(e.first_name) :operator LOWER(:value) )"
+            ),
+            'email' => new DoctrineFilterMapping(
+                "( LOWER(m.email) :operator LOWER(:value) )".
+                "OR ( LOWER(rr.email) :operator LOWER(:value) )"
+            ),
             'id' => 'e.id',
             'presentations_track_id' => new DoctrineFilterMapping(
                 'EXISTS ( 
@@ -115,13 +115,13 @@ final class DoctrineSpeakerRepository
                               JOIN __p71.speakers __spk71 WITH __spk71.id = e.id 
                               WHERE 
                               __p71.summit = :summit AND
-                              __p71.title :operator :value )'.
+                              LOWER(__p71.title) :operator LOWER(:value) )'.
                 ' OR EXISTS ( 
                               SELECT __p72.id FROM models\summit\Presentation __p72
                               JOIN __p72.moderator __md72 WITH __md72.id = e.id 
                               WHERE 
                               __p72.summit = :summit AND
-                              __p72.title :operator :value )',
+                              LOWER(__p72.title) :operator LOWER(:value) )',
 
             ),
             'presentations_abstract' =>  new DoctrineFilterMapping(
@@ -130,14 +130,44 @@ final class DoctrineSpeakerRepository
                               JOIN __p81.speakers __spk81 WITH __spk81.id = e.id 
                               WHERE 
                               __p81.summit = :summit AND
-                              __p81.abstract :operator :value )'.
+                              LOWER(__p81.abstract) :operator LOWER(:value) )'.
                 ' OR EXISTS ( 
                               SELECT __p82.id FROM models\summit\Presentation __p82
                               JOIN __p82.moderator __md82 WITH __md82.id = e.id 
                               WHERE 
                               __p82.summit = :summit AND
-                              __p82.abstract :operator :value )',
+                              LOWER(__p82.abstract) :operator LOWER(:value) )',
             ),
+            'presentations_submitter_full_name' => new DoctrineFilterMapping(
+                "EXISTS ( 
+                              SELECT __p91.id FROM models\summit\Presentation __p91
+                              JOIN __p91.speakers __spk91 WITH __spk91.id = e.id 
+                              JOIN __p91.created_by __cb91
+                              WHERE 
+                              __p91.summit = :summit AND
+                              concat(LOWER(__cb91.first_name), ' ', LOWER(__cb91.last_name)) :operator LOWER(:value) )".
+                " OR EXISTS ( 
+                              SELECT __p92.id FROM models\summit\Presentation __p92
+                              JOIN __p92.moderator __md92 WITH __md92.id = e.id 
+                              JOIN __p92.created_by __cb92
+                              WHERE 
+                              __p92.summit = :summit AND
+                               concat(LOWER(__cb92.first_name), ' ', LOWER(__cb92.last_name)) :operator LOWER(:value) )",
+            ),
+            'presentations_submitter_email' => new DoctrineFilterMapping("EXISTS ( 
+                              SELECT __p10_1.id FROM models\summit\Presentation __p10_1
+                              JOIN __p10_1.speakers __spk10_1 WITH __spk10_1.id = e.id 
+                              JOIN __p10_1.created_by __cb10_1
+                              WHERE 
+                              __p10_1.summit = :summit AND
+                              LOWER(__cb10_1.email) :operator LOWER(:value) )".
+                " OR EXISTS ( 
+                              SELECT __p10_2.id FROM models\summit\Presentation __p10_2
+                              JOIN __p10_2.moderator __md10_2 WITH __md10_2.id = e.id 
+                              JOIN __p10_2.created_by __cb10_2
+                              WHERE 
+                              __p10_2.summit = :summit AND
+                              LOWER(__cb10_2.email) :operator LOWER(:value) )"),
             'has_accepted_presentations' =>
                 new DoctrineSwitchFilterMapping([
                         'true' => new DoctrineCaseFilterMapping(
@@ -397,7 +427,7 @@ SQL,
 
         return $this->getParametrizedAllByPage(function () use ($summit) {
             return $this->getEntityManager()->createQueryBuilder()
-                ->distinct("e")
+                ->distinct(true)
                 ->select("e")
                 ->from($this->getBaseEntity(), "e")
                 ->leftJoin("e.registration_request", "rr")
@@ -421,8 +451,48 @@ SQL,
                 //default order
                 return $query->addOrderBy("e.id", 'ASC');
             });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function getSpeakersIdsBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null)
+    {
+
+        return $this->getParametrizedAllIdsByPage(function () use ($summit) {
+            return $this->getEntityManager()->createQueryBuilder()
+                ->distinct(true)
+                ->select("e.id")
+                ->from($this->getBaseEntity(), "e")
+                ->leftJoin("e.registration_request", "rr")
+                ->leftJoin("e.member", "m")
+                // we need to have SIZE(e.presentations) > 0 OR SIZE(e.moderated_presentations) > 0 for a particular summit
+                ->where(" 
+                         EXISTS (
+                            SELECT __p.id FROM models\summit\Presentation __p JOIN __p.speakers __spk WITH __spk.id = e.id 
+                            WHERE __p.summit = :summit
+                         ) OR
+                         EXISTS (
+                            SELECT __p1.id FROM models\summit\Presentation __p1 JOIN __p1.moderator __md WITH __md.id = e.id 
+                            WHERE __p1.summit = :summit
+                          )")
+                ->setParameter("summit", $summit);
+        },
+            $paging_info,
+            $filter,
+            $order,
+            function ($query) {
+                //default order
+                return $query->addOrderBy("e.id", 'ASC');
+            });
 
     }
+
 
     /**
      * @param Summit $summit

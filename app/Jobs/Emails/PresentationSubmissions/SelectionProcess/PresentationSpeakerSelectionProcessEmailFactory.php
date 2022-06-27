@@ -13,6 +13,7 @@
  **/
 
 use App\Services\Utils\Facades\EmailExcerpt;
+use App\Services\utils\IEmailExcerptService;
 use models\summit\PresentationSpeaker;
 use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
 use models\summit\SpeakerAnnouncementSummitEmail;
@@ -55,8 +56,8 @@ final class PresentationSpeakerSelectionProcessEmailFactory
         Summit $summit,
         PresentationSpeaker $speaker,
         string $type,
-        ?SummitRegistrationPromoCode $promo_code,
-        ?PresentationSpeakerSummitAssistanceConfirmationRequest $speaker_assistance
+        ?SummitRegistrationPromoCode $promo_code = null,
+        ?PresentationSpeakerSummitAssistanceConfirmationRequest $speaker_assistance = null
     ){
 
         switch ($type){
@@ -66,7 +67,7 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
-                    $speaker_assistance->getToken()
+                    is_null($speaker_assistance) ? null: $speaker_assistance->getToken()
                 );
             break;
             case SpeakerAnnouncementSummitEmail::TypeRejected:
@@ -82,7 +83,7 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
-                    $speaker_assistance->getToken()
+                    is_null($speaker_assistance) ? null: $speaker_assistance->getToken()
                 );
                 break;
             case SpeakerAnnouncementSummitEmail::TypeAcceptedRejected:
@@ -91,7 +92,7 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
-                    $speaker_assistance->getToken()
+                    is_null($speaker_assistance) ? null: $speaker_assistance->getToken()
                 );
                 break;
             case SpeakerAnnouncementSummitEmail::TypeAlternate:
@@ -100,7 +101,7 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
-                    $speaker_assistance->getToken()
+                    is_null($speaker_assistance) ? null: $speaker_assistance->getToken()
                 );
                 break;
             case SpeakerAnnouncementSummitEmail::TypeAlternateRejected:
@@ -109,13 +110,14 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
-                    $speaker_assistance->getToken()
+                    is_null($speaker_assistance) ? null: $speaker_assistance->getToken()
                 );
                 break;
         }
 
         EmailExcerpt::add(
             [
+                'type' => IEmailExcerptService::SpeakerEmailType,
                 'speaker_email' => $speaker->getEmail(),
                 'email_type'    => $type
             ]

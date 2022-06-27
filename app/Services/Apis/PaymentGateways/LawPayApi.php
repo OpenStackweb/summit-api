@@ -108,9 +108,7 @@ final class LawPayApi implements IPaymentGatewayAPI
                 "metadata" => [
                     "type" => IPaymentConstants::ApplicationTypeRegistration,
                     "summit_id" => $summit_id,
-                ],
-                'address1' => $payload['billing_address_1'] ?? 'N/A',
-                'postal_code' => $payload['billing_address_zip_code'] ?? 'N/A'
+                ]
             ]
         );
 
@@ -150,11 +148,13 @@ final class LawPayApi implements IPaymentGatewayAPI
                 throw new \InvalidArgumentException();
 
             $params = [
-                'address1' => $payload['address1'],
-                'postal_code' => $payload['postal_code'],
             ];
 
-            ChargeIO::setDebug(true);
+            if (!empty($this->account_id)) {
+                Log::debug(sprintf("LawPayApi::generatePayment setting merchant account id %s.",$this->account_id));
+                $params['account_id'] = $this->account_id;
+            }
+            //ChargeIO::setDebug(true);
 
             $charge = ChargeIO_Charge::create
             (

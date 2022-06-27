@@ -23,6 +23,7 @@ use ChargeIO_Credentials;
 use ChargeIO_Charge;
 use ChargeIO_PaymentMethodReference;
 use ChargeIO_Merchant;
+use ChargeIO_InvalidRequestError;
 use Exception;
 use models\exceptions\ValidationException;
 use models\summit\IPaymentConstants;
@@ -107,7 +108,9 @@ final class LawPayApi implements IPaymentGatewayAPI
                 "metadata" => [
                     "type" => IPaymentConstants::ApplicationTypeRegistration,
                     "summit_id" => $summit_id,
-                ]
+                ],
+                'address1' => $payload['billing_address_1'] ?? 'N/A',
+                'postal_code' => $payload['billing_address_zip_code'] ?? 'N/A'
             ]
         );
 
@@ -132,6 +135,7 @@ final class LawPayApi implements IPaymentGatewayAPI
         if (empty($this->public_key))
             throw new \InvalidArgumentException();
 
+        Log::debug(sprintf("LawPayApi::generatePayment payload %s ",json_encode($payload)));
         try {
             ChargeIO::setCredentials(new ChargeIO_Credentials(
                 $this->public_key,
@@ -145,10 +149,12 @@ final class LawPayApi implements IPaymentGatewayAPI
             if (empty($token_id))
                 throw new \InvalidArgumentException();
 
-            $params = [];
+            $params = [
+                'address1' => $payload['address1'],
+                'postal_code' => $payload['postal_code'],
+            ];
 
-            if (!empty($this->account_id))
-                $params['account_id'] = $this->account_id;
+            ChargeIO::setDebug(true);
 
             $charge = ChargeIO_Charge::create
             (
@@ -161,6 +167,11 @@ final class LawPayApi implements IPaymentGatewayAPI
             return [
                 'cart_id' => $charge->id,
             ];
+        }
+        catch (ChargeIO_InvalidRequestError $ex){
+            Log::warning($ex->getJson());
+            Log::error($ex);
+            throw $ex;
         }
         catch (Exception $ex){
             Log::error($ex);

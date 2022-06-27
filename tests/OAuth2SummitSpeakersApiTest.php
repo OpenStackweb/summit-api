@@ -384,10 +384,22 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
     {
         $params = [
 
-            'id' => 26,
+            'id' => self::$summit->getId(),
             'page' => 1,
             'per_page' => 10,
-            'order' => '+id'
+            'order' => '+id',
+            'filter' => [
+                    'has_alternate_presentations==false',
+                    'presentations_selection_plan_id==1',
+                ]
+           /* 'filter' => [
+                'has_accepted_presentations==true',
+                'has_alternate_presentations==false',
+                'has_rejected_presentations==true'
+            ]*/
+            /*'filter' => [
+                'has_accepted_presentations==true,has_rejected_presentations==true',
+            ]*/
         ];
 
         $headers = [

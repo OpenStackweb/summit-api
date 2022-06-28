@@ -42,6 +42,7 @@ use App\Models\Foundation\Summit\Repositories\IPresentationSpeakerSummitAssistan
 use App\Models\Foundation\Summit\Repositories\IPresentationTrackChairRatingTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationTrackChairScoreTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IRSVPTemplateRepository;
+use App\Models\Foundation\Summit\Repositories\ISelectionPlanActionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerActiveInvolvementRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerEditPermissionRequestRepository;
@@ -102,6 +103,7 @@ use models\summit\PresentationCategory;
 use models\summit\PresentationCategoryGroup;
 use models\summit\PresentationMediaUpload;
 use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
+use models\summit\SelectionPlanActionType;
 use models\summit\SpeakerActiveInvolvement;
 use models\summit\SpeakerOrganizationalRole;
 use models\summit\SpeakerRegistrationRequest;
@@ -682,6 +684,13 @@ final class RepositoriesProvider extends ServiceProvider
             IPresentationActionTypeRepository::class,
             function(){
                 return EntityManager::getRepository(PresentationActionType::class);
+            }
+        );
+
+        App::singleton(
+            ISelectionPlanActionTypeRepository::class,
+            function(){
+                return EntityManager::getRepository(SelectionPlanActionType::class);
             }
         );
 

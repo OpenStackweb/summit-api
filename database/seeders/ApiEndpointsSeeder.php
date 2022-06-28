@@ -7246,6 +7246,8 @@ class ApiEndpointsSeeder extends Seeder
                         IGroup::SummitAdministrators,
                     ]
                 ],
+
+                //presentation action types
                 [
                     'name' => 'get-presentation-action-types',
                     'route' => '/api/v1/summits/{id}/presentation-action-types',
@@ -7334,6 +7336,97 @@ class ApiEndpointsSeeder extends Seeder
                         IGroup::TrackChairsAdmins,
                     ]
                 ],
+
+                // selection plan action types
+                [
+                    'name' => 'get-selection-plan-action-types',
+                    'route' => 'api/v1/summits/{id}/selection-plans/{selection_plan_id}/selection-plan-action-types',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                        sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::TrackChairsAdmins,
+                        IGroup::TrackChairs,
+                    ]
+                ],
+                [
+                    'name' => 'get-selection-plan-action-types-csv',
+                    'route' => 'api/v1/summits/{id}/selection-plans/{selection_plan_id}/selection-plan-action-types/csv',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                        sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::TrackChairsAdmins,
+                    ]
+                ],
+                [
+                    'name' => 'add-selection-plan-action-types',
+                    'route' => 'api/v1/summits/{id}/selection-plans/{selection_plan_id}/selection-plan-action-types',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::TrackChairsAdmins,
+                    ]
+                ],
+                [
+                    'name' => 'get-selection-plan-action-type-by-id',
+                    'route' => 'api/v1/summits/{id}/selection-plans/{selection_plan_id}/selection-plan-action-types/{action_id}',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                        sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::TrackChairsAdmins,
+                    ]
+                ],
+                [
+                    'name' => 'delete-selection-plan-action-type',
+                    'route' => 'api/v1/summits/{id}/selection-plans/{selection_plan_id}/selection-plan-action-types/{action_id}',
+                    'http_method' => 'DELETE',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::TrackChairsAdmins,
+                    ]
+                ],
+                [
+                    'name' => 'update-selection-plan-action-type',
+                    'route' => 'api/v1/summits/{id}/selection-plans/{selection_plan_id}/selection-plan-action-types/{action_id}',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                        IGroup::TrackChairsAdmins,
+                    ]
+                ],
+
                 // registration companies
                 [
                     'name' => 'get-registration-companies',

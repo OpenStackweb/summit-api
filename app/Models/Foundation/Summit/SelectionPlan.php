@@ -23,8 +23,10 @@ use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\Presentation;
+use models\summit\PresentationActionType;
 use models\summit\PresentationCategory;
 use models\summit\PresentationCategoryGroup;
+use models\summit\SelectionPlanActionType;
 use models\summit\Summit;
 use models\summit\SummitEventType;
 use models\summit\SummitOwned;
@@ -181,6 +183,12 @@ class SelectionPlan extends SilverstripeBaseModel
      * @var SummitSelectedPresentationList[]
      */
     private $selection_lists;
+
+    /**
+     * @ORM\OneToMany(targetEntity="models\summit\SelectionPlanActionType", mappedBy="selection_plan", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var PresentationActionType[]
+     */
+    private $selection_plan_action_types;
 
     /**
      * @return string
@@ -368,6 +376,7 @@ class SelectionPlan extends SilverstripeBaseModel
         $this->submission_period_disclaimer    = null;
         $this->selection_lists = new ArrayCollection;
         $this->track_chair_rating_types = new ArrayCollection();
+        $this->selection_plan_action_types = new ArrayCollection();
     }
 
     /**
@@ -906,4 +915,63 @@ class SelectionPlan extends SilverstripeBaseModel
         self::recalculateOrderForSelectable($this->track_chair_rating_types, $ratingType, $new_order);
     }
 
+    /**
+     * @param int $action_id
+     * @return SelectionPlanActionType|null
+     */
+    public function getSelectionPlanActionTypeById(int $action_id): ?SelectionPlanActionType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $action_id));
+        $action = $this->selection_plan_action_types->matching($criteria)->first();
+        return $action === false ? null : $action;
+    }
+
+    /**
+     * @return ArrayCollection|\Doctrine\Common\Collections\Collection
+     */
+    public function getSelectionPlanActionTypes()
+    {
+        $criteria = Criteria::create();
+        $criteria->orderBy(["order" => Criteria::ASC]);
+        return $this->selection_plan_action_types->matching($criteria);
+    }
+
+    /**
+     * @param SelectionPlanActionType $selection_plan_action_type
+     * @return $this
+     */
+    public function addSelectionPlanActionType(SelectionPlanActionType $selection_plan_action_type)
+    {
+        if ($this->selection_plan_action_types->contains($selection_plan_action_type)) return $this;
+        $selection_plan_action_type->setOrder($this->getSelectionPlanActionTypeMaxOrder() + 1);
+        $this->selection_plan_action_types->add($selection_plan_action_type);
+        $selection_plan_action_type->setSelectionPlan($this);
+        $selection_plan_action_type->setSummit($this->getSummit());
+        return $this;
+    }
+
+    /**
+     * @param SelectionPlanActionType $selection_plan_action_type
+     * @return $this
+     */
+    public function removeSelectionPlanActionType(SelectionPlanActionType $selection_plan_action_type)
+    {
+        if (!$this->selection_plan_action_types->contains($selection_plan_action_type)) return $this;
+        $this->selection_plan_action_types->removeElement($selection_plan_action_type);
+        $selection_plan_action_type->setSelectionPlan(null);
+        $selection_plan_action_type->setSummit(null);
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSelectionPlanActionTypeMaxOrder(): int
+    {
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'DESC']);
+        $action = $this->selection_plan_action_types->matching($criteria)->first();
+        return $action === false ? 0 : $action->getOrder();
+    }
 }

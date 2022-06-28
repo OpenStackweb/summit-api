@@ -421,6 +421,19 @@ Route::group(array('prefix' => 'summits'), function () {
                         });
                     });
                 });
+
+                // selection plan action types
+
+                Route::group(['prefix' => 'selection-plan-action-types'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlanActionTypeApiController@getAllBySelectionPlan']);
+                    Route::get('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlanActionTypeApiController@getAllBySelectionPlanCSV']);
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlanActionTypeApiController@add']);
+                    Route::group(['prefix' => '{action_id}'], function () {
+                        Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlanActionTypeApiController@get']);
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlanActionTypeApiController@update']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlanActionTypeApiController@delete']);
+                    });
+                });
             });
         });
 

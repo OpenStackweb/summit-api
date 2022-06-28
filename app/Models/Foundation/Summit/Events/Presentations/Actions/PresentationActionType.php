@@ -25,6 +25,12 @@ use models\utils\SilverstripeBaseModel;
  *          inversedBy="presentation_action_types"
  *     )
  * })
+ * @ORM\InheritanceType("SINGLE_TABLE")
+ * @ORM\DiscriminatorColumn(name="ClassName", type="string")
+ * @ORM\DiscriminatorMap({
+ *     "PresentationActionType" = "PresentationActionType",
+ *     "SelectionPlanActionType" = "SelectionPlanActionType",
+ * })
  * @ORM\HasLifecycleCallbacks
  * Class PresentationActionType
  * @package models\summit
@@ -38,13 +44,13 @@ class PresentationActionType extends SilverstripeBaseModel
      * @ORM\Column(name="Label", type="string")
      * @var string
      */
-    private $label;
+    protected $label;
 
     /**
      * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
-    private $order;
+    protected $order;
 
     /**
      * @return int

@@ -673,7 +673,28 @@ SQL;
      */
     public function getCompanyName(): ?string
     {
+        if($this->hasCompany())
+            return $this->company->getName();
         return $this->company_name;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasCompany():bool{
+        return $this->getCompanyId() > 0;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCompanyId():int{
+        try {
+            return is_null($this->company) ? 0 : $this->company->getId();
+        }
+        catch(\Exception $ex){
+            return 0;
+        }
     }
 
     /**

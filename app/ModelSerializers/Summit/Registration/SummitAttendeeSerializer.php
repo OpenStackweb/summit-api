@@ -32,6 +32,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
         'Surname'                 => 'last_name:json_string',
         'Email'                   => 'email:json_string',
         'CompanyName'             => 'company:json_string',
+        'CompanyId'               => 'company_id:json_int',
         'DisclaimerAcceptedDate'  => 'disclaimer_accepted_date:datetime_epoch',
         'DisclaimerAccepted'      => 'disclaimer_accepted:json_boolean',
         'Status'                  => 'status:json_string',
@@ -259,6 +260,15 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                                         ['summit' => $attendee->getSummit()]);
                             }
                         }
+                            break;
+                        case 'company':
+                            {
+
+                                if ($attendee->hasCompany()) {
+                                    unset($values['company_id']);
+                                    $values['company'] = SerializerRegistry::getInstance()->getSerializer($attendee->getCompany())->serialize(AbstractSerializer::getExpandForPrefix('company', $expand));
+                                }
+                            }
                             break;
                     }
                 }

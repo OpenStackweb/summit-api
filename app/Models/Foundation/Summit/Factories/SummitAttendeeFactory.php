@@ -77,6 +77,17 @@ final class SummitAttendeeFactory
         if (isset($payload['company']) && !empty($payload['company']))
             $attendee->setCompanyName(trim($payload['company']));
 
+        if (isset($payload['company_id']) && !is_null($payload['company_id'])) {
+            $companyId = intval($payload['company_id']);
+            $company = $summit->getRegistrationCompanyById($companyId);
+            if (is_null($company)) {
+                throw new ValidationException(sprintf('company with id %d not found as a registered company for summit %d',
+                    $companyId, $summit->getId()));
+            }
+            $attendee->setCompany($company);
+            $attendee->setCompanyName($company->getName());
+        }
+
         if (isset($payload['admin_notes']) && !empty($payload['admin_notes']))
             $attendee->setAdminNotes(trim($payload['admin_notes']));
 

@@ -2774,6 +2774,9 @@ final class SummitOrderService
                 if(isset($payload['attendee_company']))
                     $attendee_payload['company'] = $payload['attendee_company'];
 
+                if(isset($payload['attendee_company_id']))
+                    $attendee_payload['company_id'] = intval($payload['attendee_company_id']);
+
                 if(isset($payload['extra_questions']))
                     $attendee_payload['extra_questions'] = $payload['extra_questions'];
 
@@ -2865,7 +2868,8 @@ final class SummitOrderService
             }
 
             $first_name = $payload['attendee_first_name'] ?? '';
-            $company = $payload['attendee_company'] ?? '';
+            $company = $payload['attendee_company'] ?? null;
+            $company_id = $payload['attendee_company_id'] ?? null;
             $last_name = $payload['attendee_last_name'] ?? '';
             $extra_questions = $payload['extra_questions'] ?? [];
 
@@ -2874,6 +2878,7 @@ final class SummitOrderService
                 'first_name' => $first_name,
                 'last_name' => $last_name,
                 'company' => $company,
+                'company_id' => $company_id,
                 'extra_questions' => $extra_questions
             ];
 
@@ -2918,6 +2923,7 @@ final class SummitOrderService
             $last_name = $payload['attendee_last_name'] ?? null;
             $email = $payload['attendee_email'] ?? null;
             $company = $payload['attendee_company'] ?? null;
+            $company_id = $payload['attendee_company_id'] ?? null;
             $extra_questions = $payload['extra_questions'] ?? [];
             $disclaimer_accepted = $payload['disclaimer_accepted'] ?? null;
 
@@ -2933,8 +2939,9 @@ final class SummitOrderService
                 'first_name' => $first_name,
                 'last_name' => $last_name,
                 'company' => $company,
+                'company_id' => $company_id,
                 'email' => $email,
-                'extra_questions' => $extra_questions
+                'extra_questions' => $extra_questions,
             ];
 
             if (!is_null($disclaimer_accepted)) {
@@ -3011,6 +3018,7 @@ final class SummitOrderService
                 $last_name = $ticket_payload['attendee_last_name'] ?? null;
                 $email = $ticket_payload['attendee_email'] ?? null;
                 $company = $ticket_payload['attendee_company'] ?? null;
+                $company_id = $ticket_payload['attendee_company_id'] ?? null;
                 $extra_questions = $ticket_payload['extra_questions'] ?? [];
                 $disclaimer_accepted = $ticket_payload['disclaimer_accepted'] ?? null;
 
@@ -3026,6 +3034,7 @@ final class SummitOrderService
                     'first_name' => $first_name,
                     'last_name' => $last_name,
                     'company' => $company,
+                    'company_id' => $company_id,
                     'email' => $email,
                     'extra_questions' => $extra_questions
                 ];
@@ -3102,6 +3111,7 @@ final class SummitOrderService
             * attendee_first_name (mandatory)
             * attendee_last_name (mandatory)
             * attendee_company (optional)
+            * attendee_company_id (optional)
             * ticket_type_name ( mandatory if id and number are missing)
             * ticket_type_id ( mandatory if id and number are missing)
             * badge_type_id (optional)
@@ -3219,6 +3229,10 @@ final class SummitOrderService
 
                         if ($reader->hasColumn('attendee_company')) {
                             $payload['company'] = $row['attendee_company'];
+                        }
+
+                        if ($reader->hasColumn('attendee_company_id')) {
+                            $payload['company_id'] = intval($row['attendee_company_id']);
                         }
 
                         Log::debug(sprintf("SummitOrderService::processTicketData creating attendee with payload %s", json_encode($payload)));

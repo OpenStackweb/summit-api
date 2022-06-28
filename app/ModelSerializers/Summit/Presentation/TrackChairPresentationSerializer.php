@@ -51,6 +51,10 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
         'likers_count',
         'selectors_count',
         'pending_category_change_requests_count',
+        'viewed',
+        'selected',
+        'maybe',
+        'pass',
     ];
 
     protected static $allowed_relations = [

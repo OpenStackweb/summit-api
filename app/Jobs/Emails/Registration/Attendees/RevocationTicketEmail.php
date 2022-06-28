@@ -60,7 +60,7 @@ class RevocationTicketEmail extends AbstractEmailJob
 
 
         $payload['ticket_number'] = $ticket->getNumber();
-
+        $payload['ticket_type_name'] = $ticket->getTicketTypeName();
         $payload['summit_name'] = $summit->getName();
         $payload['summit_logo'] = $summit->getLogoUrl();
         $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();

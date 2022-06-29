@@ -65,11 +65,9 @@ final class OAuth2TicketTypesApiTest extends ProtectedApiTest
     }
 
     public function testGetTicketTypesById(){
-        $ticket_types_response = $this->testGetTicketTypes();
-
         $params = [
-            'id'       => self::$summit->getId(),
-            'ticket_type_id' => $ticket_types_response->data[0]->id
+            'id'                => self::$summit->getId(),
+            'ticket_type_id'    => self::$default_ticket_type->getId()
         ];
 
         $headers = [
@@ -91,6 +89,7 @@ final class OAuth2TicketTypesApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
         $ticket_type = json_decode($content);
         $this->assertTrue(!is_null($ticket_type));
+        $this->assertTrue($ticket_type->id == self::$default_ticket_type->getId());
         return $ticket_type;
     }
 
@@ -136,13 +135,11 @@ final class OAuth2TicketTypesApiTest extends ProtectedApiTest
     }
 
     public function testUpdateTicketType(){
-
-        $ticket_type = $this->testAddTicketType();
         $audience    = SummitTicketType::Audience_With_Invitation;
 
         $params = [
             'id'             => self::$summit->getId(),
-            'ticket_type_id' => $ticket_type->id
+            'ticket_type_id' => self::$default_ticket_type->getId()
         ];
 
         $data = [

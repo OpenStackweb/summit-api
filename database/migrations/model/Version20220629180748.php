@@ -14,10 +14,12 @@ class Version20220629180748 extends AbstractMigration
      */
     public function up(Schema $schema): void
     {
-        $sql = <<<SQL
-ALTER TABLE SummitTicketType ADD Audience enum('All', 'WithInvitation', 'WithoutInvitation') NOT NULL DEFAULT 'All';
-SQL;
-        $this->addSql($sql);
+        $builder = new Builder($schema);
+        if($schema->hasTable("SummitTicketType") && !$builder->hasColumn("SummitTicketType", "Audience")) {
+            $builder->table("SummitTicketType", function (Table $table) {
+                $table->string("Audience")->setNotnull(true)->setDefault("All");
+            });
+        }
     }
 
     /**
@@ -27,8 +29,8 @@ SQL;
     {
         $builder = new Builder($schema);
         if($schema->hasTable("SummitTicketType") && $builder->hasColumn("SummitTicketType", "Audience")) {
-            $builder->table('SummitTicketType', function (Table $table) {
-                $table->dropColumn('Audience');
+            $builder->table("SummitTicketType", function (Table $table) {
+                $table->dropColumn("Audience");
             });
         }
     }

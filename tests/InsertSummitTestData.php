@@ -398,6 +398,7 @@ trait InsertSummitTestData
         $end_date = $end_date->add(new DateInterval("P1D"));
         for($i = 0 ; $i < 20; $i++){
             $presentation = new Presentation();
+            self::$summit->addEvent($presentation);
             $presentation->setTitle(sprintf("Presentation Title %s %s", $i, str_random(16)));
             $presentation->setAbstract(sprintf("Presentation Abstract %s %s", $i, str_random(16)));
             $presentation->setCategory(self::$defaultTrack);
@@ -407,7 +408,6 @@ trait InsertSummitTestData
             $presentation->setStartDate($start_date);
             $presentation->setEndDate($end_date);
             self::$default_selection_plan->addPresentation($presentation);
-            self::$summit->addEvent($presentation);
             self::$presentations[] = $presentation;
             $presentation->publish();
             $start_date = clone($start_date);

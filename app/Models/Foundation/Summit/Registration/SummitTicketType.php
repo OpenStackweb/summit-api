@@ -185,6 +185,7 @@ class SummitTicketType extends SilverstripeBaseModel
         $this->applied_taxes = new ArrayCollection();
         $this->sales_start_date = null;
         $this->sales_end_date = null;
+        $this->audience = self::Audience_All;
     }
 
     /**

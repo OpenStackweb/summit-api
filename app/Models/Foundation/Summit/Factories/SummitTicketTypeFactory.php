@@ -112,11 +112,8 @@ final class SummitTicketTypeFactory
         if(isset($data['badge_type']))
             $ticket_type->setBadgeType($data['badge_type']);
 
-        if(isset($data['audience'])) {
+        if(isset($data['audience']))
             $ticket_type->setAudience($data['audience']);
-        } else {
-            $ticket_type->setAudience(SummitTicketType::Audience_All);
-        }
 
         return $ticket_type;
     }

@@ -116,16 +116,6 @@ interface ISpeakerService
      */
     public function deleteSpeakerAssistance(Summit $summit, $assistance_id);
 
-
-    /**
-     * @param Summit $summit
-     * @param int $assistance_id
-     * @return void
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function sendSpeakerSummitAssistanceAnnouncementMail(Summit $summit, $assistance_id);
-
     /**
      * @param int $requested_by_id
      * @param int $speaker_id
@@ -201,12 +191,12 @@ interface ISpeakerService
      * @param array $payload
      * @param mixed $filter
      */
-    public function triggerSend(Summit $summit, array $payload, $filter = null):void;
+    public function triggerSendEmails(Summit $summit, array $payload, $filter = null):void;
 
     /**
-     * @param Summit $summit
+     * @param int $summit_id
      * @param array $payload
      * @param Filter|null $filter
      */
-    public function send(Summit $summit, array $payload, Filter $filter = null):void;
+    public function sendEmails(int $summit_id, array $payload, Filter $filter = null):void;
 }

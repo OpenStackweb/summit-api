@@ -238,7 +238,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
     protected $active_involvements;
 
     /**
-     * @ORM\OneToMany(targetEntity="SpeakerAnnouncementSummitEmail", mappedBy="speaker", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="SpeakerAnnouncementSummitEmail", mappedBy="speaker", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SpeakerAnnouncementSummitEmail[]
      */
     private $announcement_summit_emails;
@@ -2060,6 +2060,16 @@ SQL;
         $this->phone_number = $phone_number;
     }
 
+    public function addAnnouncementSummitEmail(SpeakerAnnouncementSummitEmail $announcementSummitEmail){
+        if($this->announcement_summit_emails->contains($announcementSummitEmail)) return;
+        $this->announcement_summit_emails->add($announcementSummitEmail);
+        $announcementSummitEmail->setSpeaker($this);
+    }
 
+    public function removeAnnouncementSummitEmail(SpeakerAnnouncementSummitEmail $announcementSummitEmail){
+        if(!$this->announcement_summit_emails->contains($announcementSummitEmail)) return;
+        $this->announcement_summit_emails->removeElement($announcementSummitEmail);
+        $announcementSummitEmail->clearSpeaker();
+    }
 
 }

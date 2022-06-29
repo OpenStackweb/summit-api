@@ -37,4 +37,12 @@ interface IEmailExcerptService
      * @return array
      */
     public function getReport(): array;
+
+    public function addEmailSent():void;
+
+    public function generateEmailCountLine():void;
+
+    public function addInfoMessage(string $message):void;
+
+    public function addErrorMessage(string $message):void;
 }

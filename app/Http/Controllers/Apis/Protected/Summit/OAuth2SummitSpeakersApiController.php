@@ -102,16 +102,16 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      */
     public function __construct
     (
-        ISummitRepository $summit_repository,
-        ISummitEventRepository $event_repository,
-        ISpeakerRepository $speaker_repository,
+        ISummitRepository        $summit_repository,
+        ISummitEventRepository   $event_repository,
+        ISpeakerRepository       $speaker_repository,
         IEventFeedbackRepository $event_feedback_repository,
-        IMemberRepository $member_repository,
+        IMemberRepository        $member_repository,
         ISelectionPlanRepository $selection_plan_repository,
-        ISpeakerService $service,
-        ISummitService $summit_service,
-        ISerializerTypeSelector $serializer_type_selector,
-        IResourceServerContext $resource_server_context
+        ISpeakerService          $service,
+        ISummitService           $summit_service,
+        ISerializerTypeSelector  $serializer_type_selector,
+        IResourceServerContext   $resource_server_context
     )
     {
         parent::__construct($resource_server_context);
@@ -148,38 +148,38 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         return $this->_getAll(
             function () {
                 return [
-                    'first_name'                      => ['=@', '@@', '=='],
-                    'last_name'                       => ['=@', '@@', '=='],
-                    'email'                           => ['=@', '@@', '=='],
-                    'id'                              => ['=='],
-                    'full_name'                       => ['=@', '@@', '=='],
-                    'has_accepted_presentations'      => ['=='],
-                    'has_alternate_presentations'     => ['=='],
-                    'has_rejected_presentations'      => ['=='],
-                    'presentations_track_id'          => ['=='],
+                    'first_name' => ['=@', '@@', '=='],
+                    'last_name' => ['=@', '@@', '=='],
+                    'email' => ['=@', '@@', '=='],
+                    'id' => ['=='],
+                    'full_name' => ['=@', '@@', '=='],
+                    'has_accepted_presentations' => ['=='],
+                    'has_alternate_presentations' => ['=='],
+                    'has_rejected_presentations' => ['=='],
+                    'presentations_track_id' => ['=='],
                     'presentations_selection_plan_id' => ['=='],
-                    'presentations_type_id'           => ['=='],
-                    'presentations_title'             => ['=@', '@@', '=='],
-                    'presentations_abstract'          => ['=@', '@@', '=='],
+                    'presentations_type_id' => ['=='],
+                    'presentations_title' => ['=@', '@@', '=='],
+                    'presentations_abstract' => ['=@', '@@', '=='],
                     'presentations_submitter_full_name' => ['=@', '@@', '=='],
                     'presentations_submitter_email' => ['=@', '@@', '=='],
                 ];
             },
             function () {
                 return [
-                    'first_name'                      => 'sometimes|string',
-                    'last_name'                       => 'sometimes|string',
-                    'email'                           => 'sometimes|string',
-                    'id'                              => 'sometimes|integer',
-                    'full_name'                       => 'sometimes|string',
-                    'has_accepted_presentations'      => 'sometimes|required|string|in:true,false',
-                    'has_alternate_presentations'     => 'sometimes|required|string|in:true,false',
-                    'has_rejected_presentations'      => 'sometimes|required|string|in:true,false',
-                    'presentations_track_id'          => 'sometimes|integer',
+                    'first_name' => 'sometimes|string',
+                    'last_name' => 'sometimes|string',
+                    'email' => 'sometimes|string',
+                    'id' => 'sometimes|integer',
+                    'full_name' => 'sometimes|string',
+                    'has_accepted_presentations' => 'sometimes|required|string|in:true,false',
+                    'has_alternate_presentations' => 'sometimes|required|string|in:true,false',
+                    'has_rejected_presentations' => 'sometimes|required|string|in:true,false',
+                    'presentations_track_id' => 'sometimes|integer',
                     'presentations_selection_plan_id' => 'sometimes|integer',
-                    'presentations_type_id'           => 'sometimes|integer',
-                    'presentations_title'             => 'sometimes|string',
-                    'presentations_abstract'          => 'sometimes|string',
+                    'presentations_type_id' => 'sometimes|integer',
+                    'presentations_title' => 'sometimes|string',
+                    'presentations_abstract' => 'sometimes|string',
                     'presentations_submitter_full_name' => 'sometimes|string',
                     'presentations_submitter_email' => 'sometimes|string',
                 ];
@@ -200,7 +200,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 $current_member = $this->resource_server_context->getCurrentUser();
                 $serializer_type = SerializerRegistry::SerializerType_Public;
 
-                if(!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin())){
+                if (!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin())) {
                     $serializer_type = SerializerRegistry::SerializerType_Admin;
                 }
 
@@ -229,51 +229,51 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
-    public function getSpeakersCSV($summit_id){
+    public function getSpeakersCSV($summit_id)
+    {
         $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
         if (is_null($summit)) return $this->error404();
 
         return $this->_getAllCSV(
-            function(){
+            function () {
                 return [
-                    'first_name'                      => ['=@','@@', '=='],
-                    'last_name'                       => ['=@','@@', '=='],
-                    'email'                           => ['=@','@@', '=='],
-                    'id'                              => ['=='],
-                    'full_name'                       => ['=@','@@', '=='],
-                    'has_accepted_presentations'      => ['=='],
-                    'has_alternate_presentations'     => ['=='],
-                    'has_rejected_presentations'      => ['=='],
-                    'presentations_track_id'          => ['=='],
+                    'first_name' => ['=@', '@@', '=='],
+                    'last_name' => ['=@', '@@', '=='],
+                    'email' => ['=@', '@@', '=='],
+                    'id' => ['=='],
+                    'full_name' => ['=@', '@@', '=='],
+                    'has_accepted_presentations' => ['=='],
+                    'has_alternate_presentations' => ['=='],
+                    'has_rejected_presentations' => ['=='],
+                    'presentations_track_id' => ['=='],
                     'presentations_selection_plan_id' => ['=='],
-                    'presentations_type_id'           => ['=='],
-                    'presentations_title'             => ['=@', '@@', '=='],
-                    'presentations_abstract'          => ['=@', '@@', '=='],
+                    'presentations_type_id' => ['=='],
+                    'presentations_title' => ['=@', '@@', '=='],
+                    'presentations_abstract' => ['=@', '@@', '=='],
                     'presentations_submitter_full_name' => ['=@', '@@', '=='],
                     'presentations_submitter_email' => ['=@', '@@', '=='],
                 ];
             },
-            function(){
+            function () {
                 return [
-                    'first_name'                      => 'sometimes|string',
-                    'last_name'                       => 'sometimes|string',
-                    'email'                           => 'sometimes|string',
-                    'id'                              => 'sometimes|integer',
-                    'full_name'                       => 'sometimes|string',
-                    'has_accepted_presentations'      => 'sometimes|required|string|in:true,false',
-                    'has_alternate_presentations'     => 'sometimes|required|string|in:true,false',
-                    'has_rejected_presentations'      => 'sometimes|required|string|in:true,false',
-                    'presentations_track_id'          => 'sometimes|integer',
+                    'first_name' => 'sometimes|string',
+                    'last_name' => 'sometimes|string',
+                    'email' => 'sometimes|string',
+                    'id' => 'sometimes|integer',
+                    'full_name' => 'sometimes|string',
+                    'has_accepted_presentations' => 'sometimes|required|string|in:true,false',
+                    'has_alternate_presentations' => 'sometimes|required|string|in:true,false',
+                    'has_rejected_presentations' => 'sometimes|required|string|in:true,false',
+                    'presentations_track_id' => 'sometimes|integer',
                     'presentations_selection_plan_id' => 'sometimes|integer',
-                    'presentations_type_id'           => 'sometimes|integer',
-                    'presentations_title'             => 'sometimes|string',
-                    'presentations_abstract'          => 'sometimes|string',
+                    'presentations_type_id' => 'sometimes|integer',
+                    'presentations_title' => 'sometimes|string',
+                    'presentations_abstract' => 'sometimes|string',
                     'presentations_submitter_full_name' => 'sometimes|string',
                     'presentations_submitter_email' => 'sometimes|string',
                 ];
             },
-            function()
-            {
+            function () {
                 return [
                     'full_name',
                     'first_name',
@@ -285,13 +285,13 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             function ($filter) use ($summit) {
                 return $filter;
             },
-            function(){
+            function () {
                 return SerializerRegistry::SerializerType_CSV;
             },
-            function(){
+            function () {
                 return [];
             },
-            function(){
+            function () {
                 return [
                     'id',
                     'first_name',
@@ -372,7 +372,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 $current_member = $this->resource_server_context->getCurrentUser();
                 $serializer_type = SerializerRegistry::SerializerType_Public;
 
-                if(!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin())){
+                if (!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin())) {
                     $serializer_type = SerializerRegistry::SerializerType_Admin;
                 }
                 return $serializer_type;
@@ -436,7 +436,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 $current_member = $this->resource_server_context->getCurrentUser();
                 $serializer_type = SerializerRegistry::SerializerType_Public;
 
-                if(!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin())){
+                if (!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin())) {
                     $serializer_type = SerializerRegistry::SerializerType_Admin;
                 }
                 return $serializer_type;
@@ -475,7 +475,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 if ($speaker->getMemberId() == $current_member->getId())
                     $serializer_type = SerializerRegistry::SerializerType_Private;
 
-                if($current_member->isAdmin() || $current_member->isSummitAdmin()){
+                if ($current_member->isAdmin() || $current_member->isSummitAdmin()) {
                     $serializer_type = SerializerRegistry::SerializerType_Admin;
                 }
             }
@@ -722,7 +722,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             if (!is_null($current_member)) {
                 if ($speaker->getMemberId() == $current_member->getId() || $speaker->canBeEditedBy($current_member))
                     $serializer_type = SerializerRegistry::SerializerType_Private;
-                if($current_member->isAdmin() || $current_member->isSummitAdmin()){
+                if ($current_member->isAdmin() || $current_member->isSummitAdmin()) {
                     $serializer_type = SerializerRegistry::SerializerType_Admin;
                 }
 
@@ -1715,10 +1715,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'has_alternate_presentations' => ['=='],
                     'has_rejected_presentations' => ['=='],
                     'presentations_track_id' => ['=='],
-                    'presentations_selection_plan_id' =>  ['=='],
-                    'presentations_type_id'           =>  ['=='],
-                    'presentations_title'             => ['=@', '@@', '=='],
-                    'presentations_abstract'          => ['=@', '@@', '=='],
+                    'presentations_selection_plan_id' => ['=='],
+                    'presentations_type_id' => ['=='],
+                    'presentations_title' => ['=@', '@@', '=='],
+                    'presentations_abstract' => ['=@', '@@', '=='],
                     'presentations_submitter_full_name' => ['=@', '@@', '=='],
                     'presentations_submitter_email' => ['=@', '@@', '=='],
                 ]);
@@ -1736,16 +1736,16 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'has_accepted_presentations' => 'sometimes|required|string|in:true,false',
                 'has_alternate_presentations' => 'sometimes|required|string|in:true,false',
                 'has_rejected_presentations' => 'sometimes|required|string|in:true,false',
-                'presentations_track_id'          => 'sometimes|integer',
+                'presentations_track_id' => 'sometimes|integer',
                 'presentations_selection_plan_id' => 'sometimes|integer',
-                'presentations_type_id'           => 'sometimes|integer',
-                'presentations_title'             => 'sometimes|string',
-                'presentations_abstract'          => 'sometimes|string',
+                'presentations_type_id' => 'sometimes|integer',
+                'presentations_title' => 'sometimes|string',
+                'presentations_abstract' => 'sometimes|string',
                 'presentations_submitter_full_name' => 'sometimes|string',
                 'presentations_submitter_email' => 'sometimes|string',
             ]);
 
-            $this->service->triggerSend($summit, $payload, Request::input('filter'));
+            $this->service->triggerSendEmails($summit, $payload, Request::input('filter'));
 
             return $this->ok();
         });

@@ -725,6 +725,12 @@ class Summit extends SilverstripeBaseModel
     private $registration_companies;
 
     /**
+     * @ORM\OneToMany(targetEntity="models\summit\SpeakerAnnouncementSummitEmail", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var SpeakerAnnouncementSummitEmail[]
+     */
+    private $speakers_announcement_emails;
+
+    /**
      * @return string
      */
     public function getDatesLabel()
@@ -1062,6 +1068,7 @@ class Summit extends SilverstripeBaseModel
         $this->allow_update_attendee_extra_questions = false;
         $this->registration_companies = new ArrayCollection();
         $this->external_registration_feed_last_ingest_date = null;
+        $this->speakers_announcement_emails = new ArrayCollection();
     }
 
     /**
@@ -6272,5 +6279,17 @@ SQL;
         // subtract skew time
         $utcNow->sub(new \DateInterval('PT15M'));
         $this->external_registration_feed_last_ingest_date = $utcNow;
+    }
+
+    public function addAnnouncementSummitEmail(SpeakerAnnouncementSummitEmail $announcementSummitEmail){
+        if($this->speakers_announcement_emails->contains($announcementSummitEmail)) return;
+        $this->speakers_announcement_emails->add($announcementSummitEmail);
+        $announcementSummitEmail->setSummit($this);
+    }
+
+    public function removeAnnouncementSummitEmail(SpeakerAnnouncementSummitEmail $announcementSummitEmail){
+        if(!$this->speakers_announcement_emails->contains($announcementSummitEmail)) return;
+        $this->speakers_announcement_emails->removeElement($announcementSummitEmail);
+        $announcementSummitEmail->clearSummit();
     }
 }

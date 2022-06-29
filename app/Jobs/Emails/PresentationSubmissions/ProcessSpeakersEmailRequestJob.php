@@ -17,6 +17,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use models\summit\ISummitRepository;
 use models\summit\Summit;
 use services\model\ISpeakerService;
 use utils\FilterParser;
@@ -32,32 +33,49 @@ final class ProcessSpeakersEmailRequestJob implements ShouldQueue
 
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    private $summit;
+    /**
+     * @var int
+     */
+    private $summit_id;
 
+    /**
+     * @var array
+     */
     private $payload;
 
+    /**
+     * @var mixed
+     */
     private $filter;
 
     /**
      * ProcessSpeakersEmailRequestJob constructor.
-     * @param Summit $summit
+     * @param int $summit_id
      * @param array $payload
      * @param $filter
      */
-    public function __construct(Summit $summit, array $payload, $filter)
+    public function __construct(int $summit_id, array $payload, $filter)
     {
-        $this->summit = $summit;
+        $this->summit_id = $summit_id;
         $this->payload = $payload;
         $this->filter = $filter;
     }
 
-    public function handle(ISpeakerService $service){
+    /**
+     * @param ISummitRepository $summit_repository
+     * @param ISpeakerService $service
+     * @throws \utils\FilterParserException
+     */
+    public function handle
+    (
+        ISpeakerService $service
+    ){
         Log::debug
         (
             sprintf
             (
                 "ProcessSpeakersEmailRequestJob::handle summit id %s payload %s",
-                $this->summit->getId(),
+                $this->summit_id,
                 json_encode($this->payload)
             )
         );
@@ -80,6 +98,6 @@ final class ProcessSpeakersEmailRequestJob implements ShouldQueue
             'presentations_submitter_email' => ['=@', '@@', '=='],
         ]) : null;
 
-        $service->send($this->summit, $this->payload, $filter);
+        $service->sendEmails($this->summit_id, $this->payload, $filter);
     }
 }

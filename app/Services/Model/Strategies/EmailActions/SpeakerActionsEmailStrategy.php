@@ -163,25 +163,34 @@ class SpeakerActionsEmailStrategy
                     $promo_code,
                     $assistance
                 );
+                // mark the promo code as sent
+                if(!is_null($promo_code))
+                    $promo_code->setEmailSent(true);
+
+                // generate email proof
+                $proof = new SpeakerAnnouncementSummitEmail();
+                $proof->setType($type);
+                $speaker->addAnnouncementSummitEmail($proof);
+                $this->summit->addAnnouncementSummitEmail($proof);
+                $proof->markAsSent();
+                EmailExcerpt::addEmailSent();
                 return;
             }
 
-            EmailExcerpt::add(
-                [
-                    'type' => IEmailExcerptService::InfoType,
-                    'message' => sprintf
+            EmailExcerpt::addInfoMessage(
+               sprintf
                     (
-                        "exclude speaker %s accepted %b alternate %b rejected %b original email %s",
+                        "excluded speaker %s accepted %b alternate %b rejected %b for original email %s",
                         $speaker->getEmail(),
                         $has_accepted_presentations,
                         $has_alternate_presentations,
                         $has_rejected_presentations,
                         $this->flow_event
                     )
-                ]
             );
         } catch (\Exception $ex) {
             Log::error($ex);
+            EmailExcerpt::addErrorMessage($ex->getMessage());
         }
     }
 }

@@ -26,12 +26,28 @@ final class EmailExcerptService implements IEmailExcerptService
      */
     private $report = [];
 
+    private $sent_email_count = 0;
+
     /**
      * @inheritDoc
      */
     public function add(array $value) : void
     {
         $this->report[] = $value;
+    }
+
+    public function addInfoMessage(string $message):void{
+        $this->report[] = [
+            'type' => IEmailExcerptService::InfoType,
+            'message' => $message
+        ];
+    }
+
+    public function addErrorMessage(string $message):void{
+        $this->report[] = [
+            'type' => IEmailExcerptService::ErrorType,
+            'message' => $message
+        ];
     }
 
     /**
@@ -48,5 +64,13 @@ final class EmailExcerptService implements IEmailExcerptService
     public function getReport(): array
     {
         return $this->report;
+    }
+
+    public function addEmailSent():void{
+        ++$this->sent_email_count;
+    }
+
+    public function generateEmailCountLine():void{
+        $this->addInfoMessage(sprintf("Total %s email(s) sent.", $this->sent_email_count));
     }
 }

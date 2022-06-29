@@ -12,13 +12,17 @@
  * limitations under the License.
  **/
 use Doctrine\ORM\Mapping AS ORM;
-use models\summit\PresentationSpeaker;
-use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
 use DateTime;
 /**
  * @ORM\Entity
  * @ORM\Table(name="SpeakerAnnouncementSummitEmail")
+ * @ORM\AssociationOverrides({
+ *     @ORM\AssociationOverride(
+ *          name="summit",
+ *          inversedBy="speakers_announcement_emails"
+ *     )
+ * })
  * Class SpeakerAnnouncementSummitEmail
  * @package models\summit
  */
@@ -60,7 +64,7 @@ class SpeakerAnnouncementSummitEmail extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getType()
+    public function getType():?string
     {
         return $this->type;
     }
@@ -68,7 +72,7 @@ class SpeakerAnnouncementSummitEmail extends SilverstripeBaseModel
     /**
      * @param string $type
      */
-    public function setType($type)
+    public function setType(string $type)
     {
         $this->type = $type;
     }
@@ -76,23 +80,23 @@ class SpeakerAnnouncementSummitEmail extends SilverstripeBaseModel
     /**
      * @return DateTime
      */
-    public function getSendDate()
+    public function getSendDate():?DateTime
     {
         return $this->send_date;
     }
 
-    /**
-     * @param DateTime $send_date
-     */
-    public function setSendDate(DateTime $send_date)
-    {
-        $this->send_date = $send_date;
+    public function isSent():bool{
+        return !is_null($this->send_date);
+    }
+
+    public function markAsSent():void{
+        $this->send_date = new DateTime('now', new \DateTimeZone('UTC'));
     }
 
     /**
      * @return PresentationSpeaker
      */
-    public function getSpeaker()
+    public function getSpeaker():?PresentationSpeaker
     {
         return $this->speaker;
     }
@@ -103,6 +107,10 @@ class SpeakerAnnouncementSummitEmail extends SilverstripeBaseModel
     public function setSpeaker($speaker)
     {
         $this->speaker = $speaker;
+    }
+
+    public function clearSpeaker():void{
+        $this->speaker = null;
     }
 
 }

@@ -624,79 +624,87 @@ final class SpeakerService
      */
     private function getPromoCode(Summit $summit, PresentationSpeaker $speaker): ?SpeakerSummitRegistrationPromoCode
     {
-        $promo_code = $speaker->getPromoCodeFor($summit);
+        return $this->tx_service->transaction(function() use($speaker, $summit) {
 
-        if (is_null($promo_code)) {
-            // try to get a new one
+            $promo_code = $speaker->getPromoCodeFor($summit);
 
-            $has_accepted =
-                $speaker->hasAcceptedPresentations($summit, PresentationSpeaker::RoleModerator, true, $summit->getExcludedCategoriesForAcceptedPresentations()) ||
-                $speaker->hasAcceptedPresentations($summit, PresentationSpeaker::RoleSpeaker, true, $summit->getExcludedCategoriesForAcceptedPresentations());
+            if (is_null($promo_code)) {
+                // try to get a new one
 
-            $has_alternate =
-                $speaker->hasAlternatePresentations($summit, PresentationSpeaker::RoleModerator, true, $summit->getExcludedCategoriesForAlternatePresentations()) ||
-                $speaker->hasAlternatePresentations($summit, PresentationSpeaker::RoleSpeaker, true, $summit->getExcludedCategoriesForAlternatePresentations());
+                $has_accepted =
+                    $speaker->hasAcceptedPresentations($summit, PresentationSpeaker::RoleModerator, true, $summit->getExcludedCategoriesForAcceptedPresentations()) ||
+                    $speaker->hasAcceptedPresentations($summit, PresentationSpeaker::RoleSpeaker, true, $summit->getExcludedCategoriesForAcceptedPresentations());
 
-            if ($has_accepted) //get approved code
-            {
-                $promo_code = $this->registration_code_repository->getNextAvailableByType
-                (
-                    $summit,
-                    PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAccepted
-                );
-                if (is_null($promo_code))
-                    throw new ValidationException
+                $has_alternate =
+                    $speaker->hasAlternatePresentations($summit, PresentationSpeaker::RoleModerator, true, $summit->getExcludedCategoriesForAlternatePresentations()) ||
+                    $speaker->hasAlternatePresentations($summit, PresentationSpeaker::RoleSpeaker, true, $summit->getExcludedCategoriesForAlternatePresentations());
+
+                if ($has_accepted) //get approved code
+                {
+                    $promo_code = $this->registration_code_repository->getNextAvailableByType
                     (
-                        trans
-                        (
-                            'validation_errors.send_speaker_summit_assistance_announcement_mail_run_out_promo_code',
-                            [
-                                'summit_id' => $summit->getId(),
-                                'speaker_id' => $speaker->getId(),
-                                'type' => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAccepted
-                            ]
-                        )
+                        $summit,
+                        PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAccepted
                     );
-                $speaker->addPromoCode($promo_code);
-            } else if ($has_alternate) // get alternate code
-            {
-                $promo_code = $this->registration_code_repository->getNextAvailableByType
-                (
-                    $summit,
-                    PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAlternate
-                );
-                if (is_null($promo_code))
-                    throw new ValidationException
+                    if (is_null($promo_code))
+                        throw new ValidationException
+                        (
+                            trans
+                            (
+                                'validation_errors.send_speaker_summit_assistance_announcement_mail_run_out_promo_code',
+                                [
+                                    'summit_id' => $summit->getId(),
+                                    'speaker_id' => $speaker->getId(),
+                                    'speaker_email' => $speaker->getEmail(),
+                                    'type' => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAccepted
+                                ]
+                            )
+                        );
+                    $speaker->addPromoCode($promo_code);
+                } else if ($has_alternate) // get alternate code
+                {
+                    $promo_code = $this->registration_code_repository->getNextAvailableByType
                     (
-                        trans
-                        (
-                            'validation_errors.send_speaker_summit_assistance_announcement_mail_run_out_promo_code',
-                            [
-                                'summit_id' => $summit->getId(),
-                                'speaker_id' => $speaker->getId(),
-                                'type' => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAccepted
-                            ]
-                        )
-
+                        $summit,
+                        PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAlternate
                     );
-                $speaker->addPromoCode($promo_code);
+                    if (is_null($promo_code))
+                        throw new ValidationException
+                        (
+                            trans
+                            (
+                                'validation_errors.send_speaker_summit_assistance_announcement_mail_run_out_promo_code',
+                                [
+                                    'summit_id' => $summit->getId(),
+                                    'speaker_id' => $speaker->getId(),
+                                    'speaker_email' => $speaker->getEmail(),
+                                    'type' => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAccepted
+                                ]
+                            )
+
+                        );
+                    $speaker->addPromoCode($promo_code);
+                }
             }
-        }
-        if (is_null($promo_code)) {
-            throw new ValidationException
-            (
-                trans
-                (
-                    'validation_errors.send_speaker_summit_assistance_promo_code_not_set',
-                    [
-                        'summit_id' => $summit->getId(),
-                        'speaker_id' => $speaker->getId(),
-                    ]
-                )
 
-            );
-        }
-        return $promo_code;
+            if (is_null($promo_code)) {
+                throw new ValidationException
+                (
+                    trans
+                    (
+                        'validation_errors.send_speaker_summit_assistance_promo_code_not_set',
+                        [
+                            'summit_id' => $summit->getId(),
+                            'speaker_id' => $speaker->getId(),
+                            'speaker_email' => $speaker->getEmail()
+                        ]
+                    )
+
+                );
+            }
+
+            return $promo_code;
+        });
     }
 
     /**
@@ -987,92 +995,14 @@ final class SpeakerService
 
     /**
      * @param Summit $summit
-     * @param int $assistance_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function sendSpeakerSummitAssistanceAnnouncementMail(Summit $summit, $assistance_id)
-    {
-        $this->tx_service->transaction(function () use ($summit, $assistance_id) {
-
-            $speaker_assistance = $summit->getSpeakerAssistanceById($assistance_id);
-
-            if (is_null($speaker_assistance))
-                throw new EntityNotFoundException
-                (
-                    trans
-                    (
-                        'not_found_errors.send_speaker_summit_assistance_announcement_mail_not_found_assistance',
-                        [
-                            'summit_id' => $summit->getId(),
-                            'assistance_id' => $assistance_id
-                        ]
-                    )
-                );
-            $speaker = $speaker_assistance->getSpeaker();
-
-            $role = $speaker->isModeratorFor($summit) ?
-                PresentationSpeaker::RoleModerator : PresentationSpeaker::RoleSpeaker;
-
-            $promo_code = $this->getPromoCode($summit, $speaker);
-
-            $type = SpeakerSelectionAnnouncementEmailTypeFactory::build($summit, $speaker, $role);
-
-            if ($promo_code->isRedeemed())
-                throw new ValidationException
-                (
-                    trans
-                    (
-                        'validation_errors.send_speaker_summit_assistance_announcement_mail_code_already_redeemed',
-                        [
-                            'promo_code' => $promo_code->getCode()
-                        ]
-                    )
-                );
-
-            if (!PresentationSpeakerSelectionProcessEmailFactory::isValidType($type))
-                throw new ValidationException
-                (
-                    trans
-                    (
-                        'validation_errors.send_speaker_summit_assistance_announcement_mail_invalid_mail_type',
-                        [
-                            'mail_type' => $type
-                        ]
-                    )
-                );
-
-            $assistance = $this->generateSpeakerAssistance($summit->getId(), $speaker->getId());
-            PresentationSpeakerSelectionProcessEmailFactory::send
-            (
-                $summit,
-                $speaker,
-                $type,
-                $promo_code,
-                $assistance
-            );
-            $promo_code->setEmailSent(true);
-        });
-    }
-
-
-    /**
-     * @param Summit $summit
      * @param PresentationSpeaker $speaker
      * @return PresentationSpeakerSummitAssistanceConfirmationRequest|null
      * @throws \Exception
      */
-    public function generateSpeakerAssistance(int $summit_id, int $speaker_id): ?PresentationSpeakerSummitAssistanceConfirmationRequest
+    private function generateSpeakerAssistance(Summit $summit, PresentationSpeaker $speaker): ?PresentationSpeakerSummitAssistanceConfirmationRequest
     {
-        return $this->tx_service->transaction(function () use ($summit_id, $speaker_id) {
+        return $this->tx_service->transaction(function () use ($summit, $speaker) {
 
-            $speaker = $this->speaker_repository->getById($speaker_id);
-            $summit = $this->summit_repository->getById($summit_id);
-
-            if(is_null($speaker))
-                throw new EntityNotFoundException();
-            if(is_null($summit))
-                throw new EntityNotFoundException();
 
             $has_accepted_presentations =
                 $speaker->hasAcceptedPresentations(
@@ -1374,22 +1304,22 @@ final class SpeakerService
     /**
      * @inheritDoc
      */
-    public function triggerSend(Summit $summit, array $payload, $filter = null): void
+    public function triggerSendEmails(Summit $summit, array $payload, $filter = null): void
     {
-        ProcessSpeakersEmailRequestJob::dispatch($summit, $payload, $filter);
+        ProcessSpeakersEmailRequestJob::dispatch($summit->getId(), $payload, $filter);
     }
 
     /**
      * @inheritDoc
      */
-    public function send(Summit $summit, array $payload, Filter $filter = null): void
+    public function sendEmails(int $summit_id, array $payload, Filter $filter = null): void
     {
         Log::debug
         (
             sprintf
             (
                 "SpeakerService::send summit %s payload %s filter %s",
-                $summit->getId(),
+                $summit_id,
                 json_encode($payload),
                 is_null($filter) ? "" : $filter->__toString()
             )
@@ -1398,9 +1328,7 @@ final class SpeakerService
         $flow_event = trim($payload['email_flow_event']);
         $done = isset($payload['speaker_ids']); // we have provided only ids and not a criteria
         $outcome_email_recipient = $payload['outcome_email_recipient'] ?? null;
-        $summit_id = $summit->getId();
         EmailTest::setEmailAddress($payload['test_email_recipient']);
-        $email_strategy = new SpeakerActionsEmailStrategy($summit, $flow_event);
 
         $page = 1;
         $count = 0;
@@ -1410,12 +1338,21 @@ final class SpeakerService
             Log::debug(sprintf("SpeakerService::send summit id %s flow_event %s filter %s",
                 $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString()));
 
-            EmailExcerpt::add(
-                [
-                    'type' => IEmailExcerptService::InfoType,
-                    'message' => sprintf("Processing EMAIL %s for summit %s", $flow_event, $summit->getId())
-                ]
+            EmailExcerpt::addInfoMessage(
+                sprintf("Processing EMAIL %s for summit %s", $flow_event, $summit_id)
             );
+
+            $summit = $this->tx_service->transaction(function () use($summit_id){
+
+                $summit = $this->summit_repository->getById($summit_id);
+                if (is_null($summit) || !$summit instanceof Summit) return null;
+                return $summit;
+            });
+
+            if(is_null($summit)){
+                Log::debug("SpeakerService::send summit is null");
+                return;
+            }
 
             $ids = $this->tx_service->transaction(function () use ($summit, $payload, $filter, $page, $maxPageSize) {
                 if (isset($payload['speaker_ids'])) {
@@ -1443,23 +1380,9 @@ final class SpeakerService
 
             EmailExcerpt::clearReport();
 
+            $email_strategy = new SpeakerActionsEmailStrategy($summit, $flow_event);
+
             foreach ($ids as $speaker_id) {
-
-                $promo_code = $this->tx_service->transaction(function() use ($summit, $speaker_id){
-                    try{
-                        $speaker = $this->speaker_repository->getByIdExclusiveLock(intval($speaker_id));
-                        if (is_null($speaker) || !$speaker instanceof PresentationSpeaker) {
-                            throw new EntityNotFoundException('speaker not found!');
-                        }
-                        return $this->getPromoCode($summit, $speaker);
-                    }
-                    catch (\Exception $ex){
-                        Log::warning($ex);
-                        return null;
-                    }
-                });
-
-                $assistance = $this->generateSpeakerAssistance($summit_id, $speaker_id);
 
                 try {
                     $this->tx_service->transaction(function () use
@@ -1467,9 +1390,7 @@ final class SpeakerService
                         $flow_event,
                         $summit,
                         $speaker_id,
-                        $email_strategy,
-                        $promo_code,
-                        $assistance
+                        $email_strategy
                     ) {
 
                         Log::debug(sprintf("SpeakerService::send processing speaker id %s", $speaker_id));
@@ -1480,6 +1401,12 @@ final class SpeakerService
                             throw new EntityNotFoundException('speaker not found!');
                         }
 
+                        // try to get a promo code
+                        $promo_code = $this->getPromoCode($summit, $speaker);
+
+                        // try to get an speaker assistance
+                        $assistance = $this->generateSpeakerAssistance($summit, $speaker);
+
                         $email_strategy->process
                         (
                             $speaker,
@@ -1489,14 +1416,16 @@ final class SpeakerService
                     });
                 } catch (\Exception $ex) {
                     Log::warning($ex);
-                    EmailExcerpt::add(['type' => IEmailExcerptService::ErrorType, 'message' => $ex->getMessage()]);
+                    EmailExcerpt::addErrorMessage($ex->getMessage());
                 }
                 $count++;
             }
             $page++;
         } while (!$done);
 
-        EmailExcerpt::add(['type' => IEmailExcerptService::InfoType, 'message' => sprintf("TOTAL of %s emails sent.", $count)]);
+
+        EmailExcerpt::addInfoMessage(sprintf("TOTAL of %s speaker(s) processed.", $count));
+        EmailExcerpt::generateEmailCountLine();
 
         if (!empty($outcome_email_recipient))
             PresentationSpeakerSelectionProcessExcerptEmail::dispatch($summit, $outcome_email_recipient);

@@ -21,27 +21,30 @@ use Doctrine\ORM\Mapping AS ORM;
 trait SummitOwned
 {
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\Summit", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="models\summit\Summit")
      * @ORM\JoinColumn(name="SummitID", referencedColumnName="ID")
      * @var Summit
      */
     protected $summit;
 
-    public function setSummit($summit){
+    /**
+     * @param Summit $summit
+     */
+    public function setSummit(Summit $summit){
         $this->summit = $summit;
     }
 
     /**
      * @return Summit
      */
-    public function getSummit(){
+    public function getSummit():Summit{
         return $this->summit;
     }
 
     /**
      * @return int
      */
-    public function getSummitId(){
+    public function getSummitId():int{
         try {
             return is_null($this->summit) ? 0 : $this->summit->getId();
         }

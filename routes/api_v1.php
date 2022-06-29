@@ -499,7 +499,8 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSpeakersAssistanceApiController@getSpeakerSummitAssistanceBySummit']);
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSpeakersAssistanceApiController@deleteSpeakerSummitAssistance']);
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSpeakersAssistanceApiController@updateSpeakerSummitAssistance']);
-                Route::post('mail', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSpeakersAssistanceApiController@sendSpeakerSummitAssistanceAnnouncementMail']);
+                // @deprecated
+                // Route::post('mail', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSpeakersAssistanceApiController@sendSpeakerSummitAssistanceAnnouncementMail']);
             });
         });
 

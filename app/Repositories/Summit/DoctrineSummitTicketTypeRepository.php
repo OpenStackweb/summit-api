@@ -42,6 +42,7 @@ final class DoctrineSummitTicketTypeRepository
             'name'        => 'tt.name:json_string',
             'description' => 'tt.description:json_string',
             'external_id' => 'tt.external_id:json_string',
+            'audience'    => 'tt.audience:json_string',
         ];
     }
 
@@ -54,6 +55,7 @@ final class DoctrineSummitTicketTypeRepository
             'name'        => 'tt.name',
             'id'          => 'tt.id',
             'external_id' => 'tt.external_id',
+            'audience'    => 'tt.audience',
         ];
     }
 

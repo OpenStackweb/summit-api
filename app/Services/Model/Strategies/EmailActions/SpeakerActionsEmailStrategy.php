@@ -163,6 +163,17 @@ class SpeakerActionsEmailStrategy
                     $promo_code,
                     $assistance
                 );
+                // mark the promo code as sent
+                if(!is_null($promo_code))
+                    $promo_code->setEmailSent(true);
+
+                // build email proof
+                $proof = new SpeakerAnnouncementSummitEmail();
+                $proof->setType($type);
+                $speaker->addAnnouncementSummitEmail($proof);
+                $this->summit->addAnnouncementSummitEmail($proof);
+
+                $proof->markAsSent();
                 return;
             }
 

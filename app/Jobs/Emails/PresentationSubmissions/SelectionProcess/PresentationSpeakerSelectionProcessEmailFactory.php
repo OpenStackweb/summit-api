@@ -30,9 +30,10 @@ final class PresentationSpeakerSelectionProcessEmailFactory
      */
     public static $valid_types = [
         SpeakerAnnouncementSummitEmail::TypeAccepted,
+        SpeakerAnnouncementSummitEmail::TypeAlternate,
+        SpeakerAnnouncementSummitEmail::TypeAlternate,
         SpeakerAnnouncementSummitEmail::TypeAcceptedAlternate,
         SpeakerAnnouncementSummitEmail::TypeAcceptedRejected,
-        SpeakerAnnouncementSummitEmail::TypeAlternate,
         SpeakerAnnouncementSummitEmail::TypeAlternateRejected,
     ];
 

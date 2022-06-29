@@ -987,77 +987,6 @@ final class SpeakerService
 
     /**
      * @param Summit $summit
-     * @param int $assistance_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function sendSpeakerSummitAssistanceAnnouncementMail(Summit $summit, $assistance_id)
-    {
-        $this->tx_service->transaction(function () use ($summit, $assistance_id) {
-
-            $speaker_assistance = $summit->getSpeakerAssistanceById($assistance_id);
-
-            if (is_null($speaker_assistance))
-                throw new EntityNotFoundException
-                (
-                    trans
-                    (
-                        'not_found_errors.send_speaker_summit_assistance_announcement_mail_not_found_assistance',
-                        [
-                            'summit_id' => $summit->getId(),
-                            'assistance_id' => $assistance_id
-                        ]
-                    )
-                );
-            $speaker = $speaker_assistance->getSpeaker();
-
-            $role = $speaker->isModeratorFor($summit) ?
-                PresentationSpeaker::RoleModerator : PresentationSpeaker::RoleSpeaker;
-
-            $promo_code = $this->getPromoCode($summit, $speaker);
-
-            $type = SpeakerSelectionAnnouncementEmailTypeFactory::build($summit, $speaker, $role);
-
-            if ($promo_code->isRedeemed())
-                throw new ValidationException
-                (
-                    trans
-                    (
-                        'validation_errors.send_speaker_summit_assistance_announcement_mail_code_already_redeemed',
-                        [
-                            'promo_code' => $promo_code->getCode()
-                        ]
-                    )
-                );
-
-            if (!PresentationSpeakerSelectionProcessEmailFactory::isValidType($type))
-                throw new ValidationException
-                (
-                    trans
-                    (
-                        'validation_errors.send_speaker_summit_assistance_announcement_mail_invalid_mail_type',
-                        [
-                            'mail_type' => $type
-                        ]
-                    )
-                );
-
-            $assistance = $this->generateSpeakerAssistance($summit->getId(), $speaker->getId());
-            PresentationSpeakerSelectionProcessEmailFactory::send
-            (
-                $summit,
-                $speaker,
-                $type,
-                $promo_code,
-                $assistance
-            );
-            $promo_code->setEmailSent(true);
-        });
-    }
-
-
-    /**
-     * @param Summit $summit
      * @param PresentationSpeaker $speaker
      * @return PresentationSpeakerSummitAssistanceConfirmationRequest|null
      * @throws \Exception
@@ -1445,6 +1374,7 @@ final class SpeakerService
 
             foreach ($ids as $speaker_id) {
 
+                // try to get a promo code
                 $promo_code = $this->tx_service->transaction(function() use ($summit, $speaker_id){
                     try{
                         $speaker = $this->speaker_repository->getByIdExclusiveLock(intval($speaker_id));
@@ -1459,6 +1389,7 @@ final class SpeakerService
                     }
                 });
 
+                // try to get an speaker assistance
                 $assistance = $this->generateSpeakerAssistance($summit_id, $speaker_id);
 
                 try {

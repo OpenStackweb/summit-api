@@ -2060,6 +2060,16 @@ SQL;
         $this->phone_number = $phone_number;
     }
 
+    public function addAnnouncementSummitEmail(SpeakerAnnouncementSummitEmail $announcementSummitEmail){
+        if($this->announcement_summit_emails->contains($announcementSummitEmail)) return;
+        $this->announcement_summit_emails->add($announcementSummitEmail);
+        $announcementSummitEmail->setSpeaker($this);
+    }
 
+    public function removeAnnouncementSummitEmail(SpeakerAnnouncementSummitEmail $announcementSummitEmail){
+        if(!$this->announcement_summit_emails->contains($announcementSummitEmail)) return;
+        $this->announcement_summit_emails->removeElement($announcementSummitEmail);
+        $announcementSummitEmail->clearSpeaker();
+    }
 
 }

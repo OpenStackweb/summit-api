@@ -44,7 +44,7 @@ class PresentationSpeakerSelectionProcessAcceptedRejectedEmail extends Presentat
     public function __construct
     (
         Summit $summit,
-        SummitRegistrationPromoCode $promo_code,
+        ?SummitRegistrationPromoCode $promo_code,
         PresentationSpeaker $speaker,
         ?string $confirmation_token = null
     )

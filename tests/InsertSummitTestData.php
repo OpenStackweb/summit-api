@@ -175,6 +175,7 @@ trait InsertSummitTestData
         self::$default_ticket_type->setName("TICKET TYPE 1");
         self::$default_ticket_type->setQuantity2Sell(100);
         self::$default_ticket_type->setBadgeType(self::$default_badge_type);
+        self::$default_ticket_type->setAudience(SummitTicketType::Audience_All);
 
         self::$summit = new Summit();
         self::$summit->setActive(true);

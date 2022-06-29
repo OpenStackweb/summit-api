@@ -1,4 +1,6 @@
 <?php namespace App\Http\Controllers;
+use models\summit\SummitTicketType;
+
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,6 +37,7 @@ final class SummitTicketTypeValidationRulesFactory
                 'sales_start_date'        => 'nullable|date_format:U',
                 'sales_end_date'          => 'nullable:sales_start_date|date_format:U|after:sales_start_date',
                 'cost'                    => 'sometimes|numeric|greater_than_or_equal:0',
+                'audience'                => 'sometimes|string|in:'.implode(',', SummitTicketType::AllowedAudience),
             ];
         }
 
@@ -49,6 +52,7 @@ final class SummitTicketTypeValidationRulesFactory
             'description'            => 'sometimes|string',
             'external_id'            => 'sometimes|string|max:255',
             'badge_type_id'          => 'sometimes|integer',
+            'audience'               => 'sometimes|string|in:'.implode(',', SummitTicketType::AllowedAudience),
         ];
     }
 

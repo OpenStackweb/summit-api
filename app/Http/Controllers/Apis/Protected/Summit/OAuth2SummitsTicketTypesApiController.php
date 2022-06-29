@@ -106,6 +106,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
                     'name'        => ['=@', '=='],
                     'description' => ['=@', '=='],
                     'external_id' => ['=@', '=='],
+                    'audience'    => ['=@', '=='],
                 ]);
             }
 
@@ -115,6 +116,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
                 'name'        => 'sometimes|string',
                 'description' => 'sometimes|string',
                 'external_id' => 'sometimes|string',
+                'audience'    => 'sometimes|string',
             ]);
 
             $order = null;
@@ -124,7 +126,8 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
                 $order = OrderParser::parse(Request::input('order'), [
                     'id',
                     'name',
-                    'external_id'
+                    'external_id',
+                    'audience'
                 ]);
             }
 
@@ -190,6 +193,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
                     'name'        => ['=@', '=='],
                     'description' => ['=@', '=='],
                     'external_id' => ['=@', '=='],
+                    'audience'    => ['=@', '=='],
                 ]);
             }
 
@@ -200,6 +204,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
                 'name'        => 'sometimes|string',
                 'description' => 'sometimes|string',
                 'external_id' => 'sometimes|string',
+                'audience'    => 'sometimes|string',
             ]);
 
             $order = null;
@@ -209,7 +214,8 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
                 $order = OrderParser::parse(Request::input('order'), [
                     'id',
                     'name',
-                    'external_id'
+                    'external_id',
+                    'audience'
                 ]);
             }
 

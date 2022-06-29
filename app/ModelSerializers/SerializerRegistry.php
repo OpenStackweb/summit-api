@@ -210,6 +210,7 @@ final class SerializerRegistry
         $this->registry['SummitDocument'] = SummitDocumentSerializer::class;
         $this->registry['SummitEmailEventFlow'] = SummitEmailEventFlowSerializer::class;
         $this->registry['SelectionPlan'] = SelectionPlanSerializer::class;
+        $this->registry['SelectionPlanActionType'] = SelectionPlanActionTypeSerializer::class;
         $this->registry['SummitSelectionPlanExtraQuestionType'] = SummitSelectionPlanExtraQuestionTypeSerializer::class;
         $this->registry['SummitWIFIConnection'] = SummitWIFIConnectionSerializer::class;
         $this->registry['SummitType'] = SummitTypeSerializer::class;

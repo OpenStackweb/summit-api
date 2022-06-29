@@ -53,9 +53,11 @@ trait GetSelectionPlanChildElementById
         try {
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
             $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
             if (is_null($selection_plan)) return $this->error404();
-            $child = $this->getChildFromSelectionPlan($summit, $selection_plan, $child_id);
+
+            $child = $this->getChildFromSelectionPlan($selection_plan, $child_id);
             if(is_null($child))
                 return $this->error404();
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($child, $this->getChildSerializer())->serialize(Request::input('expand', '')));

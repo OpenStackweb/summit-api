@@ -41,11 +41,17 @@ final class OAuth2SummitSelectionPlanActionTypeApiTest extends ProtectedApiTest
         self::$summit->addTrackChair(self::$member, [ self::$defaultTrack ] );
 
         self::$action1 = new SelectionPlanActionType();
-        self::$action1->setLabel("SELECTION PLAN ACTION");
-        self::$action1->setOrder(3);
+        self::$action1->setLabel("SELECTION_PLAN_ACTION_TYPE");
+        self::$action1->setOrder(1);
         self::$default_selection_plan->addSelectionPlanActionType(self::$action1);
 
+        self::$action2 = new PresentationActionType();
+        self::$action2->setLabel("PRESENTATION_ACTION_TYPE");
+        self::$action2->setOrder(1);
+        self::$summit->addPresentationActionType(self::$action2);
+
         self::$em->persist(self::$default_selection_plan);
+        self::$em->persist(self::$summit);
         self::$em->flush();
     }
 
@@ -66,7 +72,7 @@ final class OAuth2SummitSelectionPlanActionTypeApiTest extends ProtectedApiTest
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE"       => "application/json"
         ];
 
         $response = $this->action(
@@ -83,22 +89,23 @@ final class OAuth2SummitSelectionPlanActionTypeApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
         $page = json_decode($content);
         $this->assertTrue(!is_null($page));
-        $this->assertTrue($page->total == 2);
+        $this->assertTrue($page->total == 1);
     }
 
     public function testGetAllBySelectionPlanWithFiltering(){
         $params = [
-            'summit_id'         => self::$summit->getId(),
+            'id'                => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
-            'filter'            => 'label==ACTION1',
+            'filter'            => 'label==SELECTION_PLAN_ACTION_TYPE',
             'page'              => 1,
             'per_page'          => 10,
             'order'             => '+order',
+            'expand'            => 'selection_plan'
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE"       => "application/json"
         ];
 
         $response = $this->action(
@@ -127,7 +134,7 @@ final class OAuth2SummitSelectionPlanActionTypeApiTest extends ProtectedApiTest
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE"       => "application/json"
         ];
 
         $response = $this->action(
@@ -149,14 +156,14 @@ final class OAuth2SummitSelectionPlanActionTypeApiTest extends ProtectedApiTest
 
     public function testReorderAction(){
         $params = [
-            'summit_id'         => self::$summit->getId(),
+            'id'                => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
             'action_id'         => self::$action2->getId(),
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE"       => "application/json"
         ];
 
         $payload = [
@@ -184,13 +191,13 @@ final class OAuth2SummitSelectionPlanActionTypeApiTest extends ProtectedApiTest
 
     public function testAddAction(){
         $params = [
-            'summit_id'         => self::$summit->getId(),
+            'id'                => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE"       => "application/json"
         ];
 
         $payload = [
@@ -219,14 +226,14 @@ final class OAuth2SummitSelectionPlanActionTypeApiTest extends ProtectedApiTest
 
     public function testUpdateAction(){
         $params = [
-            'summit_id'         => self::$summit->getId(),
+            'id'                => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
             'action_id'         => self::$action2->getId(),
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE"       => "application/json"
         ];
 
         $payload = [
@@ -255,14 +262,14 @@ final class OAuth2SummitSelectionPlanActionTypeApiTest extends ProtectedApiTest
 
     public function testDeleteAction(){
         $params = [
-            'summit_id'         => self::$summit->getId(),
+            'id'                => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
             'action_id'         => self::$action2->getId(),
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE"       => "application/json"
         ];
 
         $response = $this->action(

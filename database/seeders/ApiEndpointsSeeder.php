@@ -7340,7 +7340,7 @@ class ApiEndpointsSeeder extends Seeder
                 // selection plan action types
                 [
                     'name' => 'get-selection-plan-action-types',
-                    'route' => 'api/v1/summits/{id}/selection-plans/{selection_plan_id}/selection-plan-action-types',
+                    'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/selection-plan-action-types',
                     'http_method' => 'GET',
                     'scopes' => [
                         sprintf(SummitScopes::ReadAllSummitData, $current_realm),
@@ -7356,7 +7356,7 @@ class ApiEndpointsSeeder extends Seeder
                 ],
                 [
                     'name' => 'get-selection-plan-action-types-csv',
-                    'route' => 'api/v1/summits/{id}/selection-plans/{selection_plan_id}/selection-plan-action-types/csv',
+                    'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/selection-plan-action-types/csv',
                     'http_method' => 'GET',
                     'scopes' => [
                         sprintf(SummitScopes::ReadAllSummitData, $current_realm),
@@ -7371,7 +7371,7 @@ class ApiEndpointsSeeder extends Seeder
                 ],
                 [
                     'name' => 'add-selection-plan-action-types',
-                    'route' => 'api/v1/summits/{id}/selection-plans/{selection_plan_id}/selection-plan-action-types',
+                    'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/selection-plan-action-types',
                     'http_method' => 'POST',
                     'scopes' => [
                         sprintf(SummitScopes::WriteSummitData, $current_realm),
@@ -7385,7 +7385,7 @@ class ApiEndpointsSeeder extends Seeder
                 ],
                 [
                     'name' => 'get-selection-plan-action-type-by-id',
-                    'route' => 'api/v1/summits/{id}/selection-plans/{selection_plan_id}/selection-plan-action-types/{action_id}',
+                    'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/selection-plan-action-types/{action_id}',
                     'http_method' => 'GET',
                     'scopes' => [
                         sprintf(SummitScopes::ReadAllSummitData, $current_realm),
@@ -7400,7 +7400,7 @@ class ApiEndpointsSeeder extends Seeder
                 ],
                 [
                     'name' => 'delete-selection-plan-action-type',
-                    'route' => 'api/v1/summits/{id}/selection-plans/{selection_plan_id}/selection-plan-action-types/{action_id}',
+                    'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/selection-plan-action-types/{action_id}',
                     'http_method' => 'DELETE',
                     'scopes' => [
                         sprintf(SummitScopes::WriteSummitData, $current_realm),
@@ -7414,7 +7414,7 @@ class ApiEndpointsSeeder extends Seeder
                 ],
                 [
                     'name' => 'update-selection-plan-action-type',
-                    'route' => 'api/v1/summits/{id}/selection-plans/{selection_plan_id}/selection-plan-action-types/{action_id}',
+                    'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/selection-plan-action-types/{action_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
                         sprintf(SummitScopes::WriteSummitData, $current_realm),

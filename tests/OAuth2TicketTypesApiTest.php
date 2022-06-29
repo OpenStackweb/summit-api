@@ -1,4 +1,6 @@
 <?php namespace Tests;
+use models\summit\SummitTicketType;
+
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -99,10 +101,12 @@ final class OAuth2TicketTypesApiTest extends ProtectedApiTest
 
         $name        = str_random(16).'_ticket_type';
         $external_id = str_random(16).'_external_id';
+        $audience    = SummitTicketType::Audience_All;
 
         $data = [
             'name'        => $name,
             'external_id' => $external_id,
+            'audience'    => $audience,
         ];
 
         $headers = [
@@ -127,12 +131,14 @@ final class OAuth2TicketTypesApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($ticket_type));
         $this->assertTrue($ticket_type->name == $name);
         $this->assertTrue($ticket_type->external_id == $external_id);
+        $this->assertTrue($ticket_type->audience == $audience);
         return $ticket_type;
     }
 
     public function testUpdateTicketType(){
 
         $ticket_type = $this->testAddTicketType();
+        $audience    = SummitTicketType::Audience_With_Invitation;
 
         $params = [
             'id'             => self::$summit->getId(),
@@ -141,6 +147,7 @@ final class OAuth2TicketTypesApiTest extends ProtectedApiTest
 
         $data = [
             'description' => 'test description',
+            'audience'    => $audience,
         ];
 
         $headers = [
@@ -164,6 +171,7 @@ final class OAuth2TicketTypesApiTest extends ProtectedApiTest
         $ticket_type = json_decode($content);
         $this->assertTrue(!is_null($ticket_type));
         $this->assertTrue($ticket_type->description == 'test description');
+        $this->assertTrue($ticket_type->audience == $audience);
         return $ticket_type;
     }
 

@@ -4999,33 +4999,22 @@ DQL;
     }
 
     /**
-     * @return bool
-     */
-    public function isInviteOnlyRegistration(): bool
-    {
-        return $this->registration_invitations->count() > 0;
-    }
-
-    /**
-     * @param string $email
-     * @return bool
-     */
-    public function canBuyRegistrationTickets(string $email): bool
-    {
-        if (!$this->isInviteOnlyRegistration()) return true;
-        return $this->getSummitRegistrationInvitationByEmail($email) !== null;
-    }
-
-    /**
      * @param string $email
      * @param SummitTicketType $ticketType
      * @return bool
      */
     public function canBuyRegistrationTicketByType(string $email, SummitTicketType $ticketType):bool{
-        if (!$this->isInviteOnlyRegistration()) return true;
         if($ticketType->getSummitId() != $this->id) return false;
+
         $invitation = $this->getSummitRegistrationInvitationByEmail($email);
-        if(is_null($invitation)) return false;
+        if(is_null($invitation)) {
+            return $ticketType->getAudience() == SummitTicketType::Audience_All ||
+                $ticketType->getAudience() == SummitTicketType::Audience_Without_Invitation;
+        }
+
+        if ($invitation->isAccepted() ||
+            $ticketType->getAudience() != SummitTicketType::Audience_With_Invitation) return false;
+
         return $invitation->isTicketTypeAllowed($ticketType->getId());
     }
 

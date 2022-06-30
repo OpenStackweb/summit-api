@@ -328,7 +328,7 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         if ($ticketType->getAudience() != SummitTicketType::Audience_With_Invitation) {
             throw new ValidationException
             (
-                "Ticket type {$ticketType->getId()} must have audience attribute \"With Invitation\" to be added to this invitation {$this->getId()}"
+                "Ticket type {$ticketType->getId()} must have audience attribute \"With Invitation\" to be added to this invitation {$this->getId()}."
             );
         }
         if($this->ticket_types->contains($ticketType)) return;

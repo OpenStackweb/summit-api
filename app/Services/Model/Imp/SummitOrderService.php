@@ -832,18 +832,6 @@ final class PreOrderValidationTask extends AbstractTask
                 throw new ValidationException(sprintf("Summit %s registration period is closed", $this->summit->getId()));
             $owner_email = $this->payload['owner_email'];
 
-            if (!$this->summit->canBuyRegistrationTickets($owner_email)) {
-                throw new ValidationException
-                (
-                    sprintf
-                    (
-                        "Email %s can not buy registration tickets for summit %s.",
-                        $owner_email,
-                        $this->summit->getName()
-                    )
-                );
-            }
-
             // check extra question for order ( if they exists and if they are mandatory)
 
             $mandatory_per_order = $this->summit->getMandatoryOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::OrderQuestionUsage);
@@ -3721,6 +3709,7 @@ final class SummitOrderService
             Log::debug(sprintf("SummitOrderService::processOrderPaymentConfirmation - trying to get order id %s", $orderId));
 
             $order = $this->order_repository->getByIdExclusiveLock($orderId);
+
             if (is_null($order) || !$order instanceof SummitOrder) {
                 Log::warning(sprintf("SummitOrderService::processOrderPaymentConfirmation order %s not found.", $orderId));
             }
@@ -3850,16 +3839,14 @@ final class SummitOrderService
                 $this->sendAttendeesInvitationEmail($order);
             }
 
-            if ($summit->isInviteOnlyRegistration()) {
-                // we should mark the associated invitation as processed
-                $invitation = $summit->getSummitRegistrationInvitationByEmail($order->getOwnerEmail());
-                if (is_null($invitation)) {
-                    Log::warning(sprintf("order %s has not valid invitation for email %s.", $order->getId(), $order->getOwnerEmail()));
-                    return;
-                }
-                $invitation->setOrder($order);
-                $invitation->markAsAccepted();
+            // we should mark the associated invitation as processed
+            $invitation = $summit->getSummitRegistrationInvitationByEmail($order->getOwnerEmail());
+            if (is_null($invitation)) {
+                Log::warning(sprintf("order %s has not valid invitation for email %s.", $order->getId(), $order->getOwnerEmail()));
+                return;
             }
+            $invitation->setOrder($order);
+            $invitation->markAsAccepted();
         });
     }
 

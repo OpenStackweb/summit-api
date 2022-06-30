@@ -228,10 +228,17 @@ final class LawPayApi implements IPaymentGatewayAPI
 
             $event = json_decode($requestContent, false);
             $transaction = $event->data;
+            if ($event->type == ILawPayApiEventType::TransactionAuthorized) {
+                Log::debug("LawPayApi::processCallback: transaction.authorized");
+                return [
+                    "type" => $event->type,
+                    "cart_id" => $transaction->id,
+                ];
+            }
             if ($event->type == ILawPayApiEventType::TransactionCompleted) {
                 Log::debug("LawPayApi::processCallback: transaction.completed");
                 return [
-                    "event_type" => $event->type,
+                    "type" => $event->type,
                     "cart_id" => $transaction->id,
                 ];
             }
@@ -240,7 +247,7 @@ final class LawPayApi implements IPaymentGatewayAPI
                 Log::debug("LawPayApi::processCallback: transaction.failed");
                 $transaction = $event->data;
                 return [
-                    "event_type" => $event->type,
+                    "type" => $event->type,
                     "cart_id" => $transaction->id,
                     "error" => [
                         "last_payment_error" => $transaction->status,
@@ -280,10 +287,10 @@ final class LawPayApi implements IPaymentGatewayAPI
     public function getPaymentError(array $payload): ?string
     {
         if (isset($payload['type']) && $payload['type'] == ILawPayApiEventType::TransactionFailed) {
-            if (isset($payload['data'])) {
-                $data = $payload['data'];
-                if (isset($data["failure_code"])) {
-                    return $data["failure_code"];
+            if (isset($payload['error'])) {
+                $error = $payload['error'];
+                if (isset($error["message"])) {
+                    return $error["message"];
                 }
             }
         }
@@ -329,8 +336,10 @@ final class LawPayApi implements IPaymentGatewayAPI
             if (is_null($charge))
                 throw new \InvalidArgumentException();
 
-            if($charge->status !== ILawPayApiChargeStatus::Completed){
-                throw new ValidationException(sprintf("charge can not be refunded."));
+            Log::debug(sprintf("LawPayApi::refundPayment charge %s", json_encode($charge->attributes)));
+
+            if(!$this->isSucceeded($charge->status)){
+                throw new ValidationException(sprintf("Charge can not be refunded."));
             }
 
             if ($amount > 0) {

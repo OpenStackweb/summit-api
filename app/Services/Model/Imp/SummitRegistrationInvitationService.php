@@ -375,9 +375,6 @@ final class SummitRegistrationInvitationService
     public function getInvitationByEmail(Summit $summit, string $email): ?SummitRegistrationInvitation
     {
         return $this->tx_service->transaction(function () use ($summit, $email) {
-            if (!$summit->isInviteOnlyRegistration())
-                throw new ValidationException(sprintf("Summit %s is not invite only.", $summit->getId()));
-
             return $summit->getSummitRegistrationInvitationByEmail($email);
         });
     }

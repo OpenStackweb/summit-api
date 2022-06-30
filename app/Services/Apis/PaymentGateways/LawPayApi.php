@@ -53,6 +53,7 @@ final class LawPayApi implements IPaymentGatewayAPI
      * @var bool
      */
     private $test_mode_enabled;
+
     /**
      * StripeApi constructor.
      * @param array $config
@@ -77,7 +78,6 @@ final class LawPayApi implements IPaymentGatewayAPI
     /**
      * @param SummitOrder $order
      * @return SummitOrder
-     * @throws ValidationException
      */
     public function preProcessOrder(SummitOrder $order): SummitOrder
     {
@@ -87,8 +87,9 @@ final class LawPayApi implements IPaymentGatewayAPI
     /**
      * @param SummitOrder $order
      * @param array $payload
-     * @throws ValidationException
      * @return SummitOrder
+     * @throws ChargeIO_InvalidRequestError
+     * @throws ValidationException
      */
     public function postProcessOrder(SummitOrder $order, array $payload = []):SummitOrder
     {
@@ -119,9 +120,41 @@ final class LawPayApi implements IPaymentGatewayAPI
     }
 
     /**
+     * @param ChargeIO_InvalidRequestError $ex
+     * @throws ChargeIO_InvalidRequestError
+     * @throws ValidationException
+     */
+    static private function handleChargeIOError(ChargeIO_InvalidRequestError $ex):void{
+        Log::warning($ex->getJson());
+        Log::error($ex);
+
+        $code = $ex->getCode();
+        if(LawPayCardValidationMessages::isCardValidationError($code))
+            throw new ValidationException($ex->errors[0]);
+
+        if(LawPayCardProcessingMessages::isCardProcessingError($code))
+            throw new ValidationException($ex->errors[0]);
+
+        if(LawPayGeneralMessages::isGeneralError($code))
+            throw new ValidationException($ex->errors[0]);
+
+        throw $ex;
+    }
+
+    /**
+     * @param Exception $ex
+     * @throws Exception
+     */
+    static private function handleGenericException(Exception $ex):void{
+        Log::error($ex);
+        throw $ex;
+    }
+
+    /**
      * @param array $payload
      * @return array
-     * @throws Exception
+     * @throws ChargeIO_InvalidRequestError
+     * @throws ValidationException
      */
     public function generatePayment(array $payload): array
     {
@@ -167,19 +200,17 @@ final class LawPayApi implements IPaymentGatewayAPI
             ];
         }
         catch (ChargeIO_InvalidRequestError $ex){
-            Log::warning($ex->getJson());
-            Log::error($ex);
-            throw $ex;
+            self::handleChargeIOError($ex);
         }
         catch (Exception $ex){
-            Log::error($ex);
-            throw $ex;
+          self::handleGenericException($ex);
         }
     }
 
     /**
      * @param LaravelRequest $request
      * @return array
+     * @throws ChargeIO_InvalidRequestError
      * @throws ValidationException
      */
     public function processCallback(LaravelRequest $request): array
@@ -220,9 +251,11 @@ final class LawPayApi implements IPaymentGatewayAPI
 
             throw new ValidationException(sprintf("event type %s not handled!", $event->type));
         }
+        catch (ChargeIO_InvalidRequestError $ex){
+            self::handleChargeIOError($ex);
+        }
         catch (Exception $ex){
-            Log::warning($ex);
-            throw $ex;
+            self::handleGenericException($ex);
         }
     }
 
@@ -232,7 +265,10 @@ final class LawPayApi implements IPaymentGatewayAPI
      */
     public function isSuccessFullPayment(array $payload): bool
     {
-        if (isset($payload['type']) && $payload['type'] == ILawPayApiEventType::TransactionCompleted) return true;
+        if (isset($payload['type']) &&
+            in_array($payload['type'],
+                [ILawPayApiEventType::TransactionAuthorized, ILawPayApiEventType::TransactionCompleted]))
+            return true;
         Log::debug("LawPayApi::isSuccessFullPayment false");
         return false;
     }
@@ -260,6 +296,7 @@ final class LawPayApi implements IPaymentGatewayAPI
      * @param string $currency
      * @param string $reason
      * @return string|null
+     * @throws ChargeIO_InvalidRequestError
      * @throws ValidationException
      */
     public function refundPayment(string $cart_id, float $amount, string $currency, string $reason = 'requested_by_customer'): ?string
@@ -306,13 +343,10 @@ final class LawPayApi implements IPaymentGatewayAPI
             return $res;
         }
         catch (ChargeIO_InvalidRequestError $ex){
-            Log::warning($ex->getJson());
-            Log::error($ex);
-            throw $ex;
+            self::handleChargeIOError($ex);
         }
         catch(Exception $ex){
-            Log::error($ex);
-            throw $ex;
+            self::handleGenericException($ex);
         }
     }
 
@@ -320,6 +354,8 @@ final class LawPayApi implements IPaymentGatewayAPI
      * @param string $cart_id
      * @return mixed|void
      * @throws CartAlreadyPaidException
+     * @throws ChargeIO_InvalidRequestError
+     * @throws ValidationException
      */
     public function abandonCart(string $cart_id)
     {
@@ -347,9 +383,7 @@ final class LawPayApi implements IPaymentGatewayAPI
             $charge->void();
         }
         catch (ChargeIO_InvalidRequestError $ex){
-            Log::warning($ex->getJson());
-            Log::error($ex);
-            throw $ex;
+            self::handleChargeIOError($ex);
         }
         catch(Exception $ex){
             Log::warning(sprintf("LawPayApi::abandonCart cart_id %s code %s message %s", $cart_id, $ex->getCode(), $ex->getMessage()));
@@ -371,6 +405,8 @@ final class LawPayApi implements IPaymentGatewayAPI
     /**
      * @param string $cart_id
      * @return string|null
+     * @throws ChargeIO_InvalidRequestError
+     * @throws ValidationException
      */
     public function getCartStatus(string $cart_id): ?string
     {
@@ -394,9 +430,7 @@ final class LawPayApi implements IPaymentGatewayAPI
             return $charge->status;
         }
         catch (ChargeIO_InvalidRequestError $ex){
-            Log::warning($ex->getJson());
-            Log::error($ex);
-            throw $ex;
+            self::handleChargeIOError($ex);
         }
         catch(Exception $ex){
             Log::warning(sprintf("LawPayApi::getCartStatus cart_id %s code %s message %s", $cart_id, $ex->getCode(), $ex->getMessage()));
@@ -410,12 +444,14 @@ final class LawPayApi implements IPaymentGatewayAPI
      */
     public function isSucceeded(string $status): bool
     {
-        return $status == ILawPayApiChargeStatus::Completed;
+        return in_array($status,[ILawPayApiChargeStatus::Authorized, ILawPayApiChargeStatus::Completed]);
     }
 
     /**
      * @param string $webhook_endpoint_url
      * @return array
+     * @throws ChargeIO_InvalidRequestError
+     * @throws ValidationException
      */
     public function createWebHook(string $webhook_endpoint_url): array
     {
@@ -451,9 +487,7 @@ final class LawPayApi implements IPaymentGatewayAPI
             return [];
         }
         catch (ChargeIO_InvalidRequestError $ex){
-            Log::warning($ex->getJson());
-            Log::error($ex);
-            throw $ex;
+            self::handleChargeIOError($ex);
         }
         catch(Exception $ex){
             Log::warning(sprintf("LawPayApi::createWebHook code %s message %s", $ex->getCode(), $ex->getMessage()));
@@ -461,6 +495,10 @@ final class LawPayApi implements IPaymentGatewayAPI
         }
     }
 
+    /**
+     * @throws ChargeIO_InvalidRequestError
+     * @throws ValidationException
+     */
     public function clearWebHooks():void{
         if (empty($this->secret_key))
             throw new \InvalidArgumentException();
@@ -485,9 +523,7 @@ final class LawPayApi implements IPaymentGatewayAPI
             $current_merchant->update($attributes);
         }
         catch (ChargeIO_InvalidRequestError $ex){
-            Log::warning($ex->getJson());
-            Log::error($ex);
-            throw $ex;
+            self::handleChargeIOError($ex);
         }
         catch(Exception $ex){
             Log::warning(sprintf("LawPayApi::createWebHook code %s message %s", $ex->getCode(), $ex->getMessage()));

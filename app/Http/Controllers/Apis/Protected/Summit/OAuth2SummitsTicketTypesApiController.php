@@ -22,6 +22,7 @@ use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\exceptions\EntityNotFoundException;
+use models\summit\SummitTicketType;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterParser;
@@ -35,6 +36,10 @@ use utils\PagingResponse;
  */
 final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedController
 {
+    use GetAndValidateJsonPayload;
+
+    use RequestProcessor;
+
     /**
      * @var ISummitRepository
      */
@@ -253,6 +258,35 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
             Log::error($ex);
             return $this->error500($ex);
         }
+    }
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function getAllowedBySummit($summit_id){
+        return $this->processRequest(function () use ($summit_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $member = $this->resource_server_context->getCurrentUser();
+            if(is_null($member)) return $this->error404();
+
+            $ticket_types = $this->ticket_type_service->getAllowedTicketTypes($summit, $member->getEmail());
+
+            $resp = new PagingResponse(count($ticket_types), count($ticket_types), 1, 1, $ticket_types);
+
+            return $this->ok
+            (
+                $resp->toArray
+                (
+                    self::getExpands(),
+                    self::getFields(),
+                    self::getRelations(),
+                    []
+                )
+            );
+        });
     }
 
     /**

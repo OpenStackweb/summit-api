@@ -99,7 +99,6 @@ class SummitSerializer extends SilverStripeSerializer
         'ScheduleTwitterText' => 'schedule_twitter_text:json_string',
         'DefaultPageUrl' => 'default_page_url:json_string',
         'SpeakerConfirmationDefaultPageUrl' => 'speaker_confirmation_default_page_url:json_string',
-        'InviteOnlyRegistration' => 'invite_only_registration:json_boolean',
         'VirtualSiteUrl' => 'virtual_site_url:json_string',
         'MarketingSiteUrl' => 'marketing_site_url:json_string',
         'SupportEmail' => 'support_email:json_string',

@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\Member;
 use models\summit\Summit;
 use models\summit\SummitTicketType;
 use services\apis\IEventbriteAPI;
@@ -356,6 +357,33 @@ final class SummitTicketTypeService
             } while ($has_more_items);
 
             return $res;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param string $member_email
+     * @return SummitTicketType[]
+     * @throws \Exception
+     */
+    public function getAllowedTicketTypes(Summit $summit, string $member_email): array
+    {
+        return $this->tx_service->transaction(function () use ($summit, $member_email) {
+
+            $ticket_types = $summit->getTicketTypesByAudience(SummitTicketType::Audience_All);
+
+            $invitation = $summit->getSummitRegistrationInvitationByEmail($member_email);
+            if(!is_null($invitation)) {
+                $invitation_ticket_types = $invitation->getTicketTypes();
+                if (count($invitation_ticket_types) == 0) {
+                    return $summit->getTicketTypesByAudience(SummitTicketType::Audience_With_Invitation);
+                }
+                $ticket_types = array_merge($ticket_types, $invitation->getTicketTypes());
+            } else {
+                $ticket_types = array_merge($ticket_types,
+                    $summit->getTicketTypesByAudience(SummitTicketType::Audience_Without_Invitation));
+            }
+            return $ticket_types;
         });
     }
 }

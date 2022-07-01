@@ -106,6 +106,11 @@ trait InsertSummitTestData
     static $default_ticket_type;
 
     /**
+     * @var SummitTicketType
+     */
+    static $default_ticket_type_2;
+
+    /**
      * @var SummitBadgeType
      */
     static $default_badge_type;
@@ -177,6 +182,14 @@ trait InsertSummitTestData
         self::$default_ticket_type->setBadgeType(self::$default_badge_type);
         self::$default_ticket_type->setAudience(SummitTicketType::Audience_All);
 
+        self::$default_ticket_type_2 = new SummitTicketType();
+        self::$default_ticket_type_2->setCost(100);
+        self::$default_ticket_type_2->setCurrency("USD");
+        self::$default_ticket_type_2->setName("TICKET TYPE 1");
+        self::$default_ticket_type_2->setQuantity2Sell(100);
+        self::$default_ticket_type_2->setBadgeType(self::$default_badge_type);
+        self::$default_ticket_type_2->setAudience(SummitTicketType::Audience_Without_Invitation);
+
         self::$summit = new Summit();
         self::$summit->setActive(true);
         // set feed type (sched)
@@ -194,6 +207,7 @@ trait InsertSummitTestData
         self::$summit->setName("TEST SUMMIT");
         self::$summit->addBadgeType(self::$default_badge_type);
         self::$summit->addTicketType(self::$default_ticket_type);
+        self::$summit->addTicketType(self::$default_ticket_type_2);
 
         $defaultBadge = new SummitBadgeType();
         $defaultBadge->setName("DEFAULT");

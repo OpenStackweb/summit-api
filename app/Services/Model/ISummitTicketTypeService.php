@@ -55,4 +55,12 @@ interface ISummitTicketTypeService
      * @throws ValidationException
      */
     public function seedSummitTicketTypesFromEventBrite(Summit $summit);
+
+    /**
+     * @param Summit $summit
+     * @param string $member_email
+     * @return SummitTicketType[]
+     * @throws \Exception
+     */
+    public function getAllowedTicketTypes(Summit $summit, string $member_email): array;
 }

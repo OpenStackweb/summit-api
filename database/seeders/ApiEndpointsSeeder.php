@@ -4371,6 +4371,14 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'get-allowed_ticket-types',
+                'route' => '/api/v1/summits/{id}/ticket-types/allowed',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(MemberScopes::ReadMyMemberData, $current_realm)
+                ],
+            ],
+            [
                 'name' => 'add-ticket-type',
                 'route' => '/api/v1/summits/{id}/ticket-types',
                 'http_method' => 'POST',

@@ -1423,6 +1423,17 @@ class Summit extends SilverstripeBaseModel
     }
 
     /**
+     * @param string $ticket_type_audience
+     * @return SummitTicketType[]
+     */
+    public function getTicketTypesByAudience(string $ticket_type_audience): array
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('audience', $ticket_type_audience));
+        return $this->ticket_types->matching($criteria)->toArray();
+    }
+
+    /**
      * @param string $ticket_type_external_id
      * @return SummitOrderExtraQuestionType|null
      */

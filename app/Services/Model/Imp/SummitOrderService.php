@@ -3841,10 +3841,7 @@ final class SummitOrderService
 
             // we should mark the associated invitation as processed
             $invitation = $summit->getSummitRegistrationInvitationByEmail($order->getOwnerEmail());
-            if (is_null($invitation)) {
-                Log::warning(sprintf("order %s has not valid invitation for email %s.", $order->getId(), $order->getOwnerEmail()));
-                return;
-            }
+            if (is_null($invitation)) return;
             $invitation->setOrder($order);
             $invitation->markAsAccepted();
         });

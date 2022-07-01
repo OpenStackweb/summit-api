@@ -93,6 +93,36 @@ final class OAuth2TicketTypesApiTest extends ProtectedApiTest
         return $ticket_type;
     }
 
+    public function testGetAllowedTicketTypes(){
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'order'    => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitsTicketTypesApiController@getAllowedBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $ticket_types = json_decode($content);
+        $this->assertTrue(!is_null($ticket_types));
+        return $ticket_types;
+    }
+
     public function testAddTicketType(){
         $params = [
             'id' => self::$summit->getId(),

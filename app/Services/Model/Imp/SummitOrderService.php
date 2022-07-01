@@ -1219,34 +1219,42 @@ final class SummitOrderService
     public function revokeTicket(Member $current_user, int $order_id, int $ticket_id): SummitAttendeeTicket
     {
         return $this->tx_service->transaction(function () use ($current_user, $order_id, $ticket_id) {
+
             $order = $this->order_repository->getByIdExclusiveLock($order_id);
+
             if (is_null($order) || !$order instanceof SummitOrder)
-                throw new EntityNotFoundException("order not found");
+                throw new EntityNotFoundException("Order not found.");
 
             if (!$order->hasOwner() && $order->getOwnerEmail() == $current_user->getEmail()) {
                 $current_user->addSummitRegistrationOrder($order);
             }
 
             if (!$order->hasOwner()) {
-                throw new EntityNotFoundException("order not found");
+                throw new EntityNotFoundException("Order not found.");
             }
 
+            // check that we own the order
             if ($order->getOwner()->getId() != $current_user->getId()) {
-                throw new EntityNotFoundException("order not found");
+                throw new EntityNotFoundException("Order not found.");
             }
 
             $summit = $order->getSummit();
             if ($summit->hasReassignTicketLimit()) {
                 $now = new \DateTime('now', new \DateTimeZone('UTC'));
                 if ($now > $summit->getReassignTicketTillDate()) {
-                    throw new ValidationException('revoked ticket period expired');
+                    throw new ValidationException('Revoked ticket period expired.');
                 }
             }
 
             $ticket = $order->getTicketById($ticket_id);
 
             if (is_null($ticket))
-                throw new EntityNotFoundException("ticket not found");
+                throw new EntityNotFoundException("Ticket not found.");
+
+            // if ticket type audience is with invitation , then ticket can not be re-assigned
+            if($ticket->getTicketType()->getAudience() === SummitTicketType::Audience_With_Invitation){
+                throw new ValidationException("You can not reassign this ticket. please contact support.");
+            }
 
             if (!$ticket->hasOwner()) {
                 throw new ValidationException("You attempted to assign or reassign a ticket that you don’t have permission to assign.");
@@ -1255,7 +1263,7 @@ final class SummitOrderService
             $attendee = $ticket->getOwner();
 
             if ($ticket->hasBadge() && $ticket->getBadge()->isPrinted()) {
-                throw new ValidationException("ticket can not be revoked due badge its already printed");
+                throw new ValidationException("Ticket can not be revoked due badge its already printed.");
             }
 
             $attendee->sendRevocationTicketEmail($ticket);
@@ -2689,6 +2697,85 @@ final class SummitOrderService
     }
 
     /**
+     * @param Member $current_user
+     * @param int $ticket_id
+     * @param array $payload
+     * @return SummitAttendeeTicket
+     * @throws \Exception
+     */
+    public function updateTicketById(Member $current_user, int $ticket_id, array $payload): SummitAttendeeTicket
+    {
+        return $this->tx_service->transaction(function () use ($current_user, $ticket_id, $payload) {
+            $ticket = $this->ticket_repository->getByIdExclusiveLock($ticket_id);
+
+            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket || !$ticket->isActive())
+                throw new EntityNotFoundException("ticket not found");
+
+            if (!$ticket->canEditTicket($current_user)) {
+                throw new ValidationException(sprintf("Ticket %s can not be edited by current member", $ticket_id));
+            }
+
+            $order = $ticket->getOrder();
+            $summit = $order->getSummit();
+            $first_name = $payload['attendee_first_name'] ?? null;
+            $last_name = $payload['attendee_last_name'] ?? null;
+            $email = $payload['attendee_email'] ?? null;
+            $company = $payload['attendee_company'] ?? null;
+            $company_id = $payload['attendee_company_id'] ?? null;
+            $extra_questions = $payload['extra_questions'] ?? [];
+            $disclaimer_accepted = $payload['disclaimer_accepted'] ?? null;
+
+            if ($summit->isRegistrationDisclaimerMandatory()) {
+                $disclaimer_accepted = boolval($payload['disclaimer_accepted'] ?? false);
+                if (!$disclaimer_accepted)
+                    throw new ValidationException("Disclaimer is Mandatory.");
+            }
+
+            $attendee = $ticket->getOwner();
+
+            if (!is_null($attendee)) {
+                if ($attendee->getEmail() != $email)
+                    throw new ValidationException
+                    (
+                        "Ticket already had been assigned to another attendee, please revoke it before to assign it again."
+                    );
+            }
+
+            $payload = [
+                'first_name' => $first_name,
+                'last_name' => $last_name,
+                'company' => $company,
+                'company_id' => $company_id,
+                'email' => $email,
+                'extra_questions' => $extra_questions,
+            ];
+
+            if (!is_null($disclaimer_accepted)) {
+                $payload['disclaimer_accepted'] = boolval($disclaimer_accepted);
+            }
+
+            if (is_null($attendee) && !empty($attendee_email)) {
+                // try to create it
+                $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $attendee_email);
+                if (is_null($attendee)) {
+                    $attendee = new SummitAttendee();
+                }
+            }
+
+            if (!is_null($attendee)) {
+                // update it
+                SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
+                $attendee->addTicket($ticket);
+                $attendee->updateStatus();
+                if($summit->isRegistrationSendTicketEmailAutomatically())
+                    $attendee->sendInvitationEmail($ticket);
+            }
+
+            return $ticket;
+        });
+    }
+
+    /**
      * @param Summit $summit
      * @param int $order_id
      * @param int $ticket_id
@@ -2821,7 +2908,6 @@ final class SummitOrderService
         return $ticket;
     }
 
-
     /**
      * @param string $hash
      * @param array $payload
@@ -2835,16 +2921,16 @@ final class SummitOrderService
             $ticket = $this->ticket_repository->getByHashExclusiveLock($hash);
 
             if (is_null($ticket) || !$ticket->isActive())
-                throw new EntityNotFoundException("ticket not found");
+                throw new EntityNotFoundException("Ticket not found.");
 
             if (!$ticket->isPaid())
-                throw new ValidationException("ticket is not paid");
+                throw new ValidationException("Ticket is not paid.");
 
             if (!$ticket->hasOwner())
-                throw new ValidationException("ticket must have an assigned owner");
+                throw new ValidationException("Ticket must have an assigned owner.");
 
             if (!$ticket->canPubliclyEdit())
-                throw new ValidationException("ticket hash is not valid");
+                throw new ValidationException("Ticket hash is not valid.");
 
             $attendee = $ticket->getOwner();
             $summit = $ticket->getOrder()->getSummit();
@@ -2852,7 +2938,7 @@ final class SummitOrderService
             if ($summit->isRegistrationDisclaimerMandatory()) {
                 $disclaimer_accepted = boolval($payload['disclaimer_accepted'] ?? false);
                 if (!$disclaimer_accepted)
-                    throw new ValidationException("disclaimer_accepted is mandatory");
+                    throw new ValidationException("disclaimer_accepted is mandatory.");
             }
 
             $first_name = $payload['attendee_first_name'] ?? '';
@@ -2887,78 +2973,6 @@ final class SummitOrderService
     }
 
     /**
-     * @param Member $current_user
-     * @param int $ticket_id
-     * @param array $payload
-     * @return SummitAttendeeTicket
-     * @throws \Exception
-     */
-    public function updateTicketById(Member $current_user, int $ticket_id, array $payload): SummitAttendeeTicket
-    {
-        return $this->tx_service->transaction(function () use ($current_user, $ticket_id, $payload) {
-            $ticket = $this->ticket_repository->getByIdExclusiveLock($ticket_id);
-
-            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket || !$ticket->isActive())
-                throw new EntityNotFoundException("ticket not found");
-
-            if (!$ticket->canEditTicket($current_user)) {
-                throw new ValidationException(sprintf("Ticket %s can not be edited by current member", $ticket_id));
-            }
-
-            $order = $ticket->getOrder();
-            $summit = $order->getSummit();
-            $first_name = $payload['attendee_first_name'] ?? null;
-            $last_name = $payload['attendee_last_name'] ?? null;
-            $email = $payload['attendee_email'] ?? null;
-            $company = $payload['attendee_company'] ?? null;
-            $company_id = $payload['attendee_company_id'] ?? null;
-            $extra_questions = $payload['extra_questions'] ?? [];
-            $disclaimer_accepted = $payload['disclaimer_accepted'] ?? null;
-
-            if ($summit->isRegistrationDisclaimerMandatory()) {
-                $disclaimer_accepted = boolval($payload['disclaimer_accepted'] ?? false);
-                if (!$disclaimer_accepted)
-                    throw new ValidationException("Disclaimer is Mandatory.");
-            }
-
-            $attendee = $ticket->getOwner();
-
-            $payload = [
-                'first_name' => $first_name,
-                'last_name' => $last_name,
-                'company' => $company,
-                'company_id' => $company_id,
-                'email' => $email,
-                'extra_questions' => $extra_questions,
-            ];
-
-            if (!is_null($disclaimer_accepted)) {
-                $payload['disclaimer_accepted'] = boolval($disclaimer_accepted);
-            }
-
-            if (is_null($attendee) && !empty($attendee_email)) {
-                // try to create it
-                $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $attendee_email);
-                if (is_null($attendee)) {
-                    $attendee = new SummitAttendee();
-                }
-            }
-
-            if (!is_null($attendee)) {
-                // update it
-                SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
-                $attendee->addTicket($ticket);
-                $attendee->updateStatus();
-                if($summit->isRegistrationSendTicketEmailAutomatically())
-                    $attendee->sendInvitationEmail($ticket);
-            }
-
-            return $ticket;
-        });
-    }
-
-
-    /**
      * @param string $order_hash
      * @param array $payload
      * @return SummitOrder
@@ -2974,11 +2988,11 @@ final class SummitOrderService
             $tickets = $payload['tickets'] ?? [];
             $order = $this->order_repository->getByHashLockExclusive($order_hash);
             if (is_null($order))
-                throw new EntityNotFoundException("order not found");
+                throw new EntityNotFoundException("Order not found.");
 
             if (!$order->canPubliclyEdit()) {
                 // check hash lifetime
-                throw new ValidationException("order hash is not valid");
+                throw new ValidationException("Order hash is not valid.");
             }
 
             $attendees_cache = [];
@@ -3018,6 +3032,14 @@ final class SummitOrderService
 
                 $attendee = $ticket->getOwner();
 
+                if (!is_null($attendee)) {
+                    if ($attendee->getEmail() != $email)
+                        throw new ValidationException
+                        (
+                            "Ticket already had been assigned to another attendee, please revoke it before to assign it again."
+                        );
+                }
+
                 $payload = [
                     'first_name' => $first_name,
                     'last_name' => $last_name,
@@ -3030,6 +3052,7 @@ final class SummitOrderService
                 if (!is_null($disclaimer_accepted)) {
                     $payload['disclaimer_accepted'] = boolval($disclaimer_accepted);
                 }
+
 
                 if (is_null($attendee) && !empty($email)) {
                     Log::debug(sprintf("SummitOrderService::updateTicketsByOrderHash attendee does not exists"));

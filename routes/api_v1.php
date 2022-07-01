@@ -170,8 +170,8 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::group(['prefix' => 'all'], function () {
                 Route::group(['prefix' => 'tickets'], function () {
                     Route::group(['prefix' => '{ticket_id}'], function () {
-                        Route::put('', 'OAuth2SummitOrdersApiController@updateTicketById');
-                        Route::get('pdf', 'OAuth2SummitOrdersApiController@getTicketPDFById');
+                        Route::put('', 'OAuth2SummitOrdersApiController@updateMyTicketById');
+                        Route::get('pdf', 'OAuth2SummitOrdersApiController@getMyTicketPDFById');
                     });
 
                     Route::group(['prefix' => 'me'], function () {

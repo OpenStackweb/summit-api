@@ -264,6 +264,84 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
      * @param $summit_id
      * @return mixed
      */
+    public function getAllBySummitV2($summit_id){
+        return $this->processRequest(function () use ($summit_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $values = Request::all();
+            $rules  = [
+                'page'     => 'integer|min:1',
+                'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::DefaultPageSize, PagingConstants::MaxPageSize),
+            ];
+
+            $validation = Validator::make($values, $rules);
+
+            if ($validation->fails()) {
+                $ex = new ValidationException();
+                throw $ex->setMessages($validation->messages()->toArray());
+            }
+
+            // default values
+            $page     = 1;
+            $per_page = PagingConstants::DefaultPageSize;
+
+            if (Request::has('page')) {
+                $page     = intval(Request::input('page'));
+                $per_page = intval(Request::input('per_page'));
+            }
+
+            $filter = null;
+
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
+                    'name'        => ['=@', '=='],
+                    'description' => ['=@', '=='],
+                    'external_id' => ['=@', '=='],
+                    'audience'    => ['=@', '=='],
+                ]);
+            }
+
+            if(is_null($filter)) $filter = new Filter();
+
+            $filter->validate([
+                'name'        => 'sometimes|string',
+                'description' => 'sometimes|string',
+                'external_id' => 'sometimes|string',
+                'audience'    => 'sometimes|string|in:'.implode(',', SummitTicketType::AllowedAudience),
+            ]);
+
+            $order = null;
+
+            if (Request::has('order'))
+            {
+                $order = OrderParser::parse(Request::input('order'), [
+                    'id',
+                    'name',
+                    'external_id',
+                    'audience'
+                ]);
+            }
+
+            $data = $this->repository->getBySummit($summit, new PagingInfo($page, $per_page), $filter, $order);
+
+            return $this->ok
+            (
+                $data->toArray
+                (
+                    self::getExpands(),
+                    self::getFields(),
+                    self::getRelations(),
+                    []
+                )
+            );
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
     public function getAllowedBySummit($summit_id){
         return $this->processRequest(function () use ($summit_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);

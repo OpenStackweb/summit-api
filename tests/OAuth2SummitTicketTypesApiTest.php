@@ -18,7 +18,7 @@ use models\summit\SummitTicketType;
  * Class OAuth2TicketTypesApiTest
  * @package Tests
  */
-final class OAuth2TicketTypesApiTest extends ProtectedApiTest
+final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
 {
     use InsertSummitTestData;
 
@@ -50,6 +50,37 @@ final class OAuth2TicketTypesApiTest extends ProtectedApiTest
         $response = $this->action(
             "GET",
             "OAuth2SummitsTicketTypesApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $ticket_types = json_decode($content);
+        $this->assertTrue(!is_null($ticket_types));
+        return $ticket_types;
+    }
+
+    public function testGetTicketTypesV2(){
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'order'    => '+name',
+            'filter'   => 'audience==WithoutInvitation',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitsTicketTypesApiController@getAllBySummitV2",
             $params,
             [],
             [],

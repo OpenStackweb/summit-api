@@ -26,13 +26,12 @@ final class SerializerUtils
 
     public static function getRelations(){
         $relations = Request::input('relations', '');
-        $relations = !empty($relations) ? explode(',', $relations) : [];
-        return $relations;
+        return !empty($relations) ? explode(',', $relations) : [];
     }
 
     public static function getFields(){
         $fields    = Request::input('fields', '');
-        $fields    = !empty($fields) ? explode(',', $fields) : [];
-        return $fields;
+        return !empty($fields) ? explode(',', $fields) : [];
     }
+
 }

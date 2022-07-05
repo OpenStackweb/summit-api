@@ -12,20 +12,17 @@
  * limitations under the License.
  **/
 
-use App\Http\Exceptions\HTTP403ForbiddenException;
-use App\Models\Exceptions\AuthzException;
-use Illuminate\Support\Facades\Log;
+use App\Http\Utils\PagingConstants;
+use App\ModelSerializers\SerializerUtils;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
-use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use utils\Filter;
 use utils\FilterParser;
 use utils\Order;
 use utils\OrderParser;
 use utils\PagingInfo;
-use App\Http\Utils\PagingConstants;
-use Exception;
+
 /**
  * Trait ParametrizedGetAll
  * @package App\Http\Controllers
@@ -33,6 +30,8 @@ use Exception;
 trait ParametrizedGetAll
 {
     use BaseAPI;
+
+    use RequestProcessor;
 
     /**
      * @param int $page
@@ -44,7 +43,7 @@ trait ParametrizedGetAll
      */
     protected function defaultQuery(int $page, int $per_page, ?Filter $filter, ?Order $order, ?callable $applyExtraFilters = null)
     {
-        if(!is_null($applyExtraFilters))
+        if (!is_null($applyExtraFilters))
             $filter = call_user_func($applyExtraFilters, $filter);
 
         return $this->getRepository()->getAllByPage
@@ -77,18 +76,27 @@ trait ParametrizedGetAll
         callable $defaultOrderRules = null,
         callable $defaultPageSize = null,
         callable $queryCallable = null,
-        array $serializerParams = []
+        array    $serializerParams = []
     )
     {
-        $values = Request::all();
+        return $this->processRequest(function () use (
+            $getFilterRules,
+            $getFilterValidatorRules,
+            $getOrderRules,
+            $applyExtraFilters,
+            $serializerType,
+            $defaultOrderRules,
+            $defaultPageSize,
+            $queryCallable,
+            $serializerParams
+        ) {
+            $values = Request::all();
 
-        $rules = [
+            $rules = [
 
-            'page' => 'integer|min:1',
-            'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::MinPageSize, PagingConstants::MaxPageSize),
-        ];
-
-        try {
+                'page' => 'integer|min:1',
+                'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::MinPageSize, PagingConstants::MaxPageSize),
+            ];
 
             $validation = Validator::make($values, $rules);
 
@@ -149,48 +157,20 @@ trait ParametrizedGetAll
                     $applyExtraFilters
                 );
 
-            $fields = Request::input('fields', '');
-            $relations = Request::input('relations', '');
-
-            $relations = !empty($relations) ? explode(',', $relations) : [];
-            $fields = !empty($fields) ? explode(',', $fields) : [];
 
             return $this->ok
             (
                 $data->toArray
                 (
-                    Request::input('expand', ''),
-                    $fields,
-                    $relations,
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
                     $serializerParams,
                     call_user_func($serializerType)
                 )
             );
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch (EntityNotFoundException $ex) {
-            Log::warning($ex);
-            return $this->error404(array('message' => $ex->getMessage()));
-        }
-        catch (\HTTP401UnauthorizedException $ex) {
-            Log::warning($ex);
-            return $this->error401();
-        }
-        catch(HTTP403ForbiddenException $ex){
-            Log::warning($ex);
-            return $this->error403();
-        }
-        catch(AuthzException $ex){
-            Log::warning($ex);
-            return $this->error403($ex->getMessage());
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+
+        });
     }
 
     /**
@@ -215,18 +195,30 @@ trait ParametrizedGetAll
         callable $serializerType,
         callable $getFormatters,
         callable $getColumns,
-        string $file_prefix = 'file-',
-        array $serializerParams = [],
+        string   $file_prefix = 'file-',
+        array    $serializerParams = [],
         callable $queryCallable = null
     )
     {
-        $values = Request::all();
-        $rules = [
-            'page' => 'integer|min:1',
-            'per_page' => sprintf('required_with:page|integer|min:%s', PagingConstants::MinPageSize),
-        ];
 
-        try {
+        return $this->processRequest(function () use (
+            $getFilterRules,
+            $getFilterValidatorRules,
+            $getOrderRules,
+            $applyExtraFilters,
+            $serializerType,
+            $getFormatters,
+            $getColumns,
+            $file_prefix,
+            $serializerParams,
+            $queryCallable
+        ) {
+
+            $values = Request::all();
+            $rules = [
+                'page' => 'integer|min:1',
+                'per_page' => sprintf('required_with:page|integer|min:%s', PagingConstants::MinPageSize),
+            ];
 
             $validation = Validator::make($values, $rules);
 
@@ -286,17 +278,11 @@ trait ParametrizedGetAll
 
             $filename = $file_prefix . date('Ymd');
 
-            $fields = Request::input('fields', '');
-            $relations = Request::input('relations', '');
-
-            $relations = !empty($relations) ? explode(',', $relations) : [];
-            $fields = !empty($fields) ? explode(',', $fields) : [];
-
             $list = $data->toArray
             (
-                Request::input('expand', ''),
-                $fields,
-                $relations,
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
                 $serializerParams,
                 call_user_func($serializerType)
             );
@@ -309,22 +295,7 @@ trait ParametrizedGetAll
                 call_user_func($getFormatters),
                 call_user_func($getColumns)
             );
-        } catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        } catch (EntityNotFoundException $ex) {
-            Log::warning($ex);
-            return $this->error404(array('message' => $ex->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex) {
-            Log::warning($ex);
-            return $this->error401();
-        } catch(AuthzException $ex){
-            Log::warning($ex);
-            return $this->error403($ex->getMessage());
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+
+        });
     }
 }

@@ -376,11 +376,11 @@ final class SummitTicketTypeService
             if(!is_null($invitation)) {
                 $invitation_ticket_types = $invitation->getTicketTypes();
                 if (count($invitation_ticket_types) == 0) {
-                    return $summit->getTicketTypesByAudience(SummitTicketType::Audience_With_Invitation);
+                    return $summit->getTicketTypesByAudience(SummitTicketType::Audience_With_Invitation)->toArray();
                 }
-                $ticket_types = array_merge($ticket_types, $invitation->getTicketTypes());
+                $ticket_types = array_merge($ticket_types->toArray(), $invitation->getTicketTypes()->toArray());
             } else {
-                $ticket_types = array_merge($ticket_types,
+                $ticket_types = array_merge($ticket_types->toArray(),
                     $summit->getTicketTypesByAudience(SummitTicketType::Audience_Without_Invitation));
             }
             return $ticket_types;

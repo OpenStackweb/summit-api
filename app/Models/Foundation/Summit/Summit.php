@@ -1424,13 +1424,13 @@ class Summit extends SilverstripeBaseModel
 
     /**
      * @param string $ticket_type_audience
-     * @return SummitTicketType[]
+     * @return ArrayCollection|\Doctrine\Common\Collections\Collection
      */
-    public function getTicketTypesByAudience(string $ticket_type_audience): array
+    public function getTicketTypesByAudience(string $ticket_type_audience)
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('audience', $ticket_type_audience));
-        return $this->ticket_types->matching($criteria)->toArray();
+        return $this->ticket_types->matching($criteria);
     }
 
     /**
@@ -6291,5 +6291,13 @@ SQL;
         if(!$this->speakers_announcement_emails->contains($announcementSummitEmail)) return;
         $this->speakers_announcement_emails->removeElement($announcementSummitEmail);
         $announcementSummitEmail->clearSummit();
+    }
+
+    public function isInviteOnlyRegistration(): bool{
+        $hasAll = $this->getTicketTypesByAudience(SummitTicketType::Audience_All)->count() > 0;
+        $hasWithInvitation = $this->getTicketTypesByAudience(SummitTicketType::Audience_With_Invitation)->count() > 0;
+        $hasWithoutInvitation = $this->getTicketTypesByAudience(SummitTicketType::Audience_Without_Invitation)->count() > 0;
+        if($hasWithInvitation && !$hasAll && !$hasWithoutInvitation) return true;
+        return false;
     }
 }

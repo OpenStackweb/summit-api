@@ -344,7 +344,7 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
     }
 
     /**
-     * @return SummitTicketType[]
+     * @return ArrayCollection|SummitTicketType[]
      */
     public function getTicketTypes()
     {

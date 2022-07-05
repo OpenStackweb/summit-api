@@ -51,6 +51,43 @@ class SponsoredProject extends SilverstripeBaseModel
     private $slug;
 
     /**
+     * @ORM\Column(name="NavBarTitle", type="string")
+     * @var string
+     */
+    private $nav_bar_title;
+
+    /**
+     * @ORM\Column(name="ShouldShowOnNavBar", type="boolean")
+     * @var bool
+     */
+    private $should_show_on_nav_bar;
+
+    /**
+     * @ORM\Column(name="LearnMoreLink", type="string")
+     * @var string
+     */
+    private $learn_more_link;
+
+    /**
+     * @ORM\Column(name="LearnMoreText", type="string")
+     * @var string
+     */
+    private $learn_more_text;
+
+    /**
+     * @ORM\Column(name="SiteURL", type="string")
+     * @var string
+     */
+    private $site_url;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist","remove"})
+     * @ORM\JoinColumn(name="LogoID", referencedColumnName="ID")
+     * @var File
+     */
+    protected $logo;
+
+    /**
      * @param string $name
      */
     public function setName(string $name):void{
@@ -107,6 +144,136 @@ class SponsoredProject extends SilverstripeBaseModel
         return $this->slug;
     }
 
+    /**
+     * @return string
+     */
+    public function getNavBarTitle(): ?string
+    {
+        return $this->nav_bar_title;
+    }
+
+    /**
+     * @param string $nav_bar_title
+     */
+    public function setNavBarTitle(string $nav_bar_title): void
+    {
+        $this->nav_bar_title = $nav_bar_title;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getShouldShowOnNavBar(): bool
+    {
+        return $this->should_show_on_nav_bar;
+    }
+
+    /**
+     * @param bool $should_show_on_nav_bar
+     */
+    public function setShouldShowOnNavBar(bool $should_show_on_nav_bar): void
+    {
+        $this->should_show_on_nav_bar = $should_show_on_nav_bar;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLearnMoreLink(): ?string
+    {
+        return $this->learn_more_link;
+    }
+
+    /**
+     * @param string $learn_more_link
+     */
+    public function setLearnMoreLink(string $learn_more_link): void
+    {
+        $this->learn_more_link = $learn_more_link;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLearnMoreText(): ?string
+    {
+        return $this->learn_more_text;
+    }
+
+    /**
+     * @param string $learn_more_text
+     */
+    public function setLearnMoreText(string $learn_more_text): void
+    {
+        $this->learn_more_text = $learn_more_text;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSiteUrl(): ?string
+    {
+        return $this->site_url;
+    }
+
+    /**
+     * @param string $site_url
+     */
+    public function setSiteUrl(string $site_url): void
+    {
+        $this->site_url = $site_url;
+    }
+
+    /**
+     * @return File|null
+     */
+    public function getLogo(): ?File
+    {
+        return $this->logo;
+    }
+
+    /**
+     * @param File $logo
+     */
+    public function setLogo(File $logo): void
+    {
+        $this->logo = $logo;
+    }
+
+    public function clearLogo():void
+    {
+        $this->logo = null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasLogo(): bool {
+        return $this->getLogoId() > 0;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLogoId(): int {
+        try {
+            return !is_null($this->logo) ? $this->logo->getId() : 0;
+        } catch(\Exception $ex){
+            return 0;
+        }
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getLogoUrl(): ?string {
+        $logoUrl = null;
+        if ($this->hasLogo() && $logo = $this->getLogo()) {
+            $logoUrl = $logo->getUrl();
+        }
+        return $logoUrl;
+    }
+
     use OrderableChilds;
 
     /**
@@ -124,6 +291,8 @@ class SponsoredProject extends SilverstripeBaseModel
         parent::__construct();
         $this->sponsorship_types = new ArrayCollection;
         $this->is_active = false;
+        $this->logo = null;
+        $this->should_show_on_nav_bar = true;
     }
 
     /**

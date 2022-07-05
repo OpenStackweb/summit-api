@@ -30,12 +30,22 @@ class SponsoredProjectValidationRulesFactory
                 'name' => 'sometimes|string',
                 'description' => 'sometimes|string',
                 'is_active' => 'sometimes|boolean',
+                'nav_bar_title' => 'sometimes|string',
+                'should_show_on_nav_bar' => 'sometimes|boolean',
+                'learn_more_link' => 'sometimes|url',
+                'learn_more_text' => 'sometimes|string',
+                'site_url' => 'sometimes|url',
             ];
         }
         return [
             'name' => 'required|string',
             'description' => 'sometimes|string',
             'is_active' => 'sometimes|boolean',
+            'nav_bar_title' => 'sometimes|string',
+            'should_show_on_nav_bar' => 'sometimes|boolean',
+            'learn_more_link' => 'sometimes|url',
+            'learn_more_text' => 'sometimes|string',
+            'site_url' => 'sometimes|url',
         ];
     }
 }

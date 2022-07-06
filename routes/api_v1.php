@@ -118,6 +118,11 @@ Route::group(['prefix' => 'sponsored-projects'], function () {
                 });
             });
         });
+
+        Route::group(['prefix' => 'logo'], function () {
+            Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SponsoredProjectApiController@addSponsoredProjectLogo']);
+            Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SponsoredProjectApiController@deleteSponsoredProjectLogo']);
+        });
     });
 });
 

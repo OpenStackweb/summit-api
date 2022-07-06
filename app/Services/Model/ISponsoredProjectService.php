@@ -11,8 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Http\UploadedFile;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\File;
 use models\main\ProjectSponsorshipType;
 use models\main\SponsoredProject;
 use models\main\SupportingCompany;
@@ -101,4 +104,19 @@ interface ISponsoredProjectService
      */
     public function removeCompanyToProjectSponsorshipType(int $project_id, int $sponsorship_id, int $company_id):void;
 
+    /**
+     * @param int $project_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @return File
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addLogo(int $project_id,  UploadedFile $file,  $max_file_size = 10485760):File;
+
+    /**
+     * @param int $project_id
+     * @throws EntityNotFoundException
+     */
+    public function deleteLogo(int $project_id):void;
 }

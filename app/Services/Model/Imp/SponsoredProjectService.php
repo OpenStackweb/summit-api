@@ -11,16 +11,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Http\Utils\IFileUploader;
 use App\Models\Foundation\Main\Factories\ProjectSponsorshipTypeFactory;
 use App\Models\Foundation\Main\Factories\SponsoredProjectFactory;
 use App\Models\Foundation\Main\Repositories\ISponsoredProjectRepository;
 use App\Services\Model\AbstractService;
 use App\Services\Model\ISponsoredProjectService;
+use Illuminate\Http\UploadedFile;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Company;
+use models\main\File;
 use models\main\ICompanyRepository;
+use models\main\IFolderRepository;
 use models\main\ProjectSponsorshipType;
 use models\main\SponsoredProject;
 use models\main\SupportingCompany;
@@ -45,21 +50,37 @@ final class SponsoredProjectService
     private $company_repository;
 
     /**
+     * @var IFileUploader
+     */
+    private $file_uploader;
+
+    /**
+     * @var IFolderRepository
+     */
+    private $folder_repository;
+
+    /**
      * SponsoredProjectService constructor.
      * @param ISponsoredProjectRepository $repository
      * @param ICompanyRepository $company_repository
+     * @param IFileUploader $file_uploader
+     * @param IFolderRepository $folder_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
     (
         ISponsoredProjectRepository $repository,
         ICompanyRepository $company_repository,
+        IFileUploader $file_uploader,
+        IFolderRepository $folder_repository,
         ITransactionService $tx_service
     )
     {
         parent::__construct($tx_service);
         $this->repository = $repository;
         $this->company_repository = $company_repository;
+        $this->file_uploader = $file_uploader;
+        $this->folder_repository = $folder_repository;
     }
 
     /**
@@ -301,4 +322,53 @@ final class SponsoredProjectService
         });
     }
 
+    /**
+     * @inheritDoc
+     */
+    public function addLogo(int $project_id, UploadedFile $file, $max_file_size = 10485760): File
+    {
+        return $this->tx_service->transaction(function () use ($project_id, $file, $max_file_size) {
+
+            $allowed_extensions = ['png', 'jpg', 'jpeg', 'svg'];
+
+            $project = $this->repository->getById($project_id);
+
+            if (is_null($project) || !$project instanceof SponsoredProject) {
+                throw new EntityNotFoundException('sponsored project not found!');
+            }
+
+            if (!in_array($file->extension(), $allowed_extensions)) {
+                throw new ValidationException("file does not has a valid extension ('png', 'jpg', 'jpeg', 'svg').");
+            }
+
+            if ($file->getSize() > $max_file_size) {
+                throw new ValidationException(sprintf("file exceeds max_file_size (%s MB).", ($max_file_size / 1024) / 1024));
+            }
+
+            $logo = $this->file_uploader->build($file, sprintf('sponsored-projects/%s/logos', $project->getId()), true);
+            $project->setLogo($logo);
+            return $logo;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function deleteLogo(int $project_id): void
+    {
+        $this->tx_service->transaction(function () use ($project_id) {
+            $project = $this->repository->getById($project_id);
+
+            if (is_null($project) || !$project instanceof SponsoredProject) {
+                throw new EntityNotFoundException('sponsored project not found!');
+            }
+
+            if ($project->hasLogo()) {
+                // drop file
+                $file = $project->getLogo();
+                $this->folder_repository->delete($file);
+                $project->clearLogo();
+            }
+        });
+    }
 }

@@ -1,4 +1,6 @@
 <?php namespace Tests;
+use Illuminate\Http\UploadedFile;
+
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -358,5 +360,71 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTest
         $page = json_decode($content);
         $this->assertTrue(!is_null($page));
         $this->assertResponseStatus(200);
+    }
+
+    public function testAddSponsoredProjectLogo(){
+        $params = [
+            'id' => 1,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SponsoredProjectApiController@addSponsoredProjectLogo",
+            $params,
+            [],
+            [],
+            [
+                'file' => UploadedFile::fake()->image('logo.jpg'),
+            ],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $file = json_decode($content);
+        $this->assertTrue(!is_null($file));
+    }
+
+    public function testDeleteSponsoredProjectLogo(){
+        $params = [
+            'id' => 1,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SponsoredProjectApiController@addSponsoredProjectLogo",
+            $params,
+            [],
+            [],
+            [
+                'file' => UploadedFile::fake()->image('logo.jpg'),
+            ],
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SponsoredProjectApiController@deleteSponsoredProjectLogo",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(204);
     }
 }

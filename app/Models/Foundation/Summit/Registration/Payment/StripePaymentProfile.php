@@ -16,6 +16,8 @@ use App\Services\Apis\PaymentGateways\StripeApi;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use Doctrine\ORM\Mapping AS ORM;
+use function Psy\debug;
+
 /**
  * @ORM\Entity
  * @ORM\Table(name="StripePaymentProfile")
@@ -107,6 +109,8 @@ class StripePaymentProfile extends PaymentGatewayProfile
      */
     public function setLiveWebHookData(array $webhook_data): void
     {
+        Log::debug(sprintf("StripePaymentProfile::setLiveWebHookData payload %s", json_encode($webhook_data)));
+
         $this->live_webhook_id = $webhook_data['id'];
         $this->live_webhook_secret_key = $webhook_data['secret_key'];
     }
@@ -116,6 +120,7 @@ class StripePaymentProfile extends PaymentGatewayProfile
      */
     public function setTestWebHookData(array $webhook_data): void
     {
+        Log::debug(sprintf("StripePaymentProfile::setTestWebHookData payload %s", json_encode($webhook_data)));
         $this->test_webhook_id = $webhook_data['id'];
         $this->test_webhook_secret_key = $webhook_data['secret_key'];
     }
@@ -292,24 +297,6 @@ class StripePaymentProfile extends PaymentGatewayProfile
     {
         // remove web hooks
         $this->clearWebHooks();
-    }
-
-    /**
-     * @param string $live_webhook_secret_key
-     */
-    public function setLiveWebhookSecretKey(string $live_webhook_secret_key): void
-    {
-        Log::debug(sprintf("StripePaymentProfile::setLiveWebhookSecretKey %s", $live_webhook_secret_key));
-        $this->live_webhook_secret_key = $live_webhook_secret_key;
-    }
-
-    /**
-     * @param string $test_webhook_secret_key
-     */
-    public function setTestWebhookSecretKey(string $test_webhook_secret_key): void
-    {
-        Log::debug(sprintf("StripePaymentProfile::setTestWebhookSecretKey %s", $test_webhook_secret_key));
-        $this->test_webhook_secret_key = $test_webhook_secret_key;
     }
 
     /**

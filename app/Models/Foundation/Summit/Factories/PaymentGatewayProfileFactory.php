@@ -82,9 +82,6 @@ final class PaymentGatewayProfileFactory
 
         if ($profile instanceof StripePaymentProfile) {
 
-            $profile->setTestWebhookSecretKey($params['test_web_hook_secret'] ?? '');
-            $profile->setLiveWebhookSecretKey($params['live_web_hook_secret'] ?? '');
-
             if (isset($params['send_email_receipt']))
                 $profile->setSendEmailReceipt(boolval($params['send_email_receipt']));
         }

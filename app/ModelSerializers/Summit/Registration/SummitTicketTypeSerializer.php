@@ -35,6 +35,7 @@ final class SummitTicketTypeSerializer extends SilverStripeSerializer
         'SalesEndDate' => 'sales_end_date:datetime_epoch',
         'BadgeTypeId' => 'badge_type_id:json_int',
         'QuantitySold' => 'quantity_sold:json_int',
+        'Audience' => 'audience:json_string',
     ];
 
     protected static $allowed_relations = [

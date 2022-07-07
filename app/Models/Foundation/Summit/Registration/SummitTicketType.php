@@ -19,6 +19,7 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Mapping AS ORM;
+
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitTicketTypeRepository")
  * @ORM\AssociationOverrides({
@@ -35,6 +36,16 @@ use Doctrine\ORM\Mapping AS ORM;
 class SummitTicketType extends SilverstripeBaseModel
 {
     use SummitOwned;
+
+    const Audience_All = 'All';
+    const Audience_With_Invitation = 'WithInvitation';
+    const Audience_Without_Invitation = 'WithoutInvitation';
+
+    const AllowedAudience = [
+        self::Audience_All,
+        self::Audience_With_Invitation,
+        self::Audience_Without_Invitation,
+    ];
 
     /**
      * @ORM\Column(name="Name", type="string")
@@ -110,6 +121,12 @@ class SummitTicketType extends SilverstripeBaseModel
     private $badge_type;
 
     /**
+     * @ORM\Column(name="Audience", type="string")
+     * @var string
+     */
+    private $audience;
+
+    /**
      * @return string
      */
     public function getName()
@@ -168,6 +185,7 @@ class SummitTicketType extends SilverstripeBaseModel
         $this->applied_taxes = new ArrayCollection();
         $this->sales_start_date = null;
         $this->sales_end_date = null;
+        $this->audience = self::Audience_All;
     }
 
     /**
@@ -551,6 +569,22 @@ class SummitTicketType extends SilverstripeBaseModel
     public function setBadgeType(SummitBadgeType $badge_type): void
     {
         $this->badge_type = $badge_type;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAudience(): string
+    {
+        return $this->audience;
+    }
+
+    /**
+     * @param string $audience
+     */
+    public function setAudience(string $audience)
+    {
+        $this->audience = $audience;
     }
 
     /**

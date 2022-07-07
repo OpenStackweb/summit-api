@@ -1423,6 +1423,17 @@ class Summit extends SilverstripeBaseModel
     }
 
     /**
+     * @param string $ticket_type_audience
+     * @return ArrayCollection|\Doctrine\Common\Collections\Collection
+     */
+    public function getTicketTypesByAudience(string $ticket_type_audience)
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('audience', $ticket_type_audience));
+        return $this->ticket_types->matching($criteria);
+    }
+
+    /**
      * @param string $ticket_type_external_id
      * @return SummitOrderExtraQuestionType|null
      */
@@ -4999,33 +5010,58 @@ DQL;
     }
 
     /**
-     * @return bool
-     */
-    public function isInviteOnlyRegistration(): bool
-    {
-        return $this->registration_invitations->count() > 0;
-    }
-
-    /**
-     * @param string $email
-     * @return bool
-     */
-    public function canBuyRegistrationTickets(string $email): bool
-    {
-        if (!$this->isInviteOnlyRegistration()) return true;
-        return $this->getSummitRegistrationInvitationByEmail($email) !== null;
-    }
-
-    /**
      * @param string $email
      * @param SummitTicketType $ticketType
      * @return bool
      */
     public function canBuyRegistrationTicketByType(string $email, SummitTicketType $ticketType):bool{
-        if (!$this->isInviteOnlyRegistration()) return true;
-        if($ticketType->getSummitId() != $this->id) return false;
+        if($ticketType->getSummitId() != $this->id) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "Summit::canBuyRegistrationTicketByType ticket type %s does not belongs to summit %s.",
+                    $ticketType->getId(),
+                    $this->id
+                )
+            );
+            return false;
+        }
+
         $invitation = $this->getSummitRegistrationInvitationByEmail($email);
-        if(is_null($invitation)) return false;
+        if(is_null($invitation)) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "Summit::canBuyRegistrationTicketByType invitation for email %s and summit %s does not exists. checking ticket type %s audience %s",
+                    $email,
+                    $this->id,
+                    $ticketType->getId(),
+                    $ticketType->getAudience()
+                )
+            );
+            return $ticketType->getAudience() == SummitTicketType::Audience_All ||
+                $ticketType->getAudience() == SummitTicketType::Audience_Without_Invitation;
+        }
+
+        Log::debug
+        (
+            sprintf
+            (
+                "Summit::canBuyRegistrationTicketByType invitation for email %s and summit %s exists and accepted status is %b. checking ticket type %s audience %s",
+                $email,
+                $this->id,
+                $invitation->isAccepted(),
+                $ticketType->getId(),
+                $ticketType->getAudience()
+            )
+        );
+
+        if ($invitation->isAccepted() ||
+            $ticketType->getAudience() != SummitTicketType::Audience_With_Invitation) return false;
+
         return $invitation->isTicketTypeAllowed($ticketType->getId());
     }
 
@@ -6291,5 +6327,13 @@ SQL;
         if(!$this->speakers_announcement_emails->contains($announcementSummitEmail)) return;
         $this->speakers_announcement_emails->removeElement($announcementSummitEmail);
         $announcementSummitEmail->clearSummit();
+    }
+
+    public function isInviteOnlyRegistration(): bool{
+        $hasAll = $this->getTicketTypesByAudience(SummitTicketType::Audience_All)->count() > 0;
+        $hasWithInvitation = $this->getTicketTypesByAudience(SummitTicketType::Audience_With_Invitation)->count() > 0;
+        $hasWithoutInvitation = $this->getTicketTypesByAudience(SummitTicketType::Audience_Without_Invitation)->count() > 0;
+        if($hasWithInvitation && !$hasAll && !$hasWithoutInvitation) return true;
+        return false;
     }
 }

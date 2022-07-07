@@ -12,29 +12,30 @@
  * limitations under the License.
  **/
 use App\Http\Utils\EpochCellFormatter;
-use App\Http\Utils\PagingConstants;
+use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitTicketTypeService;
-use Illuminate\Support\Facades\Request;
-use models\summit\ISummitTicketTypeRepository;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
-use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
-use models\exceptions\EntityNotFoundException;
+use models\summit\ISummitTicketTypeRepository;
+use models\summit\SummitTicketType;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
-use utils\FilterParser;
-use utils\OrderParser;
+use utils\FilterElement;
 use utils\PagingInfo;
-use Exception;
 use utils\PagingResponse;
+
 /**
  * Class OAuth2SummitsTicketTypesApiController
  * @package App\Http\Controllers
  */
 final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedController
 {
+    use GetAndValidateJsonPayload;
+
+    use RequestProcessor;
+
+    use ParametrizedGetAll;
+
     /**
      * @var ISummitRepository
      */
@@ -55,14 +56,14 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
     public function __construct
     (
         ISummitTicketTypeRepository $repository,
-        ISummitRepository $summit_repository,
-        ISummitTicketTypeService $ticket_type_service,
-        IResourceServerContext $resource_server_context
+        ISummitRepository           $summit_repository,
+        ISummitTicketTypeService    $ticket_type_service,
+        IResourceServerContext      $resource_server_context
     )
     {
         parent::__construct($resource_server_context);
-        $this->repository          = $repository;
-        $this->summit_repository   = $summit_repository;
+        $this->repository = $repository;
+        $this->summit_repository = $summit_repository;
         $this->ticket_type_service = $ticket_type_service;
     }
 
@@ -70,183 +71,198 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
      * @param $summit_id
      * @return mixed
      */
-    public function getAllBySummit($summit_id){
-        $values = Request::all();
-        $rules  = [
+    public function getAllBySummit($summit_id)
+    {
 
-            'page'     => 'integer|min:1',
-            'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::DefaultPageSize, PagingConstants::MaxPageSize),
-        ];
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
 
-        try {
+        return $this->_getAll(
+            function () {
+                return [
+                    'name' => ['=@', '@@', '=='],
+                    'description' => ['=@', '@@', '=='],
+                    'external_id' => ['=@', '@@', '=='],
+                    'audience' => ['=@', '@@', '=='],
+                ];
+            },
+            function () {
+                return [
+                    'name' => 'sometimes|string',
+                    'description' => 'sometimes|string',
+                    'external_id' => 'sometimes|string',
+                    'audience' => 'sometimes|string|in:' . implode(',', SummitTicketType::AllowedAudience),
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'name',
+                    'external_id',
+                    'audience'
+                ];
+            },
+            function ($filter) {
+                if ($filter instanceof Filter) {
+                    $filter->addFilterCondition(FilterElement::makeEqual('audience', SummitTicketType::Audience_All));
+                }
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
+                return $this->repository->getBySummit
+                (
+                    $summit, new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
+    }
 
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function getAllBySummitCSV($summit_id)
+    {
+
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        return $this->_getAllCSV(
+            function () {
+                return [
+                    'name' => ['=@', '@@', '=='],
+                    'description' => ['=@', '@@', '=='],
+                    'external_id' => ['=@', '@@', '=='],
+                    'audience' => ['=@', '@@', '=='],
+                ];
+            },
+            function () {
+                return [
+                    'name' => 'sometimes|string',
+                    'description' => 'sometimes|string',
+                    'external_id' => 'sometimes|string',
+                    'audience' => 'sometimes|string|in:' . implode(',', SummitTicketType::AllowedAudience),
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'name',
+                    'external_id',
+                    'audience'
+                ];
+            },
+            function ($filter) use ($summit) {
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_CSV;
+            },
+            function () {
+                return [
+                    'created' => new EpochCellFormatter,
+                    'last_edited' => new EpochCellFormatter,
+                ];
+            },
+            function () {
+                return [];
+            },
+            "ticket-types",
+            [],
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
+                return $this->repository->getBySummit
+                (
+                    $summit,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
+    }
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function getAllBySummitV2($summit_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+        return $this->_getAll(
+            function () {
+                return [
+                    'name' => ['=@', '@@', '=='],
+                    'description' => ['=@', '@@', '=='],
+                    'external_id' => ['=@', '@@', '=='],
+                    'audience' => ['=@', '@@', '=='],
+                ];
+            },
+            function () {
+                return [
+                    'name' => 'sometimes|string',
+                    'description' => 'sometimes|string',
+                    'external_id' => 'sometimes|string',
+                    'audience' => 'sometimes|string|in:' . implode(',', SummitTicketType::AllowedAudience),
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'name',
+                    'external_id',
+                    'audience'
+                ];
+            },
+            function ($filter) {
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
+                return $this->repository->getBySummit($summit, new PagingInfo($page, $per_page), $filter, $order);
+            }
+        );
+    }
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function getAllowedBySummit($summit_id)
+    {
+        return $this->processRequest(function () use ($summit_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $validation = Validator::make($values, $rules);
+            $member = $this->resource_server_context->getCurrentUser();
+            if (is_null($member)) return $this->error404();
 
-            if ($validation->fails()) {
-                $ex = new ValidationException();
-                throw $ex->setMessages($validation->messages()->toArray());
-            }
+            $ticket_types = $this->ticket_type_service->getAllowedTicketTypes($summit, $member->getEmail());
 
-            // default values
-            $page     = 1;
-            $per_page = PagingConstants::DefaultPageSize;
-
-            if (Request::has('page')) {
-                $page     = intval(Request::input('page'));
-                $per_page = intval(Request::input('per_page'));
-            }
-
-            $filter = null;
-
-            if (Request::has('filter')) {
-                $filter = FilterParser::parse(Request::input('filter'), [
-                    'name'        => ['=@', '=='],
-                    'description' => ['=@', '=='],
-                    'external_id' => ['=@', '=='],
-                ]);
-            }
-
-            if(is_null($filter)) $filter = new Filter();
-
-            $filter->validate([
-                'name'        => 'sometimes|string',
-                'description' => 'sometimes|string',
-                'external_id' => 'sometimes|string',
-            ]);
-
-            $order = null;
-
-            if (Request::has('order'))
-            {
-                $order = OrderParser::parse(Request::input('order'), [
-                    'id',
-                    'name',
-                    'external_id'
-                ]);
-            }
-
-            $data = $this->repository->getBySummit($summit, new PagingInfo($page, $per_page), $filter, $order);
+            $resp = new PagingResponse(count($ticket_types), count($ticket_types), 1, 1, $ticket_types);
 
             return $this->ok
             (
-                $data->toArray
+                $resp->toArray
                 (
-                    Request::input('expand', ''),
-                    [],
-                    [],
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
                     []
                 )
             );
-        }
-        catch (ValidationException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error412(array( $ex1->getMessage()));
-        }
-        catch (EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
-
-    /**
-     * @param $summit_id
-     * @return mixed
-     */
-    public function getAllBySummitCSV($summit_id){
-
-        try {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-
-            // default values
-            $page     = 1;
-            $per_page = PHP_INT_MAX;
-
-            if (Request::has('page')) {
-                $page     = intval(Request::input('page'));
-                $per_page = intval(Request::input('per_page'));
-            }
-
-            $filter = null;
-
-            if (Request::has('filter')) {
-                $filter = FilterParser::parse(Request::input('filter'), [
-                    'name'        => ['=@', '=='],
-                    'description' => ['=@', '=='],
-                    'external_id' => ['=@', '=='],
-                ]);
-            }
-
-
-            if(is_null($filter)) $filter = new Filter();
-
-            $filter->validate([
-                'name'        => 'sometimes|string',
-                'description' => 'sometimes|string',
-                'external_id' => 'sometimes|string',
-            ]);
-
-            $order = null;
-
-            if (Request::has('order'))
-            {
-                $order = OrderParser::parse(Request::input('order'), [
-                    'id',
-                    'name',
-                    'external_id'
-                ]);
-            }
-
-            $data = $this->repository->getBySummit($summit, new PagingInfo($page, $per_page), $filter, $order);
-
-            $filename = "ticket-types-" . date('Ymd');
-            $list     =  $data->toArray();
-            return $this->export
-            (
-                'csv',
-                $filename,
-                $list['data'],
-                [
-                    'created'     => new EpochCellFormatter,
-                    'last_edited' => new EpochCellFormatter,
-                ]
-            );
-        }
-        catch (ValidationException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error412(array( $ex1->getMessage()));
-        }
-        catch (EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -254,69 +270,44 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
      * @param $ticket_type_id
      * @return mixed
      */
-    public function getTicketTypeBySummit($summit_id, $ticket_type_id){
-        try {
+    public function getTicketTypeBySummit($summit_id, $ticket_type_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $ticket_type_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $ticket_type = $summit->getTicketTypeById($ticket_type_id);
-            if(is_null($ticket_type))
+            if (is_null($ticket_type))
                 return $this->error404();
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($ticket_type)->serialize( Request::input('expand', '')));
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(['message' => $ex2->getMessage()]);
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($ticket_type)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
      * @param $summit_id
      * @return mixed
      */
-    public function addTicketTypeBySummit($summit_id){
-        try {
+    public function addTicketTypeBySummit($summit_id)
+    {
+        return $this->processRequest(function () use ($summit_id) {
 
-            if(!Request::isJson()) return $this->error400();
-            $data    = Request::json();
-            $payload = $data->all();
-            $summit  = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $rules = SummitTicketTypeValidationRulesFactory::build($payload);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonPayload(SummitTicketTypeValidationRulesFactory::buildForAdd());
 
             $ticket_type = $this->ticket_type_service->addTicketType($summit, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($ticket_type)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($ticket_type)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -324,45 +315,23 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
      * @param $ticket_type_id
      * @return mixed
      */
-    public function updateTicketTypeBySummit($summit_id, $ticket_type_id){
-        try {
+    public function updateTicketTypeBySummit($summit_id, $ticket_type_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $ticket_type_id) {
 
-            if(!Request::isJson()) return $this->error400();
-            $data    = Request::json();
-            $payload = $data->all();
-            $summit  = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $rules = SummitTicketTypeValidationRulesFactory::build($payload, true);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonPayload(SummitTicketTypeValidationRulesFactory::buildForUpdate());
 
             $ticket_type = $this->ticket_type_service->updateTicketType($summit, $ticket_type_id, $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket_type)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket_type)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+            ));
+        });
     }
 
     /**
@@ -370,37 +339,26 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
      * @param $ticket_type_id
      * @return mixed
      */
-    public function deleteTicketTypeBySummit($summit_id, $ticket_type_id){
-        try {
+    public function deleteTicketTypeBySummit($summit_id, $ticket_type_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $ticket_type_id) {
 
-            $summit  = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $this->ticket_type_service->deleteTicketType($summit, $ticket_type_id);
 
             return $this->deleted();
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
      * @param $summit_id
      * @return mixed
      */
-    public function seedDefaultTicketTypesBySummit($summit_id){
-        try {
+    public function seedDefaultTicketTypesBySummit($summit_id)
+    {
+        return $this->processRequest(function () use ($summit_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -416,21 +374,12 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
                 $ticket_types
             );
 
-            return $this->created($response->toArray());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created($response->toArray(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+            ));
+        });
     }
 
 }

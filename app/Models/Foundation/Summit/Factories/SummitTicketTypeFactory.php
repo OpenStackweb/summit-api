@@ -112,6 +112,9 @@ final class SummitTicketTypeFactory
         if(isset($data['badge_type']))
             $ticket_type->setBadgeType($data['badge_type']);
 
+        if(isset($data['audience']))
+            $ticket_type->setAudience($data['audience']);
+
         return $ticket_type;
     }
 }

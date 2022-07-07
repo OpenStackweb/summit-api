@@ -409,6 +409,8 @@ final class StripeApi implements IPaymentGatewayAPI
      */
     public function createWebHook(string $webhook_endpoint_url): array
     {
+        Log::debug(sprintf("StripeApi::createWebHook webhook_endpoint_url %s", $webhook_endpoint_url));
+
         if (empty($this->secret_key))
             throw new \InvalidArgumentException();
 
@@ -423,6 +425,8 @@ final class StripeApi implements IPaymentGatewayAPI
             ],
         ]);
 
+        Log::debug(sprintf("StripeApi::createWebHook webhook_endpoint_url %s res %s", $webhook_endpoint_url, $res->toJSON()));
+
         return [
             'id' => $res->id,
             'secret' => $res->secret,
@@ -436,6 +440,8 @@ final class StripeApi implements IPaymentGatewayAPI
      */
     public function getWebHookById(string $id){
 
+        Log::debug(sprintf("StripeApi::getWebHookById id %s", $id));
+
         try {
             if (empty($this->secret_key))
                 throw new \InvalidArgumentException();
@@ -443,7 +449,11 @@ final class StripeApi implements IPaymentGatewayAPI
             Stripe::setApiKey($this->secret_key);
             Stripe::setApiVersion(self::Version);
 
-            return WebhookEndpoint::retrieve($id);
+            $res =  WebhookEndpoint::retrieve($id);
+            if(!is_null($res))
+                Log::debug(sprintf("StripeApi::getWebHookById id %s res %s", $id, $res->toJSON()));
+
+            return $res;
         }
         catch (Exception $ex){
             Log::error($ex);
@@ -456,10 +466,15 @@ final class StripeApi implements IPaymentGatewayAPI
      * @return void
      */
     public function deleteWebHookById(string $id):void{
+        Log::debug(sprintf("StripeApi::deleteWebHookById id %s", $id));
+
         try {
             $webhook = $this->getWebHookById($id);
             if (!$webhook) return;
+
             $webhook->delete();
+            Log::debug(sprintf("StripeApi::deleteWebHookById deleted webhook id %s", $id));
+
         }
         catch (Exception $ex){
             Log::error($ex);

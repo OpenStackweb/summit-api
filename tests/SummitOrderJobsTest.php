@@ -48,6 +48,7 @@ final class SummitOrderJobsTest extends TestCase
             $order->shouldReceive('getNumber')->andReturn('ABC_1234');
             $order->shouldReceive('generateQRCode');
             $order->shouldReceive('hasOwner')->andReturnFalse();
+            $order->shouldReceive('setOwner');
             $order->shouldReceive('getOwnerEmail')->andReturn('test@test.com');
             $order->shouldReceive('getOwnerFirstName')->andReturn('test');
             $order->shouldReceive('getOwnerSurname')->andReturn('test');
@@ -59,6 +60,7 @@ final class SummitOrderJobsTest extends TestCase
             $order->shouldReceive('getCurrency')->andReturn('USD');
             $order->shouldReceive('getQRCode')->andReturn('QR_CODE');
             $order->shouldReceive('getSummit')->andReturn(self::$summit);
+            $order->shouldReceive('getSummitId')->andReturn(self::$summit->getId());
             $order->shouldReceive('getTickets')->andReturn([]);
 
             $externalUserApi = \Mockery::mock(IExternalUserApi::class)
@@ -77,6 +79,7 @@ final class SummitOrderJobsTest extends TestCase
 
             $orderRepository = \Mockery::mock(ISummitOrderRepository::class)->shouldIgnoreMissing();
             $orderRepository->shouldReceive('getById')->with(1)->andReturn($order);
+            $orderRepository->shouldReceive('getByIdExclusiveLock')->with(1)->andReturn($order);
 
             $this->app->instance(ISummitOrderRepository::class, $orderRepository);
 

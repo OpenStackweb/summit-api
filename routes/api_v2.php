@@ -40,5 +40,9 @@ Route::group(['prefix' => 'summits'], function () {
                 Route::get('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@getAllVoteablePresentationsV2CSV']);
             });
         });
+        // ticket types
+        Route::group(['prefix' => 'ticket-types'], function () {
+            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitsTicketTypesApiController@getAllBySummitV2']);
+        });
     });
 });

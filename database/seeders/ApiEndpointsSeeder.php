@@ -4371,6 +4371,28 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'get-ticket-types-v2',
+                'route' => '/api/v2/summits/{id}/ticket-types',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'get-allowed_ticket-types',
+                'route' => '/api/v1/summits/{id}/ticket-types/allowed',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(MemberScopes::ReadMyMemberData, $current_realm)
+                ],
+            ],
+            [
                 'name' => 'add-ticket-type',
                 'route' => '/api/v1/summits/{id}/ticket-types',
                 'http_method' => 'POST',

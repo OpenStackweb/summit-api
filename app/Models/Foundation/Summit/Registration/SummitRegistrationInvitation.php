@@ -14,6 +14,7 @@
 
 use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Log;
+use models\exceptions\ValidationException;
 use models\main\Member;
 use models\utils\RandomGenerator;
 use models\utils\SilverstripeBaseModel;
@@ -321,8 +322,15 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
 
     /**
      * @param SummitTicketType $ticketType
+     * @throws ValidationException
      */
     public function addTicketType(SummitTicketType $ticketType){
+        if ($ticketType->getAudience() != SummitTicketType::Audience_With_Invitation) {
+            throw new ValidationException
+            (
+                "Ticket type {$ticketType->getId()} must have audience attribute \"With Invitation\" to be added to this invitation {$this->getId()}."
+            );
+        }
         if($this->ticket_types->contains($ticketType)) return;
         $this->ticket_types->add($ticketType);
     }
@@ -336,7 +344,7 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
     }
 
     /**
-     * @return SummitTicketType[]
+     * @return ArrayCollection|SummitTicketType[]
      */
     public function getTicketTypes()
     {

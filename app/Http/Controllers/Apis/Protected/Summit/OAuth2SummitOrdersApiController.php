@@ -911,7 +911,7 @@ final class OAuth2SummitOrdersApiController
      * @param $ticket_id
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response|mixed
      */
-    public function getTicketPDFById($ticket_id){
+    public function getMyTicketPDFById($ticket_id){
         try {
             $current_user = $this->getResourceServerContext()->getCurrentUser();
             $content      = $this->service->renderTicketByFormat(intval($ticket_id),IRenderersFormats::PDFFormat, $current_user);
@@ -1035,7 +1035,7 @@ final class OAuth2SummitOrdersApiController
      * @param $ticket_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function updateTicketById($ticket_id){
+    public function updateMyTicketById($ticket_id){
         try {
 
             $current_user = $this->getResourceServerContext()->getCurrentUser();

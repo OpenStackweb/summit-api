@@ -80,10 +80,10 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         return $this->_getAll(
             function () {
                 return [
-                    'name' => ['=@', '=='],
-                    'description' => ['=@', '=='],
-                    'external_id' => ['=@', '=='],
-                    'audience' => ['=@', '=='],
+                    'name' => ['=@', '@@', '=='],
+                    'description' => ['=@', '@@', '=='],
+                    'external_id' => ['=@', '@@', '=='],
+                    'audience' => ['=@', '@@', '=='],
                 ];
             },
             function () {
@@ -137,10 +137,10 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         return $this->_getAllCSV(
             function () {
                 return [
-                    'name' => ['=@', '=='],
-                    'description' => ['=@', '=='],
-                    'external_id' => ['=@', '=='],
-                    'audience' => ['=@', '=='],
+                    'name' => ['=@', '@@', '=='],
+                    'description' => ['=@', '@@', '=='],
+                    'external_id' => ['=@', '@@', '=='],
+                    'audience' => ['=@', '@@', '=='],
                 ];
             },
             function () {
@@ -199,10 +199,10 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         return $this->_getAll(
             function () {
                 return [
-                    'name' => ['=@', '=='],
-                    'description' => ['=@', '=='],
-                    'external_id' => ['=@', '=='],
-                    'audience' => ['=@', '=='],
+                    'name' => ['=@', '@@', '=='],
+                    'description' => ['=@', '@@', '=='],
+                    'external_id' => ['=@', '@@', '=='],
+                    'audience' => ['=@', '@@', '=='],
                 ];
             },
             function () {

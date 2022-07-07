@@ -5015,13 +5015,49 @@ DQL;
      * @return bool
      */
     public function canBuyRegistrationTicketByType(string $email, SummitTicketType $ticketType):bool{
-        if($ticketType->getSummitId() != $this->id) return false;
+        if($ticketType->getSummitId() != $this->id) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "Summit::canBuyRegistrationTicketByType ticket type %s does not belongs to summit %s.",
+                    $ticketType->getId(),
+                    $this->id
+                )
+            );
+            return false;
+        }
 
         $invitation = $this->getSummitRegistrationInvitationByEmail($email);
         if(is_null($invitation)) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "Summit::canBuyRegistrationTicketByType invitation for email %s and summit %s does not exists. checking ticket type %s audience %s",
+                    $email,
+                    $this->id,
+                    $ticketType->getId(),
+                    $ticketType->getAudience()
+                )
+            );
             return $ticketType->getAudience() == SummitTicketType::Audience_All ||
                 $ticketType->getAudience() == SummitTicketType::Audience_Without_Invitation;
         }
+
+        Log::debug
+        (
+            sprintf
+            (
+                "Summit::canBuyRegistrationTicketByType invitation for email %s and summit %s exists and accepted status is %b. checking ticket type %s audience %s",
+                $email,
+                $this->id,
+                $invitation->isAccepted(),
+                $ticketType->getId(),
+                $ticketType->getAudience()
+            )
+        );
 
         if ($invitation->isAccepted() ||
             $ticketType->getAudience() != SummitTicketType::Audience_With_Invitation) return false;

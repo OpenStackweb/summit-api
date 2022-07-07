@@ -126,7 +126,7 @@ final class LawPayApi implements IPaymentGatewayAPI
      */
     static private function handleChargeIOError(ChargeIO_InvalidRequestError $ex):void{
         Log::warning($ex->getJson());
-        Log::error($ex);
+        Log::warning($ex);
 
         $code = $ex->getCode();
         if(LawPayCardValidationMessages::isCardValidationError($code))

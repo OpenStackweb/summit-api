@@ -239,16 +239,16 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
      * @param $summit_id
      * @return mixed
      */
-    public function getAllowedBySummit($summit_id)
+    public function getAllowedBySummitAndCurrentMember($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $member = $this->resource_server_context->getCurrentUser();
-            if (is_null($member)) return $this->error404();
+            if (is_null($member)) return $this->error403();
 
-            $ticket_types = $this->ticket_type_service->getAllowedTicketTypes($summit, $member->getEmail());
+            $ticket_types = $this->ticket_type_service->getAllowedTicketTypes($summit, $member);
 
             $resp = new PagingResponse(count($ticket_types), count($ticket_types), 1, 1, $ticket_types);
 

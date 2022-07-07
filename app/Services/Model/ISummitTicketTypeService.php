@@ -13,6 +13,7 @@
  **/
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\Member;
 use models\summit\Summit;
 use models\summit\SummitTicketType;
 /**
@@ -58,9 +59,9 @@ interface ISummitTicketTypeService
 
     /**
      * @param Summit $summit
-     * @param string $member_email
+     * @param Member $member
      * @return SummitTicketType[]
      * @throws \Exception
      */
-    public function getAllowedTicketTypes(Summit $summit, string $member_email): array;
+    public function getAllowedTicketTypes(Summit $summit, Member $member): array;
 }

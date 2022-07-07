@@ -5015,6 +5015,7 @@ DQL;
      * @return bool
      */
     public function canBuyRegistrationTicketByType(string $email, SummitTicketType $ticketType):bool{
+
         if($ticketType->getSummitId() != $this->id) {
             Log::debug
             (
@@ -5028,9 +5029,26 @@ DQL;
             return false;
         }
 
-        $invitation = $this->getSummitRegistrationInvitationByEmail($email);
-        if(is_null($invitation)) {
+        $audience = $ticketType->getAudience();
 
+        if($audience === SummitTicketType::Audience_All) {
+            // anyone can buy
+            Log::debug
+            (
+                sprintf
+                (
+                    "Summit::canBuyRegistrationTicketByType ticket type %s summit %s audience All.",
+                    $ticketType->getId(),
+                    $this->id
+                )
+            );
+            return true;
+        }
+
+        $invitation = $this->getSummitRegistrationInvitationByEmail($email);
+
+        if(is_null($invitation)) {
+            // we dont have invitation
             Log::debug
             (
                 sprintf
@@ -5039,11 +5057,11 @@ DQL;
                     $email,
                     $this->id,
                     $ticketType->getId(),
-                    $ticketType->getAudience()
+                    $audience
                 )
             );
-            return $ticketType->getAudience() == SummitTicketType::Audience_All ||
-                $ticketType->getAudience() == SummitTicketType::Audience_Without_Invitation;
+            // we can only buy all or without invitation
+            return $audience == SummitTicketType::Audience_Without_Invitation;
         }
 
         Log::debug
@@ -5055,12 +5073,14 @@ DQL;
                 $this->id,
                 $invitation->isAccepted(),
                 $ticketType->getId(),
-                $ticketType->getAudience()
+                $audience
             )
         );
 
-        if ($invitation->isAccepted() ||
-            $ticketType->getAudience() != SummitTicketType::Audience_With_Invitation) return false;
+        // if invitation is already accepted only we could buy all
+        if ($invitation->isAccepted()) return false;
+        // at this point we can only buy with invitation only or all
+        if($audience !== SummitTicketType::Audience_With_Invitation) return false;
 
         return $invitation->isTicketTypeAllowed($ticketType->getId());
     }

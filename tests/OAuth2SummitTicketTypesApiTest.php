@@ -139,7 +139,7 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
 
         $response = $this->action(
             "GET",
-            "OAuth2SummitsTicketTypesApiController@getAllowedBySummit",
+            "OAuth2SummitsTicketTypesApiController@getAllowedBySummitAndCurrentMember",
             $params,
             [],
             [],

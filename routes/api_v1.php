@@ -910,7 +910,7 @@ Route::group(array('prefix' => 'summits'), function () {
         Route::group(['prefix' => 'ticket-types'], function () {
             Route::get('', 'OAuth2SummitsTicketTypesApiController@getAllBySummit');
             Route::get('csv', 'OAuth2SummitsTicketTypesApiController@getAllBySummitCSV');
-            Route::get('allowed', 'OAuth2SummitsTicketTypesApiController@getAllowedBySummit');
+            Route::get('allowed', 'OAuth2SummitsTicketTypesApiController@getAllowedBySummitAndCurrentMember');
             Route::post('seed-defaults', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitsTicketTypesApiController@seedDefaultTicketTypesBySummit']);
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitsTicketTypesApiController@addTicketTypeBySummit']);
             Route::group(['prefix' => '{ticket_type_id}'], function () {

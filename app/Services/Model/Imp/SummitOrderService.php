@@ -729,7 +729,7 @@ final class PreProcessReservationTask extends AbstractTask
 
         foreach ($tickets as $ticket_dto) {
             if (!isset($ticket_dto['type_id']))
-                throw new ValidationException('type_id is mandatory');
+                throw new ValidationException('type_id is mandatory.');
 
             $type_id = intval($ticket_dto['type_id']);
 
@@ -860,15 +860,22 @@ final class PreOrderValidationTask extends AbstractTask
             // check if we are allowed to buy ticket by type
             $tickets = $this->payload['tickets'];
 
+            // create the reservation excerpt
+            $reservations = [];
             foreach ($tickets as $ticket_dto) {
-
                 if (!isset($ticket_dto['type_id']))
                     throw new ValidationException('type_id is mandatory');
-
                 $type_id = intval($ticket_dto['type_id']);
+                if(!isset($reservations[$type_id]))
+                    $reservations[$type_id] = 0;
+                $reservations[$type_id] += 1;
+            }
+
+            foreach ($reservations as $type_id => $qty){
+
                 $ticket_type = $this->ticket_type_repository->getById($type_id);
                 if(is_null($ticket_type) || !$ticket_type instanceof SummitTicketType)
-                    throw new EntityNotFoundException(sprintf("ticket type %s not found.", $type_id));
+                    throw new EntityNotFoundException(sprintf("Ticket Type %s not found.", $type_id));
 
                 if (!$this->summit->canBuyRegistrationTicketByType($owner_email, $ticket_type)) {
                     throw new ValidationException
@@ -878,7 +885,7 @@ final class PreOrderValidationTask extends AbstractTask
                             "Email %s can not buy registration tickets of type %s for summit %s.",
                             $owner_email,
                             $ticket_type->getName(),
-                            $this->summit->getId()
+                            $this->summit->getName()
                         )
                     );
                 }
@@ -3864,8 +3871,8 @@ final class SummitOrderService
 
             // we should mark the associated invitation as processed
             $invitation = $summit->getSummitRegistrationInvitationByEmail($order->getOwnerEmail());
-            if (is_null($invitation)) return;
-            $invitation->setOrder($order);
+            if (is_null($invitation) || $invitation->isAccepted()) return;
+            $invitation->addOrder($order);
             $invitation->markAsAccepted();
         });
     }

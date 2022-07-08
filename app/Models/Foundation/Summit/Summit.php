@@ -5063,7 +5063,7 @@ DQL;
             // we can only buy all or without invitation
             return $audience == SummitTicketType::Audience_Without_Invitation;
         }
-
+        // we have an invitation
         Log::debug
         (
             sprintf
@@ -5079,6 +5079,8 @@ DQL;
 
         // if invitation is already accepted only we could buy all
         if ($invitation->isAccepted()) return false;
+
+
         // at this point we can only buy with invitation only or all
         if($audience !== SummitTicketType::Audience_With_Invitation) return false;
 

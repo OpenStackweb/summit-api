@@ -187,13 +187,6 @@ Route::group(['prefix' => 'summits'], function () {
             });
         });
 
-        // registration invitations
-        Route::group(['prefix' => 'registration-invitations'], function () {
-            Route::group(['prefix' => '{email}'], function () {
-                Route::get('', 'OAuth2SummitOrdersApiController@getByEmail');
-            });
-        });
-
         // order-extra-questions
 
         Route::group(['prefix' => 'order-extra-questions'], function () {

@@ -60,18 +60,25 @@ final class SummitOrderFactory
         if (isset($payload['owner_email']) && !is_null($payload['owner_email']))
             $order->setOwnerEmail(trim($payload['owner_email']));
 
-        if (isset($payload['owner_company']) && !is_null($payload['owner_company']))
+        if (isset($payload['owner_company']) && !is_null($payload['owner_company'])) {
             $order->setOwnerCompanyName(trim($payload['owner_company']));
+            $company = $summit->getRegistrationCompanyByName(trim($payload['owner_company']));
+            if(!is_null($company)){
+                $order->setOwnerCompany($company);
+            }
+        }
 
         if (isset($payload['owner_company_id']) && !is_null($payload['owner_company_id'])) {
             $ownerCompanyId = intval($payload['owner_company_id']);
-            $company = $summit->getRegistrationCompanyById($ownerCompanyId);
-            if (is_null($company)) {
-                throw new ValidationException(sprintf('Owner company with id %d not found as a registered company for summit %d',
-                    $ownerCompanyId, $summit->getId()));
+            if($ownerCompanyId > 0) {
+                $company = $summit->getRegistrationCompanyById($ownerCompanyId);
+                if (is_null($company)) {
+                    throw new ValidationException(sprintf('Owner company with id %d not found as a registered company for summit %d',
+                        $ownerCompanyId, $summit->getId()));
+                }
+                $order->setOwnerCompany($company);
+                $order->setOwnerCompanyName($company->getName());
             }
-            $order->setOwnerCompany($company);
-            $order->setOwnerCompanyName($company->getName());
         }
 
         if (isset($payload['billing_address_1']) && !is_null($payload['billing_address_1']))

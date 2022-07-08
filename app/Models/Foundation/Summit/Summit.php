@@ -6302,6 +6302,18 @@ SQL;
     }
 
     /**
+     * @param string $name
+     * @return Company|null
+     */
+    public function getRegistrationCompanyByName(string $name): ?Company
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('name', trim($name)));
+        $res = $this->registration_companies->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    /**
      * @param Company $registrationCompany
      */
     public function addRegistrationCompany(Company $registrationCompany)

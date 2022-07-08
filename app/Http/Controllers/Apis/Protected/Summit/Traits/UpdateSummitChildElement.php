@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\ModelSerializers\SerializerUtils;
 use models\summit\Summit;
 use models\utils\IEntity;
 use Illuminate\Support\Facades\Log;
@@ -29,7 +31,7 @@ trait UpdateSummitChildElement
     use BaseSummitAPI;
 
     protected function updateSerializerType():string{
-        return SerializerRegistry::SerializerType_Public;
+        return SerializerRegistry::SerializerType_Admin;
     }
 
     /**
@@ -75,20 +77,14 @@ trait UpdateSummitChildElement
 
             $child = $this->updateChild($summit, $child_id, $payload);
 
-            $fields = Request::input('fields', '');
-            $relations = Request::input('relations', '');
-
-            $relations = !empty($relations) ? explode(',', $relations) : [];
-            $fields = !empty($fields) ? explode(',', $fields) : [];
-
             return $this->updated(SerializerRegistry::getInstance()->getSerializer
             (
                 $child,
                 $this->updateSerializerType()
             )->serialize(
-                Request::input('expand', ''),
-                $fields,
-                $relations
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
             ));
         }
         catch (ValidationException $ex1) {

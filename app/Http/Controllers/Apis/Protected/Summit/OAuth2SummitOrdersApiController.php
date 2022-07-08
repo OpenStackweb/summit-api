@@ -673,7 +673,7 @@ final class OAuth2SummitOrdersApiController
      */
     public function removeAttendee($order_id, $ticket_id){
 
-        return processRequest(function() use($order_id, $ticket_id){
+        return $this->processRequest(function() use($order_id, $ticket_id){
 
             $current_user = $this->getResourceServerContext()->getCurrentUser();
             $ticket       = $this->service->revokeTicket($current_user, intval($order_id), intval($ticket_id));

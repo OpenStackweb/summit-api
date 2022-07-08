@@ -510,8 +510,14 @@ final class SerializerRegistry
         $serializer_class = $this->registry[$class];
 
         if (is_array($serializer_class)) {
-            if (!isset($serializer_class[$type]))
+            if (!isset($serializer_class[$type])){
+                $type =  self::SerializerType_Public;
+            }
+
+            if (!isset($serializer_class[$type])) {
                 throw new \InvalidArgumentException(sprintf('Serializer not found for %s , type %s', $class, $type));
+            }
+
             $serializer_class = $serializer_class[$type];
         }
 

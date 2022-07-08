@@ -1258,16 +1258,22 @@ final class SummitOrderService
             if (is_null($ticket))
                 throw new EntityNotFoundException("Ticket not found.");
 
-            // if ticket type audience is with invitation , then ticket can not be re-assigned
-            if($ticket->getTicketType()->getAudience() === SummitTicketType::Audience_With_Invitation){
-                throw new ValidationException("You can not reassign this ticket. please contact support.");
-            }
-
             if (!$ticket->hasOwner()) {
                 throw new ValidationException("You attempted to assign or reassign a ticket that you don’t have permission to assign.");
             }
 
+
             $attendee = $ticket->getOwner();
+
+            // if ticket type audience is with invitation , then check if we can re-assigned
+            if($ticket->getTicketType()->getAudience() === SummitTicketType::Audience_With_Invitation){
+                // ticket assigned to order owner can not be reassigned if its the unique one
+                if($attendee->getEmail() === $order->getOwnerEmail()){
+                    if($summit->getTicketCountByTypeAndOwnerEmail($ticket->getTicketType(),$attendee->getEmail()) === 1) {
+                        throw new ValidationException("You can not reassign this ticket. please contact support.");
+                    }
+                }
+            }
 
             if ($ticket->hasBadge() && $ticket->getBadge()->isPrinted()) {
                 throw new ValidationException("Ticket can not be revoked due badge its already printed.");

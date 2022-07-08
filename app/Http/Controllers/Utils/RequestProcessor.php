@@ -30,6 +30,10 @@ trait RequestProcessor
         try{
             return $callback($this);
         }
+        catch(\InvalidArgumentException $ex){
+            Log::warning($ex);
+            return $this->error400();
+        }
         catch (ValidationException $ex) {
             Log::warning($ex);
             return $this->error412($ex->getMessages());

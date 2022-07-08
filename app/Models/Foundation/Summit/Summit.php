@@ -1083,8 +1083,9 @@ class Summit extends SilverstripeBaseModel
         return $speaker_assistance === false ? null : $speaker_assistance;
     }
 
-    public function addSpeakerAssistance(PresentationSpeakerSummitAssistanceConfirmationRequest $assistanceConfirmationRequest){
-        if($this->speaker_assistances->contains($assistanceConfirmationRequest)) return;
+    public function addSpeakerAssistance(PresentationSpeakerSummitAssistanceConfirmationRequest $assistanceConfirmationRequest)
+    {
+        if ($this->speaker_assistances->contains($assistanceConfirmationRequest)) return;
         $this->speaker_assistances->add($assistanceConfirmationRequest);
         $assistanceConfirmationRequest->setSummit($this);
     }
@@ -1414,7 +1415,7 @@ class Summit extends SilverstripeBaseModel
      * @param string $ticket_type_external_id
      * @return SummitTicketType|null
      */
-    public function getTicketTypeByExternalId(string $ticket_type_external_id):?SummitTicketType
+    public function getTicketTypeByExternalId(string $ticket_type_external_id): ?SummitTicketType
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('external_id', $ticket_type_external_id));
@@ -1437,7 +1438,7 @@ class Summit extends SilverstripeBaseModel
      * @param string $ticket_type_external_id
      * @return SummitOrderExtraQuestionType|null
      */
-    public function getExtraQuestionTypeByExternalId(string $extra_question_type_external_id):?SummitOrderExtraQuestionType
+    public function getExtraQuestionTypeByExternalId(string $extra_question_type_external_id): ?SummitOrderExtraQuestionType
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('external_id', $extra_question_type_external_id));
@@ -1583,7 +1584,7 @@ class Summit extends SilverstripeBaseModel
     /**
      * @return int
      */
-    private function getTrackMaxOrder():int
+    private function getTrackMaxOrder(): int
     {
         $criteria = Criteria::create();
         $criteria->orderBy(['order' => 'DESC']);
@@ -2305,7 +2306,7 @@ SQL;
      * @param strign $type
      * @return int
      */
-    public function getSpeakerAnnouncementEmailCount(string $type):int
+    public function getSpeakerAnnouncementEmailCount(string $type): int
     {
         try {
             $sql = <<<SQL
@@ -2326,7 +2327,7 @@ SQL;
     /**
      * @return int
      */
-    public function getSpeakerAnnouncementEmailAcceptedCount():int
+    public function getSpeakerAnnouncementEmailAcceptedCount(): int
     {
         return $this->getSpeakerAnnouncementEmailCount('ACCEPTED');
     }
@@ -2334,7 +2335,7 @@ SQL;
     /**
      * @return int
      */
-    public function getSpeakerAnnouncementEmailRejectedCount():int
+    public function getSpeakerAnnouncementEmailRejectedCount(): int
     {
         return $this->getSpeakerAnnouncementEmailCount('REJECTED');
     }
@@ -2342,7 +2343,7 @@ SQL;
     /**
      * @return int
      */
-    public function getSpeakerAnnouncementEmailAlternateCount():int
+    public function getSpeakerAnnouncementEmailAlternateCount(): int
     {
         return $this->getSpeakerAnnouncementEmailCount('ALTERNATE');
     }
@@ -2350,7 +2351,7 @@ SQL;
     /**
      * @return int
      */
-    public function getSpeakerAnnouncementEmailAcceptedAlternateCount():int
+    public function getSpeakerAnnouncementEmailAcceptedAlternateCount(): int
     {
         return $this->getSpeakerAnnouncementEmailCount('ACCEPTED_ALTERNATE');
     }
@@ -2358,7 +2359,7 @@ SQL;
     /**
      * @return int
      */
-    public function getSpeakerAnnouncementEmailAcceptedRejectedCount():int
+    public function getSpeakerAnnouncementEmailAcceptedRejectedCount(): int
     {
         return $this->getSpeakerAnnouncementEmailCount('ACCEPTED_REJECTED');
     }
@@ -2366,7 +2367,7 @@ SQL;
     /**
      * @return int
      */
-    public function getSpeakerAnnouncementEmailAlternateRejectedCount():int
+    public function getSpeakerAnnouncementEmailAlternateRejectedCount(): int
     {
         return $this->getSpeakerAnnouncementEmailCount('ALTERNATE_REJECTED');
     }
@@ -3846,7 +3847,8 @@ SQL;
         return $this->summit_sponsors;
     }
 
-    public function getPublishedSummitSponsors(){
+    public function getPublishedSummitSponsors()
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('is_published', true));
         return $this->summit_sponsors->matching($criteria);
@@ -4012,7 +4014,7 @@ SQL;
      * @param string $usage
      * @return array
      */
-    public function getMainOrderExtraQuestionsByUsage(string $usage):array
+    public function getMainOrderExtraQuestionsByUsage(string $usage): array
     {
         $dql = <<<DQL
 SELECT q from models\summit\SummitOrderExtraQuestionType q 
@@ -5014,9 +5016,10 @@ DQL;
      * @param SummitTicketType $ticketType
      * @return bool
      */
-    public function canBuyRegistrationTicketByType(string $email, SummitTicketType $ticketType):bool{
+    public function canBuyRegistrationTicketByType(string $email, SummitTicketType $ticketType): bool
+    {
 
-        if($ticketType->getSummitId() != $this->id) {
+        if ($ticketType->getSummitId() != $this->id) {
             Log::debug
             (
                 sprintf
@@ -5031,7 +5034,7 @@ DQL;
 
         $audience = $ticketType->getAudience();
 
-        if($audience === SummitTicketType::Audience_All) {
+        if ($audience === SummitTicketType::Audience_All) {
             // anyone can buy
             Log::debug
             (
@@ -5047,7 +5050,7 @@ DQL;
 
         $invitation = $this->getSummitRegistrationInvitationByEmail($email);
 
-        if(is_null($invitation)) {
+        if (is_null($invitation)) {
             // we dont have invitation
             Log::debug
             (
@@ -5082,7 +5085,7 @@ DQL;
 
 
         // at this point we can only buy with invitation only or all
-        if($audience !== SummitTicketType::Audience_With_Invitation) return false;
+        if ($audience !== SummitTicketType::Audience_With_Invitation) return false;
 
         return $invitation->isTicketTypeAllowed($ticketType->getId());
     }
@@ -5092,7 +5095,7 @@ DQL;
      */
     public function addRegistrationInvitation(SummitRegistrationInvitation $invitation)
     {
-        if($this->registration_invitations->contains($invitation)) return;
+        if ($this->registration_invitations->contains($invitation)) return;
         $this->registration_invitations->add($invitation);
         $invitation->setSummit($this);
     }
@@ -5325,7 +5328,8 @@ SQL;
      * @param PresentationSpeaker $speaker
      * @return bool
      */
-    public function isFeaturedSpeaker(PresentationSpeaker $speaker):bool{
+    public function isFeaturedSpeaker(PresentationSpeaker $speaker): bool
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('speaker', $speaker));
         return $this->featured_speakers->matching($criteria)->count() > 0;
@@ -5335,7 +5339,8 @@ SQL;
      * @param PresentationSpeaker $speaker
      * @return FeaturedSpeaker | null
      */
-    public function getFeatureSpeaker(PresentationSpeaker $speaker):?FeaturedSpeaker{
+    public function getFeatureSpeaker(PresentationSpeaker $speaker): ?FeaturedSpeaker
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('speaker', $speaker));
         $res = $this->featured_speakers->matching($criteria)->first();
@@ -5357,9 +5362,9 @@ SQL;
      * @param PresentationSpeaker $speaker
      * @return FeaturedSpeaker|null
      */
-    public function addFeaturedSpeaker(PresentationSpeaker $speaker):?FeaturedSpeaker
+    public function addFeaturedSpeaker(PresentationSpeaker $speaker): ?FeaturedSpeaker
     {
-        if($this->isFeaturedSpeaker($speaker)) return null;
+        if ($this->isFeaturedSpeaker($speaker)) return null;
         $featureSpeaker = new FeaturedSpeaker($this, $speaker, $this->getFeaturedSpeakerMaxOrder() + 1);
         $this->featured_speakers->add($featureSpeaker);
         return $featureSpeaker;
@@ -5373,7 +5378,7 @@ SQL;
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('speaker', $speaker));
         $featured = $this->featured_speakers->matching($criteria)->first();
-        if(!$featured) return;
+        if (!$featured) return;
         $this->featured_speakers->removeElement($featured);
         $featured->clearSummit();
         self::resetOrderForSelectable($this->featured_speakers);
@@ -5388,6 +5393,7 @@ SQL;
     {
         self::recalculateOrderForSelectable($this->featured_speakers, $speaker, $new_order);
     }
+
     /**
      * @return array|DateTime[]
      */
@@ -5567,8 +5573,8 @@ SQL;
     public function isTrackChair(Member $member, PresentationCategory $category = null): bool
     {
         if ($member->isAdmin()) return true;
-        if($this->isTrackChairAdmin($member)) return true;
-        if($this->isSummitAdmin($member)) return true;
+        if ($this->isTrackChairAdmin($member)) return true;
+        if ($this->isSummitAdmin($member)) return true;
 
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('member', $member));
@@ -5840,7 +5846,7 @@ SQL;
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
             $res = count($res) > 0 ? $res[0] : 0;
-            $res =  !is_null($res) ? $res : 0;
+            $res = !is_null($res) ? $res : 0;
             Cache::add($key, $res, 600);
             return $res;
         } catch (\Exception $ex) {
@@ -5855,7 +5861,7 @@ SQL;
     {
         $key = sprintf("%s_getActiveTicketsCountPerTicketType", $this->id);
         $res = Cache::get($key);
-        if(!empty($res)) return json_decode($res, true);
+        if (!empty($res)) return json_decode($res, true);
 
         try {
             $sql = <<<SQL
@@ -5886,7 +5892,7 @@ SQL;
     {
         $key = sprintf("%s_getActiveBadgesCountPerBadgeType", $this->id);
         $res = Cache::get($key);
-        if(!empty($res)) return json_decode($res, true);
+        if (!empty($res)) return json_decode($res, true);
 
         try {
             $sql = <<<SQL
@@ -6027,7 +6033,7 @@ SQL;
     {
         $key = sprintf("%s_getActiveTicketsPerBadgeFeatureType", $this->id);
         $res = Cache::get($key);
-        if(!empty($res)) return json_decode($res, true);
+        if (!empty($res)) return json_decode($res, true);
 
         try {
             $sql = <<<SQL
@@ -6064,7 +6070,7 @@ SQL;
     {
         $key = sprintf("%s_getAttendeesCheckinPerBadgeFeatureType", $this->id);
         $res = Cache::get($key);
-        if(!empty($res)) return json_decode($res, true);
+        if (!empty($res)) return json_decode($res, true);
 
         try {
             $sql = <<<SQL
@@ -6163,24 +6169,25 @@ SQL;
     /**
      * @return string
      */
-    public function getModality():string{
+    public function getModality(): string
+    {
         $has_virtual = false;
         $has_in_person = false;
 
-        foreach($this->badge_types as $badge_type){
-            foreach($badge_type->getAccessLevels() as $accessLevel){
-                if($accessLevel->getName() == SummitAccessLevelType::VIRTUAL)
+        foreach ($this->badge_types as $badge_type) {
+            foreach ($badge_type->getAccessLevels() as $accessLevel) {
+                if ($accessLevel->getName() == SummitAccessLevelType::VIRTUAL)
                     $has_virtual = true;
-                if($accessLevel->getName() == SummitAccessLevelType::IN_PERSON)
+                if ($accessLevel->getName() == SummitAccessLevelType::IN_PERSON)
                     $has_in_person = true;
             }
         }
 
-        if($has_virtual && $has_in_person)
+        if ($has_virtual && $has_in_person)
             return ISummitModality::Hybrid;
-        if($has_virtual)
+        if ($has_virtual)
             return ISummitModality::Virtual;
-        if($has_in_person)
+        if ($has_in_person)
             return ISummitModality::InPerson;
         return ISummitModality::None;
     }
@@ -6255,18 +6262,20 @@ SQL;
      * @param SummitScheduleConfig $scheduleConfig
      * @throws ValidationException
      */
-    public function addScheduleSetting(SummitScheduleConfig $scheduleConfig){
-        if($this->schedule_settings->contains($scheduleConfig)) return;
+    public function addScheduleSetting(SummitScheduleConfig $scheduleConfig)
+    {
+        if ($this->schedule_settings->contains($scheduleConfig)) return;
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('key', trim($scheduleConfig->getKey())));
-        if($this->schedule_settings->matching($criteria)->count() > 0)
+        if ($this->schedule_settings->matching($criteria)->count() > 0)
             throw new ValidationException(sprintf("Key %s already exists", $scheduleConfig->getKey()));
         $this->schedule_settings->add($scheduleConfig);
         $scheduleConfig->setSummit($this);
     }
 
-    public function removeScheduleSetting(SummitScheduleConfig $scheduleConfig){
-        if(!$this->schedule_settings->contains($scheduleConfig)) return;
+    public function removeScheduleSetting(SummitScheduleConfig $scheduleConfig)
+    {
+        if (!$this->schedule_settings->contains($scheduleConfig)) return;
         $this->schedule_settings->removeElement($scheduleConfig);
         $scheduleConfig->clearFilters();
         $scheduleConfig->clearSummit();
@@ -6276,7 +6285,8 @@ SQL;
      * @param int $id
      * @return SummitScheduleConfig|null
      */
-    public function getScheduleSettingById(int $id):?SummitScheduleConfig{
+    public function getScheduleSettingById(int $id): ?SummitScheduleConfig
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($id)));
         $res = $this->schedule_settings->matching($criteria)->first();
@@ -6320,7 +6330,7 @@ SQL;
      */
     public function addRegistrationCompany(Company $registrationCompany)
     {
-        if($this->registration_companies->contains($registrationCompany)) return;
+        if ($this->registration_companies->contains($registrationCompany)) return;
         $this->registration_companies->add($registrationCompany);
     }
 
@@ -6329,7 +6339,7 @@ SQL;
      */
     public function removeRegistrationCompany(Company $registrationCompany)
     {
-        if(!$this->registration_companies->contains($registrationCompany)) return;
+        if (!$this->registration_companies->contains($registrationCompany)) return;
         $this->registration_companies->removeElement($registrationCompany);
     }
 
@@ -6344,30 +6354,67 @@ SQL;
     /**
      * @throws \Exception
      */
-    public function markExternalRegistrationFeedLastIngestDate():void{
+    public function markExternalRegistrationFeedLastIngestDate(): void
+    {
         $utcNow = new DateTime('now', new \DateTimeZone('UTC'));
         // subtract skew time
         $utcNow->sub(new \DateInterval('PT15M'));
         $this->external_registration_feed_last_ingest_date = $utcNow;
     }
 
-    public function addAnnouncementSummitEmail(SpeakerAnnouncementSummitEmail $announcementSummitEmail){
-        if($this->speakers_announcement_emails->contains($announcementSummitEmail)) return;
+    public function addAnnouncementSummitEmail(SpeakerAnnouncementSummitEmail $announcementSummitEmail)
+    {
+        if ($this->speakers_announcement_emails->contains($announcementSummitEmail)) return;
         $this->speakers_announcement_emails->add($announcementSummitEmail);
         $announcementSummitEmail->setSummit($this);
     }
 
-    public function removeAnnouncementSummitEmail(SpeakerAnnouncementSummitEmail $announcementSummitEmail){
-        if(!$this->speakers_announcement_emails->contains($announcementSummitEmail)) return;
+    public function removeAnnouncementSummitEmail(SpeakerAnnouncementSummitEmail $announcementSummitEmail)
+    {
+        if (!$this->speakers_announcement_emails->contains($announcementSummitEmail)) return;
         $this->speakers_announcement_emails->removeElement($announcementSummitEmail);
         $announcementSummitEmail->clearSummit();
     }
 
-    public function isInviteOnlyRegistration(): bool{
+    public function isInviteOnlyRegistration(): bool
+    {
         $hasAll = $this->getTicketTypesByAudience(SummitTicketType::Audience_All)->count() > 0;
         $hasWithInvitation = $this->getTicketTypesByAudience(SummitTicketType::Audience_With_Invitation)->count() > 0;
         $hasWithoutInvitation = $this->getTicketTypesByAudience(SummitTicketType::Audience_Without_Invitation)->count() > 0;
-        if($hasWithInvitation && !$hasAll && !$hasWithoutInvitation) return true;
+        if ($hasWithInvitation && !$hasAll && !$hasWithoutInvitation) return true;
         return false;
+    }
+
+    /**
+     * @param SummitTicketType $ticketType
+     * @param string $emailOwner
+     * @return int
+     */
+    public function getTicketCountByTypeAndOwnerEmail(SummitTicketType $ticketType, string $emailOwner): int
+    {
+        try {
+            $sql = <<<SQL
+            SELECT COUNT(DISTINCT(T.ID)) AS ticket_count
+            FROM SummitAttendeeTicket AS T
+            INNER JOIN SummitAttendee AS A ON A.ID = T.OwnerID   
+            LEFT JOIN Member AS M ON M.ID = A.MemberID    
+            INNER JOIN SummitTicketType AS TT ON TT.ID = T.TicketTypeID
+            INNER JOIN SummitOrder AS O ON O.ID = T.OrderID
+            WHERE 
+                  O.SummitID = :summit_id 
+                  AND TT.ID = :type_id
+                  AND ( A.Email = :email OR M.Email = :email )
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute([
+                'summit_id' => $this->id,
+                'type_id' => $ticketType->getId(),
+                'email' => strtolower(trim($emailOwner))
+            ]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            return count($res) > 0 ? intval($res[0]) : 0;
+        } catch (\Exception $ex) {
+            return 0;
+        }
     }
 }

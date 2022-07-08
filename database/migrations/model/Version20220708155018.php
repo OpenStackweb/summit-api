@@ -28,7 +28,7 @@ final class Version20220708155018 extends AbstractMigration
         $sql = <<<SQL
 INSERT INTO SummitRegistrationInvitation_SummitOrders
 (SummitRegistrationInvitationID, SummitOrderID)
-SELECT ID,SummitOrderID FROM SummitRegistrationInvitation;
+SELECT ID,SummitOrderID FROM SummitRegistrationInvitation WHERE SummitRegistrationInvitation.SummitOrderID IS NOT NULL;
 SQL;
 
         $this->addSql($sql);

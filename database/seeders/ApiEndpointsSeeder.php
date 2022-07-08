@@ -747,8 +747,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/registration-invitations/me',
                 'http_method' => 'GET',
                 'scopes'      => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadRegistrationInvitations, $current_realm),
+                    sprintf(SummitScopes::ReadMyRegistrationInvitations, $current_realm),
                 ],
             ],
             [

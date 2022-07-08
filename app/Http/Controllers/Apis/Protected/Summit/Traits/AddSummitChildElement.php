@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Http\Exceptions\HTTP403ForbiddenException;
+use App\ModelSerializers\SerializerUtils;
 use models\summit\Summit;
 use models\utils\IEntity;
 use Illuminate\Support\Facades\Log;
@@ -43,7 +44,7 @@ trait AddSummitChildElement
     abstract function getAddValidationRules(array $payload): array;
 
     protected function addSerializerType():string{
-        return SerializerRegistry::SerializerType_Public;
+        return SerializerRegistry::SerializerType_Admin;
     }
 
     /**
@@ -72,20 +73,14 @@ trait AddSummitChildElement
 
             $child = $this->addChild($summit, $payload);
 
-            $fields = Request::input('fields', '');
-            $relations = Request::input('relations', '');
-
-            $relations = !empty($relations) ? explode(',', $relations) : [];
-            $fields = !empty($fields) ? explode(',', $fields) : [];
-
             return $this->created(SerializerRegistry::getInstance()->getSerializer
             (
                 $child,
                 $this->addSerializerType()
             )->serialize(
-                Request::input('expand', ''),
-                $fields,
-                $relations
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
             ));
         }
         catch (ValidationException $ex) {

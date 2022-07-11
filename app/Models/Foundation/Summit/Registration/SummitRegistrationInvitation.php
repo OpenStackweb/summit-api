@@ -349,10 +349,12 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
 
     public function markAsAccepted(): void
     {
+        Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s ", $this->id));
         if($this->orders->count() === 0 ) return;
 
         $bought_tickets = $this->getBoughtTicketTypesExcerpt();
 
+        Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s bought_tickets %s", $this->id, json_encode($bought_tickets)));
         // check if we fullfill the invitation
 
         $invitation_ticket_types = $this->ticket_types;
@@ -371,7 +373,10 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
             );
 
         foreach ($invitation_ticket_types as $ticket_type){
-            if(!isset($bought_tickets[$ticket_type->getId()])) return;
+            if(!isset($bought_tickets[$ticket_type->getId()])){
+                Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s ticket type is not purchased yet ", $this->id, $ticket_type->getId()));
+                return;
+            }
         }
         // once i bought all meant ticket types ... the invitation is marked as accepted
         $this->accepted_date = new \DateTime('now', new \DateTimeZone('UTC'));

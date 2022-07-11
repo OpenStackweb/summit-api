@@ -19,7 +19,7 @@ use models\main\Member;
 use models\utils\RandomGenerator;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitRegistrationInvitationRepository")
@@ -81,8 +81,17 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
     private $member;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitOrder")
-     * @ORM\JoinColumn(name="SummitOrderID", referencedColumnName="ID", nullable=true)
+     * @ORM\ManyToMany(targetEntity="SummitOrder", fetch="EXTRA_LAZY")
+     * @ORM\JoinTable(name="SummitRegistrationInvitation_SummitOrders",
+     *      joinColumns={@ORM\JoinColumn(name="SummitRegistrationInvitationID", referencedColumnName="ID")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitOrderID", referencedColumnName="ID")}
+     *      )
+     * @var SummitOrder[]
+     */
+    private $orders;
+
+    /**
+     * @deprecated
      * @var SummitOrder
      */
     private $order;
@@ -97,12 +106,13 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
      */
     private $ticket_types;
 
+
     public function __construct()
     {
         parent::__construct();
         $this->ticket_types = new ArrayCollection();
+        $this->orders = new ArrayCollection();
         $this->member = null;
-        $this->order = null;
     }
 
     /**
@@ -206,7 +216,7 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
     /**
      * @return int
      */
-    public function getMemberId()
+    public function getMemberId():int
     {
         try {
             return is_null($this->member) ? 0 : $this->member->getId();
@@ -248,11 +258,11 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         $this->accepted_date = null;
         // build seed
         $seed = '';
-        if(!is_null($this->first_name))
+        if (!is_null($this->first_name))
             $seed .= $this->first_name;
-        if(!is_null($this->last_name))
+        if (!is_null($this->last_name))
             $seed .= $this->last_name;
-        if(!is_null($this->email))
+        if (!is_null($this->email))
             $seed .= $this->email;
         $seed .= $generator->randomToken();
         $this->token = md5($seed);
@@ -282,64 +292,132 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         $this->set_password_link = $set_password_link;
     }
 
-    /**
-     * @return SummitOrder
-     */
-    public function getOrder(): ?SummitOrder
-    {
-        return $this->order;
+    public function getBoughtTicketTypesExcerpt():array{
+        if($this->orders->count() === 0 ) return[];
+
+        $bought_tickets = [];
+        foreach ($this->orders as $order){
+            foreach ($order->getTickets() as $ticket){
+                $type = $ticket->getTicketType();
+                if(!isset($bought_tickets[$type->getId()])){
+                    $bought_tickets[$type->getId()] = 0;
+                }
+                $bought_tickets[$type->getId()] += 1;
+            }
+        }
+        return $bought_tickets;
     }
 
-    /**
-     * @param SummitOrder $order
-     */
-    public function setOrder(SummitOrder $order): void
-    {
-        $this->order = $order;
+    public function getRemainingAllowedTicketTypes():array {
+
+        $res = [];
+        $bought_tickets = $this->getBoughtTicketTypesExcerpt();
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitRegistrationInvitation::getRemainingAllowedTicketTypes id %s excerpt %s",
+                $this->id,
+                json_encode($bought_tickets
+                )
+            )
+        );
+
+        $invitation_ticket_types = $this->ticket_types;
+        if($invitation_ticket_types->count() === 0 )
+            $invitation_ticket_types = $this->summit->getTicketTypesByAudience(SummitTicketType::Audience_With_Invitation);
+
+        foreach ($invitation_ticket_types as $ticket_type){
+            if(isset($bought_tickets[$ticket_type->getId()])) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitRegistrationInvitation::getRemainingAllowedTicketTypes id %s ticket type already bought %s",
+                        $this->id,
+                        $ticket_type->getId()
+                    )
+                );
+
+                continue;
+            }
+            $res[] = $ticket_type;
+        }
+
+        return $res;
     }
 
     public function markAsAccepted(): void
     {
+        Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s ", $this->id));
+        if($this->orders->count() === 0 ) return;
+
+        $bought_tickets = $this->getBoughtTicketTypesExcerpt();
+
+        Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s bought_tickets %s", $this->id, json_encode($bought_tickets)));
+        // check if we fullfill the invitation
+
+        $invitation_ticket_types = $this->ticket_types;
+        if($invitation_ticket_types->count() === 0 )
+            $invitation_ticket_types = $this->summit->getTicketTypesByAudience(SummitTicketType::Audience_With_Invitation);
+
+        if($invitation_ticket_types->count() === 0)
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "There are not Ticket Types with Audience %s for Summit %s.",
+                    SummitTicketType::Audience_With_Invitation,
+                    $this->summit->getId()
+                )
+            );
+
+        foreach ($invitation_ticket_types as $ticket_type){
+            if(!isset($bought_tickets[$ticket_type->getId()])){
+                Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s ticket type is not purchased yet ", $this->id, $ticket_type->getId()));
+                return;
+            }
+        }
+        // once i bought all meant ticket types ... the invitation is marked as accepted
         $this->accepted_date = new \DateTime('now', new \DateTimeZone('UTC'));
     }
 
-    /**
-     * @return int
-     */
-    public function getOrderId()
-    {
-        try {
-            return is_null($this->order) ? 0 : $this->order->getId();
-        } catch (\Exception $ex) {
-            return 0;
-        }
+    public function addOrder(SummitOrder $order){
+        if ($this->orders->contains($order)) return;
+        $this->orders->add($order);
     }
 
-    public function clearOrder()
-    {
-        $this->order = null;
+    public function removeOrder(SummitOrder $order){
+        if (!$this->orders->contains($order)) return;
+        $this->orders->removeElement($order);
+    }
+
+    public function getOrders(){
+        return $this->orders;
     }
 
     /**
      * @param SummitTicketType $ticketType
      * @throws ValidationException
      */
-    public function addTicketType(SummitTicketType $ticketType){
+    public function addTicketType(SummitTicketType $ticketType)
+    {
         if ($ticketType->getAudience() != SummitTicketType::Audience_With_Invitation) {
             throw new ValidationException
             (
                 "Ticket type {$ticketType->getId()} must have audience attribute \"With Invitation\" to be added to this invitation {$this->getId()}."
             );
         }
-        if($this->ticket_types->contains($ticketType)) return;
+        if ($this->ticket_types->contains($ticketType)) return;
         $this->ticket_types->add($ticketType);
     }
 
     /**
      * @param SummitTicketType $ticketType
      */
-    public function removeTicketType(SummitTicketType $ticketType){
-        if(!$this->ticket_types->contains($ticketType)) return;
+    public function removeTicketType(SummitTicketType $ticketType)
+    {
+        if (!$this->ticket_types->contains($ticketType)) return;
         $this->ticket_types->removeElement($ticketType);
     }
 
@@ -351,7 +429,8 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         return $this->ticket_types;
     }
 
-    public function clearTicketTypes():void{
+    public function clearTicketTypes(): void
+    {
         $this->ticket_types->clear();
     }
 
@@ -359,11 +438,80 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
      * @param int $ticket_type_id
      * @return bool
      */
-    public function isTicketTypeAllowed(int $ticket_type_id):bool{
-        if(!$this->ticket_types->count()) return true;
+    public function isTicketTypeAllowed(int $ticket_type_id): bool
+    {
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitRegistrationInvitation::isTicketTypeAllowed ticket_type_id %s invitation %s",
+                $ticket_type_id,
+                $this->id
+            )
+        );
+
+        $ticket_type = $this->summit->getTicketTypeById($ticket_type_id);
+        if(is_null($ticket_type) || $ticket_type->getAudience() !== SummitTicketType::Audience_With_Invitation) return false;
+
+        $bought_tickets = $this->getBoughtTicketTypesExcerpt();
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitRegistrationInvitation::isTicketTypeAllowed ticket_type_id %s bought_tickets %s",
+                $ticket_type_id,
+                json_encode($bought_tickets)
+            )
+        );
+
+        if (!$this->ticket_types->count()) {
+
+            if(isset($bought_tickets[$ticket_type_id])){
+                // we already bought some, we can not buy more
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitRegistrationInvitation::isTicketTypeAllowed ticket_type_id %s we already bought some, we can not buy anymore",
+                        $ticket_type_id,
+                    )
+                );
+                return false;
+            }
+
+            return true;
+        }
+
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $ticket_type_id));
         $ticket_type = $this->ticket_types->matching($criteria)->first();
-        return !($ticket_type === false);
+        if(!$ticket_type) {
+            // ticket type is not allowed on invitation list
+            Log::debug(
+                sprintf
+                (
+                    "SummitRegistrationInvitation::isTicketTypeAllowed ticket_type_id %s is not allowed on invitation %s.",
+                    $ticket_type_id,
+                    $this->id
+                )
+            );
+            return false;
+        }
+
+        if(isset($bought_tickets[$ticket_type_id])){
+            // we already bought some, we can not buy more
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitRegistrationInvitation::isTicketTypeAllowed ticket_type_id %s we already bought some, we can not buy anymore",
+                    $ticket_type_id,
+                )
+            );
+            return false;
+        }
+
+        return true;
     }
 }

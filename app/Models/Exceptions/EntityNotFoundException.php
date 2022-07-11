@@ -18,5 +18,7 @@ use Exception;
  */
 class EntityNotFoundException extends Exception
 {
-
+    public function __construct($message = "Entity Not Found."){
+        parent::__construct($message);
+    }
 }

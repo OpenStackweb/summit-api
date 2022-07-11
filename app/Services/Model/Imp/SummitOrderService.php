@@ -729,7 +729,7 @@ final class PreProcessReservationTask extends AbstractTask
 
         foreach ($tickets as $ticket_dto) {
             if (!isset($ticket_dto['type_id']))
-                throw new ValidationException('type_id is mandatory');
+                throw new ValidationException('type_id is mandatory.');
 
             $type_id = intval($ticket_dto['type_id']);
 
@@ -860,15 +860,22 @@ final class PreOrderValidationTask extends AbstractTask
             // check if we are allowed to buy ticket by type
             $tickets = $this->payload['tickets'];
 
+            // create the reservation excerpt
+            $reservations = [];
             foreach ($tickets as $ticket_dto) {
-
                 if (!isset($ticket_dto['type_id']))
                     throw new ValidationException('type_id is mandatory');
-
                 $type_id = intval($ticket_dto['type_id']);
+                if(!isset($reservations[$type_id]))
+                    $reservations[$type_id] = 0;
+                $reservations[$type_id] += 1;
+            }
+
+            foreach ($reservations as $type_id => $qty){
+
                 $ticket_type = $this->ticket_type_repository->getById($type_id);
                 if(is_null($ticket_type) || !$ticket_type instanceof SummitTicketType)
-                    throw new EntityNotFoundException(sprintf("ticket type %s not found.", $type_id));
+                    throw new EntityNotFoundException(sprintf("Ticket Type %s not found.", $type_id));
 
                 if (!$this->summit->canBuyRegistrationTicketByType($owner_email, $ticket_type)) {
                     throw new ValidationException
@@ -878,7 +885,7 @@ final class PreOrderValidationTask extends AbstractTask
                             "Email %s can not buy registration tickets of type %s for summit %s.",
                             $owner_email,
                             $ticket_type->getName(),
-                            $this->summit->getId()
+                            $this->summit->getName()
                         )
                     );
                 }
@@ -1251,16 +1258,22 @@ final class SummitOrderService
             if (is_null($ticket))
                 throw new EntityNotFoundException("Ticket not found.");
 
-            // if ticket type audience is with invitation , then ticket can not be re-assigned
-            if($ticket->getTicketType()->getAudience() === SummitTicketType::Audience_With_Invitation){
-                throw new ValidationException("You can not reassign this ticket. please contact support.");
-            }
-
             if (!$ticket->hasOwner()) {
                 throw new ValidationException("You attempted to assign or reassign a ticket that you don’t have permission to assign.");
             }
 
+
             $attendee = $ticket->getOwner();
+
+            // if ticket type audience is with invitation , then check if we can re-assigned
+            if($ticket->getTicketType()->getAudience() === SummitTicketType::Audience_With_Invitation){
+                // ticket assigned to order owner can not be reassigned if its the unique one
+                if($attendee->getEmail() === $order->getOwnerEmail()){
+                    if($summit->getTicketCountByTypeAndOwnerEmail($ticket->getTicketType(), $attendee->getEmail()) === 1) {
+                        throw new ValidationException("You can not reassign this ticket. please contact support.");
+                    }
+                }
+            }
 
             if ($ticket->hasBadge() && $ticket->getBadge()->isPrinted()) {
                 throw new ValidationException("Ticket can not be revoked due badge its already printed.");
@@ -3857,15 +3870,21 @@ final class SummitOrderService
                 Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to owner (REGISTERED)");
                 $this->sendExistentSummitOrderOwnerEmail($order);
             }
+
             if($shouldSendTicketEmail) {
                 Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to attendees");
                 $this->sendAttendeesInvitationEmail($order);
             }
 
             // we should mark the associated invitation as processed
+            Log::debug(sprintf("SummitOrderService::processOrderPaymentConfirmation trying to get invitation for email %s.", $order->getOwnerEmail()));
             $invitation = $summit->getSummitRegistrationInvitationByEmail($order->getOwnerEmail());
-            if (is_null($invitation)) return;
-            $invitation->setOrder($order);
+            if (is_null($invitation) || $invitation->isAccepted()) {
+                Log::debug(sprintf("SummitOrderService::processOrderPaymentConfirmation invitation for email %s does not exists or its already accepted.", $order->getOwnerEmail()));
+                return;
+            }
+            $invitation->addOrder($order);
+            Log::debug(sprintf("SummitOrderService::processOrderPaymentConfirmation trying mark invitation for email %s as accepted.", $order->getOwnerEmail()));
             $invitation->markAsAccepted();
         });
     }

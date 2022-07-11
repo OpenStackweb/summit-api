@@ -15,6 +15,7 @@ use App\Http\Renderers\IRenderersFormats;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
 use App\ModelSerializers\ISummitOrderSerializerTypes;
+use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitOrderService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
@@ -50,6 +51,8 @@ final class OAuth2SummitOrdersApiController
     use UpdateSummitChildElement;
 
     use DeleteSummitChildElement;
+
+    use RequestProcessor;
 
     /**
      * @var ISummitRepository
@@ -95,7 +98,7 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function reserve($summit_id){
-        try {
+        return $this->processRequest(function() use($summit_id){
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -150,30 +153,11 @@ final class OAuth2SummitOrdersApiController
                     $order, ISummitOrderSerializerTypes::ReservationType
                 )->serialize
                 (
-                    self::getExpands(),
-                    self::getFields(),
-                    self::getRelations()
-                )
-            );
-
-        }
-        catch(\InvalidArgumentException $ex){
-            Log::warning($ex);
-            return $this->error400();
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
+        });
     }
 
     /**
@@ -182,7 +166,8 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function checkout($summit_id, $hash){
-        try {
+
+        return $this->processRequest(function() use($summit_id, $hash){
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -204,31 +189,12 @@ final class OAuth2SummitOrdersApiController
                 $order,
                 ISummitOrderSerializerTypes::CheckOutType
             )->serialize(
-             self::getExpands(),
-             self::getFields(),
-             self::getRelations()
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
             ));
-
-        }
-        catch(\InvalidArgumentException $ex){
-            Log::warning($ex);
-            return $this->error400();
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
-
 
     /**
      * @param $summit_id
@@ -236,33 +202,21 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function getMyTicketByOrderHash($summit_id, $hash){
-        try {
-
+        return $this->processRequest(function() use($summit_id, $hash){
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $ticket = $this->service->getMyTicketByOrderHash($summit, $hash);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::GuestEdition)->serialize( Request::input('expand', '')));
-
-        }
-        catch(\InvalidArgumentException $ex){
-            Log::warning($ex);
-            return $this->error400();
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()
+                ->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::GuestEdition)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
+            );
+        });
     }
 
     /**
@@ -271,26 +225,12 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function cancel($summit_id, $hash){
-        try {
-
+        return $this->processRequest(function() use($summit_id, $hash) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $this->service->cancel($summit, $hash);
             return $this->deleted();
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -481,7 +421,7 @@ final class OAuth2SummitOrdersApiController
      * @param $order_id
      */
     public function updateMyOrder($order_id){
-        try {
+        return $this->processRequest(function() use($order_id) {
             $current_user = $this->getResourceServerContext()->getCurrentUser();
             $payload = $this->getJsonPayload([
                 'extra_questions'           => 'sometimes|extra_question_dto_array',
@@ -496,26 +436,15 @@ final class OAuth2SummitOrdersApiController
 
             $order = $this->service->updateMyOrder($current_user, intval($order_id), $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($order, ISummitOrderSerializerTypes::CheckOutType)->serialize( Request::input('expand', '')));
-
-        }
-        catch(\InvalidArgumentException $ex){
-            Log::warning($ex);
-            return $this->error400();
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()
+                ->getSerializer($order, ISummitOrderSerializerTypes::CheckOutType)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
+            );
+        });
     }
 
 
@@ -525,8 +454,7 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function cancelRefundRequestTicket($order_id , $ticket_id){
-        try {
-
+        return $this->processRequest(function() use($order_id, $ticket_id) {
             $current_user = $this->getResourceServerContext()->getCurrentUser();
             if(is_null($current_user))
                 return $this->error403();
@@ -537,22 +465,15 @@ final class OAuth2SummitOrdersApiController
 
             $ticket = $this->service->cancelRequestRefundTicket(intval($order_id), intval($ticket_id), $current_user, trim($payload['notes'] ?? ''));
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize( Request::input('expand', '')));
-
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)
+                ->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
+            );
+        });
     }
 
     /**
@@ -561,30 +482,21 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function requestRefundMyTicket($order_id, $ticket_id){
-        try {
-
+        return $this->processRequest(function() use($order_id, $ticket_id) {
             $current_user = $this->getResourceServerContext()->getCurrentUser();
             if(is_null($current_user))
                 return $this->error403();
 
             $ticket = $this->service->requestRefundTicket($current_user, intval($order_id), intval($ticket_id));
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize( Request::input('expand', '')));
-
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)
+                ->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
+        });
     }
 
     /**
@@ -592,27 +504,18 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function requestRefundMyOrder($order_id){
-        try {
+        return $this->processRequest(function() use($order_id) {
             $current_user = $this->getResourceServerContext()->getCurrentUser();
 
             $order = $this->service->requestRefundOrder($current_user, intval($order_id));
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($order)->serialize( Request::input('expand', '')));
-
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($order)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -621,7 +524,7 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function assignAttendee($order_id, $ticket_id){
-        try {
+        return $this->processRequest(function() use($order_id, $ticket_id) {
             $current_user = $this->getResourceServerContext()->getCurrentUser();
 
             $payload = $this->getJsonPayload([
@@ -635,56 +538,30 @@ final class OAuth2SummitOrdersApiController
 
             $ticket = $this->service->ownerAssignTicket($current_user, intval($order_id), intval($ticket_id), $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize( Request::input('expand', '')));
-
-        }
-        catch(\InvalidArgumentException $ex){
-            Log::warning($ex);
-            return $this->error400();
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
-
 
     /**
      * @param $order_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function reSendOrderEmail($order_id){
-        try {
+        return $this->processRequest(function() use($order_id) {
 
             $order = $this->service->reSendOrderEmail(intval($order_id));
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($order)->serialize( Request::input('expand', '')));
-        }
-        catch(\InvalidArgumentException $ex){
-            Log::warning($ex);
-            return $this->error400();
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($order)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -693,7 +570,7 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function reInviteAttendee($order_id, $ticket_id){
-        try {
+        return $this->processRequest(function() use($order_id, $ticket_id) {
             $current_user = $this->resource_server_context->getCurrentUser();
             if(is_null($current_user))
                 return $this->error403();
@@ -707,25 +584,13 @@ final class OAuth2SummitOrdersApiController
             }
 
             $ticket = $this->service->reInviteAttendee(intval($order_id), intval($ticket_id));
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize( Request::input('expand', '')));
-        }
-        catch(\InvalidArgumentException $ex){
-            Log::warning($ex);
-            return $this->error400();
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -735,7 +600,7 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function updateTicket($summit_id, $order_id, $ticket_id){
-        try {
+        return $this->processRequest(function() use($summit_id, $order_id, $ticket_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -753,26 +618,14 @@ final class OAuth2SummitOrdersApiController
 
             $ticket = $this->service->updateTicket($summit, intval($order_id), intval($ticket_id), $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::AdminType)->serialize( Request::input('expand', '')));
-
-        }
-        catch(\InvalidArgumentException $ex){
-            Log::warning($ex);
-            return $this->error400();
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()
+                ->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::AdminType)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
+        });
     }
 
     /**
@@ -782,7 +635,7 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function addTicket($summit_id, $order_id){
-        try {
+        return $this->processRequest(function() use($summit_id, $order_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -802,28 +655,16 @@ final class OAuth2SummitOrdersApiController
 
             $order = $this->service->addTickets($summit, intval($order_id), $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($order)->serialize(Request::input('expand', '')));
-
-        }
-        catch(\InvalidArgumentException $ex){
-            Log::warning($ex);
-            return $this->error400();
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
-
+            return $this->created(SerializerRegistry::getInstance()
+                ->getSerializer($order)
+                ->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
+        });
+     }
 
     /**
      * @param $order_id
@@ -831,26 +672,20 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function removeAttendee($order_id, $ticket_id){
-        try {
+
+        return $this->processRequest(function() use($order_id, $ticket_id){
+
             $current_user = $this->getResourceServerContext()->getCurrentUser();
             $ticket       = $this->service->revokeTicket($current_user, intval($order_id), intval($ticket_id));
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
+            );
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize( Request::input('expand', '')));
-
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -860,25 +695,12 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response|mixed
      */
     public function getTicketPDFBySummit($summit_id, $order_id, $ticket_id){
-        try {
+        return $this->processRequest(function() use($summit_id, $order_id, $ticket_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $content      = $this->service->renderTicketByFormat(intval($ticket_id), IRenderersFormats::PDFFormat,null, intval($order_id), $summit);
             return $this->pdf('ticket_'.$ticket_id.'.pdf', $content);
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -887,24 +709,11 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response|mixed
      */
     public function getTicketPDFByOrderId($order_id, $ticket_id){
-        try {
+        return $this->processRequest(function() use($order_id, $ticket_id) {
             $current_user = $this->getResourceServerContext()->getCurrentUser();
             $content      = $this->service->renderTicketByFormat(intval($ticket_id),IRenderersFormats::PDFFormat, $current_user, intval($order_id));
             return $this->pdf('ticket_'.$ticket_id.'.pdf', $content);
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -912,24 +721,11 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response|mixed
      */
     public function getMyTicketPDFById($ticket_id){
-        try {
+        return $this->processRequest(function() use($ticket_id) {
             $current_user = $this->getResourceServerContext()->getCurrentUser();
             $content      = $this->service->renderTicketByFormat(intval($ticket_id),IRenderersFormats::PDFFormat, $current_user);
             return $this->pdf('ticket_'.$ticket_id.'.pdf', $content);
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /// public endpoints
@@ -939,25 +735,18 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function getTicketByHash($hash){
-        try {
+        return $this->processRequest(function() use($hash) {
             $ticket = $this->service->getTicketByHash($hash);
             if(is_null($ticket) || !$ticket->isActive())
                 throw new EntityNotFoundException();
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::PublicEdition)->serialize(Request::input('expand', '')));
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->ok(SerializerRegistry::getInstance()
+                ->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::PublicEdition)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
+        });
     }
 
     /**
@@ -965,7 +754,7 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function updateTicketByHash($hash){
-        try {
+        return $this->processRequest(function() use($hash) {
 
             $payload = $this->getJsonPayload([
                 'attendee_first_name' => 'nullable|string|max:255',
@@ -979,27 +768,15 @@ final class OAuth2SummitOrdersApiController
 
             $ticket = $this->service->updateTicketByHash($hash, $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::PublicEdition)->serialize( Request::input('expand', '')));
-        }
-        catch(\InvalidArgumentException $ex){
-            Log::warning($ex);
-            return $this->error400();
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()
+                ->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::PublicEdition)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
+        });
     }
-
 
     /**
      * @param $order_hash
@@ -1007,7 +784,7 @@ final class OAuth2SummitOrdersApiController
      */
     public function updateTicketsByOrderHash($order_hash)
     {
-        try {
+        return $this->processRequest(function() use($order_hash) {
 
             $payload = $this->getJsonPayload([
                 'tickets' => 'required|ticket_dto_array',
@@ -1015,28 +792,21 @@ final class OAuth2SummitOrdersApiController
 
             $order = $this->service->updateTicketsByOrderHash($order_hash, $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($order, ISummitOrderSerializerTypes::CheckOutType)->serialize(Request::input('expand', '')));
-
-        } catch (\InvalidArgumentException $ex) {
-            Log::warning($ex);
-            return $this->error400();
-        } catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        } catch (EntityNotFoundException $ex) {
-            Log::warning($ex);
-            return $this->error404(array('message' => $ex->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()
+                ->getSerializer($order, ISummitOrderSerializerTypes::CheckOutType)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
+        });
     }
     /**
      * @param $ticket_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function updateMyTicketById($ticket_id){
-        try {
+        return $this->processRequest(function() use($ticket_id) {
 
             $current_user = $this->getResourceServerContext()->getCurrentUser();
             if(is_null($current_user))
@@ -1054,25 +824,14 @@ final class OAuth2SummitOrdersApiController
 
             $ticket = $this->service->updateTicketById($current_user, $ticket_id, $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::PublicEdition)->serialize( Request::input('expand', '')));
-        }
-        catch(\InvalidArgumentException $ex){
-            Log::warning($ex);
-            return $this->error400();
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()
+                ->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::PublicEdition)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
+        });
     }
 
     /**
@@ -1080,25 +839,12 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function regenerateTicketHash($hash){
-        try {
+        return $this->processRequest(function() use($hash) {
 
             $this->service->regenerateTicketHash($hash);
 
             return $this->ok();
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -1106,23 +852,10 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response|mixed
      */
     public function getTicketPDFByHash($hash){
-        try {
-            $content      = $this->service->renderTicketByFormat($hash, IRenderersFormats::PDFFormat);
+        return $this->processRequest(function() use($hash) {
+            $content = $this->service->renderTicketByFormat($hash, IRenderersFormats::PDFFormat);
             return $this->pdf('ticket_'.$hash.'.pdf', $content);
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -1222,57 +955,33 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function activateTicket($summit_id, $order_id, $ticket_id){
-        try {
+        return $this->processRequest(function() use($summit_id, $order_id, $ticket_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $ticket = $this->service->activateTicket($summit, intval($order_id), intval($ticket_id));
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::AdminType)->serialize( Request::input('expand', '')));
-
-        }
-        catch(\InvalidArgumentException $ex){
-            Log::warning($ex);
-            return $this->error400();
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()
+                ->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::AdminType)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
+        });
     }
 
     public function deActivateTicket($summit_id, $order_id, $ticket_id){
-        try {
+        return $this->processRequest(function() use($summit_id, $order_id, $ticket_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $ticket = $this->service->deActivateTicket($summit, intval($order_id), intval($ticket_id));
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::AdminType)->serialize( Request::input('expand', '')));
-
-        }
-        catch(\InvalidArgumentException $ex){
-            Log::warning($ex);
-            return $this->error400();
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()
+                ->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::AdminType)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
+        });
     }
 }

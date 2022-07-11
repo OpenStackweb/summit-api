@@ -60,6 +60,7 @@ class ReInviteSummitRegistrationEmail extends AbstractEmailJob
         if (empty($invitation_form_url))
             throw new \InvalidArgumentException("missing dashboard_invitation_form_url value");
 
+        $payload['invitation_token'] = $invitation->getToken();
         $payload['invitation_form_url'] = sprintf($invitation_form_url, $base_url, $invitation->getToken());
 
         if(!empty($invitation->getSetPasswordLink())){
@@ -73,7 +74,7 @@ class ReInviteSummitRegistrationEmail extends AbstractEmailJob
 
         $ticket_types = [];
 
-        foreach ($invitation->getTicketTypes() as $ticketType){
+        foreach ($invitation->getRemainingAllowedTicketTypes() as $ticketType){
             $ticket_type_dto = [
                 'name' => $ticketType->getName(),
                 'description' => $ticketType->getDescription(),

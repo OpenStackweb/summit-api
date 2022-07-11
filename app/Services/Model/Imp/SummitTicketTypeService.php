@@ -380,7 +380,7 @@ final class SummitTicketTypeService
                 )
             );
 
-            $ticket_types = $summit->getTicketTypesByAudience(SummitTicketType::Audience_All);
+            $all_ticket_types = $summit->getTicketTypesByAudience(SummitTicketType::Audience_All);
 
             $invitation = $summit->getSummitRegistrationInvitationByEmail($member->getEmail());
 
@@ -406,16 +406,11 @@ final class SummitTicketTypeService
                             $member->getId()
                         )
                     );
-
-                    return $ticket_types->toArray();
+                    // only all
+                    return $all_ticket_types->toArray();
                 }
 
-                $invitation_ticket_types = $invitation->getTicketTypes();
-                if (count($invitation_ticket_types) == 0) {
-                    // if we dont have specified any ticket types then we are allowing all with invitation.
-                    return $summit->getTicketTypesByAudience(SummitTicketType::Audience_With_Invitation)->toArray();
-                }
-                return array_merge($ticket_types->toArray(), $invitation->getTicketTypes()->toArray());
+                return array_merge($all_ticket_types->toArray(), $invitation->getRemainingAllowedTicketTypes());
             }
 
             Log::debug
@@ -428,7 +423,7 @@ final class SummitTicketTypeService
                 )
             );
             // we do not have invitation
-            return array_merge($ticket_types->toArray(),
+            return array_merge($all_ticket_types->toArray(),
                     $summit->getTicketTypesByAudience(SummitTicketType::Audience_Without_Invitation)->toArray());
         });
     }

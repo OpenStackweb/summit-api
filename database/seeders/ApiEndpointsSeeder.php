@@ -2905,6 +2905,7 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::MeRead, $current_realm),
+                    sprintf(MemberScopes::ReadMyMemberData, $current_realm)
                 ],
             ],
             [
@@ -2913,7 +2914,7 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'POST',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::AddMyEventFeedback, $current_realm),
+                    sprintf(SummitScopes::AddMyEventFeedback, $current_realm)
                 ],
             ],
             [
@@ -5014,19 +5015,28 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'get-own-member',
                 'route' => '/api/v1/summits/{id}/members/{member_id}',
                 'http_method' => 'GET',
-                'scopes' => [sprintf(SummitScopes::MeRead, $current_realm)],
+                'scopes' => [
+                    sprintf(SummitScopes::MeRead, $current_realm),
+                    sprintf(MemberScopes::ReadMyMemberData, $current_realm),
+                ],
             ],
             [
                 'name' => 'get-own-member-favorites',
                 'route' => '/api/v1/summits/{id}/members/{member_id}/favorites',
                 'http_method' => 'GET',
-                'scopes' => [sprintf(SummitScopes::MeRead, $current_realm)],
+                'scopes' => [
+                    sprintf(SummitScopes::MeRead, $current_realm),
+                    sprintf(MemberScopes::ReadMyMemberData, $current_realm)
+                ],
             ],
             [
                 'name' => 'add-2-own-member-favorites',
                 'route' => '/api/v1/summits/{id}/members/{member_id}/favorites/{event_id}',
                 'http_method' => 'POST',
-                'scopes' => [sprintf(SummitScopes::AddMyFavorites, $current_realm)],
+                'scopes' => [
+                    sprintf(SummitScopes::AddMyFavorites, $current_realm),
+                    sprintf(MemberScopes::ReadMyMemberData, $current_realm)
+                ],
             ],
             [
                 'name' => 'add-rsvp-member',
@@ -5065,7 +5075,10 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'get-own-member-schedule',
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule',
                 'http_method' => 'GET',
-                'scopes' => [sprintf(SummitScopes::MeRead, $current_realm)]
+                'scopes' => [
+                    sprintf(SummitScopes::MeRead, $current_realm),
+                    sprintf(MemberScopes::ReadMyMemberData, $current_realm)
+                ]
             ],
             [
                 'name' => 'add-2-own-member-schedule',

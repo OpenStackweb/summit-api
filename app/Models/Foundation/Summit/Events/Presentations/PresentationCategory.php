@@ -101,7 +101,7 @@ class PresentationCategory extends SilverstripeBaseModel
     private $chair_visible;
 
     /**
-     * @ORM\Column(name="`CustomOrder`", type="integer")
+     * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
     protected $order;

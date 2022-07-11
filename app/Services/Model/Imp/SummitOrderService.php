@@ -1269,7 +1269,7 @@ final class SummitOrderService
             if($ticket->getTicketType()->getAudience() === SummitTicketType::Audience_With_Invitation){
                 // ticket assigned to order owner can not be reassigned if its the unique one
                 if($attendee->getEmail() === $order->getOwnerEmail()){
-                    if($summit->getTicketCountByTypeAndOwnerEmail($ticket->getTicketType(),$attendee->getEmail()) === 1) {
+                    if($summit->getTicketCountByTypeAndOwnerEmail($ticket->getTicketType(), $attendee->getEmail()) === 1) {
                         throw new ValidationException("You can not reassign this ticket. please contact support.");
                     }
                 }
@@ -3870,6 +3870,7 @@ final class SummitOrderService
                 Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to owner (REGISTERED)");
                 $this->sendExistentSummitOrderOwnerEmail($order);
             }
+
             if($shouldSendTicketEmail) {
                 Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to attendees");
                 $this->sendAttendeesInvitationEmail($order);

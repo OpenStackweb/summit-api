@@ -79,7 +79,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     public function ingestInvitations(LaravelRequest $request, $summit_id)
     {
-        return $this->processRequest(function() use($request, $summit_id){
+        return $this->processRequest(function () use ($request, $summit_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -102,7 +102,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     public function getInvitationByToken($token)
     {
-        return $this->processRequest(function() use($token){
+        return $this->processRequest(function () use ($token) {
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
@@ -331,7 +331,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     public function deleteAll($summit_id)
     {
-        return $this->processRequest(function() use($summit_id){
+        return $this->processRequest(function () use ($summit_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -346,7 +346,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     public function send($summit_id)
     {
-        return $this->processRequest(function() use($summit_id){
+        return $this->processRequest(function () use ($summit_id) {
 
             if (!Request::isJson()) return $this->error400();
             $data = Request::json();
@@ -408,27 +408,28 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      * @param $summit_id
      * @return mixed
      */
-    function getMyInvitation($summit_id){
-        return $this->processRequest(function() use($summit_id){
-            return $this->processRequest(function() use($summit_id){
-                $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-                if (is_null($summit)) return $this->error404();
+    function getMyInvitation($summit_id)
+    {
 
-                $current_member = $this->resource_server_context->getCurrentUser();
-                if (is_null($current_member)) return $this->error403();
+        return $this->processRequest(function () use ($summit_id) {
 
-                $invitation = $this->service->getInvitationByEmail($summit, $current_member->getEmail());
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
 
-                if (is_null($invitation))
-                    throw new EntityNotFoundException();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
 
-                return $this->ok(SerializerRegistry::getInstance()->getSerializer($invitation)->serialize
-                (
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations(),
-                ));
-            });
+            $invitation = $this->service->getInvitationByEmail($summit, $current_member->getEmail());
+
+            if (is_null($invitation))
+                throw new EntityNotFoundException();
+
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($invitation)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+            ));
         });
     }
 }

@@ -46,7 +46,7 @@ implements IOrderable
     protected $value;
 
     /**
-     * @ORM\Column(name="`CustomOrder`", type="integer")
+     * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
     protected $order;

@@ -35,7 +35,7 @@ class DefaultTrackTagGroup extends SilverstripeBaseModel
     private $label;
 
     /**
-     * @ORM\Column(name="`CustomOrder`", type="integer")
+     * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
     private $order;

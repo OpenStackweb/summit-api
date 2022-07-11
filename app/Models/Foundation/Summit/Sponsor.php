@@ -35,7 +35,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     use SummitOwned;
 
     /**
-     * @ORM\Column(name="`CustomOrder`", type="integer")
+     * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
     private $order;

@@ -43,7 +43,7 @@ class SummitSelectedPresentation extends SilverstripeBaseModel implements IOrder
     private $collection;
 
     /**
-     * @ORM\Column(name="`CustomOrder`", type="integer")
+     * @ORM\Column(name="`Order`", type="integer")
      * @var int
      */
     private $order;

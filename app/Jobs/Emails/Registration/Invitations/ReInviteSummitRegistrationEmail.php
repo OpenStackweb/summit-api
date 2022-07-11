@@ -74,7 +74,7 @@ class ReInviteSummitRegistrationEmail extends AbstractEmailJob
 
         $ticket_types = [];
 
-        foreach ($invitation->getTicketTypes() as $ticketType){
+        foreach ($invitation->getRemainingAllowedTicketTypes() as $ticketType){
             $ticket_type_dto = [
                 'name' => $ticketType->getName(),
                 'description' => $ticketType->getDescription(),

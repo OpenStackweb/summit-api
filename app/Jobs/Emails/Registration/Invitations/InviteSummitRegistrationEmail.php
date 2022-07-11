@@ -62,6 +62,7 @@ class InviteSummitRegistrationEmail extends AbstractEmailJob
 
         $payload['invitation_form_url'] = sprintf($invitation_form_url, $base_url, $invitation->getToken());
         $payload['invitation_token'] = $invitation->getToken();
+
         if(!empty($invitation->getSetPasswordLink())){
             $payload['invitation_form_url']  = sprintf(
                 "%s?client_id=%s&redirect_uri=%s",
@@ -73,7 +74,7 @@ class InviteSummitRegistrationEmail extends AbstractEmailJob
 
         $ticket_types = [];
 
-        foreach ($invitation->getTicketTypes() as $ticketType){
+        foreach ($invitation->getRemainingAllowedTicketTypes() as $ticketType){
             $ticket_type_dto = [
                 'name' => $ticketType->getName(),
                 'description' => $ticketType->getDescription(),

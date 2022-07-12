@@ -50,7 +50,7 @@ interface ISpeakerSummitRegistrationPromoCodeRepository
     /**
      * @param Summit $summit
      * @param string $type
-     * @return SpeakerSummitRegistrationPromoCode
+     * @return SummitRegistrationPromoCode|null
      */
-    public function getNextAvailableByType(Summit $summit, $type);
+    public function getNextAvailableByType(Summit $summit, string $type):?SummitRegistrationPromoCode;
 }

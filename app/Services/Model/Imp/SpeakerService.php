@@ -1328,7 +1328,8 @@ final class SpeakerService
         $flow_event = trim($payload['email_flow_event']);
         $done = isset($payload['speaker_ids']); // we have provided only ids and not a criteria
         $outcome_email_recipient = $payload['outcome_email_recipient'] ?? null;
-        EmailTest::setEmailAddress($payload['test_email_recipient']);
+        if(isset($payload['test_email_recipient']))
+            EmailTest::setEmailAddress($payload['test_email_recipient']);
 
         $page = 1;
         $count = 0;

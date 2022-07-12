@@ -13,8 +13,10 @@
  **/
 use models\summit\ISpeakerSummitRegistrationPromoCodeRepository;
 use models\summit\PresentationSpeaker;
+use models\summit\SpeakerSummitRegistrationDiscountCode;
 use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\Summit;
+use models\summit\SummitRegistrationPromoCode;
 
 /**
  * Class DoctrineSpeakerSummitRegistrationPromoCodeRepository
@@ -108,21 +110,38 @@ final class DoctrineSpeakerSummitRegistrationPromoCodeRepository
     /**
      * @param Summit $summit
      * @param string $type
-     * @return SpeakerSummitRegistrationPromoCode
+     * @return SummitRegistrationPromoCode
      */
-    public function getNextAvailableByType(Summit $summit, $type)
+    public function getNextAvailableByType(Summit $summit, string $type):?SummitRegistrationPromoCode
     {
-        return $this->getEntityManager()
+        $res =  $this->getEntityManager()
             ->createQueryBuilder()
-            ->select("c")
-            ->from(SpeakerSummitRegistrationPromoCode::class, "c")
-            ->where("c.speaker is null")
-            ->andWhere("c.summit = :summit")
-            ->andWhere("c.type = :type")
+            ->select("e")
+            ->from(SpeakerSummitRegistrationPromoCode::class, "e")
+            ->where("e.speaker is null")
+            ->andWhere("e.summit = :summit")
+            ->andWhere("e.type = :type")
             ->setParameter("summit", $summit)
             ->setParameter("type", trim($type))
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
+
+        if(is_null($res)){
+             $res =  $this->getEntityManager()
+                 ->createQueryBuilder()
+                 ->select("e")
+                 ->from(SpeakerSummitRegistrationDiscountCode::class, "e")
+                 ->where("e.speaker is null")
+                 ->andWhere("e.summit = :summit")
+                 ->andWhere("e.type = :type")
+                 ->setParameter("summit", $summit)
+                 ->setParameter("type", trim($type))
+                 ->setMaxResults(1)
+                 ->getQuery()
+                 ->getOneOrNullResult();
+
+        }
+        return $res;
     }
 }

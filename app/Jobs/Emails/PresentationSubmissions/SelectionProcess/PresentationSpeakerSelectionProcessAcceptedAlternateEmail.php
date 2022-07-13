@@ -56,7 +56,7 @@ class PresentationSpeakerSelectionProcessAcceptedAlternateEmail extends Presenta
 
         $payload['accepted_presentations'] = [];
         foreach($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleSpeaker) as $p){
-            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email))
+            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
                 $cc_email[] = $p->getCreatedBy()->getEmail();
             $payload['accepted_presentations'][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
@@ -64,7 +64,7 @@ class PresentationSpeakerSelectionProcessAcceptedAlternateEmail extends Presenta
 
         $payload['accepted_moderated_presentations'] = [];
         foreach($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleModerator) as $p){
-            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email))
+            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
                 $cc_email[] = $p->getCreatedBy()->getEmail();
 
             $payload['accepted_moderated_presentations'][] =
@@ -73,7 +73,7 @@ class PresentationSpeakerSelectionProcessAcceptedAlternateEmail extends Presenta
 
         $payload['alternate_presentations'] = [];
         foreach($speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleSpeaker) as $p){
-            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email))
+            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
                 $cc_email[] = $p->getCreatedBy()->getEmail();
 
             $payload['alternate_presentations'][] =
@@ -82,7 +82,7 @@ class PresentationSpeakerSelectionProcessAcceptedAlternateEmail extends Presenta
 
         $payload['alternate_moderated_presentations'] = [];
         foreach($speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleModerator) as $p){
-            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email))
+            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
                 $cc_email[] = $p->getCreatedBy()->getEmail();
 
             $payload['alternate_moderated_presentations'][] =

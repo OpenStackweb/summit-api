@@ -693,22 +693,6 @@ final class SpeakerService
                 }
             }
 
-            if (is_null($promo_code)) {
-                throw new ValidationException
-                (
-                    trans
-                    (
-                        'validation_errors.send_speaker_summit_assistance_promo_code_not_set',
-                        [
-                            'summit_id' => $summit->getId(),
-                            'speaker_id' => $speaker->getId(),
-                            'speaker_email' => $speaker->getEmail()
-                        ]
-                    )
-
-                );
-            }
-
             return $promo_code;
         });
     }

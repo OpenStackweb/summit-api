@@ -103,7 +103,7 @@ final class PromoCodesValidationRulesFactory
                 {
                     $specific_rules = array_merge([
                         'type'       => 'required|string|in:'.join(",", PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypes),
-                        'speaker_id' => 'required|integer',
+                        'speaker_id' => 'sometimes|integer',
                         'amount'     => 'sometimes|required_without:rate',
                         'rate'       => 'sometimes|required_without:amount',
                     ], $discount_code_rules);

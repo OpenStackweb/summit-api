@@ -63,7 +63,10 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
             }
             if(in_array('registration_code', $relations)) {
                 $registration_code = $speaker->getPromoCodeFor($summit);
-                if ($registration_code) {
+                if(is_null($registration_code)){
+                    $registration_code = $speaker->getDiscountCodeFor($summit);
+                }
+                if (!is_null($registration_code)) {
                     $values['registration_code'] = SerializerRegistry::getInstance()->getSerializer($registration_code)->serialize();
                 }
             }

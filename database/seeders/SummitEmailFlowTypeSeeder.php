@@ -59,7 +59,7 @@ use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeaker
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateOnlyEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateRejectedEmail;
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedOnlyEmail;
 use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationModeratorNotificationEmail;
 // Presentation Selections
@@ -307,9 +307,9 @@ final class SummitEmailFlowTypeSeeder extends Seeder
                 'default_email_template' => PresentationSpeakerSelectionProcessAlternateRejectedEmail::DEFAULT_TEMPLATE
             ],
             [
-                'name' => PresentationSpeakerSelectionProcessRejectedEmail::EVENT_NAME,
-                'slug' => PresentationSpeakerSelectionProcessRejectedEmail::EVENT_SLUG,
-                'default_email_template' => PresentationSpeakerSelectionProcessRejectedEmail::DEFAULT_TEMPLATE
+                'name' => PresentationSpeakerSelectionProcessRejectedOnlyEmail::EVENT_NAME,
+                'slug' => PresentationSpeakerSelectionProcessRejectedOnlyEmail::EVENT_SLUG,
+                'default_email_template' => PresentationSpeakerSelectionProcessRejectedOnlyEmail::DEFAULT_TEMPLATE
             ],
             [
                 'name' => ImportEventSpeakerEmail::EVENT_NAME,

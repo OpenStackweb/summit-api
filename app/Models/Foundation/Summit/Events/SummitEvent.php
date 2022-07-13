@@ -1392,7 +1392,7 @@ class SummitEvent extends SilverstripeBaseModel
     }
 
     /**
-     * @return Member
+     * @return Member|null
      */
     public function getCreatedBy(): ?Member
     {

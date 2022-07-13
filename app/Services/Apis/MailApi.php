@@ -84,10 +84,22 @@ final class MailApi extends AbstractOAuth2Api implements IMailApi
      * @param string $template_identifier
      * @param string $to_email
      * @param string|null $subject
+     * @param string|null $cc_email
+     * @param string|null $bbc_email
      * @return array
-     * @throws \Exception
+     * @throws ValidationException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \League\OAuth2\Client\Provider\Exception\IdentityProviderException
      */
-    public function sendEmail(array $payload, string $template_identifier, string $to_email, string $subject = null): array
+    public function sendEmail
+    (
+        array $payload,
+        string $template_identifier,
+        string $to_email,
+        string $subject = null,
+        string $cc_email = null ,
+        string $bbc_email = null
+    ): array
     {
 
         Log::debug
@@ -112,13 +124,25 @@ final class MailApi extends AbstractOAuth2Api implements IMailApi
                 'access_token' => $this->getAccessToken()
             ];
 
+            $payload = [
+                'payload' => $payload,
+                'template' => $template_identifier,
+                'to_email' => $to_email
+            ];
+
+            if(!empty($cc_email)){
+                Log::debug(sprintf("MailApi::sendEmail setting cc_email %s", $cc_email));
+                $payload['cc_email'] = trim($cc_email);
+            }
+
+            if(!empty($bcc_email)){
+                Log::debug(sprintf("MailApi::sendEmail setting bcc_email %s", $bcc_email));
+                $payload['bcc_email'] = trim($bcc_email);
+            }
+
             $response = $this->client->post('/api/v1/mails', [
                     'query' => $query,
-                    RequestOptions::JSON => [
-                      'payload' => $payload,
-                      'template' => $template_identifier,
-                      'to_email' => $to_email
-                    ]
+                    RequestOptions::JSON => $payload
                 ]
             );
 
@@ -142,7 +166,7 @@ final class MailApi extends AbstractOAuth2Api implements IMailApi
             $code = $response->getStatusCode();
             if($code == 403){
                 // retry
-                return $this->sendEmail($payload,  $template_identifier,  $to_email,  $subject);
+                return $this->sendEmail($payload,  $template_identifier,  $to_email,  $subject, $cc_email, $bbc_email);
             }
             Log::error($ex);
             throw $ex;

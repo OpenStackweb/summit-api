@@ -35,6 +35,7 @@ use App\Services\Model\IFolderService;
 use App\Services\Model\Strategies\EmailActions\SpeakerActionsEmailStrategy;
 use App\Services\Utils\Facades\EmailExcerpt;
 use App\Services\Utils\Facades\EmailTest;
+use App\Services\Utils\Facades\SpeakersAnnouncementEmailConfig;
 use App\Services\utils\IEmailExcerptService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -59,6 +60,7 @@ use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\SpeakerTravelPreference;
 use models\summit\Summit;
 use App\Http\Utils\IFileUploader;
+use models\summit\SummitRegistrationPromoCode;
 use utils\Filter;
 use utils\FilterElement;
 use utils\PagingInfo;
@@ -619,14 +621,18 @@ final class SpeakerService
     /**
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
-     * @return SpeakerSummitRegistrationPromoCode|null
-     * @throws ValidationException
+     * @return SummitRegistrationPromoCode|null
+     * @throws \Exception
      */
-    private function getPromoCode(Summit $summit, PresentationSpeaker $speaker): ?SpeakerSummitRegistrationPromoCode
+    private function getPromoCode(Summit $summit, PresentationSpeaker $speaker): ?SummitRegistrationPromoCode
     {
         return $this->tx_service->transaction(function() use($speaker, $summit) {
 
             $promo_code = $speaker->getPromoCodeFor($summit);
+
+            if (is_null($promo_code)) {
+                $promo_code = $speaker->getDiscountCodeFor($summit);
+            }
 
             if (is_null($promo_code)) {
                 // try to get a new one
@@ -646,6 +652,7 @@ final class SpeakerService
                         $summit,
                         PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAccepted
                     );
+                    /*
                     if (is_null($promo_code))
                         throw new ValidationException
                         (
@@ -660,7 +667,9 @@ final class SpeakerService
                                 ]
                             )
                         );
-                    $speaker->addPromoCode($promo_code);
+                    */
+                    if (!is_null($promo_code))
+                        $speaker->addPromoCode($promo_code);
                 } else if ($has_alternate) // get alternate code
                 {
                     $promo_code = $this->registration_code_repository->getNextAvailableByType
@@ -668,6 +677,7 @@ final class SpeakerService
                         $summit,
                         PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAlternate
                     );
+                    /*
                     if (is_null($promo_code))
                         throw new ValidationException
                         (
@@ -683,24 +693,10 @@ final class SpeakerService
                             )
 
                         );
-                    $speaker->addPromoCode($promo_code);
+                    */
+                    if (!is_null($promo_code))
+                        $speaker->addPromoCode($promo_code);
                 }
-            }
-
-            if (is_null($promo_code)) {
-                throw new ValidationException
-                (
-                    trans
-                    (
-                        'validation_errors.send_speaker_summit_assistance_promo_code_not_set',
-                        [
-                            'summit_id' => $summit->getId(),
-                            'speaker_id' => $speaker->getId(),
-                            'speaker_email' => $speaker->getEmail()
-                        ]
-                    )
-
-                );
             }
 
             return $promo_code;
@@ -1310,7 +1306,10 @@ final class SpeakerService
     }
 
     /**
-     * @inheritDoc
+     * @param int $summit_id
+     * @param array $payload
+     * @param Filter|null $filter
+     * @throws ValidationException
      */
     public function sendEmails(int $summit_id, array $payload, Filter $filter = null): void
     {
@@ -1325,11 +1324,22 @@ final class SpeakerService
             )
         );
 
-        $flow_event = trim($payload['email_flow_event']);
+        $flow_event = trim($payload['email_flow_event'] ?? '');
+
+        if(empty($flow_event))
+            throw new ValidationException("email_flow_event is required.");
+
         $done = isset($payload['speaker_ids']); // we have provided only ids and not a criteria
         $outcome_email_recipient = $payload['outcome_email_recipient'] ?? null;
         if(isset($payload['test_email_recipient']))
             EmailTest::setEmailAddress($payload['test_email_recipient']);
+
+        if(isset($payload['should_resend'])){
+            SpeakersAnnouncementEmailConfig::setShouldResend(boolval($payload['should_resend']));
+        }
+        if(isset($payload['should_send_copy_2_submitter'])){
+            SpeakersAnnouncementEmailConfig::setShouldSendCopy2Submitter(boolval($payload['should_send_copy_2_submitter']));
+        }
 
         $page = 1;
         $count = 0;
@@ -1344,7 +1354,6 @@ final class SpeakerService
             );
 
             $summit = $this->tx_service->transaction(function () use($summit_id){
-
                 $summit = $this->summit_repository->getById($summit_id);
                 if (is_null($summit) || !$summit instanceof Summit) return null;
                 return $summit;

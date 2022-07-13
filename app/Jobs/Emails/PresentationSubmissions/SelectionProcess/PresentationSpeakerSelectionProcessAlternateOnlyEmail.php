@@ -57,7 +57,7 @@ class PresentationSpeakerSelectionProcessAlternateOnlyEmail extends Presentation
 
         $payload['alternate_presentations'] = [];
         foreach($speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleSpeaker) as $p){
-            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($cc_email, $p->getCreatedBy()->getEmail()))
+            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email))
                 $cc_email[] = $p->getCreatedBy()->getEmail();
 
             $payload['alternate_presentations'][] =
@@ -66,7 +66,7 @@ class PresentationSpeakerSelectionProcessAlternateOnlyEmail extends Presentation
 
         $payload['alternate_moderated_presentations'] = [];
         foreach($speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleModerator) as $p){
-            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($cc_email, $p->getCreatedBy()->getEmail()))
+            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email))
                 $cc_email[] = $p->getCreatedBy()->getEmail();
 
             $payload['alternate_moderated_presentations'][] =

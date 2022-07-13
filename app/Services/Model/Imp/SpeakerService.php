@@ -652,6 +652,7 @@ final class SpeakerService
                         $summit,
                         PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAccepted
                     );
+                    /*
                     if (is_null($promo_code))
                         throw new ValidationException
                         (
@@ -666,7 +667,9 @@ final class SpeakerService
                                 ]
                             )
                         );
-                    $speaker->addPromoCode($promo_code);
+                    */
+                    if (!is_null($promo_code))
+                        $speaker->addPromoCode($promo_code);
                 } else if ($has_alternate) // get alternate code
                 {
                     $promo_code = $this->registration_code_repository->getNextAvailableByType
@@ -674,6 +677,7 @@ final class SpeakerService
                         $summit,
                         PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAlternate
                     );
+                    /*
                     if (is_null($promo_code))
                         throw new ValidationException
                         (
@@ -689,7 +693,9 @@ final class SpeakerService
                             )
 
                         );
-                    $speaker->addPromoCode($promo_code);
+                    */
+                    if (!is_null($promo_code))
+                        $speaker->addPromoCode($promo_code);
                 }
             }
 

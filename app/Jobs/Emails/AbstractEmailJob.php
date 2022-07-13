@@ -47,16 +47,35 @@ abstract class AbstractEmailJob implements ShouldQueue
     /**
      * @var string|null
      */
+    protected $cc_email;
+
+    /**
+     * @var string|null
+     */
+    protected $bcc_email;
+
+    /**
+     * @var string|null
+     */
     protected $subject;
 
     /**
-     * AbstractEmailJob constructor.
      * @param array $payload
      * @param string|null $template_identifier
      * @param string $to_email
      * @param string|null $subject
+     * @param string|null $cc_email
+     * @param string|null $bcc_email
      */
-    public function __construct(array $payload, ?string $template_identifier, string $to_email, ?string $subject = null)
+    public function __construct
+    (
+        array $payload,
+        ?string $template_identifier,
+        string $to_email,
+        ?string $subject = null,
+        ?string $cc_email = null,
+        ?string $bcc_email = null
+    )
     {
         $this->template_identifier = $template_identifier;
         Log::debug(sprintf("AbstractEmailJob::__construct template_identifier %s", $template_identifier));
@@ -66,6 +85,8 @@ abstract class AbstractEmailJob implements ShouldQueue
         $this->payload = $payload;
         $this->to_email = $to_email;
         $this->subject = $subject;
+        $this->cc_email = $cc_email;
+        $this->bcc_email = $bcc_email;
     }
 
     /**
@@ -76,11 +97,19 @@ abstract class AbstractEmailJob implements ShouldQueue
     public function handle
     (
         IMailApi $api
-    )
+    ):array
     {
         try {
             Log::debug(sprintf("AbstractEmailJob::handle template_identifier %s to_email %s", $this->template_identifier, $this->to_email));
-            return $api->sendEmail($this->payload, $this->template_identifier, $this->to_email, $this->subject);
+            return $api->sendEmail
+            (
+                $this->payload,
+                $this->template_identifier,
+                $this->to_email,
+                $this->subject,
+                $this->cc_email,
+                $this->bcc_email
+            );
         }
         catch (\Exception $ex){
             Log::error(sprintf("AbstractEmailJob::sendEmail template_identifier %s to_email %s",  $this->template_identifier, $this->to_email));

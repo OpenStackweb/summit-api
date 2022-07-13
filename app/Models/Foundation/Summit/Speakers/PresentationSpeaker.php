@@ -40,13 +40,6 @@ use Doctrine\Common\Collections\Criteria;
  */
 class PresentationSpeaker extends SilverstripeBaseModel
 {
-
-    const AnnouncementEmailAccepted          = 'ACCEPTED';
-    const AnnouncementEmailRejected          = 'REJECTED';
-    const AnnouncementEmailAlternate         = 'ALTERNATE';
-    const AnnouncementEmailAcceptedAlternate = 'ACCEPTED_ALTERNATE';
-    const AnnouncementEmailAcceptedRejected  = 'ACCEPTED_REJECTED';
-    const AnnouncementEmailAlternateRejected = 'ALTERNATE_REJECTED';
     const RoleSpeaker                        = 'SPEAKER';
     const RoleModerator                      = 'MODERATOR';
 
@@ -148,6 +141,12 @@ class PresentationSpeaker extends SilverstripeBaseModel
      * @var SpeakerSummitRegistrationPromoCode[]
      */
     private $promo_codes;
+
+    /**
+     * @ORM\OneToMany(targetEntity="SpeakerSummitRegistrationDiscountCode", mappedBy="speaker", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var SpeakerSummitRegistrationDiscountCode[]
+     */
+    private $discount_codes;
 
     /**
      * @ORM\ManyToMany(targetEntity="models\summit\Presentation", mappedBy="speakers", cascade={"persist"})
@@ -366,6 +365,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
         $this->moderated_presentations    = new ArrayCollection;
         $this->summit_assistances         = new ArrayCollection;
         $this->promo_codes                = new ArrayCollection;
+        $this->discount_codes             = new ArrayCollection;
         $this->areas_of_expertise         = new ArrayCollection;
         $this->other_presentation_links   = new ArrayCollection;
         $this->travel_preferences         = new ArrayCollection;
@@ -389,41 +389,74 @@ class PresentationSpeaker extends SilverstripeBaseModel
         }
         $this->presentations->clear();
     }
+
     /**
-     * @param SpeakerSummitRegistrationPromoCode $code
+     * @param SummitRegistrationPromoCode $code
      * @return $this
      */
-    public function addPromoCode(SpeakerSummitRegistrationPromoCode $code){
-        $this->promo_codes->add($code);
-        $code->setSpeaker($this);
+    public function addPromoCode(SummitRegistrationPromoCode $code): PresentationSpeaker
+    {
+        if($code instanceof SpeakerSummitRegistrationPromoCode) {
+            $this->promo_codes->add($code);
+            $code->setSpeaker($this);
+        }
+        if($code instanceof SpeakerSummitRegistrationDiscountCode){
+            $this->discount_codes->add($code);
+            $code->setSpeaker($this);
+        }
         return $this;
     }
 
     /**
-     * @param SpeakerSummitRegistrationPromoCode $code
+     * @param SummitRegistrationPromoCode $code
      * @return $this
      */
-    public function removePromoCode(SpeakerSummitRegistrationPromoCode $code){
-        $this->promo_codes->removeElement($code);
-        $code->setSpeaker(null);
+    public function removePromoCode(SummitRegistrationPromoCode $code): PresentationSpeaker
+    {
+        if($code instanceof SpeakerSummitRegistrationPromoCode) {
+            $this->promo_codes->removeElement($code);
+            $code->setSpeaker(null);
+        }
+        if($code instanceof SpeakerSummitRegistrationDiscountCode){
+            $this->discount_codes->removeElement($code);
+            $code->setSpeaker(null);
+        }
         return $this;
     }
 
     /**
-     * @return ArrayCollection|SpeakerSummitRegistrationPromoCode[]
+     * @return ArrayCollection|SummitRegistrationPromoCode[]
      */
     public function getPromoCodes(){
         return $this->promo_codes;
     }
 
     /**
-     * @param Summit $summit
-     * @return SpeakerSummitRegistrationPromoCode
+     * @return ArrayCollection|SpeakerSummitRegistrationDiscountCode[]
      */
-    public function getPromoCodeFor(Summit $summit){
+    public function getDiscountCodes(){
+        return $this->discount_codes;
+    }
+
+    /**
+     * @param Summit $summit
+     * @return SpeakerSummitRegistrationPromoCode|null
+     */
+    public function getPromoCodeFor(Summit $summit):?SpeakerSummitRegistrationPromoCode{
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('summit', $summit));
         $res = $this->promo_codes->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    /**
+     * @param Summit $summit
+     * @return SpeakerSummitRegistrationDiscountCode|null
+     */
+    public function getDiscountCodeFor(Summit $summit):?SpeakerSummitRegistrationDiscountCode{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('summit', $summit));
+        $res = $this->discount_codes->matching($criteria)->first();
         return $res === false ? null : $res;
     }
 
@@ -1873,6 +1906,24 @@ SQL;
 
         return $email ? $email->getType() : null;
     }
+
+    /**
+     * @param Summit $summit
+     * @param string $type
+     * @return bool
+     */
+    public function hasAnnouncementEmailTypeSent(Summit $summit, string $type):bool
+    {
+        $criteria = Criteria::create();
+
+        $criteria
+            ->where(Criteria::expr()->eq('summit', $summit))
+            ->andWhere(Criteria::expr()->eq('type', $type));
+
+        return $this->announcement_summit_emails->matching($criteria)->count() > 0;
+    }
+
+
 
     /**
      * @return bool

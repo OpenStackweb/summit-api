@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Services\Utils\Facades\SpeakersAnnouncementEmailConfig;
 use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
@@ -50,29 +51,47 @@ class PresentationSpeakerSelectionProcessAcceptedRejectedEmail extends Presentat
     )
     {
         $payload = [];
+        $cc_email = [];
+        $shouldSendCopy2Submitter = SpeakersAnnouncementEmailConfig::shouldSendCopy2Submitter();
 
         $payload['accepted_presentations'] = [];
         foreach($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleSpeaker) as $p){
+            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
+                $cc_email[] = $p->getCreatedBy()->getEmail();
+
             $payload['accepted_presentations'][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
 
         $payload['accepted_moderated_presentations'] = [];
         foreach($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleModerator) as $p){
+            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
+                $cc_email[] = $p->getCreatedBy()->getEmail();
+
             $payload['accepted_moderated_presentations'][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
 
         $payload['rejected_presentations'] = [];
         foreach($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleSpeaker) as $p){
+            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
+                $cc_email[] = $p->getCreatedBy()->getEmail();
+
             $payload['rejected_presentations'][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
 
         $payload['rejected_moderated_presentations'] = [];
         foreach($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleModerator) as $p){
+            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
+                $cc_email[] = $p->getCreatedBy()->getEmail();
+
             $payload['rejected_moderated_presentations'][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
+        }
+
+        if(count($cc_email) > 0){
+            $payload['cc_email'] = implode(',', $cc_email);
         }
 
         parent::__construct($payload, $summit, $speaker, $promo_code);

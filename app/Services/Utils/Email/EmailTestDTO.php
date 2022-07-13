@@ -23,10 +23,15 @@ final class EmailTestDTO
      */
     private $email_address;
 
+    public function __construct()
+    {
+        $this->email_address = null;
+    }
+
     /**
-     * @return string
+     * @return string|null
      */
-    public function getEmailAddress(): string {
+    public function getEmailAddress(): ?string {
         Log::debug(sprintf("EmailTestDTO::setEmailAddress getEmailAddress %s", $this->email_address));
         return $this->email_address;
     }

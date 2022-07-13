@@ -18,8 +18,9 @@ use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeaker
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateOnlyEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessEmailFactory;
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedOnlyEmail;
 use App\Services\Utils\Facades\EmailExcerpt;
+use App\Services\Utils\Facades\SpeakersAnnouncementEmailConfig;
 use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
@@ -27,6 +28,7 @@ use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
 use models\summit\SpeakerAnnouncementSummitEmail;
 use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\Summit;
+use models\summit\SummitRegistrationPromoCode;
 
 class SpeakerActionsEmailStrategy
 {
@@ -43,9 +45,9 @@ class SpeakerActionsEmailStrategy
     /**
      * SpeakerActionsEmailStrategy constructor.
      * @param Summit $summit
-     * @param String $flow_event
+     * @param string $flow_event
      */
-    public function __construct(Summit $summit, String $flow_event)
+    public function __construct(Summit $summit, string $flow_event)
     {
         $this->summit = $summit;
         $this->flow_event = $flow_event;
@@ -53,11 +55,11 @@ class SpeakerActionsEmailStrategy
 
     /**
      * @param PresentationSpeaker $speaker
-     * @param SpeakerSummitRegistrationPromoCode|null $promo_code
+     * @param SummitRegistrationPromoCode|null $promo_code
      * @param PresentationSpeakerSummitAssistanceConfirmationRequest|null $assistance
      */
     public function process(PresentationSpeaker $speaker,
-                            ?SpeakerSummitRegistrationPromoCode $promo_code = null,
+                            ?SummitRegistrationPromoCode $promo_code = null,
                             ?PresentationSpeakerSummitAssistanceConfirmationRequest $assistance = null):void
     {
         try {
@@ -138,7 +140,7 @@ class SpeakerActionsEmailStrategy
                         $type = SpeakerAnnouncementSummitEmail::TypeAlternateRejected;
                     }
                     break;
-                case PresentationSpeakerSelectionProcessRejectedEmail::EVENT_SLUG:
+                case PresentationSpeakerSelectionProcessRejectedOnlyEmail::EVENT_SLUG:
                     if (!$has_accepted_presentations && !$has_alternate_presentations && $has_rejected_presentations) {
                         $type = SpeakerAnnouncementSummitEmail::TypeRejected;
                     }
@@ -155,6 +157,21 @@ class SpeakerActionsEmailStrategy
             }
 
             if (!is_null($type)) {
+
+                if($speaker->hasAnnouncementEmailTypeSent($this->summit, $type) &&
+                    !SpeakersAnnouncementEmailConfig::shouldResend()){
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SpeakerActionsEmailStrategy::send speaker %s already has an email of type %s.",
+                            $speaker->getEmail(),
+                            $type
+                        )
+                    );
+                    return ;
+                }
+
                 PresentationSpeakerSelectionProcessEmailFactory::send
                 (
                     $this->summit,
@@ -163,6 +180,7 @@ class SpeakerActionsEmailStrategy
                     $promo_code,
                     $assistance
                 );
+
                 // mark the promo code as sent
                 if(!is_null($promo_code))
                     $promo_code->setEmailSent(true);

@@ -52,13 +52,14 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
             (
                 sprintf
                 (
-                    "PresentationSpeakerSelectionProcessEmail::__construct replacing original email %s by %s",
+                    "PresentationSpeakerSelectionProcessEmail::__construct replacing original email %s by %s and clearing cc field",
                     $payload['speaker_email'],
                     $test_email_recipient
                 )
             );
 
             $payload['speaker_email'] = $test_email_recipient;
+            $payload['cc_email'] = '';
         }
 
         $speaker_management_base_url = Config::get('cfp.base_url');

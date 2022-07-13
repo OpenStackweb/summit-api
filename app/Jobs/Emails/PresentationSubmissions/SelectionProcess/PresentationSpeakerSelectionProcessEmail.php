@@ -83,6 +83,6 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
         $payload['speaker_confirmation_link'] = $summit->getSpeakerConfirmationDefaultPageUrl();
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
-        parent::__construct($payload, $template_identifier, $payload['speaker_email']);
+        parent::__construct($payload, $template_identifier, $payload['speaker_email'], $payload['cc_email'] ?? null);
     }
 }

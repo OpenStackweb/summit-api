@@ -12,24 +12,25 @@
  * limitations under the License.
  **/
 
+use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedAlternateEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedOnlyEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateOnlyEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateRejectedEmail;
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedOnlyEmail;
 
 /**
  * Class SummitSpeakerValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitSpeakerEmailsValidationRulesFactory
+final class SummitSpeakerEmailsValidationRulesFactory extends AbstractValidationRulesFactory
 {
     /**
      * @param array $payload
      * @return array
      */
-    public static function build(array $payload = []): array
+    public static function buildForAdd(array $payload = []): array
     {
         return [
             'email_flow_event' => 'required|string|in:' . join(',', [
@@ -38,11 +39,22 @@ final class SummitSpeakerEmailsValidationRulesFactory
                     PresentationSpeakerSelectionProcessAcceptedRejectedEmail::EVENT_SLUG,
                     PresentationSpeakerSelectionProcessAlternateOnlyEmail::EVENT_SLUG,
                     PresentationSpeakerSelectionProcessAlternateRejectedEmail::EVENT_SLUG,
-                    PresentationSpeakerSelectionProcessRejectedEmail::EVENT_SLUG
+                    PresentationSpeakerSelectionProcessRejectedOnlyEmail::EVENT_SLUG
                 ]),
             'speaker_ids'               => 'sometimes|int_array',
             'test_email_recipient'      => 'sometimes|email',
             'outcome_email_recipient'   => 'sometimes|email',
+            'should_send_copy_2_submitter' => 'sometimes|boolean',
+            'should_resend' => 'sometimes|boolean',
         ];
+    }
+
+    /**
+     * @param array $payload
+     * @return array
+     */
+    public static function buildForUpdate(array $payload = []): array
+    {
+        return self::buildForAdd($payload);
     }
 }

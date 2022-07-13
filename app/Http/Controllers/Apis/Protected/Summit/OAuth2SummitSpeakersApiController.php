@@ -1700,7 +1700,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404(['message' => 'missing selection summit']);
 
-            $payload = $this->getJsonPayload(SummitSpeakerEmailsValidationRulesFactory::build());
+            $payload = $this->getJsonPayload(SummitSpeakerEmailsValidationRulesFactory::buildForAdd());
 
             $filter = null;
 

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Services\Utils\Facades\SpeakersAnnouncementEmailConfig;
 use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
@@ -51,16 +52,29 @@ class PresentationSpeakerSelectionProcessAlternateOnlyEmail extends Presentation
     {
       
         $payload = [];
+        $cc_email = [];
+        $shouldSendCopy2Submitter = SpeakersAnnouncementEmailConfig::shouldSendCopy2Submitter();
+
         $payload['alternate_presentations'] = [];
         foreach($speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleSpeaker) as $p){
+            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($cc_email, $p->getCreatedBy()->getEmail()))
+                $cc_email[] = $p->getCreatedBy()->getEmail();
+
             $payload['alternate_presentations'][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
         }
 
         $payload['alternate_moderated_presentations'] = [];
         foreach($speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleModerator) as $p){
+            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($cc_email, $p->getCreatedBy()->getEmail()))
+                $cc_email[] = $p->getCreatedBy()->getEmail();
+
             $payload['alternate_moderated_presentations'][] =
                 SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
+        }
+
+        if(count($cc_email) > 0){
+            $payload['cc_email'] = implode(',', $cc_email);
         }
 
         parent::__construct($payload, $summit, $speaker, $promo_code);

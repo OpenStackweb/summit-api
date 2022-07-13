@@ -72,7 +72,7 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                 );
             break;
             case SpeakerAnnouncementSummitEmail::TypeRejected:
-                PresentationSpeakerSelectionProcessRejectedEmail::dispatch
+                PresentationSpeakerSelectionProcessRejectedOnlyEmail::dispatch
                 (
                     $summit,
                     $speaker

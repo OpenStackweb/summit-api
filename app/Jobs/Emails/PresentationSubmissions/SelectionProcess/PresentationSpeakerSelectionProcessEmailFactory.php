@@ -14,6 +14,7 @@
 
 use App\Services\Utils\Facades\EmailExcerpt;
 use App\Services\utils\IEmailExcerptService;
+use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
 use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
 use models\summit\SpeakerAnnouncementSummitEmail;
@@ -64,6 +65,8 @@ final class PresentationSpeakerSelectionProcessEmailFactory
         ?SummitRegistrationPromoCode $promo_code = null,
         ?PresentationSpeakerSummitAssistanceConfirmationRequest $speaker_assistance = null
     ){
+
+        Log::debug(sprintf("PresentationSpeakerSelectionProcessEmailFactory::send speaker %s type %s", $speaker->getEmail(), $type));
 
         switch ($type){
             case SpeakerAnnouncementSummitEmail::TypeAccepted:

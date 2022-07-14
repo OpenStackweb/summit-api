@@ -45,7 +45,8 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
         ?Filter $filter = null
     ){
 
-        $this->filter = $filter->getOriginalExp();
+        if(!is_null($filter))
+            $this->filter = $filter->getOriginalExp();
         $payload  = [];
         $cc_email = [];
         $shouldSendCopy2Submitter = SpeakersAnnouncementEmailConfig::shouldSendCopy2Submitter();

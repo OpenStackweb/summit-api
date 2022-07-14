@@ -18,6 +18,7 @@ use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use ModelSerializers\IPresentationSerializerTypes;
 use ModelSerializers\SerializerRegistry;
+use utils\Filter;
 
 /**
  * Class PresentationSpeakerSelectionProcessRejectedOnlyEmail
@@ -36,22 +37,24 @@ class PresentationSpeakerSelectionProcessRejectedOnlyEmail extends PresentationS
     const DEFAULT_TEMPLATE = 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_REJECTED_ONLY';
 
     /**
-     * PresentationSpeakerSelectionProcessRejectedEmail constructor.
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
+     * @param Filter|null $filter
      */
     public function __construct
     (
         Summit $summit,
-        PresentationSpeaker $speaker
+        PresentationSpeaker $speaker,
+        ?Filter $filter = null
     )
     {
         $payload = [];
+        $this->filter = $filter->getOriginalExp();
         $cc_email = [];
         $shouldSendCopy2Submitter = SpeakersAnnouncementEmailConfig::shouldSendCopy2Submitter();
 
         $payload['rejected_presentations'] = [];
-        foreach($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleSpeaker) as $p){
+        foreach($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleSpeaker, false, [], $filter) as $p){
             if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
                 $cc_email[] = $p->getCreatedBy()->getEmail();
 
@@ -60,7 +63,7 @@ class PresentationSpeakerSelectionProcessRejectedOnlyEmail extends PresentationS
         }
 
         $payload['rejected_moderated_presentations'] = [];
-        foreach($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleModerator) as $p){
+        foreach($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleModerator, false, [], $filter) as $p){
             if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
                 $cc_email[] = $p->getCreatedBy()->getEmail();
 

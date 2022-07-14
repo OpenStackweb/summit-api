@@ -621,12 +621,13 @@ final class SpeakerService
     /**
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
+     * @param Filter|null $filter
      * @return SummitRegistrationPromoCode|null
      * @throws \Exception
      */
-    private function getPromoCode(Summit $summit, PresentationSpeaker $speaker): ?SummitRegistrationPromoCode
+    private function getPromoCode(Summit $summit, PresentationSpeaker $speaker, ?Filter $filter = null): ?SummitRegistrationPromoCode
     {
-        return $this->tx_service->transaction(function() use($speaker, $summit) {
+        return $this->tx_service->transaction(function() use($speaker, $summit, $filter) {
 
             $promo_code = $speaker->getPromoCodeFor($summit);
 
@@ -638,12 +639,12 @@ final class SpeakerService
                 // try to get a new one
 
                 $has_accepted =
-                    $speaker->hasAcceptedPresentations($summit, PresentationSpeaker::RoleModerator, true, $summit->getExcludedCategoriesForAcceptedPresentations()) ||
-                    $speaker->hasAcceptedPresentations($summit, PresentationSpeaker::RoleSpeaker, true, $summit->getExcludedCategoriesForAcceptedPresentations());
+                    $speaker->hasAcceptedPresentations($summit, PresentationSpeaker::RoleModerator, true, $summit->getExcludedCategoriesForAcceptedPresentations(), $filter) ||
+                    $speaker->hasAcceptedPresentations($summit, PresentationSpeaker::RoleSpeaker, true, $summit->getExcludedCategoriesForAcceptedPresentations(), $filter);
 
                 $has_alternate =
-                    $speaker->hasAlternatePresentations($summit, PresentationSpeaker::RoleModerator, true, $summit->getExcludedCategoriesForAlternatePresentations()) ||
-                    $speaker->hasAlternatePresentations($summit, PresentationSpeaker::RoleSpeaker, true, $summit->getExcludedCategoriesForAlternatePresentations());
+                    $speaker->hasAlternatePresentations($summit, PresentationSpeaker::RoleModerator, true, $summit->getExcludedCategoriesForAlternatePresentations(), $filter) ||
+                    $speaker->hasAlternatePresentations($summit, PresentationSpeaker::RoleSpeaker, true, $summit->getExcludedCategoriesForAlternatePresentations(), $filter);
 
                 if ($has_accepted) //get approved code
                 {
@@ -991,33 +992,34 @@ final class SpeakerService
 
     /**
      * @param Summit $summit
-     * @param PresentationSpeaker $speaker
+     * @param PresentationSpeaker $speake
+     * @param Filter|null $filter
      * @return PresentationSpeakerSummitAssistanceConfirmationRequest|null
      * @throws \Exception
      */
-    private function generateSpeakerAssistance(Summit $summit, PresentationSpeaker $speaker): ?PresentationSpeakerSummitAssistanceConfirmationRequest
+    private function generateSpeakerAssistance(Summit $summit, PresentationSpeaker $speaker, ?Filter $filter): ?PresentationSpeakerSummitAssistanceConfirmationRequest
     {
-        return $this->tx_service->transaction(function () use ($summit, $speaker) {
+        return $this->tx_service->transaction(function () use ($summit, $speaker, $filter) {
 
 
             $has_accepted_presentations =
                 $speaker->hasAcceptedPresentations(
                     $summit, PresentationSpeaker::RoleModerator, true,
-                    $summit->getExcludedCategoriesForAcceptedPresentations()
+                    $summit->getExcludedCategoriesForAcceptedPresentations(), $filter
                 ) ||
                 $speaker->hasAcceptedPresentations(
                     $summit, PresentationSpeaker::RoleSpeaker, true,
-                    $summit->getExcludedCategoriesForAcceptedPresentations()
+                    $summit->getExcludedCategoriesForAcceptedPresentations(), $filter
                 );
 
             $has_alternate_presentations =
                 $speaker->hasAlternatePresentations(
                     $summit, PresentationSpeaker::RoleModerator, true,
-                    $summit->getExcludedCategoriesForAlternatePresentations()
+                    $summit->getExcludedCategoriesForAlternatePresentations(), $filter
                 ) ||
                 $speaker->hasAlternatePresentations(
                     $summit, PresentationSpeaker::RoleSpeaker, true,
-                    $summit->getExcludedCategoriesForAlternatePresentations()
+                    $summit->getExcludedCategoriesForAlternatePresentations(), $filter
                 );
 
             Log::debug
@@ -1400,7 +1402,8 @@ final class SpeakerService
                         $flow_event,
                         $summit,
                         $speaker_id,
-                        $email_strategy
+                        $email_strategy,
+                        $filter
                     ) {
 
                         Log::debug(sprintf("SpeakerService::send processing speaker id %s", $speaker_id));
@@ -1412,14 +1415,15 @@ final class SpeakerService
                         }
 
                         // try to get a promo code
-                        $promo_code = $this->getPromoCode($summit, $speaker);
+                        $promo_code = $this->getPromoCode($summit, $speaker, $filter);
 
                         // try to get an speaker assistance
-                        $assistance = $this->generateSpeakerAssistance($summit, $speaker);
+                        $assistance = $this->generateSpeakerAssistance($summit, $speaker, $filter);
 
                         $email_strategy->process
                         (
                             $speaker,
+                            $filter,
                             $promo_code,
                             $assistance
                         );

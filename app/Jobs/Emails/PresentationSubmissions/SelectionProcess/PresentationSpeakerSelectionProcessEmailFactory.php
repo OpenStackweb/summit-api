@@ -19,6 +19,8 @@ use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
 use models\summit\SpeakerAnnouncementSummitEmail;
 use models\summit\Summit;
 use models\summit\SummitRegistrationPromoCode;
+use utils\Filter;
+
 /**
  * Class PresentationSpeakerSelectionProcessEmailFactory
  * @package App\Jobs\Emails\PresentationSubmissions\SelectionProcess
@@ -49,6 +51,7 @@ final class PresentationSpeakerSelectionProcessEmailFactory
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
      * @param string $type
+     * @param Filter|null $filter
      * @param SummitRegistrationPromoCode|null $promo_code
      * @param PresentationSpeakerSummitAssistanceConfirmationRequest|null $speaker_assistance
      */
@@ -57,6 +60,7 @@ final class PresentationSpeakerSelectionProcessEmailFactory
         Summit $summit,
         PresentationSpeaker $speaker,
         string $type,
+        ?Filter $filter = null,
         ?SummitRegistrationPromoCode $promo_code = null,
         ?PresentationSpeakerSummitAssistanceConfirmationRequest $speaker_assistance = null
     ){
@@ -68,14 +72,26 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
-                    is_null($speaker_assistance) ? null: $speaker_assistance->getToken()
+                    is_null($speaker_assistance) ? null: $speaker_assistance->getToken(),
+                    $filter
                 );
             break;
+            case SpeakerAnnouncementSummitEmail::TypeAlternate:
+                PresentationSpeakerSelectionProcessAlternateOnlyEmail::dispatch
+                (
+                    $summit,
+                    $promo_code,
+                    $speaker,
+                    is_null($speaker_assistance) ? null: $speaker_assistance->getToken(),
+                    $filter,
+                );
+                break;
             case SpeakerAnnouncementSummitEmail::TypeRejected:
                 PresentationSpeakerSelectionProcessRejectedOnlyEmail::dispatch
                 (
                     $summit,
-                    $speaker
+                    $speaker,
+                    $filter
                 );
             break;
             case SpeakerAnnouncementSummitEmail::TypeAcceptedAlternate:
@@ -84,7 +100,8 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
-                    is_null($speaker_assistance) ? null: $speaker_assistance->getToken()
+                    is_null($speaker_assistance) ? null: $speaker_assistance->getToken(),
+                    $filter
                 );
                 break;
             case SpeakerAnnouncementSummitEmail::TypeAcceptedRejected:
@@ -93,16 +110,8 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
-                    is_null($speaker_assistance) ? null: $speaker_assistance->getToken()
-                );
-                break;
-            case SpeakerAnnouncementSummitEmail::TypeAlternate:
-                PresentationSpeakerSelectionProcessAlternateOnlyEmail::dispatch
-                (
-                    $summit,
-                    $promo_code,
-                    $speaker,
-                    is_null($speaker_assistance) ? null: $speaker_assistance->getToken()
+                    is_null($speaker_assistance) ? null: $speaker_assistance->getToken(),
+                    $filter
                 );
                 break;
             case SpeakerAnnouncementSummitEmail::TypeAlternateRejected:
@@ -111,7 +120,8 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
-                    is_null($speaker_assistance) ? null: $speaker_assistance->getToken()
+                    is_null($speaker_assistance) ? null: $speaker_assistance->getToken(),
+                    $filter
                 );
                 break;
         }

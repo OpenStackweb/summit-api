@@ -24,6 +24,7 @@ use models\summit\SummitRegistrationPromoCode;
  */
 abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
 {
+    protected $filter;
 
     /**
      * @param array $payload

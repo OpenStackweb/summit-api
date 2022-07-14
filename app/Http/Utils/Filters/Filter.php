@@ -39,9 +39,15 @@ final class Filter
      */
     private $bindings = [];
 
-    public function __construct(array $filters = [])
+    /**
+     * @var mixed
+     */
+    private $originalExp;
+
+    public function __construct(array $filters = [], $originalExp = null)
     {
         $this->filters = $filters;
+        $this->originalExp = $originalExp;
     }
 
     /**
@@ -651,5 +657,12 @@ final class Filter
      */
     public static function buildDateTimeEpochField(string $field):string{
         return self::buildField($field, self::DateTimeEpoch);
+    }
+
+    /**
+     * @return mixed|null
+     */
+    public function getOriginalExp() {
+        return $this->originalExp;
     }
 }

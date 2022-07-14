@@ -22,6 +22,7 @@ use models\main\Member;
 use models\main\Tag;
 use models\summit\ISummitEventType;
 use models\summit\PresentationCategoryGroup;
+use models\summit\PresentationSpeaker;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
@@ -59,6 +60,11 @@ trait InsertSummitTestData
      * @var SelectionPlan
      */
     static $default_selection_plan;
+
+    /**
+     * @var SelectionPlan
+     */
+    static $default_selection_plan2;
 
     /**
      * @var SummitAdministratorPermissionGroup
@@ -370,6 +376,24 @@ trait InsertSummitTestData
         self::$default_selection_plan->setIsEnabled(true);
         self::$default_selection_plan->addTrackGroup(self::$defaultTrackGroup);
 
+        // sel plan 2
+
+        self::$default_selection_plan2 = new SelectionPlan();
+        self::$default_selection_plan2->setName("TEST_SELECTION_PLAN2");
+        self::$default_selection_plan2->setPresentationCreatorNotificationEmailTemplate("PRESENTATION_CREATOR_EMAIL_TEMPLATE");
+        self::$default_selection_plan2->setPresentationModeratorNotificationEmailTemplate("PRESENTATION_MODERATOR_EMAIL_TEMPLATE");
+        self::$default_selection_plan2->setPresentationSpeakerNotificationEmailTemplate("PRESENTATION_SPEAKER_EMAIL_TEMPLATE");
+        $submission_begin_date = new DateTime('now', self::$summit->getTimeZone());
+        $submission_end_date = (clone $submission_begin_date)->add(new DateInterval("P14D"));
+        self::$default_selection_plan2->setSummit(self::$summit);
+
+        self::$default_selection_plan2->setSubmissionBeginDate($submission_begin_date);
+        self::$default_selection_plan2->setSubmissionEndDate($submission_end_date);
+        self::$default_selection_plan2->setSelectionBeginDate($submission_begin_date);
+        self::$default_selection_plan2->setSelectionEndDate($submission_end_date);
+        self::$default_selection_plan2->setIsEnabled(true);
+        self::$default_selection_plan2->addTrackGroup(self::$defaultTrackGroup);
+
         $track_chair_score_type = new PresentationTrackChairScoreType();
         $track_chair_score_type->setScore(1);
         $track_chair_score_type->setName("TEST_SCORE_TYPE");
@@ -399,6 +423,7 @@ trait InsertSummitTestData
         self::$default_selection_plan->addTrackChairRatingType($track_chair_rating_type);
 
         self::$summit->addSelectionPlan(self::$default_selection_plan);
+        self::$summit->addSelectionPlan(self::$default_selection_plan2);
 
         self::$em = Registry::getManager(SilverstripeBaseModel::EntityManager);
         if (!self::$em ->isOpen()) {
@@ -410,6 +435,15 @@ trait InsertSummitTestData
         $start_date = clone($begin_date);
         $end_date  = clone($start_date);
         $end_date = $end_date->add(new DateInterval("P1D"));
+        $speaker1 = new PresentationSpeaker();
+        if (self::$defaultMember != null) {
+            $speaker1->setMember(self::$defaultMember);
+        }
+        $speaker1->setFirstName("Sebastian");
+        $speaker1->setLastName("Marcet");
+        $speaker1->setBio("This is the Bio");
+        self::$em->persist($speaker1);
+
         for($i = 0 ; $i < 20; $i++){
             $presentation = new Presentation();
             self::$summit->addEvent($presentation);
@@ -421,7 +455,29 @@ trait InsertSummitTestData
             $presentation->setType( self::$defaultPresentationType );
             $presentation->setStartDate($start_date);
             $presentation->setEndDate($end_date);
+            $presentation->addSpeaker($speaker1);
             self::$default_selection_plan->addPresentation($presentation);
+            self::$presentations[] = $presentation;
+            $presentation->publish();
+            $start_date = clone($start_date);
+            $start_date = $start_date->add(new DateInterval("P1D"));
+            $end_date = clone($start_date);
+            $end_date = $end_date->add(new DateInterval("P1D"));
+        }
+
+        for($i = 20 ; $i < 40; $i++){
+            $presentation = new Presentation();
+            self::$summit->addEvent($presentation);
+            $presentation->setTitle(sprintf("Presentation Title %s %s", $i, str_random(16)));
+            $presentation->setAbstract(sprintf("Presentation Abstract %s %s", $i, str_random(16)));
+            $presentation->setCategory(self::$defaultTrack);
+            $presentation->setProgress(Presentation::PHASE_COMPLETE);
+            $presentation->setStatus(Presentation::STATUS_RECEIVED);
+            $presentation->setType( self::$defaultPresentationType );
+            $presentation->setStartDate($start_date);
+            $presentation->setEndDate($end_date);
+            $presentation->addSpeaker($speaker1);
+            self::$default_selection_plan2->addPresentation($presentation);
             self::$presentations[] = $presentation;
             $presentation->publish();
             $start_date = clone($start_date);

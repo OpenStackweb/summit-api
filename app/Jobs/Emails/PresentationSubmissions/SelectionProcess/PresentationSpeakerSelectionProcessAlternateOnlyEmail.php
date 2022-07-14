@@ -19,6 +19,7 @@ use models\summit\Summit;
 use models\summit\SummitRegistrationPromoCode;
 use ModelSerializers\IPresentationSerializerTypes;
 use ModelSerializers\SerializerRegistry;
+use utils\Filter;
 
 /**
  * Class PresentationSpeakerSelectionProcessAlternateOnlyEmail
@@ -38,16 +39,18 @@ class PresentationSpeakerSelectionProcessAlternateOnlyEmail extends Presentation
 
     /**
      * @param Summit $summit
-     * @param SummitRegistrationPromoCode $promo_code
+     * @param SummitRegistrationPromoCode|null $promo_code
      * @param PresentationSpeaker $speaker
      * @param string|null $confirmation_token
+     * @param Filter|null $filter
      */
     public function __construct
     (
         Summit $summit,
         ?SummitRegistrationPromoCode $promo_code,
         PresentationSpeaker $speaker,
-        ?string $confirmation_token = null
+        ?string $confirmation_token = null,
+        ?Filter $filter = null
     )
     {
       

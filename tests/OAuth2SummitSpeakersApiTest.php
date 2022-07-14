@@ -17,9 +17,14 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
 {
     use InsertSummitTestData;
 
+    use InsertMemberTestData;
+
     protected function setUp(): void
     {
         parent::setUp();
+        self::insertMemberTestData(IGroup::TrackChairs);
+        self::$defaultMember = self::$member;
+        self::$defaultMember2 = self::$member2;
         self::insertTestData();
     }
 
@@ -380,7 +385,7 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
         return $speaker;
     }
 
-    public function testGetCurrentSummitSpeakersOrderByID()
+    public function testGetCurrentSummitSpeakersOrderByIDAndFilteredBySelPlanOR()
     {
         $params = [
 
@@ -389,18 +394,10 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
             'per_page' => 10,
             'order' => '+id',
             'filter' => [
-                    'has_alternate_presentations==false',
-                    'presentations_selection_plan_id==1',
-                    'presentations_submitter_email@@test'
+                    sprintf('presentations_selection_plan_id==%s||%s',
+                        self::$default_selection_plan->getId(),
+                        self::$default_selection_plan2->getId())
                 ]
-           /* 'filter' => [
-                'has_accepted_presentations==true',
-                'has_alternate_presentations==false',
-                'has_rejected_presentations==true'
-            ]*/
-            /*'filter' => [
-                'has_accepted_presentations==true,has_rejected_presentations==true',
-            ]*/
         ];
 
         $headers = [
@@ -420,8 +417,49 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
 
         $content = $response->getContent();
         $this->assertResponseStatus(200);
-        $speakers = json_decode($content);
-        $this->assertTrue(!is_null($speakers));
+        $speakers_response = json_decode($content);
+        $this->assertTrue(!is_null($speakers_response));
+        $speakers = $speakers_response->data;
+        $this->assertTrue(count($speakers) >= 1);
+        $this->assertTrue(count($speakers[0]->accepted_presentations) == 40);
+    }
+
+    public function testGetCurrentSummitSpeakersOrderByIDAndFilteredBySelPlan()
+    {
+        $params = [
+
+            'id' => self::$summit->getId(),
+            'page' => 1,
+            'per_page' => 10,
+            'order' => '+id',
+            'filter' => [
+                sprintf('presentations_selection_plan_id==%s',
+                    self::$default_selection_plan2->getId())
+            ]
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakers",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $speakers_response = json_decode($content);
+        $this->assertTrue(!is_null($speakers_response));
+        $speakers = $speakers_response->data;
+        $this->assertTrue(count($speakers) >= 1);
+        $this->assertTrue(count($speakers[0]->accepted_presentations) == 20);
     }
 
     /**

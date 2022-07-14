@@ -29,6 +29,7 @@ use models\summit\SpeakerAnnouncementSummitEmail;
 use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\Summit;
 use models\summit\SummitRegistrationPromoCode;
+use utils\Filter;
 
 class SpeakerActionsEmailStrategy
 {
@@ -55,10 +56,12 @@ class SpeakerActionsEmailStrategy
 
     /**
      * @param PresentationSpeaker $speaker
+     * @param Filter|null $filter
      * @param SummitRegistrationPromoCode|null $promo_code
      * @param PresentationSpeakerSummitAssistanceConfirmationRequest|null $assistance
      */
     public function process(PresentationSpeaker $speaker,
+                            ?Filter $filter = null,
                             ?SummitRegistrationPromoCode $promo_code = null,
                             ?PresentationSpeakerSummitAssistanceConfirmationRequest $assistance = null):void
     {
@@ -69,32 +72,38 @@ class SpeakerActionsEmailStrategy
 
             $has_accepted_presentations =
                 $speaker->hasAcceptedPresentations(
-                    $this->summit, PresentationSpeaker::RoleModerator, true,
-                    $this->summit->getExcludedCategoriesForAcceptedPresentations()
+                    $this->summit,
+                    PresentationSpeaker::RoleModerator, true,
+                    $this->summit->getExcludedCategoriesForAcceptedPresentations(),
+                    $filter
                 ) ||
                 $speaker->hasAcceptedPresentations(
                     $this->summit, PresentationSpeaker::RoleSpeaker, true,
-                    $this->summit->getExcludedCategoriesForAcceptedPresentations()
+                    $this->summit->getExcludedCategoriesForAcceptedPresentations(), $filter
                 );
 
             $has_alternate_presentations =
                 $speaker->hasAlternatePresentations(
                     $this->summit, PresentationSpeaker::RoleModerator, true,
-                    $this->summit->getExcludedCategoriesForAlternatePresentations()
+                    $this->summit->getExcludedCategoriesForAlternatePresentations(),
+                    $filter
                 ) ||
                 $speaker->hasAlternatePresentations(
                     $this->summit, PresentationSpeaker::RoleSpeaker, true,
-                    $this->summit->getExcludedCategoriesForAlternatePresentations()
+                    $this->summit->getExcludedCategoriesForAlternatePresentations(),
+                    $filter
                 );
 
             $has_rejected_presentations =
                 $speaker->hasRejectedPresentations(
                     $this->summit, PresentationSpeaker::RoleModerator, true,
-                    $this->summit->getExcludedCategoriesForRejectedPresentations()
+                    $this->summit->getExcludedCategoriesForRejectedPresentations(),
+                    $filter
                 ) ||
                 $speaker->hasRejectedPresentations(
                     $this->summit, PresentationSpeaker::RoleSpeaker, true,
-                    $this->summit->getExcludedCategoriesForRejectedPresentations()
+                    $this->summit->getExcludedCategoriesForRejectedPresentations(),
+                    $filter
                 );
 
             $has_promo_code = !is_null($promo_code);
@@ -148,7 +157,7 @@ class SpeakerActionsEmailStrategy
                 default:
                     EmailExcerpt::add(
                         [
-                            'type' => IEmailExcerptService::SpeakerEmailType,
+                            'type'          => IEmailExcerptService::SpeakerEmailType,
                             'speaker_email' => $speaker->getEmail(),
                             'email_type'    => SpeakerAnnouncementSummitEmail::TypeNone
                         ]
@@ -177,6 +186,7 @@ class SpeakerActionsEmailStrategy
                     $this->summit,
                     $speaker,
                     $type,
+                    $filter,
                     $promo_code,
                     $assistance
                 );

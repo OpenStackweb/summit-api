@@ -433,6 +433,9 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
             'per_page' => 10,
             'order' => '+id',
             'filter' => [
+                'has_accepted_presentations==true',
+                'has_alternate_presentations==false',
+                'has_rejected_presentations==false',
                 sprintf('presentations_selection_plan_id==%s',
                     self::$default_selection_plan2->getId())
             ]

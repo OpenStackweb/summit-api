@@ -43,6 +43,60 @@ final class DoctrineSpeakerRepository
      */
     protected function getFilterMappings()
     {
+        $args  = func_get_args();
+        $filter = count($args) > 0 ? $args[0] : null;
+
+        $extraSelectionStatusFilter = '';
+
+        if(!is_null($filter) && $filter instanceof Filter){
+            $count = 0;
+            if($filter->hasFilter("presentations_selection_plan_id")){
+                $count++;
+                $e = $filter->getFilter("presentations_selection_plan_id");
+                $v = [];
+                foreach($e as $f){
+                    if(is_array($f->getValue())){
+                        foreach ($f->getValue() as $iv){
+                            $v[] = $iv;
+                        }
+                    }
+                    else
+                        $v[] = $f->getValue();
+                }
+                $extraSelectionStatusFilter = ' AND __sel_plan%'.$count.'$s.id IN ('.implode(',', $v).')';
+            }
+            if($filter->hasFilter("presentations_track_id")){
+                $count++;
+                $e = $filter->getFilter("presentations_track_id");
+                $v = [];
+                foreach($e as $f){
+                    if(is_array($f->getValue())){
+                        foreach ($f->getValue() as $iv){
+                            $v[] = $iv;
+                        }
+                    }
+                    else
+                        $v[] = $f->getValue();
+                }
+                $extraSelectionStatusFilter = ' AND __cat%'.$count.'$s.id IN ('.implode(',', $v).')';
+            }
+            if($filter->hasFilter("presentations_type_id")){
+                $count++;
+                $e = $filter->getFilter("presentations_type_id");
+                $v = [];
+                foreach($e as $f){
+                    if(is_array($f->getValue())){
+                        foreach ($f->getValue() as $iv){
+                            $v[] = $iv;
+                        }
+                    }
+                    else
+                        $v[] = $f->getValue();
+                }
+                $extraSelectionStatusFilter = ' AND __t%'.$count.'$s.id IN ('.implode(',', $v).')';
+            }
+        }
+
         return [
             'last_name' => new DoctrineFilterMapping(
                 "( LOWER(m.last_name) :operator LOWER(:value) )".
@@ -177,19 +231,26 @@ final class DoctrineSpeakerRepository
                                         SELECT __p12.id FROM models\summit\Presentation __p12 
                                         JOIN __p12.speakers __spk12 WITH __spk12.id = e.id 
                                         JOIN __p12.category __cat12
+                                        JOIN __p12.type __t12
+                                        JOIN __p12.selection_plan __sel_plan12 
                                         LEFT JOIN __p12.selected_presentations __sp12 
                                         LEFT JOIN __sp12.list __spl12 
                                         WHERE 
                                         __p12.summit = :summit AND
                                         ((__sp12.order is not null AND
                                         __sp12.order <= __cat12.session_count AND __sp12.collection = \'%1$s\' AND
-                                        __spl12.list_type = \'%2$s\' AND __spl12.list_class = \'%3$s\') OR __p12.published = 1)
-                                     )
-                                     OR
+                                        __spl12.list_type = \'%2$s\' AND __spl12.list_class = \'%3$s\') OR __p12.published = 1) ',
+                                SummitSelectedPresentation::CollectionSelected,
+                                        SummitSelectedPresentationList::Group,
+                                        SummitSelectedPresentationList::Session).(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '12'): '').
+                                     ' ) OR '.
+                                     sprintf('
                                      EXISTS (
                                         SELECT __p14.id FROM models\summit\Presentation __p14 
                                         JOIN __p14.moderator __md14 WITH __md14.id = e.id 
                                         JOIN __p14.category __cat14
+                                        JOIN __p14.type __t14
+                                        JOIN __p14.selection_plan __sel_plan14
                                         LEFT JOIN __p14.selected_presentations __sp14
                                         LEFT JOIN __sp14.list __spl14 
                                         WHERE 
@@ -197,12 +258,11 @@ final class DoctrineSpeakerRepository
                                         ((__sp14.order is not null AND
                                         __sp14.order <= __cat14.session_count AND __sp14.collection = \'%1$s\'
                                         AND __spl14.list_type = \'%2$s\' AND __spl14.list_class = \'%3$s\') OR __p14.published = 1)
-                                     )
                                 ',
                                 SummitSelectedPresentation::CollectionSelected,
                                 SummitSelectedPresentationList::Group,
                                 SummitSelectedPresentationList::Session
-                            )
+                            ).(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '14'): '').')'
                         ),
                         'false' => new DoctrineCaseFilterMapping(
                             'false',
@@ -211,32 +271,38 @@ final class DoctrineSpeakerRepository
                                         SELECT __p12.id FROM models\summit\Presentation __p12 
                                         JOIN __p12.speakers __spk12 WITH __spk12.id = e.id 
                                         JOIN __p12.category __cat12
+                                        JOIN __p12.type __t12
+                                        JOIN __p12.selection_plan __sel_plan12 
                                         LEFT JOIN __p12.selected_presentations __sp12 
                                         LEFT JOIN __sp12.list __spl12
                                         WHERE 
                                         __p12.summit = :summit AND
                                         ((__sp12.order is not null AND
                                         __sp12.order <= __cat12.session_count AND __sp12.collection = \'%1$s\' AND
-                                         __spl12.list_type = \'%2$s\' AND __spl12.list_class = \'%3$s\' ) OR __p12.published = 1)
-                                     )
-                                     AND
-                                     NOT EXISTS (
+                                         __spl12.list_type = \'%2$s\' AND __spl12.list_class = \'%3$s\' ) OR __p12.published = 1) '
+                                ,
+                                SummitSelectedPresentation::CollectionSelected,
+                                        SummitSelectedPresentationList::Group,
+                                        SummitSelectedPresentationList::Session).(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '12'): '').
+                                     ')
+                                     AND '.
+                                     sprintf('NOT EXISTS (
                                         SELECT __p14.id FROM models\summit\Presentation __p14 
                                         JOIN __p14.moderator __md14 WITH __md14.id = e.id 
                                         JOIN __p14.category __cat14
+                                        JOIN __p14.type __t14
+                                        JOIN __p14.selection_plan __sel_plan14
                                         LEFT JOIN __p14.selected_presentations __sp14 
                                         LEFT JOIN __sp14.list __spl14
                                         WHERE 
                                         __p14.summit = :summit AND
                                         ((__sp14.order is not null AND
                                         __sp14.order <= __cat14.session_count AND __sp14.collection = \'%1$s\' AND
-                                        __spl14.list_type = \'%2$s\' AND __spl14.list_class = \'%3$s\') OR __p14.published = 1)
-                                     )
-                                ',
+                                        __spl14.list_type = \'%2$s\' AND __spl14.list_class = \'%3$s\') OR __p14.published = 1) ',
                                 SummitSelectedPresentation::CollectionSelected,
                                 SummitSelectedPresentationList::Group,
                                 SummitSelectedPresentationList::Session
-                            )
+                            ).(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '14'): '').')'
                         ),
 
                     ]
@@ -245,67 +311,77 @@ final class DoctrineSpeakerRepository
                 new DoctrineSwitchFilterMapping([
                         'true' => new DoctrineCaseFilterMapping(
                             'true',
-                            sprintf('
-                                     EXISTS (
+                            sprintf('EXISTS (
                                         SELECT __p21.id FROM models\summit\Presentation __p21 
                                         JOIN __p21.speakers __spk21 WITH __spk21.id = e.id 
                                         JOIN __p21.category __cat21
+                                        JOIN __p21.type __t21
+                                        JOIN __p21.selection_plan __sel_plan21 
                                         JOIN __p21.selected_presentations __sp21 WITH __sp21.collection = \'%1$s\'
                                         JOIN __sp21.list __spl21 WITH __spl21.list_type = \'%2$s\' AND __spl21.list_class = \'%3$s\'
                                         WHERE 
                                         __p21.summit = :summit AND
                                         __sp21.order is not null AND
-                                        __sp21.order > __cat21.session_count
-                                     )
-                                     OR
-                                     EXISTS (
+                                        __sp21.order > __cat21.session_count',
+                                SummitSelectedPresentation::CollectionSelected,
+                                       SummitSelectedPresentationList::Group,
+                                       SummitSelectedPresentationList::Session
+                            ).(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '21'): '').
+                                     ' )
+                                     OR '.
+                                    sprintf('EXISTS (
                                         SELECT __p22.id FROM models\summit\Presentation __p22 
                                         JOIN __p22.moderator __md22 WITH __md22.id = e.id 
                                         JOIN __p22.category __cat22
+                                        JOIN __p22.type __t22
+                                        JOIN __p22.selection_plan __sel_plan22 
                                         JOIN __p22.selected_presentations __sp22 WITH __sp22.collection = \'%1$s\'
                                         JOIN __sp22.list __spl22 WITH __spl22.list_type = \'%2$s\' AND __spl22.list_class = \'%3$s\'
                                         WHERE 
                                         __p22.summit = :summit AND
                                         __sp22.order is not null AND
-                                        __sp22.order > __cat22.session_count
-                                     )
-                                ',
+                                        __sp22.order > __cat22.session_count',
                                 SummitSelectedPresentation::CollectionSelected,
                                 SummitSelectedPresentationList::Group,
                                 SummitSelectedPresentationList::Session
-                            )
+                            ).(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '22'): '').')'
                         ),
                         'false' => new DoctrineCaseFilterMapping(
                             'false',
-                            sprintf('
-                                     NOT EXISTS (
+                            sprintf('NOT EXISTS (
                                         SELECT __p21.id FROM models\summit\Presentation __p21 
                                         JOIN __p21.speakers __spk21 WITH __spk21.id = e.id 
                                         JOIN __p21.category __cat21
+                                        JOIN __p21.type __t21
+                                        JOIN __p21.selection_plan __sel_plan21 
                                         JOIN __p21.selected_presentations __sp21 WITH __sp21.collection = \'%1$s\'
                                         JOIN __sp21.list __spl21 WITH __spl21.list_type = \'%2$s\' AND __spl21.list_class = \'%3$s\'
                                         WHERE 
                                         __p21.summit = :summit AND
                                         __sp21.order is not null AND
-                                        __sp21.order > __cat21.session_count
-                                     )
-                                     AND
-                                     NOT EXISTS (
+                                        __sp21.order > __cat21.session_count',
+                                SummitSelectedPresentation::CollectionSelected,
+                                SummitSelectedPresentationList::Group,
+                                SummitSelectedPresentationList::Session
+                            ).(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '21'): '').
+                                     ')
+                                     AND '.
+                                     sprintf('NOT EXISTS (
                                         SELECT __p22.id FROM models\summit\Presentation __p22 
                                         JOIN __p22.moderator __md22 WITH __md22.id = e.id 
                                         JOIN __p22.category __cat22
+                                        JOIN __p22.type __t22
+                                        JOIN __p22.selection_plan __sel_plan22 
                                         JOIN __p22.selected_presentations __sp22 WITH __sp22.collection = \'%1$s\'
                                         JOIN __sp22.list __spl22 WITH __spl22.list_type = \'%2$s\' AND __spl22.list_class = \'%3$s\'
                                         WHERE 
                                         __p22.summit = :summit AND
                                         __sp22.order is not null AND
-                                        __sp22.order > __cat22.session_count
-                                     )
-                                ',
+                                        __sp22.order > __cat22.session_count',
                                 SummitSelectedPresentation::CollectionSelected,
                                 SummitSelectedPresentationList::Group,
                                 SummitSelectedPresentationList::Session
-                            )
+                            ).(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '22'): '').')'
                         ),
                     ]
                 ),
@@ -313,37 +389,44 @@ final class DoctrineSpeakerRepository
                 new DoctrineSwitchFilterMapping([
                         'true' => new DoctrineCaseFilterMapping(
                             'true',
-                            sprintf('
-                                     EXISTS (
+                            sprintf('EXISTS (
                                         SELECT __p31.id FROM models\summit\Presentation __p31 
                                         JOIN __p31.speakers __spk31 WITH __spk31.id = e.id 
+                                        JOIN __p31.category __cat31
+                                        JOIN __p31.type __t31
+                                        JOIN __p31.selection_plan __sel_plan31 
                                         WHERE 
                                         __p31.summit = :summit 
-                                        AND __p31.published = 0
-                                        AND NOT EXISTS (
+                                        AND __p31.published = 0'.
+                                        (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '31'): ' ').
+                                        'AND NOT EXISTS (
                                             SELECT ___sp31.id 
                                             FROM models\summit\SummitSelectedPresentation ___sp31
                                             JOIN ___sp31.presentation ___p31
                                             JOIN ___sp31.list ___spl31 WITH ___spl31.list_type = \'%2$s\' AND ___spl31.list_class = \'%3$s\'
                                             WHERE ___p31.id = __p31.id AND ___sp31.collection = \'%1$s\'
-                                        )
-                                     )
-                                     OR
-                                     EXISTS (
+                                        ))',
+                                SummitSelectedPresentation::CollectionSelected,
+                                       SummitSelectedPresentationList::Group,
+                                       SummitSelectedPresentationList::Session
+                                    ).
+                                     ' OR '.
+                                    sprintf('EXISTS (
                                         SELECT __p32.id FROM models\summit\Presentation __p32 
                                         JOIN __p32.moderator __md32 WITH __md32.id = e.id 
+                                        JOIN __p32.category __cat32
+                                        JOIN __p32.type __t32
+                                        JOIN __p32.selection_plan __sel_plan32 
                                         WHERE 
                                         __p32.summit = :summit 
-                                        AND __p32.published = 0
-                                        AND NOT EXISTS  (
+                                        AND __p32.published = 0'.
+                                        (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '32'): '').' '.
+                                        'AND NOT EXISTS  (
                                             SELECT ___sp32.id 
                                             FROM models\summit\SummitSelectedPresentation ___sp32 
                                             JOIN ___sp32.presentation ___p32
                                             JOIN ___sp32.list ___spl32 WITH ___spl32.list_type = \'%2$s\' AND ___spl32.list_class = \'%3$s\'
-                                            WHERE ___p32.id = __p32.id AND ___sp32.collection = \'%1$s\'
-                                        )
-                                     )
-                                ',
+                                            WHERE ___p32.id = __p32.id AND ___sp32.collection = \'%1$s\'))',
                                 SummitSelectedPresentation::CollectionSelected,
                                 SummitSelectedPresentationList::Group,
                                 SummitSelectedPresentationList::Session
@@ -355,33 +438,42 @@ final class DoctrineSpeakerRepository
                                      NOT EXISTS (
                                         SELECT __p31.id FROM models\summit\Presentation __p31 
                                         JOIN __p31.speakers __spk31 WITH __spk31.id = e.id 
+                                        JOIN __p31.category __cat31
+                                        JOIN __p31.type __t31
+                                        JOIN __p31.selection_plan __sel_plan31 
                                         WHERE 
                                         __p31.summit = :summit  
-                                        AND __p31.published = 0
-                                        AND NOT EXISTS (
+                                        AND __p31.published = 0'
+                                        .(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '31'): ' ').
+                                        'AND NOT EXISTS (
                                             SELECT ___sp31.id 
                                             FROM models\summit\SummitSelectedPresentation ___sp31
                                             JOIN ___sp31.presentation ___p31
                                             JOIN ___sp31.list ___spl31 WITH ___spl31.list_type = \'%2$s\' AND ___spl31.list_class = \'%3$s\'
                                             WHERE ___p31.id = __p31.id AND ___sp31.collection = \'%1$s\'
-                                        )
-                                     )
-                                     AND
-                                     NOT EXISTS (
+                                        ))',
+                                SummitSelectedPresentation::CollectionSelected,
+                                       SummitSelectedPresentationList::Group,
+                                       SummitSelectedPresentationList::Session
+                                    ).
+                                     ' AND '.
+                                     sprintf('NOT EXISTS (
                                         SELECT __p32.id FROM models\summit\Presentation __p32 
-                                        JOIN __p32.moderator __md32 WITH __md32.id = e.id 
+                                        JOIN __p32.moderator __md32 WITH __md32.id = e.id
+                                        JOIN __p32.category __cat32
+                                        JOIN __p32.type __t32
+                                        JOIN __p32.selection_plan __sel_plan32 
                                         WHERE 
                                         __p32.summit = :summit 
-                                        AND __p32.published = 0
-                                        AND NOT EXISTS  (
+                                        AND __p32.published = 0'.
+                                        (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '32'): ' ').
+                                        'AND NOT EXISTS (
                                             SELECT ___sp32.id 
                                             FROM models\summit\SummitSelectedPresentation ___sp32 
                                             JOIN ___sp32.presentation ___p32
                                             JOIN ___sp32.list ___spl32 WITH ___spl32.list_type = \'%2$s\' AND ___spl32.list_class = \'%3$s\'
                                             WHERE ___p32.id = __p32.id AND ___sp32.collection = \'%1$s\'
-                                        )
-                                     )
-                                ',
+                                        ))',
                                 SummitSelectedPresentation::CollectionSelected,
                                 SummitSelectedPresentationList::Group,
                                 SummitSelectedPresentationList::Session

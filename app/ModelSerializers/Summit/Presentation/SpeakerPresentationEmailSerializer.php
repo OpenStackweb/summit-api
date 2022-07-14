@@ -1,4 +1,6 @@
 <?php namespace ModelSerializers;
+use models\summit\Presentation;
+
 /**
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,4 +23,59 @@ final class SpeakerPresentationEmailSerializer extends SilverStripeSerializer
     protected static $array_mappings = [
         'Title' => 'title:json_string',
     ];
+
+    /**
+     * @param null $expand
+     * @param array $fields
+     * @param array $relations
+     * @param array $params
+     * @return array
+     */
+    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    {
+        if (!count($relations)) $relations = $this->getAllowedRelations();
+
+        $presentation = $this->object;
+
+        if (!$presentation instanceof Presentation) return [];
+
+        $values = parent::serialize($expand, $fields, $relations, $params);
+
+        $track = $presentation->getCategory();
+        if(!is_null($track)) {
+            $values['track'] = [
+                'id' => $track->getId(),
+                'name' => $track->getTitle()
+            ];
+        }
+
+        $selection_plan = $presentation->getSelectionPlan();
+        if(!is_null($selection_plan)){
+            $values['selection_plan'] =[
+                'id' => $selection_plan->getId(),
+                'name' => $selection_plan->getName(),
+            ];
+        }
+
+        $speakers = [];
+        foreach ($presentation->getSpeakers() as $speaker){
+            $speakers[] = [
+                'id' => $speaker->getId(),
+                'full_name'=> $speaker->getFullName(),
+                'email' => $speaker->getEmail()
+            ];
+        }
+
+        $values['speakers'] = $speakers;
+        $moderator = $presentation->getModerator();
+
+        if(!is_null($moderator)) {
+            $values['moderator'] = [
+                'id' => $moderator->getId(),
+                'full_name' => $moderator->getFullName(),
+                'email' => $moderator->getEmail()
+            ];
+        }
+        return $values;
+    }
 }

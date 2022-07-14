@@ -1588,13 +1588,12 @@ class PresentationSpeaker extends SilverstripeBaseModel
     }
 
     /**
-     * @param string $separator
      * @return string
      */
-    public function getFullName(string $separator=', '){
+    public function getFullName():?string{
         $fullname = $this->first_name;
         if(!empty($this->last_name)){
-            if(!empty($fullname)) $fullname .= $separator;
+            if(!empty($fullname)) $fullname .= ' ';
             $fullname .= $this->last_name;
         }
         return $fullname;

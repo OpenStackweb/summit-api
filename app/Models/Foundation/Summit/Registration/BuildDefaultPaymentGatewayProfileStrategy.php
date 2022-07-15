@@ -52,7 +52,7 @@ final class BuildDefaultPaymentGatewayProfileStrategy implements IBuildDefaultPa
                     );
                 }
 
-                PaymentGatewayProfileFactory::build
+                return PaymentGatewayProfileFactory::build
                 (
                     $provider,
                     array_merge($provider_config,

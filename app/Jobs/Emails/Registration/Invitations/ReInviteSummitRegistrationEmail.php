@@ -61,16 +61,6 @@ class ReInviteSummitRegistrationEmail extends AbstractEmailJob
             throw new \InvalidArgumentException("missing dashboard_invitation_form_url value");
 
         $payload['invitation_token'] = $invitation->getToken();
-        $payload['invitation_form_url'] = sprintf($invitation_form_url, $base_url, $invitation->getToken());
-
-        if(!empty($invitation->getSetPasswordLink())){
-            $payload['invitation_form_url']  = sprintf(
-                "%s?client_id=%s&redirect_uri=%s",
-                $invitation->getSetPasswordLink(),
-                Config::get("registration.dashboard_client_id"),
-                urlencode($payload['invitation_form_url'])
-            );
-        }
 
         $ticket_types = [];
 

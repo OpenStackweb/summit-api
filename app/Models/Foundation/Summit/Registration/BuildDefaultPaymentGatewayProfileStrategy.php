@@ -51,13 +51,17 @@ final class BuildDefaultPaymentGatewayProfileStrategy implements IBuildDefaultPa
                         )
                     );
                 }
-                return PaymentGatewayProfileFactory::build
+
+                PaymentGatewayProfileFactory::build
                 (
                     $provider,
-                    array_merge($provider_config, [
-                        'active' => true,
-                        'application_type' => $application_type,
-                    ])
+                    array_merge($provider_config,
+                        [
+                            'active' => true,
+                            'application_type' => $application_type,
+                            'set_webhooks' => true
+                        ]
+                    )
                 );
             }
 
@@ -88,6 +92,7 @@ final class BuildDefaultPaymentGatewayProfileStrategy implements IBuildDefaultPa
                     array_merge($provider_config, [
                         'active' => true,
                         'application_type' => $application_type,
+                        'set_webhooks' => true
                     ])
                 );
             }

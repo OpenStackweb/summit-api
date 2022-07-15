@@ -44,6 +44,12 @@ final class SponsoredProjectFactory
         if(isset($payload['is_active']))
             $sponsoredProject->setIsActive(boolval($payload['is_active']));
 
+        if(isset($payload['should_show_on_nav_bar']))
+            $sponsoredProject->setShouldShowOnNavBar(boolval($payload['should_show_on_nav_bar']));
+
+        if(isset($payload['site_url']))
+            $sponsoredProject->setSiteUrl(trim($payload['site_url']));
+
         return  $sponsoredProject;
     }
 }

@@ -16,6 +16,7 @@ use App\Models\Foundation\Main\Repositories\IProjectSponsorshipTypeRepository;
 use App\Models\Foundation\Main\Repositories\ISponsoredProjectRepository;
 use App\Models\Foundation\Main\Repositories\ISupportingCompanyRepository;
 use App\Services\Model\ISponsoredProjectService;
+use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Log;
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
@@ -50,6 +51,8 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
     use ParametrizedDeleteEntity;
 
     use ParametrizedGetEntity;
+
+    use RequestProcessor;
 
     /**
      * @var ISponsoredProjectService
@@ -96,7 +99,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
      */
     function getAddValidationRules(array $payload): array
     {
-        return SponsoredProjectValidationRulesFactory::build($payload);
+        return SponsoredProjectValidationRulesFactory::buildForAdd($payload);
     }
 
     /**
@@ -128,7 +131,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
      */
     function getUpdateValidationRules(array $payload): array
     {
-        return SponsoredProjectValidationRulesFactory::build($payload, true);
+        return SponsoredProjectValidationRulesFactory::buildForUpdate($payload);
     }
 
     /**
@@ -423,4 +426,34 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
             return $sponsorship_type->getSupportingCompanyById(intval($company_id));
         }, $company_id);
     }
+
+    /**
+     * @param LaravelRequest $request
+     * @param $project_id
+     * @return mixed
+     */
+    public function addSponsoredProjectLogo(LaravelRequest $request, $project_id)
+    {
+        return $this->processRequest(function () use ($request, $project_id) {
+            $file = $request->file('file');
+            if (is_null($file)) {
+                return $this->error412('file param not set!');
+            }
+            $logo = $this->service->addLogo(intval($project_id), $file);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($logo)->serialize());
+        });
+    }
+
+    /**
+     * @param $project_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function deleteSponsoredProjectLogo($project_id){
+        return $this->processRequest(function () use ($project_id) {
+            $this->service->deleteLogo(intval($project_id));
+            return $this->deleted();
+        });
+    }
+
 }

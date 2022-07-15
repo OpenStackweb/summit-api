@@ -6866,6 +6866,30 @@ class ApiEndpointsSeeder extends Seeder
                         sprintf(SponsoredProjectScope::Read, $current_realm)
                     ]
                 ],
+                [
+                    'name' => 'add-sponsored-project-logo',
+                    'route' => '/api/v1/sponsored-projects/{id}/logo',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
+                [
+                    'name' => 'delete-sponsored-project-logo',
+                    'route' => '/api/v1/sponsored-projects/{id}/logo',
+                    'http_method' => 'DELETE',
+                    'scopes' => [
+                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ],
                 // sponsorship types
                 [
                     'name' => 'get-sponsored-project-sponsorship-types',

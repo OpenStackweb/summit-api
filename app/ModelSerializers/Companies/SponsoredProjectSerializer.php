@@ -23,6 +23,9 @@ final class SponsoredProjectSerializer extends SilverStripeSerializer
         'Description' => 'description:json_string',
         'Slug' => 'slug:json_string',
         'Active' => 'is_active:json_boolean',
+        'ShouldShowOnNavBar' => 'should_show_on_nav_bar:json_boolean',
+        'SiteURL' => 'site_url:json_url',
+        'LogoUrl' => 'logo_url:json_url',
         'SponsorshipTypesIds' => 'sponsorship_types',
     ];
 
@@ -32,5 +35,4 @@ final class SponsoredProjectSerializer extends SilverStripeSerializer
             'getter' => 'getSponsorshipTypes',
         ]
     ];
-
 }

@@ -11,16 +11,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use Illuminate\Http\UploadedFile;
 /**
  * Class OAuth2SponsoredProjectsApiTest
  */
 class OAuth2SponsoredProjectsApiTest extends ProtectedApiTest
 {
     public function testAddSponsoredProject(){
+
+        $nav_bar_title = str_random(16).'_sponsored project title';
+        $should_show_on_nav_bar = false;
+        $learn_more_text = str_random(16).'_sponsored project learn more text';
+        $learn_more_link = 'https://'.str_random(16).'_sponsored_project/learn_more_text.html';
+        $site_url = 'https://'.str_random(16).'_sponsored_project/';
+
         $data = [
-            'name' => str_random(16).'_sponsored project',
-            'description' => str_random(16).'_sponsored project description',
+            'name'                      => str_random(16).'_sponsored project',
+            'description'               => str_random(16).'_sponsored project description',
+            'should_show_on_nav_bar'    => $should_show_on_nav_bar,
+            'site_url'                  => $site_url,
         ];
 
         $headers = [
@@ -41,9 +50,53 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTest
 
         $content = $response->getContent();
         $this->assertResponseStatus(201);
-        $sponsored_projects = json_decode($content);
-        $this->assertTrue(!is_null($sponsored_projects));
-        return $sponsored_projects;
+        $sponsored_project = json_decode($content);
+        $this->assertTrue(!is_null($sponsored_project));
+        $this->assertTrue($sponsored_project->should_show_on_nav_bar == $should_show_on_nav_bar);
+        $this->assertTrue($sponsored_project->site_url == $site_url);
+        return $sponsored_project;
+    }
+
+    public function testUpdateSponsoredProject(){
+
+        $nav_bar_title = str_random(16).'_sponsored project title';
+        $should_show_on_nav_bar = true;
+        $learn_more_text = str_random(16).'_sponsored project learn more text';
+        $learn_more_link = 'https://'.str_random(16).'_sponsored_project/learn_more_text.html';
+        $site_url = 'https://'.str_random(16).'_sponsored_project/';
+
+        $params = [
+            'id' => 1,
+        ];
+
+        $data = [
+            'should_show_on_nav_bar'    => $should_show_on_nav_bar,
+            'site_url'                  => $site_url,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SponsoredProjectApiController@update",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $sponsored_project = json_decode($content);
+        $this->assertTrue(!is_null($sponsored_project));
+        $this->assertTrue($sponsored_project->should_show_on_nav_bar == $should_show_on_nav_bar);
+        $this->assertTrue($sponsored_project->site_url == $site_url);
+        return $sponsored_project;
     }
 
     public function testGelAll()
@@ -67,8 +120,8 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTest
         );
 
         $content = $response->getContent();
-        $companies = json_decode($content);
-        $this->assertTrue(!is_null($companies));
+        $sponsored_projects = json_decode($content);
+        $this->assertTrue(!is_null($sponsored_projects));
         $this->assertResponseStatus(200);
     }
 
@@ -293,5 +346,71 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTest
         $page = json_decode($content);
         $this->assertTrue(!is_null($page));
         $this->assertResponseStatus(200);
+    }
+
+    public function testAddSponsoredProjectLogo(){
+        $params = [
+            'id' => 1,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SponsoredProjectApiController@addSponsoredProjectLogo",
+            $params,
+            [],
+            [],
+            [
+                'file' => UploadedFile::fake()->image('logo.jpg'),
+            ],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $file = json_decode($content);
+        $this->assertTrue(!is_null($file));
+    }
+
+    public function testDeleteSponsoredProjectLogo(){
+        $params = [
+            'id' => 1,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SponsoredProjectApiController@addSponsoredProjectLogo",
+            $params,
+            [],
+            [],
+            [
+                'file' => UploadedFile::fake()->image('logo.jpg'),
+            ],
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SponsoredProjectApiController@deleteSponsoredProjectLogo",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(204);
     }
 }

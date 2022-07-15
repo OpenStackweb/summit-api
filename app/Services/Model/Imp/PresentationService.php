@@ -1394,7 +1394,7 @@ final class PresentationService
 
             $track_chair_score = $summit_track_chair->getScoreByRatingTypeAndPresentation($rating_type, $presentation);
 
-            if (!is_null($track_chair_score)) {
+            if (is_null($track_chair_score)) {
                 throw new EntityNotFoundException("Score not found.");
             }
 

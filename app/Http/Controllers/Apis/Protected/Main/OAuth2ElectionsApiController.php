@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\IElectionService;
 use Exception;
 use App\Models\Foundation\Elections\IElectionsRepository;
@@ -65,9 +66,9 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
                     ->getSerializer($election)
                     ->serialize
                     (
-                        self::getExpands(),
-                        self::getFields(),
-                        self::getRelations()
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations()
                     )
             );
 
@@ -249,7 +250,11 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
 
             return $this->updated(SerializerRegistry::getInstance()
                 ->getSerializer($member, SerializerRegistry::SerializerType_Private)
-                ->serialize(self::getExpands(), self::getFields(), self::getRelations())
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
             );
         } catch (ValidationException $ex1) {
             Log::warning($ex1);
@@ -281,7 +286,11 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
 
             return $this->updated(SerializerRegistry::getInstance()
                 ->getSerializer($nomination)
-                ->serialize(self::getExpands(), self::getFields(), self::getRelations())
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
             );
 
         } catch (ValidationException $ex1) {

@@ -311,6 +311,7 @@ Route::group(array('prefix' => 'summits'), function () {
 
                         Route::group(['prefix' => 'track-chair-scores'], function () {
                             Route::post('{score_type_id}', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@addTrackChairScore']);
+                            Route::delete('{score_type_id}', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@removeTrackChairScore']);
                         });
                     });
                 });

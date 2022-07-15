@@ -14,6 +14,7 @@
 
 use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Models\Foundation\Summit\Repositories\ISummitScheduleConfigRepository;
+use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitScheduleSettingsService;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
@@ -251,9 +252,9 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             );
 
             return $this->created($response->toArray(
-                self::getExpands(),
-                self::getFields(),
-                self::getRelations()
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
             ));
         }
         catch (ValidationException $ex) {

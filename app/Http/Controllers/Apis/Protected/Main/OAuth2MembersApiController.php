@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Http\Utils\PagingConstants;
+use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\IMemberService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -152,9 +153,9 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             (
                 $data->toArray
                 (
-                    self::getExpands(),
-                    self::getFields(),
-                    self::getRelations(),
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
                     [],
                     $serializer_type
                 )
@@ -195,9 +196,9 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                     ->getSerializer($current_member, SerializerRegistry::SerializerType_Private)
                     ->serialize
                     (
-                        self::getExpands(),
-                        self::getFields(),
-                        self::getRelations()
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations()
                     )
             );
         }
@@ -255,9 +256,9 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             return $this->updated(SerializerRegistry::getInstance()
                 ->getSerializer($me, SerializerRegistry::SerializerType_Private)->serialize
             (
-                self::getExpands(),
-                self::getRelations(),
-                self::getFields()
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
             ));
         }
         catch (ValidationException $ex1) {
@@ -298,9 +299,9 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                     ->getSerializer($member, $serializer_type)
                     ->serialize
                     (
-                        self::getExpands(),
-                        self::getFields(),
-                        self::getRelations()
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations()
                     )
             );
         }

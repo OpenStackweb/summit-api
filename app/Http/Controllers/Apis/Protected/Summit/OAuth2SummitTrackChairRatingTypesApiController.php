@@ -14,6 +14,7 @@
 
 use App\Models\Foundation\Summit\Repositories\IPresentationTrackChairRatingTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
+use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ITrackChairRankingService;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
@@ -154,9 +155,9 @@ final class OAuth2SummitTrackChairRatingTypesApiController
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($track_chair_rating_type)
                 ->serialize
                 (
-                    self::getExpands(),
-                    self::getFields(),
-                    self::getRelations()
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
                 ));
         });
     }
@@ -182,9 +183,9 @@ final class OAuth2SummitTrackChairRatingTypesApiController
             return $this->created(SerializerRegistry::getInstance()->getSerializer($track_chair_rating_type)
                 ->serialize
                 (
-                    self::getExpands(),
-                    self::getFields(),
-                    self::getRelations()
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
                 ));
         });
     }
@@ -211,9 +212,9 @@ final class OAuth2SummitTrackChairRatingTypesApiController
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($track_chair_rating_type)
                 ->serialize
                 (
-                    self::getExpands(),
-                    self::getFields(),
-                    self::getRelations()
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
                 ));
         });
     }

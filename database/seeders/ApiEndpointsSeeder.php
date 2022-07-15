@@ -5905,6 +5905,20 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::TrackChairsAdmins,
                 ]
             ],
+            [
+                'name' => 'delete-track-chair-score',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/track-chair-scores/{score_type_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
             // track tag groups
             [
                 'name' => 'get-track-tag-groups',

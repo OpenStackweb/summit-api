@@ -56,28 +56,4 @@ abstract class OAuth2ProtectedController extends JsonController
     {
         return $this->repository;
     }
-
-    /**
-     * @return array|false|string[]
-     */
-    protected static function getFields(){
-        $fields    = Request::input('fields', '');
-        return !empty($fields) ? explode(',', $fields) : [];
-    }
-
-    /**
-     * @return array|false|string[]
-     */
-    protected static function getRelations(){
-        $relations = Request::input('relations', '');
-        return !empty($relations) ? explode(',', $relations) : [];
-    }
-
-    /**
-     * @return array|string|null
-     */
-    protected static function getExpands(){
-        return Request::input('expand', '');
-    }
-
 }

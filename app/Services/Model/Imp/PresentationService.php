@@ -1262,7 +1262,14 @@ final class PresentationService
     /**
      * @inheritDoc
      */
-    public function addTrackChairScore(Summit $summit, Member $member, int $selection_plan_id, int $presentation_id, int $score_type_id):PresentationTrackChairScore
+    public function addTrackChairScore
+    (
+        Summit $summit,
+        Member $member,
+        int $selection_plan_id,
+        int $presentation_id,
+        int $score_type_id
+    ):PresentationTrackChairScore
     {
         return $this->tx_service->transaction(function () use($summit, $member, $selection_plan_id, $presentation_id, $score_type_id){
 
@@ -1325,6 +1332,74 @@ final class PresentationService
             $presentation->addTrackChairScore($track_chair_score);
             $summit_track_chair->addScore($track_chair_score);
             return $track_chair_score;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function removeTrackChairScore
+    (
+        Summit $summit,
+        Member $member,
+        int $selection_plan_id,
+        int $presentation_id,
+        int $score_type_id
+    ):void
+    {
+        $this->tx_service->transaction(function () use($summit, $member, $selection_plan_id, $presentation_id, $score_type_id){
+
+            $selectionPlan = $summit->getSelectionPlanById($selection_plan_id);
+
+            if(is_null($selectionPlan))
+                throw new EntityNotFoundException("Selection Plan not found.");
+
+            if(!$selectionPlan->isSelectionOpen())
+                throw new ValidationException(sprintf("Selection Period is over for Selection Plan %s", $selection_plan_id));
+
+            $presentation = $this->presentation_repository->getById($presentation_id);
+            if(is_null($presentation) || !$presentation instanceof Presentation)
+                throw new EntityNotFoundException("Presentation not found.");
+
+            if($presentation->getSummitId() !== $summit->getId())
+                throw new EntityNotFoundException("Presentation not found.");
+
+            if($presentation->getSelectionPlanId() !== $selection_plan_id)
+                throw new EntityNotFoundException("Presentation not found.");
+
+            $summit_track_chair = $summit->getTrackChairByMember($member);
+
+            if(is_null($summit_track_chair))
+                throw new ValidationException(sprintf("Can't find a track chair for current member at Summit %s.", $summit->getId()));
+
+            if(!$summit_track_chair->isCategoryAllowed($presentation->getCategory())){
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Track %s is not allowed for Track Chair %s.",
+                        $presentation->getCategory()->getTitle(),
+                        $summit_track_chair->getMember()->getFullName()
+                    )
+                );
+            }
+
+            $score_type = $this->presentation_track_chair_score_type_repository->getById($score_type_id);
+
+            if(is_null($score_type) || !$score_type instanceof PresentationTrackChairScoreType)
+                throw new EntityNotFoundException("Score type not found.");
+
+            //Check if exists a score of the same rating type/presentation for this track chair, if so replace it by this new one
+            $rating_type = $score_type->getType();
+
+            $track_chair_score = $summit_track_chair->getScoreByRatingTypeAndPresentation($rating_type, $presentation);
+
+            if (!is_null($track_chair_score)) {
+                throw new EntityNotFoundException("Score not found.");
+            }
+
+            $summit_track_chair->removeScore($track_chair_score);
+
         });
     }
 }

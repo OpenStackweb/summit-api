@@ -17,6 +17,7 @@ use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitCategoryChangeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSelectionPlanExtraQuestionTypeRepository;
+use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISelectionPlanExtraQuestionTypeService;
 use App\Services\Model\ISummitSelectionPlanService;
 use Illuminate\Support\Facades\Log;
@@ -677,9 +678,9 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 $presentation,
                 IPresentationSerializerTypes::TrackChairs
             )->serialize(
-                self::getExpands(),
-                self::getFields(),
-                self::getRelations()
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
             ));
 
         } catch (ValidationException $ex) {
@@ -716,9 +717,9 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 $presentation,
                 IPresentationSerializerTypes::TrackChairs
             )->serialize(
-                self::getExpands(),
-                self::getFields(),
-                self::getRelations()
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
             ));
         } catch (ValidationException $ex) {
             Log::warning($ex);

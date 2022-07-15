@@ -14,6 +14,7 @@
 use App\Http\Utils\EpochCellFormatter;
 use App\Jobs\IngestSummitExternalRegistrationData;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
+use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitOrderService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
@@ -744,9 +745,9 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                 SerializerRegistry::getInstance()->getSerializer($badge)
                     ->serialize
                     (
-                        self::getExpands(),
-                        self::getFields(),
-                        self::getRelations()
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations()
                     )
             );
 

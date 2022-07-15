@@ -15,6 +15,7 @@
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
+use App\ModelSerializers\SerializerUtils;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
@@ -662,9 +663,9 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     ->getSerializer($speaker, SerializerRegistry::SerializerType_Private)
                     ->serialize
                     (
-                        self::getExpands(),
-                        self::getFields(),
-                        self::getRelations()
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations()
                     )
             );
         } catch (ValidationException $ex1) {

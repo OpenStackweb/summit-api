@@ -14,6 +14,7 @@
 
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderExtraQuestionTypeRepository;
+use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitOrderExtraQuestionTypeService;
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
@@ -224,9 +225,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             (
                 SerializerRegistry::getInstance()->getSerializer($value)->serialize
                 (
-                    self::getExpands(),
-                    self::getFields(),
-                    self::getRelations(),
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
                 )
             );
         });
@@ -250,9 +251,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($value)->serialize
             (
-                self::getExpands(),
-                self::getFields(),
-                self::getRelations(),
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
             ));
         });
     }
@@ -333,9 +334,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             (
                 $response->toArray
                 (
-                    self::getExpands(),
-                    self::getRelations(),
-                    self::getFields()
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
                 )
             );
         });
@@ -359,9 +360,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                     ->getSerializer($sub_question_rule)
                     ->serialize
                     (
-                        self::getExpands(),
-                        self::getRelations(),
-                        self::getFields()
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations()
                     )
             );
         });
@@ -387,9 +388,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                     ->getSerializer($sub_question_rule)
                     ->serialize
                     (
-                        self::getExpands(),
-                        self::getRelations(),
-                        self::getFields()
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations()
                     )
             );
         });
@@ -419,9 +420,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                     ->getSerializer($sub_question_rule)
                     ->serialize
                     (
-                        self::getExpands(),
-                        self::getRelations(),
-                        self::getFields()
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations()
                     )
             );
         });

@@ -19,10 +19,7 @@ class Version20220705184048 extends AbstractMigration
 
         if($schema->hasTable("SponsoredProject")) {
             $builder->table('SponsoredProject', function (Table $table) {
-                $table->string('NavBarTitle')->setNotnull(false)->setLength(255);
                 $table->boolean('ShouldShowOnNavBar')->setNotnull(true)->setDefault(true);
-                $table->string('LearnMoreLink')->setNotnull(false)->setLength(255);
-                $table->text('LearnMoreText')->setNotnull(false);
                 $table->string('SiteURL')->setNotnull(false)->setLength(255);
                 $table->integer("LogoID", false, false)->setNotnull(false)->setDefault('NULL');
                 $table->index("LogoID", "LogoID");
@@ -40,10 +37,7 @@ class Version20220705184048 extends AbstractMigration
         $builder = new Builder($schema);
         if($schema->hasTable("SponsoredProject")) {
             $builder->table('SponsoredProject', function (Table $table) {
-                $table->dropColumn('NavBarTitle');
                 $table->dropColumn('ShouldShowOnNavBar');
-                $table->dropColumn('LearnMoreLink');
-                $table->dropColumn('LearnMoreText');
                 $table->dropColumn('SiteURL');
                 $table->dropColumn('LogoID');
             });

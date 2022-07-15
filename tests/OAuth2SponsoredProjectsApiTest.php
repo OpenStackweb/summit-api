@@ -1,6 +1,4 @@
 <?php namespace Tests;
-use Illuminate\Http\UploadedFile;
-
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +11,7 @@ use Illuminate\Http\UploadedFile;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use Illuminate\Http\UploadedFile;
 /**
  * Class OAuth2SponsoredProjectsApiTest
  */
@@ -30,10 +28,7 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTest
         $data = [
             'name'                      => str_random(16).'_sponsored project',
             'description'               => str_random(16).'_sponsored project description',
-            'nav_bar_title'             => $nav_bar_title,
             'should_show_on_nav_bar'    => $should_show_on_nav_bar,
-            'learn_more_text'           => $learn_more_text,
-            'learn_more_link'           => $learn_more_link,
             'site_url'                  => $site_url,
         ];
 
@@ -57,10 +52,7 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTest
         $this->assertResponseStatus(201);
         $sponsored_project = json_decode($content);
         $this->assertTrue(!is_null($sponsored_project));
-        $this->assertTrue($sponsored_project->nav_bar_title == $nav_bar_title);
         $this->assertTrue($sponsored_project->should_show_on_nav_bar == $should_show_on_nav_bar);
-        $this->assertTrue($sponsored_project->learn_more_text == $learn_more_text);
-        $this->assertTrue($sponsored_project->learn_more_link == $learn_more_link);
         $this->assertTrue($sponsored_project->site_url == $site_url);
         return $sponsored_project;
     }
@@ -78,10 +70,7 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTest
         ];
 
         $data = [
-            'nav_bar_title'             => $nav_bar_title,
             'should_show_on_nav_bar'    => $should_show_on_nav_bar,
-            'learn_more_text'           => $learn_more_text,
-            'learn_more_link'           => $learn_more_link,
             'site_url'                  => $site_url,
         ];
 
@@ -105,10 +94,7 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTest
         $this->assertResponseStatus(201);
         $sponsored_project = json_decode($content);
         $this->assertTrue(!is_null($sponsored_project));
-        $this->assertTrue($sponsored_project->nav_bar_title == $nav_bar_title);
         $this->assertTrue($sponsored_project->should_show_on_nav_bar == $should_show_on_nav_bar);
-        $this->assertTrue($sponsored_project->learn_more_text == $learn_more_text);
-        $this->assertTrue($sponsored_project->learn_more_link == $learn_more_link);
         $this->assertTrue($sponsored_project->site_url == $site_url);
         return $sponsored_project;
     }

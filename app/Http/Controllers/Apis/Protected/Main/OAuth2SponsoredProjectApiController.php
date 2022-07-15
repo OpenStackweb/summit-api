@@ -99,7 +99,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
      */
     function getAddValidationRules(array $payload): array
     {
-        return SponsoredProjectValidationRulesFactory::build($payload);
+        return SponsoredProjectValidationRulesFactory::buildForAdd($payload);
     }
 
     /**
@@ -131,7 +131,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
      */
     function getUpdateValidationRules(array $payload): array
     {
-        return SponsoredProjectValidationRulesFactory::build($payload, true);
+        return SponsoredProjectValidationRulesFactory::buildForUpdate($payload);
     }
 
     /**

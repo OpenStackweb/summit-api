@@ -51,28 +51,10 @@ class SponsoredProject extends SilverstripeBaseModel
     private $slug;
 
     /**
-     * @ORM\Column(name="NavBarTitle", type="string")
-     * @var string
-     */
-    private $nav_bar_title;
-
-    /**
      * @ORM\Column(name="ShouldShowOnNavBar", type="boolean")
      * @var bool
      */
     private $should_show_on_nav_bar;
-
-    /**
-     * @ORM\Column(name="LearnMoreLink", type="string")
-     * @var string
-     */
-    private $learn_more_link;
-
-    /**
-     * @ORM\Column(name="LearnMoreText", type="string")
-     * @var string
-     */
-    private $learn_more_text;
 
     /**
      * @ORM\Column(name="SiteURL", type="string")
@@ -145,22 +127,6 @@ class SponsoredProject extends SilverstripeBaseModel
     }
 
     /**
-     * @return string
-     */
-    public function getNavBarTitle(): ?string
-    {
-        return $this->nav_bar_title;
-    }
-
-    /**
-     * @param string $nav_bar_title
-     */
-    public function setNavBarTitle(string $nav_bar_title): void
-    {
-        $this->nav_bar_title = $nav_bar_title;
-    }
-
-    /**
      * @return bool
      */
     public function getShouldShowOnNavBar(): bool
@@ -174,38 +140,6 @@ class SponsoredProject extends SilverstripeBaseModel
     public function setShouldShowOnNavBar(bool $should_show_on_nav_bar): void
     {
         $this->should_show_on_nav_bar = $should_show_on_nav_bar;
-    }
-
-    /**
-     * @return string
-     */
-    public function getLearnMoreLink(): ?string
-    {
-        return $this->learn_more_link;
-    }
-
-    /**
-     * @param string $learn_more_link
-     */
-    public function setLearnMoreLink(string $learn_more_link): void
-    {
-        $this->learn_more_link = $learn_more_link;
-    }
-
-    /**
-     * @return string
-     */
-    public function getLearnMoreText(): ?string
-    {
-        return $this->learn_more_text;
-    }
-
-    /**
-     * @param string $learn_more_text
-     */
-    public function setLearnMoreText(string $learn_more_text): void
-    {
-        $this->learn_more_text = $learn_more_text;
     }
 
     /**

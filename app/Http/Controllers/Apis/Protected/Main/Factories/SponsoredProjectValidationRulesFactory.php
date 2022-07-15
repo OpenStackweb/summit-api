@@ -11,40 +11,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-
+use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
 /**
  * Class SponsoredProjectValidationRulesFactory
  * @package App\Http\Controllers
  */
-class SponsoredProjectValidationRulesFactory
+final class SponsoredProjectValidationRulesFactory extends AbstractValidationRulesFactory
 {
+
     /**
-     * @param array $data
-     * @param bool $update
+     * @param array $payload
      * @return array
      */
-    public static function build(array $data, $update = false){
-        if($update){
-            return [
-                'name' => 'sometimes|string',
-                'description' => 'sometimes|string',
-                'is_active' => 'sometimes|boolean',
-                'nav_bar_title' => 'sometimes|string',
-                'should_show_on_nav_bar' => 'sometimes|boolean',
-                'learn_more_link' => 'sometimes|url',
-                'learn_more_text' => 'sometimes|string',
-                'site_url' => 'sometimes|url',
-            ];
-        }
+    public static function buildForAdd(array $payload = []): array
+    {
         return [
             'name' => 'required|string',
             'description' => 'sometimes|string',
             'is_active' => 'sometimes|boolean',
-            'nav_bar_title' => 'sometimes|string',
             'should_show_on_nav_bar' => 'sometimes|boolean',
-            'learn_more_link' => 'sometimes|url',
-            'learn_more_text' => 'sometimes|string',
+            'site_url' => 'sometimes|url',
+        ];
+    }
+
+    /**
+     * @param array $payload
+     * @return array
+     */
+    public static function buildForUpdate(array $payload = []): array
+    {
+        return [
+            'name' => 'sometimes|string',
+            'description' => 'sometimes|string',
+            'is_active' => 'sometimes|boolean',
+            'should_show_on_nav_bar' => 'sometimes|boolean',
             'site_url' => 'sometimes|url',
         ];
     }

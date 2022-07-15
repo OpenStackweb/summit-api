@@ -49,9 +49,7 @@ final class DoctrineSpeakerRepository
         $extraSelectionStatusFilter = '';
 
         if(!is_null($filter) && $filter instanceof Filter){
-            $count = 0;
             if($filter->hasFilter("presentations_selection_plan_id")){
-                $count++;
                 $e = $filter->getFilter("presentations_selection_plan_id");
                 $v = [];
                 foreach($e as $f){
@@ -63,10 +61,9 @@ final class DoctrineSpeakerRepository
                     else
                         $v[] = $f->getValue();
                 }
-                $extraSelectionStatusFilter = ' AND __sel_plan%'.$count.'$s.id IN ('.implode(',', $v).')';
+                $extraSelectionStatusFilter .= ' AND __sel_plan%1$s.id IN ('.implode(',', $v).')';
             }
             if($filter->hasFilter("presentations_track_id")){
-                $count++;
                 $e = $filter->getFilter("presentations_track_id");
                 $v = [];
                 foreach($e as $f){
@@ -78,10 +75,9 @@ final class DoctrineSpeakerRepository
                     else
                         $v[] = $f->getValue();
                 }
-                $extraSelectionStatusFilter = ' AND __cat%'.$count.'$s.id IN ('.implode(',', $v).')';
+                $extraSelectionStatusFilter .= ' AND __cat%1$s.id IN ('.implode(',', $v).')';
             }
             if($filter->hasFilter("presentations_type_id")){
-                $count++;
                 $e = $filter->getFilter("presentations_type_id");
                 $v = [];
                 foreach($e as $f){
@@ -93,7 +89,7 @@ final class DoctrineSpeakerRepository
                     else
                         $v[] = $f->getValue();
                 }
-                $extraSelectionStatusFilter = ' AND __t%'.$count.'$s.id IN ('.implode(',', $v).')';
+                $extraSelectionStatusFilter .= ' AND __t%1$s.id IN ('.implode(',', $v).')';
             }
         }
 

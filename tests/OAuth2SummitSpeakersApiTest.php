@@ -396,8 +396,8 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
             'filter' => [
                     sprintf('presentations_selection_plan_id==%s||%s',
                         self::$default_selection_plan->getId(),
-                        self::$default_selection_plan2->getId())
-                ]
+                        self::$default_selection_plan2->getId()),
+                sprintf('presentations_track_id==%s', self::$defaultTrack->getId())]
         ];
 
         $headers = [

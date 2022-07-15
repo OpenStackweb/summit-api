@@ -157,6 +157,7 @@ trait ParametrizedGetAll
                     $applyExtraFilters
                 );
 
+            $serializerParams['filter'] = $filter;
 
             return $this->ok
             (
@@ -277,6 +278,8 @@ trait ParametrizedGetAll
                 );
 
             $filename = $file_prefix . date('Ymd');
+
+            $serializerParams['filter'] = $filter;
 
             $list = $data->toArray
             (

@@ -11,7 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use models\summit\PresentationSpeaker;
+
 /**
  * Class PresentationSpeakerBaseSerializer
  * @package ModelSerializers
@@ -19,25 +21,25 @@ use models\summit\PresentationSpeaker;
 abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
-        'FirstName'               => 'first_name:json_string',
-        'LastName'                => 'last_name:json_string',
-        'Title'                   => 'title:json_string',
-        'Bio'                     => 'bio:json_string',
-        'IRCHandle'               => 'irc:json_string',
-        'TwitterName'             => 'twitter:json_string',
-        'OrgHasCloud'             => 'org_has_cloud:json_boolean',
-        'Country'                 => 'country:json_string',
-        'AvailableForBureau'      => 'available_for_bureau:json_boolean',
-        'FundedTravel'            => 'funded_travel:json_boolean',
-        'WillingToTravel'         => 'willing_to_travel:json_boolean',
-        'WillingToPresentVideo'   => 'willing_to_present_video:json_boolean',
-        'Email'                   => 'email:json_obfuscated_email',
-        'MemberID'                => 'member_id:json_int',
-        'RegistrationRequestId'   => 'registration_request_id:json_int',
-        'ProfilePhotoUrl'         => 'pic:json_url',
-        'BigProfilePhotoUrl'      => 'big_pic:json_url',
-        'Company'                 => 'company:json_string',
-        'PhoneNumber'             => 'phone_number:json_string',
+        'FirstName' => 'first_name:json_string',
+        'LastName' => 'last_name:json_string',
+        'Title' => 'title:json_string',
+        'Bio' => 'bio:json_string',
+        'IRCHandle' => 'irc:json_string',
+        'TwitterName' => 'twitter:json_string',
+        'OrgHasCloud' => 'org_has_cloud:json_boolean',
+        'Country' => 'country:json_string',
+        'AvailableForBureau' => 'available_for_bureau:json_boolean',
+        'FundedTravel' => 'funded_travel:json_boolean',
+        'WillingToTravel' => 'willing_to_travel:json_boolean',
+        'WillingToPresentVideo' => 'willing_to_present_video:json_boolean',
+        'Email' => 'email:json_obfuscated_email',
+        'MemberID' => 'member_id:json_int',
+        'RegistrationRequestId' => 'registration_request_id:json_int',
+        'ProfilePhotoUrl' => 'pic:json_url',
+        'BigProfilePhotoUrl' => 'big_pic:json_url',
+        'Company' => 'company:json_string',
+        'PhoneNumber' => 'phone_number:json_string',
     ];
 
     /**
@@ -47,27 +49,26 @@ abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        if(!count($relations)) $relations  = $this->getAllowedRelations();
-        $speaker                           = $this->object;
+        if (!count($relations)) $relations = $this->getAllowedRelations();
+        $speaker = $this->object;
 
-        if(!$speaker instanceof PresentationSpeaker) return [];
+        if (!$speaker instanceof PresentationSpeaker) return [];
 
-        $values                            = parent::serialize($expand, $fields, $relations, $params);
+        $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if(empty($values['first_name']) || empty($values['last_name'])){
+        if (empty($values['first_name']) || empty($values['last_name'])) {
 
             $first_name = '';
-            $last_name  = '';
-            if ($speaker->hasMember())
-            {
-                $member     = $speaker->getMember();
+            $last_name = '';
+            if ($speaker->hasMember()) {
+                $member = $speaker->getMember();
                 $first_name = $member->getFirstName();
-                $last_name  = $member->getLastName();
+                $last_name = $member->getLastName();
             }
             $values['first_name'] = $first_name;
-            $values['last_name']  = $last_name;
+            $values['last_name'] = $last_name;
         }
 
         return $values;

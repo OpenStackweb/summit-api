@@ -1,6 +1,4 @@
 <?php namespace ModelSerializers;
-use models\summit\PresentationSpeaker;
-
 /**
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +11,7 @@ use models\summit\PresentationSpeaker;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use models\summit\PresentationSpeaker;
 /**
  * Class AdminPresentationSpeakerCSVSerializer
  * @package ModelSerializers
@@ -48,9 +46,13 @@ final class AdminPresentationSpeakerCSVSerializer extends PresentationSpeakerBas
         $values = parent::serialize($expand, $fields, $relations, $params);
         $summit = isset($params['summit'])? $params['summit']:null;
 
+        if(isset($values['bio'])){
+            $values['bio'] = strip_tags($values['bio']);
+        }
+
         if (in_array('accepted_presentations', $relations) && !is_null($summit)) {
-            $accepted_presentations = $speaker->getAcceptedPresentations($summit);
-            $moderated_accepted_presentations = $speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleModerator);
+            $accepted_presentations = $speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleSpeaker, true, [] , $params['filter'] ?? null);
+            $moderated_accepted_presentations = $speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleModerator, true, [] , $params['filter'] ?? null);
             $all_accepted_presentations = array_merge($accepted_presentations, $moderated_accepted_presentations);
 
             $values['accepted_presentations'] = join("|", array_map(function ($value): string {
@@ -60,8 +62,8 @@ final class AdminPresentationSpeakerCSVSerializer extends PresentationSpeakerBas
         }
 
         if (in_array('alternate_presentations', $relations) && !is_null($summit)) {
-            $alternate_presentations = $speaker->getAlternatePresentations($summit);
-            $moderated_alternate_presentations = $speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleModerator);
+            $alternate_presentations = $speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleSpeaker, false, [] , false, $params['filter'] ?? null);
+            $moderated_alternate_presentations = $speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleModerator,false, [] , false, $params['filter'] ?? null);
             $all_alternate_presentations = array_merge($alternate_presentations, $moderated_alternate_presentations);
 
             $values['alternate_presentations'] = join("|", array_map(function ($value): string {
@@ -71,8 +73,8 @@ final class AdminPresentationSpeakerCSVSerializer extends PresentationSpeakerBas
         }
 
         if (in_array('rejected_presentations', $relations) && !is_null($summit)) {
-            $rejected_presentations = $speaker->getRejectedPresentations($summit);
-            $moderated_rejected_presentations = $speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleModerator);
+            $rejected_presentations = $speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleSpeaker, false, [] , $params['filter'] ?? null);
+            $moderated_rejected_presentations = $speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleModerator,false, [] , $params['filter'] ?? null);
             $all_rejected_presentations = array_merge($rejected_presentations, $moderated_rejected_presentations);
 
             $values['rejected_presentations'] = join("|", array_map(function ($value): string {

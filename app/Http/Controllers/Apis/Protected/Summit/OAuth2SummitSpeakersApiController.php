@@ -220,7 +220,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             [
                 'summit_id' => $summit_id,
                 'published' => true,
-                'summit' => $summit
+                'summit' => $summit,
             ]
         );
     }

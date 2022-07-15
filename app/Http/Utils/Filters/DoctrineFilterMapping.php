@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 
-use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 
 /**
@@ -54,7 +53,11 @@ class DoctrineFilterMapping extends FilterMapping
             foreach ($value as $val) {
                 $param_count = $query->getParameters()->count() + 1;
                 $where = $this->where;
+
                 $has_param = false;
+                if (strstr($where, ":i")) {
+                    $where = str_replace(':i', $param_count, $where);
+                }
 
                 if (strstr($where, ":value")) {
                     $where = str_replace(":value", ":value_" . $param_count, $where);
@@ -77,6 +80,9 @@ class DoctrineFilterMapping extends FilterMapping
             $param_count = $query->getParameters()->count() + 1;
             $where = $this->where;
             $has_param = false;
+            if (strstr($where, ":i")) {
+                $where = str_replace(':i', $param_count, $where);
+            }
 
             if (strstr($where, ":value")) {
                 $where = str_replace(":value", ":value_" . $param_count, $where);
@@ -111,7 +117,9 @@ class DoctrineFilterMapping extends FilterMapping
                 $param_count = $query->getParameters()->count() + 1;
                 $where = $this->where;
                 $has_param = false;
-
+                if (strstr($where, ":i")) {
+                    $where = str_replace(':i', $param_count, $where);
+                }
                 if (strstr($where, ":value")) {
                     $where = str_replace(":value", ":value_" . $param_count, $where);
                     $has_param = true;
@@ -132,9 +140,14 @@ class DoctrineFilterMapping extends FilterMapping
 
             return $inner_where;
         }
+
         $param_count = $query->getParameters()->count() + 1;
         $where = $this->where;
         $has_param = false;
+
+        if (strstr($where, ":i")) {
+            $where = str_replace(':i', $param_count, $where);
+        }
 
         if (strstr($where, ":value")) {
             $where = str_replace(":value", ":value_" . $param_count, $where);

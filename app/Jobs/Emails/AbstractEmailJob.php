@@ -97,7 +97,7 @@ abstract class AbstractEmailJob implements ShouldQueue
     public function handle
     (
         IMailApi $api
-    ):array
+    )
     {
         try {
             Log::debug(sprintf("AbstractEmailJob::handle template_identifier %s to_email %s", $this->template_identifier, $this->to_email));

@@ -26,11 +26,15 @@ use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
 use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
 use models\summit\SpeakerAnnouncementSummitEmail;
-use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\Summit;
 use models\summit\SummitRegistrationPromoCode;
+use utils\Filter;
 
-class SpeakerActionsEmailStrategy
+/**
+ * Class SpeakerActionsEmailStrategy
+ * @package App\Services\Model\Strategies\EmailActions
+ */
+final class SpeakerActionsEmailStrategy
 {
     /**
      * @var Summit
@@ -55,12 +59,14 @@ class SpeakerActionsEmailStrategy
 
     /**
      * @param PresentationSpeaker $speaker
+     * @param Filter|null $filter
      * @param SummitRegistrationPromoCode|null $promo_code
      * @param PresentationSpeakerSummitAssistanceConfirmationRequest|null $assistance
      */
-    public function process(PresentationSpeaker $speaker,
-                            ?SummitRegistrationPromoCode $promo_code = null,
-                            ?PresentationSpeakerSummitAssistanceConfirmationRequest $assistance = null):void
+    public function process(PresentationSpeaker                                     $speaker,
+                            ?Filter                                                 $filter = null,
+                            ?SummitRegistrationPromoCode                            $promo_code = null,
+                            ?PresentationSpeakerSummitAssistanceConfirmationRequest $assistance = null): void
     {
         try {
             $type = null;
@@ -69,32 +75,38 @@ class SpeakerActionsEmailStrategy
 
             $has_accepted_presentations =
                 $speaker->hasAcceptedPresentations(
-                    $this->summit, PresentationSpeaker::RoleModerator, true,
-                    $this->summit->getExcludedCategoriesForAcceptedPresentations()
+                    $this->summit,
+                    PresentationSpeaker::RoleModerator, true,
+                    $this->summit->getExcludedCategoriesForAcceptedPresentations(),
+                    $filter
                 ) ||
                 $speaker->hasAcceptedPresentations(
                     $this->summit, PresentationSpeaker::RoleSpeaker, true,
-                    $this->summit->getExcludedCategoriesForAcceptedPresentations()
+                    $this->summit->getExcludedCategoriesForAcceptedPresentations(), $filter
                 );
 
             $has_alternate_presentations =
                 $speaker->hasAlternatePresentations(
                     $this->summit, PresentationSpeaker::RoleModerator, true,
-                    $this->summit->getExcludedCategoriesForAlternatePresentations()
+                    $this->summit->getExcludedCategoriesForAlternatePresentations(),
+                    $filter
                 ) ||
                 $speaker->hasAlternatePresentations(
                     $this->summit, PresentationSpeaker::RoleSpeaker, true,
-                    $this->summit->getExcludedCategoriesForAlternatePresentations()
+                    $this->summit->getExcludedCategoriesForAlternatePresentations(),
+                    $filter
                 );
 
             $has_rejected_presentations =
                 $speaker->hasRejectedPresentations(
                     $this->summit, PresentationSpeaker::RoleModerator, true,
-                    $this->summit->getExcludedCategoriesForRejectedPresentations()
+                    $this->summit->getExcludedCategoriesForRejectedPresentations(),
+                    $filter
                 ) ||
                 $speaker->hasRejectedPresentations(
                     $this->summit, PresentationSpeaker::RoleSpeaker, true,
-                    $this->summit->getExcludedCategoriesForRejectedPresentations()
+                    $this->summit->getExcludedCategoriesForRejectedPresentations(),
+                    $filter
                 );
 
             $has_promo_code = !is_null($promo_code);
@@ -114,43 +126,43 @@ class SpeakerActionsEmailStrategy
                 )
             );
 
+            EmailExcerpt::addInfoMessage(
+                sprintf
+                (
+                    "trying to send email %s to speaker %s accepted %b alternate %b rejected %b",
+                    $this->flow_event,
+                    $speaker->getEmail(),
+                    $has_accepted_presentations,
+                    $has_alternate_presentations,
+                    $has_rejected_presentations
+                )
+            );
+
             switch ($this->flow_event) {
                 case PresentationSpeakerSelectionProcessAcceptedAlternateEmail::EVENT_SLUG:
-                    if ($has_accepted_presentations && $has_alternate_presentations && !$has_rejected_presentations) {
-                        $type = SpeakerAnnouncementSummitEmail::TypeAcceptedAlternate;
-                    }
+                    $type = SpeakerAnnouncementSummitEmail::TypeAcceptedAlternate;
                     break;
                 case PresentationSpeakerSelectionProcessAcceptedOnlyEmail::EVENT_SLUG:
-                    if ($has_accepted_presentations && !$has_alternate_presentations && !$has_rejected_presentations) {
-                        $type = SpeakerAnnouncementSummitEmail::TypeAccepted;
-                    }
+                    $type = SpeakerAnnouncementSummitEmail::TypeAccepted;
                     break;
                 case PresentationSpeakerSelectionProcessAcceptedRejectedEmail::EVENT_SLUG:
-                    if ($has_accepted_presentations && !$has_alternate_presentations && $has_rejected_presentations) {
-                        $type = SpeakerAnnouncementSummitEmail::TypeAcceptedRejected;
-                    }
+                    $type = SpeakerAnnouncementSummitEmail::TypeAcceptedRejected;
                     break;
                 case PresentationSpeakerSelectionProcessAlternateOnlyEmail::EVENT_SLUG:
-                    if (!$has_accepted_presentations && $has_alternate_presentations && !$has_rejected_presentations) {
-                        $type = SpeakerAnnouncementSummitEmail::TypeAlternate;
-                    }
+                    $type = SpeakerAnnouncementSummitEmail::TypeAlternate;
                     break;
                 case PresentationSpeakerSelectionProcessAlternateRejectedEmail::EVENT_SLUG:
-                    if (!$has_accepted_presentations && $has_alternate_presentations && $has_rejected_presentations) {
-                        $type = SpeakerAnnouncementSummitEmail::TypeAlternateRejected;
-                    }
+                    $type = SpeakerAnnouncementSummitEmail::TypeAlternateRejected;
                     break;
                 case PresentationSpeakerSelectionProcessRejectedOnlyEmail::EVENT_SLUG:
-                    if (!$has_accepted_presentations && !$has_alternate_presentations && $has_rejected_presentations) {
-                        $type = SpeakerAnnouncementSummitEmail::TypeRejected;
-                    }
+                    $type = SpeakerAnnouncementSummitEmail::TypeRejected;
                     break;
                 default:
                     EmailExcerpt::add(
                         [
                             'type' => IEmailExcerptService::SpeakerEmailType,
                             'speaker_email' => $speaker->getEmail(),
-                            'email_type'    => SpeakerAnnouncementSummitEmail::TypeNone
+                            'email_type' => SpeakerAnnouncementSummitEmail::TypeNone
                         ]
                     );
                     return;
@@ -158,8 +170,21 @@ class SpeakerActionsEmailStrategy
 
             if (!is_null($type)) {
 
-                if($speaker->hasAnnouncementEmailTypeSent($this->summit, $type) &&
-                    !SpeakersAnnouncementEmailConfig::shouldResend()){
+                if ($speaker->hasAnnouncementEmailTypeSent($this->summit, $type) &&
+                    !SpeakersAnnouncementEmailConfig::shouldResend()) {
+
+                    EmailExcerpt::addInfoMessage(
+                        sprintf
+                        (
+                            "speaker %s accepted %b alternate %b rejected %b already has an email of type %s.",
+                            $speaker->getEmail(),
+                            $has_accepted_presentations,
+                            $has_alternate_presentations,
+                            $has_rejected_presentations,
+                            $this->flow_event
+                        )
+                    );
+
                     Log::debug
                     (
                         sprintf
@@ -169,7 +194,7 @@ class SpeakerActionsEmailStrategy
                             $type
                         )
                     );
-                    return ;
+                    return;
                 }
 
                 PresentationSpeakerSelectionProcessEmailFactory::send
@@ -177,12 +202,13 @@ class SpeakerActionsEmailStrategy
                     $this->summit,
                     $speaker,
                     $type,
+                    $filter,
                     $promo_code,
                     $assistance
                 );
 
                 // mark the promo code as sent
-                if(!is_null($promo_code))
+                if (!is_null($promo_code))
                     $promo_code->setEmailSent(true);
 
                 // generate email proof
@@ -196,15 +222,15 @@ class SpeakerActionsEmailStrategy
             }
 
             EmailExcerpt::addInfoMessage(
-               sprintf
-                    (
-                        "excluded speaker %s accepted %b alternate %b rejected %b for original email %s",
-                        $speaker->getEmail(),
-                        $has_accepted_presentations,
-                        $has_alternate_presentations,
-                        $has_rejected_presentations,
-                        $this->flow_event
-                    )
+                sprintf
+                (
+                    "excluded speaker %s accepted %b alternate %b rejected %b for original email %s",
+                    $speaker->getEmail(),
+                    $has_accepted_presentations,
+                    $has_alternate_presentations,
+                    $has_rejected_presentations,
+                    $this->flow_event
+                )
             );
         } catch (\Exception $ex) {
             Log::error($ex);

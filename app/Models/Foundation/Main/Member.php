@@ -1424,7 +1424,7 @@ SQL;
     /**
      * @return string
      */
-    public function getFullName()
+    public function getFullName():?string
     {
         $fullname = $this->first_name;
         if (!empty($this->last_name)) {

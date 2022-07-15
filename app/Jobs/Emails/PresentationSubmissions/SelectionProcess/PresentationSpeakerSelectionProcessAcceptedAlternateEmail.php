@@ -12,13 +12,11 @@
  * limitations under the License.
  **/
 
-use App\Services\Utils\Facades\SpeakersAnnouncementEmailConfig;
 use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use models\summit\SummitRegistrationPromoCode;
-use ModelSerializers\IPresentationSerializerTypes;
-use ModelSerializers\SerializerRegistry;
+use utils\Filter;
 
 /**
  * Class PresentationSpeakerSelectionProcessAcceptedAlternateEmail
@@ -38,64 +36,24 @@ class PresentationSpeakerSelectionProcessAcceptedAlternateEmail extends Presenta
 
     /**
      * @param Summit $summit
-     * @param SummitRegistrationPromoCode $promo_code
+     * @param SummitRegistrationPromoCode|null $promo_code
      * @param PresentationSpeaker $speaker
      * @param string|null $confirmation_token
+     * @param Filter|null $filter
      */
     public function __construct
     (
-        Summit $summit,
+        Summit                       $summit,
         ?SummitRegistrationPromoCode $promo_code,
-        PresentationSpeaker $speaker,
-        ?string $confirmation_token = null
-    ){
+        PresentationSpeaker          $speaker,
+        ?string                      $confirmation_token = null,
+        ?Filter                      $filter = null
+    )
+    {
 
-        $payload = [];
-        $cc_email = [];
-        $shouldSendCopy2Submitter = SpeakersAnnouncementEmailConfig::shouldSendCopy2Submitter();
+        parent::__construct($summit, $speaker, $promo_code, $filter);
 
-        $payload['accepted_presentations'] = [];
-        foreach($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleSpeaker) as $p){
-            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
-                $cc_email[] = $p->getCreatedBy()->getEmail();
-            $payload['accepted_presentations'][] =
-                SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
-        }
-
-        $payload['accepted_moderated_presentations'] = [];
-        foreach($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleModerator) as $p){
-            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
-                $cc_email[] = $p->getCreatedBy()->getEmail();
-
-            $payload['accepted_moderated_presentations'][] =
-                SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
-        }
-
-        $payload['alternate_presentations'] = [];
-        foreach($speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleSpeaker) as $p){
-            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
-                $cc_email[] = $p->getCreatedBy()->getEmail();
-
-            $payload['alternate_presentations'][] =
-                SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
-        }
-
-        $payload['alternate_moderated_presentations'] = [];
-        foreach($speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleModerator) as $p){
-            if($shouldSendCopy2Submitter && $p->hasCreatedBy() && !in_array($p->getCreatedBy()->getEmail(), $cc_email) && $speaker->getEmail() != $p->getCreatedBy()->getEmail())
-                $cc_email[] = $p->getCreatedBy()->getEmail();
-
-            $payload['alternate_moderated_presentations'][] =
-                SerializerRegistry::getInstance()->getSerializer($p, IPresentationSerializerTypes::SpeakerEmails)->serialize();
-        }
-
-        if(count($cc_email) > 0){
-            $payload['cc_email'] = implode(',', $cc_email);
-        }
-
-        parent::__construct($payload , $summit, $speaker, $promo_code);
-
-        if(!empty($confirmation_token)) {
+        if (!empty($confirmation_token)) {
             $this->payload['speaker_confirmation_link'] = sprintf("%s?t=%s", $this->payload['speaker_confirmation_link'], base64_encode($confirmation_token));
         }
 

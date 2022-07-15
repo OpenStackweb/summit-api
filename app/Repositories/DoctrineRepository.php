@@ -153,11 +153,11 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
         $query = $this->applyExtraFilters($query);
 
         if(!is_null($filter)){
-            $filter->apply2Query($query, $this->getFilterMappings());
+            $filter->apply2Query($query, $this->getFilterMappings($filter));
         }
 
         if(!is_null($order)){
-            $order->apply2Query($query, $this->getOrderMappings());
+            $order->apply2Query($query, $this->getOrderMappings($filter));
         }
         else if(!is_null($fnDefaultFilter)){
             $query = call_user_func($fnDefaultFilter, $query);

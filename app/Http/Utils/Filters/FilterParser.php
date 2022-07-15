@@ -19,12 +19,12 @@ use Illuminate\Support\Facades\Log;
 final class FilterParser
 {
     /**
-     * @param mixed $filters
+     * @param $filters
      * @param array $allowed_fields
-     * @throws FilterParserException
      * @return Filter
+     * @throws FilterParserException
      */
-    public static function parse($filters, $allowed_fields = array())
+    public static function parse($filters, $allowed_fields = [])
     {
         Log::debug(sprintf("FilterParser::parse allowed_fields %s", json_encode($allowed_fields)));
 
@@ -113,7 +113,7 @@ final class FilterParser
             if (!is_null($f))
                 $res[] = $f;
         }
-        return new Filter($res);
+        return new Filter($res, $filters);
     }
 
     /**

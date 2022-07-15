@@ -84,6 +84,18 @@ final class PaymentGatewayProfileFactory
 
             if (isset($params['send_email_receipt']))
                 $profile->setSendEmailReceipt(boolval($params['send_email_receipt']));
+
+            if(isset($params['set_webhooks']) && boolval($params['set_webhooks'])){
+                $profile->setLiveWebHookData([
+                    'id' => 'DEFAULT_LIVE_WEBHOOK',
+                    'secret_key' => $params['live_web_hook_secret'] ?? null
+                ]);
+                $profile->setTestWebHookData(
+                    [
+                        'id' => 'DEFAULT_TEST_WEBHOOK',
+                        'secret_key' =>  $params['test_web_hook_secret'] ?? null
+                ]);
+            }
         }
 
         // common properties

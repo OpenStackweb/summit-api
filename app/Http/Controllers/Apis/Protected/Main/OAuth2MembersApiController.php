@@ -155,7 +155,7 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                 (
                     SerializerUtils::getExpand(),
                     SerializerUtils::getFields(),
-                    SerializerUtils::getRelations()
+                    SerializerUtils::getRelations(),
                     [],
                     $serializer_type
                 )

@@ -299,7 +299,8 @@ class SummitAttendee extends SilverstripeBaseModel
         $this->presentation_votes = new ArrayCollection();
     }
 
-    public function isVirtualCheckedIn():bool{
+    public function isVirtualCheckedIn(): bool
+    {
         return !is_null($this->summit_virtual_checked_in_date);
     }
 
@@ -535,20 +536,19 @@ class SummitAttendee extends SilverstripeBaseModel
     public function getFullName(): ?string
     {
         Log::debug(sprintf("SummitAttendee::getFullName id %s", $this->id));
-        if ($this->hasMember()) {
-            Log::debug(sprintf("SummitAttendee::getFullName id %s hasMember", $this->id));
-            $fullname = $this->member->getFullName();
-            Log::debug(sprintf("SummitAttendee::getFullName id %s Member Full Name %s", $this->id, $fullname));
-            if (!empty($fullname))
-                return $fullname;
-        }
-
         $fullname = $this->first_name;
         if (!empty($this->surname)) {
             if (!empty($fullname)) $fullname .= ' ';
             $fullname .= $this->surname;
         }
 
+        if (empty($fullname) && $this->hasMember()) {
+            Log::debug(sprintf("SummitAttendee::getFullName id %s hasMember", $this->id));
+            $fullname = $this->member->getFullName();
+            Log::debug(sprintf("SummitAttendee::getFullName id %s Member Full Name %s", $this->id, $fullname));
+            if (!empty($fullname))
+                return $fullname;
+        }
         Log::debug(sprintf("SummitAttendee::getFullName id %s Attendee Full Name %s", $this->id, $fullname));
         return $fullname;
     }
@@ -648,7 +648,7 @@ SQL;
     /**
      * @param SummitOrderExtraQuestionAnswer $answer
      */
-    public function addExtraQuestionAnswer(SummitOrderExtraQuestionAnswer $answer):void
+    public function addExtraQuestionAnswer(SummitOrderExtraQuestionAnswer $answer): void
     {
         if ($this->extra_question_answers->contains($answer)) return;
         $this->extra_question_answers->add($answer);
@@ -670,7 +670,7 @@ SQL;
      */
     public function getCompanyName(): ?string
     {
-        if($this->hasCompany())
+        if ($this->hasCompany())
             return $this->company->getName();
         return $this->company_name;
     }
@@ -678,18 +678,19 @@ SQL;
     /**
      * @return bool
      */
-    public function hasCompany():bool{
+    public function hasCompany(): bool
+    {
         return $this->getCompanyId() > 0;
     }
 
     /**
      * @return int
      */
-    public function getCompanyId():int{
+    public function getCompanyId(): int
+    {
         try {
             return is_null($this->company) ? 0 : $this->company->getId();
-        }
-        catch(\Exception $ex){
+        } catch (\Exception $ex) {
             return 0;
         }
     }
@@ -746,7 +747,7 @@ SQL;
     {
         Log::debug(sprintf("SummitAttendee::updateStatus original status %s", $this->status));
         // ingested attendee
-        if(!empty($this->external_id)){
+        if (!empty($this->external_id)) {
             $this->status = self::StatusComplete;
             Log::debug(sprintf("SummitAttendee::updateStatus StatusComplete for attendee %s (External).", $this->id));
             return $this->status;
@@ -783,12 +784,11 @@ SQL;
 
         try {
             $res = $this->hadCompletedExtraQuestions();
-            if(!$res){
+            if (!$res) {
                 $this->status = self::StatusIncomplete;
                 return $this->status;
             }
-        }
-        catch (ValidationException $ex){
+        } catch (ValidationException $ex) {
             Log::warning($ex);
             $this->status = self::StatusIncomplete;
             return $this->status;
@@ -912,13 +912,15 @@ SQL;
         return $now;
     }
 
-    public function addPresentationVote(PresentationAttendeeVote $vote){
-        if($this->presentation_votes->contains($vote)) return;
+    public function addPresentationVote(PresentationAttendeeVote $vote)
+    {
+        if ($this->presentation_votes->contains($vote)) return;
         $this->addPresentationVote($vote);
     }
 
-    public function removePresentationVote(PresentationAttendeeVote $vote){
-        if(!$this->presentation_votes->contains($vote)) return;
+    public function removePresentationVote(PresentationAttendeeVote $vote)
+    {
+        if (!$this->presentation_votes->contains($vote)) return;
         $this->presentation_votes->removeElement($vote);
     }
 
@@ -928,7 +930,8 @@ SQL;
      * @param int|null $track_group_id
      * @return int
      */
-    public function getVotesCount(?int $begin_voting_date = null, ?int $end_voting_date = null, ?int $track_group_id = null):int{
+    public function getVotesCount(?int $begin_voting_date = null, ?int $end_voting_date = null, ?int $track_group_id = null): int
+    {
         return $this->getVotesRange($begin_voting_date, $end_voting_date, $track_group_id)->count();
     }
 
@@ -938,7 +941,8 @@ SQL;
      * @param int|null $track_group_id
      * @return ArrayCollection| PresentationAttendeeVote[]
      */
-    public function getPresentationVotes(?int $begin_voting_date = null, ?int $end_voting_date = null, ?int $track_group_id = null){
+    public function getPresentationVotes(?int $begin_voting_date = null, ?int $end_voting_date = null, ?int $track_group_id = null)
+    {
         return $this->getVotesRange($begin_voting_date, $end_voting_date, $track_group_id);
     }
 
@@ -948,7 +952,8 @@ SQL;
      * @param int|null $track_group_id
      * @return ArrayCollection|\Doctrine\Common\Collections\Collection|PresentationAttendeeVote[]
      */
-    private function getVotesRange(?int $begin_voting_date = null, ?int $end_voting_date = null, ?int $track_group_id = null) {
+    private function getVotesRange(?int $begin_voting_date = null, ?int $end_voting_date = null, ?int $track_group_id = null)
+    {
         $criteria = null;
 
         if ($begin_voting_date != null) {
@@ -968,12 +973,12 @@ SQL;
         }
 
         $res = $criteria != null ? $this->presentation_votes->matching($criteria) : $this->presentation_votes;
-        if($track_group_id != null){
-            $res = $res->filter(function($v) use($track_group_id){
-               if($v instanceof PresentationAttendeeVote){
-                   return $v->getPresentation()->getCategory()->belongsToGroup($track_group_id);
-               }
-               return false;
+        if ($track_group_id != null) {
+            $res = $res->filter(function ($v) use ($track_group_id) {
+                if ($v instanceof PresentationAttendeeVote) {
+                    return $v->getPresentation()->getCategory()->belongsToGroup($track_group_id);
+                }
+                return false;
             });
         }
 
@@ -985,7 +990,7 @@ SQL;
      */
     public function getExtraQuestions()
     {
-       return $this->summit->getMainOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+        return $this->summit->getMainOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
     }
 
     /**
@@ -1005,14 +1010,14 @@ SQL;
         // caching it to avoid calculation costs
         $key = sprintf("SummitAttendee.canChangeAnswerValue.%s", $this->id);
         $res = Cache::get($key, null);
-        if(!is_null($res)) {
+        if (!is_null($res)) {
             Log::debug(sprintf("SummitAttendee::canChangeAnswerValue cache hit id %s res %b", $this->id, $res));
             return $res;
         }
 
         $resource_server_ctx = App::make(IResourceServerContext::class);
         $currentUser = $resource_server_ctx->getCurrentUser(false, false);
-        $currentUserIsAdmin = is_null($currentUser) ? false: ($currentUser->isAdmin() || $this->summit->isSummitAdmin($currentUser));
+        $currentUserIsAdmin = is_null($currentUser) ? false : ($currentUser->isAdmin() || $this->summit->isSummitAdmin($currentUser));
         Log::debug(sprintf("SummitAttendee::canChangeAnswerValue currentUserIsAdmin %b", $currentUserIsAdmin));
         $res = $currentUserIsAdmin || $this->summit->isAllowUpdateAttendeeExtraQuestions();
 
@@ -1040,11 +1045,12 @@ SQL;
             $stmt->execute(['owner_id' => $this->id]);
             $res = $stmt->fetchAll();
             $res = count($res) > 0 ? $res : [];
-            if(count($res) > 0){
-                $res = array_map(function($e){
+            if (count($res) > 0) {
+                $res = array_map(function ($e) {
                     $e['type_id'] = intval($e['type_id']);
                     $e['qty'] = intval($e['qty']);
-                    return $e; }, $res);
+                    return $e;
+                }, $res);
             }
             return $res;
         } catch (\Exception $ex) {
@@ -1053,8 +1059,9 @@ SQL;
         return [];
     }
 
-    public function getAllowedAccessLevels():array{
-        $bindings      = [
+    public function getAllowedAccessLevels(): array
+    {
+        $bindings = [
             'owner_id' => $this->id
         ];
 
@@ -1072,14 +1079,15 @@ SQL;
         // build rsm here
         $native_query = $this->getEM()->createNativeQuery($query, $rsm);
 
-        foreach($bindings as $k => $v)
+        foreach ($bindings as $k => $v)
             $native_query->setParameter($k, $v);
 
         return $native_query->getResult();
     }
 
-    public function getAllowedBadgeFeatures():array{
-        $bindings      = [
+    public function getAllowedBadgeFeatures(): array
+    {
+        $bindings = [
             'owner_id' => $this->id
         ];
 
@@ -1104,7 +1112,7 @@ SQL;
         // build rsm here
         $native_query = $this->getEM()->createNativeQuery($query, $rsm);
 
-        foreach($bindings as $k => $v)
+        foreach ($bindings as $k => $v)
             $native_query->setParameter($k, $v);
 
         return $native_query->getResult();

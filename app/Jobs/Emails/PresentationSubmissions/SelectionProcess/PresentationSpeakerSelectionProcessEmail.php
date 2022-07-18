@@ -115,7 +115,7 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
         $payload['summit_name'] = $summit->getName();
         $payload['summit_logo'] = $summit->getLogoUrl();
         $payload['summit_schedule_url'] = $summit->getScheduleDefaultPageUrl();
-        $payload['summit_site_url'] = $summit->getDefaultPageUrl();
+        $payload['summit_site_url'] = $summit->getLink();
         $payload['speaker_full_name'] = $speaker->getFullName();
         $payload['speaker_email'] = $speaker->getEmail();
 
@@ -144,6 +144,7 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
         $payload['promo_code_until_date'] = '';
         $payload['ticket_type'] = '';
         $payload['registration_link'] = $summit->getRegistrationLink();
+        $payload['virtual_event_site_link'] = $summit->getVirtualSiteUrl();
 
         if(!is_null($promo_code)){
             $payload['promo_code'] = $promo_code->getCode();

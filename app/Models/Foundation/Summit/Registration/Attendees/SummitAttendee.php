@@ -255,8 +255,9 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     public function addTicket(SummitAttendeeTicket $ticket)
     {
-        if ($this->tickets->contains($ticket)) return;
-        $this->tickets->add($ticket);
+        if (!$this->tickets->contains($ticket)) {
+            $this->tickets->add($ticket);
+        }
         $ticket->setOwner($this);
     }
 

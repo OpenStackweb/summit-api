@@ -2719,6 +2719,18 @@ final class SummitOrderService
     public function updateTicketById(Member $current_user, int $ticket_id, array $payload): SummitAttendeeTicket
     {
         return $this->tx_service->transaction(function () use ($current_user, $ticket_id, $payload) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitOrderService::updateTicketById member %s ticket %s payload %s",
+                    $current_user->getEmail(),
+                    $ticket_id,
+                    json_encode($payload)
+                )
+            );
+
             $ticket = $this->ticket_repository->getByIdExclusiveLock($ticket_id);
 
             if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket || !$ticket->isActive())
@@ -2777,11 +2789,32 @@ final class SummitOrderService
 
             if (!is_null($attendee)) {
                 // update it
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::updateTicketById member %s ticket %s updating attendee %s.",
+                        $current_user->getEmail(),
+                        $ticket_id,
+                        $attendee->getId()
+                    )
+                );
                 SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
                 $attendee->addTicket($ticket);
                 $attendee->updateStatus();
-                if($summit->isRegistrationSendTicketEmailAutomatically())
+                if($summit->isRegistrationSendTicketEmailAutomatically()) {
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitOrderService::updateTicketById member %s ticket %s sending invitation email to attendee %s.",
+                            $current_user->getEmail(),
+                            $ticket_id,
+                            $attendee->getId()
+                        )
+                    );
                     $attendee->sendInvitationEmail($ticket);
+                }
             }
 
             return $ticket;

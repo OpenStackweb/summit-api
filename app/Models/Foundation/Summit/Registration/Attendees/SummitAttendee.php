@@ -486,12 +486,10 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     public function getFirstName(): ?string
     {
-        $res = null;
-        if ($this->hasMember()) {
+        $res = $this->first_name;
+        if (empty($res) && $this->hasMember()) {
             $res = $this->member->getFirstName();
         }
-        if (empty($res))
-            $res = $this->first_name;
         return $res;
     }
 
@@ -508,12 +506,10 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     public function getSurname(): ?string
     {
-        $res = null;
-        if ($this->hasMember()) {
+        $res = $this->surname;
+        if (empty($res) && $this->hasMember()) {
             $res = $this->member->getLastName();
         }
-        if (empty($res))
-            $res = $this->surname;
         return $res;
     }
 

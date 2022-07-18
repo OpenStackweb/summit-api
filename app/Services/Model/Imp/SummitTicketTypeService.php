@@ -380,7 +380,24 @@ final class SummitTicketTypeService
                 )
             );
 
-            $all_ticket_types = $summit->getTicketTypesByAudience(SummitTicketType::Audience_All);
+            $all_ticket_types = [];
+
+            // check if we can sell ticket type
+            foreach($summit->getTicketTypesByAudience(SummitTicketType::Audience_All) as $ticket_type){
+                if(!$ticket_type->canSell())
+                {
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitTicketTypeService::getAllowedTicketTypes ticket type %s can not be sell.",
+                            $ticket_type->getId()
+                        )
+                    );
+                    continue;
+                }
+                $all_ticket_types[] = $ticket_type;
+            }
 
             $invitation = $summit->getSummitRegistrationInvitationByEmail($member->getEmail());
 
@@ -407,10 +424,10 @@ final class SummitTicketTypeService
                         )
                     );
                     // only all
-                    return $all_ticket_types->toArray();
+                    return $all_ticket_types;
                 }
 
-                return array_merge($all_ticket_types->toArray(), $invitation->getRemainingAllowedTicketTypes());
+                return array_merge($all_ticket_types, $invitation->getRemainingAllowedTicketTypes());
             }
 
             Log::debug
@@ -422,9 +439,25 @@ final class SummitTicketTypeService
                     $member->getId()
                 )
             );
+
+            $without_invitation_tickets_types = [];
+            foreach ($summit->getTicketTypesByAudience(SummitTicketType::Audience_Without_Invitation) as $ticket_type){
+                if(!$ticket_type->canSell())
+                {
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitTicketTypeService::getAllowedTicketTypes ticket type %s can not be sell",
+                            $ticket_type->getId()
+                        )
+                    );
+                    continue;
+                }
+                $without_invitation_tickets_types[] = $ticket_type;
+            }
             // we do not have invitation
-            return array_merge($all_ticket_types->toArray(),
-                    $summit->getTicketTypesByAudience(SummitTicketType::Audience_Without_Invitation)->toArray());
+            return array_merge($all_ticket_types, $without_invitation_tickets_types);
         });
     }
 }

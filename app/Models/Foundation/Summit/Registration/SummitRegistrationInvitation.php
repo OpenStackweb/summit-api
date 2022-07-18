@@ -341,6 +341,19 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
 
                 continue;
             }
+
+            if(!$ticket_type->canSell())
+            {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitRegistrationInvitation::getRemainingAllowedTicketTypes ticket type %s can not be sell",
+                        $ticket_type->getId()
+                    )
+                );
+                continue;
+            }
             $res[] = $ticket_type;
         }
 

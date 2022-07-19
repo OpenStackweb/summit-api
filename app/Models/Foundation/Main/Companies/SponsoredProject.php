@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
@@ -68,6 +69,19 @@ class SponsoredProject extends SilverstripeBaseModel
      * @var File
      */
     protected $logo;
+
+    /**
+     * @ORM\OneToMany(targetEntity="SponsoredProject", mappedBy="parent_project")
+     * @var ArrayCollection
+     */
+    private $sub_projects;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="SponsoredProject", inversedBy="sub_projects", cascade={"persist","remove"})
+     * @ORM\JoinColumn(name="ParentProjectID", referencedColumnName="ID")
+     * @var SponsoredProject
+     */
+    private $parent_project;
 
     /**
      * @param string $name
@@ -224,6 +238,7 @@ class SponsoredProject extends SilverstripeBaseModel
     {
         parent::__construct();
         $this->sponsorship_types = new ArrayCollection;
+        $this->sub_projects = new ArrayCollection;
         $this->is_active = false;
         $this->logo = null;
         $this->should_show_on_nav_bar = true;
@@ -292,4 +307,33 @@ class SponsoredProject extends SilverstripeBaseModel
         $sponsorshipType->clearSponsoredProject();
     }
 
+    /**
+     * @param SponsoredProject $sponsored_project
+     */
+    public function setParentProject(SponsoredProject $sponsored_project): void{
+        $this->parent_project = $sponsored_project;
+    }
+
+    public function clearParentProject(){
+        $this->parent_project = null;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getSubProjects(): Collection{
+        return $this->sub_projects;
+    }
+
+    public function addSubProject(SponsoredProject $subProject){
+        if($this->sub_projects->contains($subProject)) return;
+        $this->sub_projects->add($subProject);
+        $subProject->setParentProject($this);
+    }
+
+    public function removeSubProject(SponsoredProject $subProject){
+        if(!$this->sub_projects->contains($subProject)) return;
+        $this->sub_projects->removeElement($subProject);
+        $subProject->clearParentProject();
+    }
 }

@@ -4742,34 +4742,41 @@ DQL;
     {
         Log::debug(sprintf("Summit::getEmailIdentifierPerEmailEventFlowSlug id %s slug %s", $this->id, $eventSlug));
         // first check if we have an override
-        $email_event = $this->createQueryBuilder()
-            ->select('distinct ef')
-            ->from('App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlow', 'ef')
-            ->join('ef.summit', 's')
-            ->join('ef.event_type', 'et')
-            ->where("s.id = :summit_id and et.slug = :slug")
-            ->setParameter('summit_id', $this->getId())
-            ->setParameter('slug', trim($eventSlug))
-            ->setMaxResults(1)
-            ->setCacheable(false)
-            ->getQuery()
-            ->setCacheable(false)
-            ->useQueryCache(false)
-            ->getOneOrNullResult();
 
-        if (!is_null($email_event) && $email_event instanceof SummitEmailEventFlow) {
+        $identifier = null;
+        try {
+            $sql = <<<SQL
+           SELECT SummitEmailEventFlow.EmailTemplateIdentifier AS Template 
+           FROM `SummitEmailEventFlow` 
+           inner join SummitEmailEventFlowType ON SummitEmailEventFlowType.ID = SummitEmailEventFlowTypeID 
+           where SummitID = :summit_id 
+           AND SummitEmailEventFlowType.Slug = :slug LIMIT 0,1;
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute([
+                'summit_id' => $this->id,
+                'slug' => trim($eventSlug)
+            ]);
+
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $identifier = count($res) > 0 ? $res[0] : null;
+        } catch (\Exception $ex) {
+            $identifier = null;
+        }
+
+
+        if (!empty($identifier)) {
             Log::debug
             (
                 sprintf
                 (
-                    "Summit::getEmailIdentifierPerEmailEventFlowSlug id %s slug %s got override email event id %s template %s",
+                    "Summit::getEmailIdentifierPerEmailEventFlowSlug id %s slug %s got override by template %s",
                     $this->id,
                     $eventSlug,
-                    $email_event->id,
-                    $email_event->getEmailTemplateIdentifier()
+                    $identifier
                 )
             );
-            return $email_event->getEmailTemplateIdentifier();
+            return $identifier;
         }
 
         Log::debug(sprintf("Summit::getEmailIdentifierPerEmailEventFlowSlug id %s slug %s trying to get default one", $this->id, $eventSlug));

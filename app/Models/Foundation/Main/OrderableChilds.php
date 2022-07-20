@@ -14,6 +14,7 @@
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Selectable;
 use models\exceptions\ValidationException;
+use Illuminate\Support\Facades\Log;
 /**
  * Trait OrderableChilds
  * @package App\Models\Foundation\Main
@@ -74,7 +75,7 @@ trait OrderableChilds
     private static function recalculateOrderForSelectable(Selectable $collection, IOrderable $element, int $new_order, string $className = null){
         $criteria     = Criteria::create();
         $criteria->orderBy([static::getOrderFieldForOrderableChild($className) => 'ASC']);
-        self::recalculateOrderForCollection( $collection->matching($criteria)->toArray(), $element, $new_order);
+        self::recalculateOrderForCollection($collection->matching($criteria)->toArray(), $element, $new_order);
     }
 
     /**
@@ -86,6 +87,14 @@ trait OrderableChilds
         $criteria->orderBy([static::getOrderFieldForOrderableChild($className) => 'ASC']);
         $order = 1;
         foreach($collection->matching($criteria) as $e){
+            Log::debug
+            (
+                sprintf
+                (
+                    "OrderableChilds::resetOrderForSelectable newOrder %s",
+                    $order,
+                )
+            );
             $e->setOrder($order);
             $order++;
         }

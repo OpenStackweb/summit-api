@@ -232,7 +232,7 @@ abstract class ExtraQuestionTypeService
                 )
             );
 
-            if (isset($data['order']) && intval($data['order']) != $rule->getOrder()) {
+            if (isset($payload['order']) && intval($payload['order']) != $rule->getOrder()) {
                 // request to update order
                 Log::debug
                 (
@@ -241,10 +241,10 @@ abstract class ExtraQuestionTypeService
                         "ExtraQuestionTypeService::updateSubQuestionRule rule %s currentOrder %s newOrder %s",
                         $rule_id,
                         $rule->getOrder(),
-                        $data['order']
+                        $payload['order']
                     )
                 );
-                $parent->recalculateSubQuestionRuleOrder($rule, intval($data['order']));
+                $parent->recalculateSubQuestionRuleOrder($rule, intval($payload['order']));
             }
 
             return $rule;

@@ -222,6 +222,15 @@ abstract class ExtraQuestionTypeService
 
             $rule =  SubQuestionRuleFactory::populate($rule, $parent, $subQuestion, $payload);
 
+            Log::debug
+            (
+                sprintf
+                (
+                    "ExtraQuestionTypeService::updateSubQuestionRule rule %s currentOrder %s",
+                    $rule_id,
+                    $rule->getOrder(),
+                )
+            );
 
             if (isset($data['order']) && intval($data['order']) != $rule->getOrder()) {
                 // request to update order

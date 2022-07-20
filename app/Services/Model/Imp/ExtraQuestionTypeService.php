@@ -21,6 +21,7 @@ use App\Models\Foundation\Main\ExtraQuestions\Factories\SubQuestionRuleFactory;
 use App\Models\Foundation\Main\ExtraQuestions\SubQuestionRule;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IExtraQuestionTypeService;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\summit\Summit;
@@ -179,6 +180,19 @@ abstract class ExtraQuestionTypeService
      */
     public function updateSubQuestionRule(Summit $summit, int $parent_id, int $rule_id, array $payload):SubQuestionRule{
         return $this->tx_service->transaction(function () use ($summit, $parent_id, $rule_id, $payload) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "ExtraQuestionTypeService::updateSubQuestionRule summit %s parent %s rule %s payload %s",
+                    $summit->getId(),
+                    $parent_id,
+                    $rule_id,
+                    json_encode($payload)
+                )
+            );
+
             $parent = $summit->getOrderExtraQuestionById($parent_id);
             if(is_null($parent))
                 throw new EntityNotFoundException(sprintf("Parent Question %s not found.", $parent_id));
@@ -206,7 +220,34 @@ abstract class ExtraQuestionTypeService
                 }
             }
 
-            return SubQuestionRuleFactory::populate($rule, $parent, $subQuestion, $payload);
+            $rule =  SubQuestionRuleFactory::populate($rule, $parent, $subQuestion, $payload);
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "ExtraQuestionTypeService::updateSubQuestionRule rule %s currentOrder %s",
+                    $rule_id,
+                    $rule->getOrder(),
+                )
+            );
+
+            if (isset($payload['order']) && intval($payload['order']) != $rule->getOrder()) {
+                // request to update order
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "ExtraQuestionTypeService::updateSubQuestionRule rule %s currentOrder %s newOrder %s",
+                        $rule_id,
+                        $rule->getOrder(),
+                        $payload['order']
+                    )
+                );
+                $parent->recalculateSubQuestionRuleOrder($rule, intval($payload['order']));
+            }
+
+            return $rule;
         });
     }
 

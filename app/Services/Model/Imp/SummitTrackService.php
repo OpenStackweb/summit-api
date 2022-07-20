@@ -201,6 +201,7 @@ final class SummitTrackService
                     Log::debug(sprintf("SummitTrackService::UpdateTrack %s added access level %s", $track_id, $access_level_id));
                 }
             }
+
             if (isset($data['order']) && intval($data['order']) != $track->getOrder()) {
                 // request to update order
                 $summit->recalculateTrackOrder($track, intval($data['order']));

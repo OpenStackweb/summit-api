@@ -12,37 +12,43 @@
  * limitations under the License.
  **/
 
+use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 
 /**
  * Class SubQuestionRuleValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SubQuestionRuleValidationRulesFactory
+final class SubQuestionRuleValidationRulesFactory extends AbstractValidationRulesFactory
 {
     /**
-     * @param array $data
-     * @param bool $update
+     * @param array $payload
      * @return array
      */
-    public static function build(array $data, $update = false){
-
-        if($update){
-            return [
-                'visibility' => 'sometimes|string|in:'.implode(',', ExtraQuestionTypeConstants::AllowedSubQuestionRuleVisibility),
-                'visibility_condition' => 'sometimes|string|in:'.implode(',', ExtraQuestionTypeConstants::AllowedSubQuestionRuleVisibilityCondition),
-                'answer_values_operator' => 'sometimes|string|in:'.implode(',', ExtraQuestionTypeConstants::AllowedSubQuestionRuleAnswerValuesOperator),
-                'answer_values' => 'sometimes|int_array',
-                'sub_question_id'=> 'sometimes|integer'
-            ];
-        }
-
+    public static function buildForAdd(array $payload = []): array
+    {
         return [
-            'visibility' => 'required|string|in:'.implode(',', ExtraQuestionTypeConstants::AllowedSubQuestionRuleVisibility),
-            'visibility_condition' => 'required|string|in:'.implode(',', ExtraQuestionTypeConstants::AllowedSubQuestionRuleVisibilityCondition),
-            'answer_values_operator' => 'required|string|in:'.implode(',', ExtraQuestionTypeConstants::AllowedSubQuestionRuleAnswerValuesOperator),
+            'visibility' => 'required|string|in:' . implode(',', ExtraQuestionTypeConstants::AllowedSubQuestionRuleVisibility),
+            'visibility_condition' => 'required|string|in:' . implode(',', ExtraQuestionTypeConstants::AllowedSubQuestionRuleVisibilityCondition),
+            'answer_values_operator' => 'required|string|in:' . implode(',', ExtraQuestionTypeConstants::AllowedSubQuestionRuleAnswerValuesOperator),
             'answer_values' => 'required|int_array',
-            'sub_question_id'=> 'required|integer'
+            'sub_question_id' => 'required|integer'
+        ];
+    }
+
+    /**
+     * @param array $payload
+     * @return array
+     */
+    public static function buildForUpdate(array $payload = []): array
+    {
+        return [
+            'visibility' => 'sometimes|string|in:' . implode(',', ExtraQuestionTypeConstants::AllowedSubQuestionRuleVisibility),
+            'visibility_condition' => 'sometimes|string|in:' . implode(',', ExtraQuestionTypeConstants::AllowedSubQuestionRuleVisibilityCondition),
+            'answer_values_operator' => 'sometimes|string|in:' . implode(',', ExtraQuestionTypeConstants::AllowedSubQuestionRuleAnswerValuesOperator),
+            'answer_values' => 'sometimes|int_array',
+            'sub_question_id' => 'sometimes|integer',
+            'order' => 'sometimes|integer|min:1',
         ];
     }
 }

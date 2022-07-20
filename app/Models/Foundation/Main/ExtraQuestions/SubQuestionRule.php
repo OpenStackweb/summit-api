@@ -15,6 +15,8 @@
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
+use App\Models\Foundation\Main\IOrderable;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
@@ -26,6 +28,7 @@ use Doctrine\ORM\Mapping AS ORM;
  * @package App\Models\Foundation\Main\ExtraQuestions
  */
 class SubQuestionRule extends SilverstripeBaseModel
+    implements IOrderable
 {
     use One2ManyPropertyTrait;
 
@@ -63,6 +66,12 @@ class SubQuestionRule extends SilverstripeBaseModel
     private $answer_values_operator;
 
     /**
+     * @ORM\Column(name="`CustomOrder`", type="integer")
+     * @var int
+     */
+    private $order;
+
+    /**
      * @ORM\ManyToOne(targetEntity="App\Models\Foundation\ExtraQuestions\ExtraQuestionType", fetch="EXTRA_LAZY", cascade={"persist"}, inversedBy="sub_question_rules")
      * @ORM\JoinColumn(name="ParentQuestionID", referencedColumnName="ID")
      * @var ExtraQuestionType
@@ -75,6 +84,12 @@ class SubQuestionRule extends SilverstripeBaseModel
      * @var ExtraQuestionType
      */
     private $sub_question;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->order = 0;
+    }
 
     /**
      * @return string
@@ -235,5 +250,30 @@ class SubQuestionRule extends SilverstripeBaseModel
         }
         // not visible
         return !$initial_condition;
+    }
+
+    /**
+     * @return int
+     */
+    public function getOrder(): int
+    {
+        return $this->order;
+    }
+
+    /**
+     * @param int $order
+     */
+    public function setOrder($order): void
+    {
+        Log::debug
+        (
+            sprintf
+            (
+                "SubQuestionRule::setOrder id %s order %s",
+                $this->id,
+                $order,
+            )
+        );
+        $this->order = $order;
     }
 }

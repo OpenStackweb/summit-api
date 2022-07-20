@@ -23,6 +23,7 @@ final class SubQuestionRuleSerializer extends SilverStripeSerializer
         'VisibilityCondition' => 'visibility_condition:json_string',
         'AnswerValues' => 'answer_values:json_string_array',
         'AnswerValuesOperator' => 'answer_values_operator:json_string',
+        'Order' => 'order:json_int',
         'SubQuestionId' => 'sub_question_id:json_int',
         'ParentQuestionId' => 'parent_question_id:json_int',
     ];

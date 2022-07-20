@@ -16,6 +16,7 @@ use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\Main\IOrderable;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
@@ -264,6 +265,15 @@ class SubQuestionRule extends SilverstripeBaseModel
      */
     public function setOrder($order): void
     {
+        Log::debug
+        (
+            sprintf
+            (
+                "SubQuestionRule::setOrder id %s order %s",
+                $this->id,
+                $order,
+            )
+        );
         $this->order = $order;
     }
 }

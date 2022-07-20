@@ -66,7 +66,7 @@ class ExtraQuestionTypeSerializer extends SilverStripeSerializer
 
         if(in_array('sub_question_rules', $relations) && !isset($values['sub_question_rules']) && $question->allowsValues()) {
             $sub_question_rules = [];
-            foreach ($question->getSubQuestionRules() as $rule) {
+            foreach ($question->getOrderedSubQuestionRules() as $rule) {
                 $sub_question_rules[] = $rule->getId();
             }
             $values['sub_question_rules'] = $sub_question_rules;

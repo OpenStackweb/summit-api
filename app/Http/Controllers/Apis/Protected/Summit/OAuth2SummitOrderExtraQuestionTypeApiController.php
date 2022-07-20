@@ -351,7 +351,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         return $this->processRequest(function () use ($summit_id, $question_id) {
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
-            $payload = $this->getJsonPayload(SubQuestionRuleValidationRulesFactory::build([]));
+            $payload = $this->getJsonPayload(SubQuestionRuleValidationRulesFactory::buildForAdd());
 
             $sub_question_rule = $this->service->addSubQuestionRule($summit, intval($question_id), $payload);
             return $this->created
@@ -379,7 +379,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $payload = $this->getJsonPayload(SubQuestionRuleValidationRulesFactory::build([], true));
+            $payload = $this->getJsonPayload(SubQuestionRuleValidationRulesFactory::buildForUpdate());
 
             $sub_question_rule = $this->service->updateSubQuestionRule($summit, intval($question_id), intval($rule_id), $payload);
             return $this->updated

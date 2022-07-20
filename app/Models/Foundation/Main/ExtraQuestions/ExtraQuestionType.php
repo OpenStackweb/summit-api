@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Models\Foundation\Main\ExtraQuestions\ExtraQuestionAnswerSet;
 use App\Models\Foundation\Main\ExtraQuestions\SubQuestionRule;
 use App\Models\Foundation\Main\IOrderable;
@@ -20,6 +19,7 @@ use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
+use models\summit\PresentationCategory;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
@@ -98,7 +98,6 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
      * @var SubQuestionRule[]
      */
     protected $parent_rules;
-
 
     public function __construct()
     {
@@ -375,9 +374,19 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
         return $this->sub_question_rules;
     }
 
+    /**
+     * @return ArrayCollection|\Doctrine\Common\Collections\Collection|SubQuestionRule[]
+     */
+    public function getOrderedSubQuestionRules(){
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'ASC']);
+        return $this->sub_question_rules->matching($criteria);
+    }
+
     public function addSubQuestionRule(SubQuestionRule $rule):void{
         if($this->sub_question_rules->contains($rule)) return;
         $this->sub_question_rules->add($rule);
+        $rule->setOrder($this->getSubQuestionRuleMaxOrder() + 1);
         $rule->setParentQuestion($this);
     }
 
@@ -500,5 +509,26 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
             return true;
         }
         return true;
+    }
+
+    /**
+     * @return int
+     */
+    private function getSubQuestionRuleMaxOrder(): int
+    {
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'DESC']);
+        $rule = $this->sub_question_rules->matching($criteria)->first();
+        return $rule === false ? 0 : $rule->getOrder();
+    }
+
+    /**
+     * @param PresentationCategory $track
+     * @param int $new_order
+     * @throws ValidationException
+     */
+    public function recalculateSubQuestionRuleOrder(SubQuestionRule $rule, $new_order)
+    {
+        self::recalculateOrderForSelectable($this->sub_question_rules, $rule, $new_order);
     }
 }

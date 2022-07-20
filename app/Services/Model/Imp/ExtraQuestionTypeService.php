@@ -206,7 +206,15 @@ abstract class ExtraQuestionTypeService
                 }
             }
 
-            return SubQuestionRuleFactory::populate($rule, $parent, $subQuestion, $payload);
+            $rule =  SubQuestionRuleFactory::populate($rule, $parent, $subQuestion, $payload);
+
+
+            if (isset($data['order']) && intval($data['order']) != $rule->getOrder()) {
+                // request to update order
+                $parent->recalculateSubQuestionRuleOrder($rule, intval($data['order']));
+            }
+
+            return $rule;
         });
     }
 

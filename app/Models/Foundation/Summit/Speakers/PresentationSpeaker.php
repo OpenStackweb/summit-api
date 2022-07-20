@@ -1596,6 +1596,10 @@ class PresentationSpeaker extends SilverstripeBaseModel
             if(!empty($fullname)) $fullname .= ' ';
             $fullname .= $this->last_name;
         }
+        if(empty($fullname) && $this->hasMember()){
+            $fullname = $this->member->getFullName();
+        }
+
         return $fullname;
     }
 

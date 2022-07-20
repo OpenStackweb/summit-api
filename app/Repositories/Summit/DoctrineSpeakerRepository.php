@@ -494,7 +494,7 @@ SQL,
 COALESCE(LOWER(m.last_name), LOWER(e.last_name)) 
 SQL,
             "full_name" => <<<SQL
-COALESCE(LOWER(CONCAT(m.first_name, ' ', m.last_name)), LOWER(CONCAT(e.first_name, ' ', e.last_name)))
+COALESCE(LOWER(CONCAT(e.first_name, ' ', e.last_name)), LOWER(CONCAT(m.first_name, ' ', m.last_name)))
 SQL,
             'email' => <<<SQL
 COALESCE(LOWER(m.email), LOWER(rr.email)) 

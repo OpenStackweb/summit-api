@@ -51,6 +51,7 @@ final class DoctrineSummitAttendeeTicketRepository
     protected function getFilterMappings()
     {
         return [
+            'id'                  => 'e.id:json_int',
             'number'              => 'e.number:json_string',
             'is_active'           => 'e.is_active',
             'order_number'        => 'o.number:json_string',

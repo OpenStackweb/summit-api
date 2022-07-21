@@ -26,6 +26,8 @@ use models\summit\PresentationType;
 use models\summit\Summit;
 use models\summit\SummitEvent;
 use models\summit\SummitGroupEvent;
+use models\summit\SummitSelectedPresentation;
+use models\summit\SummitSelectedPresentationList;
 use models\utils\SilverstripeBaseModel;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineCollectionFieldsFilterMapping;
@@ -213,7 +215,22 @@ final class DoctrineSummitEventRepository
                     ),
                     'accepted' => new DoctrineCaseFilterMapping(
                         'accepted',
-                        "ssp.order is not null and ssp.order <= cc.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category"
+                        "(ssp.order is not null and ssp.order <= cc.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category) OR e.published = 1"
+                    ),
+                    'rejected' => new DoctrineCaseFilterMapping(
+                        'rejected',
+                        sprintf('e.published = 0 AND NOT EXISTS (
+                                            SELECT ___sp31.id 
+                                            FROM models\summit\SummitSelectedPresentation ___sp31
+                                            JOIN ___sp31.presentation ___p31
+                                            JOIN ___sp31.list ___spl31 WITH ___spl31.list_type = \'%2$s\' AND ___spl31.list_class = \'%3$s\'
+                                            WHERE ___p31.id = e.id 
+                                            AND ___sp31.collection = \'%1$s\'
+                                        )',
+                            SummitSelectedPresentation::CollectionSelected,
+                            SummitSelectedPresentationList::Group,
+                            SummitSelectedPresentationList::Session
+                        )
                     ),
                     'alternate' => new DoctrineCaseFilterMapping(
                         'alternate',

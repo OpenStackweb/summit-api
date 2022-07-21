@@ -113,7 +113,8 @@ class AppServiceProvider extends ServiceProvider
         'to_record',
         'speakers',
         'moderator_speaker_id',
-        'groups'
+        'groups',
+        'selection_plan_id',
     ];
 
     static $event_dto_fields_publish = [
@@ -139,8 +140,8 @@ class AppServiceProvider extends ServiceProvider
         'head_count'                => 'sometimes|integer',
         'social_description'        => 'sometimes|string|max:100',
         'location_id'               => 'sometimes|integer',
-        'start_date'                => 'sometimes|date_format:U',
-        'end_date'                  => 'sometimes|required_with:start_date|date_format:U|after:start_date',
+        'start_date'                => 'sometimes|nullable|date_format:U',
+        'end_date'                  => 'sometimes|nullable|required_with:start_date|date_format:U|after:start_date',
         'allow_feedback'            => 'sometimes|boolean',
         'type_id'                   => 'sometimes|required|integer',
         'track_id'                  => 'sometimes|required|integer',
@@ -154,6 +155,7 @@ class AppServiceProvider extends ServiceProvider
         'moderator_speaker_id'      =>  'sometimes|integer',
         // group event
         'groups'                    =>  'sometimes|int_array',
+        'selection_plan_id'         =>  'sometimes|integer',
     ];
 
 

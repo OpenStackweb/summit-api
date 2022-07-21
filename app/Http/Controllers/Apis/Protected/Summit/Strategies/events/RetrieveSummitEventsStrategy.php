@@ -208,6 +208,7 @@ abstract class RetrieveSummitEventsStrategy
             'class_name' => 'sometimes|string|in:'.implode(',',[ Presentation::ClassName, SummitEvent::ClassName]),
             'presentation_attendee_vote_date'  => 'sometimes|date_format:U',
             'votes_count' => 'sometimes|integer',
+            'selection_status' => 'sometimes|string|in:selected,accepted,rejected,alternate,lightning-accepted,lightning-alternate',
         ];
     }
 }

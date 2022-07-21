@@ -496,6 +496,12 @@ class Summit extends SilverstripeBaseModel
     private $badge_types;
 
     /**
+     * @ORM\OneToMany(targetEntity="SummitBadgeViewType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var SummitBadgeViewType[]
+     */
+    private $badge_view_types;
+
+    /**
      * @ORM\OneToMany(targetEntity="SummitOrder", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var SummitOrder[]
      */
@@ -1069,6 +1075,7 @@ class Summit extends SilverstripeBaseModel
         $this->registration_companies = new ArrayCollection();
         $this->external_registration_feed_last_ingest_date = null;
         $this->speakers_announcement_emails = new ArrayCollection();
+        $this->badge_view_types = new ArrayCollection();
     }
 
     /**

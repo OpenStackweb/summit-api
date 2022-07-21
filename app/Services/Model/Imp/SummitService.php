@@ -988,37 +988,51 @@ final class SummitService extends AbstractService implements ISummitService
 
         if (isset($data['selection_plan_id'])) {
             $selection_plan_id = intval($data['selection_plan_id']);
-            $selection_plan = $event->getSummit()->getSelectionPlanById($selection_plan_id);
-            if (!is_null($selection_plan)) {
-                $track = $event->getCategory();
-                $type = $event->getType();
-                if (!$selection_plan->hasTrack($track)) {
-                    throw new ValidationException
-                    (
-                        sprintf
+            if($selection_plan_id > 0) {
+                $selection_plan = $event->getSummit()->getSelectionPlanById($selection_plan_id);
+                if (!is_null($selection_plan)) {
+                    $track = $event->getCategory();
+                    $type = $event->getType();
+                    if (!$selection_plan->hasTrack($track)) {
+                        throw new ValidationException
                         (
-                            "Track %s (%s) does not belongs to Selection Plan %s (%s).",
-                            $track->getTitle(),
-                            $track->getId(),
-                            $selection_plan->getName(),
-                            $selection_plan->getId()
-                        )
-                    );
-                }
-                if (!$selection_plan->hasEventType($type)) {
-                    throw new ValidationException
-                    (
-                        sprintf
+                            sprintf
+                            (
+                                "Track %s (%s) does not belongs to Selection Plan %s (%s).",
+                                $track->getTitle(),
+                                $track->getId(),
+                                $selection_plan->getName(),
+                                $selection_plan->getId()
+                            )
+                        );
+                    }
+                    if (!$selection_plan->hasEventType($type)) {
+                        throw new ValidationException
                         (
-                            "Type %s (%s) does not belongs to Selection Plan %s (%s).",
-                            $type->getType(),
-                            $type->getId(),
-                            $selection_plan->getName(),
-                            $selection_plan->getId()
-                        )
-                    );
+                            sprintf
+                            (
+                                "Type %s (%s) does not belongs to Selection Plan %s (%s).",
+                                $type->getType(),
+                                $type->getId(),
+                                $selection_plan->getName(),
+                                $selection_plan->getId()
+                            )
+                        );
+                    }
+                    $event->setSelectionPlan($selection_plan);
                 }
-                $event->setSelectionPlan($selection_plan);
+            }
+            else{
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitService::saveOrUpdatePresentationData clearing selection plan for presentation %s",
+                        $event->getId()
+                    )
+                );
+
+                $event->clearSelectionPlan();
             }
         }
 

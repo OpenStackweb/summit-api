@@ -1346,25 +1346,27 @@ final class SpeakerService
         $page = 1;
         $count = 0;
         $maxPageSize = 100;
+        EmailExcerpt::clearReport();
+
+        Log::debug(sprintf("SpeakerService::send summit id %s flow_event %s filter %s",
+            $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString()));
+
+        EmailExcerpt::addInfoMessage(
+            sprintf("Processing EMAIL %s for summit %s", $flow_event, $summit_id)
+        );
+
+        $summit = $this->tx_service->transaction(function () use($summit_id){
+            $summit = $this->summit_repository->getById($summit_id);
+            if (is_null($summit) || !$summit instanceof Summit) return null;
+            return $summit;
+        });
+
+        if(is_null($summit)){
+            Log::debug("SpeakerService::send summit is null");
+            return;
+        }
 
         do {
-            Log::debug(sprintf("SpeakerService::send summit id %s flow_event %s filter %s",
-                $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString()));
-
-            EmailExcerpt::addInfoMessage(
-                sprintf("Processing EMAIL %s for summit %s", $flow_event, $summit_id)
-            );
-
-            $summit = $this->tx_service->transaction(function () use($summit_id){
-                $summit = $this->summit_repository->getById($summit_id);
-                if (is_null($summit) || !$summit instanceof Summit) return null;
-                return $summit;
-            });
-
-            if(is_null($summit)){
-                Log::debug("SpeakerService::send summit is null");
-                return;
-            }
 
             $ids = $this->tx_service->transaction(function () use ($summit, $payload, $filter, $page, $maxPageSize) {
                 if (isset($payload['speaker_ids'])) {
@@ -1389,8 +1391,6 @@ final class SpeakerService
                 Log::debug(sprintf("SpeakerService::send summit id %s page is empty, ending processing.", $summit_id));
                 break;
             }
-
-            EmailExcerpt::clearReport();
 
             $email_strategy = new SpeakerActionsEmailStrategy($summit, $flow_event);
 

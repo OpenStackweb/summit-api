@@ -119,4 +119,28 @@ interface ISponsoredProjectService
      * @throws EntityNotFoundException
      */
     public function deleteLogo(int $project_id):void;
+
+    /**
+     * @param int $project_id
+     * @param array $payload
+     * @return SponsoredProject
+     * @throws ValidationException
+     */
+    public function addSubproject(int $project_id, array $payload):SponsoredProject;
+
+    /**
+     * @param int $project_id
+     * @param int $subproject_id
+     * @param array $payload
+     * @return SponsoredProject
+     * @throws ValidationException
+     */
+    public function updateSubproject(int $project_id, int $subproject_id, array $payload):SponsoredProject;
+
+    /**
+     * @param int $project_id
+     * @param int $subproject_id
+     * @throws ValidationException
+     */
+    public function removeSubproject(int $project_id, int $subproject_id);
 }

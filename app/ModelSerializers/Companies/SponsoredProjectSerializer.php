@@ -27,12 +27,17 @@ final class SponsoredProjectSerializer extends SilverStripeSerializer
         'SiteURL' => 'site_url:json_url',
         'LogoUrl' => 'logo_url:json_url',
         'SponsorshipTypesIds' => 'sponsorship_types',
+        'SubprojectIds' => 'subprojects',
     ];
 
     protected static $expand_mappings = [
         'sponsorship_types' => [
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getSponsorshipTypes',
+        ],
+        'subprojects' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getSubProjects',
         ]
     ];
 }

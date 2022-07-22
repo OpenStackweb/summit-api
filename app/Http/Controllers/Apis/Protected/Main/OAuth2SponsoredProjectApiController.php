@@ -20,6 +20,7 @@ use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Log;
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
+use models\main\SponsoredProject;
 use models\oauth2\IResourceServerContext;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
@@ -456,4 +457,43 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         });
     }
 
+    //  subprojects
+
+    /**
+     * @param $id string|int
+     */
+    public function getSubprojects($id)
+    {
+        return $this->_getAll(
+            function () {
+                return [
+                    'name' => ['=@', '=='],
+                    'slug' => ['=@', '=='],
+                    'is_active' => ['==']
+                ];
+            },
+            function () {
+                return [
+                    'is_active' => 'sometimes|boolean',
+                    'name' => 'sometimes|string',
+                    'slug' => 'sometimes|string',
+                ];
+            },
+            function () {
+                return [
+                    'name',
+                    'id'
+                ];
+            },
+            function ($filter) use($id) {
+                if($filter instanceof Filter){
+                    $filter->addFilterCondition(FilterElement::makeEqual('parent_project_id', intval($id)));
+                }
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            }
+        );
+    }
 }

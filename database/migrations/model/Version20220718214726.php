@@ -32,7 +32,7 @@ class Version20220718214726 extends AbstractMigration
             $builder->table('SponsoredProject', function (Table $table) {
                 $table->integer("ParentProjectID", false, false)->setNotnull(false)->setDefault('NULL');
                 $table->index("ParentProjectID", "ParentProjectID");
-                $table->foreign("ParentProject", "ParentProjectID", "ID", ["onDelete" => "CASCADE"]);
+                $table->foreign("SponsoredProject", "ParentProjectID", "ID", ["onDelete" => "SET NULL"], 'FK_Parent_SubProject');
             });
         }
     }

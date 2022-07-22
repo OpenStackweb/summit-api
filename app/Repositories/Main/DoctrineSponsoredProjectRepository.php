@@ -32,6 +32,7 @@ final class DoctrineSponsoredProjectRepository
             'name' => 'e.name:json_string',
             'slug' => 'e.slug:json_string',
             'is_active' => 'e.is_active:json_int',
+            'parent_project_id' => 'e.parent_project:json_int',
         ];
     }
 

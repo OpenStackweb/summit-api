@@ -123,6 +123,10 @@ Route::group(['prefix' => 'sponsored-projects'], function () {
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SponsoredProjectApiController@addSponsoredProjectLogo']);
             Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SponsoredProjectApiController@deleteSponsoredProjectLogo']);
         });
+
+        Route::group(['prefix' => 'subprojects'], function () {
+            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SponsoredProjectApiController@getSubprojects']);
+        });
     });
 });
 

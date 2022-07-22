@@ -12,6 +12,9 @@
  * limitations under the License.
  **/
 use Illuminate\Http\UploadedFile;
+use LaravelDoctrine\ORM\Facades\EntityManager;
+use models\main\SponsoredProject;
+
 /**
  * Class OAuth2SponsoredProjectsApiTest
  */
@@ -99,9 +102,7 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTest
         return $sponsored_project;
     }
 
-    public function testGelAll()
-    {
-
+    public function testGetAll(){
         $params = [
             //AND FILTER
             'filter' => ['name=@sponsored project'],
@@ -403,6 +404,144 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTest
         $response = $this->action(
             "DELETE",
             "OAuth2SponsoredProjectApiController@deleteSponsoredProjectLogo",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(204);
+    }
+
+    public function testAddSubproject(){
+        $data = [
+            'name' => str_random(16).'_sponsored project',
+            'description' => str_random(16).'_sponsored project description',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SponsoredProjectApiController@add",
+            [],
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $sponsored_projects = json_decode($content);
+        $this->assertTrue(!is_null($sponsored_projects));
+
+        $data = [
+            'parent_project_id' => $sponsored_projects->id,
+            'name'              => str_random(16).'_sponsored subproject',
+            'description'       => str_random(16).'_sponsored subproject description',
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SponsoredProjectApiController@add",
+            [],
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $subproject = json_decode($content);
+        $this->assertTrue(!is_null($subproject));
+        return $subproject;
+    }
+
+    public function testUpdateSubproject(){
+        $added_subproject_id = $this->testAddSubproject()->id;
+        $sponsored_project_repository = EntityManager::getRepository(SponsoredProject::class);
+        $subproject = $sponsored_project_repository->find($added_subproject_id);
+
+        $params = [
+            'id' => $subproject->getId(),
+        ];
+
+        $data = [
+            'parent_project_id' => 1,
+            'name'              => str_random(16).'_sponsored subproject updated',
+            'description'       => str_random(16).'_sponsored subproject description updated',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SponsoredProjectApiController@update",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+        $this->assertResponseStatus(201);
+    }
+
+    public function testGetSubprojects(){
+        $added_subproject_id = $this->testAddSubproject()->id;
+        $sponsored_project_repository = EntityManager::getRepository(SponsoredProject::class);
+        $subproject = $sponsored_project_repository->find($added_subproject_id);
+
+        $params = [
+            'id' => $subproject->getParentProject()->getId(),
+        ];
+
+        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
+        $response = $this->action(
+            "GET",
+            "OAuth2SponsoredProjectApiController@getSubprojects",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $content = $response->getContent();
+        $subprojects = json_decode($content);
+        $this->assertResponseStatus(200);
+        $this->assertNotEmpty($subprojects);
+    }
+
+    public function testDeleteSponsoredProjectWithSubprojects(){
+        $added_subproject_id = $this->testAddSubproject()->id;
+        $sponsored_project_repository = EntityManager::getRepository(SponsoredProject::class);
+        $subproject = $sponsored_project_repository->find($added_subproject_id);
+
+        $params = [
+            'id' => $subproject->getParentProject()->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SponsoredProjectApiController@delete",
             $params,
             [],
             [],

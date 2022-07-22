@@ -71,7 +71,7 @@ class SponsoredProject extends SilverstripeBaseModel
     protected $logo;
 
     /**
-     * @ORM\OneToMany(targetEntity="SponsoredProject", mappedBy="parent_project")
+     * @ORM\OneToMany(targetEntity="SponsoredProject", mappedBy="parent_project", cascade={"persist","remove"})
      * @var ArrayCollection
      */
     private $sub_projects;
@@ -308,6 +308,24 @@ class SponsoredProject extends SilverstripeBaseModel
     }
 
     /**
+     * @return int
+     */
+    public function getParentProjectId(): int {
+        try {
+            return !is_null($this->parent_project) ? $this->parent_project->getId() : 0;
+        } catch(\Exception $ex){
+            return 0;
+        }
+    }
+
+    /**
+     * @return SponsoredProject|null
+     */
+    public function getParentProject():?SponsoredProject{
+        return $this->parent_project;
+    }
+
+    /**
      * @param SponsoredProject $sponsored_project
      */
     public function setParentProject(SponsoredProject $sponsored_project): void{
@@ -325,15 +343,31 @@ class SponsoredProject extends SilverstripeBaseModel
         return $this->sub_projects;
     }
 
+    /**
+     * @return array|int[]
+     */
+    public function getSubProjectIds(): array {
+        $res = [];
+        foreach($this->sub_projects as $item){
+            $res[] = $item->getId();
+        }
+        return $res;
+    }
+
+    /**
+     * @param int $id
+     * @return SponsoredProject|null
+     */
+    public function getSubprojectById(int $id):?SponsoredProject{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $id));
+        $subProject = $this->sub_projects->matching($criteria)->first();
+        return $subProject === false ? null : $subProject;
+    }
+
     public function addSubProject(SponsoredProject $subProject){
         if($this->sub_projects->contains($subProject)) return;
         $this->sub_projects->add($subProject);
         $subProject->setParentProject($this);
-    }
-
-    public function removeSubProject(SponsoredProject $subProject){
-        if(!$this->sub_projects->contains($subProject)) return;
-        $this->sub_projects->removeElement($subProject);
-        $subProject->clearParentProject();
     }
 }

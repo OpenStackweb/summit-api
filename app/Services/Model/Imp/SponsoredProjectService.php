@@ -97,6 +97,15 @@ final class SponsoredProjectService
 
             $sponsoredProject = SponsoredProjectFactory::build($payload);
 
+            if(isset($payload['parent_project_id'])) {
+                $parentProject = $this->repository->getById(intval($payload['parent_project_id']));
+
+                if(is_null($parentProject) || !$parentProject instanceof SponsoredProject)
+                    throw new EntityNotFoundException(sprintf("sponsored project parent %s not found.", $payload['parent_project_id']));
+
+                $sponsoredProject->setParentProject($parentProject);
+            }
+
             $this->repository->add($sponsoredProject);
 
             return $sponsoredProject;
@@ -123,6 +132,15 @@ final class SponsoredProjectService
                 throw new EntityNotFoundException(sprintf("sponsored project %s not found.", $project_id));
 
             SponsoredProjectFactory::populate($sponsoredProject, $payload);
+
+            if(isset($payload['parent_project_id'])) {
+                $parentProject = $this->repository->getById(intval($payload['parent_project_id']));
+
+                if(is_null($parentProject) || !$parentProject instanceof SponsoredProject)
+                    throw new EntityNotFoundException(sprintf("sponsored project parent %s not found.", $project_id));
+
+                $sponsoredProject->setParentProject($parentProject);
+            }
 
             return $sponsoredProject;
         });

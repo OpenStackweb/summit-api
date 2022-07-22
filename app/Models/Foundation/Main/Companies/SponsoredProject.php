@@ -71,7 +71,7 @@ class SponsoredProject extends SilverstripeBaseModel
     protected $logo;
 
     /**
-     * @ORM\OneToMany(targetEntity="SponsoredProject", mappedBy="parent_project")
+     * @ORM\OneToMany(targetEntity="SponsoredProject", mappedBy="parent_project", cascade={"persist","remove"})
      * @var ArrayCollection
      */
     private $sub_projects;
@@ -308,6 +308,13 @@ class SponsoredProject extends SilverstripeBaseModel
     }
 
     /**
+     * @return SponsoredProject|null
+     */
+    public function getParentProject():?SponsoredProject{
+        return $this->parent_project;
+    }
+
+    /**
      * @param SponsoredProject $sponsored_project
      */
     public function setParentProject(SponsoredProject $sponsored_project): void{
@@ -323,6 +330,17 @@ class SponsoredProject extends SilverstripeBaseModel
      */
     public function getSubProjects(): Collection{
         return $this->sub_projects;
+    }
+
+    /**
+     * @param int $id
+     * @return SponsoredProject|null
+     */
+    public function getSubprojectById(int $id):?SponsoredProject{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $id));
+        $subProject = $this->sub_projects->matching($criteria)->first();
+        return $subProject === false ? null : $subProject;
     }
 
     public function addSubProject(SponsoredProject $subProject){

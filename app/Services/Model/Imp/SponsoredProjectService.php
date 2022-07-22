@@ -371,4 +371,62 @@ final class SponsoredProjectService
             }
         });
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function addSubproject(int $project_id, array $payload):SponsoredProject
+    {
+        return $this->tx_service->transaction(function() use ($project_id, $payload){
+            $sponsoredProject = $this->repository->getById($project_id);
+
+            if(is_null($sponsoredProject) || !$sponsoredProject instanceof SponsoredProject)
+                throw new EntityNotFoundException(sprintf("sponsored project %s not found.", $project_id));
+
+            $subProject = SponsoredProjectFactory::build($payload);
+            $sponsoredProject->addSubProject($subProject);
+
+            return $subProject;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function updateSubproject(int $project_id, int $subproject_id, array $payload):SponsoredProject
+    {
+        return $this->tx_service->transaction(function() use ($project_id, $subproject_id, $payload){
+            $sponsoredProject = $this->repository->getById($project_id);
+
+            if(is_null($sponsoredProject) || !$sponsoredProject instanceof SponsoredProject)
+                throw new EntityNotFoundException(sprintf("sponsored project %s not found.", $project_id));
+
+            $subProject = $sponsoredProject->getSubprojectById($subproject_id);
+
+            if(is_null($subProject) || !$subProject instanceof SponsoredProject)
+                throw new EntityNotFoundException(sprintf("sponsored subproject %s not found.", $project_id));
+
+            return SponsoredProjectFactory::populate($subProject, $payload);
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function removeSubproject(int $project_id, int $subproject_id)
+    {
+        return $this->tx_service->transaction(function() use ($project_id, $subproject_id){
+            $sponsoredProject = $this->repository->getById($project_id);
+
+            if(is_null($sponsoredProject) || !$sponsoredProject instanceof SponsoredProject)
+                throw new EntityNotFoundException(sprintf("sponsored project %s not found.", $project_id));
+
+            $subProject = $sponsoredProject->getSubprojectById($subproject_id);
+
+            if(is_null($subProject) || !$subProject instanceof SponsoredProject)
+                throw new EntityNotFoundException(sprintf("sponsored subproject %s not found.", $project_id));
+
+            $sponsoredProject->removeSubProject($subProject);
+        });
+    }
 }

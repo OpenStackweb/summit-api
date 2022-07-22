@@ -13,6 +13,7 @@
  **/
 use App\Jobs\Emails\AbstractEmailJob;
 use Illuminate\Support\Facades\Config;
+use libs\utils\FormatUtils;
 use models\summit\SummitOrder;
 /**
  * Class SummitOrderRefundRequestAdmin
@@ -42,6 +43,9 @@ class SummitOrderRefundRequestAdmin extends AbstractEmailJob
         $payload['owner_email']     = $order->getOwnerEmail();
         $payload['owner_company']   = $order->getOwnerCompanyName();
         $payload['order_number']    = $order->getNumber();
+        $payload['order_amount'] = FormatUtils::getNiceFloat($order->getFinalAmount());
+        $payload['order_currency'] = $order->getCurrency();
+        $payload['order_currency_symbol'] = $order->getCurrencySymbol();
         $payload['summit_name']     = $order->getSummit()->getName();
         $payload['summit_logo']     = $order->getSummit()->getLogoUrl();
         $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();

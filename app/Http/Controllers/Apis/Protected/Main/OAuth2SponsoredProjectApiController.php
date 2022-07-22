@@ -20,6 +20,7 @@ use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Log;
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
+use models\main\SponsoredProject;
 use models\oauth2\IResourceServerContext;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
@@ -456,4 +457,77 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         });
     }
 
+    //  subprojects
+
+    /**
+     * @param $id
+     * @param $subproject_id
+     * @return mixed
+     */
+    public function getSubproject($id, $subproject_id){
+        return $this->_get($id, function($id, $subproject_id){
+            $sponsored_project = $this->repository->getById(intval($id));
+            if(is_null($sponsored_project)  || !$sponsored_project instanceof SponsoredProject)
+                throw new EntityNotFoundException();
+            return $sponsored_project->getSubprojectById($subproject_id);
+        }, intval($subproject_id));
+    }
+
+    /**
+     * @param $id
+     * @return mixed
+     */
+    public function addSubproject($id){
+        $args = [intval($id)];
+        return $this->_add(
+            function ($payload) {
+                return SponsoredProjectValidationRulesFactory::buildForAdd($payload);
+            },
+            function ($payload, $id){
+                return $this->service->addSubproject($id, HTMLCleaner::cleanData($payload, ['description']));
+            },
+            ...$args
+        );
+    }
+
+    /**
+     * @param $id
+     * @param $subproject_id
+     * @return mixed
+     */
+    public function updateSubproject($id, $subproject_id){
+        $project_id = intval($id);
+        $subproject_id = intval($subproject_id);
+        return $this->_update($subproject_id,
+            function($payload){
+                return SponsoredProjectValidationRulesFactory::buildForUpdate($payload);
+            },
+            function($subproject_id, $payload, $project_id){
+                return $this->service->updateSubproject
+                (
+                    $project_id,
+                    $subproject_id,
+                    $payload
+                );
+            },
+            $project_id
+        );
+    }
+
+    /**
+     * @param $id
+     * @param $subproject_id
+     * @return mixed
+     */
+    public function deleteSubproject($id, $subproject_id){
+        $args = [ intval($id) ];
+
+        return $this->_delete(
+            $subproject_id,
+            function ($subproject_id, $project_id){
+                $this->service->removeSubproject($project_id, $subproject_id);
+            },
+            ...$args
+        );
+    }
 }

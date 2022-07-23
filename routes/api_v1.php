@@ -1149,8 +1149,24 @@ Route::group(array('prefix' => 'summits'), function () {
                     Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@getAttendeeBadge']);
                     Route::group(['prefix' => 'current'], function () {
                         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@deleteAttendeeBadge']);
-                        Route::get('print', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@canPrintAttendeeBadge']);
-                        Route::put('print', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@printAttendeeBadge']);
+
+
+                        // printing endpoints
+
+                        // legacy ( default )
+                        Route::group(['prefix' => 'print'], function () {
+                            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@canPrintAttendeeBadgeDefault']);
+                            Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@printAttendeeBadgeDefault']);
+                        });
+
+                        // view type
+                        Route::group(['prefix' => '{view_type}'], function () {
+                            Route::group(['prefix' => 'print'], function () {
+                                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@canPrintAttendeeBadge']);
+                                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@printAttendeeBadge']);
+                            });
+                        });
+
                         Route::group(['prefix' => 'features'], function () {
                             Route::group(['prefix' => '{feature_id}'], function () {
                                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@addAttendeeBadgeFeature']);

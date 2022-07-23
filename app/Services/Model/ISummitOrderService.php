@@ -17,6 +17,7 @@ use models\main\Member;
 use models\summit\Summit;
 use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
+use models\summit\SummitBadgeViewType;
 use models\summit\SummitOrder;
 use Illuminate\Http\UploadedFile;
 /**
@@ -278,23 +279,25 @@ interface ISummitOrderService extends IProcessPaymentService
     /**
      * @param Summit $summit
      * @param int|string $ticket_id
+     * @param string $viewType
      * @param Member $requestor
      * @return SummitAttendeeBadge
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function canPrintAttendeeBadge(Summit $summit, $ticket_id, Member $requestor): SummitAttendeeBadge;
+    public function canPrintAttendeeBadge(Summit $summit, $ticket_id, string $viewTypeName, Member $requestor): SummitAttendeeBadge;
 
     /**
      * @param Summit $summit
      * @param int|string $ticket_id
+     * @param string $viewType
      * @param Member $requestor
      * @param array $payload
      * @return SummitAttendeeBadge
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function printAttendeeBadge(Summit $summit, $ticket_id, Member $requestor, array $payload = []):SummitAttendeeBadge;
+    public function printAttendeeBadge(Summit $summit, $ticket_id, string $viewTypeName, Member $requestor, array $payload = []):SummitAttendeeBadge;
 
     /**
      * @param Summit $summit

@@ -76,6 +76,16 @@ class SummitBadgeType extends SilverstripeBaseModel
     private $badge_features;
 
     /**
+     * @ORM\ManyToMany(targetEntity="SummitBadgeViewType")
+     * @ORM\JoinTable(name="SummitBadgeViewType_SummitBadgeType",
+     *      joinColumns={@ORM\JoinColumn(name="SummitBadgeTypeID", referencedColumnName="ID")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="SummitBadgeViewTypeID", referencedColumnName="ID")}
+     *      )
+     * @var SummitBadgeViewType[]
+     */
+    private $allowed_view_types;
+
+    /**
      * @return string
      */
     public function getName(): string
@@ -146,6 +156,7 @@ class SummitBadgeType extends SilverstripeBaseModel
         $this->default          = false;
         $this->badge_features   = new ArrayCollection();
         $this->access_levels    = new ArrayCollection();
+        $this->allowed_view_types = new ArrayCollection();
     }
 
     /**
@@ -254,4 +265,25 @@ class SummitBadgeType extends SilverstripeBaseModel
         return $badge;
     }
 
+    public function getAllowedViewTypes(){
+        return $this->allowed_view_types;
+    }
+
+    public function addAllowedViewType(SummitBadgeViewType $viewType){
+        if($this->allowed_view_types->contains($viewType)) return;
+        $this->allowed_view_types->add($viewType);
+    }
+
+    /**
+     * @param SummitBadgeViewType $viewType
+     * @return bool
+     */
+    public function allowsViewType(SummitBadgeViewType $viewType):bool{
+        return $this->allowed_view_types->contains($viewType);
+    }
+
+    public function removeAllowedViewType(SummitBadgeViewType $viewType){
+        if(!$this->allowed_view_types->contains($viewType)) return;
+        $this->allowed_view_types->removeElement($viewType);
+    }
 }

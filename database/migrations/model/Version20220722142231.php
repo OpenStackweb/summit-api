@@ -11,16 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Database\Utils\DBHelpers;
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
 use LaravelDoctrine\Migrations\Schema\Builder;
 use LaravelDoctrine\Migrations\Schema\Table;
 
 /**
- * Class Version20220720202655
+ * Class Version20220722142231
  * @package Database\Migrations\Model
  */
-final class Version20220720202655 extends AbstractMigration
+final class Version20220722142231 extends AbstractMigration
 {
     /**
      * @param Schema $schema
@@ -28,30 +30,14 @@ final class Version20220720202655 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $builder = new Builder($schema);
-
-        if (!$schema->hasTable("SummitBadgeViewType_SummitBadgeType")) {
-
-            $builder->create('SummitBadgeViewType_SummitBadgeType', function (Table $table) {
-                $table->integer("ID", true, false);
-                $table->primary("ID");
-                $table->string('ClassName')->setDefault("SummitBadgeViewType");
-                $table->index("ClassName", "ClassName");
-
+        if (!$schema->hasTable("SummitAttendeeBadgePrint")) {
+            $builder->table('', function(Table $table){
                 // FK
-
                 $table->integer("SummitBadgeViewTypeID", false, false)->setNotnull(false);
                 $table->index("SummitBadgeViewTypeID", "SummitBadgeViewTypeID");
-                $table->foreign("SummitBadgeViewType", "SummitBadgeViewTypeID", "ID", ["onDelete" => "CASCADE"], "FK_SummitBadgeViewType_SummitBadgeType_SummitBadgeViewType");
-
-                $table->integer("SummitBadgeTypeID", false, false)->setNotnull(false);
-                $table->index("SummitBadgeTypeID", "SummitBadgeTypeID");
-                $table->foreign("SummitBadgeType", "SummitBadgeTypeID", "ID", ["onDelete" => "CASCADE"], "FK_SummitBadgeViewType_SummitBadgeType_SummitBadgeType");
-
-                $table->unique("SummitBadgeViewTypeID", "SummitBadgeTypeID");
-
+                $table->foreign("SummitBadgeViewType", "SummitBadgeViewTypeID", "ID", ["onDelete" => "SET NULL"], "FK_SummitAttendeeBadgePrint_SummitBadgeViewType");
             });
         }
-
     }
 
     /**
@@ -59,8 +45,16 @@ final class Version20220720202655 extends AbstractMigration
      */
     public function down(Schema $schema): void
     {
-        if ($schema->hasTable("SummitBadgeViewType_SummitBadgeType")) {
-            $schema->dropTable("SummitBadgeViewType_SummitBadgeType");
+        $builder = new Builder($schema);
+
+        if(DBHelpers::existsFK(env('SS_DATABASE'), "SummitAttendeeBadgePrint", "FK_SummitAttendeeBadgePrint_SummitBadgeViewType")){
+           DBHelpers::dropFK(env('SS_DATABASE'), "SummitAttendeeBadgePrint", "FK_SummitAttendeeBadgePrint_SummitBadgeViewType");
+        }
+
+        if (!$schema->hasTable("SummitAttendeeBadgePrint")) {
+            $builder->table('', function(Table $table) {
+                $table->dropColumn("SummitBadgeViewTypeID");
+            });
         }
     }
 }

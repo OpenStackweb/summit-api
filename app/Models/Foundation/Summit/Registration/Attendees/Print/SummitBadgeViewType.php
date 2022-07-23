@@ -47,6 +47,12 @@ class SummitBadgeViewType extends SilverstripeBaseModel
      */
     private $default;
 
+    public function __construct()
+    {
+        parent::__construct();
+        $this->default = false;
+    }
+
     /**
      * @return string
      */

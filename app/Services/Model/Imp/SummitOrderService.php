@@ -55,6 +55,7 @@ use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitBadgeType;
+use models\summit\SummitBadgeViewType;
 use models\summit\SummitOrder;
 use models\summit\SummitOrderExtraQuestionTypeConstants;
 use models\summit\SummitRegistrationPromoCode;
@@ -2473,15 +2474,21 @@ final class SummitOrderService
     /**
      * @param Member $requestor
      * @param SummitAttendeeBadge $badge
+     * @param SummitBadgeViewType $viewType
      * @return bool
      * @throws ValidationException
      */
-    private function checkPrintingRights(Member $requestor, SummitAttendeeBadge $badge):bool{
+    private function checkPrintingRights(Member $requestor, SummitAttendeeBadge $badge, SummitBadgeViewType $viewType):bool{
         // check rules
 
-        $al = $badge->getType()->getAccessLevelByName(SummitAccessLevelType::IN_PERSON);
+        $type = $badge->getType();
+        $al = $type->getAccessLevelByName(SummitAccessLevelType::IN_PERSON);
         if(is_null($al)) {
             throw new ValidationException("You have a Virtual only ticket.");
+        }
+
+        if(!$type->addAllowedViewType($viewType)){
+            throw new ValidationException(sprintf("View Type %s is not allowed.", $viewType->getName()));
         }
 
         if (!$requestor->isAdmin()) {
@@ -2539,35 +2546,44 @@ final class SummitOrderService
     /**
      * @param Summit $summit
      * @param int|string $ticket_id
+     * @param string $viewTypeName
      * @param Member $requestor
      * @param array $payload
      * @return SummitAttendeeBadge
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function printAttendeeBadge(Summit $summit, $ticket_id, Member $requestor, array $payload = []): SummitAttendeeBadge
+    public function printAttendeeBadge(Summit $summit, $ticket_id, string $viewTypeName, Member $requestor, array $payload = []): SummitAttendeeBadge
     {
-        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $requestor, $payload) {
+        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $viewTypeName, $requestor, $payload) {
 
             Log::debug
             (
                 sprintf
                 (
-                    "SummitOrderService::printAttendeeBadge summit %s ticket %s payload %s",
+                    "SummitOrderService::printAttendeeBadge summit %s ticket %s view %s payload %s",
                     $summit->getId(),
                     $ticket_id,
+                    $viewTypeName,
                     json_encode($payload)
                 )
             );
 
+            $viewType = $summit->getBadgeViewTypeByName($viewTypeName);
+
+            if(is_null($viewType)){
+                throw new EntityNotFoundException(sprintf("View Type %s not found.", $viewTypeName));
+            }
+
             $badge = $this->getAttendeeBadge($summit, $ticket_id, $requestor);
 
-            $this->checkPrintingRights($requestor, $badge);
+            $this->checkPrintingRights($requestor, $badge, $viewType);
 
-            $badge->printIt($requestor);
+            $badge->printIt($requestor, $viewType);
 
             // do checkin on print
             $attendee = $badge->getTicket()->getOwner();
+
             $must_check_in = $payload['check_in'] ?? true;
             if ($must_check_in && !$attendee->hasCheckedIn()) {
                 $attendee->setSummitHallCheckedIn(true);
@@ -2580,17 +2596,23 @@ final class SummitOrderService
     /**
      * @param Summit $summit
      * @param int|string $ticket_id
+     * @param string $viewType
      * @param Member $requestor
      * @return SummitAttendeeBadge
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function canPrintAttendeeBadge(Summit $summit, $ticket_id, Member $requestor): SummitAttendeeBadge
+    public function canPrintAttendeeBadge(Summit $summit, $ticket_id, string $viewType, Member $requestor): SummitAttendeeBadge
     {
-        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $requestor) {
+        return $this->tx_service->transaction(function () use ($summit, $ticket_id, $viewType, $requestor) {
+
+            $view = $summit->getBadgeViewTypeByName($viewType);
+            if(is_null($view)){
+                throw new EntityNotFoundException(sprintf("View Type %s not found.", $viewType));
+            }
             $badge = $this->getAttendeeBadge($summit, $ticket_id, $requestor);
+            $this->checkPrintingRights($requestor, $badge, $view);
             $badge->generateQRCode();
-            $this->checkPrintingRights($requestor, $badge);
             return $badge;
         });
     }

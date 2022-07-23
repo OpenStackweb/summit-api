@@ -6431,4 +6431,52 @@ SQL;
             return 0;
         }
     }
+
+    public function getBadgeViewTypes(){
+        return $this->badge_view_types;
+    }
+
+    /**
+     * @return SummitBadgeViewType|null
+     */
+    public function getDefaultBadgeViewType():?SummitBadgeViewType{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('default', true));
+        $res = $this->badge_view_types->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    /**
+     * @param string $name
+     * @return SummitBadgeViewType|null
+     */
+    public function getBadgeViewTypeByName(string $name):?SummitBadgeViewType{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('name', trim($name)));
+        $res = $this->badge_view_types->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    /**
+     * @param int $id
+     * @return SummitBadgeViewType|null
+     */
+    public function getBadgeViewTypeById(int $id):?SummitBadgeViewType{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $id));
+        $res = $this->badge_view_types->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    public function addBadgeViewType(SummitBadgeViewType $viewType){
+        if($this->badge_view_types->contains($viewType)) return;
+        $this->badge_view_types->add($viewType);
+        $viewType->setSummit($this);
+    }
+
+    public function removeBadgeViewType(SummitBadgeViewType $viewType){
+        if(!$this->badge_view_types->contains($viewType)) return;
+        $this->badge_view_types->removeElement($viewType);
+        $viewType->clearSummit();;
+    }
 }

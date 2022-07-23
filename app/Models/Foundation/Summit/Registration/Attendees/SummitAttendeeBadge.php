@@ -107,15 +107,15 @@ class SummitAttendeeBadge extends SilverstripeBaseModel implements IQREntity
     {
         $ticket = $this->getTicket();
         if(is_null($ticket))
-            throw new ValidationException("ticket is not set");
+            throw new ValidationException("ticket is not set.");
 
         $order  = $ticket->getOrder();
         if(is_null($order))
-            throw new ValidationException("order is not set");
+            throw new ValidationException("order is not set.");
 
         $summit = $order->getSummit();
         if(is_null($summit))
-            throw new ValidationException("summit is not set");
+            throw new ValidationException("summit is not set.");
 
         $this->qr_code = $this->generateQRFromFields([
             $summit->getBadgeQRPrefix(),
@@ -252,10 +252,11 @@ class SummitAttendeeBadge extends SilverstripeBaseModel implements IQREntity
 
     /**
      * @param Member $requestor
+     * @param SummitBadgeViewType $viewType
      * @return SummitAttendeeBadgePrint
      * @throws ValidationException
      */
-    public function printIt(Member $requestor):SummitAttendeeBadgePrint{
+    public function printIt(Member $requestor, SummitBadgeViewType $viewType):SummitAttendeeBadgePrint{
         if(!$this->ticket->hasOwner())
             throw new ValidationException("badge has not owner set");
 
@@ -263,7 +264,7 @@ class SummitAttendeeBadge extends SilverstripeBaseModel implements IQREntity
             throw new ValidationException("badge is void");
         }
         $this->generateQRCode();
-        $print = SummitAttendeeBadgePrint::build($this, $requestor);
+        $print = SummitAttendeeBadgePrint::build($this, $requestor, $viewType);
         $this->prints->add($print);
         return $print;
     }

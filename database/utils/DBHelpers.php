@@ -39,4 +39,23 @@ SQL;
         }
         return false;
     }
+
+    /**
+     * @param string $db
+     * @param string $table
+     * @param string $fk
+     * @return bool
+     */
+    public static function dropFK(string $db, string $table, string $fk):bool{
+
+        $sql = <<<SQL
+alter table $table
+    drop foreign key $fk;
+SQL;
+        $res = DB::update($sql);
+        if($res){
+            return true;
+        }
+        return false;
+    }
 }

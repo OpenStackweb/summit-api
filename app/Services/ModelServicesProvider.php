@@ -24,10 +24,12 @@ use App\Services\FileSystem\Swift\SwiftStorageFileDownloadStrategy;
 use App\Services\FileSystem\Swift\SwiftStorageFileUploadStrategy;
 use App\Services\Model\AttendeeService;
 use App\Services\Model\IAttendeeService;
+use App\Services\Model\IBadgeViewTypeService;
 use App\Services\Model\ICompanyService;
 use App\Services\Model\IElectionService;
 use App\Services\Model\ILocationService;
 use App\Services\Model\IMemberService;
+use App\Services\Model\Imp\BadgeViewTypeService;
 use App\Services\Model\Imp\CompanyService;
 use App\Services\Model\Imp\ElectionService;
 use App\Services\Model\Imp\PaymentGatewayProfileService;
@@ -414,6 +416,11 @@ final class ModelServicesProvider extends ServiceProvider
             ITrackChairRankingService::class,
             TrackChairRankingService::class
         );
+
+        App::singleton(
+            IBadgeViewTypeService::class,
+            BadgeViewTypeService::class,
+        );
    }
 
     /**
@@ -474,6 +481,7 @@ final class ModelServicesProvider extends ServiceProvider
             ISelectionPlanExtraQuestionTypeService::class,
             IElectionService::class,
             ISummitScheduleSettingsService::class,
+            IBadgeViewTypeService::class,
         ];
     }
 }

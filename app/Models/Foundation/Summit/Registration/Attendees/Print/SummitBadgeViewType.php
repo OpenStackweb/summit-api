@@ -14,7 +14,7 @@
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitBadgeViewTypeRepository")
  * @ORM\AssociationOverrides({
  *     @ORM\AssociationOverride(
  *          name="summit",

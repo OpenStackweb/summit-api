@@ -225,4 +225,50 @@ final class SummitBadgeTypeService extends AbstractService
             return $badge_type;
         });
     }
+
+    /**
+     * @param Summit $summit
+     * @param int $badge_type_id
+     * @param int $view_type_id
+     * @return SummitBadgeType
+     */
+    public function addViewTypeToBadgeType(Summit $summit, int $badge_type_id, int $view_type_id): SummitBadgeType
+    {
+        return $this->tx_service->transaction(function () use ($summit, $badge_type_id, $view_type_id) {
+            $badge_type = $summit->getBadgeViewTypeById($badge_type_id);
+            if (is_null($badge_type) || !$badge_type instanceof SummitBadgeType)
+                throw new EntityNotFoundException("badge type not found.");
+
+            $view_type = $summit->getBadgeViewTypeById($view_type_id);
+            if (is_null($view_type))
+                throw new EntityNotFoundException("view type not found.");
+
+            $badge_type->addAllowedViewType($view_type);
+
+            return $badge_type;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $badge_type_id
+     * @param int $view_type_id
+     * @return SummitBadgeType
+     */
+    public function removeViewTypeFromBadgeType(Summit $summit, int $badge_type_id, int $view_type_id): SummitBadgeType
+    {
+        return $this->tx_service->transaction(function () use ($summit, $badge_type_id, $view_type_id) {
+            $badge_type = $summit->getBadgeTypeById($badge_type_id);
+            if (is_null($badge_type))
+                throw new EntityNotFoundException("badge type not found.");
+
+            $view_type = $summit->getBadgeViewTypeById($view_type_id);
+            if (is_null($view_type))
+                throw new EntityNotFoundException("view type not found.");
+
+            $badge_type->removeAllowedViewType($view_type);
+
+            return $badge_type;
+        });
+    }
 }

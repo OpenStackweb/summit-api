@@ -47,7 +47,7 @@ final class Version20220720202655 extends AbstractMigration
                 $table->index("SummitBadgeTypeID", "SummitBadgeTypeID");
                 $table->foreign("SummitBadgeType", "SummitBadgeTypeID", "ID", ["onDelete" => "CASCADE"], "FK_SummitBadgeViewType_SummitBadgeType_SummitBadgeType");
 
-                $table->unique("SummitBadgeViewTypeID", "SummitBadgeTypeID");
+                $table->unique(["SummitBadgeViewTypeID", "SummitBadgeTypeID"],'IDX_SummitBadgeViewTypeID_SummitBadgeTypeID');
 
             });
         }

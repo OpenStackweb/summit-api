@@ -24,7 +24,7 @@ use models\utils\IEntity;
  * Class OAuth2SummitBadgeViewTypeApiController
  * @package App\Http\Controllers
  */
-class OAuth2SummitBadgeViewTypeApiController extends OAuth2ProtectedController
+final class OAuth2SummitBadgeViewTypeApiController extends OAuth2ProtectedController
 {
     /**
      * @var ISummitRepository

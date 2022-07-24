@@ -94,7 +94,6 @@ use App\ModelSerializers\SummitScheduleFilterElementConfigSerializer;
 use Illuminate\Support\Facades\App;
 use Libs\ModelSerializers\IModelSerializer;
 use models\oauth2\IResourceServerContext;
-use models\summit\SummitAttendeeTicketRefundRequest;
 use ModelSerializers\ChatTeams\ChatTeamInvitationSerializer;
 use ModelSerializers\ChatTeams\ChatTeamMemberSerializer;
 use ModelSerializers\ChatTeams\ChatTeamPushNotificationMessageSerializer;
@@ -240,16 +239,16 @@ final class SerializerRegistry
         ];
 
         $this->registry['Presentation'] =
-        [
-            self::SerializerType_Public => PresentationSerializer::class,
-            self::SerializerType_Private => AdminPresentationSerializer::class,
-            self::SerializerType_CSV => AdminPresentationCSVSerializer::class,
-            self::SerializerType_Admin_Voteable => AdminVoteablePresentationSerializer::class,
-            self::SerializerType_Admin_Voteable_CSV => AdminVoteablePresentationCSVSerializer::class,
-            IPresentationSerializerTypes::TrackChairs => TrackChairPresentationSerializer::class,
-            IPresentationSerializerTypes::TrackChairs_CSV => TrackChairPresentationCSVSerializer::class,
-            IPresentationSerializerTypes::SpeakerEmails => SpeakerPresentationEmailSerializer::class
-        ];
+            [
+                self::SerializerType_Public => PresentationSerializer::class,
+                self::SerializerType_Private => AdminPresentationSerializer::class,
+                self::SerializerType_CSV => AdminPresentationCSVSerializer::class,
+                self::SerializerType_Admin_Voteable => AdminVoteablePresentationSerializer::class,
+                self::SerializerType_Admin_Voteable_CSV => AdminVoteablePresentationCSVSerializer::class,
+                IPresentationSerializerTypes::TrackChairs => TrackChairPresentationSerializer::class,
+                IPresentationSerializerTypes::TrackChairs_CSV => TrackChairPresentationCSVSerializer::class,
+                IPresentationSerializerTypes::SpeakerEmails => SpeakerPresentationEmailSerializer::class
+            ];
 
         $this->registry['PresentationAttendeeVote'] = PresentationAttendeeVoteSerializer::class;
 
@@ -351,6 +350,7 @@ final class SerializerRegistry
         $this->registry['SponsorSummitRegistrationDiscountCode'] = SponsorSummitRegistrationDiscountCodeSerializer::class;
 
         // registration
+
         $this->registry['SummitRegistrationInvitation'] =
             [
                 self::SerializerType_Public => SummitRegistrationInvitationSerializer::class,
@@ -364,6 +364,7 @@ final class SerializerRegistry
         $this->registry['SummitRefundPolicyType'] = SummitRefundPolicyTypeSerializer::class;
         $this->registry['SummitOrderExtraQuestionType'] = SummitOrderExtraQuestionTypeSerializer::class;
 
+        $this->registry['SummitBadgeViewType'] = SummitBadgeViewTypeSerializer::class;
 
         // orders
 
@@ -510,8 +511,8 @@ final class SerializerRegistry
         $serializer_class = $this->registry[$class];
 
         if (is_array($serializer_class)) {
-            if (!isset($serializer_class[$type])){
-                $type =  self::SerializerType_Public;
+            if (!isset($serializer_class[$type])) {
+                $type = self::SerializerType_Public;
             }
 
             if (!isset($serializer_class[$type])) {

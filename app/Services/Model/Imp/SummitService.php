@@ -89,6 +89,7 @@ use models\summit\RSVP;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
+use models\summit\SummitBadgeViewType;
 use models\summit\SummitBookableVenueRoomAttributeType;
 use models\summit\SummitBookableVenueRoomAttributeValue;
 use models\summit\SummitEvent;
@@ -1700,6 +1701,8 @@ final class SummitService extends AbstractService implements ISummitService
             $summit->seedDefaultEmailFlowEvents();
 
             $summit->seedDefaultAccessLevelTypes();
+
+            SummitBadgeViewType::buildDefaultCardType($summit);
 
             $this->summit_repository->add($summit);
 

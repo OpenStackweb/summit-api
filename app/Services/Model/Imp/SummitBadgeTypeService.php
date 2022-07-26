@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Factories\SummitBadgeTypeFactory;
+use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -67,6 +68,11 @@ final class SummitBadgeTypeService extends AbstractService
                 $badge_type->addAccessLevel($default_access_level);
             }
             $summit->addBadgeType($badge_type);
+
+            $viewType = $summit->getDefaultBadgeViewType();
+            if(!is_null($viewType)){
+                $badge_type->addAllowedViewType($viewType);
+            }
             return $badge_type;
         });
     }
@@ -235,6 +241,18 @@ final class SummitBadgeTypeService extends AbstractService
     public function addViewTypeToBadgeType(Summit $summit, int $badge_type_id, int $view_type_id): SummitBadgeType
     {
         return $this->tx_service->transaction(function () use ($summit, $badge_type_id, $view_type_id) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitBadgeTypeService::addViewTypeToBadgeType summit %s badge_type_id %s view_type_id %s",
+                    $summit->getId(),
+                    $badge_type_id,
+                    $view_type_id,
+                )
+            );
+
             $badge_type = $summit->getBadgeViewTypeById($badge_type_id);
             if (is_null($badge_type) || !$badge_type instanceof SummitBadgeType)
                 throw new EntityNotFoundException("badge type not found.");
@@ -258,6 +276,18 @@ final class SummitBadgeTypeService extends AbstractService
     public function removeViewTypeFromBadgeType(Summit $summit, int $badge_type_id, int $view_type_id): SummitBadgeType
     {
         return $this->tx_service->transaction(function () use ($summit, $badge_type_id, $view_type_id) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitBadgeTypeService::removeViewTypeFromBadgeType summit %s badge_type_id %s view_type_id %s",
+                    $summit->getId(),
+                    $badge_type_id,
+                    $view_type_id,
+                )
+            );
+
             $badge_type = $summit->getBadgeTypeById($badge_type_id);
             if (is_null($badge_type))
                 throw new EntityNotFoundException("badge type not found.");

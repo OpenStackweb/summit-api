@@ -100,4 +100,17 @@ class SummitBadgeViewType extends SilverstripeBaseModel
     {
         $this->default = $default;
     }
+
+    /**
+     * @param Summit $summit
+     * @return SummitBadgeViewType
+     */
+    public static function buildDefaultCardType(Summit $summit):SummitBadgeViewType{
+        $card = new SummitBadgeViewType;
+        $card->setName("Card");
+        $card->setDefault(true);
+        $card->setDescription("Badge Card View Type");
+        $summit->addBadgeViewType($card);
+        return $card;
+    }
 }

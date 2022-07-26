@@ -6451,9 +6451,9 @@ SQL;
      * @return SummitBadgeViewType|null
      */
     public function getBadgeViewTypeByName(string $name):?SummitBadgeViewType{
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('name', trim($name)));
-        $res = $this->badge_view_types->matching($criteria)->first();
+        $res = $this->badge_view_types->filter(function($e) use($name){
+            return $e instanceof SummitBadgeViewType && strtolower($e->getName()) == strtolower(trim($name));
+        })->first();
         return $res === false ? null : $res;
     }
 
@@ -6468,12 +6468,19 @@ SQL;
         return $res === false ? null : $res;
     }
 
+    /**
+     * @param SummitBadgeViewType $viewType
+     */
     public function addBadgeViewType(SummitBadgeViewType $viewType){
         if($this->badge_view_types->contains($viewType)) return;
+        if(!is_null($this->getBadgeViewTypeByName($viewType->getName()))) return;
         $this->badge_view_types->add($viewType);
         $viewType->setSummit($this);
     }
 
+    /**
+     * @param SummitBadgeViewType $viewType
+     */
     public function removeBadgeViewType(SummitBadgeViewType $viewType){
         if(!$this->badge_view_types->contains($viewType)) return;
         $this->badge_view_types->removeElement($viewType);

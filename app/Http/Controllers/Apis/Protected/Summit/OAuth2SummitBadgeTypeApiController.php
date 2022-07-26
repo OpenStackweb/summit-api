@@ -264,6 +264,12 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         });
     }
 
+    /**
+     * @param $summit_id
+     * @param $badge_type_id
+     * @param $view_type_id
+     * @return mixed
+     */
     public function addViewTypeToBadgeType($summit_id, $badge_type_id, $view_type_id){
         return $this->processRequest(function() use($summit_id, $badge_type_id, $view_type_id){
 
@@ -279,12 +285,19 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         });
     }
 
+    /**
+     * @param $summit_id
+     * @param $badge_type_id
+     * @param $view_type_id
+     * @return mixed
+     */
     public function removeViewTypeFromBadgeType($summit_id, $badge_type_id, $view_type_id){
         return $this->processRequest(function() use ($summit_id, $badge_type_id, $view_type_id){
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $child = $this->service->removeViewTypeFromBadgeType($summit, $badge_type_id, $view_type_id);
+
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($child)->serialize(
                 SerializerUtils::getExpand(),
                 SerializerUtils::getFields(),

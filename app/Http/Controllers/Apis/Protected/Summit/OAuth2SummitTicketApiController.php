@@ -17,9 +17,7 @@ use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitOrderService;
 use Illuminate\Http\Request as LaravelRequest;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
-use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\IOrderConstants;
@@ -304,7 +302,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
      */
     public function ingestExternalTicketData($summit_id)
     {
-        return $this->processRequest(function () use ($summit_id){
+        return $this->processRequest(function () use ($summit_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -329,7 +327,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
      */
     public function getImportTicketDataTemplate($summit_id)
     {
-        return $this->processRequest(function () use ($summit_id){
+        return $this->processRequest(function () use ($summit_id) {
             /**
              * id
              * number
@@ -388,7 +386,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     public function importTicketData(LaravelRequest $request, $summit_id)
     {
 
-        return $this->processRequest(function () use ($request, $summit_id){
+        return $this->processRequest(function () use ($request, $summit_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -491,7 +489,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
      */
     public function refundTicket($summit_id, $ticket_id)
     {
-        return $this->processRequest(function () use ($summit_id,$ticket_id){
+        return $this->processRequest(function () use ($summit_id, $ticket_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $current_user = $this->getResourceServerContext()->getCurrentUser();
@@ -533,7 +531,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
      */
     public function getAttendeeBadge($summit_id, $ticket_id)
     {
-        return $this->processRequest(function () use ($summit_id, $ticket_id){
+        return $this->processRequest(function () use ($summit_id, $ticket_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -557,7 +555,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
      */
     public function createAttendeeBadge($summit_id, $ticket_id)
     {
-        return $this->processRequest(function () use ($summit_id, $ticket_id){
+        return $this->processRequest(function () use ($summit_id, $ticket_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -658,12 +656,13 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
      * @param $ticket_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function printAttendeeBadgeDefault($summit_id, $ticket_id){
+    public function printAttendeeBadgeDefault($summit_id, $ticket_id)
+    {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
         if (is_null($summit)) return $this->error404('Summit not Found.');
 
         $viewType = $summit->getDefaultBadgeViewType();
-        if(is_null($viewType))
+        if (is_null($viewType))
             return $this->error404('Default view type not found.');
 
         return $this->printAttendeeBadge($summit_id, $ticket_id, $viewType->getName());
@@ -709,12 +708,13 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
      * @param $ticket_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function canPrintAttendeeBadgeDefault($summit_id, $ticket_id){
+    public function canPrintAttendeeBadgeDefault($summit_id, $ticket_id)
+    {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
         if (is_null($summit)) return $this->error404('Summit not Found.');
 
         $viewType = $summit->getDefaultBadgeViewType();
-        if(is_null($viewType))
+        if (is_null($viewType))
             return $this->error404('Default view type not found.');
 
         return $this->canPrintAttendeeBadge($summit_id, $ticket_id, $viewType->getName());

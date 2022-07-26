@@ -2606,6 +2606,17 @@ final class SummitOrderService
     {
         return $this->tx_service->transaction(function () use ($summit, $ticket_id, $viewType, $requestor) {
 
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitOrderService::canPrintAttendeeBadge summit %s ticket_id %s viewType %s",
+                    $summit->getId(),
+                    $ticket_id,
+                    $viewType
+                )
+            );
+
             $view = $summit->getBadgeViewTypeByName($viewType);
             if(is_null($view)){
                 throw new EntityNotFoundException(sprintf("View Type %s not found.", $viewType));

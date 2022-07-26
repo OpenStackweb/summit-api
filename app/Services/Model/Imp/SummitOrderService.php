@@ -2487,7 +2487,7 @@ final class SummitOrderService
             throw new ValidationException("You have a Virtual only ticket.");
         }
 
-        if(!$type->addAllowedViewType($viewType)){
+        if(!$type->allowsViewType($viewType)){
             throw new ValidationException(sprintf("View Type %s is not allowed.", $viewType->getName()));
         }
 

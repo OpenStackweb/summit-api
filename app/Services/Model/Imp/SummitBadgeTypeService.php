@@ -253,7 +253,7 @@ final class SummitBadgeTypeService extends AbstractService
                 )
             );
 
-            $badge_type = $summit->getBadgeViewTypeById($badge_type_id);
+            $badge_type = $summit->getBadgeTypeById($badge_type_id);
             if (is_null($badge_type) || !$badge_type instanceof SummitBadgeType)
                 throw new EntityNotFoundException("badge type not found.");
 

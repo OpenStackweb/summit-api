@@ -78,6 +78,7 @@ class SummitAttendeeBadge extends SilverstripeBaseModel implements IQREntity
 
     /**
      * @ORM\OneToMany(targetEntity="models\summit\SummitAttendeeBadgePrint", mappedBy="badge",  cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SummitAttendeeBadgePrint[]
      */
     private $prints;
 
@@ -310,6 +311,21 @@ SQL;
     public function getPrintedTimes(): ?int
     {
         return $this->prints->count();
+    }
+
+    public function getPrintExcerpt():array{
+        $res = [];
+        foreach($this->prints as $print){
+            $viewType = null;
+            if($print->hasViewType())
+                $viewType = $print->getViewType();
+            if(!is_null($viewType)){
+                if(!isset($res[$viewType->getName()]))
+                    $res[$viewType->getName()] = 0;
+                $res[$viewType->getName()] = $res[$viewType->getName()] + 1;
+            }
+        }
+        return $res;
     }
 
 }

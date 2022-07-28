@@ -31,7 +31,7 @@ final class Version20220722142231 extends AbstractMigration
     {
         $builder = new Builder($schema);
         if ($schema->hasTable("SummitAttendeeBadgePrint") && !$builder->hasColumn("SummitAttendeeBadgePrint", "SummitBadgeViewTypeID")) {
-            $builder->table('', function(Table $table){
+            $builder->table('SummitAttendeeBadgePrint', function(Table $table){
                 // FK
                 $table->integer("SummitBadgeViewTypeID", false, false)->setNotnull(false);
                 $table->index("SummitBadgeViewTypeID", "SummitBadgeViewTypeID");
@@ -52,7 +52,7 @@ final class Version20220722142231 extends AbstractMigration
         }
 
         if ($schema->hasTable("SummitAttendeeBadgePrint") && $builder->hasColumn("SummitAttendeeBadgePrint", "SummitBadgeViewTypeID")) {
-            $builder->table('', function(Table $table) {
+            $builder->table('SummitAttendeeBadgePrint', function(Table $table) {
                 $table->dropColumn("SummitBadgeViewTypeID");
             });
         }

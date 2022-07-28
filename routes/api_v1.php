@@ -1087,8 +1087,8 @@ Route::group(array('prefix' => 'summits'), function () {
 
                 Route::group(['prefix' => 'view-types'], function () {
                     Route::group(['prefix' => '{badge_view_type_id}'], function () {
-                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@addFeatureToBadgeType']);
-                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@removeFeatureFromBadgeType']);
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@addViewTypeToBadgeType']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@removeViewTypeFromBadgeType']);
                     });
                 });
 

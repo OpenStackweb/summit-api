@@ -30,7 +30,7 @@ final class Version20220722142231 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $builder = new Builder($schema);
-        if (!$schema->hasTable("SummitAttendeeBadgePrint")) {
+        if ($schema->hasTable("SummitAttendeeBadgePrint") && !$builder->hasColumn("SummitAttendeeBadgePrint", "SummitBadgeViewTypeID")) {
             $builder->table('', function(Table $table){
                 // FK
                 $table->integer("SummitBadgeViewTypeID", false, false)->setNotnull(false);
@@ -51,7 +51,7 @@ final class Version20220722142231 extends AbstractMigration
            DBHelpers::dropFK(env('SS_DATABASE'), "SummitAttendeeBadgePrint", "FK_SummitAttendeeBadgePrint_SummitBadgeViewType");
         }
 
-        if (!$schema->hasTable("SummitAttendeeBadgePrint")) {
+        if ($schema->hasTable("SummitAttendeeBadgePrint") && $builder->hasColumn("SummitAttendeeBadgePrint", "SummitBadgeViewTypeID")) {
             $builder->table('', function(Table $table) {
                 $table->dropColumn("SummitBadgeViewTypeID");
             });

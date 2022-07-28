@@ -47,7 +47,7 @@ class SummitAttendeeBadgePrint extends SilverstripeBaseModel
     private $badge;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitBadgeViewType",)
+     * @ORM\ManyToOne(targetEntity="models\summit\SummitBadgeViewType")
      * @ORM\JoinColumn(name="SummitBadgeViewTypeID", referencedColumnName="ID")
      * @var SummitBadgeViewType
      */

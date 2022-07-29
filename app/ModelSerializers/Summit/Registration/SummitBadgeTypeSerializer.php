@@ -81,7 +81,7 @@ final class SummitBadgeTypeSerializer extends SilverStripeSerializer
             if(in_array('allowed_view_types', $relations)) {
                 $allowed_view_types = [];
                 foreach ($badge_type->getAllowedViewTypes() as $viewType) {
-                    $features[] = $viewType->getId();
+                    $allowed_view_types[] = $viewType->getId();
                 }
                 $values['allowed_view_types'] = $allowed_view_types;
             }

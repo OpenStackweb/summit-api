@@ -293,4 +293,11 @@ abstract class ProtectedApiTest extends \Tests\BrowserKitTestCase
         Mockery::close();
         parent::tearDown();
     }
+
+    protected function getAuthHeaders():array{
+        return [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+    }
 }

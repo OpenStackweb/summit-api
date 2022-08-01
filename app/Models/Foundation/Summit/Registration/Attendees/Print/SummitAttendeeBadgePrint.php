@@ -11,10 +11,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use models\main\Member;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
+
 /**
  * @ORM\Entity
  * @ORM\Table(name="SummitAttendeeBadgePrint")
@@ -27,12 +29,14 @@ class SummitAttendeeBadgePrint extends SilverstripeBaseModel
 
     protected $getIdMappings = [
         'getRequestorId' => 'requestor',
-        'getBadgeId'     => 'badge',
+        'getBadgeId' => 'badge',
+        'getViewTypeId' => 'view_type',
     ];
 
     protected $hasPropertyMappings = [
         'hasRequestor' => 'requestor',
-        'hasBadge'     => 'badge',
+        'hasBadge' => 'badge',
+        'hasViewType' => 'view_type',
     ];
 
     /**
@@ -41,6 +45,13 @@ class SummitAttendeeBadgePrint extends SilverstripeBaseModel
      * @var SummitAttendeeBadge
      */
     private $badge;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="models\summit\SummitBadgeViewType")
+     * @ORM\JoinColumn(name="SummitBadgeViewTypeID", referencedColumnName="ID")
+     * @var SummitBadgeViewType
+     */
+    private $view_type;
 
     /**
      * @ORM\ManyToOne(targetEntity="models\main\Member")
@@ -80,15 +91,42 @@ class SummitAttendeeBadgePrint extends SilverstripeBaseModel
     }
 
     /**
+     * @return SummitBadgeViewType
+     */
+    public function getViewType(): ?SummitBadgeViewType
+    {
+        return $this->view_type;
+    }
+
+    /**
+     * @param SummitBadgeViewType $view_type
+     */
+    public function setViewType(SummitBadgeViewType $view_type): void
+    {
+        $this->view_type = $view_type;
+    }
+
+    /**
      * @param SummitAttendeeBadge $badge
      * @param Member $requestor
+     * @param SummitBadgeViewType|null $view_type
      * @return SummitAttendeeBadgePrint
+     * @throws \Exception
      */
-    public static function build(SummitAttendeeBadge $badge, Member $requestor){
-        $print             = new SummitAttendeeBadgePrint();
-        $print->badge      = $badge;
-        $print->requestor  = $requestor;
+    public static function build
+    (
+        SummitAttendeeBadge $badge,
+        Member $requestor,
+        ?SummitBadgeViewType $view_type = null
+    ): SummitAttendeeBadgePrint
+    {
+        $print = new SummitAttendeeBadgePrint();
+
+        $print->badge = $badge;
+        $print->requestor = $requestor;
         $print->print_date = new \DateTime('now', new \DateTimeZone('UTC'));
+        $print->view_type = $view_type;
+
         return $print;
     }
 

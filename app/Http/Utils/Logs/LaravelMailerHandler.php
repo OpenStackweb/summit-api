@@ -135,33 +135,38 @@ final class LaravelMailerHandler extends MailHandler
      */
     protected function send($content, array $records):void
     {
-        $content = wordwrap($content, $this->maxColumnWidth);
+        try {
+            $content = wordwrap($content, $this->maxColumnWidth);
 
 
-        $subject = $this->subject;
-        if ($records) {
-            $subjectFormatter = new LineFormatter($this->subject);
-            $subject = $subjectFormatter->format($this->getHighestRecord($records));
-        }
-
-        // to avoid bloating inboxes/quotas
-        if($this->cacheService){
-            if($this->cacheService->exists(self::SENT_ERROR_EMAIL)){
-                // short circuit
-                Log::debug(sprintf("LaravelMailerHandler::send skipping exception %s %s", $subject, $content));
-                return;
+            $subject = $this->subject;
+            if ($records) {
+                $subjectFormatter = new LineFormatter($this->subject);
+                $subject = $subjectFormatter->format($this->getHighestRecord($records));
             }
-            $this->cacheService->setSingleValue(self::SENT_ERROR_EMAIL, self::SENT_ERROR_EMAIL, self::TIME_BETWEEN_ERRORS);
-        }
 
-        foreach ($this->to as $to) {
-            Mail::raw($content, function(Message $message) use($to, $subject, $content){
-                $message
-                    ->to($to)
-                    ->subject($subject)
-                    ->setBody($content, 'text/html')
-                    ->setFrom($this->from);
-            });
+            // to avoid bloating inboxes/quotas
+            if ($this->cacheService) {
+                if ($this->cacheService->exists(self::SENT_ERROR_EMAIL)) {
+                    // short circuit
+                    Log::debug(sprintf("LaravelMailerHandler::send skipping exception %s %s", $subject, $content));
+                    return;
+                }
+                $this->cacheService->setSingleValue(self::SENT_ERROR_EMAIL, self::SENT_ERROR_EMAIL, self::TIME_BETWEEN_ERRORS);
+            }
+
+            foreach ($this->to as $to) {
+                Mail::raw($content, function (Message $message) use ($to, $subject, $content) {
+                    $message
+                        ->to($to)
+                        ->subject($subject)
+                        ->setBody($content, 'text/html')
+                        ->setFrom($this->from);
+                });
+            }
+        }
+        catch (\Exception $ex){
+            Log::warning($ex);
         }
     }
 

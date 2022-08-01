@@ -665,6 +665,7 @@ final class MemberService
         Log::debug(sprintf("MemberService::updatePendingRegistrationRequest - sending new profile info to user api for member %s", $email));
         $res = $this->external_user_api->getUserRegistrationRequest($email);
         if (!is_null($res)) {
+            Log::debug(sprintf("MemberService::updatePendingRegistrationRequest res %s", json_encode($res)));
             $this->external_user_api->updateUserRegistrationRequest($res['id'], $first_name, $last_name, $company_name, $country);
         }
     }

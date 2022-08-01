@@ -1061,19 +1061,23 @@ Route::group(array('prefix' => 'summits'), function () {
         });
 
         // badge-types
+
         Route::group(['prefix' => 'badge-types'], function () {
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@getAllBySummit']);
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@add']);
             Route::group(['prefix' => '{badge_type_id}'], function () {
+
                 Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@get']);
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@update']);
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@delete']);
+
                 Route::group(['prefix' => 'access-levels'], function () {
                     Route::group(['prefix' => '{access_level_id}'], function () {
                         Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@addAccessLevelToBadgeType']);
                         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@removeAccessLevelFromBadgeType']);
                     });
                 });
+
                 Route::group(['prefix' => 'features'], function () {
                     Route::group(['prefix' => '{feature_id}'], function () {
                         Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@addFeatureToBadgeType']);
@@ -1081,6 +1085,25 @@ Route::group(array('prefix' => 'summits'), function () {
                     });
                 });
 
+                Route::group(['prefix' => 'view-types'], function () {
+                    Route::group(['prefix' => '{badge_view_type_id}'], function () {
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@addViewTypeToBadgeType']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeTypeApiController@removeViewTypeFromBadgeType']);
+                    });
+                });
+
+            });
+        });
+
+        // badge-view-types
+
+        Route::group(['prefix' => 'badge-view-types'], function() {
+            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeViewTypeApiController@getAllBySummit']);
+            Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeViewTypeApiController@add']);
+            Route::group(['prefix' => '{badge_view_type_id}'], function () {
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeViewTypeApiController@get']);
+                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeViewTypeApiController@update']);
+                Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeViewTypeApiController@delete']);
             });
         });
 
@@ -1149,8 +1172,24 @@ Route::group(array('prefix' => 'summits'), function () {
                     Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@getAttendeeBadge']);
                     Route::group(['prefix' => 'current'], function () {
                         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@deleteAttendeeBadge']);
-                        Route::get('print', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@canPrintAttendeeBadge']);
-                        Route::put('print', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@printAttendeeBadge']);
+
+
+                        // printing endpoints
+
+                        // legacy ( default )
+                        Route::group(['prefix' => 'print'], function () {
+                            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@canPrintAttendeeBadgeDefault']);
+                            Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@printAttendeeBadgeDefault']);
+                        });
+
+                        // view type
+                        Route::group(['prefix' => '{view_type}'], function () {
+                            Route::group(['prefix' => 'print'], function () {
+                                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@canPrintAttendeeBadge']);
+                                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@printAttendeeBadge']);
+                            });
+                        });
+
                         Route::group(['prefix' => 'features'], function () {
                             Route::group(['prefix' => '{feature_id}'], function () {
                                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@addAttendeeBadgeFeature']);

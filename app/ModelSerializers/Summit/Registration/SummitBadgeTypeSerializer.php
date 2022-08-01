@@ -11,10 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\ModelSerializers\Traits\RequestScopedCache;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SummitBadgeType;
+
 /**
  * Class SummitBadgeTypeSerializer
  * @package ModelSerializers
@@ -32,6 +32,7 @@ final class SummitBadgeTypeSerializer extends SilverStripeSerializer
     protected static $allowed_relations = [
         'access_levels',
         'badge_features',
+        'allowed_view_types',
     ];
 
     use RequestScopedCache;
@@ -76,6 +77,15 @@ final class SummitBadgeTypeSerializer extends SilverStripeSerializer
                 $values['badge_features'] = $features;
             }
 
+            // allowed_view_types
+            if(in_array('allowed_view_types', $relations)) {
+                $allowed_view_types = [];
+                foreach ($badge_type->getAllowedViewTypes() as $viewType) {
+                    $allowed_view_types[] = $viewType->getId();
+                }
+                $values['allowed_view_types'] = $allowed_view_types;
+            }
+
             if (!empty($expand)) {
                 $exp_expand = explode(',', $expand);
                 foreach ($exp_expand as $relation) {
@@ -96,6 +106,15 @@ final class SummitBadgeTypeSerializer extends SilverStripeSerializer
                                 $badge_features[] = SerializerRegistry::getInstance()->getSerializer($feature)->serialize(AbstractSerializer::getExpandForPrefix('badge_features', $expand));
                             }
                             $values['badge_features'] = $badge_features;
+                        }
+                            break;
+                        case 'allowed_view_types': {
+                            unset($values['allowed_view_types']);
+                            $allowed_view_types = [];
+                            foreach ($badge_type->getAllowedViewTypes() as $viewType) {
+                                $allowed_view_types[] = SerializerRegistry::getInstance()->getSerializer($viewType)->serialize(AbstractSerializer::getExpandForPrefix('allowed_view_types', $expand));
+                            }
+                            $values['allowed_view_types'] = $allowed_view_types;
                         }
                             break;
                     }

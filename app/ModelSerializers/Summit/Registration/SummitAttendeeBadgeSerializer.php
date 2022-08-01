@@ -70,6 +70,8 @@ class SummitAttendeeBadgeSerializer extends SilverStripeSerializer
                 $values['features'] = $features;
             }
 
+            $values['print_excerpt'] = $badge->getPrintExcerpt();
+
             if (!empty($expand)) {
                 $exp_expand = explode(',', $expand);
                 foreach ($exp_expand as $relation) {

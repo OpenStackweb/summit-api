@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Repositories\ISummitBadgeTypeRepository;
+use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitBadgeTypeService;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
@@ -30,6 +31,7 @@ use Exception;
 final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
 {
 
+    use RequestProcessor;
     /**
      * @var ISummitRepository
      */
@@ -186,27 +188,19 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function addAccessLevelToBadgeType($summit_id, $badge_type_id, $access_level_id){
-        try {
+       return $this->processRequest(function() use( $summit_id, $badge_type_id, $access_level_id){
 
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $child = $this->service->addAccessLevelToBadgeType($summit, $badge_type_id, $access_level_id);
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($child)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            $child = $this->service->addAccessLevelToBadgeType($summit, intval($badge_type_id), intval($access_level_id));
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($child)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+       });
     }
 
     /**
@@ -216,27 +210,17 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function removeAccessLevelFromBadgeType($summit_id, $badge_type_id, $access_level_id){
-        try {
-
+        return $this->processRequest(function() use($summit_id, $badge_type_id, $access_level_id){
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $child = $this->service->removeAccessLevelFromBadgeType($summit, $badge_type_id, $access_level_id);
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($child)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            $child = $this->service->removeAccessLevelFromBadgeType($summit, intval($badge_type_id), intval($access_level_id));
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($child)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -246,27 +230,18 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function addFeatureToBadgeType($summit_id, $badge_type_id, $feature_id){
-        try {
+        return $this->processRequest(function() use($summit_id, $badge_type_id, $feature_id){
 
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $child = $this->service->addFeatureToBadgeType($summit, $badge_type_id, $feature_id);
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($child)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            $child = $this->service->addFeatureToBadgeType($summit, intval($badge_type_id), intval($feature_id));
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($child)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -276,26 +251,59 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function removeFeatureFromBadgeType($summit_id, $badge_type_id, $feature_id){
-        try {
+        return $this->processRequest(function() use ($summit_id, $badge_type_id, $feature_id){
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $child = $this->service->removeFeatureFromBadgeType($summit, intval($badge_type_id), intval($feature_id));
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($child)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $badge_type_id
+     * @param $view_type_id
+     * @return mixed
+     */
+    public function addViewTypeToBadgeType($summit_id, $badge_type_id, $view_type_id){
+        return $this->processRequest(function() use($summit_id, $badge_type_id, $view_type_id){
 
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $child = $this->service->removeFeatureFromBadgeType($summit, $badge_type_id, $feature_id);
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($child)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            $child = $this->service->addViewTypeToBadgeType($summit, intval($badge_type_id), intval($view_type_id));
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($child)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
+
+    /**
+     * @param $summit_id
+     * @param $badge_type_id
+     * @param $view_type_id
+     * @return mixed
+     */
+    public function removeViewTypeFromBadgeType($summit_id, $badge_type_id, $view_type_id){
+        return $this->processRequest(function() use ($summit_id, $badge_type_id, $view_type_id){
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $child = $this->service->removeViewTypeFromBadgeType($summit, intval($badge_type_id), intval($view_type_id));
+
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($child)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
+
 }

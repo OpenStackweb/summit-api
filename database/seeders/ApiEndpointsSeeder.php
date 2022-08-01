@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Security\ElectionScopes;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Config;
@@ -278,7 +277,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name'        => 'print-ticket-badge',
-                'route'       => '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/print',
+                'route'       => '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/{view_type}/print',
                 'http_method' => 'PUT',
                 'scopes'      => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm),
@@ -294,6 +293,38 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name'        => 'can-print-ticket-badge',
+                'route'       => '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/{view_type}/print',
+                'http_method' => 'GET',
+                'scopes'      => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::PrintRegistrationOrdersBadges, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
+                    IGroup::BadgePrinters,
+                ]
+            ],
+            [
+                'name'        => 'print-ticket-badge-default',
+                'route'       => '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/print',
+                'http_method' => 'PUT',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::PrintRegistrationOrdersBadges, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
+                    IGroup::BadgePrinters,
+                ]
+            ],
+            [
+                'name'        => 'can-print-ticket-badge-default',
                 'route'       => '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/print',
                 'http_method' => 'GET',
                 'scopes'      => [
@@ -2019,6 +2050,100 @@ class ApiEndpointsSeeder extends Seeder
             [
                 'name' => 'remove-feature-from-badge-type',
                 'route' => '/api/v1/summits/{id}/badge-types/{badge_type_id}/features/{feature_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-view-2-badge-type',
+                'route' => '/api/v1/summits/{id}/badge-types/{badge_type_id}/view-types/{badge_view_type_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'remove-view-from-badge-type',
+                'route' => '/api/v1/summits/{id}/badge-types/{badge_type_id}/view-types/{badge_view_type_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            // badge view types
+            [
+                'name' => 'get-badge-view-types',
+                'route' => '/api/v1/summits/{id}/badge-view-types',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-badge-view-type',
+                'route' => '/api/v1/summits/{id}/badge-view-types',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'get-badge-view-type',
+                'route' => '/api/v1/summits/{id}/badge-view-types/{badge_view_type_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'update-badge-view-type',
+                'route' => '/api/v1/summits/{id}/badge-view-types/{badge_view_type_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-badge-view-type',
+                'route' => '/api/v1/summits/{id}/badge-view-types/{badge_view_type_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm),

@@ -78,4 +78,21 @@ interface ISummitBadgeTypeService
      * @return SummitBadgeType
      */
     public function removeFeatureFromBadgeType(Summit $summit, int $badge_type_id,int $feature_id):SummitBadgeType;
+
+    /**
+     * @param Summit $summit
+     * @param int $badge_type_id
+     * @param int $view_type_id
+     * @return SummitBadgeType
+     */
+    public function addViewTypeToBadgeType(Summit $summit, int $badge_type_id,int $view_type_id):SummitBadgeType;
+
+    /**
+     * @param Summit $summit
+     * @param int $badge_type_id
+     * @param int $view_type_id
+     * @return SummitBadgeType
+     */
+    public function removeViewTypeFromBadgeType(Summit $summit, int $badge_type_id,int $view_type_id):SummitBadgeType;
+
 }

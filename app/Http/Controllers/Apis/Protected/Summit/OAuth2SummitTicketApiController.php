@@ -109,6 +109,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'has_owner' => ['=='],
                     'owner_status' => ['=='],
                     'has_badge' => ['=='],
+                    'view_type_id' => ['=='],
                 ];
             },
             function () {
@@ -129,6 +130,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'has_requested_refund_requests' => 'sometimes|boolean',
                     'access_level_type_name' => 'sometimes|string',
                     'ticket_type_id' => 'sometimes|integer',
+                    'view_type_id' => 'sometimes|integer',
                     'has_owner' => 'sometimes|boolean',
                     'owner_status' => 'sometimes|string|in:' . implode(',', SummitAttendee::AllowedStatus),
                     'has_badge' => 'sometimes|boolean',
@@ -187,6 +189,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'has_owner' => ['=='],
                     'owner_status' => ['=='],
                     'has_badge' => ['=='],
+                    'view_type_id' => ['=='],
                 ];
             },
             function () {
@@ -210,6 +213,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'has_owner' => 'sometimes|boolean',
                     'owner_status' => 'sometimes|string|in:' . implode(',', SummitAttendee::AllowedStatus),
                     'has_badge' => 'sometimes|boolean',
+                    'view_type_id' => 'sometimes|integer',
                 ];
             },
             function () {

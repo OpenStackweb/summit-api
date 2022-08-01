@@ -90,6 +90,7 @@ final class DoctrineSummitAttendeeTicketRepository
             ),
             'access_level_type_name' => 'al.name :operator :value',
             'ticket_type_id' => 'tt.id:json_int',
+            'view_type_id' => 'avt.id:json_int',
             'has_owner' =>  new DoctrineSwitchFilterMapping([
                     '1' => new DoctrineCaseFilterMapping(
                         'true',
@@ -142,6 +143,9 @@ final class DoctrineSummitAttendeeTicketRepository
         $query->leftJoin("a.member","m");
         if($filter->hasFilter('ticket_type_id')){
             $query = $query->join("e.ticket_type", "tt");
+        }
+        if($filter->hasFilter('view_type_id')){
+            $query = $query->join("bt.allowed_view_types", "avt");
         }
         return $query;
     }

@@ -129,6 +129,7 @@ class SummitSerializer extends SilverStripeSerializer
         'dates_with_events',
         'presentation_action_types',
         'schedule_settings',
+        'badge_view_types',
     ];
 
     /**
@@ -201,13 +202,22 @@ class SummitSerializer extends SilverStripeSerializer
             sprintf("%s%s", Config::get("server.assets_base_url", 'https://www.openstack.org/'), $schedule_page);
         $values['schedule_event_detail_url'] = empty($schedule_page) ? null : sprintf("%s%s/%s", Config::get("server.assets_base_url", 'https://www.openstack.org/'), $schedule_page, 'events/:event_id/:event_title');
 
-        // tickets
+        // tickets types
         if (in_array('ticket_types', $relations)) {
             $ticket_types = [];
             foreach ($summit->getTicketTypes() as $ticket) {
                 $ticket_types[] = SerializerRegistry::getInstance()->getSerializer($ticket)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'ticket_types'));
             }
             $values['ticket_types'] = $ticket_types;
+        }
+
+        // badge_view_types
+        if (in_array('badge_view_types', $relations)) {
+            $badge_view_types = [];
+            foreach ($summit->getBadgeViewTypes() as $viewType) {
+                $badge_view_types[] = SerializerRegistry::getInstance()->getSerializer($viewType)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'badge_view_types'));
+            }
+            $values['badge_view_types'] = $badge_view_types;
         }
 
         // payment_profiles

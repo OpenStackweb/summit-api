@@ -3894,7 +3894,6 @@ SQL;
         $sponsor->setOrder($this->getSummitSponsorMaxOrder() + 1);
         $this->summit_sponsors->add($sponsor);
         $sponsor->setSummit($this);
-
     }
 
     /**

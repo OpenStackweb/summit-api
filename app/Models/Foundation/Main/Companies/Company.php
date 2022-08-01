@@ -135,7 +135,7 @@ class Company extends SilverstripeBaseModel
     private $commitment_author;
 
     /**
-     * @ORM\Column(name="isDeleted", type="string")
+     * @ORM\Column(name="isDeleted", type="boolean")
      * @var bool
      */
     private $is_deleted;

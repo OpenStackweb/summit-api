@@ -1,5 +1,6 @@
 <?php namespace Tests;
 
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\App;
 use services\model\ISummitService;
 
@@ -124,5 +125,44 @@ final class OAuth2SummitRegistrationCompaniesApiTest extends ProtectedApiTest
         );
         $content = $response->getContent();
         $this->assertResponseStatus(204);
+    }
+
+    public function testIngestRegistrationCompanies()
+    {
+        $csv_content = <<<CSV
+name,
+Testco,
+Testco 2,
+Testco 3,
+Testco 4,
+CSV;
+        $path = "/tmp/registration_companies.csv";
+
+        file_put_contents($path, $csv_content);
+
+        $file = new UploadedFile($path, "registration_companies.csv", 'text/csv', null, true);
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitRegistrationCompaniesApiController@import",
+            $params,
+            [],
+            [],
+            [
+                'file' => $file
+            ],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
     }
 }

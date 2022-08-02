@@ -16,7 +16,7 @@ use App\Models\Foundation\Main\OrderableChilds;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use App\Models\Utils\TimeZoneEntity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Illuminate\Support\Facades\Log;
@@ -32,6 +32,7 @@ use models\summit\SummitSelectedPresentationList;
 use models\utils\SilverstripeBaseModel;
 use DateTime;
 use DateTimeZone;
+
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSelectionPlanRepository")
  * @ORM\AssociationOverrides({
@@ -51,8 +52,8 @@ class SelectionPlan extends SilverstripeBaseModel
     use TimeZoneEntity;
 
     const STATUS_SUBMISSION = 'SUBMISSION';
-    const STATUS_SELECTION  = 'SELECTION';
-    const STATUS_VOTING     = 'VOTING';
+    const STATUS_SELECTION = 'SELECTION';
+    const STATUS_VOTING = 'VOTING';
 
     /**
      * @ORM\Column(name="Name", type="string")
@@ -89,6 +90,12 @@ class SelectionPlan extends SilverstripeBaseModel
      * @var \DateTime
      */
     private $submission_end_date;
+
+    /**
+     * @ORM\Column(name="SubmissionLockDownPresentationStatusDate", type="datetime")
+     * @var \DateTime
+     */
+    private $submission_lock_down_presentation_status_date;
 
     /**
      * @ORM\Column(name="VotingBeginDate", type="datetime")
@@ -209,15 +216,17 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @param DateTime $submission_begin_date
      */
-    public function setSubmissionBeginDate(DateTime $submission_begin_date){
+    public function setSubmissionBeginDate(DateTime $submission_begin_date)
+    {
         $this->submission_begin_date = $this->convertDateFromTimeZone2UTC($submission_begin_date);
     }
 
     /**
      * @return $this
      */
-    public function clearSubmissionDates(){
-        $this->submission_begin_date =  $this->submission_end_date = null;
+    public function clearSubmissionDates()
+    {
+        $this->submission_begin_date = $this->submission_end_date = null;
         return $this;
     }
 
@@ -229,18 +238,21 @@ class SelectionPlan extends SilverstripeBaseModel
         return $this->submission_end_date;
     }
 
-    public function getSubmissionEndDateLocal():?DateTime{
+    public function getSubmissionEndDateLocal(): ?DateTime
+    {
         return $this->convertDateFromUTC2TimeZone($this->submission_end_date);
     }
 
-    public function getSubmissionBeginDateLocal():?DateTime{
+    public function getSubmissionBeginDateLocal(): ?DateTime
+    {
         return $this->convertDateFromUTC2TimeZone($this->submission_begin_date);
     }
 
     /**
      * @param DateTime $submission_end_date
      */
-    public function setSubmissionEndDate(DateTime $submission_end_date){
+    public function setSubmissionEndDate(DateTime $submission_end_date)
+    {
         $this->submission_end_date = $this->convertDateFromTimeZone2UTC($submission_end_date);
     }
 
@@ -255,14 +267,16 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @param DateTime $voting_begin_date
      */
-    public function setVotingBeginDate(DateTime $voting_begin_date){
+    public function setVotingBeginDate(DateTime $voting_begin_date)
+    {
         $this->voting_begin_date = $this->convertDateFromTimeZone2UTC($voting_begin_date);
     }
 
     /**
      * @return $this
      */
-    public function clearVotingDates(){
+    public function clearVotingDates()
+    {
         $this->voting_begin_date = $this->voting_end_date = null;
         return $this;
     }
@@ -278,7 +292,8 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @param DateTime $voting_end_date
      */
-    public function setVotingEndDate(DateTime $voting_end_date){
+    public function setVotingEndDate(DateTime $voting_end_date)
+    {
         $this->voting_end_date = $this->convertDateFromTimeZone2UTC($voting_end_date);
     }
 
@@ -293,15 +308,17 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @param DateTime $selection_begin_date
      */
-    public function setSelectionBeginDate(DateTime $selection_begin_date){
+    public function setSelectionBeginDate(DateTime $selection_begin_date)
+    {
         $this->selection_begin_date = $this->convertDateFromTimeZone2UTC($selection_begin_date);
     }
 
     /**
      * @return $this
      */
-    public function clearSelectionDates(){
-        $this->selection_begin_date =  $this->selection_end_date = null;
+    public function clearSelectionDates()
+    {
+        $this->selection_begin_date = $this->selection_end_date = null;
         return $this;
     }
 
@@ -316,7 +333,8 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @param DateTime $selection_end_date
      */
-    public function setSelectionEndDate(DateTime $selection_end_date){
+    public function setSelectionEndDate(DateTime $selection_end_date)
+    {
         $this->selection_end_date = $this->convertDateFromTimeZone2UTC($selection_end_date);
     }
 
@@ -358,16 +376,17 @@ class SelectionPlan extends SilverstripeBaseModel
     public function __construct()
     {
         parent::__construct();
-        $this->is_enabled                      = false;
-        $this->allow_new_presentations         = true;
-        $this->category_groups                 = new ArrayCollection;
-        $this->presentations                   = new ArrayCollection;
-        $this->extra_questions                 = new ArrayCollection;
-        $this->event_types                     = new ArrayCollection;
+        $this->is_enabled = false;
+        $this->allow_new_presentations = true;
+        $this->category_groups = new ArrayCollection;
+        $this->presentations = new ArrayCollection;
+        $this->extra_questions = new ArrayCollection;
+        $this->event_types = new ArrayCollection;
         $this->max_submission_allowed_per_user = Summit::DefaultMaxSubmissionAllowedPerUser;
-        $this->submission_period_disclaimer    = null;
+        $this->submission_period_disclaimer = null;
         $this->selection_lists = new ArrayCollection;
         $this->track_chair_rating_types = new ArrayCollection();
+        $this->submission_lock_down_presentation_status_date = null;
     }
 
     /**
@@ -378,33 +397,38 @@ class SelectionPlan extends SilverstripeBaseModel
         return $this->category_groups;
     }
 
-    public function getEventTypes(){
+    public function getEventTypes()
+    {
         return $this->event_types;
     }
 
     /**
      * @param PresentationCategoryGroup $track_group
      */
-    public function addTrackGroup(PresentationCategoryGroup $track_group){
-        if($this->category_groups->contains($track_group)) return;
+    public function addTrackGroup(PresentationCategoryGroup $track_group)
+    {
+        if ($this->category_groups->contains($track_group)) return;
         $this->category_groups->add($track_group);
     }
 
     /**
      * @param PresentationCategoryGroup $track_group
      */
-    public function removeTrackGroup(PresentationCategoryGroup $track_group){
-        if(!$this->category_groups->contains($track_group)) return;
+    public function removeTrackGroup(PresentationCategoryGroup $track_group)
+    {
+        if (!$this->category_groups->contains($track_group)) return;
         $this->category_groups->removeElement($track_group);
     }
 
-    public function addEventType(SummitEventType $eventType){
-        if($this->event_types->contains($eventType)) return;
+    public function addEventType(SummitEventType $eventType)
+    {
+        if ($this->event_types->contains($eventType)) return;
         $this->event_types->add($eventType);
     }
 
-    public function removeEventType(SummitEventType $eventType){
-        if(!$this->event_types->contains($eventType)) return;
+    public function removeEventType(SummitEventType $eventType)
+    {
+        if (!$this->event_types->contains($eventType)) return;
         $this->event_types->removeElement($eventType);
     }
 
@@ -435,13 +459,15 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @param Presentation $presentation
      */
-    public function addPresentation(Presentation $presentation){
-        if($this->presentations->contains($presentation)) return;
+    public function addPresentation(Presentation $presentation)
+    {
+        if ($this->presentations->contains($presentation)) return;
         $this->presentations->add($presentation);
         $presentation->setSelectionPlan($this);
     }
 
-    public function getStageStatus($stage) {
+    public function getStageStatus($stage)
+    {
 
         $getStartDate = "get{$stage}BeginDate";
         $getEndDate = "get{$stage}EndDate";
@@ -455,7 +481,7 @@ class SelectionPlan extends SilverstripeBaseModel
         $utc_time_zone = new \DateTimeZone('UTC');
         $start_date->setTimeZone($utc_time_zone);
         $end_date->setTimeZone($utc_time_zone);
-        $now = new \DateTime('now', new \DateTimeZone(  'UTC'));
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
 
         if ($now > $end_date) {
             return Summit::STAGE_FINISHED;
@@ -470,9 +496,10 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param PresentationCategory $track
      * @return bool
      */
-    public function hasTrack(PresentationCategory $track){
-        foreach($this->category_groups as $track_group){
-            if($track_group->hasCategory($track->getIdentifier())) return true;
+    public function hasTrack(PresentationCategory $track)
+    {
+        foreach ($this->category_groups as $track_group) {
+            if ($track_group->hasCategory($track->getIdentifier())) return true;
         }
         return false;
     }
@@ -521,7 +548,8 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param int $id
      * @return Presentation|null
      */
-    public function getPresentation(int $id):?Presentation{
+    public function getPresentation(int $id): ?Presentation
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($id)));
         $presentation = $this->presentations->matching($criteria)->first();
@@ -537,7 +565,8 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param int $question_id
      * @return SummitSelectionPlanExtraQuestionType|null
      */
-    public function getExtraQuestionById(int $question_id):?SummitSelectionPlanExtraQuestionType{
+    public function getExtraQuestionById(int $question_id): ?SummitSelectionPlanExtraQuestionType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $question_id));
         $question = $this->extra_questions->matching($criteria)->first();
@@ -548,7 +577,8 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param string $name
      * @return SummitSelectionPlanExtraQuestionType|null
      */
-    public function getExtraQuestionByName(string $name):?SummitSelectionPlanExtraQuestionType{
+    public function getExtraQuestionByName(string $name): ?SummitSelectionPlanExtraQuestionType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('name', trim($name)));
         $question = $this->extra_questions->matching($criteria)->first();
@@ -559,7 +589,8 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param string $label
      * @return SummitSelectionPlanExtraQuestionType|null
      */
-    public function getExtraQuestionByLabel(string $label):?SummitSelectionPlanExtraQuestionType{
+    public function getExtraQuestionByLabel(string $label): ?SummitSelectionPlanExtraQuestionType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('label', trim($label)));
         $question = $this->extra_questions->matching($criteria)->first();
@@ -569,7 +600,8 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @return int
      */
-    private function getExtraQuestionMaxOrder():int{
+    private function getExtraQuestionMaxOrder(): int
+    {
         $criteria = Criteria::create();
         $criteria->orderBy(['order' => 'DESC']);
         $question = $this->extra_questions->matching($criteria)->first();
@@ -580,21 +612,23 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param SummitSelectionPlanExtraQuestionType $question
      * @throws ValidationException
      */
-    public function addExtraQuestion(SummitSelectionPlanExtraQuestionType $question){
-        if($this->extra_questions->contains($question)) return;
+    public function addExtraQuestion(SummitSelectionPlanExtraQuestionType $question)
+    {
+        if ($this->extra_questions->contains($question)) return;
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('name', $question->getName()));
         $formerExtraQuestion = $this->extra_questions->matching($criteria)->first();
-        if($formerExtraQuestion){
+        if ($formerExtraQuestion) {
             throw new ValidationException(sprintf("Question Name %s already exists.", $question->getName()));
         };
-        $question->setOrder($this->getExtraQuestionMaxOrder()+1);
+        $question->setOrder($this->getExtraQuestionMaxOrder() + 1);
         $this->extra_questions->add($question);
         $question->setSelectionPlan($this);
     }
 
-    public function removeExtraQuestion(SummitSelectionPlanExtraQuestionType $question){
-        if(!$this->extra_questions->contains($question)) return;
+    public function removeExtraQuestion(SummitSelectionPlanExtraQuestionType $question)
+    {
+        if (!$this->extra_questions->contains($question)) return;
         $this->extra_questions->removeElement($question);
         $question->clearSelectionPlan();
     }
@@ -606,14 +640,16 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param int $new_order
      * @throws ValidationException
      */
-    public function recalculateQuestionOrder(SummitSelectionPlanExtraQuestionType $question, $new_order){
+    public function recalculateQuestionOrder(SummitSelectionPlanExtraQuestionType $question, $new_order)
+    {
         self::recalculateOrderForSelectable($this->extra_questions, $question, $new_order);
     }
 
     /**
      * @return ArrayCollection|\Doctrine\Common\Collections\Collection
      */
-    public function getExtraQuestions(){
+    public function getExtraQuestions()
+    {
         $criteria = Criteria::create();
         $criteria->orderBy(['order' => 'ASC']);
         return $this->extra_questions->matching($criteria);
@@ -622,7 +658,8 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @return ArrayCollection|\Doctrine\Common\Collections\Collection
      */
-    public function getMandatoryExtraQuestions(){
+    public function getMandatoryExtraQuestions()
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('mandatory', true));
         return $this->extra_questions->matching($criteria);
@@ -631,7 +668,7 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @return int
      */
-    public function getSubmissionLimitFor():int
+    public function getSubmissionLimitFor(): int
     {
         $res = -1;
         if ($this->isSubmissionOpen()) {
@@ -646,7 +683,8 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param SummitEventType $type
      * @return bool
      */
-    public function hasEventType(SummitEventType $type):bool{
+    public function hasEventType(SummitEventType $type): bool
+    {
         return $this->getEventTypeById($type->getId()) != null;
     }
 
@@ -654,10 +692,11 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param int $eventTypeId
      * @return SummitEventType|null
      */
-    public function getEventTypeById(int $eventTypeId):?SummitEventType{
+    public function getEventTypeById(int $eventTypeId): ?SummitEventType
+    {
         //$criteria = Criteria::create();
         //$criteria->where(Criteria::expr()->eq('id', intval($eventTypeId)));
-        $event_type = $this->event_types->filter(function($e) use($eventTypeId){
+        $event_type = $this->event_types->filter(function ($e) use ($eventTypeId) {
             return $e->getId() === $eventTypeId;
         })->first();
         return $event_type === false ? null : $event_type;
@@ -726,7 +765,7 @@ class SelectionPlan extends SilverstripeBaseModel
     {
         $this->presentation_speaker_notification_email_template = $presentation_speaker_notification_email_template;
     }
-  
+
     /**
      * @return SummitSelectedPresentationList[]
      */
@@ -738,8 +777,9 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @param SummitSelectedPresentationList $selection_list
      */
-    public function addSelectionList(SummitSelectedPresentationList $selection_list){
-        if($this->selection_lists->contains($selection_list)) return;
+    public function addSelectionList(SummitSelectedPresentationList $selection_list)
+    {
+        if ($this->selection_lists->contains($selection_list)) return;
         $this->selection_lists->add($selection_list);
         $selection_list->setSelectionPlan($this);
     }
@@ -747,8 +787,9 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @param SummitSelectedPresentationList $selection_list
      */
-    public function removeSelectionList(SummitSelectedPresentationList $selection_list){
-        if(!$this->selection_lists->contains($selection_list)) return;
+    public function removeSelectionList(SummitSelectedPresentationList $selection_list)
+    {
+        if (!$this->selection_lists->contains($selection_list)) return;
         $this->selection_lists->removeElement($selection_list);
         $selection_list->clearSelectionPlan();
     }
@@ -763,17 +804,18 @@ class SelectionPlan extends SilverstripeBaseModel
     public function getSelectionListByTrackAndTypeAndOwner
     (
         PresentationCategory $track,
-        string $list_type,
-        ?Member $owner = null
-    ):?SummitSelectedPresentationList{
-        if(!in_array($list_type, SummitSelectedPresentationList::ValidListTypes))
+        string               $list_type,
+        ?Member              $owner = null
+    ): ?SummitSelectedPresentationList
+    {
+        if (!in_array($list_type, SummitSelectedPresentationList::ValidListTypes))
             throw new ValidationException(sprintf("List Type %s is not valid.", $list_type));
 
         $criteria = Criteria::create();
         $criteria->andWhere(Criteria::expr()->eq('list_type', $list_type));
         $criteria->andWhere(Criteria::expr()->eq('category', $track));
 
-        if($list_type == SummitSelectedPresentationList::Individual){
+        if ($list_type == SummitSelectedPresentationList::Individual) {
             $criteria->andWhere(Criteria::expr()->eq('owner', $owner));
         }
 
@@ -785,7 +827,8 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param int $list_id
      * @return SummitSelectedPresentationList|null
      */
-    public function getSelectionListById(int $list_id):?SummitSelectedPresentationList{
+    public function getSelectionListById(int $list_id): ?SummitSelectedPresentationList
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $list_id));
 
@@ -798,8 +841,9 @@ class SelectionPlan extends SilverstripeBaseModel
      * @return SummitSelectedPresentationList
      * @throws ValidationException
      */
-    public function createTeamSelectionList(PresentationCategory $track):SummitSelectedPresentationList{
-        $team_selection_list = $this->getSelectionListByTrackAndTypeAndOwner($track,SummitSelectedPresentationList::Group);
+    public function createTeamSelectionList(PresentationCategory $track): SummitSelectedPresentationList
+    {
+        $team_selection_list = $this->getSelectionListByTrackAndTypeAndOwner($track, SummitSelectedPresentationList::Group);
         if (is_null($team_selection_list)) {
             Log::debug(sprintf("SelectionPlan::createSelectionLists adding team list for track %s selection plan %s", $track->getId(), $this->getId()));
             $team_selection_list = new SummitSelectedPresentationList();
@@ -818,8 +862,9 @@ class SelectionPlan extends SilverstripeBaseModel
      * @return SummitSelectedPresentationList
      * @throws ValidationException
      */
-    public function createIndividualSelectionList(PresentationCategory $track, Member $member ):SummitSelectedPresentationList{
-        if(!is_null($member)) {
+    public function createIndividualSelectionList(PresentationCategory $track, Member $member): SummitSelectedPresentationList
+    {
+        if (!is_null($member)) {
             $individual_selection_list = $this->getSelectionListByTrackAndTypeAndOwner($track, SummitSelectedPresentationList::Individual, $member);
 
             if (is_null($individual_selection_list)) {
@@ -879,21 +924,24 @@ class SelectionPlan extends SilverstripeBaseModel
         return $rating === false ? 0 : $rating->getOrder();
     }
 
-    public function addTrackChairRatingType(PresentationTrackChairRatingType $ratingType):void{
-        if($this->track_chair_rating_types->contains($ratingType)) return;
+    public function addTrackChairRatingType(PresentationTrackChairRatingType $ratingType): void
+    {
+        if ($this->track_chair_rating_types->contains($ratingType)) return;
         $ratingType->setOrder($this->getTrackChairRatingTypeMaxOrder() + 1);
         $ratingType->setSelectionPlan($this);
         $this->track_chair_rating_types->add($ratingType);
     }
 
-    public function removeTrackChairRatingType(PresentationTrackChairRatingType $ratingType):void{
-        if(!$this->track_chair_rating_types->contains($ratingType)) return;
+    public function removeTrackChairRatingType(PresentationTrackChairRatingType $ratingType): void
+    {
+        if (!$this->track_chair_rating_types->contains($ratingType)) return;
         $this->track_chair_rating_types->removeElement($ratingType);
         $ratingType->clearSelectionPlan();
         self::resetOrderForSelectable($this->track_chair_rating_types);
     }
 
-    public function clearTrackChairRatingType():void{
+    public function clearTrackChairRatingType(): void
+    {
         $this->track_chair_rating_types->clear();
     }
 
@@ -902,8 +950,25 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param int $new_order
      * @throws ValidationException
      */
-    public function recalculateTrackChairRatingTypeOrder(PresentationTrackChairRatingType $ratingType, $new_order){
+    public function recalculateTrackChairRatingTypeOrder(PresentationTrackChairRatingType $ratingType, $new_order)
+    {
         self::recalculateOrderForSelectable($this->track_chair_rating_types, $ratingType, $new_order);
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getSubmissionLockDownPresentationStatusDate(): ?DateTime
+    {
+        return $this->submission_lock_down_presentation_status_date;
+    }
+
+    /**
+     * @param DateTime $submission_lock_down_presentation_status_date
+     */
+    public function setSubmissionLockDownPresentationStatusDate(?DateTime $submission_lock_down_presentation_status_date): void
+    {
+        $this->submission_lock_down_presentation_status_date = $submission_lock_down_presentation_status_date;
     }
 
 }

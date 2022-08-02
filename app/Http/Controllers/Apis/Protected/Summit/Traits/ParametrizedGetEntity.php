@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Http\Exceptions\HTTP403ForbiddenException;
+use App\ModelSerializers\SerializerUtils;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use models\exceptions\EntityNotFoundException;
@@ -25,6 +26,8 @@ trait ParametrizedGetEntity
 {
     use BaseAPI;
 
+    use RequestProcessor;
+
     /**
      * @param $id
      * @param callable $getEntityFn
@@ -33,38 +36,18 @@ trait ParametrizedGetEntity
      */
     public function _get($id, callable $getEntityFn, ...$args)
     {
-        try {
+        return $this->processRequest(function() use($id, $getEntityFn, $args){
+
             $entity = $getEntityFn($id, ...$args);
             if(is_null($entity))
                 throw new EntityNotFoundException();
 
-            $fields = Request::input('fields', '');
-            $relations = Request::input('relations', '');
-
-            $relations = !empty($relations) ? explode(',', $relations) : [];
-            $fields = !empty($fields) ? explode(',', $fields) : [];
-
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($entity)->serialize(
-                Request::input('expand', ''),
-                $fields,
-                $relations
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
             ));
 
-        } catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412(array($ex->getMessage()));
-        } catch (EntityNotFoundException $ex) {
-            Log::warning($ex);
-            return $this->error404(array('message' => $ex->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex) {
-            Log::warning($ex);
-            return $this->error401();
-        } catch (HTTP403ForbiddenException $ex) {
-            Log::warning($ex);
-            return $this->error403();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 }

@@ -1,4 +1,6 @@
 <?php namespace App\Http\Controllers;
+use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
+
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,32 +17,14 @@
  * Class SummitSelectionPlanValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitSelectionPlanValidationRulesFactory
+final class SummitSelectionPlanValidationRulesFactory extends AbstractValidationRulesFactory
 {
     /**
-     * @param array $data
-     * @param bool $update
+     * @param array $payload
      * @return array
      */
-    public static function build(array $data, $update = false){
-        if($update){
-            return [
-                'name'                  => 'sometimes|string|max:255',
-                'is_enabled'            => 'sometimes|boolean',
-                'allow_new_presentations' => 'sometimes|boolean',
-                'max_submission_allowed_per_user' => 'sometimes|integer|min:1',
-                'submission_begin_date' => 'nullable|date_format:U',
-                'submission_end_date'   => 'nullable|required_with:submission_begin_date|date_format:U|after_or_equal:submission_begin_date',
-                'voting_begin_date'     => 'nullable|date_format:U',
-                'voting_end_date'       => 'nullable|required_with:voting_begin_date|date_format:U|after_or_equal:voting_begin_date',
-                'selection_begin_date'  => 'nullable|date_format:U',
-                'selection_end_date'    => 'nullable|required_with:selection_begin_date|date_format:U|after_or_equal:selection_begin_date',
-                'submission_period_disclaimer' =>  'sometimes|string',
-                'presentation_creator_notification_email_template'      =>  'sometimes|string|max:255',
-                'presentation_moderator_notification_email_template'    =>  'sometimes|string|max:255',
-                'presentation_speaker_notification_email_template'      =>  'sometimes|string|max:255',
-            ];
-        }
+    public static function buildForAdd(array $payload = []): array
+    {
         return [
             'name'                  => 'required|string|max:255',
             'is_enabled'            => 'required|boolean',
@@ -48,6 +32,32 @@ final class SummitSelectionPlanValidationRulesFactory
             'max_submission_allowed_per_user' => 'sometimes|integer|min:1',
             'submission_begin_date' => 'nullable|date_format:U',
             'submission_end_date'   => 'nullable|required_with:submission_begin_date|date_format:U|after_or_equal:submission_begin_date',
+            'submission_lock_down_presentation_status_date' => 'nullable|date_format:U',
+            'voting_begin_date'     => 'nullable|date_format:U',
+            'voting_end_date'       => 'nullable|required_with:voting_begin_date|date_format:U|after_or_equal:voting_begin_date',
+            'selection_begin_date'  => 'nullable|date_format:U',
+            'selection_end_date'    => 'nullable|required_with:selection_begin_date|date_format:U|after_or_equal:selection_begin_date',
+            'submission_period_disclaimer' =>  'sometimes|string',
+            'presentation_creator_notification_email_template'      =>  'sometimes|string|max:255',
+            'presentation_moderator_notification_email_template'    =>  'sometimes|string|max:255',
+            'presentation_speaker_notification_email_template'      =>  'sometimes|string|max:255',
+        ];
+    }
+
+    /**
+     * @param array $payload
+     * @return array
+     */
+    public static function buildForUpdate(array $payload = []): array
+    {
+        return [
+            'name'                  => 'sometimes|string|max:255',
+            'is_enabled'            => 'sometimes|boolean',
+            'allow_new_presentations' => 'sometimes|boolean',
+            'max_submission_allowed_per_user' => 'sometimes|integer|min:1',
+            'submission_begin_date' => 'nullable|date_format:U',
+            'submission_end_date'   => 'nullable|required_with:submission_begin_date|date_format:U|after_or_equal:submission_begin_date',
+            'submission_lock_down_presentation_status_date' => 'nullable|date_format:U',
             'voting_begin_date'     => 'nullable|date_format:U',
             'voting_end_date'       => 'nullable|required_with:voting_begin_date|date_format:U|after_or_equal:voting_begin_date',
             'selection_begin_date'  => 'nullable|date_format:U',

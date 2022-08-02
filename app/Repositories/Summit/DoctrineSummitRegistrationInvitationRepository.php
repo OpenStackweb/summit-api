@@ -57,7 +57,7 @@ class DoctrineSummitRegistrationInvitationRepository
             'email' => 'e.email:json_string',
             'first_name' => 'e.first_name:json_string',
             'last_name' => 'e.last_name:json_string',
-            'is_accepted' => new DoctrineSwitchFilterMapping([
+            'is_completed' => new DoctrineSwitchFilterMapping([
                     'true' => new DoctrineCaseFilterMapping(
                         'true',
                         "e.accepted_date is not null"
@@ -65,6 +65,17 @@ class DoctrineSummitRegistrationInvitationRepository
                     'false' => new DoctrineCaseFilterMapping(
                         'false',
                         "e.accepted_date is null"
+                    ),
+                ]
+            ),
+            'is_accepted' => new DoctrineSwitchFilterMapping([
+                    'true' => new DoctrineCaseFilterMapping(
+                        'true',
+                        "SIZE(e.orders) > 0"
+                    ),
+                    'false' => new DoctrineCaseFilterMapping(
+                        'false',
+                        "e.orders IS EMPTY"
                     ),
                 ]
             ),

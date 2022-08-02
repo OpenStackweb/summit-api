@@ -621,6 +621,14 @@ class AppServiceProvider extends ServiceProvider
 
             return ($value % 1024 == 0);
         });
+
+        Validator::extend('single_word', function ($attribute, $value, $parameters, $validator) {
+            $validator->addReplacer('single_word', function($message, $attribute, $rule, $parameters) use ($validator) {
+                return sprintf("%s should be single word", $attribute);
+            });
+
+            return is_string($value) && ! preg_match('/\s/u', $value);
+        });
     }
 
     /**

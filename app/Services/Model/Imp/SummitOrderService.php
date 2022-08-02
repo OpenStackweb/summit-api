@@ -2572,7 +2572,11 @@ final class SummitOrderService
             $viewType = $summit->getBadgeViewTypeByName($viewTypeName);
 
             if(is_null($viewType)){
-                throw new EntityNotFoundException(sprintf("View Type %s not found.", $viewTypeName));
+
+                $viewType = $summit->getBadgeViewTypeById(intval($viewTypeName));
+                if(is_null($viewType)) {
+                    throw new EntityNotFoundException(sprintf("View Type %s not found.", $viewTypeName));
+                }
             }
 
             $badge = $this->getAttendeeBadge($summit, $ticket_id, $requestor);
@@ -2619,7 +2623,10 @@ final class SummitOrderService
 
             $view = $summit->getBadgeViewTypeByName($viewType);
             if(is_null($view)){
-                throw new EntityNotFoundException(sprintf("View Type %s not found.", $viewType));
+                $view = $summit->getBadgeViewTypeById(intval($viewType));
+                if(is_null($view)) {
+                    throw new EntityNotFoundException(sprintf("View Type %s not found.", $viewType));
+                }
             }
             $badge = $this->getAttendeeBadge($summit, $ticket_id, $requestor);
             $this->checkPrintingRights($requestor, $badge, $view);

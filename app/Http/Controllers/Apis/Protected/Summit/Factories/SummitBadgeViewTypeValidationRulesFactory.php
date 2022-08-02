@@ -28,8 +28,8 @@ final class SummitBadgeViewTypeValidationRulesFactory extends AbstractValidation
     public static function buildForAdd(array $payload = []): array
     {
         return [
-            'name' => 'required|single_word',
-            'description' => 'required|string',
+            'name' => 'required|single_word|max:50',
+            'description' => 'required|string|max:255',
             'is_default' => 'required|boolean',
         ];
     }
@@ -41,8 +41,8 @@ final class SummitBadgeViewTypeValidationRulesFactory extends AbstractValidation
     public static function buildForUpdate(array $payload = []): array
     {
         return [
-            'name' => 'sometimes|single_word',
-            'description' => 'sometimes|string',
+            'name' => 'sometimes|single_word|max:50',
+            'description' => 'sometimes|string|max:255',
             'is_default' => 'sometimes|boolean',
         ];
     }

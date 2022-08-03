@@ -133,7 +133,9 @@ final class SponsoredProjectService
 
             SponsoredProjectFactory::populate($sponsoredProject, $payload);
 
-            if(isset($payload['parent_project_id'])) {
+            if(array_key_exists('parent_project_id', $payload) && is_null($payload['parent_project_id'])) {
+                $sponsoredProject->clearParentProject();
+            } else if(isset($payload['parent_project_id'])) {
                 $parentProject = $this->repository->getById(intval($payload['parent_project_id']));
 
                 if(is_null($parentProject) || !$parentProject instanceof SponsoredProject)

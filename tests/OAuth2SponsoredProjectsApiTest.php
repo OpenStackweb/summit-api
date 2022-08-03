@@ -505,7 +505,8 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTest
         $subproject = $sponsored_project_repository->find($added_subproject_id);
 
         $params = [
-            'id' => $subproject->getParentProject()->getId(),
+            'id'     => $subproject->getParentProject()->getId(),
+            'expand' => 'parent_project'
         ];
 
         $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);

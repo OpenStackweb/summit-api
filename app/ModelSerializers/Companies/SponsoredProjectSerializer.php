@@ -11,7 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\AbstractSerializer;
 use Libs\ModelSerializers\Many2OneExpandSerializer;
+use models\main\SponsoredProject;
+
 /**
  * Class SponsoredProjectSerializer
  * @package ModelSerializers
@@ -26,6 +30,7 @@ final class SponsoredProjectSerializer extends SilverStripeSerializer
         'ShouldShowOnNavBar' => 'should_show_on_nav_bar:json_boolean',
         'SiteURL' => 'site_url:json_url',
         'LogoUrl' => 'logo_url:json_url',
+        'ParentProjectId' => 'parent_project_id:json_int',
         'SponsorshipTypesIds' => 'sponsorship_types',
         'SubprojectIds' => 'subprojects',
     ];
@@ -40,4 +45,31 @@ final class SponsoredProjectSerializer extends SilverStripeSerializer
             'getter' => 'getSubProjects',
         ]
     ];
+
+    /**
+     * @param null $expand
+     * @param array $fields
+     * @param array $relations
+     * @param array $params
+     * @return array
+     */
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [] )
+    {
+        $values = parent::serialize($expand, $fields, $relations, $params);
+        $project = $this->object;
+        if(!count($relations)) $relations = $this->getAllowedRelations();
+        if(!$project instanceof SponsoredProject) return $values;
+
+        if (!empty($expand)) {
+            foreach (explode(',', $expand) as $relation) {
+                $relation = trim($relation);
+                if ($relation == 'parent_project') {
+                    $values['parent_project'] = SerializerRegistry::getInstance()->getSerializer($project->getParentProject())
+                        ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                }
+            }
+        }
+
+        return $values;
+    }
 }

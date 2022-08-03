@@ -71,13 +71,13 @@ class SponsoredProject extends SilverstripeBaseModel
     protected $logo;
 
     /**
-     * @ORM\OneToMany(targetEntity="SponsoredProject", mappedBy="parent_project", cascade={"persist","remove"})
+     * @ORM\OneToMany(targetEntity="SponsoredProject", mappedBy="parent_project", cascade={"persist"})
      * @var ArrayCollection
      */
     private $sub_projects;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SponsoredProject", inversedBy="sub_projects", cascade={"persist","remove"})
+     * @ORM\ManyToOne(targetEntity="SponsoredProject", inversedBy="sub_projects", cascade={"persist"})
      * @ORM\JoinColumn(name="ParentProjectID", referencedColumnName="ID")
      * @var SponsoredProject
      */

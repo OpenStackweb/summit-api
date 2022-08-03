@@ -971,4 +971,7 @@ class SelectionPlan extends SilverstripeBaseModel
         $this->submission_lock_down_presentation_status_date = $submission_lock_down_presentation_status_date;
     }
 
+    public function clearSubmissionLockDownPresentationStatusDate():void{
+        $this->submission_lock_down_presentation_status_date = null;
+    }
 }

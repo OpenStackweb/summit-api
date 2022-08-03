@@ -105,6 +105,18 @@ final class SummitSelectionPlanFactory
             }
         }
 
+        if(array_key_exists('submission_lock_down_presentation_status_date', $data)){
+            if (isset($data['submission_lock_down_presentation_status_date']) && $data['submission_lock_down_presentation_status_date'] > 0){
+                $start_datetime = intval($data['submission_lock_down_presentation_status_date']);
+                $start_datetime = new \DateTime("@$start_datetime");
+                $start_datetime->setTimezone($summit->getTimeZone());
+                $selection_plan->setSubmissionLockDownPresentationStatusDate($start_datetime);
+            }
+            else{
+                $selection_plan->clearSubmissionLockDownPresentationStatusDate();
+            }
+        }
+
         if(isset($data['submission_period_disclaimer']))
             $selection_plan->setSubmissionPeriodDisclaimer(trim($data['submission_period_disclaimer']));
 

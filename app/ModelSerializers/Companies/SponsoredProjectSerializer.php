@@ -64,8 +64,11 @@ final class SponsoredProjectSerializer extends SilverStripeSerializer
             foreach (explode(',', $expand) as $relation) {
                 $relation = trim($relation);
                 if ($relation == 'parent_project') {
-                    $values['parent_project'] = SerializerRegistry::getInstance()->getSerializer($project->getParentProject())
-                        ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                    $parentProject = $project->getParentProject();
+                    if (!is_null($parentProject) && $project instanceof SponsoredProject) {
+                        $values['parent_project'] = SerializerRegistry::getInstance()->getSerializer($project->getParentProject())
+                            ->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                    }
                 }
             }
         }

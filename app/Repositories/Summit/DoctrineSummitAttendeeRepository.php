@@ -64,8 +64,12 @@ final class DoctrineSummitAttendeeRepository
             $filter->hasFilter("tickets_count") ||
             $filter->hasFilter("ticket_type") ||
             $filter->hasFilter("badge_type") ||
+            $filter->hasFilter("badge_type_id") ||
             $filter->hasFilter('features') ||
-            $filter->hasFilter('access_levels')
+            $filter->hasFilter('features_id') ||
+            $filter->hasFilter('access_levels') ||
+            $filter->hasFilter('access_levels_ids') ||
+            $filter->hasFilter('ticket_type_id')
         ) {
             $query = $query->leftJoin('e.tickets', 't')
                 ->leftJoin('t.badge', 'b')
@@ -73,12 +77,17 @@ final class DoctrineSummitAttendeeRepository
                 ->leftJoin('t.ticket_type', 'tt');
         }
 
-        if($filter->hasFilter('features')) {
+        if(
+            $filter->hasFilter('features') ||
+            $filter->hasFilter('features_id')
+        ) {
             $query = $query->leftJoin('b.features', 'bf')
                 ->leftJoin("bt.badge_features","btf");
         }
 
-        if($filter->hasFilter('access_levels')){
+        if(
+            $filter->hasFilter('access_levels') ||
+            $filter->hasFilter('access_levels_ids') ){
             $query = $query->leftJoin("bt.access_levels","bac");
         }
 
@@ -154,7 +163,9 @@ final class DoctrineSummitAttendeeRepository
             ),
             'tickets_count' => new DoctrineHavingFilterMapping("", "t.owner", "count(t.id) :operator :value"),
             'ticket_type' => new DoctrineFilterMapping("tt.name :operator :value"),
+            'ticket_type_id' => new DoctrineFilterMapping("tt.id :operator :value"),
             'badge_type' => new DoctrineFilterMapping("bt.name :operator :value"),
+            'badge_type_id' => new DoctrineFilterMapping("bt.id :operator :value"),
             'status' =>  new DoctrineFilterMapping("e.status :operator :value"),
             'last_name'            => [
                 "m.last_name :operator :value",
@@ -178,7 +189,12 @@ final class DoctrineSummitAttendeeRepository
                 'bf.name :operator :value',
                 'btf.name :operator :value',
             ],
+            'features_id' => [
+                'bf.id :operator :value',
+                'btf.id :operator :value',
+            ],
             'access_levels' => 'bac.name :operator :value',
+            'access_levels_id' => 'bac.id :operator :value',
         ];
     }
 

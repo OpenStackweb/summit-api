@@ -968,7 +968,7 @@ class SelectionPlan extends SilverstripeBaseModel
      */
     public function setSubmissionLockDownPresentationStatusDate(?DateTime $submission_lock_down_presentation_status_date): void
     {
-        $this->submission_lock_down_presentation_status_date = $submission_lock_down_presentation_status_date;
+        $this->submission_lock_down_presentation_status_date = $this->convertDateFromTimeZone2UTC($submission_lock_down_presentation_status_date);
     }
 
     public function clearSubmissionLockDownPresentationStatusDate():void{

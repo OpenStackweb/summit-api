@@ -208,6 +208,55 @@ CSV;
         $this->assertResponseStatus(200);
     }
 
+    public function testIngestExistingInvitations(){
+
+        $csv_content = <<<CSV
+email,first_name,last_name
+cespin+3@gmail.com,Jason,Cirrus
+CSV;
+
+        $path = "/tmp/invitations.csv";
+
+        file_put_contents($path, $csv_content);
+
+        $file = new UploadedFile($path, "invitations.csv", 'text/csv', null, true);
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+        ];
+
+        $this->action(
+            "POST",
+            "OAuth2SummitRegistrationInvitationApiController@ingestInvitations",
+            $params,
+            [],
+            [],
+            [
+                'file' => $file
+            ],
+            $headers
+        );
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitRegistrationInvitationApiController@ingestInvitations",
+            $params,
+            [],
+            [],
+            [
+                'file' => $file
+            ],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+    }
+
     public function testInviteWithInvitation(){
 
         self::$default_ticket_type->setAudience(SummitTicketType::Audience_With_Invitation);

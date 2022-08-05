@@ -84,12 +84,6 @@ class PresentationSerializer extends SummitEventSerializer
         return $serializerType;
     }
 
-    /**
-     * @return string
-     */
-    protected function getSpeakersSerializerType():string{
-        return SerializerRegistry::SerializerType_Public;
-    }
 
     /**
      * @param null $expand
@@ -223,7 +217,7 @@ class PresentationSerializer extends SummitEventSerializer
                         foreach ($presentation->getSpeakers() as $s) {
                             $speakers[] = SerializerRegistry::getInstance()->getSerializer
                             (
-                                $s, $this->getSpeakersSerializerType()
+                                $s, $this->getSerializerType($relation)
                             )->serialize
                             (
                                 AbstractSerializer::filterExpandByPrefix($expand, $relation),
@@ -237,7 +231,7 @@ class PresentationSerializer extends SummitEventSerializer
                             $values['moderator'] = SerializerRegistry::getInstance()->getSerializer
                             (
                                 $presentation->getModerator(),
-                                $this->getSpeakersSerializerType()
+                                $this->getSerializerType($relation)
                             )->serialize
                             (
                                 AbstractSerializer::filterExpandByPrefix($expand, $relation),

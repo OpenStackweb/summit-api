@@ -24,6 +24,14 @@ use models\summit\SummitEvent;
 class SummitEventSerializer extends SilverStripeSerializer
 {
 
+    /**
+     * @param string $relation
+     * @return string
+     */
+    protected function getSerializerType(string $relation):string{
+        return SerializerRegistry::SerializerType_Public;
+    }
+
     protected static $array_mappings = [
         'Title' => 'title:json_string',
         'Abstract' => 'description:json_string',
@@ -174,7 +182,7 @@ class SummitEventSerializer extends SilverStripeSerializer
                         $attendance = [];
                         $count = 0;
                         foreach ($event->getCurrentAttendance() as $a) {
-                            $attendance[] = SerializerRegistry::getInstance()->getSerializer($a)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $attendance[] = SerializerRegistry::getInstance()->getSerializer($a, $this->getSerializerType($relation))->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             $count++;
                             if (AbstractSerializer::MaxCollectionPage < $count) break;
                         }
@@ -184,7 +192,7 @@ class SummitEventSerializer extends SilverStripeSerializer
                         {
                             $feedback = [];
                             foreach ($event->getFeedback() as $f) {
-                                $feedback[] = SerializerRegistry::getInstance()->getSerializer($f)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $feedback[] = SerializerRegistry::getInstance()->getSerializer($f, $this->getSerializerType($relation))->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
                             $values['feedback'] = $feedback;
                         }
@@ -193,7 +201,7 @@ class SummitEventSerializer extends SilverStripeSerializer
                         {
                             if ($event->hasLocation()) {
                                 unset($values['location_id']);
-                                $values['location'] = SerializerRegistry::getInstance()->getSerializer($event->getLocation())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $values['location'] = SerializerRegistry::getInstance()->getSerializer($event->getLocation(), $this->getSerializerType($relation))->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
                         }
                         break;
@@ -201,7 +209,7 @@ class SummitEventSerializer extends SilverStripeSerializer
                         {
                             if ($event->hasRSVPTemplate()) {
                                 unset($values['rsvp_template_id']);
-                                $values['rsvp_template'] = SerializerRegistry::getInstance()->getSerializer($event->getRSVPTemplate())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $values['rsvp_template'] = SerializerRegistry::getInstance()->getSerializer($event->getRSVPTemplate(), $this->getSerializerType($relation))->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
                         }
                         break;
@@ -209,7 +217,7 @@ class SummitEventSerializer extends SilverStripeSerializer
                         {
                             $sponsors = [];
                             foreach ($event->getSponsors() as $s) {
-                                $sponsors[] = SerializerRegistry::getInstance()->getSerializer($s)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $sponsors[] = SerializerRegistry::getInstance()->getSerializer($s, $this->getSerializerType($relation))->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
                             $values['sponsors'] = $sponsors;
                         }
@@ -217,20 +225,20 @@ class SummitEventSerializer extends SilverStripeSerializer
                     case 'track':
                     {
                         unset($values['track_id']);
-                        $values['track'] = SerializerRegistry::getInstance()->getSerializer($event->getCategory())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                        $values['track'] = SerializerRegistry::getInstance()->getSerializer($event->getCategory(), $this->getSerializerType())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                     case 'type':
                         {
                             if(!$event->hasType()) break;
                             unset($values['type_id']);
-                            $values['type'] = SerializerRegistry::getInstance()->getSerializer($event->getType())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $values['type'] = SerializerRegistry::getInstance()->getSerializer($event->getType(), $this->getSerializerType())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         break;
                     case 'tags':
                         {
                             $tags = [];
                             foreach ($event->getTags() as $tag) {
-                                $tags[] = SerializerRegistry::getInstance()->getSerializer($tag)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                $tags[] = SerializerRegistry::getInstance()->getSerializer($tag, $this->getSerializerType())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
                             $values['tags'] = $tags;
                         }
@@ -240,7 +248,7 @@ class SummitEventSerializer extends SilverStripeSerializer
                             if(!$event->hasCreatedBy())
                                 break;
                             unset($values['created_by_id']);
-                            $values['created_by'] = SerializerRegistry::getInstance()->getSerializer($event->getCreatedBy())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $values['created_by'] = SerializerRegistry::getInstance()->getSerializer($event->getCreatedBy(), $this->getSerializerType())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         break;
                     case 'updated_by':
@@ -248,7 +256,7 @@ class SummitEventSerializer extends SilverStripeSerializer
                             if(!$event->hasUpdatedBy())
                                 break;
                             unset($values['updated_by_id']);
-                            $values['updated_by'] = SerializerRegistry::getInstance()->getSerializer($event->getUpdatedBy())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $values['updated_by'] = SerializerRegistry::getInstance()->getSerializer($event->getUpdatedBy(), $this->getSerializerType())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
                         break;
                 }

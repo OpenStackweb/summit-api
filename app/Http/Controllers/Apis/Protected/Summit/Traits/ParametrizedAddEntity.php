@@ -11,14 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Http\Exceptions\HTTP403ForbiddenException;
-use Illuminate\Support\Facades\Log;
+
+use App\ModelSerializers\SerializerUtils;
 use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Validator;
-use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
 use ModelSerializers\SerializerRegistry;
-use Exception;
+
 /**
  * Trait ParametrizedAddEntity
  * @package App\Http\Controllers
@@ -27,64 +24,31 @@ trait ParametrizedAddEntity
 {
     use BaseAPI;
 
+    use RequestProcessor;
+
+    use GetAndValidateJsonPayload;
 
     public function _add(
         callable $getAddValidationRulesFn,
         callable $addEntityFn,
-        ...$args
-    ){
-        try {
-            if(!Request::isJson()) return $this->error400();
+                 ...$args
+    )
+    {
+        return $this->processRequest(function () use ($getAddValidationRulesFn, $addEntityFn, $args) {
+
+            if (!Request::isJson()) return $this->error400();
             $data = Request::json();
-            $payload = $data->all();
 
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $getAddValidationRulesFn($payload));
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
-
-            $fields = Request::input('fields', '');
-            $relations = Request::input('relations', '');
-
-            $relations = !empty($relations) ? explode(',', $relations) : [];
-            $fields = !empty($fields) ? explode(',', $fields) : [];
+            $payload = $this->getJsonPayload($getAddValidationRulesFn($data->all()));
 
             $entity = $addEntityFn($payload, ...$args);
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($entity)->serialize
             (
-                Request::input('expand', ''),
-                $fields,
-                $relations
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
             ));
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412(array($ex->getMessage()));
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (\HTTP401UnauthorizedException $ex) {
-            Log::warning($ex);
-            return $this->error401();
-        }
-        catch (HTTP403ForbiddenException $ex) {
-            Log::warning($ex);
-            return $this->error403();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 }

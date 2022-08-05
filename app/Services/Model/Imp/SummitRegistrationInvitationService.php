@@ -143,7 +143,14 @@ final class SummitRegistrationInvitationService
                 if (isset($row['allowed_ticket_types']) && is_string($row['allowed_ticket_types'])) {
                     $row['allowed_ticket_types'] = empty($row['allowed_ticket_types']) ? [] : explode('|', $row['allowed_ticket_types']);
                 }
-                $this->add($summit, $row);
+
+                $email = trim($row['email']);
+                $former_invitation = $summit->getSummitRegistrationInvitationByEmail($email);
+                if (!is_null($former_invitation)) {
+                    $this->update($summit, $former_invitation->getId(), $row);
+                } else {
+                    $this->add($summit, $row);
+                }
             } catch (\Exception $ex) {
                 Log::warning($ex);
                 $summit = $this->summit_repository->getById($summit->getId());

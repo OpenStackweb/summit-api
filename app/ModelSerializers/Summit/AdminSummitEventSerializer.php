@@ -19,6 +19,20 @@ use models\summit\SummitEvent;
 class AdminSummitEventSerializer extends SummitEventSerializer
 {
     /**
+     * @param string $relation
+     * @return string
+     */
+    protected function getSerializerType(string $relation):string{
+        $relation = trim($relation);
+        if($relation == 'created_by')
+            return SerializerRegistry::SerializerType_Admin;
+        if($relation == 'updated_by')
+            return SerializerRegistry::SerializerType_Admin;
+
+        return SerializerRegistry::SerializerType_Private;
+    }
+
+    /**
      * @param null $expand
      * @param array $fields
      * @param array $relations
@@ -26,7 +40,8 @@ class AdminSummitEventSerializer extends SummitEventSerializer
      * @return array
      */
     public function serialize(
-        $expand = null, array $fields = array(), array $relations = array(), array $params = array())
+        $expand = null, array $fields = [], array $relations = [], array $params = []
+    )
     {
         $event = $this->object;
         if (!$event instanceof SummitEvent) return [];

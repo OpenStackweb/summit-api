@@ -21,6 +21,22 @@ use models\summit\SummitEvent;
  */
 class AdminPresentationSerializer extends PresentationSerializer
 {
+    /**
+     * @param string $relation
+     * @return string
+     */
+    protected function getSerializerType(string $relation):string{
+        $relation = trim($relation);
+        if($relation == 'created_by')
+            return SerializerRegistry::SerializerType_Admin;
+        if($relation == 'updated_by')
+            return SerializerRegistry::SerializerType_Admin;
+        if($relation == 'speakers')
+            return SerializerRegistry::SerializerType_Admin;
+
+        return SerializerRegistry::SerializerType_Private;
+    }
+
     protected static $array_mappings = [
         'Rank'              => 'rank:json_int',
         'SelectionStatus'   => 'selection_status:json_string',

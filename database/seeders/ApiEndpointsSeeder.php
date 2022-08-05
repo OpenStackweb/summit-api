@@ -7140,6 +7140,18 @@ class ApiEndpointsSeeder extends Seeder
                         IGroup::Administrators,
                     ]
                 ],
+                [
+                    'name' => 'get-sponsored-subprojects',
+                    'route' => '/api/v1/sponsored-projects/{id}/subprojects',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SponsoredProjectScope::Read, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                    ]
+                ]
             ]
         );
     }

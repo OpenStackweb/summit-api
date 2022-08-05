@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
@@ -68,6 +69,19 @@ class SponsoredProject extends SilverstripeBaseModel
      * @var File
      */
     protected $logo;
+
+    /**
+     * @ORM\OneToMany(targetEntity="SponsoredProject", mappedBy="parent_project", cascade={"persist"})
+     * @var ArrayCollection
+     */
+    private $sub_projects;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="SponsoredProject", inversedBy="sub_projects", cascade={"persist"})
+     * @ORM\JoinColumn(name="ParentProjectID", referencedColumnName="ID")
+     * @var SponsoredProject
+     */
+    private $parent_project;
 
     /**
      * @param string $name
@@ -224,6 +238,7 @@ class SponsoredProject extends SilverstripeBaseModel
     {
         parent::__construct();
         $this->sponsorship_types = new ArrayCollection;
+        $this->sub_projects = new ArrayCollection;
         $this->is_active = false;
         $this->logo = null;
         $this->should_show_on_nav_bar = true;
@@ -292,4 +307,67 @@ class SponsoredProject extends SilverstripeBaseModel
         $sponsorshipType->clearSponsoredProject();
     }
 
+    /**
+     * @return int
+     */
+    public function getParentProjectId(): int {
+        try {
+            return !is_null($this->parent_project) ? $this->parent_project->getId() : 0;
+        } catch(\Exception $ex){
+            return 0;
+        }
+    }
+
+    /**
+     * @return SponsoredProject|null
+     */
+    public function getParentProject():?SponsoredProject{
+        return $this->parent_project;
+    }
+
+    /**
+     * @param SponsoredProject $sponsored_project
+     */
+    public function setParentProject(SponsoredProject $sponsored_project): void{
+        $this->parent_project = $sponsored_project;
+    }
+
+    public function clearParentProject(){
+        $this->parent_project = null;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getSubProjects(): Collection{
+        return $this->sub_projects;
+    }
+
+    /**
+     * @return array|int[]
+     */
+    public function getSubProjectIds(): array {
+        $res = [];
+        foreach($this->sub_projects as $item){
+            $res[] = $item->getId();
+        }
+        return $res;
+    }
+
+    /**
+     * @param int $id
+     * @return SponsoredProject|null
+     */
+    public function getSubprojectById(int $id):?SponsoredProject{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $id));
+        $subProject = $this->sub_projects->matching($criteria)->first();
+        return $subProject === false ? null : $subProject;
+    }
+
+    public function addSubProject(SponsoredProject $subProject){
+        if($this->sub_projects->contains($subProject)) return;
+        $this->sub_projects->add($subProject);
+        $subProject->setParentProject($this);
+    }
 }

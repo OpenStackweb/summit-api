@@ -358,6 +358,8 @@ final class MemberService
                 $member->setLastName(trim($user_data['last_name']));
                 $member->setBio($user_data['bio']);
                 $member->setUserExternalId($user_external_id);
+                $member->setCompany($user_data['company'] ?? '');
+
                 if(isset($user_data['pic']))
                     $member->setExternalPic($user_data['pic']);
                 $this->member_repository->add($member, true);
@@ -374,6 +376,7 @@ final class MemberService
                 if(isset($user_data['pic']))
                     $member->setExternalPic($user_data['pic']);
                 $member->setUserExternalId($user_external_id);
+                $member->setCompany($user_data['company'] ?? '');
             }
 
             $this->synchronizeGroups($member, $user_data['groups']);

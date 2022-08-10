@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use models\exceptions\ValidationException;
 use models\summit\Presentation;
 use models\summit\SummitEvent;
@@ -22,6 +23,7 @@ use Illuminate\Support\Facades\Validator;
 use utils\FilterParser;
 use utils\PagingInfo;
 use Illuminate\Support\Facades\Request;
+
 /**
  * Class RetrieveSummitEventsStrategy
  * @package App\Http\Controllers
@@ -29,13 +31,14 @@ use Illuminate\Support\Facades\Request;
 abstract class RetrieveSummitEventsStrategy
 {
 
-    protected function getPageParams(){
+    protected function getPageParams()
+    {
         // default values
-        $page     = 1;
+        $page = 1;
         $per_page = 5;
 
         if (Request::has('page')) {
-            $page     = intval(Request::input('page'));
+            $page = intval(Request::input('page'));
             $per_page = intval(Request::input('per_page'));
         }
 
@@ -49,40 +52,42 @@ abstract class RetrieveSummitEventsStrategy
      */
     public function getEvents(array $params = [])
     {
-            $values = Request::all();
+        $values = Request::all();
 
-            $rules = [
-                'page'     => 'integer|min:1',
-                'per_page' => 'required_with:page|integer|min:5|max:100',
-            ];
+        $rules = [
+            'page' => 'integer|min:1',
+            'per_page' => 'required_with:page|integer|min:5|max:100',
+        ];
 
-            $validation = Validator::make($values, $rules);
+        $validation = Validator::make($values, $rules);
 
-            if ($validation->fails()) {
-                $ex = new ValidationException();
-                throw $ex->setMessages($validation->messages()->toArray());
-            }
+        if ($validation->fails()) {
+            $ex = new ValidationException();
+            throw $ex->setMessages($validation->messages()->toArray());
+        }
 
 
-            list($page, $per_page) = $this->getPageParams();
+        list($page, $per_page) = $this->getPageParams();
 
-            return $this->retrieveEventsFromSource
-            (
-                new PagingInfo($page, $per_page), $this->buildFilter(), $this->buildOrder()
-            );
+        return $this->retrieveEventsFromSource
+        (
+            new PagingInfo($page, $per_page), $this->buildFilter(), $this->buildOrder()
+        );
     }
 
     /**
      * @return null|Filter
      */
-    public function getFilter(){
+    public function getFilter()
+    {
         return $this->buildFilter();
     }
 
     /**
      * @return null|Filter
      */
-    protected function buildFilter(){
+    protected function buildFilter()
+    {
 
         $filter = null;
 
@@ -90,10 +95,10 @@ abstract class RetrieveSummitEventsStrategy
             $filter = FilterParser::parse(Request::input('filter'), $this->getValidFilters());
         }
 
-        if(is_null($filter)) $filter = new Filter();
+        if (is_null($filter)) $filter = new Filter();
 
         $filter_validator_rules = $this->getFilterValidatorRules();
-        if(count($filter_validator_rules)) {
+        if (count($filter_validator_rules)) {
             $filter->validate($filter_validator_rules);
         }
 
@@ -103,10 +108,10 @@ abstract class RetrieveSummitEventsStrategy
     /**
      * @return null|Order
      */
-    protected function buildOrder(){
+    protected function buildOrder()
+    {
         $order = null;
-        if (Request::has('order'))
-        {
+        if (Request::has('order')) {
             $order = OrderParser::parse(Request::input('order'), [
                 'title',
                 'start_date',
@@ -122,6 +127,7 @@ abstract class RetrieveSummitEventsStrategy
         }
         return $order;
     }
+
     /**
      * @param PagingInfo $paging_info
      * @param Filter|null $filter
@@ -137,31 +143,32 @@ abstract class RetrieveSummitEventsStrategy
     {
         return [
 
-            'title'            => ['=@', '=='],
-            'abstract'         => ['=@', '=='],
-            'social_summary'   => ['=@', '=='],
-            'tags'             => ['=@', '=='],
-            'level'            => ['=@', '=='],
-            'start_date'       => ['>', '<', '<=', '>=', '=='],
-            'end_date'         => ['>', '<', '<=', '>=', '=='],
-            'summit_type_id'   => ['=='],
-            'event_type_id'    => ['=='],
-            'track_id'         => ['=='],
-            'track_group_id'   => ['=='],
-            'speaker_id'       => ['=='],
-            'sponsor_id'       => ['=='],
-            'summit_id'        => ['=='],
-            'sponsor'          => ['=@', '=='],
-            'location_id'      => ['=='],
-            'speaker'          => ['=@', '=='],
-            'speaker_email'    => ['=@', '=='],
-            'speaker_title'    => ['=@', '=='],
-            'speaker_company'  => ['=@', '=='],
+            'title' => ['=@', '@@', '=='],
+            'abstract' => ['=@', '@@', '=='],
+            'social_summary' => ['=@', '@@', '=='],
+            'tags' => ['=@', '@@', '=='],
+            'level' => ['=@', '@@', '=='],
+            'start_date' => ['>', '<', '<=', '>=', '=='],
+            'end_date' => ['>', '<', '<=', '>=', '=='],
+            'summit_type_id' => ['=='],
+            'event_type_id' => ['=='],
+            'track_id' => ['=='],
+            'track_group_id' => ['=='],
+            'speaker_id' => ['=='],
+            'sponsor_id' => ['=='],
+            'summit_id' => ['=='],
+            'sponsor' => ['=@', '@@', '=='],
+            'location_id' => ['=='],
+            'speaker' => ['=@', '@@', '=='],
+            'speaker_email' => ['=@', '@@', '=='],
+            'speaker_title' => ['=@', '@@', '=='],
+            'speaker_company' => ['=@', '@@', '=='],
             'selection_status' => ['=='],
-            'id'               => ['=='],
+            'id' => ['=='],
             'selection_plan_id' => ['=='],
-            'created_by_fullname'  => ['=@', '=='],
-            'created_by_email'  => ['=@', '=='],
+            'created_by_fullname' => ['=@', '@@', '=='],
+            'created_by_email' => ['=@', '@@', '=='],
+            'created_by_company' => ['=@', '@@', '=='],
             'type_allows_publishing_dates' => ['=='],
             'type_allows_location' => ['=='],
             'type_allows_attendee_vote' => ['=='],
@@ -176,37 +183,39 @@ abstract class RetrieveSummitEventsStrategy
     /**
      * @return array
      */
-    protected function getFilterValidatorRules():array{
+    protected function getFilterValidatorRules(): array
+    {
         return [
-            'title'           => 'sometimes|string',
-            'abstract'        => 'sometimes|string',
-            'social_summary'  => 'sometimes|string',
-            'tags'            => 'sometimes|string',
-            'level'           => 'sometimes|string',
-            'speaker'         => 'sometimes|string',
-            'speaker_email'   => 'sometimes|string',
-            'speaker_title'   => 'sometimes|string',
+            'title' => 'sometimes|string',
+            'abstract' => 'sometimes|string',
+            'social_summary' => 'sometimes|string',
+            'tags' => 'sometimes|string',
+            'level' => 'sometimes|string',
+            'speaker' => 'sometimes|string',
+            'speaker_email' => 'sometimes|string',
+            'speaker_title' => 'sometimes|string',
             'speaker_company' => 'sometimes|string',
-            'start_date'      => 'sometimes|date_format:U',
-            'end_date'        => 'sometimes|date_format:U',
-            'summit_type_id'  => 'sometimes|integer',
-            'event_type_id'   => 'sometimes|integer',
-            'track_id'        => 'sometimes|integer',
-            'track_group_id'  => 'sometimes|integer',
-            'summit_id'       => 'sometimes|integer',
-            'speaker_id'      => 'sometimes|integer',
-            'location_id'     => 'sometimes|integer',
-            'id'              => 'sometimes|integer',
+            'start_date' => 'sometimes|date_format:U',
+            'end_date' => 'sometimes|date_format:U',
+            'summit_type_id' => 'sometimes|integer',
+            'event_type_id' => 'sometimes|integer',
+            'track_id' => 'sometimes|integer',
+            'track_group_id' => 'sometimes|integer',
+            'summit_id' => 'sometimes|integer',
+            'speaker_id' => 'sometimes|integer',
+            'location_id' => 'sometimes|integer',
+            'id' => 'sometimes|integer',
             'selection_plan_id' => 'sometimes|integer',
-            'created_by_fullname'  => 'sometimes|string',
-            'created_by_email'  => 'sometimes|string',
+            'created_by_fullname' => 'sometimes|string',
+            'created_by_email' => 'sometimes|string',
+            'created_by_company' => 'sometimes|string',
             'type_allows_publishing_dates' => 'sometimes|boolean',
             'type_allows_location' => 'sometimes|boolean',
             'type_allows_attendee_vote' => 'sometimes|boolean',
             'type_allows_custom_ordering' => 'sometimes|boolean',
             'published' => 'sometimes|boolean',
-            'class_name' => 'sometimes|string|in:'.implode(',',[ Presentation::ClassName, SummitEvent::ClassName]),
-            'presentation_attendee_vote_date'  => 'sometimes|date_format:U',
+            'class_name' => 'sometimes|string|in:' . implode(',', [Presentation::ClassName, SummitEvent::ClassName]),
+            'presentation_attendee_vote_date' => 'sometimes|date_format:U',
             'votes_count' => 'sometimes|integer',
             'selection_status' => 'sometimes|string|in:selected,accepted,rejected,alternate,lightning-accepted,lightning-alternate',
         ];

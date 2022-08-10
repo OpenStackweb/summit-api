@@ -369,6 +369,12 @@ class Member extends SilverstripeBaseModel
     private $candidate_profiles;
 
     /**
+     * @ORM\Column(name="Company", nullable=true, type="string")
+     * @var string
+     */
+    private $company;
+
+    /**
      * Member constructor.
      */
     public function __construct()
@@ -2412,4 +2418,21 @@ SQL;
         self::ShirtSize_WXL,
         self::ShirtSize_WXXL,
     ];
+
+    /**
+     * @return string
+     */
+    public function getCompany(): ?string
+    {
+        return $this->company;
+    }
+
+    /**
+     * @param string $company
+     */
+    public function setCompany(string $company): void
+    {
+        $this->company = $company;
+    }
+
 }

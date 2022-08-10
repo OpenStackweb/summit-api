@@ -111,6 +111,10 @@ final class DoctrineSummitEventRepository
         return [
             'id' => 'e.id:json_int',
             'title' => 'e.title:json_string',
+            'streaming_url' => 'e.streaming_url:json_string',
+            'streaming_type' => 'e.streaming_type:json_string',
+            'meeting_url' => 'e.meeting_url:json_string',
+            'etherpad_link' => 'e.etherpad_link:json_string',
             'abstract' => 'e.abstract:json_string',
             'level' => 'e.level:json_string',
             'status' => 'p.status:json_string',
@@ -328,6 +332,7 @@ final class DoctrineSummitEventRepository
                 "concat(cb.first_name, ' ', cb.last_name) :operator :value "
             ),
             'created_by_email' => 'cb.email',
+            'created_by_company' => 'cb.company',
             'class_name' => new DoctrineInstanceOfFilterMapping(
                 "e",
                 [

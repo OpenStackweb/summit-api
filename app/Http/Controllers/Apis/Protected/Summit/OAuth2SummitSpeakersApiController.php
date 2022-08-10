@@ -154,6 +154,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'email' => ['=@', '@@', '=='],
                     'id' => ['=='],
                     'full_name' => ['=@', '@@', '=='],
+                    'member_id' => ['=='],
+                    'member_user_external_id' => ['=='],
                     'has_accepted_presentations' => ['=='],
                     'has_alternate_presentations' => ['=='],
                     'has_rejected_presentations' => ['=='],
@@ -173,6 +175,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'email' => 'sometimes|string',
                     'id' => 'sometimes|integer',
                     'full_name' => 'sometimes|string',
+                    'member_id' => 'sometimes|integer',
+                    'member_user_external_id' => 'sometimes|integer',
                     'has_accepted_presentations' => 'sometimes|required|string|in:true,false',
                     'has_alternate_presentations' => 'sometimes|required|string|in:true,false',
                     'has_rejected_presentations' => 'sometimes|required|string|in:true,false',
@@ -243,6 +247,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'email' => ['=@', '@@', '=='],
                     'id' => ['=='],
                     'full_name' => ['=@', '@@', '=='],
+                    'member_id' => ['=='],
+                    'member_user_external_id' => ['=='],
                     'has_accepted_presentations' => ['=='],
                     'has_alternate_presentations' => ['=='],
                     'has_rejected_presentations' => ['=='],
@@ -262,6 +268,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'email' => 'sometimes|string',
                     'id' => 'sometimes|integer',
                     'full_name' => 'sometimes|string',
+                    'member_id' => 'sometimes|integer',
+                    'member_user_external_id' => 'sometimes|integer',
                     'has_accepted_presentations' => 'sometimes|required|string|in:true,false',
                     'has_alternate_presentations' => 'sometimes|required|string|in:true,false',
                     'has_rejected_presentations' => 'sometimes|required|string|in:true,false',
@@ -411,6 +419,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'email' => ['=@', '=='],
                     'id' => ['=='],
                     'full_name' => ['=@', '=='],
+                    'member_id' => ['=='],
+                    'member_user_external_id' => ['=='],
                 ];
             },
             function () {
@@ -420,6 +430,8 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'email' => 'sometimes|string',
                     'id' => 'sometimes|integer',
                     'full_name' => 'sometimes|string',
+                    'member_id' => 'sometimes|integer',
+                    'member_user_external_id' => 'sometimes|integer',
                 ];
             },
             function () {

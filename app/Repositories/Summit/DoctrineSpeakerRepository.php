@@ -111,6 +111,12 @@ final class DoctrineSpeakerRepository
                 "OR ( LOWER(rr.email) :operator LOWER(:value) )"
             ),
             'id' => 'e.id',
+            'member_id' => new DoctrineFilterMapping(
+                "( m.id :operator :value )"
+            ),
+            'member_user_external_id' => new DoctrineFilterMapping(
+                "( m.user_external_id :operator :value )"
+            ),
             'presentations_track_id' => new DoctrineFilterMapping(
                 'EXISTS ( 
                               SELECT __p41_:i.id FROM models\summit\Presentation __p41_:i 
@@ -883,6 +889,8 @@ SQL;
                 'email' => 'Email',
                 'id' => 'ID',
                 'full_name' => "FullName",
+                'member_id' => "MemberID",
+                'member_user_external_id' => "MemberUserExternalID",
             ]);
             if (!empty($where_conditions)) {
                 $extra_filters = " WHERE {$where_conditions}";
@@ -904,14 +912,16 @@ SQL;
         $query_count = <<<SQL
 SELECT COUNT(DISTINCT(ID)) AS QTY
 FROM (
-	SELECT S.ID,
-	IFNULL(S.FirstName, M.FirstName) AS FirstName,
-	IFNULL(S.LastName, M.Surname) AS LastName,
-	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-	IFNULL(M.Email,R.Email) AS Email
-	FROM PresentationSpeaker S
-	LEFT JOIN Member M ON M.ID = S.MemberID
-	LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
+    SELECT S.ID,
+           M.ID AS MemberID,
+           M.ExternalUserID AS MemberUserExternalID,
+           IFNULL(S.FirstName, M.FirstName) AS FirstName,
+           IFNULL(S.LastName, M.Surname) AS LastName,
+           CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
+           IFNULL(M.Email,R.Email) AS Email
+    FROM PresentationSpeaker S
+        LEFT JOIN Member M ON M.ID = S.MemberID
+        LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
 )
 SUMMIT_SPEAKERS
 {$extra_filters}
@@ -953,6 +963,7 @@ FROM (
     S.PhotoID,
     S.BigPhotoID,
     M.ID AS MemberID,
+    M.ExternalUserID AS MemberUserExternalID,
     R.ID AS RegistrationRequestID
     FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID

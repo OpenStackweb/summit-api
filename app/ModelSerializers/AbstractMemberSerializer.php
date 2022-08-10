@@ -38,6 +38,7 @@ class AbstractMemberSerializer extends SilverStripeSerializer
         'ProfilePhotoUrl' => 'pic:json_url',
         'MembershipType' => 'membership_type:json_string',
         'LatestCandidateProfileId' => 'candidate_profile_id:json_int',
+        'Company'         => 'company:json_string',
     ];
 
     protected static $allowed_relations = [

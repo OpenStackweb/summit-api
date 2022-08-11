@@ -845,6 +845,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                         'email'      => ['=@', '=='],
                         'id'         => ['=='],
                         'full_name'  => ['=@', '=='],
+                        'member_id'  => ['=='],
+                        'member_user_external_id' => ['=='],
                     ];
                 },
                 function(){
@@ -854,6 +856,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                         'email'      => 'sometimes|string',
                         'id'         => 'sometimes|integer',
                         'full_name'  => 'sometimes|string',
+                        'member_id'  => 'sometimes|integer',
+                        'member_user_external_id' => 'sometimes|integer',
                     ];
                 },
                 function()

@@ -1136,7 +1136,9 @@ SQL;
                 'first_name' => 'FirstName',
                 'last_name' => 'LastName',
                 'email' => 'Email',
-                'id' => 'ID'
+                'id' => 'ID',
+                'member_id' => "MemberID",
+                'member_user_external_id' => "MemberUserExternalID",
             ]);
             if (!empty($where_conditions)) {
                 $extra_filters = " WHERE {$where_conditions}";
@@ -1160,6 +1162,8 @@ SQL;
 SELECT COUNT(DISTINCT(ID)) AS QTY
 FROM (
 	SELECT S.ID,
+	M.ID AS MemberID,
+	M.ExternalUserID AS MemberUserExternalID,
 	IFNULL(S.FirstName, M.FirstName) AS FirstName,
 	IFNULL(S.LastName, M.Surname) AS LastName,
 	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
@@ -1199,6 +1203,7 @@ FROM (
     S.FundedTravel,
     S.Country,
     S.MemberID,
+    M.ExternalUserID AS MemberUserExternalID,
     S.WillingToTravel,
     S.WillingToPresentVideo,
     S.Notes,

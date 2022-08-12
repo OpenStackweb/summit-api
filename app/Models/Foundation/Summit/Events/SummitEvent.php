@@ -57,6 +57,12 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class SummitEvent extends SilverstripeBaseModel
 {
+
+    /**
+     *  minimun number of minutes that an event must last
+     */
+    const MIN_EVENT_MINUTES = 1;
+
     use One2ManyPropertyTrait;
 
     const ClassName = 'SummitEvent';
@@ -1488,6 +1494,18 @@ class SummitEvent extends SilverstripeBaseModel
      */
     public function setDuration(int $duration_in_seconds): void
     {
+        if(!$this->type->isAllowsPublishingDates()){
+            throw new ValidationException("Type does not allows Publishing Period.");
+        }
+
+        if($duration_in_seconds <= 0 ){
+            throw new ValidationException('Duration should be greater than zero.');
+        }
+
+        if($duration_in_seconds < (self::MIN_EVENT_MINUTES * 60)){
+            throw new ValidationException(sprintf('Duration should be greater than %s.',self::MIN_EVENT_MINUTES));
+        }
+
         $this->duration = $duration_in_seconds;
         $start_date = $this->getStartDate();
         if (!is_null($start_date)) {

@@ -18,6 +18,8 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Facades\Log;
+use models\exceptions\EntityNotFoundException;
+
 /**
  * Class PublishUserCreated
  * RabbitMQ job
@@ -45,6 +47,9 @@ class PublishUserCreated implements ShouldQueue
 
         try {
             $service->registerExternalUserById($this->user_id);
+        }
+        catch (EntityNotFoundException $ex){
+            Log::warning($ex);
         }
         catch (\Exception $ex){
             Log::error($ex);

@@ -215,6 +215,11 @@ final class ExternalUserApi extends AbstractOAuth2Api
 
             return json_decode($response->getBody()->getContents(), true);
         }
+        catch(RequestException $ex){
+            $this->cleanAccessToken();
+            Log::warning($ex);
+            return null;
+        }
         catch (Exception $ex) {
             $this->cleanAccessToken();
             Log::error($ex);

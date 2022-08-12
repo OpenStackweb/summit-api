@@ -63,6 +63,7 @@ interface IMemberService
     /**
      * @param $user_external_id
      * @return Member
+     * @throw EntityNotFoundException
      */
     public function registerExternalUserById($user_external_id):Member;
 

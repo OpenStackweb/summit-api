@@ -118,11 +118,6 @@ final class SummitService extends AbstractService implements ISummitService
 {
 
     /**
-     *  minimun number of minutes that an event must last
-     */
-    const MIN_EVENT_MINUTES = 1;
-
-    /**
      * @var ISummitEventRepository
      */
     private $event_repository;
@@ -673,13 +668,13 @@ final class SummitService extends AbstractService implements ISummitService
             $end_datetime->setTimezone($summit->getTimeZone());
             $interval_seconds = $end_datetime->getTimestamp() - $start_datetime->getTimestamp();
             $minutes = $interval_seconds / 60;
-            if ($minutes < self::MIN_EVENT_MINUTES)
+            if ($minutes < SummitEvent::MIN_EVENT_MINUTES)
                 throw new ValidationException
                 (
                     sprintf
                     (
                         "event should last at least %s minutes  - current duration %s",
-                        self::MIN_EVENT_MINUTES,
+                        SummitEvent::MIN_EVENT_MINUTES,
                         $minutes
                     )
                 );
@@ -687,6 +682,10 @@ final class SummitService extends AbstractService implements ISummitService
             // set local time from UTC
             $event->setStartDate($start_datetime);
             $event->setEndDate($end_datetime);
+        }
+
+        if(isset($data['duration'])){
+            $event->setDuration(intval($data['duration']));
         }
 
         return $event;
@@ -1509,14 +1508,14 @@ final class SummitService extends AbstractService implements ISummitService
                         while
                         (
                             (
-                                $gap_end_date->getTimestamp() + (self::MIN_EVENT_MINUTES * 60)
+                                $gap_end_date->getTimestamp() + (SummitEvent::MIN_EVENT_MINUTES * 60)
                             )
                             <= $event->getLocalStartDate()->getTimestamp()
                         ) {
                             $max_gap_end_date = clone $gap_end_date;
                             $max_gap_end_date->setTime(23, 59, 59);
-                            if ($gap_end_date->getTimestamp() + (self::MIN_EVENT_MINUTES * 60) > $max_gap_end_date->getTimestamp()) break;
-                            $gap_end_date->add(new DateInterval('PT' . self::MIN_EVENT_MINUTES . 'M'));
+                            if ($gap_end_date->getTimestamp() + (SummitEvent::MIN_EVENT_MINUTES * 60) > $max_gap_end_date->getTimestamp()) break;
+                            $gap_end_date->add(new DateInterval('PT' . SummitEvent::MIN_EVENT_MINUTES . 'M'));
                         }
 
                         if ($gap_start_date->getTimestamp() == $gap_end_date->getTimestamp()) {

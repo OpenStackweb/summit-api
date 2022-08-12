@@ -64,7 +64,7 @@ class SummitEventSerializer extends SilverStripeSerializer
         'CreatedById' => 'created_by_id:json_int',
         'UpdatedById' => 'updated_by_id:json_int',
         'ShowSponsors' => 'show_sponsors:json_boolean',
-        'DurationInSeconds' => 'duration:json_int',
+        'Duration' => 'duration:json_int',
     ];
 
     protected static $allowed_fields = [

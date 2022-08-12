@@ -177,6 +177,7 @@ abstract class RetrieveSummitEventsStrategy
             'class_name' => ['=='],
             'presentation_attendee_vote_date' => ['>', '<', '<=', '>=', '=='],
             'votes_count' => ['>', '<', '<=', '>=', '=='],
+            'duration' => ['>', '<', '<=', '>=', '=='],
         ];
     }
 
@@ -218,6 +219,7 @@ abstract class RetrieveSummitEventsStrategy
             'presentation_attendee_vote_date' => 'sometimes|date_format:U',
             'votes_count' => 'sometimes|integer',
             'selection_status' => 'sometimes|string|in:selected,accepted,rejected,alternate,lightning-accepted,lightning-alternate',
+            'duration' => 'sometimes|integer',
         ];
     }
 }

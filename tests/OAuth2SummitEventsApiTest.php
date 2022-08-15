@@ -1939,7 +1939,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $params = array
         (
             'id' => self::$summit->getId(),
-            'filter' => ['duration>0']
+            'filter' => ['duration>0', 'duration<=60','speakers_count>1']
         );
 
         $headers = array

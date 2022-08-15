@@ -57,6 +57,12 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class SummitEvent extends SilverstripeBaseModel
 {
+
+    /**
+     *  minimun number of minutes that an event must last
+     */
+    const MIN_EVENT_MINUTES = 1;
+
     use One2ManyPropertyTrait;
 
     const ClassName = 'SummitEvent';
@@ -310,6 +316,12 @@ class SummitEvent extends SilverstripeBaseModel
     protected $show_sponsors;
 
     /**
+     * @ORM\Column(name="DurationInSeconds", type="integer")
+     * @var int|null
+     */
+    protected $duration;
+
+    /**
      * SummitEvent constructor.
      */
     public function __construct()
@@ -324,6 +336,7 @@ class SummitEvent extends SilverstripeBaseModel
         $this->rsvp_max_user_number = 0;
         $this->rsvp_max_user_wait_list_number = 0;
         $this->streaming_type = SummitEvent::STREAMING_TYPE_LIVE;
+        $this->duration = 0;
 
         $this->tags = new ArrayCollection();
         $this->feedback = new ArrayCollection();
@@ -777,6 +790,12 @@ class SummitEvent extends SilverstripeBaseModel
         if (!is_null($summit)) {
             $value = $summit->convertDateFromTimeZone2UTC($value);
         }
+        $end_date = $this->getEndDate();
+        if (!is_null($end_date)) {
+            $this->duration = $end_date->getTimestamp() - $value->getTimestamp();
+            $this->duration = $this->duration < 0 ? 0 : $this->duration;
+        }
+
         $this->start_date = $value;
         return $this;
     }
@@ -788,6 +807,10 @@ class SummitEvent extends SilverstripeBaseModel
     public function setRawStartDate(DateTime $value){
         if(!$this->type->isAllowsPublishingDates()){
             throw new ValidationException("Type does not allows Publishing Period.");
+        }
+        $end_date = $this->getEndDate();
+        if (!is_null($end_date)) {
+            $this->duration = $end_date->getTimestamp() - $value->getTimestamp();
         }
         $this->start_date = $value;
     }
@@ -814,6 +837,10 @@ class SummitEvent extends SilverstripeBaseModel
         $summit = $this->getSummit();
         if (!is_null($summit)) {
             $value = $summit->convertDateFromTimeZone2UTC($value);
+        }
+        $start_date = $this->getStartDate();
+        if (!is_null($start_date)) {
+            $this->duration = $value->getTimestamp() - $start_date->getTimestamp();
         }
         $this->end_date = $value;
         return $this;
@@ -1451,5 +1478,39 @@ class SummitEvent extends SilverstripeBaseModel
     public function setShowSponsors(bool $show_sponsors): void
     {
         $this->show_sponsors = $show_sponsors;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDuration(): ?int
+    {
+        return $this->duration;
+    }
+
+    /**
+     * @param int $duration_in_seconds
+     * @throws ValidationException
+     */
+    public function setDuration(int $duration_in_seconds): void
+    {
+        if(!$this->type->isAllowsPublishingDates()){
+            throw new ValidationException("Type does not allows Publishing Period.");
+        }
+
+        if($duration_in_seconds <= 0 ){
+            throw new ValidationException('Duration should be greater than zero.');
+        }
+
+        if($duration_in_seconds < (self::MIN_EVENT_MINUTES * 60)){
+            throw new ValidationException(sprintf('Duration should be greater than %s.',self::MIN_EVENT_MINUTES));
+        }
+
+        $this->duration = $duration_in_seconds;
+        $start_date = $this->getStartDate();
+        if (!is_null($start_date)) {
+            $end_date = $start_date->add(new \DateInterval('PT'.$duration_in_seconds.'S'));
+            $this->setEndDate($end_date);
+        }
     }
 }

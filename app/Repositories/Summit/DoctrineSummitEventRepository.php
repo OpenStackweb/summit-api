@@ -341,7 +341,8 @@ final class DoctrineSummitEventRepository
                 ]
             ),
             'presentation_attendee_vote_date' => 'av.created:datetime_epoch|'.SilverstripeBaseModel::DefaultTimeZone,
-            'votes_count' => new DoctrineHavingFilterMapping("", "av.presentation", "count(av.id) :operator :value")
+            'votes_count' => new DoctrineHavingFilterMapping("", "av.presentation", "count(av.id) :operator :value"),
+            'duration' => 'e.duration:json_int'
         ];
     }
 

@@ -24,6 +24,7 @@ interface ISummitMetricType
     const Sponsor = 'SPONSOR';
     const Poster = 'POSTER';
     const Posters = 'POSTERS';
+    const Room = 'ROOM';
 
     const ValidTypes = [
         self::General,
@@ -32,5 +33,6 @@ interface ISummitMetricType
         self::Sponsor,
         self::Poster,
         self::Posters,
+        self::Room,
     ];
 }

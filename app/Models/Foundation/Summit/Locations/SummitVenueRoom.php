@@ -20,7 +20,7 @@ use models\main\File;
 /**
  * @ORM\Entity
  * @ORM\Table(name="SummitVenueRoom")
- * Class SummitVenueRoomgetLocalEndDatetime
+ * Class SummitVenueRoom
  * @package models\summit
  */
 class SummitVenueRoom extends SummitAbstractLocation implements IOrderable

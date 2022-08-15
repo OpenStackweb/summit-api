@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use models\exceptions\EntityNotFoundException;
+use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\Summit;
 use models\summit\SummitMetric;
@@ -35,4 +38,42 @@ interface ISummitMetricService
      * @return SummitMetric
      */
     public function leave(Summit $summit, Member $current_member, array $payload):SummitMetric;
+
+    /**
+     * @param Summit $summit
+     * @param int $attendee_id
+     * @param array $required_access_levels
+     * @param int|null $room_id
+     * @param int|null $event_id
+     * @return SummitMetric
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function registerAttendeePhysicalIngress
+    (
+        Summit $summit,
+        int $attendee_id,
+        array $required_access_levels = [],
+        ?int $room_id = null,
+        ?int $event_id = null
+    ):SummitMetric;
+
+    /**
+     * @param Summit $summit
+     * @param int $attendee_id
+     * @param array $required_access_levels
+     * @param int|null $room_id
+     * @param int|null $event_id
+     * @return SummitMetric
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function registerAttendeePhysicalEgress
+    (
+        Summit $summit,
+        int $attendee_id,
+        array $required_access_levels = [],
+        ?int $room_id = null,
+        ?int $event_id = null
+    ):SummitMetric;
 }

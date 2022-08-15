@@ -30,7 +30,8 @@ use Doctrine\ORM\Mapping AS ORM;
  * @ORM\DiscriminatorMap({
  *     "SummitMetric" = "SummitMetric",
  *     "SummitEventAttendanceMetric" = "SummitEventAttendanceMetric",
- *     "SummitSponsorMetric" = "SummitSponsorMetric"
+ *     "SummitSponsorMetric" = "SummitSponsorMetric",
+ *     "SummitRoomMetric" = "SummitRoomMetric"
  * })
  * Class SummitMetric
  * @package models\summit
@@ -162,7 +163,7 @@ class SummitMetric extends SilverstripeBaseModel
      * @return SummitMetric
      * @throws \Exception
      */
-    public static function build(?Member $member){
+    public static function build(?Member $member = null){
         $metric = new static();
         $metric->member = $member;
         $metric->ingress_date = new \DateTime('now', new \DateTimeZone('UTC'));

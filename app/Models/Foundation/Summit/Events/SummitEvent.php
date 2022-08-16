@@ -1485,6 +1485,9 @@ class SummitEvent extends SilverstripeBaseModel
      */
     public function getDuration(): ?int
     {
+        if(!$this->duration && !is_null($this->start_date) && !is_null(!is_null($this->end_date))){
+            $this->duration = $this->end_date->getTimestamp() - $this->start_date->getTimestamp();
+        }
         return $this->duration;
     }
 

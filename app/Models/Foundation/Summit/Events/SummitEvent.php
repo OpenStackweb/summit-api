@@ -811,6 +811,7 @@ class SummitEvent extends SilverstripeBaseModel
         }
 
         $this->start_date = $value;
+        Log::debug(sprintf("SummitEvent::setStartDate id %s start_date %s", $this->id, $this->start_date->getTimestamp()));
         return $this;
     }
 
@@ -859,6 +860,8 @@ class SummitEvent extends SilverstripeBaseModel
             $this->duration = $value->getTimestamp() - $start_date->getTimestamp();
         }
         $this->end_date = $value;
+
+        Log::debug(sprintf("SummitEvent::setEndDate id %s end_date %s", $this->id, $this->end_date->getTimestamp()));
         return $this;
     }
 

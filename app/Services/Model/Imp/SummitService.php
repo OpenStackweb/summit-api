@@ -684,12 +684,24 @@ final class SummitService extends AbstractService implements ISummitService
             $event->setEndDate($end_datetime);
         }
 
-        if(isset($data['duration'])){
-            $event->setDuration(intval($data['duration']));
-        }
+        return $this->updateEventDates($data, $summit, $event);
 
-        return $event;
+    }
 
+    /**
+     * @param array $data
+     * @param Summit $summit
+     * @param SummitEvent $event
+     * @return SummitEvent
+     * @throws ValidationException
+     */
+    public function updateDuration(array $data, Summit $summit, SummitEvent $event):SummitEvent{
+        return $this->tx_service->transaction(function() use($data, $summit, $event) {
+            if(isset($data['duration'])){
+                $event->setDuration(intval($data['duration']));
+            }
+            return $event;
+        });
     }
 
     /**

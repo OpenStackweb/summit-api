@@ -2866,12 +2866,17 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'update-event',
                 'route' => '/api/v1/summits/{id}/events/{event_id}',
                 'http_method' => 'PUT',
-                'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteEventData, $current_realm)
+                ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::SummitRegistrationAdmins,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
                 ]
             ],
             [
@@ -5921,7 +5926,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_id}/complete',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteEventData, $current_realm)
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6021,7 +6027,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/track-chair-scores/{score_type_id}',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteEventData, $current_realm)
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,

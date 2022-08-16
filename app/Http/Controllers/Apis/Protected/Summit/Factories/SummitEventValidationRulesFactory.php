@@ -116,6 +116,15 @@ final class SummitEventValidationRulesFactory
      * @param bool $update
      * @return string[]
      */
+    public static function buildForTrackChair(array $data,  bool $update = false){
+        return [ 'duration' => 'sometimes|integer'];
+    }
+
+    /**
+     * @param array $data
+     * @param bool $update
+     * @return string[]
+     */
     public static function buildForSubmission(array $data, bool $update = false)
     {
 

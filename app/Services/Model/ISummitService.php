@@ -573,4 +573,13 @@ interface ISummitService
      * @throws EntityNotFoundException
      */
     public function processRegistrationCompaniesData(int $summit_id, string $filename):void;
+
+    /**
+     * @param array $data
+     * @param Summit $summit
+     * @param SummitEvent $event
+     * @return SummitEvent
+     * @throws ValidationException
+     */
+    public function updateDuration(array $data, Summit $summit, SummitEvent $event):SummitEvent;
 }

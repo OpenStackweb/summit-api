@@ -656,17 +656,25 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     public function updateEvent($summit_id, $event_id)
     {
         return $this->processRequest(function() use($summit_id, $event_id){
-            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
 
-            if (!Request::isJson()) return $this->error400();
+            Log::debug(sprintf("OAuth2SummitEventsApiController::updateEvent summit id %s event id %s", $summit_id, $event_id));
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit))
+                return $this->error404();
+
+            if (!Request::isJson())
+                return $this->error400();
             $data = Request::json();
 
             $current_member = $this->resource_server_context->getCurrentUser();
-            if (is_null($current_member)) return $this->error403();
+            if (is_null($current_member))
+                return $this->error403();
 
             $event = $summit->getEvent($event_id);
-            if (is_null($event)) return $this->error404();
+            if (is_null($event))
+                return $this->error404();
+
             $isAdmin = $current_member->isAdmin() || $current_member->isSummitAdmin();
             $isTrackChair = $summit->isTrackChairAdmin($current_member) || $summit->isTrackChair($current_member, $event->getCategory());
 
@@ -697,10 +705,16 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 'social_summary',
             ];
 
-            $event =
-                $isAdmin ?
-                    $this->service->updateEvent($summit, $event_id, HTMLCleaner::cleanData($payload, $fields)) :
-                    $this->service->updateDuration($payload, $summit, $event);
+            $event = null;
+
+            if($isAdmin) {
+                Log::debug(sprintf("OAuth2SummitEventsApiController::updateEvent summit id %s event id %s updating event", $summit_id, $event_id));
+                $event = $this->service->updateEvent($summit, $event_id, HTMLCleaner::cleanData($payload, $fields));
+            }
+            else{
+                Log::debug(sprintf("OAuth2SummitEventsApiController::updateEvent summit id %s event id %s updating duration", $summit_id, $event_id));
+                $event = $this->service->updateDuration($payload, $summit, $event);
+            }
 
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($event, $this->getSerializerType())
                 ->serialize

@@ -796,6 +796,7 @@ class SummitEvent extends SilverstripeBaseModel
      */
     public function setStartDate(DateTime $value)
     {
+        Log::debug(sprintf("SummitEvent::setStartDate id %s value %s", $this->id, $value->getTimestamp()));
         if(!$this->type->isAllowsPublishingDates()){
             throw new ValidationException("Type does not allows Publishing Period.");
         }
@@ -844,6 +845,8 @@ class SummitEvent extends SilverstripeBaseModel
      */
     public function setEndDate(DateTime $value)
     {
+        Log::debug(sprintf("SummitEvent::setEndDate id %s value %s", $this->id, $value->getTimestamp()));
+
         if(!$this->type->isAllowsPublishingDates()){
             throw new ValidationException("Type does not allows Publishing Period.");
         }

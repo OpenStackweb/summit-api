@@ -743,8 +743,8 @@ class SummitEvent extends SilverstripeBaseModel
                 throw new ValidationException('Invalid Summit TimeZone.');
             }
 
-            if ($end_date < $start_date)
-                throw new ValidationException('start datetime must be greater or equal than end datetime.');
+            if ($end_date->getTimestamp() < $start_date->getTimestamp())
+                throw new ValidationException('start datetime must be lower or equal than end datetime.');
         }
 
         $this->published = true;

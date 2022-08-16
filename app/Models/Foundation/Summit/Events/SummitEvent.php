@@ -1528,6 +1528,7 @@ class SummitEvent extends SilverstripeBaseModel
         $this->duration = $duration_in_seconds;
         $start_date = $this->getStartDate();
         if (!is_null($start_date)) {
+            $start_date = clone $start_date;
             $end_date = $start_date->add(new \DateInterval('PT'.$duration_in_seconds.'S'));
             $this->setEndDate($end_date);
         }

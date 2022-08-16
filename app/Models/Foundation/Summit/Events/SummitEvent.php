@@ -721,6 +721,8 @@ class SummitEvent extends SilverstripeBaseModel
      */
     public function publish()
     {
+        Log::debug(sprintf("SummitEvent::Publish id %s", $this->id));
+
         if ($this->isPublished())
             throw new ValidationException('Already published Summit Event.');
 
@@ -742,6 +744,17 @@ class SummitEvent extends SilverstripeBaseModel
             if (empty($timezone)) {
                 throw new ValidationException('Invalid Summit TimeZone.');
             }
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitEvent::Publish id %s start date %s end date %s",
+                    $this->id,
+                    $start_date->getTimestamp(),
+                    $end_date->getTimestamp()
+                )
+            );
 
             if ($end_date->getTimestamp() < $start_date->getTimestamp())
                 throw new ValidationException('start datetime must be lower or equal than end datetime.');

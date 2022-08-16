@@ -684,7 +684,7 @@ final class SummitService extends AbstractService implements ISummitService
             $event->setEndDate($end_datetime);
         }
 
-        return $this->updateEventDates($data, $summit, $event);
+        return $this->updateDuration($data, $summit, $event);
 
     }
 
@@ -697,6 +697,7 @@ final class SummitService extends AbstractService implements ISummitService
      */
     public function updateDuration(array $data, Summit $summit, SummitEvent $event):SummitEvent{
         return $this->tx_service->transaction(function() use($data, $summit, $event) {
+            Log::debug(sprintf("SummitService::updateDuration data %s summit %s event %s", json_encode($data), $summit->getId(), $event->getId()));
             if(isset($data['duration'])){
                 $event->setDuration(intval($data['duration']));
             }

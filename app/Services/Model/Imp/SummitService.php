@@ -913,7 +913,7 @@ final class SummitService extends AbstractService implements ISummitService
             }
 
             $this->event_repository->add($event);
-
+            $event->updateLastEdited();
             return $event;
         });
     }

@@ -130,6 +130,7 @@ class SummitSerializer extends SilverStripeSerializer
         'presentation_action_types',
         'schedule_settings',
         'badge_view_types',
+        'badge_access_level_types',
     ];
 
     /**
@@ -209,6 +210,15 @@ class SummitSerializer extends SilverStripeSerializer
                 $ticket_types[] = SerializerRegistry::getInstance()->getSerializer($ticket)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'ticket_types'));
             }
             $values['ticket_types'] = $ticket_types;
+        }
+
+        // badge_access_level_types
+        if (in_array('badge_access_level_types', $relations)) {
+            $badge_access_level_types = [];
+            foreach ($summit->getBadgeAccessLevelTypes() as $accessLevelType) {
+                $badge_access_level_types[] = SerializerRegistry::getInstance()->getSerializer($accessLevelType)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'badge_access_level_types'));
+            }
+            $values['badge_access_level_types'] = $badge_access_level_types;
         }
 
         // badge_view_types

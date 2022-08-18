@@ -682,7 +682,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             // Creates a Validator instance and validates the data.
             $rules = $isAdmin ? SummitEventValidationRulesFactory::build($payload, true) : null;
             if(is_null($rules)){
-                $rules = $isTrackChair ? SummitEventValidationRulesFactory::buildForTrackChair($data, true) : null;
+                $rules = $isTrackChair ? SummitEventValidationRulesFactory::buildForTrackChair($payload, true) : null;
             }
 
             if(is_null($rules))

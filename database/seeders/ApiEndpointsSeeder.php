@@ -183,6 +183,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                     IGroup::SummitRegistrationAdmins,
                     IGroup::BadgePrinters,
+                    IGroup::SummitAccessControl
                 ]
             ],
             [

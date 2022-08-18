@@ -705,8 +705,6 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 'social_summary',
             ];
 
-            $event = null;
-
             if($isAdmin) {
                 Log::debug(sprintf("OAuth2SummitEventsApiController::updateEvent summit id %s event id %s updating event", $summit_id, $event_id));
                 $event = $this->service->updateEvent($summit, $event_id, HTMLCleaner::cleanData($payload, $fields));

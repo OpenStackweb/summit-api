@@ -15,6 +15,8 @@ use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
 use LaravelDoctrine\Migrations\Schema\Builder;
 use LaravelDoctrine\Migrations\Schema\Table;
+use models\summit\SummitEventAttendanceMetric;
+
 /**
  * Class Version20220815160210
  * @package Database\Migrations\Model
@@ -28,27 +30,28 @@ final class Version20220815160210 extends AbstractMigration
     {
         $builder = new Builder($schema);
 
-        if(!$schema->hasTable("SummitRoomMetric")) {
-            $builder->create('SummitRoomMetric', function (Table $table) {
+        if($schema->hasTable("SummitEventAttendanceMetric") && !$builder->hasColumns("SummitEventAttendanceMetric", [
+            'SummitVenueRoomID',
+            "SummitAttendeeID",
+            "SubType",
+            ])) {
+            $builder->table('SummitEventAttendanceMetric', function (Table $table) {
 
-                $table->integer("ID", true, false);
-                $table->primary("ID");
-                $table->string('ClassName')->setDefault('SummitRoomMetric');
+                $table->string("SubType")->setNotnull(true)->setDefault(SummitEventAttendanceMetric::SubTypeVirtual);
 
                 // FK
-                $table->integer("SummitEventID", false, false)->setNotnull(false)->setDefault('NULL');
-                $table->index("SummitEventID", "SummitEventID");
-                $table->foreign("SummitEvent", "SummitEventID", "ID", ["onDelete" => "CASCADE"], 'FK_SummitRoomMetric_SummitEvent');
 
                 $table->integer("SummitVenueRoomID", false, false)->setNotnull(false)->setDefault('NULL');
                 $table->index("SummitVenueRoomID", "SummitVenueRoomID");
-                $table->foreign("SummitVenueRoom", "SummitVenueRoomID", "ID", ["onDelete" => "CASCADE"], 'FK_SummitRoomMetric_SummitVenueRoom');
+                $table->foreign("SummitVenueRoom", "SummitVenueRoomID", "ID", ["onDelete" => "CASCADE"], 'FK_SummitEventAttendanceMetric_SummitVenueRoom');
 
                 $table->integer("SummitAttendeeID", false, false)->setNotnull(false)->setDefault('NULL');
                 $table->index("SummitAttendeeID", "SummitAttendeeID");
-                $table->foreign("SummitAttendee", "SummitAttendeeID", "ID", ["onDelete" => "CASCADE"], 'FK_SummitRoomMetric_SummitAttendee');
+                $table->foreign("SummitAttendee", "SummitAttendeeID", "ID", ["onDelete" => "CASCADE"], 'FK_SummitEventAttendanceMetric_SummitAttendee');
 
-                $table->foreign("SummitMetric", "ID", "ID", ["onDelete" => "CASCADE"], 'FK_SummitRoomMetric_SummitMetric');
+                $table->integer("CreatedByID", false, false)->setNotnull(false)->setDefault('NULL');
+                $table->index("CreatedByID", "CreatedByID");
+                $table->foreign("Member", "CreatedByID", "ID", ["onDelete" => "CASCADE"], 'FK_SummitEventAttendanceMetric_CreatedBy');
 
             });
         }
@@ -59,6 +62,21 @@ final class Version20220815160210 extends AbstractMigration
      */
     public function down(Schema $schema): void
     {
+        $builder = new Builder($schema);
 
+        if($schema->hasTable("SummitEventAttendanceMetric") && $builder->hasColumns("SummitEventAttendanceMetric", [
+                'SummitVenueRoomID',
+                "SummitAttendeeID",
+                "SubType",
+            ])) {
+            $builder->table('SummitEventAttendanceMetric', function (Table $table) {
+
+                $table->dropColumn("SubType");
+                // FK
+                $table->dropColumn("SummitVenueRoomID");
+                $table->dropColumn("SummitAttendeeID");
+                $table->dropColumn("CreatedByID");
+            });
+        }
     }
 }

@@ -39,6 +39,6 @@ interface ISummitMetricRepository extends IBaseRepository
      * @return SummitRoomMetric|null
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    public function getNonAbandonedRoomMetric(SummitAttendee $attendee, ?SummitVenueRoom $room , ?SummitEvent $event): ?SummitRoomMetric;
+    public function getNonAbandonedOnSiteMetric(SummitAttendee $attendee, ?SummitVenueRoom $room , ?SummitEvent $event): ?SummitRoomMetric;
 
 }

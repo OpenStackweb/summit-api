@@ -30,8 +30,7 @@ use Doctrine\ORM\Mapping AS ORM;
  * @ORM\DiscriminatorMap({
  *     "SummitMetric" = "SummitMetric",
  *     "SummitEventAttendanceMetric" = "SummitEventAttendanceMetric",
- *     "SummitSponsorMetric" = "SummitSponsorMetric",
- *     "SummitRoomMetric" = "SummitRoomMetric"
+ *     "SummitSponsorMetric" = "SummitSponsorMetric"
  * })
  * Class SummitMetric
  * @package models\summit
@@ -88,6 +87,14 @@ class SummitMetric extends SilverstripeBaseModel
      * @var Member|null
      */
     protected $member;
+
+    const AccessTypeIngress = 'INGRESS';
+    const AccessTypeEgress = 'EGRESS';
+
+    const ValidAccessTypes = [
+        self::AccessTypeIngress,
+        self::AccessTypeEgress,
+    ];
 
     /**
      * @return \DateTime

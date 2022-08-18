@@ -41,39 +41,17 @@ interface ISummitMetricService
 
     /**
      * @param Summit $summit
-     * @param int $attendee_id
-     * @param array $required_access_levels
-     * @param int|null $room_id
-     * @param int|null $event_id
+     * @param Member $current_user
+     * @param array $payload
      * @return SummitMetric
-     * @throws EntityNotFoundException
-     * @throws ValidationException
      */
-    public function registerAttendeePhysicalIngress
-    (
-        Summit $summit,
-        int $attendee_id,
-        array $required_access_levels = [],
-        ?int $room_id = null,
-        ?int $event_id = null
-    ):SummitMetric;
+    public function onSiteEnter(Summit $summit, Member $current_user, array $payload):SummitMetric;
 
     /**
      * @param Summit $summit
-     * @param int $attendee_id
-     * @param array $required_access_levels
-     * @param int|null $room_id
-     * @param int|null $event_id
+     * @param Member $current_user
+     * @param array $payload
      * @return SummitMetric
-     * @throws EntityNotFoundException
-     * @throws ValidationException
      */
-    public function registerAttendeePhysicalEgress
-    (
-        Summit $summit,
-        int $attendee_id,
-        array $required_access_levels = [],
-        ?int $room_id = null,
-        ?int $event_id = null
-    ):SummitMetric;
+    public function onSiteLeave(Summit $summit, Member $current_user, array $payload):SummitMetric;
 }

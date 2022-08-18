@@ -7805,6 +7805,28 @@ class ApiEndpointsSeeder extends Seeder
                         sprintf(SummitScopes::WriteMetrics, $current_realm)
                     ],
                 ],
+                [
+                    'name' => 'metric-onsite-enter',
+                    'route' => '/api/v1/summits/{id}/metrics/onsite/enter',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteMetrics, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SummitAccessControl,
+                    ]
+                ],
+                [
+                    'name' => 'metric-onsite-leave',
+                    'route' => '/api/v1/summits/{id}/metrics/onsite/leave',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteMetrics, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SummitAccessControl,
+                    ]
+                ],
             ]
         );
     }

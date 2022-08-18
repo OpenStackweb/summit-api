@@ -11,18 +11,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitMetricService;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Validator;
-use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
 use models\main\IMemberRepository;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitMetricType;
 use models\summit\ISummitRepository;
+use models\summit\SummitMetric;
 use ModelSerializers\SerializerRegistry;
-use Exception;
+
 /**
  * Class OAuth2SummitMetricsApiController
  * @package App\Http\Controllers
@@ -30,6 +28,8 @@ use Exception;
 final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
 {
     use GetAndValidateJsonPayload;
+
+    use RequestProcessor;
 
     /**
      * @var ISummitRepository
@@ -50,14 +50,15 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
      */
     public function __construct
     (
-        IMemberRepository $member_repository,
-        ISummitRepository $summit_repository,
-        ISummitMetricService $service,
+        IMemberRepository      $member_repository,
+        ISummitRepository      $summit_repository,
+        ISummitMetricService   $service,
         IResourceServerContext $resource_server_context
-    ) {
+    )
+    {
         parent::__construct($resource_server_context);
-        $this->summit_repository  = $summit_repository;
-        $this->repository         = $member_repository;
+        $this->summit_repository = $summit_repository;
+        $this->repository = $member_repository;
         $this->service = $service;
     }
 
@@ -67,56 +68,31 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
      * @param $event_id
      * @return mixed
      */
-    public function enter($summit_id){
-        try {
+    public function enter($summit_id)
+    {
+        return $this->processRequest(function () use ($summit_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
-            $payload = Request::all();
-            if(Request::isJson()){
-                $payload = Request::json()->all();
-            }
-
-            $validation = Validator::make($payload,
-            [
-                    'type' => 'required|string|in:'.implode(",", ISummitMetricType::ValidTypes),
+            $payload = $this->getJsonPayload(
+                [
+                    'type' => 'required|string|in:' . implode(",", ISummitMetricType::ValidTypes),
                     'source_id' => 'sometimes|integer',
                     'location' => 'sometimes|string',
-            ]);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-                $ex = new ValidationException();
-                $ex->setMessages($messages);
-                throw $ex;
-            }
+                ]
+            );
 
             $metric = $this->service->enter($summit, $current_member, $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($metric)->serialize());
-        }
-        catch (ValidationException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error412(array( $ex1->getMessage()));
-        }
-        catch (EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($metric)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -125,56 +101,31 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
      * @param $event_id
      * @return mixed
      */
-    public function leave($summit_id){
-        try {
+    public function leave($summit_id)
+    {
+        return $this->processRequest(function () use ($summit_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
-            $payload = Request::all();
-            if(Request::isJson()){
-                $payload = Request::json()->all();
-            }
 
-            $validation = Validator::make($payload,
-            [
-                    'type' => 'required|string|in:'.implode(",", ISummitMetricType::ValidTypes),
+            $payload = $this->getJsonPayload(
+                [
+                    'type' => 'required|string|in:' . implode(",", ISummitMetricType::ValidTypes),
                     'source_id' => 'sometimes|integer',
                     'location' => 'sometimes|string',
-            ]);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-                $ex = new ValidationException();
-                $ex->setMessages($messages);
-                throw $ex;
-            }
-
+                ]
+            );
             $metric = $this->service->leave($summit, $current_member, $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($metric)->serialize());
-        }
-        catch (ValidationException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error412(array( $ex1->getMessage()));
-        }
-        catch (EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($metric)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -183,8 +134,9 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
      * @param $event_id
      * @return mixed
      */
-    public function enterToEvent($summit_id, $member_id, $event_id){
-        try {
+    public function enterToEvent($summit_id, $member_id, $event_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $member_id, $event_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -196,27 +148,12 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
                 'source_id' => intval($event_id)
             ]);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($metric)->serialize());
-        }
-        catch (ValidationException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error412(array( $ex1->getMessage()));
-        }
-        catch (EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($metric)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -225,8 +162,9 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
      * @param $event_id
      * @return mixed
      */
-    public function leaveFromEvent($summit_id, $member_id, $event_id){
-        try {
+    public function leaveFromEvent($summit_id, $member_id, $event_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $member_id, $event_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -238,26 +176,63 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
                 'source_id' => intval($event_id)
             ]);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($metric)->serialize());
-        }
-        catch (ValidationException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error412(array( $ex1->getMessage()));
-        }
-        catch (EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($metric)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
+
+    public function onSiteEnter($summit_id)
+    {
+        return $this->processRequest(function () use ($summit_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $payload = $this->getJsonPayload([
+                'attendee_id' => 'required|integer',
+                'room_id' => 'sometimes|integer',
+                'event_id' => 'sometimes|integer',
+                'required_access_levels' => 'sometimes|int_array',
+            ]);
+
+            $metric = $this->service->onSiteEnter($summit, $current_member, $payload);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($metric)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
+
+    public function onSiteLeave($summit_id)
+    {
+        return $this->processRequest(function () use ($summit_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $payload = $this->getJsonPayload([
+                'attendee_id' => 'required|integer',
+                'room_id' => 'sometimes|integer',
+                'event_id' => 'sometimes|integer',
+                'required_access_levels' => 'sometimes|int_array',
+            ]);
+
+            $metric = $this->service->onSiteLeave($summit, $current_member, $payload);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($metric)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 }

@@ -155,7 +155,7 @@ class SilverstripeBaseModel extends BaseEntity
     const EntityManager = 'model';
 
     public function updateLastEdited():void{
-        $now               = new \DateTime('now', new \DateTimeZone('UTC'));
+        $now               = new \DateTime('now', new \DateTimeZone(self::DefaultTimeZone));
         $this->last_edited = $now;
     }
 }

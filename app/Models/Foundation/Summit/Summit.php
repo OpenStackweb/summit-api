@@ -3476,7 +3476,7 @@ SQL;
     /*
      * @return SummitAccessLevelType[]
      */
-    public function getBadgeAccessLevelTypes(): array
+    public function getBadgeAccessLevelTypes()
     {
         return $this->badge_access_level_types;
     }

@@ -321,18 +321,41 @@ final class AttendeeService extends AbstractService implements IAttendeeService
     public function reassignAttendeeTicket(Summit $summit, SummitAttendee $attendee, int $ticket_id, array $payload):SummitAttendeeTicket
     {
         return $this->tx_service->transaction(function() use($summit, $attendee, $ticket_id, $payload){
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "AttendeeService::reassignAttendeeTicket summit %s attendee %s ticket %s payload %s.",
+                    $summit->getId(),
+                    $attendee->getId(),
+                    $ticket_id,
+                    json_encode($payload)
+                )
+            );
+
             $ticket = $this->ticket_repository->getByIdExclusiveLock($ticket_id);
 
             if(is_null($ticket) || !$ticket instanceof SummitAttendeeTicket){
-                throw new EntityNotFoundException("ticket not found");
+                throw new EntityNotFoundException("ticket not found.");
             }
 
             $attendee_email = $payload['attendee_email'] ?? null;
 
+            Log::debug
+            (
+                sprintf
+                (
+                    "AttendeeService::reassignAttendeeTicket trying to get attendee %s for summit %s.",
+                    $attendee_email,
+                    $summit->getId()
+                )
+            );
+
             $new_owner = $this->attendee_repository->getBySummitAndEmail($summit , $attendee_email);
 
             if(is_null($new_owner)){
-                Log::debug(sprintf("attendee %s does no exists .. creating it ", $attendee_email));
+                Log::debug(sprintf("AttendeeService::reassignAttendeeTicket attendee %s does no exists .. creating it.", $attendee_email));
                 $attendee_payload = [
                     'email'  => $attendee_email
                 ];
@@ -344,7 +367,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     $this->member_repository->getByEmail($attendee_email)
                 );
 
-                $this->attendee_repository->add($new_owner);
+                $this->attendee_repository->add($new_owner, true);
             }
 
             $attendee_payload = [];
@@ -363,17 +386,43 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
             SummitAttendeeFactory::populate($summit, $new_owner, $attendee_payload, $new_owner->getMember());
 
-            $attendee->sendRevocationTicketEmail($ticket);
+            // $attendee->sendRevocationTicketEmail($ticket);
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "AttendeeService::reassignAttendeeTicket revoking ticket %s from attendee %s (%s).",
+                    $ticket_id,
+                    $attendee->getId(),
+                    $attendee->getEmail()
+                )
+            );
+
             $attendee->removeTicket($ticket);
             $attendee->updateStatus();
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "AttendeeService::reassignAttendeeTicket adding ticket %s to attendee %s (%s).",
+                    $ticket_id,
+                    $new_owner->getId(),
+                    $new_owner->getEmail()
+                )
+            );
 
             $new_owner->addTicket($ticket);
 
             $ticket->generateQRCode();
             $ticket->generateHash();
             $new_owner->updateStatus();
+
+            /*
             if($summit->isRegistrationSendTicketEmailAutomatically())
                 $new_owner->sendInvitationEmail($ticket);
+            */
 
             return $ticket;
         });

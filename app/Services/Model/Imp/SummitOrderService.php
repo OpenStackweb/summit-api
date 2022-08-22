@@ -2109,6 +2109,8 @@ final class SummitOrderService
             if (is_null($attendee) && isset($payload['owner_email'])) {
                 Log::debug(sprintf("SummitOrderService::createOfflineOrder trying to get attendee by email %s", $payload['owner_email']));
                 $attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($payload['owner_email']));
+                if(!is_null($attendee))
+                    Log::debug(sprintf("SummitOrderService::createOfflineOrder found attendee %s (%s).", $attendee->getId(), $attendee->getEmail()));
             }
 
             if (is_null($attendee) && isset($payload['attendee'])) {
@@ -2149,6 +2151,8 @@ final class SummitOrderService
                     'email' => $email,
                     'company' => $company
                 ], $owner);
+
+                $this->attendee_repository->add($attendee, true);
             }
 
             // create order

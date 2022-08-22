@@ -319,7 +319,7 @@ SQL,
             ->leftJoin('e.summit', 's')
             ->leftJoin('e.member', 'm')
             ->where("s.id = :summit_id")
-            ->andWhere("m.email = :email or e.email = :email")
+            ->andWhere("(m.email = :email or e.email = :email)")
             ->setParameter("summit_id", $summit->getId())
             ->setParameter("email", strtolower(trim($email)));
 

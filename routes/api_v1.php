@@ -1333,10 +1333,10 @@ Route::group(array('prefix' => 'summits'), function () {
                         });
 
                         Route::group(['prefix' => 'feedback'], function () {
-                            Route::get('', 'OAuth2SummitMembersApiController@getMyEventFeedback')->where('member_id', 'me');
-                            Route::post('', 'OAuth2SummitMembersApiController@addMyEventFeedback')->where('member_id', 'me');
-                            Route::put('', 'OAuth2SummitMembersApiController@updateMyEventFeedback')->where('member_id', 'me');
-                            Route::delete('', 'OAuth2SummitMembersApiController@deleteMyEventFeedback')->where('member_id', 'me');
+                            Route::get('', 'OAuth2SummitEventsApiController@getMyEventFeedback')->where('member_id', 'me');
+                            Route::post('', 'OAuth2SummitEventsApiController@addMyEventFeedback')->where('member_id', 'me');
+                            Route::put('', 'OAuth2SummitEventsApiController@updateMyEventFeedback')->where('member_id', 'me');
+                            Route::delete('', 'OAuth2SummitEventsApiController@deleteMyEventFeedback')->where('member_id', 'me');
                         });
 
                         Route::post('', 'OAuth2SummitMembersApiController@addEventToMemberSchedule')->where('member_id', 'me');

@@ -225,7 +225,9 @@ final class AccessTokenService implements IAccessTokenService
             if(!str_contains($content_type, 'application/json'))
             {
                 // invalid content type
-                throw new \Exception($response->getBody());
+                $body = $response->getBody();
+                Log::warning(sprintf("AccessTokenService::doIntrospectionRequest content type %s body %s", $content_type, $body));
+                throw new \Exception($body);
             }
             return json_decode($response->getBody()->getContents(), true);
         }

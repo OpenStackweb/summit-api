@@ -397,7 +397,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 )
             );
 
-            $attendee->sendRevocationTicketEmail($ticket);
+            //$attendee->sendRevocationTicketEmail($ticket);
             $attendee->removeTicket($ticket);
             $attendee->updateStatus();
 
@@ -419,7 +419,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             $new_owner->updateStatus();
 
 
-            if($summit->isRegistrationSendTicketEmailAutomatically()) {
+            /*if($summit->isRegistrationSendTicketEmailAutomatically()) {
                 Log::debug
                 (
                     sprintf
@@ -430,7 +430,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     )
                 );
                 $new_owner->sendInvitationEmail($ticket);
-            }
+            }*/
 
 
             return $ticket;

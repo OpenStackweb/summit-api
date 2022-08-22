@@ -651,6 +651,10 @@ final class SummitService extends AbstractService implements ISummitService
     {
 
         if (isset($data['start_date']) && isset($data['end_date'])) {
+            // we are setting dates
+
+            $formerDuration = $event->getDuration();
+
             if(!$event->hasType()){
                 throw new ValidationException("To be able to set schedule dates event type must be set First.");
             }
@@ -660,6 +664,7 @@ final class SummitService extends AbstractService implements ISummitService
                 throw new ValidationException("Event Type does not allow schedule dates.");
 
             $event->setSummit($summit);
+
             $start_datetime = intval($data['start_date']);
             $start_datetime = new \DateTime("@$start_datetime");
             $start_datetime->setTimezone($summit->getTimeZone());
@@ -681,6 +686,12 @@ final class SummitService extends AbstractService implements ISummitService
 
             // set local time from UTC
             $event->setStartDate($start_datetime);
+
+            if($formerDuration > 0  && !isset($data['duration'])) {
+                // if we have a former duration ... honor it
+                $data['duration'] = $formerDuration;
+            }
+
             $event->setEndDate($end_datetime);
         }
 
@@ -1065,18 +1076,18 @@ final class SummitService extends AbstractService implements ISummitService
             $event = $this->event_repository->getById($event_id);
 
             if (is_null($event) || !$event instanceof SummitEvent)
-                throw new EntityNotFoundException(sprintf("event id %s does not exists!", $event_id));
+                throw new EntityNotFoundException(sprintf("Event id %s does not exists!", $event_id));
 
             if (!$event->hasType())
-                throw new EntityNotFoundException(sprintf("event type its not assigned to event id %s!", $event_id));
+                throw new EntityNotFoundException(sprintf("Event type its not assigned to event id %s!", $event_id));
 
             $type = $event->getType();
 
             if (is_null($event->getSummit()))
-                throw new EntityNotFoundException(sprintf("summit its not assigned to event id %s!", $event_id));
+                throw new EntityNotFoundException(sprintf("Summit its not assigned to event id %s!", $event_id));
 
             if ($event->getSummit()->getIdentifier() !== $summit->getIdentifier())
-                throw new ValidationException(sprintf("event %s does not belongs to summit id %s", $event_id, $summit->getIdentifier()));
+                throw new ValidationException(sprintf("Event %s does not belongs to summit id %s", $event_id, $summit->getIdentifier()));
 
             $this->updateEventDates($data, $summit, $event);
 

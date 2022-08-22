@@ -386,8 +386,6 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
             SummitAttendeeFactory::populate($summit, $new_owner, $attendee_payload, $new_owner->getMember());
 
-            // $attendee->sendRevocationTicketEmail($ticket);
-
             Log::debug
             (
                 sprintf
@@ -399,6 +397,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 )
             );
 
+            $attendee->sendRevocationTicketEmail($ticket);
             $attendee->removeTicket($ticket);
             $attendee->updateStatus();
 
@@ -419,10 +418,20 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             $ticket->generateHash();
             $new_owner->updateStatus();
 
-            /*
-            if($summit->isRegistrationSendTicketEmailAutomatically())
+
+            if($summit->isRegistrationSendTicketEmailAutomatically()) {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "AttendeeService::reassignAttendeeTicket sending invitation email to new owner %s (%s).",
+                         $new_owner->getId(),
+                         $new_owner->getEmail()
+                    )
+                );
                 $new_owner->sendInvitationEmail($ticket);
-            */
+            }
+
 
             return $ticket;
         });

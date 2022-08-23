@@ -153,6 +153,9 @@ final class SummitMetricService
 
         return $this->tx_service->transaction(function () use ($summit, $current_member, $payload) {
 
+            if(!isset($payload['type']))
+                throw new ValidationException("Type is required.");
+
             $source_id = null;
             if (isset($payload['source_id']))
                 $source_id = intval($payload['source_id']);

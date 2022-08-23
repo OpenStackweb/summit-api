@@ -12,7 +12,11 @@
  * limitations under the License.
  **/
 use models\main\Member;
+use models\summit\SummitAttendee;
+use models\summit\SummitEvent;
 use models\summit\SummitMetric;
+use models\summit\SummitRoomMetric;
+use models\summit\SummitVenueRoom;
 use models\utils\IBaseRepository;
 /**
  * Interface ISummitMetricRepository
@@ -27,5 +31,14 @@ interface ISummitMetricRepository extends IBaseRepository
      * @return SummitMetric|null
      */
     public function getNonAbandoned(Member $member, string $type, ?int $source_id = null):?SummitMetric;
+
+    /**
+     * @param SummitAttendee $attendee
+     * @param SummitVenueRoom|null $room
+     * @param SummitEvent|null $event
+     * @return SummitRoomMetric|null
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function getNonAbandonedOnSiteMetric(SummitAttendee $attendee, ?SummitVenueRoom $room , ?SummitEvent $event): ?SummitRoomMetric;
 
 }

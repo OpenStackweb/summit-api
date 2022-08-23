@@ -893,10 +893,11 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
     /**
      * @param $summit_id
+     * @param $member_id
      * @param $event_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function addMyEventFeedback($summit_id, $event_id)
+    public function addMyEventFeedback($summit_id, $member_id, $event_id)
     {
         return $this->_addMyEventFeedback($summit_id, $event_id, false);
     }
@@ -925,7 +926,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             (
                 $current_member,
                 $summit,
-                $event_id,
+                intval($event_id),
                 $payload
             );
 
@@ -954,10 +955,11 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
     /**
      * @param $summit_id
+     * @param $member_id
      * @param $event_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function updateMyEventFeedback($summit_id, $event_id)
+    public function updateMyEventFeedback($summit_id, $member_id, $event_id)
     {
         return $this->_updateMyEventFeedback($summit_id, $event_id, false);
     }
@@ -986,7 +988,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             (
                 $current_member,
                 $summit,
-                $event_id,
+                intval($event_id),
                 $payload
             );
 
@@ -1005,10 +1007,11 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
     /**
      * @param $summit_id
+     * @param $member_id
      * @param $event_id
-     * @return \Illuminate\Http\JsonResponse|mixed
+     * @return mixed
      */
-    public function getMyEventFeedback($summit_id, $event_id)
+    public function getMyEventFeedback($summit_id, $member_id, $event_id)
     {
         return $this->processRequest(function() use($summit_id, $event_id){
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
@@ -1021,7 +1024,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             (
                 $current_member,
                 $summit,
-                $event_id
+                intval($event_id)
             );
 
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($feedback)->serialize
@@ -1035,10 +1038,11 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
     /**
      * @param $summit_id
+     * @param $member_id
      * @param $event_id
-     * @return \Illuminate\Http\JsonResponse|mixed
+     * @return mixed
      */
-    public function deleteMyEventFeedback($summit_id, $event_id)
+    public function deleteMyEventFeedback($summit_id, $member_id, $event_id)
     {
         return $this->processRequest(function() use($summit_id, $event_id){
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
@@ -1051,7 +1055,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             (
                 $current_member,
                 $summit,
-                $event_id
+                intval($event_id)
             );
 
             return $this->deleted();

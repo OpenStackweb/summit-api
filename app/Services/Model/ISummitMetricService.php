@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use models\exceptions\EntityNotFoundException;
+use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\Summit;
 use models\summit\SummitMetric;
@@ -35,4 +38,20 @@ interface ISummitMetricService
      * @return SummitMetric
      */
     public function leave(Summit $summit, Member $current_member, array $payload):SummitMetric;
+
+    /**
+     * @param Summit $summit
+     * @param Member $current_user
+     * @param array $payload
+     * @return SummitMetric
+     */
+    public function onSiteEnter(Summit $summit, Member $current_user, array $payload):SummitMetric;
+
+    /**
+     * @param Summit $summit
+     * @param Member $current_user
+     * @param array $payload
+     * @return SummitMetric
+     */
+    public function onSiteLeave(Summit $summit, Member $current_user, array $payload):SummitMetric;
 }

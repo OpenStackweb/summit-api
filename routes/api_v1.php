@@ -222,6 +222,11 @@ Route::group(array('prefix' => 'summits'), function () {
         Route::group(['prefix' => 'metrics'], function () {
             Route::put('enter', 'OAuth2SummitMetricsApiController@enter');
             Route::post('leave', 'OAuth2SummitMetricsApiController@leave');
+            // on site
+            Route::group(['prefix' => 'onsite'], function () {
+                Route::put('enter', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitMetricsApiController@onSiteEnter']);
+                Route::post('leave', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitMetricsApiController@onSiteLeave']);
+            });
         });
 
         Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@updateSummit']);
@@ -1328,10 +1333,10 @@ Route::group(array('prefix' => 'summits'), function () {
                         });
 
                         Route::group(['prefix' => 'feedback'], function () {
-                            Route::get('', 'OAuth2SummitMembersApiController@getMyEventFeedback')->where('member_id', 'me');
-                            Route::post('', 'OAuth2SummitMembersApiController@addMyEventFeedback')->where('member_id', 'me');
-                            Route::put('', 'OAuth2SummitMembersApiController@updateMyEventFeedback')->where('member_id', 'me');
-                            Route::delete('', 'OAuth2SummitMembersApiController@deleteMyEventFeedback')->where('member_id', 'me');
+                            Route::get('', 'OAuth2SummitEventsApiController@getMyEventFeedback')->where('member_id', 'me');
+                            Route::post('', 'OAuth2SummitEventsApiController@addMyEventFeedback')->where('member_id', 'me');
+                            Route::put('', 'OAuth2SummitEventsApiController@updateMyEventFeedback')->where('member_id', 'me');
+                            Route::delete('', 'OAuth2SummitEventsApiController@deleteMyEventFeedback')->where('member_id', 'me');
                         });
 
                         Route::post('', 'OAuth2SummitMembersApiController@addEventToMemberSchedule')->where('member_id', 'me');

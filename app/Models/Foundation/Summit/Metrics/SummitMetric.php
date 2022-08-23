@@ -88,6 +88,14 @@ class SummitMetric extends SilverstripeBaseModel
      */
     protected $member;
 
+    const AccessTypeIngress = 'INGRESS';
+    const AccessTypeEgress = 'EGRESS';
+
+    const ValidAccessTypes = [
+        self::AccessTypeIngress,
+        self::AccessTypeEgress,
+    ];
+
     /**
      * @return \DateTime
      */
@@ -162,7 +170,7 @@ class SummitMetric extends SilverstripeBaseModel
      * @return SummitMetric
      * @throws \Exception
      */
-    public static function build(?Member $member){
+    public static function build(?Member $member = null){
         $metric = new static();
         $metric->member = $member;
         $metric->ingress_date = new \DateTime('now', new \DateTimeZone('UTC'));

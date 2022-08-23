@@ -15,9 +15,14 @@ use App\Models\Foundation\Summit\Repositories\ISummitMetricRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
 use models\main\Member;
 use models\summit\ISummitMetricType;
+use models\summit\SummitAttendee;
+use models\summit\SummitEvent;
 use models\summit\SummitEventAttendanceMetric;
 use models\summit\SummitMetric;
+use models\summit\SummitRoomMetric;
 use models\summit\SummitSponsorMetric;
+use models\summit\SummitVenueRoom;
+
 /**
  * Class DoctrineSummitMetricRepository
  * @package App\Repositories\Summit
@@ -54,7 +59,9 @@ final class DoctrineSummitMetricRepository
                 $query = $query->leftJoin(SummitEventAttendanceMetric::class, 'sam', 'WITH', 'e.id = sam.id')
                     ->join("sam.event", "evt")
                     ->andWhere("evt.id = :source_id")
-                    ->setParameter("source_id", $source_id);
+                    ->andWhere("sam.sub_type = :sub_type")
+                    ->setParameter("source_id", $source_id)
+                    ->setParameter("sub_type", SummitEventAttendanceMetric::SubTypeVirtual);
             }
             if($type == ISummitMetricType::Sponsor){
                 $query = $query->leftJoin(SummitSponsorMetric::class, 'sm', 'WITH', 'e.id = sm.id')
@@ -73,5 +80,42 @@ final class DoctrineSummitMetricRepository
             ->orderBy('e.ingress_date', 'DESC')
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    /**
+     * @param SummitAttendee $attendee
+     * @param SummitVenueRoom|null $room
+     * @param SummitEvent|null $event
+     * @return SummitRoomMetric|null
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function getNonAbandonedOnSiteMetric(SummitAttendee $attendee, ?SummitVenueRoom $room , ?SummitEvent $event): ?SummitRoomMetric
+    {
+        $query =  $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->leftJoin(SummitEventAttendanceMetric::class, "rm", 'WITH', 'rm.id = e.id')
+            ->where("e.sub_type = :type");
+
+        $query = $query
+            ->andWhere("e.outgress_date is null")
+            ->andWhere("rm.attendee = :attendee")
+            ->setParameter("attendee", $attendee)
+            ->setParameter("sub_type", SummitEventAttendanceMetric::SubTypeOnSite);
+
+        if(!is_null($room)){
+            $query = $query->andWhere("rm.room = :room")->setParameter("room", $room);
+        }
+
+        if(!is_null($event)){
+            $query = $query->andWhere("rm.event = :event")->setParameter("event", $event);
+        }
+
+        return  $query->setMaxResults(1)
+        ->orderBy('e.ingress_date', 'DESC')
+        ->getQuery()
+        ->getOneOrNullResult();
+
     }
 }

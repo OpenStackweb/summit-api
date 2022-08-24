@@ -116,7 +116,7 @@ class SummitAttendee extends SilverstripeBaseModel
 
     /**
      * @ORM\Column(name="SummitHallCheckedIn", type="boolean")
-     * @var \DateTime
+     * @var boolean
      */
     private $summit_hall_checked_in;
 

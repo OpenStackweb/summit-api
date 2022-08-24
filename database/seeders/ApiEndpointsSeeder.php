@@ -888,7 +888,14 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadBookableRoomsData, $current_realm),
+                ],
+            ],
+            [
+                'name' => 'get-summits-all-by-id-slug-registration-stats',
+                'route' => '/api/v1/summits/all/{id}/registration-stats',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
                 ],
             ],
             [

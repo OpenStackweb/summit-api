@@ -406,8 +406,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
 
             if (Request::has('filter')) {
                 $filter = FilterParser::parse(Request::get('filter'), [
-                    'start_date' => ['==', '<', '>', '<=', '>='],
-                    'end_date' => ['==', '<', '>', '<=', '>='],
+                    'start_date' => [ '>='],
+                    'end_date' => ['<='],
                 ]);
             }
 

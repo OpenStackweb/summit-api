@@ -27,6 +27,15 @@ trait SummitRegistrationStats
      */
 
     /**
+     * @return float|int
+     * @throws \Exception
+     */
+    private static function getDefaultTimeZoneOffset(){
+        $defaultSSTimeZone = new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone);
+        return $defaultSSTimeZone->getOffset(new DateTime('now', new \DateTimeZone('UTC'))) / 3600;
+    }
+
+    /**
      * @param DateTime|null $startDate
      * @param DateTime|null $endDate
      * @return int
@@ -43,8 +52,7 @@ WHERE SummitOrder.SummitID = :summit_id AND
 SQL;
 
             if(!is_null($startDate) && !is_null($endDate)){
-                $defaultSSTimeZone = new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone);
-                $offset = $defaultSSTimeZone->getOffset(new DateTime('now', new \DateTimeZone('UTC')));
+                $offset = self::getDefaultTimeZoneOffset();
                 $sql .= sprintf(
                     "AND SummitAttendeeTicket.Created BETWEEN CONVERT_TZ('%s','UTC,'%s:00') AND CONVERT_TZ('%s','UTC,'%s:00')",
                     $startDate->format("Y-m-d H:i:s"),
@@ -82,8 +90,7 @@ WHERE SummitOrder.SummitID = :summit_id AND
 SQL;
 
             if(!is_null($startDate) && !is_null($endDate)){
-                $defaultSSTimeZone = new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone);
-                $offset = $defaultSSTimeZone->getOffset(new DateTime('now', new \DateTimeZone('UTC')));
+                $offset = self::getDefaultTimeZoneOffset();
                 $sql .= sprintf(
                     "AND SummitAttendeeTicket.Created BETWEEN CONVERT_TZ('%s','UTC,'%s:00') AND CONVERT_TZ('%s','UTC,'%s:00')",
                     $startDate->format("Y-m-d H:i:s"),
@@ -121,8 +128,7 @@ WHERE SummitOrder.SummitID = :summit_id AND
       SummitAttendeeTicket.Status = 'Paid';
 SQL;
             if(!is_null($startDate) && !is_null($endDate)){
-                $defaultSSTimeZone = new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone);
-                $offset = $defaultSSTimeZone->getOffset(new DateTime('now', new \DateTimeZone('UTC')));
+                $offset = self::getDefaultTimeZoneOffset();
                 $sql .= sprintf(
                     "AND SummitAttendeeTicket.Created BETWEEN CONVERT_TZ('%s','UTC,'%s:00') AND CONVERT_TZ('%s','UTC,'%s:00')",
                     $startDate->format("Y-m-d H:i:s"),
@@ -156,8 +162,7 @@ WHERE SummitOrder.SummitID = :summit_id AND
       SummitOrder.Status = 'Paid';
 SQL;
             if(!is_null($startDate) && !is_null($endDate)){
-                $defaultSSTimeZone = new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone);
-                $offset = $defaultSSTimeZone->getOffset(new DateTime('now', new \DateTimeZone('UTC')));
+                $offset = self::getDefaultTimeZoneOffset();
                 $sql .= sprintf(
                     "AND SummitOrder.Created BETWEEN CONVERT_TZ('%s','UTC,'%s:00') AND CONVERT_TZ('%s','UTC,'%s:00')",
                     $startDate->format("Y-m-d H:i:s"),
@@ -196,8 +201,7 @@ WHERE SummitOrder.SummitID = :summit_id AND
       SummitAttendeeTicket.Status = 'Paid';
 SQL;
             if(!is_null($startDate) && !is_null($endDate)){
-                $defaultSSTimeZone = new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone);
-                $offset = $defaultSSTimeZone->getOffset(new DateTime('now', new \DateTimeZone('UTC')));
+                $offset = self::getDefaultTimeZoneOffset();
                 $sql .= sprintf(
                     "AND SummitAttendeeTicket.Created BETWEEN CONVERT_TZ('%s','UTC,'%s:00') AND CONVERT_TZ('%s','UTC,'%s:00')",
                     $startDate->format("Y-m-d H:i:s"),
@@ -241,8 +245,7 @@ where SummitRefundRequest.Status='Approved' AND
       SummitOrder.SummitID = :summit_id;
 SQL;
             if(!is_null($startDate) && !is_null($endDate)){
-                $defaultSSTimeZone = new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone);
-                $offset = $defaultSSTimeZone->getOffset(new DateTime('now', new \DateTimeZone('UTC')));
+                $offset = self::getDefaultTimeZoneOffset();
                 $sql .= sprintf(
                     "AND SummitRefundRequest.Created BETWEEN CONVERT_TZ('%s','UTC,'%s:00') AND CONVERT_TZ('%s','UTC,'%s:00')",
                     $startDate->format("Y-m-d H:i:s"),
@@ -285,8 +288,7 @@ WHERE SummitOrder.SummitID = :summit_id AND
 GROUP BY SummitTicketType.Name;
 SQL;
             if(!is_null($startDate) && !is_null($endDate)){
-                $defaultSSTimeZone = new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone);
-                $offset = $defaultSSTimeZone->getOffset(new DateTime('now', new \DateTimeZone('UTC')));
+                $offset = self::getDefaultTimeZoneOffset();
                 $sql .= sprintf(
                     "AND SummitAttendeeTicket.Created BETWEEN CONVERT_TZ('%s','UTC,'%s:00') AND CONVERT_TZ('%s','UTC,'%s:00')",
                     $startDate->format("Y-m-d H:i:s"),
@@ -332,8 +334,7 @@ WHERE SummitOrder.SummitID = :summit_id AND
 GROUP BY SummitBadgeType.ID;
 SQL;
             if(!is_null($startDate) && !is_null($endDate)){
-                $defaultSSTimeZone = new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone);
-                $offset = $defaultSSTimeZone->getOffset(new DateTime('now', new \DateTimeZone('UTC')));
+                $offset = self::getDefaultTimeZoneOffset();
                 $sql .= sprintf(
                     "AND SummitAttendeeBadge.Created BETWEEN CONVERT_TZ('%s','UTC,'%s:00') AND CONVERT_TZ('%s','UTC,'%s:00')",
                     $startDate->format("Y-m-d H:i:s"),
@@ -382,8 +383,7 @@ SummitAttendee.SummitHallCheckedIn = 1;
 SQL;
 
             if(!is_null($startDate) && !is_null($endDate)){
-                $defaultSSTimeZone = new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone);
-                $offset = $defaultSSTimeZone->getOffset(new DateTime('now', new \DateTimeZone('UTC')));
+                $offset = self::getDefaultTimeZoneOffset();
                 $sql .= sprintf(
                     "AND SummitAttendee.Created BETWEEN CONVERT_TZ('%s','UTC,'%s:00') AND CONVERT_TZ('%s','UTC,'%s:00')",
                     $startDate->format("Y-m-d H:i:s"),
@@ -432,8 +432,7 @@ SummitAttendee.SummitHallCheckedIn = 0;
 SQL;
 
             if(!is_null($startDate) && !is_null($endDate)){
-                $defaultSSTimeZone = new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone);
-                $offset = $defaultSSTimeZone->getOffset(new DateTime('now', new \DateTimeZone('UTC')));
+                $offset = self::getDefaultTimeZoneOffset();
                 $sql .= sprintf(
                     "AND SummitAttendee.Created BETWEEN CONVERT_TZ('%s','UTC,'%s:00') AND CONVERT_TZ('%s','UTC,'%s:00')",
                     $startDate->format("Y-m-d H:i:s"),
@@ -532,8 +531,7 @@ SummitOrder.SummitID = :summit_id
 GROUP BY SummitBadgeFeatureType.Name;
 SQL;
             if(!is_null($startDate) && !is_null($endDate)){
-                $defaultSSTimeZone = new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone);
-                $offset = $defaultSSTimeZone->getOffset(new DateTime('now', new \DateTimeZone('UTC')));
+                $offset = self::getDefaultTimeZoneOffset();
                 $sql .= sprintf(
                     "AND SummitAttendeeTicket.Created BETWEEN CONVERT_TZ('%s','UTC,'%s:00') AND CONVERT_TZ('%s','UTC,'%s:00')",
                     $startDate->format("Y-m-d H:i:s"),
@@ -586,8 +584,7 @@ GROUP BY SummitBadgeFeatureType.Name;
 SQL;
 
             if(!is_null($startDate) && !is_null($endDate)){
-                $defaultSSTimeZone = new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone);
-                $offset = $defaultSSTimeZone->getOffset(new DateTime('now', new \DateTimeZone('UTC')));
+                $offset = self::getDefaultTimeZoneOffset();
                 $sql .= sprintf(
                     "AND SummitAttendeeTicket.Created BETWEEN CONVERT_TZ('%s','UTC,'%s:00') AND CONVERT_TZ('%s','UTC,'%s:00')",
                     $startDate->format("Y-m-d H:i:s"),

@@ -565,13 +565,13 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
     }
 
-    public function testGetCurrentSummit($summit_id = 27)
+    public function testGetCurrentSummit()
     {
 
         $params = array
         (
            // 'expand' => 'schedule',
-            'id'     => $summit_id
+            'id'     => self::$summit->getId()
         );
 
         $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
@@ -579,9 +579,9 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
             "GET",
             "OAuth2SummitApiController@getSummit",
             $params,
-            array(),
-            array(),
-            array(),
+            [],
+            [],
+            [],
             $headers
         );
 
@@ -591,11 +591,41 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($summit));
     }
 
+    public function testGetCurrentSummitRegStats()
+    {
+
+        $params = array
+        (
+            'id' => self::$summit->getId(),
+            'filter' => [
+                'start_date>=1661449232',
+                'end_date<=1661459232',
+            ]
+        );
+
+        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitApiController@getAllSummitByIdOrSlugRegistrationStats",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $stats = json_decode($content);
+        $this->assertTrue(!is_null($stats));
+    }
+
+
     public function testGetCurrentSummitSpeakers()
     {
         $params = [
 
-            'id'       => 23,
+            'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 50,
             'order'    => '+first_name,-last_name'

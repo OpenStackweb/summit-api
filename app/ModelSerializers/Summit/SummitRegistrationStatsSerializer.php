@@ -12,8 +12,11 @@
  * limitations under the License.
  **/
 use App\Http\Exceptions\HTTP403ForbiddenException;
+use Illuminate\Support\Facades\Log;
 use libs\utils\JsonUtils;
 use models\summit\Summit;
+use utils\Filter;
+
 /**
  * Class SummitRegistrationStatsSerializer
  * @package ModelSerializers
@@ -26,7 +29,6 @@ final class SummitRegistrationStatsSerializer extends SilverStripeSerializer
      * @param array $relations
      * @param array $params
      * @return array
-     * @throws HTTP403ForbiddenException
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
@@ -39,23 +41,41 @@ final class SummitRegistrationStatsSerializer extends SilverStripeSerializer
         $start_date = null;
         $end_date = null;
 
-        if(is_null($filter))
+        if($filter instanceof Filter && $filter->hasFilter('start_date') && $filter->hasFilter('end_date')){
 
-        $values['total_active_tickets'] = $summit->getActiveTicketsCount();
-        $values['total_inactive_tickets'] = $summit->getInactiveTicketsCount();
-        $values['total_orders'] = $summit->getTotalOrdersCount();
-        $values['total_active_assigned_tickets'] = $summit->getActiveAssignedTicketsCount();
-        $values['total_payment_amount_collected'] = JsonUtils::toJsonFloat($summit->getTotalPaymentAmountCollected());
-        $values['total_refund_amount_emitted'] = JsonUtils::toJsonFloat($summit->getTotalRefundAmountEmitted());
-        $values['total_tickets_per_type'] = $summit->getActiveTicketsCountPerTicketType();
-        $values['total_badges_per_type'] = $summit->getActiveBadgesCountPerBadgeType();
-        $values['total_checked_in_attendees'] = $summit->getCheckedInAttendeesCount();
-        $values['total_non_checked_in_attendees'] = $summit->getNonCheckedInAttendeesCount();
-        $values['total_virtual_attendees'] = $summit->getVirtualAttendeesCount();
+            $start_date = Filter::convertToDateTime($filter->getUniqueFilter('start_date')->getValue(), 'UTC');
+            $end_date = Filter::convertToDateTime($filter->getUniqueFilter('end_date')->getValue(), 'UTC');
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitRegistrationStatsSerializer::serialize summit %s start_date %s end_date %s",
+                    $summit->getId(),
+                    $start_date,
+                    $end_date
+                )
+            );
+
+            $start_date = new \DateTime($start_date, new \DateTimeZone('UTC'));
+            $end_date = new \DateTime($end_date, new \DateTimeZone('UTC'));
+        }
+
+        $values['total_active_tickets'] = $summit->getActiveTicketsCount($start_date, $end_date);
+        $values['total_inactive_tickets'] = $summit->getInactiveTicketsCount($start_date, $end_date);
+        $values['total_orders'] = $summit->getTotalOrdersCount($start_date, $end_date);
+        $values['total_active_assigned_tickets'] = $summit->getActiveAssignedTicketsCount($start_date, $end_date);
+        $values['total_payment_amount_collected'] = JsonUtils::toJsonFloat($summit->getTotalPaymentAmountCollected($start_date, $end_date));
+        $values['total_refund_amount_emitted'] = JsonUtils::toJsonFloat($summit->getTotalRefundAmountEmitted($start_date, $end_date));
+        $values['total_tickets_per_type'] = $summit->getActiveTicketsCountPerTicketType($start_date, $end_date);
+        $values['total_badges_per_type'] = $summit->getActiveBadgesCountPerBadgeType($start_date, $end_date);
+        $values['total_checked_in_attendees'] = $summit->getCheckedInAttendeesCount($start_date, $end_date);
+        $values['total_non_checked_in_attendees'] = $summit->getNonCheckedInAttendeesCount($start_date, $end_date);
+        $values['total_virtual_attendees'] = $summit->getVirtualAttendeesCount($start_date, $end_date);
 
         $res  = [];
-        $res1 = $summit->getActiveTicketsPerBadgeFeatureType();
-        $res2 = $summit->getAttendeesCheckinPerBadgeFeatureType();
+        $res1 = $summit->getActiveTicketsPerBadgeFeatureType($start_date, $end_date);
+        $res2 = $summit->getAttendeesCheckinPerBadgeFeatureType($start_date, $end_date);
 
         foreach($summit->getBadgeFeaturesTypes() as $f){
 

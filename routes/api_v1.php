@@ -567,7 +567,7 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::post('/attachment', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@addEventAttachment']);
 
                 Route::group(['prefix' => 'feedback'], function () {
-                    Route::get('', ['middleware' => 'cache:' . Config::get('cache_api_response.get_event_feedback_response_lifetime', 300), 'uses' => 'OAuth2SummitEventsApiController@getEventFeedback']);
+                    Route::get('', 'OAuth2SummitEventsApiController@getEventFeedback');
                 });
 
                 Route::group(['prefix' => 'image'], function () {

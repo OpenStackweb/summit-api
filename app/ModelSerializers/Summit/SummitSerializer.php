@@ -528,9 +528,11 @@ class SummitSerializer extends SilverStripeSerializer
                             }
                         }
                         break;
+
                     case 'registration_stats':{
+
                         $values['total_active_tickets'] = $summit->getActiveTicketsCount();
-                        $values['total_inactive_tickets'] = $summit->getInactiveicketsCount();
+                        $values['total_inactive_tickets'] = $summit->getInactiveTicketsCount();
                         $values['total_orders'] = $summit->getTotalOrdersCount();
                         $values['total_active_assigned_tickets'] = $summit->getActiveAssignedTicketsCount();
                         $values['total_payment_amount_collected'] = JsonUtils::toJsonFloat($summit->getTotalPaymentAmountCollected());
@@ -544,16 +546,14 @@ class SummitSerializer extends SilverStripeSerializer
                         $res  = [];
                         $res1 = $summit->getActiveTicketsPerBadgeFeatureType();
                         $res2 = $summit->getAttendeesCheckinPerBadgeFeatureType();
+
                         foreach($summit->getBadgeFeaturesTypes() as $f){
 
                             $type = $f->getName();
-                            Log::debug(sprintf("SummitSerializer::serialize feature type %s res1 %s res2 %s", $type, json_encode($res1), json_encode($res2)));
                             $col1 = array_column($res1, 'type');
                             $col2 = array_column($res2, 'type');
-                            Log::debug(sprintf("SummitSerializer::serialize col1 %s col2 %s", json_encode($col1), json_encode($col2)));
                             $key1 = array_search($type, $col1);
                             $key2 = array_search($type, $col2);
-                            Log::debug(sprintf("SummitSerializer::serialize key1 %s key2 %s", $key1, $key2));
                             $tickets_qty = $key1 !== false ? $res1[$key1]['qty']: 0;
                             $checkin_qty = $key2 !== false ? $res2[$key2]['qty']: 0;
 

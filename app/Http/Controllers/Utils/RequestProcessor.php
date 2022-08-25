@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Http\Exceptions\HTTP400BadRequestException;
+use App\Http\Exceptions\HTTP403ForbiddenException;
 use models\exceptions\ValidationException;
 use models\exceptions\EntityNotFoundException;
 use Exception;
@@ -46,6 +49,14 @@ trait RequestProcessor
         catch (\HTTP401UnauthorizedException $ex) {
             Log::warning($ex);
             return $this->error401();
+        }
+        catch(HTTP403ForbiddenException $ex){
+            Log::warning($ex);
+            return $this->error403();
+        }
+        catch(HTTP400BadRequestException $ex){
+            Log::warning($ex);
+            return $this->error400();
         }
         catch (Exception $ex) {
             Log::error($ex);

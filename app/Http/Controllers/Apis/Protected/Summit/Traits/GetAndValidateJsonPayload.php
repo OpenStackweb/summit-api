@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Http\Exceptions\HTTP400BadRequestException;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
 use models\exceptions\ValidationException;
@@ -22,17 +24,26 @@ trait GetAndValidateJsonPayload
 {
     /**
      * @param array $validation_rules
+     * @param bool $validate_json_payload
+     * @param array $messages
      * @return array
+     * @throws HTTP400BadRequestException
      * @throws ValidationException
      */
-    public function getJsonPayload(array $validation_rules = []): array{
+    public function getJsonPayload(array $validation_rules = [], bool $validate_json_payload = false, array $messages = []): array{
+
+        if ($validate_json_payload && !Request::isJson()){
+           throw new HTTP400BadRequestException("Request has no JSON content.");
+        }
+
         if(!Request::isJson()){
             return [];
         }
+
         $data    = Request::json();
         $payload = $data->all();
         // Creates a Validator instance and validates the data.
-        $validation = Validator::make($payload, $validation_rules);
+        $validation = Validator::make($payload, $validation_rules, $messages);
 
         if ($validation->fails()) {
             throw new ValidationException($validation->messages()->toArray());

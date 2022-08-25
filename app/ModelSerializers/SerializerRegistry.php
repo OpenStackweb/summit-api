@@ -128,6 +128,7 @@ final class SerializerRegistry
     const SerializerType_Admin_Voteable = 'ADMIN_VOTEABLE';
     const SerializerType_Admin_Voteable_CSV = "ADMIN_VOTEABLE_CSV";
     const SerializerType_CSV = 'CSV';
+    const SerializerType_Admin_Registration_Stats = 'ADMIN_REG_STATS';
 
     private function __clone()
     {
@@ -188,7 +189,8 @@ final class SerializerRegistry
         $this->registry['Summit'] =
             [
                 self::SerializerType_Public => SummitSerializer::class,
-                self::SerializerType_Private => AdminSummitSerializer::class
+                self::SerializerType_Private => AdminSummitSerializer::class,
+                self::SerializerType_Admin_Registration_Stats => SummitRegistrationStatsSerializer::class,
             ];
 
         $this->registry['SummitScheduleConfig'] = [

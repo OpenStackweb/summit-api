@@ -432,6 +432,38 @@ final class Filter
     }
 
     /**
+     * @param $value
+     * @param string|null $strTimeZone
+     * @return array|string
+     * @throws \Exception
+     */
+    public static function convertToDateTime($value ,?string $strTimeZone = null){
+        $timezone = null;
+
+        if(!empty($strTimeZone)){
+            $timezone = new \DateTimeZone($strTimeZone);
+        }
+
+        if(is_array($value)){
+            $res = [];
+            foreach ($value as $val){
+                $datetime = new \DateTime("@$val", $timezone);
+                if(!is_null($timezone))
+                    $datetime = $datetime->setTimezone($timezone);
+                $res[] =  $datetime->format("Y-m-d H:i:s");
+            }
+            return $res;
+        }
+        // single value
+        $datetime = new \DateTime("@$value");
+        Log::debug(sprintf("Filter::convertToDateTime original date value %s", $datetime->format("Y-m-d H:i:s")));
+        if(!is_null($timezone))
+            $datetime = $datetime->setTimezone($timezone);
+        Log::debug(sprintf("Filter::convertToDateTime final date %s", $datetime->format("Y-m-d H:i:s")));
+        return $datetime->format("Y-m-d H:i:s");
+    }
+
+    /**
      * @param string $value
      * @param string $original_format
      * @return mixed
@@ -442,27 +474,8 @@ final class Filter
         switch ($original_format_parts[0]) {
             case self::DateTimeEpoch:
                 Log::debug(sprintf("Filter::convertValue datetime_epoch %s", $original_format));
-                $timezone = null;
-                if(count($original_format_parts) > 1){
-                    Log::debug(sprintf("Filter::convertValue datetime_epoch %s setting time zone to %s", $original_format, $original_format_parts[1]));
-                    $timezone = new \DateTimeZone($original_format_parts[1]);
-                }
-                if(is_array($value)){
-                    $res = [];
-                    foreach ($value as $val){
-                        $datetime = new \DateTime("@$val", $timezone);
-                        if(!is_null($timezone))
-                            $datetime = $datetime->setTimezone($timezone);
-                        $res[] =  $datetime->format("Y-m-d H:i:s");
-                    }
-                    return $res;
-                }
-                $datetime = new \DateTime("@$value");
-                Log::debug(sprintf("Filter::convertValue original date value %s", $datetime->format("Y-m-d H:i:s")));
-                if(!is_null($timezone))
-                    $datetime = $datetime->setTimezone($timezone);
-                Log::debug(sprintf("Filter::convertValue final date %s", $datetime->format("Y-m-d H:i:s")));
-                return  $datetime->format("Y-m-d H:i:s");
+                $strTimeZone = count($original_format_parts) > 1 ? $original_format_parts[1] : null;
+                return self::convertToDateTime($value, $strTimeZone);
                 break;
             case self::Int:
                 if(is_array($value)){

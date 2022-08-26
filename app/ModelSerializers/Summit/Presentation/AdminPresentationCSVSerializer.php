@@ -67,6 +67,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
         $values['speaker_emails'] = "";
         $values['speaker_titles'] = "";
         $values['speaker_companies'] = "";
+        $values['speaker_countries'] = "";
 
         if($presentation->getSpeakers()->count() > 0){
 
@@ -75,6 +76,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
             $speaker_emails = [];
             $speaker_titles = [];
             $speaker_companies = [];
+            $speaker_countries = [];
 
             foreach ($presentation->getSpeakers() as $speaker) {
                 $speaker_ids[] = $speaker->getId();
@@ -82,6 +84,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
                 $speaker_emails[] = $speaker->getEmail();
                 $speaker_titles[] = trim($speaker->getTitle());
                 $speaker_companies[] = trim($speaker->getCompany());
+                $speaker_countries[] = trim($speaker->getCountry());
             }
 
             $values['speaker_ids'] = implode("|", $speaker_ids);
@@ -89,6 +92,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
             $values['speaker_emails'] = implode("|", $speaker_emails);
             $values['speaker_titles'] = implode("|", $speaker_titles);
             $values['speaker_companies'] = implode("|", $speaker_companies);
+            $values['speaker_countries'] = implode("|", $speaker_countries);
         }
 
         // submitter
@@ -98,6 +102,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
         $values['submitter_email'] = "";
         $values['submitter_title'] = "";
         $values['submitter_company'] = "";
+        $values['submitter_country'] = "";
 
         if($presentation->hasCreatedBy()){
             $creator = $presentation->getCreatedBy();
@@ -108,6 +113,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
                 $values['submitter_email'] = $submitter->getEmail();
                 $values['submitter_title'] = $submitter->getTitle();
                 $values['submitter_company'] = $submitter->getCompany();
+                $values['submitter_country'] = $submitter->getCountry();
             }
         }
 

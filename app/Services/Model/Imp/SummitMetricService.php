@@ -153,7 +153,7 @@ final class SummitMetricService
 
         return $this->tx_service->transaction(function () use ($summit, $current_member, $payload) {
 
-            if(!isset($payload['type']))
+            if (!isset($payload['type']))
                 throw new ValidationException("Type is required.");
 
             $source_id = null;
@@ -186,10 +186,10 @@ final class SummitMetricService
     (
         Summit $summit,
         Member $current_user,
-        int $attendee_id,
-        array $required_access_levels = [],
-        ?int $room_id = null,
-        ?int $event_id = null
+        int    $attendee_id,
+        array  $required_access_levels = [],
+        ?int   $room_id = null,
+        ?int   $event_id = null
     ): SummitMetric
     {
         Log::debug(sprintf("SummitMetricService::registerAttendeePhysicalIngress summit %s attendee_id %s ", $summit->getId(), $attendee_id));
@@ -220,8 +220,8 @@ final class SummitMetricService
 
             $metric = $this->repository->getNonAbandonedOnSiteMetric($attendee, $room, $event);
 
-            if ($metric){
-                throw new ValidationException(sprintf( "There is already a registered ingress scan for attendee %s", $attendee->getEmail()));
+            if ($metric) {
+                throw new ValidationException(sprintf("There is already a registered ingress scan for attendee %s", $attendee->getEmail()));
             }
 
             $metric = SummitEventAttendanceMetric::buildOnSiteMetric($current_user, $attendee, $room, $event);
@@ -245,10 +245,10 @@ final class SummitMetricService
     (
         Summit $summit,
         Member $current_user,
-        int $attendee_id,
-        array $required_access_levels = [],
-        ?int $room_id = null,
-        ?int $event_id = null
+        int    $attendee_id,
+        array  $required_access_levels = [],
+        ?int   $room_id = null,
+        ?int   $event_id = null
     ): SummitMetric
     {
         Log::debug(sprintf("SummitMetricService::registerAttendeePhysicalEgress summit %s attendee_id %s ", $summit->getId(), $attendee_id));
@@ -278,7 +278,7 @@ final class SummitMetricService
 
             $metric = $this->repository->getNonAbandonedOnSiteMetric($attendee, $room, $event);
 
-            if (!$metric){
+            if (!$metric) {
 
                 $metric = SummitEventAttendanceMetric::buildOnSiteMetric($current_user, $attendee, $room, $event);
                 $metric->setSummit($summit);
@@ -297,17 +297,23 @@ final class SummitMetricService
      * @param array $payload
      * @return SummitMetric
      */
-    public function onSiteEnter(Summit $summit, Member $current_user, array $payload):SummitMetric{
-            return $this->registerAttendeePhysicalIngress
-            (
-                $summit,
-                $current_user,
-                $payload['attendee_id'],
-                $payload['required_access_levels'] ?? [],
-                $payload['room_id'] ?? null,
-                $payload['event_id'] ?? null,
-            );
-
+    public function onSiteEnter(Summit $summit, Member $current_user, array $payload): SummitMetric
+    {
+        $room_id = $payload['room_id'] ?? null;
+        if(!is_null($room_id))
+            $room_id = intval($room_id);
+        $event_id = $payload['event_id'] ?? null;
+        if(!is_null($event_id))
+            $event_id = intval($event_id);
+        return $this->registerAttendeePhysicalIngress
+        (
+            $summit,
+            $current_user,
+            intval($payload['attendee_id']),
+            $payload['required_access_levels'] ?? [],
+            $room_id,
+            $event_id
+        );
     }
 
     /**
@@ -316,15 +322,22 @@ final class SummitMetricService
      * @param array $payload
      * @return SummitMetric
      */
-    public function onSiteLeave(Summit $summit, Member $current_user, array $payload):SummitMetric{
-        return $this->registerAttendeePhysicalEgress()
+    public function onSiteLeave(Summit $summit, Member $current_user, array $payload): SummitMetric
+    {
+        $room_id = $payload['room_id'] ?? null;
+        if(!is_null($room_id))
+            $room_id = intval($room_id);
+        $event_id = $payload['event_id'] ?? null;
+        if(!is_null($event_id))
+            $event_id = intval($event_id);
+        return $this->registerAttendeePhysicalEgress
         (
             $summit,
             $current_user,
-            $payload['attendee_id'],
+            intval($payload['attendee_id']),
             $payload['required_access_levels'] ?? [],
-            $payload['room_id'] ?? null,
-            $payload['event_id'] ?? null,
+            $room_id,
+            $event_id
         );
     }
 

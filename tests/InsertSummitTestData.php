@@ -12,39 +12,41 @@
  * limitations under the License.
  **/
 
-use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
+use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Foundation\Summit\TrackTagGroup;
+use DateInterval;
+use DateTime;
+use DateTimeZone;
+use Doctrine\Persistence\ObjectRepository;
+use Exception;
+use Illuminate\Support\Facades\DB;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\main\Member;
+use models\main\SummitAdministratorPermissionGroup;
 use models\main\Tag;
 use models\summit\ISummitEventType;
+use models\summit\Presentation;
+use models\summit\PresentationCategory;
 use models\summit\PresentationCategoryGroup;
 use models\summit\PresentationSpeaker;
+use models\summit\PresentationType;
+use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitBadgeType;
+use models\summit\SummitEvent;
+use models\summit\SummitEventType;
 use models\summit\SummitOrder;
 use models\summit\SummitTicketType;
-use models\summit\SummitEvent;
-use models\utils\SilverstripeBaseModel;
 use models\summit\SummitVenue;
-use models\summit\Summit;
-use Doctrine\Persistence\ObjectRepository;
-use models\summit\PresentationCategory;
-use models\summit\SummitEventType;
-use models\summit\PresentationType;
-use App\Models\Foundation\Summit\SelectionPlan;
-use Illuminate\Support\Facades\DB;
-use models\summit\Presentation;
-use models\main\SummitAdministratorPermissionGroup;
-use DateTimeZone;
-use DateTime;
-use DateInterval;
-use Exception;
+use models\summit\SummitVenueFloor;
+use models\summit\SummitVenueRoom;
+use models\utils\SilverstripeBaseModel;
+use models\summit\SummitAccessLevelType;
 /**
  * Trait InsertSummitTestData
  * @package Tests
@@ -142,6 +144,11 @@ trait InsertSummitTestData
     static $presentations;
 
     /**
+     * @var array|SummitVenueRoom[]
+     */
+    static $venue_rooms;
+
+    /**
      * @var PresentationCategoryGroup
      */
     static $defaultTrackGroup;
@@ -165,6 +172,11 @@ trait InsertSummitTestData
      * @var Member
      */
     static $defaultMember2;
+
+    /**
+     * @var array | SummitAccessLevelType[]
+     */
+    static $access_levels;
 
     /**
      * @throws Exception
@@ -256,6 +268,13 @@ trait InsertSummitTestData
         
         self::$summit->addEventType(self::$allow2VotePresentationType);
 
+        for($i = 0 ; $i < 5; $i++){
+            $access_level = new SummitAccessLevelType();
+            $access_level->setName(sprintf("Access Level %s", $i));
+            self::$default_badge_type->addAccessLevel($access_level);
+            self::$summit->addBadgeAccessLevelType($access_level);
+        }
+
         if (self::$defaultMember != null) {
             $attendee = new SummitAttendee();
             $attendee->setMember(self::$defaultMember);
@@ -319,6 +338,27 @@ trait InsertSummitTestData
         self::$mainVenue->setName("TEST VENUE");
         self::$mainVenue->setIsMain(true);
         self::$summit->addLocation(self::$mainVenue);
+
+        $floor = new SummitVenueFloor();
+        $floor->setNumber(1);
+        $floor->setName("F1");
+        $floor->setDescription("Floor number 1");
+
+        self::$mainVenue->addFloor($floor);
+
+        self::$venue_rooms = [];
+        for($i = 0 ; $i < 20; $i++){
+            $room = new SummitVenueRoom();
+            $room->setName(sprintf("Room %s", $i));
+            $room->setCapacity(10);
+            self::$venue_rooms[] = $room;
+
+            self::$summit->addLocation($room);
+            self::$mainVenue->addRoom($room);
+            $floor->addRoom($room);
+
+            self::$em->persist($room);
+        }
 
         self::$defaultTrack = new PresentationCategory();
         self::$defaultTrack->setTitle('DEFAULT TRACK');
@@ -526,6 +566,8 @@ trait InsertSummitTestData
         self::$summit = self::$summit_repository->find(self::$summit->getId());
         self::$summit2 = self::$summit_repository->find(self::$summit2->getId());
         self::$summit_permission_group = self::$summit_permission_group_repository->find(self::$summit_permission_group->getId());
+        self::$summit->clearMetrics();
+        self::$summit2->clearMetrics();
         self::$em->remove(self::$summit);
         self::$em->remove(self::$summit2);
         self::$em->remove(self::$summit_permission_group);

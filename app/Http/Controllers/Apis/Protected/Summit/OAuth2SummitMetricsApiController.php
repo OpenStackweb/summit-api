@@ -18,7 +18,6 @@ use models\main\IMemberRepository;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitMetricType;
 use models\summit\ISummitRepository;
-use models\summit\SummitMetric;
 use ModelSerializers\SerializerRegistry;
 
 /**
@@ -202,7 +201,8 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
 
             $metric = $this->service->onSiteEnter($summit, $current_member, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($metric)->serialize(
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($metric)->serialize
+            (
                 SerializerUtils::getExpand(),
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations()

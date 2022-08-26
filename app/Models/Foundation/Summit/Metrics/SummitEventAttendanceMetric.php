@@ -11,7 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Mapping AS ORM;
+
+use Doctrine\ORM\Mapping as ORM;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use models\utils\One2ManyPropertyTrait;
@@ -40,8 +41,8 @@ class SummitEventAttendanceMetric extends SummitMetric
         'hasCreatedBy' => 'created_by'
     ];
 
-    Const SubTypeVirtual = 'VIRTUAL';
-    Const SubTypeOnSite = 'ON_SITE';
+    const SubTypeVirtual = 'VIRTUAL';
+    const SubTypeOnSite = 'ON_SITE';
 
     /**
      * @ORM\Column(name="SubType", type="string")
@@ -154,16 +155,20 @@ class SummitEventAttendanceMetric extends SummitMetric
      * @return SummitMetric|static
      * @throws \Exception
      */
-    public static function buildOnSiteMetric(?Member $creator ,SummitAttendee $attendee, ?SummitVenueRoom $room = null, ?SummitEvent $event = null){
+    public static function buildOnSiteMetric(?Member $creator, SummitAttendee $attendee, ?SummitVenueRoom $room = null, ?SummitEvent $event = null)
+    {
         $metric = new static();
         $metric->attendee = $attendee;
+        if ($attendee->hasMember()) {
+            $metric->member = $attendee->getMember();
+        }
         $metric->ingress_date = new \DateTime('now', new \DateTimeZone('UTC'));
         $metric->room = $room;
         $metric->event = $event;
         $metric->created_by = $creator;
 
         $metric->type = ISummitMetricType::Room;
-        if(!is_null($event)){
+        if (!is_null($event)) {
             $metric->type = ISummitMetricType::Event;
         }
         $metric->markAsOnSite();
@@ -173,7 +178,8 @@ class SummitEventAttendanceMetric extends SummitMetric
     /**
      * @throws ValidationException
      */
-    public function abandon(){
+    public function abandon()
+    {
         $this->outgress_date = new \DateTime('now', new \DateTimeZone('UTC'));
     }
 
@@ -185,13 +191,14 @@ class SummitEventAttendanceMetric extends SummitMetric
         return $this->sub_type;
     }
 
-    public function markAsVirtual():void{
+    public function markAsVirtual(): void
+    {
         $this->sub_type = self::SubTypeVirtual;
     }
 
-    public function markAsOnSite():void{
+    public function markAsOnSite(): void
+    {
         $this->sub_type = self::SubTypeOnSite;
     }
-
 
 }

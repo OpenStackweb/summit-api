@@ -19,7 +19,6 @@ use models\summit\SummitAttendee;
 use models\summit\SummitEvent;
 use models\summit\SummitEventAttendanceMetric;
 use models\summit\SummitMetric;
-use models\summit\SummitRoomMetric;
 use models\summit\SummitSponsorMetric;
 use models\summit\SummitVenueRoom;
 
@@ -86,17 +85,17 @@ final class DoctrineSummitMetricRepository
      * @param SummitAttendee $attendee
      * @param SummitVenueRoom|null $room
      * @param SummitEvent|null $event
-     * @return SummitRoomMetric|null
+     * @return SummitMetric|null
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    public function getNonAbandonedOnSiteMetric(SummitAttendee $attendee, ?SummitVenueRoom $room , ?SummitEvent $event): ?SummitRoomMetric
+    public function getNonAbandonedOnSiteMetric(SummitAttendee $attendee, ?SummitVenueRoom $room , ?SummitEvent $event): ?SummitMetric
     {
         $query =  $this->getEntityManager()
             ->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")
             ->leftJoin(SummitEventAttendanceMetric::class, "rm", 'WITH', 'rm.id = e.id')
-            ->where("e.sub_type = :type");
+            ->where("rm.sub_type = :sub_type");
 
         $query = $query
             ->andWhere("e.outgress_date is null")

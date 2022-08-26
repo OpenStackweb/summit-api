@@ -15,7 +15,6 @@ use models\main\Member;
 use models\summit\SummitAttendee;
 use models\summit\SummitEvent;
 use models\summit\SummitMetric;
-use models\summit\SummitRoomMetric;
 use models\summit\SummitVenueRoom;
 use models\utils\IBaseRepository;
 /**
@@ -36,9 +35,9 @@ interface ISummitMetricRepository extends IBaseRepository
      * @param SummitAttendee $attendee
      * @param SummitVenueRoom|null $room
      * @param SummitEvent|null $event
-     * @return SummitRoomMetric|null
+     * @return SummitMetric|null
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    public function getNonAbandonedOnSiteMetric(SummitAttendee $attendee, ?SummitVenueRoom $room , ?SummitEvent $event): ?SummitRoomMetric;
+    public function getNonAbandonedOnSiteMetric(SummitAttendee $attendee, ?SummitVenueRoom $room , ?SummitEvent $event): ?SummitMetric;
 
 }

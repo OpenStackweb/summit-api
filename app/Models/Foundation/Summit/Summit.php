@@ -5486,6 +5486,10 @@ SQL;
         $metric->setSummit($this);
     }
 
+    public function clearMetrics():void{
+        $this->metrics->clear();
+    }
+
     public function isPubliclyOpen(): bool
     {
         return $this->ticket_types->count() == 0;

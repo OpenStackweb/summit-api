@@ -195,6 +195,7 @@ final class SummitMetricService
         Log::debug(sprintf("SummitMetricService::registerAttendeePhysicalIngress summit %s attendee_id %s ", $summit->getId(), $attendee_id));
 
         return $this->tx_service->transaction(function () use ($summit, $current_user, $attendee_id, $required_access_levels, $room_id, $event_id) {
+
             $attendee = $summit->getAttendeeById($attendee_id);
             if (is_null($attendee))
                 throw new EntityNotFoundException("Attendee not found.");
@@ -228,6 +229,7 @@ final class SummitMetricService
             $metric->setSummit($summit);
             $this->repository->add($metric);
 
+            return $metric;
         });
     }
 
@@ -299,6 +301,7 @@ final class SummitMetricService
      */
     public function onSiteEnter(Summit $summit, Member $current_user, array $payload): SummitMetric
     {
+        Log::debug(sprintf("SummitMetricService::onSiteEnter summit %s payload %s", $summit->getId(), json_encode($payload)));
         $room_id = $payload['room_id'] ?? null;
         if(!is_null($room_id))
             $room_id = intval($room_id);
@@ -324,12 +327,14 @@ final class SummitMetricService
      */
     public function onSiteLeave(Summit $summit, Member $current_user, array $payload): SummitMetric
     {
+        Log::debug(sprintf("SummitMetricService::onSiteLeave summit %s payload %s", $summit->getId(), json_encode($payload)));
         $room_id = $payload['room_id'] ?? null;
         if(!is_null($room_id))
             $room_id = intval($room_id);
         $event_id = $payload['event_id'] ?? null;
         if(!is_null($event_id))
             $event_id = intval($event_id);
+
         return $this->registerAttendeePhysicalEgress
         (
             $summit,

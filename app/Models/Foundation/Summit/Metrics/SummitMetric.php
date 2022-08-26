@@ -154,15 +154,15 @@ class SummitMetric extends SilverstripeBaseModel
     }
 
     public function getMemberFirstName():?string{
-        return $this->member->getFirstName();
+        return is_null($this->member) ? null : $this->member->getFirstName();
     }
 
     public function getMemberLastName():?string{
-        return $this->member->getLastName();
+        return is_null($this->member) ? null : $this->member->getLastName();
     }
 
     public function getMemberProfilePhotoUrl():?string{
-        return $this->member->getProfilePhotoUrl();
+        return is_null($this->member) ? null : $this->member->getProfilePhotoUrl();
     }
 
     /**

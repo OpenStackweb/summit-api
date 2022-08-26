@@ -11,13 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 /**
  * Class SummitEventAttendanceMetricSerializer
  * @package ModelSerializers
  */
-class SummitEventAttendanceMetricSerializer extends SummitMetricSerializer
+final class SummitEventAttendanceMetricSerializer extends SummitMetricSerializer
 {
     protected static $array_mappings = [
         'EventId' => 'event_id:json_int',
+        'RoomId' => 'room_id:json_int',
+        'SubType' => 'sub_type:json_string',
+        'AttendeeId' => 'attendee_id:json_int',
+        'CreatedById' => 'created_by_id:json_int',
     ];
 }

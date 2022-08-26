@@ -867,6 +867,8 @@ SQL;
      */
     public function checkAccessLevels(array $required_access_level_ids = []): bool
     {
+        Log::debug(sprintf("SummitAttendee::checkAccessLevels id %s access levels %s", $this->id, json_encode($required_access_level_ids)));
+
         if (count($required_access_level_ids) === 0) return true;
         // check access levels
         $isAuth = false;
@@ -895,7 +897,10 @@ SQL;
             if (!$ticket->isActive()) continue;
             if (!$ticket->hasBadge()) continue;
             $al = $ticket->getBadge()->getType()->getAccessLevelByName($access_level);
-            if (!is_null($al)) return true;
+            if (!is_null($al)){
+                Log::debug(sprintf("SummitAttendee::hasAccessLevel attendee %s has access level %s.", $this->id, $al->getName()));
+                return true;
+            }
         }
         return false;
     }

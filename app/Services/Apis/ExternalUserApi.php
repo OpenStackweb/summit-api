@@ -89,6 +89,14 @@ final class ExternalUserApi extends AbstractOAuth2Api
 
             return intval($data['total']) > 0 ? $data['data'][0] : null;
         }
+        catch (RequestException $ex){
+            $this->cleanAccessToken();
+            Log::warning($ex);
+            if($ex->getCode() == 404){
+                return null;
+            }
+            throw $ex;
+        }
         catch (Exception $ex) {
             $this->cleanAccessToken();
             Log::error($ex);
@@ -178,6 +186,14 @@ final class ExternalUserApi extends AbstractOAuth2Api
             );
 
             return json_decode($response->getBody()->getContents(), true);
+        }
+        catch (RequestException $ex){
+            $this->cleanAccessToken();
+            Log::warning($ex);
+            if($ex->getCode() == 404){
+                return null;
+            }
+            throw $ex;
         }
         catch (Exception $ex) {
             $this->cleanAccessToken();

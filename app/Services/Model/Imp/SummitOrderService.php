@@ -2185,6 +2185,20 @@ final class SummitOrderService
             $order->generateHash();
             $order->generateQRCode();
 
+            // check if we have an invitation for the order owner
+
+            // we should mark the associated invitation as processed
+            Log::debug(sprintf("SummitOrderService::createOfflineOrder trying to get invitation for email %s.", $order->getOwnerEmail()));
+            $invitation = $summit->getSummitRegistrationInvitationByEmail($order->getOwnerEmail());
+            if (is_null($invitation) || $invitation->isAccepted()) {
+                Log::debug(sprintf("SummitOrderService::createOfflineOrder invitation for email %s does not exists or its already accepted.", $order->getOwnerEmail()));
+                return $order;
+            }
+
+            $invitation->addOrder($order);
+            Log::debug(sprintf("SummitOrderService::createOfflineOrder trying mark invitation for email %s as accepted.", $order->getOwnerEmail()));
+            $invitation->markAsAccepted();
+
             return $order;
         });
 

@@ -1,5 +1,5 @@
 <?php namespace Database\Migrations\Model;
-/**
+/*
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -11,42 +11,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
-use App\Models\Foundation\Summit\EmailFlows\SummitEmailFlowType;
-use Database\Seeders\SummitEmailFlowTypeSeeder;
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
-use Illuminate\Support\Facades\DB;
 use LaravelDoctrine\ORM\Facades\Registry;
+use models\summit\Summit;
 use models\utils\SilverstripeBaseModel;
 /**
- * Class Version20220207195239
+ * Class Version20220830094423
  * @package Database\Migrations\Model
  */
-final class Version20220207195239 extends AbstractMigration
+final class Version20220830094423 extends AbstractMigration
 {
     /**
      * @param Schema $schema
      */
     public function up(Schema $schema): void
     {
-        DB::setDefaultConnection("model");
         $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
-        $repository = $em->getRepository(SummitEmailFlowType::class);
-        $flow = $repository->findOneBy([
-            "name" => "Registration"
-        ]);
-        SummitEmailFlowTypeSeeder::createEventsTypes(
-            [
-                [
-                    'name' => SummitAttendeeAllTicketsEditionEmail::EVENT_NAME,
-                    'slug' => SummitAttendeeAllTicketsEditionEmail::EVENT_SLUG,
-                    'default_email_template' => SummitAttendeeAllTicketsEditionEmail::DEFAULT_TEMPLATE
-                ]
-            ],
-            $flow
-        );
-        $em->persist($flow);
+        $repository = $em->getRepository(Summit::class);
+        $summits = $repository->findAll();
+        foreach($summits as $summit){
+            $summit->seedDefaultEmailFlowEvents();
+            $em->persist($summit);
+        }
         $em->flush();
     }
 

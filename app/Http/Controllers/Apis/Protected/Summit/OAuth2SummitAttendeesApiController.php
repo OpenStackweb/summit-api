@@ -15,6 +15,7 @@
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
+use App\Jobs\Emails\Registration\Attendees\GenericSummitAttendeeEmail;
 use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
 use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
 use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
@@ -920,7 +921,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                         SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG,
                         InviteAttendeeTicketEditionMail::EVENT_SLUG,
                         SummitAttendeeAllTicketsEditionEmail::EVENT_SLUG,
-                        SummitAttendeeRegistrationIncompleteReminderEmail::EVENT_SLUG
+                        SummitAttendeeRegistrationIncompleteReminderEmail::EVENT_SLUG,
+                        GenericSummitAttendeeEmail::EVENT_SLUG,
                     ]),
                 'attendees_ids' => 'sometimes|int_array',
             ]);

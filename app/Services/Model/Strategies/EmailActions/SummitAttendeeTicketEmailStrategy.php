@@ -17,6 +17,10 @@ use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
 use Illuminate\Support\Facades\Log;
 use models\summit\SummitAttendee;
 
+/**
+ * Class SummitAttendeeTicketEmailStrategy
+ * @package App\Services\Model\Strategies\EmailActions
+ */
 class SummitAttendeeTicketEmailStrategy extends AbstractEmailAction
 {
     /**

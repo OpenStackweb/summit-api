@@ -13,6 +13,8 @@
  **/
 
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessExcerptEmail;
+use App\Jobs\Emails\Registration\Attendees\GenericSummitAttendeeEmail;
+use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
 use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -192,6 +194,16 @@ final class SummitEmailFlowTypeSeeder extends Seeder
                 'name' => ReInviteSummitRegistrationEmail::EVENT_NAME,
                 'slug' => ReInviteSummitRegistrationEmail::EVENT_SLUG,
                 'default_email_template' => ReInviteSummitRegistrationEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => SummitAttendeeAllTicketsEditionEmail::EVENT_NAME,
+                'slug' => SummitAttendeeAllTicketsEditionEmail::EVENT_SLUG,
+                'default_email_template' => SummitAttendeeAllTicketsEditionEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => GenericSummitAttendeeEmail::EVENT_NAME,
+                'slug' => GenericSummitAttendeeEmail::EVENT_SLUG,
+                'default_email_template' => GenericSummitAttendeeEmail::DEFAULT_TEMPLATE
             ],
         ], $flow);
 

@@ -836,7 +836,7 @@ class SummitEvent extends SilverstripeBaseModel
     public function getEndDate():?DateTime
     {
         $type = $this->type;
-        return  !is_null($type) && $type->isAllowsPublishingDates() ? $this->end_date: null;
+        return !is_null($type) && $type->isAllowsPublishingDates() ? $this->end_date: null;
     }
 
     /**
@@ -1512,9 +1512,10 @@ class SummitEvent extends SilverstripeBaseModel
 
     /**
      * @param int $duration_in_seconds
+     * @param bool $skipDatesSetting
      * @throws ValidationException
      */
-    public function setDuration(int $duration_in_seconds): void
+    public function setDuration(int $duration_in_seconds, bool $skipDatesSetting = false): void
     {
         if(!$this->type->isAllowsPublishingDates()){
             throw new ValidationException("Type does not allows Publishing Period.");
@@ -1529,18 +1530,21 @@ class SummitEvent extends SilverstripeBaseModel
         }
 
         $this->duration = $duration_in_seconds;
-        $start_date = $this->getStartDate();
-        if (!is_null($start_date)) {
 
-            $start_date = clone $start_date;
-            $value = $start_date->add(new \DateInterval('PT'.$duration_in_seconds.'S'));
-            $summit = $this->getSummit();
+        if(!$skipDatesSetting) {
+            $start_date = $this->getStartDate();
+            if (!is_null($start_date)) {
 
-            if(!is_null($summit)){
-                $value = $summit->convertDateFromUTC2TimeZone($value);
+                $start_date = clone $start_date;
+                $value = $start_date->add(new \DateInterval('PT' . $duration_in_seconds . 'S'));
+                $summit = $this->getSummit();
+
+                if (!is_null($summit)) {
+                    $value = $summit->convertDateFromUTC2TimeZone($value);
+                }
+
+                $this->setEndDate($value);
             }
-
-            $this->setEndDate($value);
         }
     }
 }

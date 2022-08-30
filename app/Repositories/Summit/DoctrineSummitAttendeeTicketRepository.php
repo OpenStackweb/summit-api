@@ -134,8 +134,8 @@ final class DoctrineSummitAttendeeTicketRepository
      */
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
         $query->join("e.order","o");
-        $query->join("o.owner","ord_m");
         $query->join("o.summit","s");
+        $query->leftJoin("o.owner","ord_m");
         $query->leftJoin("e.owner","a");
         $query->leftJoin("e.badge","b");
         $query->leftJoin("b.type","bt");

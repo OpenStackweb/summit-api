@@ -2807,6 +2807,8 @@ final class SummitService extends AbstractService implements ISummitService
         foreach ($events_ids as $event_id) {
             $this->tx_service->transaction(function () use ($summit_id, $event_id, $interval, $negative) {
                 $event = $this->event_repository->getByIdExclusiveLock($event_id);
+                if(!$event instanceof SummitEvent) return;
+
                 $eventBeginDate = $event->getStartDate();
                 $eventEndDate = $event->getEndDate();
                 if (is_null($eventBeginDate) || is_null($eventEndDate)) {
@@ -2827,8 +2829,13 @@ final class SummitService extends AbstractService implements ISummitService
                 } else {
                     $event->setRawEndDate(clone $eventEndDate->add($interval));
                 }
+
                 Log::debug(sprintf("SummitService::advanceSummit summit id %s event id %s new end date %s", $summit_id, $event->getId(), $event->getEndDate()->format("Ymd His")));
 
+                // set duration
+                $cloneEndDate = clone $event->getEndDate();
+                $cloneStartDate = clone $event->getStartDate();
+                $event->setDuration(($cloneEndDate->getTimestamp() - $cloneStartDate->getTimestamp()), true);
             });
         }
     }

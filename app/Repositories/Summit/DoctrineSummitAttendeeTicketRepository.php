@@ -55,10 +55,10 @@ final class DoctrineSummitAttendeeTicketRepository
             'number'              => 'e.number:json_string',
             'is_active'           => 'e.is_active',
             'order_number'        => 'o.number:json_string',
-            'owner_name'          => "COALESCE(LOWER(CONCAT(m.first_name, ' ', m.last_name)), LOWER(CONCAT(a.first_name, ' ', a.surname)))",
+            'owner_name'          => "COALESCE(LOWER(CONCAT(a.first_name, ' ', a.surname)),LOWER(CONCAT(m.first_name, ' ', m.last_name)))",
             'owner_company'       => 'a.company_name:json_string',
-            'owner_first_name'    => "COALESCE(LOWER(m.first_name), LOWER(a.first_name))",
-            'owner_last_name'     => "COALESCE(LOWER(m.last_name), LOWER(a.surname))",
+            'owner_first_name'    => "COALESCE(LOWER(a.first_name),LOWER(m.first_name))",
+            'owner_last_name'     => "COALESCE(LOWER(a.surname),LOWER(m.last_name))",
             'owner_email'         => ['m.email:json_string', 'm.second_email:json_string', 'm.third_email:json_string','a.email:json_string'],
             'summit_id'           => 's.id:json_int',
             'order_owner_id'      => 'ord_m.id:json_int',
@@ -159,10 +159,10 @@ final class DoctrineSummitAttendeeTicketRepository
             'id'     => 'e.id',
             'number' => 'e.number',
             'status' => 'e.status',
-            'owner_first_name'        => 'COALESCE(LOWER(m.first_name), LOWER(a.first_name))',
-            'owner_last_name'         => 'COALESCE(LOWER(m.last_name), LOWER(a.surname))',
+            'owner_first_name'        => 'COALESCE(LOWER(a.first_name), LOWER(m.first_name))',
+            'owner_last_name'         => 'COALESCE(LOWER(a.surname), LOWER(m.last_name))',
             "owner_name"         => <<<SQL
-COALESCE(LOWER(CONCAT(m.first_name, ' ', m.last_name)), LOWER(CONCAT(a.first_name, ' ', a.surname)))
+COALESCE(LOWER(CONCAT(a.first_name, ' ', a.surname)),LOWER(CONCAT(m.first_name, ' ', m.last_name)))
 SQL,
         ];
     }

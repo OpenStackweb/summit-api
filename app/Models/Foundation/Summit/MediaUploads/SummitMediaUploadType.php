@@ -61,10 +61,16 @@ class SummitMediaUploadType extends SilverstripeBaseModel
     private $max_size;
 
     /**
-     * @ORM\Column(name="IsMandatory", type="boolean")
-     * @var bool
+     * @ORM\Column(name="MinUploadsQty", type="integer")
+     * @var int
      */
-    private $is_mandatory;
+    private $min_uploads_qty;
+
+    /**
+     * @ORM\Column(name="MaxUploadsQty", type="integer")
+     * @var int
+     */
+    private $max_uploads_qty;
 
     /**
      * @ORM\Column(name="PrivateStorageType", type="string")
@@ -113,8 +119,8 @@ class SummitMediaUploadType extends SilverstripeBaseModel
     public function __construct()
     {
         parent::__construct();
-        $this->is_mandatory = false;
         $this->max_size = 0;
+        $this->min_uploads_qty = 0;
         $this->presentation_types = new ArrayCollection();
         $this->public_storage_type = IStorageTypesConstants::None;
         $this->private_storage_type = IStorageTypesConstants::None;
@@ -213,20 +219,43 @@ class SummitMediaUploadType extends SilverstripeBaseModel
     }
 
     /**
+     * @return int
+     */
+    public function getMinUploadsQty(): int
+    {
+        return $this->min_uploads_qty;
+    }
+
+    /**
+     * @param int $min_uploads_qty
+     */
+    public function setMinUploadsQty(int $min_uploads_qty): void
+    {
+        $this->min_uploads_qty = $min_uploads_qty;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMaxUploadsQty(): int
+    {
+        return $this->max_uploads_qty ?? PHP_INT_MAX;
+    }
+
+    /**
+     * @param int $max_uploads_qty
+     */
+    public function setMaxUploadsQty(int $max_uploads_qty): void
+    {
+        $this->max_uploads_qty = $max_uploads_qty;
+    }
+
+    /**
      * @return bool
      */
     public function isMandatory(): bool
     {
-        return $this->is_mandatory;
-    }
-
-    public function markAsMandatory(): void
-    {
-        $this->is_mandatory = true;
-    }
-
-    public function markAsOptional():void{
-        $this->is_mandatory = false;
+        return $this->min_uploads_qty > 0;
     }
 
     /**

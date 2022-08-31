@@ -1526,8 +1526,8 @@ class SummitEvent extends SilverstripeBaseModel
             throw new ValidationException('Duration should be greater or equal than zero.');
         }
 
-        if($duration_in_seconds < (self::MIN_EVENT_MINUTES * 60)){
-            throw new ValidationException(sprintf('Duration should be greater than %s.',self::MIN_EVENT_MINUTES));
+        if($duration_in_seconds > 0 && $duration_in_seconds < (self::MIN_EVENT_MINUTES * 60)){
+            throw new ValidationException(sprintf('Duration should be greater than %s minutes.',self::MIN_EVENT_MINUTES));
         }
 
         $this->duration = $duration_in_seconds;

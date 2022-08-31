@@ -694,7 +694,11 @@ final class SummitService extends AbstractService implements ISummitService
 
             $event->setEndDate($end_datetime);
         }
-
+        else
+        {
+            $event->unPublish();
+            $event->clearPublishingDates();
+        }
         return $this->updateDuration($data, $summit, $event);
 
     }

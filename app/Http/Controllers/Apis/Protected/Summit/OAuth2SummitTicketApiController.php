@@ -110,6 +110,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'owner_status' => ['=='],
                     'has_badge' => ['=='],
                     'view_type_id' => ['=='],
+                    'promo_code_id' => ['=='],
                 ];
             },
             function () {
@@ -134,6 +135,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'has_owner' => 'sometimes|boolean',
                     'owner_status' => 'sometimes|string|in:' . implode(',', SummitAttendee::AllowedStatus),
                     'has_badge' => 'sometimes|boolean',
+                    'promo_code_id' => 'sometimes|integer',
                 ];
             },
             function () {
@@ -190,6 +192,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'owner_status' => ['=='],
                     'has_badge' => ['=='],
                     'view_type_id' => ['=='],
+                    'promo_code_id' => ['=='],
                 ];
             },
             function () {
@@ -214,6 +217,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'owner_status' => 'sometimes|string|in:' . implode(',', SummitAttendee::AllowedStatus),
                     'has_badge' => 'sometimes|boolean',
                     'view_type_id' => 'sometimes|integer',
+                    'promo_code_id' => 'sometimes|integer',
                 ];
             },
             function () {

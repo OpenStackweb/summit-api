@@ -826,6 +826,7 @@ class SummitEvent extends SilverstripeBaseModel
         $end_date = $this->getEndDate();
         if (!is_null($end_date)) {
             $this->duration = $end_date->getTimestamp() - $value->getTimestamp();
+            $this->duration = $this->duration < 0 ? 0 : $this->duration;
         }
         $this->start_date = $value;
     }
@@ -1521,8 +1522,8 @@ class SummitEvent extends SilverstripeBaseModel
             throw new ValidationException("Type does not allows Publishing Period.");
         }
 
-        if($duration_in_seconds <= 0 ){
-            throw new ValidationException('Duration should be greater than zero.');
+        if($duration_in_seconds < 0 ){
+            throw new ValidationException('Duration should be greater or equal than zero.');
         }
 
         if($duration_in_seconds < (self::MIN_EVENT_MINUTES * 60)){

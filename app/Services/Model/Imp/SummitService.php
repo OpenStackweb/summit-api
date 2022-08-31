@@ -2811,6 +2811,7 @@ final class SummitService extends AbstractService implements ISummitService
 
                 $eventBeginDate = $event->getStartDate();
                 $eventEndDate = $event->getEndDate();
+
                 if (is_null($eventBeginDate) || is_null($eventEndDate)) {
                     Log::debug(sprintf("SummitService::advanceSummit summit id %s event id %s ( has not set dates but is published!), skipping it", $summit_id, $event->getId()));
                     return;

@@ -66,6 +66,7 @@ final class DoctrineSummitAttendeeTicketRepository
             'member_id'           => 'm.id:json_int',
             'order_id'            => 'o.id:json_int',
             'status'              => 'e.status:json_string',
+            'promo_code_id'       => 'pc.id:json_int',
             'has_requested_refund_requests' => new DoctrineSwitchFilterMapping([
                     '1' => new DoctrineCaseFilterMapping(
                         'true',
@@ -143,6 +144,9 @@ final class DoctrineSummitAttendeeTicketRepository
         $query->leftJoin("a.member","m");
         if($filter->hasFilter('ticket_type_id')){
             $query = $query->join("e.ticket_type", "tt");
+        }
+        if($filter->hasFilter('promo_code_id')){
+            $query = $query->leftJoin("e.promo_code", "pc");
         }
         if($filter->hasFilter('view_type_id')){
             $query = $query->join("bt.allowed_view_types", "avt");

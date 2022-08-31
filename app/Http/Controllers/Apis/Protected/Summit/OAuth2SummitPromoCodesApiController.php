@@ -15,6 +15,7 @@ use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Http\Utils\PagingConstants;
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
+use App\ModelSerializers\SerializerUtils;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use models\exceptions\EntityNotFoundException;
@@ -58,6 +59,12 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
      * @var ISummitPromoCodeService
      */
     private $promo_code_service;
+
+    use RequestProcessor;
+
+    use GetAndValidateJsonPayload;
+
+    use ParametrizedGetAll;
 
     /**
      * OAuth2SummitPromoCodesApiController constructor.
@@ -364,43 +371,22 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
      * @return mixed
      */
     public function addPromoCodeBySummit($summit_id){
-        try {
-            if(!Request::isJson()) return $this->error400();
-            $data = Request::json();
+
+        return $this->processRequest(function() use($summit_id){
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $rules = PromoCodesValidationRulesFactory::build($data->all());
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data->all(), $rules);
+            $payload = $this->getJsonPayload(PromoCodesValidationRulesFactory::buildForAdd($this->getJsonData()),true);
 
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
+            $promo_code = $this->promo_code_service->addPromoCode($summit, $payload, $this->resource_server_context->getCurrentUser());
 
-                return $this->error412
-                (
-                    $messages
-                );
-            }
-
-            $promo_code = $this->promo_code_service->addPromoCode($summit, $data->all(), $this->resource_server_context->getCurrentUser());
-
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize());
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+            ));
+        });
     }
 
     /**
@@ -410,40 +396,22 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
      */
     public function updatePromoCodeBySummit($summit_id, $promo_code_id)
     {
-        try {
-            if (!Request::isJson()) return $this->error400();
-            $data = Request::json();
+        return $this->processRequest(function() use($summit_id, $promo_code_id){
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $rules = PromoCodesValidationRulesFactory::build($data->all(), true);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data->all(), $rules);
+            $payload = $this->getJsonPayload(PromoCodesValidationRulesFactory::buildForUpdate($this->getJsonData()),true);
 
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
+            $promo_code = $this->promo_code_service->updatePromoCode($summit, intval($promo_code_id), $payload, $this->resource_server_context->getCurrentUser());
 
-                return $this->error412
-                (
-                    $messages
-                );
-            }
-
-            $promo_code = $this->promo_code_service->updatePromoCode($summit, intval($promo_code_id), $data->all(), $this->resource_server_context->getCurrentUser());
-
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize());
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+            ));
             
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -453,7 +421,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
      */
     public function deletePromoCodeBySummit($summit_id, $promo_code_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $promo_code_id){
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -461,16 +429,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             $this->promo_code_service->deletePromoCode($summit, intval($promo_code_id));
 
             return $this->deleted();
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -480,21 +439,12 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
      */
     public function sendPromoCodeMail($summit_id, $promo_code_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $promo_code_id){
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $this->promo_code_service->sendPromoCodeMail($summit, intval($promo_code_id));
             return $this->ok();
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -504,23 +454,18 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
      */
     public function getPromoCodeBySummit($summit_id, $promo_code_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $promo_code_id){
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $promo_code = $summit->getPromoCodeById(intval($promo_code_id));
             if(is_null($promo_code))
                 return $this->error404();
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize( Request::input('expand', '')));
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+            ));
+        });
     }
 
     /**
@@ -531,21 +476,16 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
      */
     public function addBadgeFeatureToPromoCode($summit_id, $promo_code_id, $badge_feature_id){
 
-        try {
+        return $this->processRequest(function() use($summit_id, $promo_code_id, $badge_feature_id){
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $promo_code = $this->promo_code_service->addPromoCodeBadgeFeature($summit, intval($promo_code_id), intval($badge_feature_id));
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize( Request::input('expand', '')));
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+            ));
+        });
     }
 
 
@@ -557,21 +497,16 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
      */
     public function removeBadgeFeatureFromPromoCode($summit_id, $promo_code_id, $badge_feature_id){
 
-        try {
+        return $this->processRequest(function() use($summit_id, $promo_code_id, $badge_feature_id){
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $promo_code = $this->promo_code_service->removePromoCodeBadgeFeature($summit, intval($promo_code_id), intval($badge_feature_id));
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize( Request::input('expand', '')));
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+            ));
+        });
     }
 
     /**
@@ -582,40 +517,25 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
      */
     public function addTicketTypeToPromoCode($summit_id, $promo_code_id, $ticket_type_id){
 
-        try {
+        return $this->processRequest(function() use($summit_id, $promo_code_id, $ticket_type_id){
+
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
-            $payload = [];
-            if (Request::isJson()) {
-                $data    = Request::json();
-                $payload = $data->all();
-                $discount_code_rules = [
+
+            $payload = $this->getJsonPayload(
+                [
                     'amount'     => 'sometimes|required_without:rate|numeric|min:0',
                     'rate'       => 'sometimes|required_without:amount|numeric|min:0',
-                ];
-                // Creates a Validator instance and validates the data.
-                $validation = Validator::make($payload, $discount_code_rules);
-                if ($validation->fails()) {
-                    $messages = $validation->messages()->toArray();
-                    return $this->error412
-                    (
-                        $messages
-                    );
-                }
-            }
+                ]
+            );
 
             $promo_code = $this->promo_code_service->addPromoCodeTicketTypeRule($summit, intval($promo_code_id), intval($ticket_type_id), $payload);
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize( Request::input('expand', '')));
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+            ));
+        });
     }
 
 
@@ -627,21 +547,16 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
      */
     public function removeTicketTypeFromPromoCode($summit_id, $promo_code_id, $ticket_type_id){
 
-        try {
+        return $this->processRequest(function() use($summit_id, $promo_code_id, $ticket_type_id){
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $promo_code = $this->promo_code_service->removePromoCodeTicketTypeRule($summit, intval($promo_code_id), intval($ticket_type_id));
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize( Request::input('expand', '')));
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($promo_code)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+            ));
+        });
     }
 
     /**
@@ -650,7 +565,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function ingestPromoCodes(LaravelRequest $request, $summit_id){
-        try {
+        return $this->processRequest(function() use($summit_id,$request){
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -666,19 +581,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             $this->promo_code_service->importPromoCodes($summit, $file, $this->resource_server_context->getCurrentUser());
             return $this->ok();
 
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
 }

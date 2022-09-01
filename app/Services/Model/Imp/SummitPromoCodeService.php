@@ -217,6 +217,8 @@ final class SummitPromoCodeService
     {
         return $this->tx_service->transaction(function () use ($promo_code_id, $summit, $data, $current_user) {
 
+            Log::debug(sprintf("SummitPromoCodeService::updatePromoCode summit %s promo code %s payload %s", $summit->getId(), $promo_code_id, json_encode($data)));
+
             $promo_code = $summit->getPromoCodeById($promo_code_id);
             if (is_null($promo_code))
                 throw new EntityNotFoundException(sprintf("Promo Code id %s does not belongs to summit id %s.", $promo_code_id, $summit->getId()));
@@ -239,6 +241,8 @@ final class SummitPromoCodeService
             $badge_features_apply_to_all_tix_retroactively = $data['badge_features_apply_to_all_tix_retroactively'] ?? false;
 
             if($badge_features_apply_to_all_tix_retroactively){
+                Log::debug(sprintf("SummitPromoCodeService::updatePromoCode summit %s promo code %s triggering retro actively apply features", $summit->getId(), $promo_code_id));
+
                 // trigger background job to re apply to all tickets with this promo code
                 ReApplyPromoCodeRetroActively::dispatch($promo_code_id)->delay(now()->addMinutes(1));
             }

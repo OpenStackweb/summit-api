@@ -340,8 +340,25 @@ SQL;
 
     public function getMandatoryAllowedMediaUploadTypesCount():int{
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('is_mandatory',true));
+        $criteria->where(Criteria::expr()->gt('min_uploads_qty',0));
         return $this->allowed_media_upload_types->matching($criteria)->count();
+    }
+
+    /**
+     * Returns all allowed media uploads for each upload type
+     * @return array
+     */
+    public function getMandatoryAllowedMediaUploadTypes():array{
+        $res = array();
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->gt('min_uploads_qty',0));
+
+        $allowed_media_upload_types = $this->allowed_media_upload_types->matching($criteria);
+
+        foreach ($allowed_media_upload_types as $allowed_media_upload_type) {
+            $res[$allowed_media_upload_type->getId()] = $allowed_media_upload_type;
+        }
+        return $res;
     }
 
     public function clearAllowedMediaUploadType()

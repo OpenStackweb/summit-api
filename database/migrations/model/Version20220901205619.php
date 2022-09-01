@@ -13,32 +13,29 @@ namespace Database\Migrations\Model;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-use Doctrine\DBAL\Schema\SchemaException;
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
 use LaravelDoctrine\Migrations\Schema\Builder;
 use LaravelDoctrine\Migrations\Schema\Table;
 
-class Version20220830224755 extends AbstractMigration
+class Version20220901205619 extends AbstractMigration
 {
     /**
      * @param Schema $schema
-     * @throws SchemaException
      */
     public function up(Schema $schema): void
     {
         $builder = new Builder($schema);
 
         if($schema->hasTable("SummitMediaUploadType")) {
-            if(!$builder->hasColumn("SummitMediaUploadType","MinUploadsQty")) {
+            $sql = <<<SQL
+update SummitMediaUploadType set MinUploadsQty = 1 where IsMandatory = 1;
+SQL;
+            $this->addSql($sql);
+
+            if($builder->hasColumn("SummitMediaUploadType","IsMandatory")) {
                 $builder->table('SummitMediaUploadType', function (Table $table) {
-                    $table->integer('MinUploadsQty')->setNotnull(true)->setDefault(0);
-                });
-            }
-            if(!$builder->hasColumn("SummitMediaUploadType","MaxUploadsQty")) {
-                $builder->table('SummitMediaUploadType', function (Table $table) {
-                    $table->integer('MaxUploadsQty')->setNotnull(true)->setDefault(0);
+                    $table->dropColumn('IsMandatory');
                 });
             }
         }
@@ -46,27 +43,15 @@ class Version20220830224755 extends AbstractMigration
 
     /**
      * @param Schema $schema
-     * @throws SchemaException
      */
     public function down(Schema $schema): void
     {
         $builder = new Builder($schema);
 
         if($schema->hasTable("SummitMediaUploadType")) {
-
-            $sql = <<<SQL
-update SummitMediaUploadType set IsMandatory = 1 where MinUploadsQty > 1;
-SQL;
-            $this->addSql($sql);
-
-            if($builder->hasColumn("SummitMediaUploadType","MinUploadsQty")) {
+            if(!$builder->hasColumn("SummitMediaUploadType","IsMandatory")) {
                 $builder->table('SummitMediaUploadType', function (Table $table) {
-                    $table->dropColumn('MinUploadsQty');
-                });
-            }
-            if($builder->hasColumn("SummitMediaUploadType","MaxUploadsQty")) {
-                $builder->table('SummitMediaUploadType', function (Table $table) {
-                    $table->dropColumn('MaxUploadsQty');
+                    $table->boolean("IsMandatory")->setDefault(false);
                 });
             }
         }

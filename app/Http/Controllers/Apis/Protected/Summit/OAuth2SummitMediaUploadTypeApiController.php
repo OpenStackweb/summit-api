@@ -119,7 +119,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
             'type_id' => 'required|int',
             'presentation_types' => 'sometimes|int_array',
             'min_uploads_qty' => 'sometimes|integer|min:0',
-            'max_uploads_qty' => 'sometimes|int',
+            'max_uploads_qty' => 'sometimes|integer|min:0',
         ];
     }
 
@@ -165,7 +165,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
             'type_id' => 'sometimes|int',
             'presentation_types' => 'sometimes|int_array',
             'min_uploads_qty' => 'sometimes|integer|min:0',
-            'max_uploads_qty' => 'sometimes|int',
+            'max_uploads_qty' => 'sometimes|integer|min:0',
         ];
     }
 

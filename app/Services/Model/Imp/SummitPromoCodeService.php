@@ -244,7 +244,7 @@ final class SummitPromoCodeService
                 Log::debug(sprintf("SummitPromoCodeService::updatePromoCode summit %s promo code %s triggering retro actively apply features", $summit->getId(), $promo_code_id));
 
                 // trigger background job to re apply to all tickets with this promo code
-                ReApplyPromoCodeRetroActively::dispatch($promo_code_id)->delay(now()->addMinutes(1));
+                ReApplyPromoCodeRetroActively::dispatch($promo_code_id)->afterResponse();
             }
 
             return $promo_code;

@@ -35,11 +35,6 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
 {
 
     /**
-     * @var ISummitRegistrationPromoCodeRepository
-     */
-    private $promo_code_repository;
-
-    /**
      * @var ISummitRepository
      */
     private $summit_repository;
@@ -79,7 +74,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
     {
         parent::__construct($resource_server_context);
         $this->promo_code_service = $promo_code_service;
-        $this->promo_code_repository = $promo_code_repository;
+        $this->repository = $promo_code_repository;
         $this->summit_repository = $summit_repository;
         $this->member_repository = $member_repository;
     }
@@ -256,7 +251,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
 
         return $this->ok
         (
-            $this->promo_code_repository->getMetadata($summit)
+            $this->repository->getMetadata($summit)
         );
     }
 

@@ -13,12 +13,14 @@
  **/
 
 use App\Jobs\Emails\Registration\PromoCodeEmailFactory;
+use App\Jobs\ReApplyPromoCodeRetroActively;
 use App\Models\Foundation\Summit\Factories\SummitPromoCodeFactory;
 use App\Models\Foundation\Summit\Factories\SummitRegistrationDiscountCodeTicketTypeRuleFactory;
 use App\Services\Utils\CSVReader;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Request;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -29,9 +31,17 @@ use models\summit\IOwnablePromoCode;
 use models\summit\ISpeakerRepository;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
+use models\summit\SummitAttendee;
+use models\summit\SummitAttendeeTicket;
 use models\summit\SummitRegistrationDiscountCode;
 use models\summit\SummitRegistrationPromoCode;
 use services\model\ISummitPromoCodeService;
+use models\summit\ISummitRegistrationPromoCodeRepository;
+use models\summit\ISummitAttendeeTicketRepository;
+use utils\Filter;
+use utils\FilterElement;
+use utils\FilterParser;
+use utils\PagingInfo;
 
 /**
  * Class SummitPromoCodeService
@@ -61,13 +71,23 @@ final class SummitPromoCodeService
      */
     private $summit_repository;
 
+    /**
+     * @var ISummitRegistrationPromoCodeRepository
+     */
+    private $repository;
 
     /**
-     * SummitPromoCodeService constructor.
+     * @var ISummitAttendeeTicketRepository
+     */
+    private $ticket_repository;
+
+    /**
      * @param IMemberRepository $member_repository
      * @param ICompanyRepository $company_repository
      * @param ISpeakerRepository $speaker_repository
      * @param ISummitRepository $summit_repository
+     * @param ISummitAttendeeTicketRepository $ticket_repository
+     * @param ISummitRegistrationPromoCodeRepository $repository
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -76,6 +96,8 @@ final class SummitPromoCodeService
         ICompanyRepository  $company_repository,
         ISpeakerRepository  $speaker_repository,
         ISummitRepository   $summit_repository,
+        ISummitAttendeeTicketRepository $ticket_repository,
+        ISummitRegistrationPromoCodeRepository $repository,
         ITransactionService $tx_service
     )
     {
@@ -84,6 +106,8 @@ final class SummitPromoCodeService
         $this->company_repository = $company_repository;
         $this->speaker_repository = $speaker_repository;
         $this->summit_repository = $summit_repository;
+        $this->ticket_repository = $ticket_repository;
+        $this->repository = $repository;
     }
 
     /**
@@ -103,7 +127,6 @@ final class SummitPromoCodeService
                 if (is_null($ticket_type))
                     throw new EntityNotFoundException(sprintf("ticket type %s not found", $ticket_type_id));
                 $allowed_ticket_types[] = $ticket_type;
-
             }
             $params['allowed_ticket_types'] = $allowed_ticket_types;
         }
@@ -194,15 +217,17 @@ final class SummitPromoCodeService
     {
         return $this->tx_service->transaction(function () use ($promo_code_id, $summit, $data, $current_user) {
 
+            Log::debug(sprintf("SummitPromoCodeService::updatePromoCode summit %s promo code %s payload %s", $summit->getId(), $promo_code_id, json_encode($data)));
+
             $promo_code = $summit->getPromoCodeById($promo_code_id);
             if (is_null($promo_code))
-                throw new EntityNotFoundException(sprintf("promo code id %s does not belongs to summit id %s", $promo_code_id, $summit->getId()));
+                throw new EntityNotFoundException(sprintf("Promo Code id %s does not belongs to summit id %s.", $promo_code_id, $summit->getId()));
 
             if (isset($data['code'])) {
                 $old_promo_code = $summit->getPromoCodeByCode(trim($data['code']));
 
                 if (!is_null($old_promo_code) && $old_promo_code->getId() != $promo_code_id)
-                    throw new ValidationException(sprintf("promo code %s already exits on summit id %s for promo code id %s", trim($data['code']), $summit->getId(), $old_promo_code->getId()));
+                    throw new ValidationException(sprintf("Promo Code %s already exits on summit id %s for promo code id %s.", trim($data['code']), $summit->getId(), $old_promo_code->getId()));
 
             }
 
@@ -210,7 +235,17 @@ final class SummitPromoCodeService
 
             if (!is_null($current_user))
                 $promo_code->setCreator($current_user);
+
             $promo_code->setSourceAdmin();
+
+            $badge_features_apply_to_all_tix_retroactively = $data['badge_features_apply_to_all_tix_retroactively'] ?? false;
+
+            if($badge_features_apply_to_all_tix_retroactively){
+                Log::debug(sprintf("SummitPromoCodeService::updatePromoCode summit %s promo code %s triggering retro actively apply features", $summit->getId(), $promo_code_id));
+
+                // trigger background job to re apply to all tickets with this promo code
+                ReApplyPromoCodeRetroActively::dispatch($promo_code_id)->afterResponse();
+            }
 
             return $promo_code;
         });
@@ -357,8 +392,7 @@ final class SummitPromoCodeService
      * @param int $promo_code_id
      * @param int $badge_feature_id
      * @return SummitRegistrationPromoCode
-     * @throws EntityNotFoundException
-     * @throws ValidationException
+     * @throws \Exception
      */
     public function addPromoCodeBadgeFeature(Summit $summit, int $promo_code_id, int $badge_feature_id): SummitRegistrationPromoCode
     {
@@ -443,5 +477,71 @@ final class SummitPromoCodeService
                 $summit = $this->summit_repository->getById($summit->getId());
             }
         }
+    }
+
+    /**
+     * @param int $promo_code_id
+     * @throws EntityNotFoundException
+     */
+    public function reApplyPromoCode(int $promo_code_id):void{
+
+        Log::debug(sprintf("SummitPromoCodeService::reApplyPromoCode promo code id %s", $promo_code_id));
+
+        $page = 1;
+        $count = 0;
+        $maxPageSize = 100;
+        $promo_code = $this->tx_service->transaction(function() use ($promo_code_id){
+            $promo_code = $this->repository->getById($promo_code_id);
+            if(!$promo_code instanceof SummitRegistrationPromoCode)
+                throw new EntityNotFoundException("Promo Code not found.");
+
+            return $promo_code;
+        });
+
+        $filter = new Filter();
+        $filter->addFilterCondition(FilterElement::makeEqual('promo_code_id', $promo_code_id));
+
+        do {
+
+            $ticket_ids = $this->tx_service->transaction(function () use ($filter, $page, $maxPageSize) {
+                return $this->ticket_repository->getAllIdsByPage(new PagingInfo($page, $maxPageSize), $filter);
+            });
+
+            if (!count($ticket_ids)) {
+                // if we are processing a page, then break it
+                Log::debug(sprintf("SummitPromoCodeService::reApplyPromoCode promo code id %s page is empty, ending processing.", $promo_code_id));
+                break;
+            }
+
+            foreach ($ticket_ids as $ticket_id){
+                try {
+
+                    Log::debug(sprintf("SummitPromoCodeService::reApplyPromoCode processing ticket %s", $ticket_id));
+
+                    $this->tx_service->transaction(function () use ($ticket_id, $promo_code) {
+
+                        $ticket = $this->ticket_repository->getById($ticket_id);
+
+                        if (!$ticket instanceof SummitAttendeeTicket)
+                            throw new EntityNotFoundException("Ticket not found.");
+
+                        if (!$ticket->hasBadge())
+                            throw new ValidationException(sprintf("Ticket %s does not has a Badge set.", $ticket_id));
+
+
+                        Log::debug(sprintf("SummitPromoCodeService::reApplyPromoCode reapplying promo code %s to ticket %s", $promo_code->getId(), $ticket_id));
+
+                        $ticket->getBadge()->applyPromoCode($promo_code);
+
+                    });
+
+                    $count++;
+                }
+                catch (\Exception $ex){
+                    Log::warning($ex);
+                }
+            }
+            $page++;
+        } while(1);
     }
 }

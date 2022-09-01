@@ -111,4 +111,9 @@ interface ISummitPromoCodeService
      */
     public function importPromoCodes(Summit $summit, UploadedFile $csv_file, ?Member $current_user = null):void;
 
+    /**
+     * @param int $promo_code_id
+     * @throws EntityNotFoundException
+     */
+    public function reApplyPromoCode(int $promo_code_id):void;
 }

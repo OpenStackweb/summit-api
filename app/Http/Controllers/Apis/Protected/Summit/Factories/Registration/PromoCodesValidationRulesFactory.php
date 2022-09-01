@@ -152,6 +152,7 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
             'valid_until_date'     => 'nullable|required_with:valid_since_date|date_format:U|after:valid_since_date',
             'allowed_ticket_types' => 'sometimes|int_array',
             'badge_features'       => 'sometimes|int_array',
+            'badge_features_apply_to_all_tix_retroactively' => 'sometimes|boolean'
         ];
 
         $specific_rules = [];

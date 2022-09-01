@@ -19,7 +19,6 @@ use App\Jobs\Emails\Registration\Attendees\GenericSummitAttendeeEmail;
 use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
 use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
 use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
-use App\Jobs\SynchAllAttendeesStatus;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\IAttendeeService;
 use App\Services\Model\ISummitOrderService;

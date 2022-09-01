@@ -23,6 +23,15 @@ use models\exceptions\ValidationException;
 trait GetAndValidateJsonPayload
 {
     /**
+     * @return array
+     */
+    public function getJsonData():array{
+        if(!Request::isJson()) return [];
+        $data = Request::json();
+        return $data->all();
+    }
+
+    /**
      * @param array $validation_rules
      * @param bool $validate_json_payload
      * @param array $messages
@@ -40,8 +49,7 @@ trait GetAndValidateJsonPayload
             return [];
         }
 
-        $data    = Request::json();
-        $payload = $data->all();
+        $payload = $this->getJsonData();
         // Creates a Validator instance and validates the data.
         $validation = Validator::make($payload, $validation_rules, $messages);
 

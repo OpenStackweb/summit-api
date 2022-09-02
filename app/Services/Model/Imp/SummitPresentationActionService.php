@@ -52,13 +52,9 @@ implements ISummitPresentationActionService
 
             $action->setUpdatedBy($performer);
             $action->setIsCompleted($isCompleted);
-            $message = sprintf("%s has marked status '%s' as %s", $performer->getFullName(), $action->getType()->getLabel(), ($isCompleted? "Completed":"Uncompleted"));
             if(!$action->hasCreatedBy()){
                 $action->setCreatedBy($performer);
             }
-
-            // emit notification
-            $presentation->addTrackChairComment($performer, $message, true);
 
             $presentation->setUpdatedBy($performer);
 

@@ -50,7 +50,7 @@ final class ReApplyPromoCodeRetroActively implements ShouldQueue
      * @throws \models\exceptions\EntityNotFoundException
      */
     public function handle(ISummitPromoCodeService $service){
-        Log::error(sprintf( "ReApplyPromoCodeRetroActively::handle promo code id %s", $this->promo_code_id));
+        Log::debug(sprintf( "ReApplyPromoCodeRetroActively::handle promo code id %s", $this->promo_code_id));
         $service->reApplyPromoCode($this->promo_code_id);
     }
 

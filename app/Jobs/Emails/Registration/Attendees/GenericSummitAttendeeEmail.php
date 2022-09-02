@@ -37,6 +37,7 @@ final class GenericSummitAttendeeEmail extends AbstractSummitAttendeeTicketEmail
         $payload['owner_last_name'] = $attendee->getSurname();
         $payload['owner_company'] = $attendee->getCompanyName();
         $payload['owner_email']  = $attendee->getEmail();
+        $payload['owner_full_name'] = $attendee->getFullName();
 
         if(empty($payload['owner_full_name'])){
             Log::warning(sprintf("SummitAttendeeAllTicketsEditionEmail owner_full_name is empty setting email"));

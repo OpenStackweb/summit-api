@@ -141,4 +141,60 @@ class OAuth2SummitMetricsApiControllerTest extends ProtectedApiTest
         $this->assertTrue(!is_null($metric));
         return $metric;
     }
+
+    public function testEnterOnSiteTwice(){
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json",
+            'REMOTE_ADDR'         => '10.1.0.1',
+            'HTTP_REFERER'        => 'https://www.test.com'
+        ];
+
+        $attendees =  self::$summit->getAttendees();
+        $rooms =  self::$venue_rooms;
+        $access_levels = self::$summit->getBadgeAccessLevelTypes();
+        $data = [
+            'attendee_id' => $attendees[0]->getId(),
+            'room_id' => $rooms[0]->getId(),
+            'required_access_levels' => [$access_levels[0]->getId()]
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitMetricsApiController@onSiteEnter",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $metric = json_decode($content);
+        $this->assertTrue(!is_null($metric));
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitMetricsApiController@onSiteEnter",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $metric = json_decode($content);
+        $this->assertTrue(!is_null($metric));
+
+        return $metric;
+    }
 }

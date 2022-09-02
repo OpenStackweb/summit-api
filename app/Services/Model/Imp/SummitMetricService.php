@@ -210,7 +210,7 @@ final class SummitMetricService
             if (!is_null($room_id)) {
                 $room = $summit->getLocation($room_id);
                 if (is_null($room) || !$room instanceof SummitVenueRoom)
-                    throw new EntityNotFoundException("Room mot found.");
+                    throw new EntityNotFoundException("Room not found.");
             }
 
             if (!is_null($event_id)) {
@@ -221,9 +221,9 @@ final class SummitMetricService
 
             $metric = $this->repository->getNonAbandonedOnSiteMetric($attendee, $room, $event);
 
-            if ($metric) {
-                throw new ValidationException(sprintf("There is already a registered ingress scan for attendee %s", $attendee->getEmail()));
-            }
+//            if ($metric) {
+//                throw new ValidationException(sprintf("There is already a registered ingress scan for attendee %s", $attendee->getEmail()));
+//            }
 
             $metric = SummitEventAttendanceMetric::buildOnSiteMetric($current_user, $attendee, $room, $event);
             $metric->setSummit($summit);

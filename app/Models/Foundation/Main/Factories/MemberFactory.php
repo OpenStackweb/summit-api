@@ -41,4 +41,42 @@ final class MemberFactory
         }
         return $member;
     }
+
+    /**
+     * @param Member $member
+     * @param int $user_external_id
+     * @param array $payload
+     * @return Member
+     */
+    public static function populateFromExternalProfile(Member $member, int $user_external_id, array $payload):Member{
+
+        $member->setActive(boolval($payload['active']));
+        $member->setEmailVerified(boolval($payload['email_verified']));
+        $member->setEmail(trim($payload['email']));
+        $member->setFirstName(trim($payload['first_name']));
+        $member->setLastName(trim($payload['last_name']));
+        $member->setBio($payload['bio']);
+        $member->setUserExternalId($user_external_id);
+        $member->setCompany($payload['company'] ?? '');
+        $member->setSecondEmail($payload['second_email'] ?? '');
+        $member->setThirdEmail($payload['third_email'] ?? '');
+        $member->setCountry($payload['country_iso_code'] ?? '');
+        $member->setState($payload['state'] ?? '');
+
+        if(isset($user_data['pic']))
+            $member->setExternalPic($payload['pic']);
+
+        return $member;
+    }
+
+    /**
+     * @param Member $member
+     * @param int $user_external_id
+     * @param array $payload
+     * @return Member
+     */
+    public static function createFromExternalProfile(int $user_external_id, array $payload):Member{
+
+        return self::populateFromExternalProfile(new Member(), $user_external_id, $payload);
+    }
 }

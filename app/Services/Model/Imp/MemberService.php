@@ -350,33 +350,14 @@ final class MemberService
             $is_new = false;
             if(is_null($member)) {
                 Log::debug(sprintf("MemberService::registerExternalUserById %s does not exists , creating it ...", $email));
-                $member = new Member();
-                $member->setActive(boolval($user_data['active']));
-                $member->setEmailVerified(boolval($user_data['email_verified']));
-                $member->setEmail($email);
-                $member->setFirstName(trim($user_data['first_name']));
-                $member->setLastName(trim($user_data['last_name']));
-                $member->setBio($user_data['bio']);
-                $member->setUserExternalId($user_external_id);
-                $member->setCompany($user_data['company'] ?? '');
 
-                if(isset($user_data['pic']))
-                    $member->setExternalPic($user_data['pic']);
+                $member = MemberFactory::createFromExternalProfile($user_external_id, $user_data);
                 $this->member_repository->add($member, true);
                 $is_new = true;
             }
             else {
                 Log::debug(sprintf("MemberService::registerExternalUserById %s already exists", $email));
-                $member->setActive(boolval($user_data['active']));
-                $member->setEmailVerified(boolval($user_data['email_verified']));
-                $member->setEmail($email);
-                $member->setFirstName(trim($user_data['first_name']));
-                $member->setLastName(trim($user_data['last_name']));
-                $member->setBio($user_data['bio']);
-                if(isset($user_data['pic']))
-                    $member->setExternalPic($user_data['pic']);
-                $member->setUserExternalId($user_external_id);
-                $member->setCompany($user_data['company'] ?? '');
+                $member = MemberFactory::populateFromExternalProfile($member, $user_external_id, $user_data);
             }
 
             $this->synchronizeGroups($member, $user_data['groups']);

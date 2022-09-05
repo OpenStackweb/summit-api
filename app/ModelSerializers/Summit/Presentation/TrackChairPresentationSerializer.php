@@ -187,6 +187,8 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
                 $track_chair_scores[] = $score->getId();
             }
             $values['track_chair_scores'] = $track_chair_scores;
+
+            $values['track_chair_scores_avg'] = $presentation->getTrackChairAvgScoresPerRakingType();
         };
 
         if (!empty($expand)) {

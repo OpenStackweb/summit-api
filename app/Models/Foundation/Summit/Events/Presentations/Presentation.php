@@ -1890,6 +1890,38 @@ class Presentation extends SummitEvent
         $score->clearPresentation();
     }
 
+
+    public function getTrackChairAvgScoresPerRakingType():array{
+
+        Log::debug(sprintf("Presentation::getTrackChairAvgScoresPerRakingType presentation %s", $this->getId()));
+
+        $query = <<<SQL
+SELECT 
+AVG(PresentationTrackChairScoreType.Score) avg_score, 
+PresentationTrackChairRatingType.ID AS ranking_type_id
+FROM PresentationTrackChairScore
+INNER JOIN PresentationTrackChairScoreType on PresentationTrackChairScoreType.ID = PresentationTrackChairScore.TypeID
+INNER JOIN PresentationTrackChairRatingType on PresentationTrackChairRatingType.ID = PresentationTrackChairScoreType.TypeID
+WHERE PresentationTrackChairScore.PresentationID = :presentation_id
+GROUP BY PresentationTrackChairRatingType.ID
+SQL;
+
+        try{
+            $stmt = $this->prepareRawSQL($query);
+            $stmt->execute(
+                [
+                    'presentation_id' => $this->getId(),
+                ]
+            );
+            $res = $stmt->fetchAll();
+            $res = count($res) > 0 ? $res : [];
+            return $res;
+        }
+        catch (\Exception $ex){
+            Log::error($ex);
+        }
+        return [];
+    }
     /**
      * @return float
      */

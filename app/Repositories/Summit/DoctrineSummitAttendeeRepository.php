@@ -122,8 +122,7 @@ final class DoctrineSummitAttendeeRepository
                         'true',
                         sprintf
                         (
-                            "EXISTS (select t1 from %s t1 where t1.owner = e  and (t1.status = '%s') and t1.is_active = 1)",
-                            SummitAttendeeTicket::class,
+                            "SIZE(e.tickets) > 0 AND t.status = '%s' AND t.is_active = 1",
                             IOrderConstants::PaidStatus,
                         )
                     ),

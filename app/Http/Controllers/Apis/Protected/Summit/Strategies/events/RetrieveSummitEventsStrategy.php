@@ -145,6 +145,9 @@ abstract class RetrieveSummitEventsStrategy
 
             'title' => ['=@', '@@', '=='],
             'abstract' => ['=@', '@@', '=='],
+            'meeting_url' => ['=@', '@@', '=='],
+            'streaming_url' => ['=@', '@@', '=='],
+            'etherpad_link' => ['=@', '@@', '=='],
             'social_summary' => ['=@', '@@', '=='],
             'tags' => ['=@', '@@', '=='],
             'level' => ['=@', '@@', '=='],
@@ -222,6 +225,10 @@ abstract class RetrieveSummitEventsStrategy
             'selection_status' => 'sometimes|string|in:selected,accepted,rejected,alternate,lightning-accepted,lightning-alternate',
             'duration' => 'sometimes|integer',
             'speakers_count' => 'sometimes|integer',
+            'meeting_url' => 'sometimes|string',
+            'streaming_url' => 'sometimes|string',
+            'etherpad_link' => 'sometimes|string',
+
         ];
     }
 }

@@ -54,11 +54,11 @@ final class SummitMediaUploadTypeFactory
         if(isset($data['public_storage_type']))
             $type->setPublicStorageType(trim($data['public_storage_type']));
 
-        if(isset($data['is_mandatory']))
-            if(boolval($data['is_mandatory']))
-                $type->markAsMandatory();
-            else
-                $type->markAsOptional();
+        if(isset($data['min_uploads_qty']))
+            $type->setMinUploadsQty(intval($data['min_uploads_qty']));
+
+        if(isset($data['max_uploads_qty']))
+            $type->setMaxUploadsQty(intval($data['max_uploads_qty']));
 
         return $type;
     }

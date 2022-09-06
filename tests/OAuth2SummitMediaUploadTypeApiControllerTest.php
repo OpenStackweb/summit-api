@@ -23,7 +23,7 @@ final class OAuth2SummitMediaUploadTypeApiControllerTest
     extends ProtectedApiTest
 {
 
-    use \InsertSummitTestData;
+    use InsertSummitTestData;
     /**
      * @var ObjectRepository
      */
@@ -62,7 +62,9 @@ final class OAuth2SummitMediaUploadTypeApiControllerTest
             'is_mandatory' => false,
             'private_storage_type' => \App\Models\Utils\IStorageTypesConstants::DropBox,
             'public_storage_type' => \App\Models\Utils\IStorageTypesConstants::Swift,
-            'presentation_types' => [$event_types[0]->getId()]
+            'presentation_types' => [$event_types[0]->getId()],
+            'min_uploads_qty' => 1,
+            'max_uploads_qty' => 55,
         ];
 
         $headers = [

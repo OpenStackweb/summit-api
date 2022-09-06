@@ -560,14 +560,14 @@ class Presentation extends SummitEvent
 
     /**
      * @param SummitMediaUploadType $media_upload_type
-     * @return bool
+     * @return int
      */
-    public function hasMediaUploadByType(SummitMediaUploadType $media_upload_type): bool
+    public function getMediaUploadsCountByType(SummitMediaUploadType $media_upload_type): int
     {
         $res = $this->materials->filter(function ($element) use ($media_upload_type) {
             return $element instanceof PresentationMediaUpload && $element->getMediaUploadTypeId() == $media_upload_type->getId();
         });
-        return $res->count() > 0;
+        return $res->count();
     }
 
     /**
@@ -1189,6 +1189,23 @@ class Presentation extends SummitEvent
         return $this->materials->filter(function ($element) {
             return $element instanceof PresentationMediaUpload && $element->isMandatory();
         })->count();
+    }
+
+    /**
+     * @return array
+     */
+    public function getMandatoryMediaUploadsCountByType(): array {
+        $res = array();
+        foreach ($this->materials as $element) {
+            if ($element instanceof PresentationMediaUpload && $element->isMandatory()) {
+                if (array_key_exists($element->getMediaUploadTypeId(), $res)) {
+                    $res[$element->getMediaUploadTypeId()]++;
+                } else {
+                    $res[$element->getMediaUploadTypeId()] = 1;
+                }
+            }
+        }
+        return $res;
     }
 
     /**

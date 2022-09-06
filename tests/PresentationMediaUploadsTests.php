@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Http\UploadedFile;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\SummitMediaFileType;
 use Doctrine\Persistence\ObjectRepository;
@@ -48,10 +50,12 @@ class PresentationMediaUploadsTests
         self::$media_upload_type->setType($types[0]);
         self::$media_upload_type->setName('TEST');
         self::$media_upload_type->setDescription("TEST");
-
         self::$media_upload_type->setMaxSize(2048);
+        self::$media_upload_type->setMinUploadsQty(2);
+        self::$media_upload_type->setMaxUploadsQty(4);
         self::$media_upload_type->setPrivateStorageType(\App\Models\Utils\IStorageTypesConstants::DropBox);
         self::$media_upload_type->setPublicStorageType(\App\Models\Utils\IStorageTypesConstants::Swift);
+
         self::$presentation = new Presentation();
         $event_types = self::$summit->getEventTypes();
         self::$presentation->setTitle("TEST PRESENTATION");
@@ -96,7 +100,7 @@ class PresentationMediaUploadsTests
             $payload,
             [],
             [
-                //'file' => UploadedFile::fake()->image('slide.png')
+                'file' => UploadedFile::fake()->image('slide.png')
             ],
             $headers,
             json_encode($payload)

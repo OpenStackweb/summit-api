@@ -61,10 +61,21 @@ class SummitMediaUploadType extends SilverstripeBaseModel
     private $max_size;
 
     /**
-     * @ORM\Column(name="IsMandatory", type="boolean")
-     * @var bool
+     * @deprecated
      */
     private $is_mandatory;
+
+    /**
+     * @ORM\Column(name="MinUploadsQty", type="integer")
+     * @var int
+     */
+    private $min_uploads_qty;
+
+    /**
+     * @ORM\Column(name="MaxUploadsQty", type="integer")
+     * @var int
+     */
+    private $max_uploads_qty;
 
     /**
      * @ORM\Column(name="PrivateStorageType", type="string")
@@ -115,6 +126,8 @@ class SummitMediaUploadType extends SilverstripeBaseModel
         parent::__construct();
         $this->is_mandatory = false;
         $this->max_size = 0;
+        $this->min_uploads_qty = 0;
+        $this->max_uploads_qty = 0;
         $this->presentation_types = new ArrayCollection();
         $this->public_storage_type = IStorageTypesConstants::None;
         $this->private_storage_type = IStorageTypesConstants::None;
@@ -213,18 +226,58 @@ class SummitMediaUploadType extends SilverstripeBaseModel
     }
 
     /**
+     * @return int
+     */
+    public function getMinUploadsQty(): int
+    {
+        return $this->min_uploads_qty;
+    }
+
+    /**
+     * @param int $min_uploads_qty
+     */
+    public function setMinUploadsQty(int $min_uploads_qty): void
+    {
+        $this->min_uploads_qty = $min_uploads_qty;
+    }
+
+    /**
+     * @return int
+     *
+     * 0 -> INFINITE
+     */
+    public function getMaxUploadsQty(): int
+    {
+        return $this->max_uploads_qty;
+    }
+
+    /**
+     * @param int $max_uploads_qty
+     */
+    public function setMaxUploadsQty(int $max_uploads_qty): void
+    {
+        $this->max_uploads_qty = $max_uploads_qty;
+    }
+
+    /**
      * @return bool
      */
     public function isMandatory(): bool
     {
-        return $this->is_mandatory;
+        return $this->min_uploads_qty > 0;
     }
 
+    /**
+     * @deprecated use SummitMediaUploadType::setMinUploadsQty(1) instead
+     */
     public function markAsMandatory(): void
     {
         $this->is_mandatory = true;
     }
 
+    /**
+     * @deprecated use SummitMediaUploadType::setMinUploadsQty(0) instead
+     */
     public function markAsOptional():void{
         $this->is_mandatory = false;
     }

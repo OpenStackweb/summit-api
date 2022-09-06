@@ -118,6 +118,8 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
             'public_storage_type' => 'required|string|in:'.implode(",", IStorageTypesConstants::ValidPublicTypes),
             'type_id' => 'required|int',
             'presentation_types' => 'sometimes|int_array',
+            'min_uploads_qty' => 'sometimes|integer|min:0',
+            'max_uploads_qty' => 'sometimes|integer|min:0',
         ];
     }
 
@@ -162,6 +164,8 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
             'public_storage_type' => 'sometimes|string|in:'.implode(",", IStorageTypesConstants::ValidPublicTypes),
             'type_id' => 'sometimes|int',
             'presentation_types' => 'sometimes|int_array',
+            'min_uploads_qty' => 'sometimes|integer|min:0',
+            'max_uploads_qty' => 'sometimes|integer|min:0',
         ];
     }
 

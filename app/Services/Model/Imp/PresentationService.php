@@ -984,12 +984,14 @@ final class PresentationService
                 throw new ValidationException(sprintf("Presentation Type %s is not allowed on Media Upload %s", $presentation->getTypeId(), $media_upload_type_id));
             }
 
-            if ($presentation->hasMediaUploadByType($mediaUploadType)) {
+            $maxUploadsQty = $mediaUploadType->getMaxUploadsQty();
+
+            if ($maxUploadsQty != 0 && $presentation->getMediaUploadsCountByType($mediaUploadType) == $maxUploadsQty) {
                 throw new ValidationException
                 (
                     sprintf
                     (
-                        "Presentation %s already has a media upload for that type %s.",
+                        "Presentation %s has reached the maximum media uploads qty allowed for the type %s.",
                         $presentation_id, $mediaUploadType->getName()
                     )
                 );
@@ -1041,16 +1043,31 @@ final class PresentationService
                 Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s is not complete", $presentation_id));
                 $type = $presentation->getType();
                 if($type instanceof PresentationType) {
-                    $summitMediaUploadCount = $type->getMandatoryAllowedMediaUploadTypesCount();
-                    Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s got summitMediaUploadCount %s", $presentation_id, $summitMediaUploadCount));
-                    if ($summitMediaUploadCount == 0) {
-                        Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s marking as PHASE_UPLOADS ( no mandatories uploads)", $presentation_id));
-                        $presentation->setProgress(Presentation::PHASE_UPLOADS);
-                    }
+                    $summitMandatoryMediaUploadTypes = $type->getMandatoryAllowedMediaUploadTypes();
+                    $summitMediaUploadCount = count($summitMandatoryMediaUploadTypes);
 
-                    if ($summitMediaUploadCount > 0 && $summitMediaUploadCount == $presentation->getMediaUploadsMandatoryCount()) {
-                        Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s marking as PHASE_UPLOADS ( mandatories completed)", $presentation_id));
+                    Log::debug("PresentationService::addMediaUploadTo presentation {$presentation_id} got summitMediaUploadCount {$summitMediaUploadCount}");
+
+                    if ($summitMediaUploadCount == 0) {
+                        Log::debug("PresentationService::addMediaUploadTo presentation {$presentation_id} marking as PHASE_UPLOADS (no mandatories uploads)");
                         $presentation->setProgress(Presentation::PHASE_UPLOADS);
+                    } else {
+                        $presentationMandatoryUploadsCountByType = $presentation->getMandatoryMediaUploadsCountByType();
+                        $mandatoryIsCompleted = true;
+
+                        foreach ($presentationMandatoryUploadsCountByType as $presentationMediaUploadTypeId => $uploadsCount) {
+                            if (array_key_exists($presentationMediaUploadTypeId, $summitMandatoryMediaUploadTypes) &&
+                                $uploadsCount < $summitMandatoryMediaUploadTypes[$presentationMediaUploadTypeId]->getMinUploadsQty()
+                            ) {
+                                $mandatoryIsCompleted = false;
+                                break;
+                            }
+                        }
+
+                        if ($mandatoryIsCompleted) {
+                            Log::debug("PresentationService::addMediaUploadTo presentation {$presentation_id} marking as PHASE_UPLOADS (mandatories completed)");
+                            $presentation->setProgress(Presentation::PHASE_UPLOADS);
+                        }
                     }
                 }
             }

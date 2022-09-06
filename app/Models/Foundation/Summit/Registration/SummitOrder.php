@@ -288,11 +288,9 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         return $this->status;
     }
 
-
     public function setPaidStatus(){
         $this->status = IOrderConstants::PaidStatus;
         $this->approved_payment_date = new \DateTime('now', new \DateTimeZone('UTC'));
-
     }
 
     public function setPaid(){
@@ -371,6 +369,13 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     public function getPaymentMethod(): string
     {
         return $this->payment_method;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isOfflineOrder():bool{
+        return $this->payment_method == IOrderConstants::OfflinePaymentMethod;
     }
 
     /**

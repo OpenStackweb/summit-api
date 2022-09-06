@@ -2185,20 +2185,6 @@ final class SummitOrderService
             $order->generateHash();
             $order->generateQRCode();
 
-            // check if we have an invitation for the order owner
-
-            // we should mark the associated invitation as processed
-            Log::debug(sprintf("SummitOrderService::createOfflineOrder trying to get invitation for email %s.", $order->getOwnerEmail()));
-            $invitation = $summit->getSummitRegistrationInvitationByEmail($order->getOwnerEmail());
-            if (is_null($invitation) || $invitation->isAccepted()) {
-                Log::debug(sprintf("SummitOrderService::createOfflineOrder invitation for email %s does not exists or its already accepted.", $order->getOwnerEmail()));
-                return $order;
-            }
-
-            $invitation->addOrder($order);
-            Log::debug(sprintf("SummitOrderService::createOfflineOrder trying mark invitation for email %s as accepted.", $order->getOwnerEmail()));
-            $invitation->markAsAccepted();
-
             return $order;
         });
 
@@ -3874,15 +3860,18 @@ final class SummitOrderService
                     $order->setOwner($member);
 
                     // send email to owner;
-                    if($shouldSendOrderEmail) {
+                    if($shouldSendOrderEmail && !$order->isOfflineOrder()) {
                         Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to owner");
                         $this->sendExistentSummitOrderOwnerEmail($order);
                     }
 
-                    if($shouldSendTicketEmail) {
+                    if($shouldSendTicketEmail && !$order->isOfflineOrder()) {
                         Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to attendees");
                         $this->sendAttendeesInvitationEmail($order);
                     }
+
+                    $this->processInvitation($order);
+
                     return;
                 }
 
@@ -3901,7 +3890,7 @@ final class SummitOrderService
 
                     // user does not exists , emit a registration request
                     // need to send email with set password link
-                    if($shouldSendOrderEmail) {
+                    if($shouldSendOrderEmail && !$order->isOfflineOrder()) {
                         Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to owner (NON REGISTERED)");
                         $this->sendSummitOrderOwnerInvitationEmail($order, $this->member_service->emitRegistrationRequest
                         (
@@ -3912,10 +3901,13 @@ final class SummitOrderService
                         ));
                     }
 
-                    if($shouldSendTicketEmail) {
+                    if($shouldSendTicketEmail && !$order->isOfflineOrder()) {
                         Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to attendees");
                         $this->sendAttendeesInvitationEmail($order);
                     }
+
+                    $this->processInvitation($order);
+
                     return;
                 }
 
@@ -3957,27 +3949,39 @@ final class SummitOrderService
                 $member->addSummitRegistrationOrder($order);
             }
 
-            if($shouldSendOrderEmail) {
+            if($shouldSendOrderEmail && !$order->isOfflineOrder()) {
                 Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to owner (REGISTERED)");
                 $this->sendExistentSummitOrderOwnerEmail($order);
             }
 
-            if($shouldSendTicketEmail) {
+            if($shouldSendTicketEmail && !$order->isOfflineOrder()) {
                 Log::debug("SummitOrderService::processOrderPaymentConfirmation - sending email to attendees");
                 $this->sendAttendeesInvitationEmail($order);
             }
 
-            // we should mark the associated invitation as processed
-            Log::debug(sprintf("SummitOrderService::processOrderPaymentConfirmation trying to get invitation for email %s.", $order->getOwnerEmail()));
-            $invitation = $summit->getSummitRegistrationInvitationByEmail($order->getOwnerEmail());
-            if (is_null($invitation) || $invitation->isAccepted()) {
-                Log::debug(sprintf("SummitOrderService::processOrderPaymentConfirmation invitation for email %s does not exists or its already accepted.", $order->getOwnerEmail()));
-                return;
-            }
-            $invitation->addOrder($order);
-            Log::debug(sprintf("SummitOrderService::processOrderPaymentConfirmation trying mark invitation for email %s as accepted.", $order->getOwnerEmail()));
-            $invitation->markAsAccepted();
+            $this->processInvitation($order);
         });
+    }
+
+    /**
+     * @param SummitOrder $order
+     * @return SummitOrder
+     * @throws ValidationException
+     */
+    private function processInvitation(SummitOrder $order):SummitOrder{
+        $summit = $order->getSummit();
+        // we should mark the associated invitation as processed
+        Log::debug(sprintf("SummitOrderService::processInvitation trying to get invitation for email %s.", $order->getOwnerEmail()));
+        $invitation = $summit->getSummitRegistrationInvitationByEmail($order->getOwnerEmail());
+        if (is_null($invitation) || $invitation->isAccepted()) {
+            Log::debug(sprintf("SummitOrderService::processInvitation invitation for email %s does not exists or its already accepted.", $order->getOwnerEmail()));
+            return $order;
+        }
+        $invitation->addOrder($order);
+        Log::debug(sprintf("SummitOrderService::processInvitation trying mark invitation for email %s as accepted.", $order->getOwnerEmail()));
+        $invitation->markAsAccepted();
+
+        return $order;
     }
 
     /**

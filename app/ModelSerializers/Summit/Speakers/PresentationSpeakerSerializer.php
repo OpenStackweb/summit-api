@@ -66,7 +66,7 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
             $values['featured']                = !is_null($featured);
             $values['order']                   = is_null($featured) ? 0 : $featured->getOrder();
             if(in_array('presentations', $relations))
-                $values['presentations']           = $speaker->getPresentationIds($summit->getId(), $published);
+                $values['presentations'] = $speaker->getPresentationIds($summit->getId(), $published);
             if(in_array('moderated_presentations', $relations))
                 $values['moderated_presentations'] = $speaker->getModeratedPresentationIds($summit->getId(), $published);
         }

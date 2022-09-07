@@ -215,7 +215,7 @@ class PresentationSerializer extends SummitEventSerializer
                     case 'speakers': {
                         $speakers = [];
                         foreach ($presentation->getSpeakers() as $s) {
-                            $speakers[] = SerializerRegistry::getInstance()->getSerializer
+                            $serialized_speaker = SerializerRegistry::getInstance()->getSerializer
                             (
                                 $s, $this->getSerializerType($relation)
                             )->serialize
@@ -225,6 +225,8 @@ class PresentationSerializer extends SummitEventSerializer
                                 [],
                                 $params
                             );
+                            $serialized_speaker['order'] = $s->getPresentationAssignmentOrder($presentation);
+                            $speakers[] = $serialized_speaker;
                         }
                         $values['speakers'] = $speakers;
                         if(isset($values['moderator_speaker_id']) && intval($values['moderator_speaker_id']) > 0 ){

@@ -700,10 +700,10 @@ final class PresentationService
     public function addSlideTo
     (
         LaravelRequest $request,
-                       $presentation_id,
-        array          $slide_data,
-        array          $allowed_extensions = [],
-                       $max_file_size = 10485760 // bytes
+        $presentation_id,
+        array $slide_data,
+        array $allowed_extensions = [],
+        $max_file_size = 10485760 // bytes
     )
     {
         $slide = $this->tx_service->transaction(function () use (
@@ -774,11 +774,11 @@ final class PresentationService
     public function updateSlide
     (
         LaravelRequest $request,
-                       $presentation_id,
-                       $slide_id,
-        array          $slide_data,
-        array          $allowed_extensions = [],
-                       $max_file_size = 10485760 // bytes
+        $presentation_id,
+        $slide_id,
+        array $slide_data,
+        array $allowed_extensions = [],
+        $max_file_size = 10485760 // bytes
     )
     {
 
@@ -1604,6 +1604,63 @@ final class PresentationService
             $disk->delete($path);
             Log::debug(sprintf("PresentationService::processMediaUpload deleting local file %s", $localPath));
             unlink($localPath);
+        });
+    }
+
+    /**
+     * @param int $presentation_id
+     * @param int $speaker_id
+     * @param array $data
+     * @return Presentation
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function upsertPresentationSpeaker(int $presentation_id, int $speaker_id, array $data): Presentation {
+        return $this->tx_service->transaction(function () use ($presentation_id, $speaker_id, $data) {
+
+            $presentation = $this->presentation_repository->getById($presentation_id);
+            if (is_null($presentation) || !$presentation instanceof Presentation)
+                throw new EntityNotFoundException("presentation {$presentation_id} not found");
+
+            $speaker = $this->speaker_repository->getById(intval($speaker_id));
+            if (is_null($speaker) || !($speaker instanceof PresentationSpeaker))
+                throw new EntityNotFoundException("speaker {$speaker_id} not found");
+
+            if (!$presentation->isSpeaker($speaker)) {
+                $presentation->addSpeaker($speaker);
+            }
+
+            if (isset($data['order'])) {
+                $new_order = intval($data['order']);
+                $current_order = $presentation->getSpeakerOrder($speaker);
+                if ($current_order != $new_order) $presentation->updateSpeakerOrder($speaker, $new_order);
+            }
+
+            return $presentation;
+        });
+    }
+
+    /**
+     * @param int $presentation_id
+     * @param int $speaker_id
+     * @return Presentation
+     * @throws \Exception
+     */
+    public function removeSpeakerFromPresentation(int $presentation_id, int $speaker_id): Presentation
+    {
+        return $this->tx_service->transaction(function () use ($presentation_id, $speaker_id) {
+
+            $presentation = $this->presentation_repository->getById($presentation_id);
+            if (is_null($presentation) || !$presentation instanceof Presentation)
+                throw new EntityNotFoundException("presentation {$presentation_id} not found");
+
+            $speaker = $this->speaker_repository->getById(intval($speaker_id));
+            if (is_null($speaker) || !($speaker instanceof PresentationSpeaker))
+                throw new EntityNotFoundException("speaker {$speaker_id} not found");
+
+            $presentation->removeSpeaker($speaker);
+
+            return $presentation;
         });
     }
 }

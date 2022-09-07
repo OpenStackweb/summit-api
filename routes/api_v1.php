@@ -766,6 +766,16 @@ Route::group(array('prefix' => 'summits'), function () {
                         Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@updateComment']);
                     });
                 });
+
+                // speakers
+
+                Route::group(['prefix' => 'speakers'], function(){
+                    Route::group(['prefix' => '{speaker_id}'], function () {
+                        Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@addSpeaker2Presentation']);
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@updateSpeakerInPresentation']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@removeSpeakerFromPresentation']);
+                    });
+                });
             });
         });
 

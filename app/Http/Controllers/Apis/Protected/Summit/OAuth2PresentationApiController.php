@@ -48,6 +48,8 @@ use utils\PagingResponse;
  */
 final class OAuth2PresentationApiController extends OAuth2ProtectedController
 {
+    use GetAndValidateJsonPayload;
+
     use RequestProcessor;
 
     use GetAndValidateJsonPayload;
@@ -1205,6 +1207,91 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 return $this->error403();
 
             $this->presentation_service->removeTrackChairScore($summit, $current_member, intval($selection_plan_id), intval($presentation_id), intval($score_type_id));
+
+            return $this->deleted();
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $presentation_id
+     * @param $speaker_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function addSpeaker2Presentation($summit_id, $presentation_id, $speaker_id) {
+
+        return $this->processRequest(function () use ($summit_id, $presentation_id, $speaker_id) {
+
+            $summit = SummitFinderStrategyFactory::build(
+                $this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $payload = $this->getJsonPayload(['order' => 'sometimes|integer|min:1']);
+
+            $presentation = $this->presentation_service->upsertPresentationSpeaker(
+                intval($presentation_id), intval($speaker_id), $payload);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $presentation_id
+     * @param $speaker_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function updateSpeakerInPresentation($summit_id, $presentation_id, $speaker_id) {
+
+        return $this->processRequest(function () use ($summit_id, $presentation_id, $speaker_id) {
+
+            $summit = SummitFinderStrategyFactory::build(
+                $this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $payload = $this->getJsonPayload(['order' => 'required|integer|min:1']);
+
+            $presentation = $this->presentation_service->upsertPresentationSpeaker(
+                intval($presentation_id), intval($speaker_id), $payload);
+
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $presentation_id
+     * @param $speaker_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function removeSpeakerFromPresentation($summit_id, $presentation_id, $speaker_id) {
+
+        return $this->processRequest(function () use ($summit_id, $presentation_id, $speaker_id) {
+
+            $summit = SummitFinderStrategyFactory::build(
+                $this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $this->presentation_service->removeSpeakerFromPresentation(intval($presentation_id), intval($speaker_id));
 
             return $this->deleted();
         });

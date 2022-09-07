@@ -5832,7 +5832,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
-            // media uplods
+            // media uploads
             [
                 'name' => 'get-presentation-media-uploads',
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/media-uploads',
@@ -5877,6 +5877,49 @@ class ApiEndpointsSeeder extends Seeder
                     sprintf(SummitScopes::WritePresentationMaterialsData, $current_realm),
                     sprintf(SummitScopes::WritePresentationSlidesData, $current_realm)
                 ],
+            ],
+            // presentation speakers
+            [
+                'name' => 'add-presentation-speaker',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/speakers/{speaker_id}',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WritePresentationData, $current_realm),
+                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'update-presentation-speaker',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/speakers/{speaker_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WritePresentationData, $current_realm),
+                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-presentation-speaker',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/speakers/{speaker_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WritePresentationData, $current_realm),
+                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
             ],
             //members
             [

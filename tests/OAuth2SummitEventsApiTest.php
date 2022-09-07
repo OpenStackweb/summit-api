@@ -1306,7 +1306,6 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
 
         $content = $response->getContent();
         $this->assertResponseStatus(200);
-
         $events = json_decode($content);
         $this->assertTrue(!is_null($events));
     }
@@ -1473,11 +1472,11 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($events));
     }
 
-    public function testGetSummitEventsExpandSpeaker($summit_id = 37)
+    public function testGetSummitEventsExpandSpeaker()
     {
         $params = array
         (
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             'expand' => 'speaker,type',
         );
 
@@ -1510,8 +1509,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
     {
         $params = array
         (
-            'id' => 7,
-            'event_id' => 15303,
+            'id' => 2941,
+            'event_id' => 91941,
             'expand' => 'speakers',
         );
 

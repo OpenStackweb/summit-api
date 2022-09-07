@@ -289,7 +289,6 @@ interface ISummitService
      */
     public function removeModeratorFromPresentation(int $current_member_id, int $speaker_id, int $presentation_id):Presentation;
 
-
     /**
      * @param Summit $summit
      * @param int $event_id

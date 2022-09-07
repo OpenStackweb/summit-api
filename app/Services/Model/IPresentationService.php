@@ -282,4 +282,23 @@ interface IPresentationService
      * @throws ValidationException
      */
     public function updatePresentationComment(Summit $summit, int $presentation_id, int $comment_id, array $payload):SummitPresentationComment;
+
+    /**
+     * @param int $presentation_id
+     * @param int $speaker_id
+     * @param array $data
+     * @return Presentation
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function upsertPresentationSpeaker(int $presentation_id, int $speaker_id, array $data): Presentation;
+
+    /**
+     * @param int $presentation_id
+     * @param int $speaker_id
+     * @return Presentation
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function removeSpeakerFromPresentation(int $presentation_id, int $speaker_id): Presentation;
 }

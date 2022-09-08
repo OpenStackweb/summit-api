@@ -855,7 +855,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             },
             function(){
                 return [
-                    'created_date',
+                    'created',
                     'owner_id',
                     'owner_full_name',
                     'rate',
@@ -870,7 +870,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             },
             function(){
                 return new Order([
-                    OrderElement::buildDescFor("created_date"),
+                    OrderElement::buildDescFor("created"),
                 ]);
             },
             null,
@@ -881,6 +881,74 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                     $order
                 );
             }
+        );
+    }
+
+    /**
+     * @param $summit_id
+     * @param $event_id
+     * @return mixed
+     */
+    public function getEventFeedbackCSV($summit_id, $event_id)
+    {
+
+        $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        $event = $summit->getScheduleEvent(intval($event_id));
+
+        if (is_null($event)) {
+            return $this->error404();
+        }
+
+        return $this->_getAllCSV(
+            function(){
+                return [
+                    'owner_full_name' => ['=@', '==', '@@'],
+                    'note' => ['=@', '==', '@@'],
+                    'owner_id' => ['=='],
+                ];
+            },
+            function(){
+                return [
+                    'owner_full_name' =>  'sometimes|required|string',
+                    'note' =>  'sometimes|required|string',
+                    'owner_id' =>  'sometimes|required|integer',
+                ];
+            },
+            function(){
+                return [
+                    'created',
+                    'owner_id',
+                    'owner_full_name',
+                    'rate',
+                    'id',
+                ];
+            },
+            function($filter){
+                return $filter;
+            },
+            function(){
+                return SerializerRegistry::SerializerType_CSV;
+            },
+            function () {
+                return [
+                    'created_date' => new EpochCellFormatter(),
+                    'last_edited' => new EpochCellFormatter(),
+                ];
+            },
+            function () {
+                return [];
+            },
+            sprintf('event-%s-feedback', $event_id),
+            [],
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($event) {
+                return $this->event_feedback_repository->getByEvent($event,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            },
         );
     }
 

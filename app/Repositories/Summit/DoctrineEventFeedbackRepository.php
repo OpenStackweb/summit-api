@@ -53,7 +53,7 @@ final class DoctrineEventFeedbackRepository
     protected function getOrderMappings()
     {
         return [
-            'created_date' => 'f.created',
+            'created'      => 'f.created',
             'owner_id'     => 'o.id',
             'rate'         => 'f.rate',
             'id'           => 'f.id',

@@ -805,9 +805,11 @@ class SummitEvent extends SilverstripeBaseModel
             $value = $summit->convertDateFromTimeZone2UTC($value);
         }
         $end_date = $this->getEndDate();
+
         if (!is_null($end_date)) {
-            $this->duration = $end_date->getTimestamp() - $value->getTimestamp();
-            $this->duration = $this->duration < 0 ? 0 : $this->duration;
+            $newDuration= $end_date->getTimestamp() - $value->getTimestamp();
+            Log::debug(sprintf("SummitEvent::setStartDate id %s setting new duration %s", $this->id, $newDuration));;
+            $this->duration = $newDuration < 0 ? 0 : $newDuration;
         }
 
         $this->start_date = $value;
@@ -852,13 +854,17 @@ class SummitEvent extends SilverstripeBaseModel
         if(!$this->type->isAllowsPublishingDates()){
             throw new ValidationException("Type does not allows Publishing Period.");
         }
+
         $summit = $this->getSummit();
         if (!is_null($summit)) {
             $value = $summit->convertDateFromTimeZone2UTC($value);
         }
+
         $start_date = $this->getStartDate();
         if (!is_null($start_date)) {
-            $this->duration = $value->getTimestamp() - $start_date->getTimestamp();
+            $newDuration = $value->getTimestamp() - $start_date->getTimestamp();
+            Log::debug(sprintf("SummitEvent::setEndDate id %s newDuration %s", $this->id, $newDuration));
+            $this->duration = $newDuration;
         }
         $this->end_date = $value;
 

@@ -746,6 +746,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
                 'location_id' => 'sometimes|required|integer',
                 'start_date' => 'sometimes|required|date_format:U',
+                'duration' => 'sometimes|integer|min:0',
                 'end_date' => 'sometimes|required_with:start_date|date_format:U|after:start_date',
             ];
 

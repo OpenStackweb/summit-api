@@ -649,11 +649,30 @@ final class SummitService extends AbstractService implements ISummitService
      */
     private function updateEventDates(array $data, Summit $summit, SummitEvent $event)
     {
+        Log::debug
+        (
+            sprintf(
+                "SummitService:updateEventDates summit %s event %s payload %s",
+                $summit->getId(),
+                $event->getId(),
+                json_encode($data)
+            )
+        );
+
+        $formerDuration = $event->getDuration();
+
+        Log::debug
+        (
+            sprintf(
+                "SummitService:updateEventDates summit %s event %s former duration %s",
+                $summit->getId(),
+                $event->getId(),
+                $formerDuration
+            )
+        );
 
         if (isset($data['start_date']) && isset($data['end_date'])) {
             // we are setting dates
-
-            $formerDuration = $event->getDuration();
 
             if(!$event->hasType()){
                 throw new ValidationException("To be able to set schedule dates event type must be set First.");
@@ -668,11 +687,14 @@ final class SummitService extends AbstractService implements ISummitService
             $start_datetime = intval($data['start_date']);
             $start_datetime = new \DateTime("@$start_datetime");
             $start_datetime->setTimezone($summit->getTimeZone());
+
             $end_datetime = intval($data['end_date']);
             $end_datetime = new \DateTime("@$end_datetime");
             $end_datetime->setTimezone($summit->getTimeZone());
+
             $interval_seconds = $end_datetime->getTimestamp() - $start_datetime->getTimestamp();
             $minutes = $interval_seconds / 60;
+
             if ($minutes < SummitEvent::MIN_EVENT_MINUTES)
                 throw new ValidationException
                 (
@@ -684,14 +706,18 @@ final class SummitService extends AbstractService implements ISummitService
                     )
                 );
 
+            Log::debug
+            (
+                sprintf(
+                    "SummitService:updateEventDates summit %s event %s new duration %s",
+                    $summit->getId(),
+                    $event->getId(),
+                    $minutes
+                )
+            );
+
             // set local time from UTC
             $event->setStartDate($start_datetime);
-
-            if($formerDuration > 0  && !isset($data['duration'])) {
-                // if we have a former duration ... honor it
-                $data['duration'] = $formerDuration;
-            }
-
             $event->setEndDate($end_datetime);
         }
         else
@@ -699,8 +725,8 @@ final class SummitService extends AbstractService implements ISummitService
             $event->unPublish();
             $event->clearPublishingDates();
         }
-        return $this->updateDuration($data, $summit, $event);
 
+        return $this->updateDuration($data, $summit, $event);
     }
 
     /**

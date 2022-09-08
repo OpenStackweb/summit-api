@@ -694,6 +694,28 @@ class SummitEvent extends SilverstripeBaseModel
     }
 
     /**
+     * @param SummitEventFeedback $feedback
+     */
+    public function removeFeedback(SummitEventFeedback $feedback){
+        if (!$this->feedback->contains($feedback)) return;
+        $this->feedback->removeElement($feedback);
+        $feedback->clearOwner();
+        $feedback->clearEvent();
+    }
+
+    /**
+     * @param int $feedback_id
+     * @return SummitEventFeedback|null
+     */
+    public function getFeedbackById(int $feedback_id):?SummitEventFeedback
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $feedback_id));
+        $feedback = $this->feedback->matching($criteria)->first();
+        return $feedback === false ? null : $feedback;
+    }
+
+    /**
      * @return ArrayCollection
      */
     public function getTags()

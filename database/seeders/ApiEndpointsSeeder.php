@@ -3030,7 +3030,7 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'delete-event-feedback',
+                'name' => 'delete-my-event-feedback',
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/feedback',
                 'http_method' => 'DELETE',
                 'scopes' => [
@@ -3072,6 +3072,20 @@ class ApiEndpointsSeeder extends Seeder
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm),
                     sprintf(SummitScopes::ReadSummitData, $current_realm),
                 ],
+            ],
+            [
+                'name' => 'delete-event-feedback',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/feedback/{feedback_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteEventData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
             ],
             [
                 'name' => 'delete-rsvp',

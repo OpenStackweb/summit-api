@@ -101,7 +101,6 @@ use models\summit\SummitGeoLocatedLocation;
 use models\summit\SummitGroupEvent;
 use models\summit\SummitMediaUploadType;
 use models\summit\SummitScheduleEmptySpot;
-use phpseclib3\File\ASN1\Maps\PrivateKeyInfo;
 use services\apis\IEventbriteAPI;
 use utils\Filter;
 use utils\FilterElement;
@@ -3762,5 +3761,34 @@ final class SummitService extends AbstractService implements ISummitService
 
         Log::debug(sprintf("SummitService::processRegistrationCompaniesData deleting file %s from cloud storage %s", $path, $this->download_strategy->getDriver()));
         $this->download_strategy->delete($path);
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $event_id
+     * @param int $feedback_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function deleteEventFeedback(Summit $summit, int $event_id, int $feedback_id): void
+    {
+        $this->tx_service->transaction(function () use ($summit, $event_id, $feedback_id) {
+
+            $event = $summit->getScheduleEvent($event_id);
+            if (is_null($event))
+                throw new EntityNotFoundException("Event not found.");
+
+            if (!$event->isAllowFeedback())
+                throw new ValidationException(sprintf("Event id %s does not allow feedback.", $event->getIdentifier()));
+
+            // check older feedback
+            $feedback = $event->getFeedbackById($feedback_id);
+
+            if(!$feedback instanceof SummitEventFeedback)
+                throw new EntityNotFoundException("Feedback not found.");
+
+            $event->removeFeedback($feedback);
+
+        });
     }
 }

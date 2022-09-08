@@ -3074,6 +3074,20 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'get-event-feedback-csv',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/feedback/csv',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
                 'name' => 'delete-event-feedback',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/feedback/{feedback_id}',
                 'http_method' => 'DELETE',

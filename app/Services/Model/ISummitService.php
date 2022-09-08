@@ -137,6 +137,15 @@ interface ISummitService
 
     /**
      * @param Summit $summit
+     * @param int $event_id
+     * @param int $feedback_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function deleteEventFeedback(Summit $summit, int $event_id, int $feedback_id):void;
+
+    /**
+     * @param Summit $summit
      * @param null|int $member_id
      * @param null|\DateTime $from_date
      * @param null|int $from_id

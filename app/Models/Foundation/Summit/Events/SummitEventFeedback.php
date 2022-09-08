@@ -13,7 +13,6 @@
  **/
 
 use Doctrine\ORM\Mapping AS ORM;
-use libs\utils\JsonUtils;
 use models\utils\SilverstripeBaseModel;
 use models\main\Member;
 
@@ -139,8 +138,12 @@ class SummitEventFeedback extends SilverstripeBaseModel
         }
     }
 
-    public function clearOwner(){
+    public function clearOwner():void{
         $this->owner = null;
+    }
+
+    public function clearEvent():void{
+        $this->event = null;
     }
 
     /**

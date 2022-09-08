@@ -35,6 +35,8 @@ use services\model\ISummitService;
 use utils\Filter;
 use utils\FilterElement;
 use utils\FilterParser;
+use utils\Order;
+use utils\OrderElement;
 use utils\OrderParser;
 use utils\PagingInfo;
 use utils\PagingResponse;
@@ -48,6 +50,10 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     use GetAndValidateJsonPayload;
 
     use RequestProcessor;
+
+    use ValidateEventUri;
+
+    use ParametrizedGetAll;
 
     /**
      * @var ISummitService
@@ -573,7 +579,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
-    use ValidateEventUri;
+
 
     /**
      * @param $summit_id
@@ -823,26 +829,71 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     public function getEventFeedback($summit_id, $event_id)
     {
 
-        return $this->processRequest(function() use($summit_id, $event_id){
+        $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
 
+        $event = $summit->getScheduleEvent(intval($event_id));
+
+        if (is_null($event)) {
+            return $this->error404();
+        }
+
+        return $this->_getAll(
+            function(){
+                return [
+                    'owner_full_name' => ['=@', '==', '@@'],
+                    'note' => ['=@', '==', '@@'],
+                    'owner_id' => ['=='],
+                ];
+            },
+            function(){
+                return [
+                    'owner_full_name' =>  'sometimes|required|string',
+                    'note' =>  'sometimes|required|string',
+                    'owner_id' =>  'sometimes|required|integer',
+                ];
+            },
+            function(){
+                return [
+                    'created_date',
+                    'owner_id',
+                    'owner_full_name',
+                    'rate',
+                    'id',
+                ];
+            },
+            function($filter){
+                return $filter;
+            },
+            function(){
+                return SerializerRegistry::SerializerType_Public;
+            },
+            function(){
+                return new Order([
+                    OrderElement::buildDescFor("created_date"),
+                ]);
+            },
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($event) {
+                return $this->event_feedback_repository->getByEvent($event,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
+    }
+
+    /**
+     * @param $summit_id
+     * @param $event_id
+     * @param $feedback_id
+     * @return mixed
+     */
+    public function deleteEventFeedback($summit_id, $event_id, $feedback_id){
+        return $this->processRequest(function() use($summit_id, $event_id, $feedback_id){
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
-
-            $values = Request::all();
-
-            $rules = array
-            (
-                'page' => 'integer|min:1',
-                'per_page' => 'required_with:page|integer|min:5|max:100',
-            );
-
-            $validation = Validator::make($values, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412($messages);
-            }
 
             $event = $summit->getScheduleEvent(intval($event_id));
 
@@ -850,38 +901,11 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 return $this->error404();
             }
 
-            $filter = null;
-            // default values
-            $page = 1;
-            $per_page = 5;
+            $this->service->deleteEventFeedback($summit, $event_id, $feedback_id);
 
-            if (Request::has('page')) {
-                $page = intval(Request::input('page'));
-                $per_page = intval(Request::input('per_page'));
-            }
-
-            $order = null;
-            if (Request::has('order')) {
-                $order = OrderParser::parse(Request::input('order'), array
-                (
-                    'created_date',
-                    'owner_id',
-                    'rate',
-                    'id',
-                ));
-            }
-
-            $response = $this->event_feedback_repository->getByEvent($event, new PagingInfo($page, $per_page), $filter, $order);
-
-            return $this->ok($response->toArray(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-
+            return $this->deleted();
         });
     }
-
     /**
      * @param $summit_id
      * @param $event_id

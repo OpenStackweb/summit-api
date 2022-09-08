@@ -17,6 +17,7 @@ use models\summit\IEventFeedbackRepository;
 use models\summit\SummitEventFeedback;
 use App\Repositories\SilverStripeDoctrineRepository;
 use models\summit\SummitEvent;
+use utils\DoctrineFilterMapping;
 use utils\PagingInfo;
 use utils\Filter;
 use utils\Order;
@@ -33,6 +34,34 @@ final class DoctrineEventFeedbackRepository
     extends SilverStripeDoctrineRepository
     implements IEventFeedbackRepository
 {
+
+    /**
+     * @return array
+     */
+    protected function getFilterMappings()
+    {
+        return [
+            'owner_id' => 'o.id',
+            'owner_full_name' => new DoctrineFilterMapping("concat(o.first_name, ' ', o.last_name) :operator :value"),
+            'note' => 'f.note'
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function getOrderMappings()
+    {
+        return [
+            'created_date' => 'f.created',
+            'owner_id'     => 'o.id',
+            'rate'         => 'f.rate',
+            'id'           => 'f.id',
+            "owner_full_name" => <<<SQL
+LOWER(CONCAT(o.first_name, ' ', o.last_name))
+SQL,
+        ];
+    }
 
     /**
      * @param SummitEvent $event
@@ -53,22 +82,12 @@ final class DoctrineEventFeedbackRepository
 
         if(!is_null($filter)){
 
-            $filter->apply2Query($query, array
-            (
-                'owner_id'      => 'o.id',
-            ));
+            $filter->apply2Query($query, $this->getFilterMappings());
         }
 
         if(!is_null($order))
         {
-
-            $order->apply2Query($query, array
-            (
-                'created_date' => 'f.created',
-                'owner_id'     => 'o.id',
-                'rate'         => 'f.rate',
-                'id'           => 'f.id',
-            ));
+            $order->apply2Query($query, $this->getOrderMappings());
         }
         else
         {

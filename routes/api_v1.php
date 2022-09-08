@@ -571,6 +571,9 @@ Route::group(array('prefix' => 'summits'), function () {
 
                 Route::group(['prefix' => 'feedback'], function () {
                     Route::get('', 'OAuth2SummitEventsApiController@getEventFeedback');
+                    Route::group(['prefix' => '{feedback_id}'], function () {
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' =>'OAuth2SummitEventsApiController@deleteEventFeedback']);
+                    });
                 });
 
                 Route::group(['prefix' => 'image'], function () {

@@ -56,7 +56,6 @@ class Kernel extends HttpKernel
         'api' => [
             'ssl',
             'oauth2.protected',
-            'rate.limit',
             'etags'
         ],
         'public_api' => [
@@ -66,7 +65,7 @@ class Kernel extends HttpKernel
         ],
         'well_known' => [
             'ssl',
-            'rate.limit:1000,1', // 1000 request per minute
+            'rate.limit:10000,1', // 1000 request per minute
         ]
     ];
 

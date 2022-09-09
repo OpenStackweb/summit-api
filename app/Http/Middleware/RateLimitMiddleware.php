@@ -99,7 +99,7 @@ final class RateLimitMiddleware extends ThrottleRequests
         }
 
         if ($this->limiter->tooManyAttempts($key, $maxAttempts)) {
-            throw $this->buildException($key, $maxAttempts);
+            throw $this->buildException($request, $key, $maxAttempts);
         }
 
         $this->limiter->hit($key, $decayMinutes);

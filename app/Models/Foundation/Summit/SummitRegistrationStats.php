@@ -46,7 +46,7 @@ trait SummitRegistrationStats
             $offset = self::getDefaultTimeZoneOffset();
             if(!is_null($endDate)) {
                 $sql .= sprintf(
-                    " AND {$table}.Created BETWEEN CONVERT_TZ('%s','UTC','%s:00') AND CONVERT_TZ('%s','UTC','%s:00')",
+                    " AND {$table}.Created BETWEEN CONVERT_TZ('%s','+00:00','%s:00') AND CONVERT_TZ('%s','+00:00','%s:00')",
                     $startDate->format("Y-m-d H:i:s"),
                     $offset,
                     $endDate->format("Y-m-d H:i:s"),
@@ -55,7 +55,7 @@ trait SummitRegistrationStats
             }
             else{
                 $sql .= sprintf(
-                    " AND {$table}.Created >= CONVERT_TZ('%s','UTC','%s:00')",
+                    " AND {$table}.Created >= CONVERT_TZ('%s','+00:00','%s:00')",
                     $startDate->format("Y-m-d H:i:s"),
                     $offset,
                 );

@@ -3349,12 +3349,6 @@ final class SummitOrderService
                     if (is_null($ticket)) {
                         Log::debug(sprintf("SummitOrderService::processTicketData ticket is null, trying to create a new one"));
 
-                        if ($attendee->hasTickets()) {
-                            Log::debug(sprintf("SummitOrderService::processTicketData - attendee %s already has ticket", $row['attendee_email']));
-                            return;
-                        }
-
-                        Log::debug("SummitOrderService::processTicketData - ticket does not exists, creating it ...");
                         // create ticket
                         // first try to get ticket type
                         $ticket_type = null;

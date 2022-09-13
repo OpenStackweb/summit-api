@@ -25,12 +25,15 @@ trait SummitRegistrationStats
      */
 
     /**
+     * @param DateTime|null $now
      * @return float|int
      * @throws \Exception
      */
-    private static function getDefaultTimeZoneOffset(){
+    private static function getDefaultTimeZoneOffset(?DateTime $now = null){
+        if(is_null($now))
+            $now = new DateTime('now', new DateTimeZone('UTC'));
         $defaultSSTimeZone = new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone);
-        return $defaultSSTimeZone->getOffset(new DateTime('now', new DateTimeZone('UTC'))) / 3600;
+        return $defaultSSTimeZone->getOffset($now) / 3600;
     }
 
     /**
@@ -43,21 +46,22 @@ trait SummitRegistrationStats
      */
     private static function addDatesFilteringWithTimeZone(string $sql, string $table, ?DateTime $startDate  = null, ?DateTime $endDate = null):string{
         if(!is_null($startDate)){
-            $offset = self::getDefaultTimeZoneOffset();
+            $offset1 = self::getDefaultTimeZoneOffset($startDate);
             if(!is_null($endDate)) {
+                $offset2 = self::getDefaultTimeZoneOffset($endDate);
                 $sql .= sprintf(
                     " AND {$table}.Created BETWEEN CONVERT_TZ('%s','+00:00','%s:00') AND CONVERT_TZ('%s','+00:00','%s:00')",
                     $startDate->format("Y-m-d H:i:s"),
-                    $offset,
+                    $offset1,
                     $endDate->format("Y-m-d H:i:s"),
-                    $offset
+                    $offset2
                 );
             }
             else{
                 $sql .= sprintf(
                     " AND {$table}.Created >= CONVERT_TZ('%s','+00:00','%s:00')",
                     $startDate->format("Y-m-d H:i:s"),
-                    $offset,
+                    $offset1,
                 );
             }
         }
@@ -303,7 +307,7 @@ SQL;
      * @param DateTime|null $endDate
      * @return int
      */
-    public function getCheckedInAttendeesCount(?DateTime $startDate  = null, ?DateTime $endDate = null): int
+    public function getInPersonCheckedInAttendeesCount(?DateTime $startDate  = null, ?DateTime $endDate = null): int
     {
         try {
             $sql = <<<SQL
@@ -312,10 +316,15 @@ WHERE
 SummitAttendee.SummitID = :summit_id AND
 EXISTS ( 
     SELECT SummitAttendeeTicket.ID FROM SummitAttendeeTicket 
+    INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.TicketID = SummitAttendeeTicket.ID
+    INNER JOIN SummitBadgeType ON SummitBadgeType.ID = SummitAttendeeBadge.BadgeTypeID
+    INNER JOIN SummitBadgeType_AccessLevels ON SummitBadgeType_AccessLevels.SummitBadgeTypeID = SummitBadgeType.ID
+    INNER JOIN SummitAccessLevelType ON SummitAccessLevelType.ID = SummitBadgeType_AccessLevels.SummitAccessLevelTypeID
     WHERE 
-    SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND 
-    SummitAttendeeTicket.Status = 'Paid' AND
-    SummitAttendeeTicket.IsActive = 1
+        SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND 
+        SummitAttendeeTicket.Status = 'Paid' AND 
+        SummitAttendeeTicket.IsActive = 1  AND 
+        SummitAccessLevelType.Name = 'IN_PERSON' 
 ) AND
 SummitAttendee.SummitHallCheckedIn = 1
 SQL;
@@ -339,7 +348,7 @@ SQL;
      * @param DateTime|null $endDate
      * @return int
      */
-    public function getNonCheckedInAttendeesCount(?DateTime $startDate  = null, ?DateTime $endDate = null): int
+    public function getInPersonNonCheckedInAttendeesCount(?DateTime $startDate  = null, ?DateTime $endDate = null): int
     {
         try {
             $sql = <<<SQL
@@ -347,11 +356,17 @@ SELECT COUNT(SummitAttendee.ID) FROM SummitAttendee
 WHERE SummitAttendee.SummitID = :summit_id AND
 EXISTS ( 
     SELECT SummitAttendeeTicket.ID FROM SummitAttendeeTicket 
-    WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND 
-    SummitAttendeeTicket.Status = 'Paid' AND 
-    SummitAttendeeTicket.IsActive = 1      
+    INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.TicketID = SummitAttendeeTicket.ID
+    INNER JOIN SummitBadgeType ON SummitBadgeType.ID = SummitAttendeeBadge.BadgeTypeID
+    INNER JOIN SummitBadgeType_AccessLevels ON SummitBadgeType_AccessLevels.SummitBadgeTypeID = SummitBadgeType.ID
+    INNER JOIN SummitAccessLevelType ON SummitAccessLevelType.ID = SummitBadgeType_AccessLevels.SummitAccessLevelTypeID
+    WHERE 
+        SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND 
+        SummitAttendeeTicket.Status = 'Paid' AND 
+        SummitAttendeeTicket.IsActive = 1  AND 
+        SummitAccessLevelType.Name = 'IN_PERSON' 
 )
-AND
+AND      
 SummitAttendee.SummitHallCheckedIn = 0
 SQL;
 
@@ -383,12 +398,18 @@ SQL;
 SELECT COUNT(ID) FROM `SummitAttendee` 
 WHERE 
 EXISTS ( 
-    SELECT SummitAttendeeTicket.ID FROM SummitAttendeeTicket 
-    WHERE SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND 
-    SummitAttendeeTicket.Status = 'Paid' AND 
-    SummitAttendeeTicket.IsActive = 1      
-) AND      
-SummitVirtualCheckedInDate IS NOT NULL 
+     SELECT SummitAttendeeTicket.ID FROM SummitAttendeeTicket 
+    INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.TicketID = SummitAttendeeTicket.ID
+    INNER JOIN SummitBadgeType ON SummitBadgeType.ID = SummitAttendeeBadge.BadgeTypeID
+    INNER JOIN SummitBadgeType_AccessLevels ON SummitBadgeType_AccessLevels.SummitBadgeTypeID = SummitBadgeType.ID
+    INNER JOIN SummitAccessLevelType ON SummitAccessLevelType.ID = SummitBadgeType_AccessLevels.SummitAccessLevelTypeID
+    WHERE 
+        SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND 
+        SummitAttendeeTicket.Status = 'Paid' AND 
+        SummitAttendeeTicket.IsActive = 1  AND 
+        SummitAccessLevelType.Name = 'VIRTUAL' 
+) 
+AND SummitVirtualCheckedInDate IS NOT NULL 
 AND SummitID = :summit_id
 SQL;
 
@@ -421,6 +442,43 @@ SQL;
         return 0;
     }
 
+
+    public function getVirtualNonCheckedInAttendeesCount(?DateTime $startDate  = null, ?DateTime $endDate = null): int
+    {
+        try {
+            $sql = <<<SQL
+SELECT COUNT(SummitAttendee.ID) FROM SummitAttendee
+WHERE SummitAttendee.SummitID = :summit_id AND
+EXISTS ( 
+    SELECT SummitAttendeeTicket.ID FROM SummitAttendeeTicket 
+    INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.TicketID = SummitAttendeeTicket.ID
+    INNER JOIN SummitBadgeType ON SummitBadgeType.ID = SummitAttendeeBadge.BadgeTypeID
+    INNER JOIN SummitBadgeType_AccessLevels ON SummitBadgeType_AccessLevels.SummitBadgeTypeID = SummitBadgeType.ID
+    INNER JOIN SummitAccessLevelType ON SummitAccessLevelType.ID = SummitBadgeType_AccessLevels.SummitAccessLevelTypeID
+    WHERE 
+        SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND 
+        SummitAttendeeTicket.Status = 'Paid' AND 
+        SummitAttendeeTicket.IsActive = 1  AND 
+        SummitAccessLevelType.Name = 'VIRTUAL' 
+)    
+AND SummitVirtualCheckedInDate IS NULL 
+SQL;
+
+            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendee", $startDate, $endDate);
+
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = count($res) > 0 ? $res[0] : 0;
+            $res = !is_null($res) ? $res : 0;
+            return $res;
+
+        }
+        catch (\Exception $ex) {
+
+        }
+        return 0;
+    }
     /**
      * @param DateTime|null $startDate
      * @param DateTime|null $endDate

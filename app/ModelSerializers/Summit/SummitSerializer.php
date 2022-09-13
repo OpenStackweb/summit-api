@@ -528,46 +528,6 @@ class SummitSerializer extends SilverStripeSerializer
                             }
                         }
                         break;
-
-                    case 'registration_stats':{
-
-                        $values['total_active_tickets'] = $summit->getActiveTicketsCount();
-                        $values['total_inactive_tickets'] = $summit->getInactiveTicketsCount();
-                        $values['total_orders'] = $summit->getTotalOrdersCount();
-                        $values['total_active_assigned_tickets'] = $summit->getActiveAssignedTicketsCount();
-                        $values['total_payment_amount_collected'] = JsonUtils::toJsonFloat($summit->getTotalPaymentAmountCollected());
-                        $values['total_refund_amount_emitted'] = JsonUtils::toJsonFloat($summit->getTotalRefundAmountEmitted());
-                        $values['total_tickets_per_type'] = $summit->getActiveTicketsCountPerTicketType();
-                        $values['total_badges_per_type'] = $summit->getActiveBadgesCountPerBadgeType();
-                        $values['total_checked_in_attendees'] = $summit->getCheckedInAttendeesCount();
-                        $values['total_non_checked_in_attendees'] = $summit->getNonCheckedInAttendeesCount();
-                        $values['total_virtual_attendees'] = $summit->getVirtualAttendeesCount();
-
-                        $res  = [];
-                        $res1 = $summit->getActiveTicketsPerBadgeFeatureType();
-                        $res2 = $summit->getAttendeesCheckinPerBadgeFeatureType();
-
-                        foreach($summit->getBadgeFeaturesTypes() as $f){
-
-                            $type = $f->getName();
-                            $col1 = array_column($res1, 'type');
-                            $col2 = array_column($res2, 'type');
-                            $key1 = array_search($type, $col1);
-                            $key2 = array_search($type, $col2);
-                            $tickets_qty = $key1 !== false ? $res1[$key1]['qty']: 0;
-                            $checkin_qty = $key2 !== false ? $res2[$key2]['qty']: 0;
-
-                            $res[] = [
-                                'type' => $type,
-                                'tickets_qty' => intval($tickets_qty),
-                                'checkin_qty' => intval($checkin_qty),
-                            ];
-                        }
-
-                        $values['total_tickets_per_badge_feature'] = $res;
-
-                    }
-                    break;
                 }
             }
         }

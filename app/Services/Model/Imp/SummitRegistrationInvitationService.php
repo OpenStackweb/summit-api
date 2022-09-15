@@ -416,8 +416,6 @@ final class SummitRegistrationInvitationService
         $done = isset($payload['invitations_ids']); // we have provided only ids and not a criteria
         $page = 1;
         $count = 0;
-        $to_exclude = [
-        ];
         $maxPageSize = 100;
 
         do{
@@ -436,6 +434,11 @@ final class SummitRegistrationInvitationService
                 if (!$filter->hasFilter("summit_id"))
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
                 Log::debug(sprintf("SummitRegistrationInvitationService::send page %s", $page));
+                if($filter->hasFilter("is_sent")){
+                    // we need to reset the page bc the page processing will mark the current page as "sent"
+                    // and adding an offset will move the cursor forward, leaving next round of not send out of the current process
+                    $page = 1;
+                }
                 return $this->invitation_repository->getAllIdsByPage(new PagingInfo($page, $maxPageSize), $filter);
             });
 
@@ -447,11 +450,6 @@ final class SummitRegistrationInvitationService
             }
 
             foreach ($ids as $invitation_id) {
-
-                if (in_array($invitation_id, $to_exclude)) {
-                    Log::debug(sprintf("SummitRegistrationInvitationService::send excluding id %s", $invitation_id));
-                    continue;
-                }
 
                 $res = $this->tx_service->transaction(function () use ($flow_event, $invitation_id) {
 

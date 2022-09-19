@@ -47,6 +47,7 @@ final class DoctrineSpeakerRepository
         $filter = count($args) > 0 ? $args[0] : null;
 
         $extraSelectionStatusFilter = '';
+        $extraSelectionPlanFilter = '';
 
         if(!is_null($filter) && $filter instanceof Filter){
             if($filter->hasFilter("presentations_selection_plan_id")){
@@ -76,6 +77,7 @@ final class DoctrineSpeakerRepository
                         $v[] = $f->getValue();
                 }
                 $extraSelectionStatusFilter .= ' AND __cat%1$s.id IN ('.implode(',', $v).')';
+                $extraSelectionPlanFilter .= ' AND __tr%1$s_:i.id IN ('.implode(',', $v).')';
             }
             if($filter->hasFilter("presentations_type_id")){
                 $e = $filter->getFilter("presentations_type_id");
@@ -90,6 +92,7 @@ final class DoctrineSpeakerRepository
                         $v[] = $f->getValue();
                 }
                 $extraSelectionStatusFilter .= ' AND __t%1$s.id IN ('.implode(',', $v).')';
+                $extraSelectionPlanFilter .= ' AND __type%1$s_:i.id IN ('.implode(',', $v).')';
             }
         }
 
@@ -138,16 +141,20 @@ final class DoctrineSpeakerRepository
                               SELECT __p51_:i.id FROM models\summit\Presentation __p51_:i 
                               JOIN __p51_:i.speakers __spk51_:i WITH __spk51_:i.id = e.id 
                               JOIN __p51_:i.selection_plan __sel_plan51_:i 
+                              JOIN __p51_:i.category __tr51_:i 
+                              JOIN __p51_:i.type __type51_:i 
                               WHERE 
                               __p51_:i.summit = :summit AND
-                              __sel_plan51_:i.id :operator :value )'.
+                              __sel_plan51_:i.id :operator :value'.(!empty($extraSelectionPlanFilter) ? sprintf($extraSelectionPlanFilter, '51'):''). ')'.
                 ' OR EXISTS ( 
                               SELECT __p52_:i.id FROM models\summit\Presentation __p52_:i 
                               JOIN __p52_:i.moderator __md52_:i WITH __md52_:i.id = e.id 
                               JOIN __p52_:i.selection_plan __sel_plan52_:i
+                              JOIN __p52_:i.category __tr52_:i 
+                              JOIN __p52_:i.type __type52_:i 
                               WHERE 
                               __p52_:i.summit = :summit AND
-                              __sel_plan52_:i.id :operator :value )',
+                              __sel_plan52_:i.id :operator :value'.(!empty($extraSelectionPlanFilter) ? sprintf($extraSelectionPlanFilter, '52'):''). ')',
             ),
             'presentations_type_id' =>  new DoctrineFilterMapping(
                 'EXISTS ( 

@@ -191,7 +191,7 @@ SQL;
     {
         try {
             $sql = <<<SQL
-     SELECT SUM(SummitAttendeeTicket.RawCost - SummitAttendeeTicket.Discount)  FROM SummitAttendeeTicket
+SELECT SUM(SummitAttendeeTicket.RawCost - SummitAttendeeTicket.Discount)  FROM SummitAttendeeTicket
 INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 WHERE SummitOrder.SummitID = :summit_id AND 
       SummitAttendeeTicket.Status = 'Paid'
@@ -222,10 +222,11 @@ SQL;
         try {
             $sql = <<<SQL
       SELECT SUM(SummitRefundRequest.RefundedAmount) FROM `SummitRefundRequest`
-inner join SummitAttendeeTicketRefundRequest on SummitAttendeeTicketRefundRequest.ID = SummitRefundRequest.ID
-inner join SummitAttendeeTicket on SummitAttendeeTicket.ID = SummitAttendeeTicketRefundRequest.TicketID
-inner join SummitOrder on SummitOrder.ID = SummitAttendeeTicket.OrderID
-where SummitRefundRequest.Status='Approved' AND 
+INNER JOIN SummitAttendeeTicketRefundRequest on SummitAttendeeTicketRefundRequest.ID = SummitRefundRequest.ID
+INNER JOIN SummitAttendeeTicket on SummitAttendeeTicket.ID = SummitAttendeeTicketRefundRequest.TicketID
+INNER JOIN SummitOrder on SummitOrder.ID = SummitAttendeeTicket.OrderID
+WHERE
+      SummitRefundRequest.Status='Approved' AND 
       SummitOrder.SummitID = :summit_id
 SQL;
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitRefundRequest", $startDate, $endDate);
@@ -256,10 +257,46 @@ INNER JOIN SummitTicketType ON SummitAttendeeTicket.TicketTypeID = SummitTicketT
 WHERE SummitOrder.SummitID = :summit_id AND 
       SummitAttendeeTicket.IsActive = 1 AND 
       SummitAttendeeTicket.Status = 'Paid'
-GROUP BY SummitTicketType.Name
 SQL;
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", $startDate, $endDate);
+            $sql .= ' GROUP BY SummitTicketType.Name';
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll();
+            $res = count($res) > 0 ? $res : [];
+            return $res;
+        } catch (\Exception $ex) {
 
+        }
+        return [];
+    }
+
+    /**
+     * @param DateTime|null $startDate
+     * @param DateTime|null $endDate
+     * @return array
+     */
+    public function getCheckedInActiveTicketsCountPerTicketType(?DateTime $startDate  = null, ?DateTime $endDate = null): array
+    {
+        try {
+            $sql = <<<SQL
+SELECT SummitTicketType.Name AS type, COUNT(SummitAttendeeTicket.ID) as qty FROM SummitAttendeeTicket
+INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
+INNER JOIN SummitTicketType ON SummitAttendeeTicket.TicketTypeID = SummitTicketType.ID
+INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
+INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.TicketID = SummitAttendeeTicket.ID
+INNER JOIN SummitBadgeType ON SummitBadgeType.ID = SummitAttendeeBadge.BadgeTypeID
+INNER JOIN SummitBadgeType_AccessLevels ON SummitBadgeType_AccessLevels.SummitBadgeTypeID = SummitBadgeType.ID
+INNER JOIN SummitAccessLevelType ON SummitAccessLevelType.ID = SummitBadgeType_AccessLevels.SummitAccessLevelTypeID
+WHERE
+      SummitOrder.SummitID = :summit_id AND
+      SummitAttendeeTicket.IsActive = 1 AND
+      SummitAttendeeTicket.Status = 'Paid' AND
+      SummitAttendee.SummitHallCheckedIn = 1 AND
+      SummitAccessLevelType.Name = 'IN_PERSON'
+SQL;
+            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", $startDate, $endDate);
+            $sql .= ' GROUP BY SummitTicketType.Name';
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll();
@@ -288,9 +325,45 @@ INNER JOIN SummitTicketType ON SummitAttendeeTicket.TicketTypeID = SummitTicketT
 WHERE SummitOrder.SummitID = :summit_id AND 
       SummitAttendeeTicket.IsActive = 1 AND 
       SummitAttendeeTicket.Status = 'Paid'
-GROUP BY SummitBadgeType.ID
 SQL;
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeBadge", $startDate, $endDate);
+            $sql .= ' GROUP BY SummitBadgeType.ID';
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['summit_id' => $this->id]);
+            $res = $stmt->fetchAll();
+            $res = count($res) > 0 ? $res : [];
+            return $res;
+        } catch (\Exception $ex) {
+
+        }
+        return [];
+    }
+
+    /**
+     * @param DateTime|null $startDate
+     * @param DateTime|null $endDate
+     * @return array
+     */
+    public function getActiveCheckedInBadgesCountPerBadgeType(?DateTime $startDate  = null, ?DateTime $endDate = null): array
+    {
+        try {
+            $sql = <<<SQL
+SELECT SummitBadgeType.Name as type, COUNT(DISTINCT(SummitAttendeeBadge.ID)) as qty FROM SummitAttendeeBadge
+INNER JOIN SummitBadgeType ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType.ID
+INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
+INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
+INNER JOIN SummitTicketType ON SummitAttendeeTicket.TicketTypeID = SummitTicketType.ID
+INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
+INNER JOIN SummitBadgeType_AccessLevels ON SummitBadgeType_AccessLevels.SummitBadgeTypeID = SummitBadgeType.ID
+INNER JOIN SummitAccessLevelType ON SummitAccessLevelType.ID = SummitBadgeType_AccessLevels.SummitAccessLevelTypeID
+WHERE SummitOrder.SummitID = :summit_id AND
+      SummitAttendeeTicket.IsActive = 1 AND
+      SummitAttendeeTicket.Status = 'Paid' AND
+      SummitAttendee.SummitHallCheckedIn = 1 AND
+      SummitAccessLevelType.Name = 'IN_PERSON'
+SQL;
+            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeBadge", $startDate, $endDate);
+            $sql .= ' GROUP BY SummitBadgeType.ID';
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll();
@@ -442,7 +515,11 @@ SQL;
         return 0;
     }
 
-
+    /**
+     * @param DateTime|null $startDate
+     * @param DateTime|null $endDate
+     * @return int
+     */
     public function getVirtualNonCheckedInAttendeesCount(?DateTime $startDate  = null, ?DateTime $endDate = null): int
     {
         try {
@@ -500,10 +577,10 @@ WHERE
 SummitAttendeeTicket.IsActive = 1 AND
 SummitAttendeeTicket.Status = 'Paid' AND
 SummitOrder.SummitID = :summit_id
-GROUP BY SummitBadgeFeatureType.Name;
 SQL;
 
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", $startDate, $endDate);
+            $sql .= ' GROUP BY SummitBadgeFeatureType.Name';
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll();
@@ -538,11 +615,10 @@ SummitAttendeeTicket.IsActive = 1 AND
 SummitAttendeeTicket.Status = 'Paid' AND
 SummitOrder.SummitID = :summit_id AND
 SummitAttendee.SummitHallCheckedIn = 1
-GROUP BY SummitBadgeFeatureType.Name;
 SQL;
 
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", $startDate, $endDate);
-
+            $sql .= ' GROUP BY SummitBadgeFeatureType.Name';
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll();

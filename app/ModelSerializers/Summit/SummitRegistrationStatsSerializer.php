@@ -70,7 +70,9 @@ final class SummitRegistrationStatsSerializer extends SilverStripeSerializer
         $values['total_payment_amount_collected'] = JsonUtils::toJsonFloat($summit->getTotalPaymentAmountCollected($start_date, $end_date));
         $values['total_refund_amount_emitted'] = JsonUtils::toJsonFloat($summit->getTotalRefundAmountEmitted($start_date, $end_date));
         $values['total_tickets_per_type'] = $summit->getActiveTicketsCountPerTicketType($start_date, $end_date);
+        $values['total_checked_in_tickets_per_type'] = $summit->getCheckedInActiveTicketsCountPerTicketType($start_date, $end_date);
         $values['total_badges_per_type'] = $summit->getActiveBadgesCountPerBadgeType($start_date, $end_date);
+        $values['total_checked_in_badges_per_type'] = $summit->getActiveCheckedInBadgesCountPerBadgeType($start_date, $end_date);
         // attendees
         $values['total_checked_in_attendees'] = $summit->getInPersonCheckedInAttendeesCount($start_date, $end_date);
         $values['total_virtual_attendees'] = $summit->getVirtualAttendeesCount($start_date, $end_date);

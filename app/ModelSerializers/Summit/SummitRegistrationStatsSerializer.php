@@ -69,16 +69,63 @@ final class SummitRegistrationStatsSerializer extends SilverStripeSerializer
         $values['total_active_assigned_tickets'] = $summit->getActiveAssignedTicketsCount($start_date, $end_date);
         $values['total_payment_amount_collected'] = JsonUtils::toJsonFloat($summit->getTotalPaymentAmountCollected($start_date, $end_date));
         $values['total_refund_amount_emitted'] = JsonUtils::toJsonFloat($summit->getTotalRefundAmountEmitted($start_date, $end_date));
-        $values['total_tickets_per_type'] = $summit->getActiveTicketsCountPerTicketType($start_date, $end_date);
-        $values['total_checked_in_tickets_per_type'] = $summit->getCheckedInActiveTicketsCountPerTicketType($start_date, $end_date);
-        $values['total_badges_per_type'] = $summit->getActiveBadgesCountPerBadgeType($start_date, $end_date);
-        $values['total_checked_in_badges_per_type'] = $summit->getActiveCheckedInBadgesCountPerBadgeType($start_date, $end_date);
+
+        /** Tickets per type  **/
+        $res = [];
+        $res1 = $summit->getActiveTicketsCountPerTicketType($start_date, $end_date);
+        $res2 = $summit->getCheckedInActiveTicketsCountPerTicketType($start_date, $end_date);
+
+        foreach($summit->getTicketTypes() as $tt){
+            $type = $tt->getName();
+            $col1 = array_column($res1, 'type');
+            $col2 = array_column($res2, 'type');
+            $key1 = array_search($type, $col1);
+            $key2 = array_search($type, $col2);
+            $tickets_qty = $key1 !== false ? $res1[$key1]['qty']: 0;
+            $checkin_qty = $key2 !== false ? $res2[$key2]['qty']: 0;
+
+            $res[] = [
+                'type' => $type,
+                'tickets_qty' => intval($tickets_qty),
+                'checkin_qty' => intval($checkin_qty),
+            ];
+        }
+
+        $values['total_tickets_per_type'] = $res;
+
+        /** Badge per type **/
+
+        $res = [];
+        $res1 = $summit->getActiveBadgesCountPerBadgeType($start_date, $end_date);
+        $res2 = $summit->getActiveCheckedInBadgesCountPerBadgeType($start_date, $end_date);
+
+        foreach($summit->getBadgeTypes() as $bt){
+            $type = $bt->getName();
+            $col1 = array_column($res1, 'type');
+            $col2 = array_column($res2, 'type');
+            $key1 = array_search($type, $col1);
+            $key2 = array_search($type, $col2);
+            $tickets_qty = $key1 !== false ? $res1[$key1]['qty']: 0;
+            $checkin_qty = $key2 !== false ? $res2[$key2]['qty']: 0;
+
+            $res[] = [
+                'type' => $type,
+                'badges_qty' => intval($tickets_qty),
+                'checkin_qty' => intval($checkin_qty),
+            ];
+        }
+
+        $values['total_badges_per_type'] = $res;
+
         // attendees
+
         $values['total_checked_in_attendees'] = $summit->getInPersonCheckedInAttendeesCount($start_date, $end_date);
         $values['total_virtual_attendees'] = $summit->getVirtualAttendeesCount($start_date, $end_date);
 
         $values['total_non_checked_in_attendees'] = $summit->getInPersonNonCheckedInAttendeesCount($start_date, $end_date);
         $values['total_virtual_non_checked_in_attendees'] = $summit->getVirtualNonCheckedInAttendeesCount($start_date, $end_date);
+
+        /** Tickets per badge feature type **/
 
         $res  = [];
         $res1 = $summit->getActiveTicketsPerBadgeFeatureType($start_date, $end_date);

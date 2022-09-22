@@ -25,6 +25,7 @@ use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use libs\utils\TextUtils;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Company;
@@ -560,7 +561,7 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     public function setEmail(string $email): void
     {
-        $this->email = strtolower(trim($email));
+        $this->email = strtolower(TextUtils::trim($email));
     }
 
     /**

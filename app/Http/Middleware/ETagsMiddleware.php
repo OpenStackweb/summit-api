@@ -35,9 +35,11 @@ final class ETagsMiddleware
             $etag        = md5($response->getContent());
             $requestETag = str_replace('"', '', $request->getETags());
             $requestETag = str_replace('-gzip', '', $requestETag);
-
+            if($requestETag && is_array($requestETag))
+                Log::debug(sprintf("ETagsMiddleware::handle requestEtag %s calculated etag %s", $requestETag[0], $etag));
             if ($requestETag && $requestETag[0] == $etag)
             {
+                Log::debug("ETagsMiddleware::handle set 304");
                 $response->setNotModified();
             }
             $response->setEtag($etag);

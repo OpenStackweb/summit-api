@@ -14,6 +14,8 @@
 use App\Services\Apis\IMailApi;
 use App\Services\Model\IMemberService;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Log;
+
 /**
  * Class AbstractSummitAttendeeTicketEmail
  * @package App\Jobs\Emails\Registration
@@ -37,6 +39,7 @@ abstract class AbstractSummitAttendeeTicketEmail extends AbstractEmailJob
         }
 
         if($memberService instanceof IMemberService){
+
             $email = $this->payload['owner_email'];
             // check if exist at idp
             $user = $memberService->checkExternalUser($email);
@@ -45,39 +48,44 @@ abstract class AbstractSummitAttendeeTicketEmail extends AbstractEmailJob
 
                 // user does not exist at idp so we need to generate a registration request
                 // and create the magic links to complete the registration request
+                try {
 
-                $userRegistrationRequest = $memberService->emitRegistrationRequest
-                (
-                    $email,
-                    $this->payload['owner_first_name'],
-                    $this->payload['owner_last_name'],
-                    $this->payload['owner_company'] ?? ''
-                );
-
-                $setPasswordLink = $userRegistrationRequest['set_password_link'];
-
-                if(isset($this->payload['summit_virtual_site_url']) &&
-                   !empty($this->payload['summit_virtual_site_url']) &&
-                   isset($this->payload['summit_virtual_site_oauth2_client_id']) &&
-                   !empty($this->payload['summit_virtual_site_oauth2_client_id'])){
-                    $this->payload['summit_virtual_site_url'] = sprintf(
-                        "%s?client_id=%s&redirect_uri=%s",
-                        $setPasswordLink,
-                        $this->payload['summit_virtual_site_oauth2_client_id'],
-                        urlencode($this->payload['summit_virtual_site_url'])
+                    $userRegistrationRequest = $memberService->emitRegistrationRequest
+                    (
+                        $email,
+                        $this->payload['owner_first_name'],
+                        $this->payload['owner_last_name'],
+                        $this->payload['owner_company'] ?? ''
                     );
+
+                    $setPasswordLink = $userRegistrationRequest['set_password_link'];
+
+                    if (isset($this->payload['summit_virtual_site_url']) &&
+                        !empty($this->payload['summit_virtual_site_url']) &&
+                        isset($this->payload['summit_virtual_site_oauth2_client_id']) &&
+                        !empty($this->payload['summit_virtual_site_oauth2_client_id'])) {
+                        $this->payload['summit_virtual_site_url'] = sprintf(
+                            "%s?client_id=%s&redirect_uri=%s",
+                            $setPasswordLink,
+                            $this->payload['summit_virtual_site_oauth2_client_id'],
+                            urlencode($this->payload['summit_virtual_site_url'])
+                        );
+                    }
+
+                    if (isset($this->payload['summit_marketing_site_url']) &&
+                        !empty($this->payload['summit_marketing_site_url']) &&
+                        isset($this->payload['summit_marketing_site_oauth2_client_id']) &&
+                        !empty($this->payload['summit_marketing_site_oauth2_client_id'])) {
+                        $this->payload['summit_marketing_site_url'] = sprintf(
+                            "%s?client_id=%s&redirect_uri=%s",
+                            $setPasswordLink,
+                            $this->payload['summit_marketing_site_oauth2_client_id'],
+                            urlencode($this->payload['summit_marketing_site_url'])
+                        );
+                    }
                 }
-
-                if(isset($this->payload['summit_marketing_site_url']) &&
-                    !empty($this->payload['summit_marketing_site_url']) &&
-                    isset($this->payload['summit_marketing_site_oauth2_client_id']) &&
-                    !empty($this->payload['summit_marketing_site_oauth2_client_id'])){
-                    $this->payload['summit_marketing_site_url'] = sprintf(
-                        "%s?client_id=%s&redirect_uri=%s",
-                        $setPasswordLink,
-                        $this->payload['summit_marketing_site_oauth2_client_id'],
-                        urlencode($this->payload['summit_marketing_site_url'])
-                    );
+                catch (\Exception $ex){
+                    Log::warning($ex);
                 }
             }
         }

@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ICacheService;
 use libs\utils\ITransactionService;
+use libs\utils\TextUtils;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Affiliation;
@@ -507,6 +508,7 @@ final class MemberService
      * @throws \Exception
      */
     public function checkExternalUser(string $email) {
+        $email = TextUtils::trim($email);
         Log::debug(sprintf("MemberService::checkExternalUser - trying to get member %s from user api", $email));
         $user = $this->external_user_api->getUserByEmail($email);
         // check if primary email is the same if not disregard

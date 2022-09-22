@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use models\exceptions\EntityNotFoundException;
+use models\exceptions\ValidationException;
 use models\main\Tag;
 /**
  * Interface ITagService
@@ -23,4 +26,20 @@ interface ITagService
      * @return Tag
      */
     public function addTag(array $payload):Tag;
+
+    /**
+     * @param int $tag_id
+     * @param array $payload
+     * @return Tag
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function updateTag(int $tag_id, array $payload):Tag;
+
+    /**
+     * @param int $tag_id
+     * @return void
+     * @throws EntityNotFoundException
+     */
+    public function deleteTag(int $tag_id);
 }

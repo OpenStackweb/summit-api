@@ -86,7 +86,9 @@ final class SummitRegistrationStatsSerializer extends SilverStripeSerializer
 
             $res[] = [
                 'type' => $type,
-                'tickets_qty' => intval($tickets_qty),
+                'badge_type' => $tt->hasBadgeType() ? $tt->getBadgeType()->getName(): 'TBD',
+                'available_qty' => $tt->getQuantitySold(),
+                'sold_qty' => intval($tickets_qty),
                 'checkin_qty' => intval($checkin_qty),
             ];
         }
@@ -143,7 +145,7 @@ final class SummitRegistrationStatsSerializer extends SilverStripeSerializer
 
             $res[] = [
                 'type' => $type,
-                'tickets_qty' => intval($tickets_qty),
+                'sold_qty' => intval($tickets_qty),
                 'checkin_qty' => intval($checkin_qty),
             ];
         }

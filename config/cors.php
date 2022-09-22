@@ -39,6 +39,7 @@ return [
         'Authorization',
         'X-Requested-With',
         'Cache-Control',
+        "If-None-Match",
     ],
 
     'exposed_headers' => [
@@ -48,6 +49,7 @@ return [
         'Expires',
         'Last-Modified',
         'Pragma',
+        "ETag",
     ],
 
     'max_age' => 60 * 60 * 24,

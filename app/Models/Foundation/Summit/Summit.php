@@ -1411,7 +1411,7 @@ class Summit extends SilverstripeBaseModel
     }
 
     /**
-     * @return ArrayCollection
+     * @return ArrayCollection|SummitTicketType[]
      */
     public function getTicketTypes()
     {

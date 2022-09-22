@@ -29,7 +29,16 @@ final class ETagsMiddleware
      */
     public function handle($request, Closure $next)
     {
+        // Handle request
+        $method = $request->getMethod();
+
+        // Support using HEAD method for checking If-None-Match
+        if ($request->isMethod('HEAD')) {
+            $request->setMethod('GET');
+        }
+        //Handle response
         $response = $next($request);
+
         if ($response->getStatusCode() === 200 && $request->getMethod() === 'GET')
         {
             $etag        = md5($response->getContent());
@@ -37,14 +46,24 @@ final class ETagsMiddleware
             $requestETag = str_replace('-gzip', '', $requestETag);
             if($requestETag && is_array($requestETag))
                 Log::debug(sprintf("ETagsMiddleware::handle requestEtag %s calculated etag %s", $requestETag[0], $etag));
-            if ($requestETag && $requestETag[0] == $etag)
-            {
-                Log::debug("ETagsMiddleware::handle set 304");
+
+            // Strip W/ if weak comparison algorithm can be used
+            $requestETag = array_map([$this, 'stripWeakTags'], $requestETag);
+
+            if (in_array($etag, $requestETag)) {
                 $response->setNotModified();
             }
+
             $response->setEtag($etag);
         }
 
+        $request->setMethod($method);
+
         return $response;
+    }
+
+    private function stripWeakTags($etag)
+    {
+        return str_replace('W/', '', $etag);
     }
 }

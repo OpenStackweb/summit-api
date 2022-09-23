@@ -156,6 +156,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'last_name' => ['=@', '=='],
                     'is_accepted' => ['=='],
                     'is_sent' => ['=='],
+                    'ticket_types_id' => ['=='],
                 ];
             },
             function () {
@@ -165,6 +166,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'last_name' => 'sometimes|required|string',
                     'is_accepted' => 'sometimes|required|string|in:true,false',
                     'is_sent' => 'sometimes|required|string|in:true,false',
+                    'ticket_types_id' => 'sometimes|integer',
                 ];
             },
             function () {

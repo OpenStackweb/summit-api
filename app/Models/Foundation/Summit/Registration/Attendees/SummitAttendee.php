@@ -535,10 +535,19 @@ class SummitAttendee extends SilverstripeBaseModel
         return $this->email;
     }
 
+    /**
+     * @return string|null
+     */
     public function getFullName(): ?string
     {
-        Log::debug(sprintf("SummitAttendee::getFullName id %s", $this->id));
-        if ($this->hasMember()) {
+        $fullname = $this->first_name;
+        if (!empty($this->surname)) {
+            if (!empty($fullname)) $fullname .= ' ';
+            $fullname .= $this->surname;
+        }
+
+        // fallback
+        if (empty($fullname) && $this->hasMember()) {
             Log::debug(sprintf("SummitAttendee::getFullName id %s hasMember", $this->id));
             $fullname = $this->member->getFullName();
             Log::debug(sprintf("SummitAttendee::getFullName id %s Member Full Name %s", $this->id, $fullname));
@@ -546,13 +555,6 @@ class SummitAttendee extends SilverstripeBaseModel
                 return $fullname;
         }
 
-        $fullname = $this->first_name;
-        if (!empty($this->surname)) {
-            if (!empty($fullname)) $fullname .= ' ';
-            $fullname .= $this->surname;
-        }
-
-        Log::debug(sprintf("SummitAttendee::getFullName id %s Attendee Full Name %s", $this->id, $fullname));
         return $fullname;
     }
 

@@ -87,7 +87,7 @@ final class SummitRegistrationStatsSerializer extends SilverStripeSerializer
             $res[] = [
                 'type' => $type,
                 'badge_type' => $tt->hasBadgeType() ? $tt->getBadgeType()->getName(): 'TBD',
-                'available_qty' => $tt->getQuantitySold(),
+                'available_qty' => $tt->getQuantity2Sell(),
                 'sold_qty' => intval($tickets_qty),
                 'checkin_qty' => intval($checkin_qty),
             ];

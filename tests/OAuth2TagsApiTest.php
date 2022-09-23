@@ -41,6 +41,32 @@ class OAuth2TagsApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
     }
 
+    public function testGetTag($tag_id = 1)
+    {
+        $params = [
+            'id' => $tag_id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2TagsApiController@getTag",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $tag = json_decode($content);
+        $this->assertTrue(!is_null($tag));
+        $this->assertResponseStatus(200);
+    }
 
     public function testAddTag(){
         $params = [
@@ -75,4 +101,60 @@ class OAuth2TagsApiTest extends ProtectedApiTest
         return $tag;
     }
 
+    public function testUpdateTag($tag_id = 3){
+        $params = [
+            'id' => $tag_id,
+        ];
+
+        $tag  = 'Business';
+        $data = [
+            'tag' => $tag,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2TagsApiController@updateTag",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $updated_tag = json_decode($content);
+        $this->assertTrue(!is_null($updated_tag));
+        $this->assertTrue($updated_tag->tag == $tag);
+        return $tag;
+    }
+
+    public function testDeleteTag($tag_id = 503){
+        $params = [
+            'id' => $tag_id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $this->action(
+            "DELETE",
+            "OAuth2TagsApiController@deleteTag",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
+    }
 }

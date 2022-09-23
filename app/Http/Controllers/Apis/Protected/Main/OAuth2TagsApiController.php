@@ -11,19 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\ModelSerializers\SerializerUtils;
 use models\main\ITagRepository;
 use models\oauth2\IResourceServerContext;
 use Illuminate\Support\Facades\Validator;
 use ModelSerializers\SerializerRegistry;
-use utils\Filter;
-use utils\FilterParser;
-use utils\FilterParserException;
-use utils\OrderParser;
 use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Log;
-use utils\PagingInfo;
-use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
 use App\Services\Model\ITagService;
 /**
  * Class OAuth2TagsApiController
@@ -31,6 +25,12 @@ use App\Services\Model\ITagService;
  */
 final class OAuth2TagsApiController extends OAuth2ProtectedController
 {
+    use ParametrizedGetAll;
+
+    use GetAndValidateJsonPayload;
+
+    use RequestProcessor;
+
     /**
      * @var ITagService
      */
@@ -55,95 +55,62 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
     }
 
     public function getAll(){
-
-        $values = Request::all();
-
-        $rules = [
-            'page'     => 'integer|min:1',
-            'per_page' => 'required_with:page|integer|min:5|max:100',
-        ];
-
-        try {
-
-            $validation = Validator::make($values, $rules);
-
-            if ($validation->fails()) {
-                $ex = new ValidationException();
-                throw $ex->setMessages($validation->messages()->toArray());
-            }
-
-            // default values
-            $page     = 1;
-            $per_page = 5;
-
-            if (Request::has('page')) {
-                $page     = intval(Request::input('page'));
-                $per_page = intval(Request::input('per_page'));
-            }
-
-            $filter = null;
-
-            if (Request::has('filter')) {
-                $filter = FilterParser::parse(Request::input('filter'), [
-
-                    'tag' => ['=@', '=='],
-                ]);
-            }
-
-            $order = null;
-
-            if (Request::has('order'))
-            {
-                $order = OrderParser::parse(Request::input('order'), [
+        return $this->_getAll(
+            function () {
+                return [
+                    'tag' => ['=@', '==', '@@'],
+                ];
+            },
+            function () {
+                return [
+                    'tag' => 'sometimes|string',
+                ];
+            },
+            function () {
+                return [
                     'tag',
                     'id',
-                ]);
+                ];
+            },
+            function ($filter) {
+                return $filter;
+            },
+            function () {
+                $current_member = $this->resource_server_context->getCurrentUser();
+                $serializer_type = SerializerRegistry::SerializerType_Public;
+
+                if (!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin())) {
+                    $serializer_type = SerializerRegistry::SerializerType_Admin;
+                }
+
+                return $serializer_type;
             }
+        );
+    }
 
-            if(is_null($filter)) $filter = new Filter();
+    public function getTag($tag_id){
+        return $this->processRequest(function () use ($tag_id) {
+            $tag = $this->repository->getById(intval($tag_id));
 
-            $data      = $this->repository->getAllByPage(new PagingInfo($page, $per_page), $filter, $order);
-            $fields    = Request::input('fields', '');
-            $fields    = !empty($fields) ? explode(',', $fields) : [];
-            $relations = Request::input('relations', '');
-            $relations = !empty($relations) ? explode(',', $relations) : [];
+            if(is_null($tag)) return $this->error404();
 
-            return $this->ok
-            (
-                $data->toArray
-                (
-                    Request::input('expand', ''),
-                    $fields,
-                    $relations
-                )
-            );
-        }
-
-        catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        }
-        catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412($ex2->getMessages());
-        }
-        catch(FilterParserException $ex3){
-            Log::warning($ex3);
-            return $this->error412($ex3->getMessages());
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->ok(SerializerRegistry::getInstance()
+                ->getSerializer($tag)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
+        });
     }
 
     public function addTag(){
-        try {
+        return $this->processRequest(function () {
             if(!Request::isJson()) return $this->error400();
             $data = Request::json();
 
             $rules = [
-                'tag' => 'required|string',
+                'tag' => 'required|string|max:100',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -164,20 +131,47 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
             (
                 Request::input('expand','')
             ));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
+    public function updateTag($tag_id){
+        return $this->processRequest(function () use ($tag_id) {
+            if(!Request::isJson()) return $this->error400();
+            $data = Request::json();
+
+            $rules = [
+                'tag' => 'required|string|max:100',
+            ];
+
+            // Creates a Validator instance and validates the data.
+            $validation = Validator::make($data->all(), $rules);
+
+            if ($validation->fails()) {
+                $messages = $validation->messages()->toArray();
+
+                return $this->error412
+                (
+                    $messages
+                );
+            }
+
+            $tag = $this->tag_service->updateTag(intval($tag_id), $data->all());
+
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($tag)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
+        });
+    }
+
+    public function deleteTag($tag_id){
+        return $this->processRequest(function () use ($tag_id) {
+
+            $this->tag_service->deleteTag(intval($tag_id));
+
+            return $this->deleted();
+        });
+    }
 }

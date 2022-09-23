@@ -6866,9 +6866,47 @@ class ApiEndpointsSeeder extends Seeder
                     ],
                 ],
                 [
+                    'name' => 'get-tag',
+                    'route' => '/api/v1/tags/{id}',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                        sprintf(SummitScopes::ReadSummitData, $current_realm),
+                        sprintf(SummitScopes::ReadTagsData, $current_realm)
+                    ],
+                ],
+                [
                     'name' => 'add-tag',
                     'route' => '/api/v1/tags',
                     'http_method' => 'POST',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                        sprintf(SummitScopes::WriteTagsData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
+                    'name' => 'update-tag',
+                    'route' => '/api/v1/tags/{id}',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                        sprintf(SummitScopes::WriteTagsData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
+                    'name' => 'delete-tag',
+                    'route' => '/api/v1/tags/{id}',
+                    'http_method' => 'DELETE',
                     'scopes' => [
                         sprintf(SummitScopes::WriteSummitData, $current_realm),
                         sprintf(SummitScopes::WriteTagsData, $current_realm)

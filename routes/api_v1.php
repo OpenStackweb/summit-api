@@ -65,6 +65,11 @@ Route::group(['prefix' => 'members'], function () {
 Route::group(['prefix' => 'tags'], function () {
     Route::get('', 'OAuth2TagsApiController@getAll');
     Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2TagsApiController@addTag']);
+    Route::group(['prefix' => '{id}'], function () {
+        Route::get('', 'OAuth2TagsApiController@getTag');
+        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2TagsApiController@updateTag']);
+        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2TagsApiController@deleteTag']);
+    });
 });
 
 // companies

@@ -27,7 +27,6 @@ final class Version20220926134810 extends AbstractMigration
     {
 
         $sql = <<<SQL
-DELETE FROM SummitEvent WHERE NOT EXISTS (SELECT 1 FROM SummitEvent_Tags WHERE SummitEvent_Tags.SummitEventID = SummitEvent.ID);
 DELETE FROM SummitEvent_Tags WHERE NOT EXISTS ( SELECT 1 FROM SummitEvent WHERE SummitEvent.ID = SummitEvent_Tags.SummitEventID);
 ALTER TABLE `SummitEvent_Tags` ADD CONSTRAINT `FK_SummitEvent_Tags_SummitEvent` FOREIGN KEY (`SummitEventID`) REFERENCES `SummitEvent`(`ID`) ON DELETE CASCADE ON UPDATE RESTRICT;
 ALTER TABLE `SummitEvent_Tags` ADD CONSTRAINT `FK_SummitEvent_Tags_Tag` FOREIGN KEY (`TagID`) REFERENCES `Tag`(`ID`) ON DELETE CASCADE ON UPDATE RESTRICT;

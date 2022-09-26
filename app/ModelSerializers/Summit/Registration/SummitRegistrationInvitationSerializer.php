@@ -31,6 +31,7 @@ class SummitRegistrationInvitationSerializer extends SilverStripeSerializer
 
     protected static $allowed_relations = [
        'allowed_ticket_types',
+        'tags',
     ];
 
     /**
@@ -55,6 +56,15 @@ class SummitRegistrationInvitationSerializer extends SilverStripeSerializer
             }
             $values['allowed_ticket_types'] = $allowed_ticket_types;
         }
+
+        if(in_array('tags', $relations) && !isset($values['tags'])){
+            $tags = [];
+            foreach ($invitation->getTags() as $tag){
+                $tags[] = $tag->getId();
+            }
+            $values['tags'] = $tags;
+        }
+
         return $values;
     }
 
@@ -62,6 +72,10 @@ class SummitRegistrationInvitationSerializer extends SilverStripeSerializer
         'allowed_ticket_types' => [
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getTicketTypes',
+        ],
+        'tags' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getTags',
         ]
     ];
 

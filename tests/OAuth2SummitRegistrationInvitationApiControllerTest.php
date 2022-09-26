@@ -38,9 +38,9 @@ class OAuth2SummitRegistrationInvitationApiControllerTest extends ProtectedApiTe
 
     public function testIngestInvitationsAndGet(){
         $csv_content = <<<CSV
-email,first_name,last_name
-cespin+3@gmail.com,Jason,Cirrus
-cespin+4@gmail.com,Allen,Altostratus
+email,first_name,last_name,tags
+cespin+3@gmail.com,Jason,Cirrus,tag1|tag2
+cespin+4@gmail.com,Allen,Altostratus,tag6|tag1
 CSV;
         $path = "/tmp/invitations.csv";
 
@@ -49,7 +49,7 @@ CSV;
         $file = new UploadedFile($path, "invitations.csv", 'text/csv', null, true);
 
         $params = [
-            'summit_id' => self::$summit->getId(),
+            'id' => self::$summit->getId(),
         ];
 
         $headers = [
@@ -73,8 +73,9 @@ CSV;
 
 
         $params = [
-            'summit_id' => self::$summit->getId(),
-            'filter'=> 'is_accepted==true'
+            'id' => self::$summit->getId(),
+            'filter'=> 'tags==tag6',
+            'expand' => 'tags',
         ];
 
         $headers = [
@@ -94,6 +95,9 @@ CSV;
 
         $content = $response->getContent();
         $this->assertResponseStatus(200);
+        $invitations = json_decode($content);
+        $this->assertTrue(!is_null($invitations));
+        $this->assertTrue(count($invitations->data) == 1);
     }
 
     public function testIngestInvitationsAndGetCSV(){
@@ -265,6 +269,7 @@ CSV;
 
         $params = [
             'id' => self::$summit->getId(),
+            'expand' => 'tags'
         ];
 
         $first_name = str_random(16).'_ticket_type';
@@ -275,7 +280,8 @@ CSV;
             'email'                 => $email,
             'first_name'            => $first_name,
             'last_name'             => $last_name,
-            'allowed_ticket_types'  => [self::$default_ticket_type->getId()]
+            'allowed_ticket_types'  => [self::$default_ticket_type->getId()],
+            'tags'                  => ['tag1', 'tag2']
         ];
 
         $headers = [
@@ -298,6 +304,7 @@ CSV;
         $this->assertResponseStatus(201);
         $invitation = json_decode($content);
         $this->assertTrue(!is_null($invitation));
+        $this->assertTrue(count($invitation->tags) == 2);
         return $invitation;
     }
 

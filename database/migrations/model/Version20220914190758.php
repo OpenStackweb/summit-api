@@ -1,6 +1,4 @@
-<?php
-
-namespace Database\Migrations\Model;
+<?php namespace Database\Migrations\Model;
 /**
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +11,13 @@ namespace Database\Migrations\Model;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
-
-class Version20220914190758 extends AbstractMigration
+/**
+ * Class Version20220914190758
+ * @package Database\Migrations\Model
+ */
+final class Version20220914190758 extends AbstractMigration
 {
     /**
      * @param Schema $schema

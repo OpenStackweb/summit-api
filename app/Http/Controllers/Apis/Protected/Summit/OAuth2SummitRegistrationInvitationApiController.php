@@ -151,12 +151,14 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
         return $this->_getAll(
             function () {
                 return [
-                    'email' => ['=@', '=='],
-                    'first_name' => ['=@', '=='],
-                    'last_name' => ['=@', '=='],
+                    'email' => ['@@','=@', '=='],
+                    'first_name' => ['@@','=@', '=='],
+                    'last_name' => ['@@','=@', '=='],
                     'is_accepted' => ['=='],
                     'is_sent' => ['=='],
                     'ticket_types_id' => ['=='],
+                    'tags' => ['@@','=@', '=='],
+                    'tags_id' => ['=='],
                 ];
             },
             function () {
@@ -167,6 +169,8 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'is_accepted' => 'sometimes|required|string|in:true,false',
                     'is_sent' => 'sometimes|required|string|in:true,false',
                     'ticket_types_id' => 'sometimes|integer',
+                    'tags' => 'sometimes|required|string',
+                    'tags_id' => 'sometimes|integer',
                 ];
             },
             function () {
@@ -200,11 +204,13 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
         return $this->_getAllCSV(
             function () {
                 return [
-                    'email' => ['=@', '=='],
-                    'first_name' => ['=@', '=='],
-                    'last_name' => ['=@', '=='],
+                    'email' =>  ['@@','=@', '=='],
+                    'first_name' =>  ['@@','=@', '=='],
+                    'last_name' => ['@@','=@', '=='],
                     'is_accepted' => ['=='],
                     'is_sent' => ['=='],
+                    'tags' => ['@@','=@', '=='],
+                    'tags_id' => ['=='],
                 ];
             },
             function () {
@@ -214,6 +220,8 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'last_name' => 'sometimes|required|string',
                     'is_accepted' => 'sometimes|required|string|in:true,false',
                     'is_sent' => 'sometimes|required|string|in:true,false',
+                    'tags' => 'sometimes|required|string',
+                    'tags_id' => 'sometimes|integer',
                 ];
             },
             function () {
@@ -252,6 +260,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'is_accepted',
                     'is_sent',
                     'allowed_ticket_types',
+                    'tags',
                 ];
 
                 $columns_param = Request::input("columns", "");
@@ -301,6 +310,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'allowed_ticket_types' => 'sometimes|int_array',
+            'tags' => 'sometimes|string_array',
         ];
     }
 
@@ -316,6 +326,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             'first_name' => 'sometimes|string|max:255',
             'last_name' => 'sometimes|string|max:255',
             'allowed_ticket_types' => 'sometimes|int_array',
+            'tags' => 'sometimes|string_array',
         ];
     }
 
@@ -380,11 +391,13 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
 
             if (Request::has('filter')) {
                 $filter = FilterParser::parse(Request::input('filter'), [
-                    'email' => ['=@', '=='],
-                    'first_name' => ['=@', '=='],
-                    'last_name' => ['=@', '=='],
+                    'email' => ['@@','=@', '=='],
+                    'first_name' =>['@@','=@', '=='],
+                    'last_name' => ['@@','=@', '=='],
                     'is_accepted' => ['=='],
                     'is_sent' => ['=='],
+                    'tags' => ['@@','=@', '=='],
+                    'tags_id' => ['=='],
                 ]);
             }
 
@@ -397,6 +410,8 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                 'email' => 'sometimes|required|string',
                 'first_name' => 'sometimes|required|string',
                 'last_name' => 'sometimes|required|string',
+                'tags' => 'sometimes|required|string',
+                'tags_id' => 'sometimes|integer',
             ]);
 
             $this->service->triggerSend($summit, $payload, Request::input('filter'));

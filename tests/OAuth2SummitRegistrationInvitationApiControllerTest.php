@@ -347,4 +347,31 @@ CSV;
         $content = $response->getContent();
         $this->assertResponseStatus(412);
     }
+
+    public function testGetInvitationsByAllowedTicketTypes(){
+        $params = [
+            'id' => '3109',
+            'filter' => ['ticket_types_id==2046||2047']
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitRegistrationInvitationApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $invitations = json_decode($content);
+        $this->assertNotEmpty($invitations);
+        $this->assertResponseStatus(200);
+    }
 }

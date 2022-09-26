@@ -63,9 +63,11 @@ class ProcessRegistrationInvitationsJob implements ShouldQueue
         $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, [
             'is_accepted' => ['=='],
             'is_sent' => ['=='],
-            'email' => ['=@', '=='],
-            'first_name' => ['=@', '=='],
-            'last_name' => ['=@', '=='],
+            'email' => ['@@','=@', '=='],
+            'first_name' => ['@@','=@', '=='],
+            'last_name' => ['@@','=@', '=='],
+            'tags' => ['@@','=@', '=='],
+            'tags_id' => ['=='],
         ]) : null;
 
         $service->send($this->summit_id, $this->payload, $filter);

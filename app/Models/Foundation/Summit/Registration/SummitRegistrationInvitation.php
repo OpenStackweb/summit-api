@@ -16,6 +16,7 @@ use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Member;
+use models\main\Tag;
 use models\utils\RandomGenerator;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -106,12 +107,22 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
      */
     private $ticket_types;
 
+    /**
+     * @ORM\ManyToMany(targetEntity="models\main\Tag", cascade={"persist"}, inversedBy="events", fetch="EXTRA_LAZY")
+     * @ORM\JoinTable(name="SummitRegistrationInvitation_Tags",
+     *      joinColumns={@ORM\JoinColumn(name="SummitRegistrationInvitationID", referencedColumnName="ID")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="TagID", referencedColumnName="ID")}
+     *      )
+     */
+    private $tags;
+
 
     public function __construct()
     {
         parent::__construct();
         $this->ticket_types = new ArrayCollection();
         $this->orders = new ArrayCollection();
+        $this->tags = new ArrayCollection();
         $this->member = null;
     }
 
@@ -556,5 +567,27 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         }
 
         return true;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getTags()
+    {
+        return $this->tags;
+    }
+
+    /**
+     * @param Tag $tag
+     */
+    public function addTag(Tag $tag)
+    {
+        if ($this->tags->contains($tag)) return;
+        $this->tags->add($tag);
+    }
+
+    public function clearTags()
+    {
+        $this->tags->clear();
     }
 }

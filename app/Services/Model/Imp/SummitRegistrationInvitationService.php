@@ -22,6 +22,7 @@ use App\Services\Model\AbstractService;
 use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Model\IMemberService;
 use App\Services\Model\ISummitRegistrationInvitationService;
+use App\Services\Model\ITagService;
 use App\Services\Utils\CSVReader;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
@@ -30,6 +31,7 @@ use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\IMemberRepository;
+use models\main\ITagRepository;
 use models\main\Member;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
@@ -73,20 +75,34 @@ final class SummitRegistrationInvitationService
     private $summit_repository;
 
     /**
+     * @var ITagRepository
+     */
+    private $tag_repository;
+
+    /**
+     * @var ITagService
+     */
+    private $tag_service;
+
+    /**
      * @param IExternalUserApi $external_user_api
+     * @param ITagService $tag_service
      * @param IMemberService $member_service
      * @param ISummitRegistrationInvitationRepository $invitation_repository
      * @param IMemberRepository $member_repository
      * @param ISummitRepository $summit_repository
+     * @param ITagRepository $tag_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
     (
         IExternalUserApi                        $external_user_api,
+        ITagService                             $tag_service,
         IMemberService                          $member_service,
         ISummitRegistrationInvitationRepository $invitation_repository,
         IMemberRepository                       $member_repository,
         ISummitRepository                       $summit_repository,
+        ITagRepository                          $tag_repository,
         ITransactionService                     $tx_service
     )
     {
@@ -96,6 +112,8 @@ final class SummitRegistrationInvitationService
         $this->external_user_api = $external_user_api;
         $this->invitation_repository = $invitation_repository;
         $this->member_service = $member_service;
+        $this->tag_repository = $tag_repository;
+        $this->tag_service = $tag_service;
     }
 
     /**
@@ -127,6 +145,7 @@ final class SummitRegistrationInvitationService
          * first_name (mandatory)
          * last_name (mandatory)
          * allowed_ticket_types (optional)
+         * tags (optional)
          ***********************************************************/
 
         if (!$reader->hasColumn("email"))
@@ -142,6 +161,9 @@ final class SummitRegistrationInvitationService
                 Log::debug(sprintf("SummitRegistrationInvitationService::importInvitationData processing row %s", json_encode($row)));
                 if (isset($row['allowed_ticket_types']) && is_string($row['allowed_ticket_types'])) {
                     $row['allowed_ticket_types'] = empty($row['allowed_ticket_types']) ? [] : explode('|', $row['allowed_ticket_types']);
+                }
+                if (isset($row['tags']) && is_string($row['tags'])) {
+                    $row['tags'] = empty($row['tags']) ? [] : explode('|', $row['tags']);
                 }
 
                 $email = trim($row['email']);
@@ -206,7 +228,26 @@ final class SummitRegistrationInvitationService
                 $invitation->addTicketType($ticket_type);
             }
 
-            $invitation = $this->setInvitationMember($invitation, $email);
+            // tags
+            if (isset($payload['tags'])) {
+                $invitation->clearTags();
+
+                foreach ($payload['tags'] as $tag_value) {
+                    $tag = $this->tag_repository->getByTag($tag_value);
+                    if (is_null($tag)) {
+                        $tag = $this->tag_service->addTag(['tag' => $tag_value]);
+                    }
+                    $invitation->addTag($tag);
+                }
+            }
+
+            try {
+                $invitation = $this->setInvitationMember($invitation, $email);
+            }
+            catch (\Exception $ex){
+                Log::warning($ex);
+            }
+
             Log::debug(sprintf("SummitRegistrationInvitationService::add adding invitation for email %s to summit %s", $email, $summit->getName()));
             $summit->addRegistrationInvitation($invitation);
 
@@ -223,69 +264,73 @@ final class SummitRegistrationInvitationService
     private function setInvitationMember(SummitRegistrationInvitation $invitation, string $email): SummitRegistrationInvitation
     {
         return $this->tx_service->transaction(function () use ($invitation, $email) {
-            // try to get local user
-            $member = $this->member_repository->getByEmail($email);
-            // try to get an user externally , user does not exist locally
-            if (is_null($member)) {
-                // check if user exists by email at idp
-                Log::debug(sprintf("SummitRegistrationInvitationService::setInvitationMember - trying to get member %s from user api", $email));
-                $user = $this->external_user_api->getUserByEmail($email);
-                // check if primary email is the same if not disregard
-                $primary_email = is_null($user) ? null : $user['email'] ?? null;
-                if (strcmp(strtolower($primary_email), strtolower($email)) !== 0) {
-                    Log::debug
-                    (
-                        sprintf
+            try {
+                // try to get local user
+                $member = $this->member_repository->getByEmail($email);
+                // try to get an user externally , user does not exist locally
+                if (is_null($member)) {
+                    // check if user exists by email at idp
+                    Log::debug(sprintf("SummitRegistrationInvitationService::setInvitationMember - trying to get member %s from user api", $email));
+                    $user = $this->external_user_api->getUserByEmail($email);
+                    // check if primary email is the same if not disregard
+                    $primary_email = is_null($user) ? null : $user['email'] ?? null;
+                    if (strcmp(strtolower($primary_email), strtolower($email)) !== 0) {
+                        Log::debug
                         (
-                            "SummitRegistrationInvitationService::setInvitationMember primary email %s differs from order owner email %s",
-                            $primary_email,
-                            $email
-                        )
-                    );
-
-                    // email are not equals , then is not the user bc primary emails differs ( could be a
-                    // match on a secondary email)
-                    $user = null; // set null on user and proceed to emit a registration request.
-                }
-
-                if (!is_null($user)) {
-                    Log::debug
-                    (
-                        sprintf
-                        (
-                            "SummitRegistrationInvitationService::setInvitationMember - Creating a local user for %s",
-                            $email
-                        )
-                    );
-                    $external_id = $user['id'];
-                    try {
-
-                        // we have an user on idp
-                        // possible race condition
-                        $member = $this->member_service->registerExternalUser
-                        (
-                            new ExternalUserDTO
+                            sprintf
                             (
-                                $external_id,
-                                $user['email'],
-                                $user['first_name'],
-                                $user['last_name'],
-                                boolval($user['active']),
-                                boolval($user['email_verified'])
+                                "SummitRegistrationInvitationService::setInvitationMember primary email %s differs from order owner email %s",
+                                $primary_email,
+                                $email
                             )
                         );
-                    } catch (\Exception $ex) {
-                        Log::warning($ex);
-                        // race condition lost
-                        $member = $this->member_repository->getByExternalIdExclusiveLock(intval($external_id));
-                        $invitation = $this->invitation_repository->getByIdExclusiveLock($invitation->getId());
+
+                        // email are not equals , then is not the user bc primary emails differs ( could be a
+                        // match on a secondary email)
+                        $user = null; // set null on user and proceed to emit a registration request.
+                    }
+
+                    if (!is_null($user)) {
+                        Log::debug
+                        (
+                            sprintf
+                            (
+                                "SummitRegistrationInvitationService::setInvitationMember - Creating a local user for %s",
+                                $email
+                            )
+                        );
+                        $external_id = $user['id'];
+                        try {
+
+                            // we have an user on idp
+                            // possible race condition
+                            $member = $this->member_service->registerExternalUser
+                            (
+                                new ExternalUserDTO
+                                (
+                                    $external_id,
+                                    $user['email'],
+                                    $user['first_name'],
+                                    $user['last_name'],
+                                    boolval($user['active']),
+                                    boolval($user['email_verified'])
+                                )
+                            );
+                        } catch (\Exception $ex) {
+                            Log::warning($ex);
+                            // race condition lost
+                            $member = $this->member_repository->getByExternalIdExclusiveLock(intval($external_id));
+                            $invitation = $this->invitation_repository->getByIdExclusiveLock($invitation->getId());
+                        }
                     }
                 }
+
+                if (!is_null($member))
+                    $invitation->setMember($member);
             }
-
-            if (!is_null($member))
-                $invitation->setMember($member);
-
+            catch (\Exception $ex){
+                Log::warning($ex);
+            }
             return $invitation;
         });
     }
@@ -312,7 +357,12 @@ final class SummitRegistrationInvitationService
 
             if (isset($payload['email'])) {
                 $email = trim($payload['email']);
-                $invitation = $this->setInvitationMember($invitation, $email);
+                try {
+                    $invitation = $this->setInvitationMember($invitation, $email);
+                }
+                catch (\Exception $ex){
+                    Log::warning($ex);
+                }
             }
 
             $allowed_ticket_types = $payload['allowed_ticket_types'] ?? [];
@@ -331,6 +381,19 @@ final class SummitRegistrationInvitationService
                     );
                 }
                 $invitation->addTicketType($ticket_type);
+            }
+
+            // tags
+            if (isset($payload['tags'])) {
+                $invitation->clearTags();
+
+                foreach ($payload['tags'] as $tag_value) {
+                    $tag = $this->tag_repository->getByTag($tag_value);
+                    if (is_null($tag)) {
+                        $tag = $this->tag_service->addTag(['tag' => $tag_value]);
+                    }
+                    $invitation->addTag($tag);
+                }
             }
 
             return $invitation;

@@ -41,6 +41,7 @@ trait SummitRegistrationStats
      * @param string $table
      * @param DateTime|null $startDate
      * @param DateTime|null $endDate
+     * @param string $field
      * @return string
      * @throws \Exception
      */
@@ -403,7 +404,23 @@ SummitAttendee.SummitHallCheckedIn = 1
 SQL;
 
 
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendee", $startDate, $endDate);
+
+            if(!is_null($startDate)){
+                if(!is_null($endDate)) {
+                    $sql .= sprintf(
+                        "AND SummitAttendee.SummitHallCheckedInDate BETWEEN '%s' AND '%s'",
+                        $startDate->format("Y-m-d H:i:s"),
+                        $endDate->format("Y-m-d H:i:s"),
+                    );
+                }
+                else{
+                    $sql .= sprintf(
+                        "AND SummitAttendee.SummitHallCheckedInDate >= '%s'",
+                        $startDate->format("Y-m-d H:i:s"),
+                    );
+                }
+            }
+
             $stmt = $this->prepareRawSQL($sql);
             $stmt->execute(['summit_id' => $this->id]);
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);

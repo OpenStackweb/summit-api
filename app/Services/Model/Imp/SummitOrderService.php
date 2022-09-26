@@ -2287,7 +2287,7 @@ final class SummitOrderService
 
             // check owner
             $owner_email = $payload['owner_email'] ?? '';
-            if(!empty($owner_email) && $owner_email != $order->getOwnerEmail()){
+            if(!empty($owner_email)){
                 Log::debug
                 (
                     sprintf

@@ -449,6 +449,10 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         return $this->owner_email;
     }
 
+    public function clearOwner():void{
+        $this->owner = null;
+    }
+
     /**
      * @param string $owner_email
      */

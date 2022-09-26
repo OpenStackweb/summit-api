@@ -14,6 +14,7 @@
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Company;
+use models\main\Member;
 use models\summit\Summit;
 use models\summit\SummitOrder;
 use models\summit\SummitOrderExtraQuestionAnswer;
@@ -51,14 +52,50 @@ final class SummitOrderFactory
         if(isset($payload['external_id']))
             $order->setExternalId(trim($payload['external_id']));
 
+        $owner_email = $payload['owner_email'] ?? null;
+        $current_owner_email = $order->getOwnerEmail();
+
+        if(!empty($current_owner_email) && !empty($owner_email) && $owner_email != $current_owner_email) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitOrderFactory::populate order %s current_owner_email %s owner_email %s, clearing owner",
+                    $order->getId(),
+                    $current_owner_email,
+                    $owner_email
+                )
+            );
+
+            $order->clearOwner();
+        }
+
+        /**
+         * setting owner
+         */
+        if(isset($payload['owner']) && !is_null($payload['owner']) && $payload['owner'] instanceof Member){
+            $owner = $payload['owner'];
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitOrderFactory::populate order %s setting new owner %s (%s).",
+                    $order->getId(),
+                    $owner->getEmail(),
+                    $owner->getId()
+                )
+            );
+            $order->setOwner($owner);
+        }
+
+        if (!empty($owner_email))
+            $order->setOwnerEmail(trim($owner_email));
+
         if(isset($payload['owner_first_name']) && !is_null($payload['owner_first_name']))
             $order->setOwnerFirstName(trim($payload['owner_first_name']));
 
         if (isset($payload['owner_last_name']) && !is_null($payload['owner_last_name']))
             $order->setOwnerSurname(trim($payload['owner_last_name']));
-
-        if (isset($payload['owner_email']) && !is_null($payload['owner_email']))
-            $order->setOwnerEmail(trim($payload['owner_email']));
 
         if (isset($payload['owner_company']) && !is_null($payload['owner_company'])) {
             $order->setOwnerCompanyName(trim($payload['owner_company']));

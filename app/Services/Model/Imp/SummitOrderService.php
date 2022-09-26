@@ -2283,7 +2283,22 @@ final class SummitOrderService
         return $this->tx_service->transaction(function () use ($summit, $order_id, $payload) {
             $order = $this->order_repository->getByIdExclusiveLock($order_id);
             if (is_null($order) || !$order instanceof SummitOrder)
-                throw new EntityNotFoundException("order not found");
+                throw new EntityNotFoundException("Order not found.");
+
+            // check owner
+            $owner_email = $payload['owner_email'] ?? '';
+            if(!empty($owner_email)){
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::updateOrder new owner provided %s",
+                        $owner_email
+                    )
+                );
+
+                $payload['owner'] = $this->member_repository->getByEmail($owner_email);
+            }
 
             SummitOrderFactory::populate($summit, $order, $payload);
 
@@ -2304,7 +2319,7 @@ final class SummitOrderService
             $order = $this->order_repository->getByIdExclusiveLock($order_id);
 
             if (is_null($order) || !$order instanceof SummitOrder)
-                throw new EntityNotFoundException("order not found");
+                throw new EntityNotFoundException("Order not found.");
 
             list($tickets_to_return, $promo_codes_to_return) = $order->calculateTicketsAndPromoCodesToReturn();
 
@@ -2342,7 +2357,7 @@ final class SummitOrderService
                     (
                         sprintf
                         (
-                            "%s qr code is not valid for summit %s",
+                            "%s qr code is not valid for summit %s.",
                             $qr_code,
                             $summit->getId()
                         )
@@ -2353,9 +2368,9 @@ final class SummitOrderService
             }
 
             if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
-                throw new EntityNotFoundException("ticket not found");
+                throw new EntityNotFoundException("Ticket not found.");
             if ($ticket->getOrder()->getSummitId() != $summit->getId()) {
-                throw new ValidationException("ticket does not belong to summit");
+                throw new ValidationException("Ticket does not belong to summit.");
             }
             return $ticket;
         });
@@ -2374,22 +2389,22 @@ final class SummitOrderService
         return $this->tx_service->transaction(function () use ($summit, $ticket_id, $type_id) {
             $badge_type = $summit->getBadgeTypeById($type_id);
             if (is_null($badge_type))
-                throw new EntityNotFoundException("badge type not found");
+                throw new EntityNotFoundException("Badge type not found.");
 
             $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
             if (is_null($ticket))
                 $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
 
             if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
-                throw new EntityNotFoundException('ticket not found');
+                throw new EntityNotFoundException('Ticket not found.');
 
             $order = $ticket->getOrder();
 
             if ($order->getSummitId() != $summit->getId())
-                throw new EntityNotFoundException('ticket not found');
+                throw new EntityNotFoundException('Ticket not found.');
 
             if (!$ticket->hasBadge())
-                throw new EntityNotFoundException('badge not found');
+                throw new EntityNotFoundException('Badge not found.');
 
             $badge = $ticket->getBadge();
 

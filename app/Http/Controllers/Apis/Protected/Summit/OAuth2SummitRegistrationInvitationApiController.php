@@ -209,6 +209,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'last_name' => ['@@','=@', '=='],
                     'is_accepted' => ['=='],
                     'is_sent' => ['=='],
+                    'ticket_types_id' => ['=='],
                     'tags' => ['@@','=@', '=='],
                     'tags_id' => ['=='],
                 ];
@@ -220,6 +221,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'last_name' => 'sometimes|required|string',
                     'is_accepted' => 'sometimes|required|string|in:true,false',
                     'is_sent' => 'sometimes|required|string|in:true,false',
+                    'ticket_types_id' => 'sometimes|integer',
                     'tags' => 'sometimes|required|string',
                     'tags_id' => 'sometimes|integer',
                 ];
@@ -396,6 +398,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'last_name' => ['@@','=@', '=='],
                     'is_accepted' => ['=='],
                     'is_sent' => ['=='],
+                    'ticket_types_id' => ['=='],
                     'tags' => ['@@','=@', '=='],
                     'tags_id' => ['=='],
                 ]);
@@ -410,6 +413,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                 'email' => 'sometimes|required|string',
                 'first_name' => 'sometimes|required|string',
                 'last_name' => 'sometimes|required|string',
+                'ticket_types_id' => 'sometimes|integer',
                 'tags' => 'sometimes|required|string',
                 'tags_id' => 'sometimes|integer',
             ]);

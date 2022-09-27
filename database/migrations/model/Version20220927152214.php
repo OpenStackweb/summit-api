@@ -11,34 +11,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Database\Utils\DBHelpers;
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
+
 /**
- * Class Version20220926172743
+ * Class Version20220927152214
  * @package Database\Migrations\Model
  */
-final class Version20220926172743 extends AbstractMigration
+final class Version20220927152214 extends AbstractMigration
 {
     /**
      * @param Schema $schema
      */
     public function up(Schema $schema): void
     {
-            $sql = <<<SQL
-ALTER TABLE `SummitOrder` ADD CONSTRAINT 
-    `FK_SummitOrder_Owner` FOREIGN KEY (`OwnerID`) 
-        REFERENCES `Member`(`ID`) ON DELETE SET NULL ON UPDATE RESTRICT;
-SQL;
-
-            $this->addSql($sql);
-
         $sql = <<<SQL
-ALTER TABLE `SummitOrder` ADD CONSTRAINT 
-    `FK_SummitOrder_Summit` FOREIGN KEY (`SummitID`) 
-        REFERENCES `Summit`(`ID`) ON DELETE CASCADE ON UPDATE RESTRICT;
+ALTER TABLE `SummitEvent` CHANGE `DurationInSeconds` `DurationInSeconds` INT NOT NULL DEFAULT '0';
 SQL;
-
         $this->addSql($sql);
     }
 

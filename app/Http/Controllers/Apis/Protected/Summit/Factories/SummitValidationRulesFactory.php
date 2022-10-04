@@ -95,6 +95,7 @@ final class SummitValidationRulesFactory extends AbstractValidationRulesFactory
             'registration_allow_automatic_reminder_emails' => 'sometimes|boolean',
             'allow_update_attendee_extra_questions' => 'sometimes|boolean',
             'time_zone_label' => 'sometimes|string',
+            'registration_allowed_refund_request_till_date' => 'nullable|date_format:U',
         ];
     }
 
@@ -171,6 +172,7 @@ final class SummitValidationRulesFactory extends AbstractValidationRulesFactory
             'registration_allow_automatic_reminder_emails' => 'sometimes|boolean',
             'allow_update_attendee_extra_questions' => 'sometimes|boolean',
             'time_zone_label' => 'sometimes|string',
+            'registration_allowed_refund_request_till_date' => 'nullable|date_format:U',
         ];
     }
 }

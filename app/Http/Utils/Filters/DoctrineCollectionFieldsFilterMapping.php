@@ -74,11 +74,9 @@ class DoctrineCollectionFieldsFilterMapping extends DoctrineJoinFilterMapping
      * @return QueryBuilder
      * @throws \models\exceptions\ValidationException
      */
-    public function apply(QueryBuilder $query, FilterElement $filter)
+    public function apply(QueryBuilder $query, FilterElement $filter):QueryBuilder
     {
         $value = $filter->getValue();
-
-
 
         if (is_array($value)) {
 
@@ -126,7 +124,7 @@ class DoctrineCollectionFieldsFilterMapping extends DoctrineJoinFilterMapping
      * @param FilterElement $filter
      * @return string
      */
-    public function applyOr(QueryBuilder $query, FilterElement $filter)
+    public function applyOr(QueryBuilder $query, FilterElement $filter):string
     {
         $value = $filter->getValue();
 

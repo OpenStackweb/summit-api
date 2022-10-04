@@ -694,7 +694,10 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
     {
         $params = array
         (
-            'id' => 29,
+            'id' => self::$summit->getId(),
+            'filter'=> [
+                'selection_status==selected||rejected||alternate'
+            ]
         );
 
         $headers = array

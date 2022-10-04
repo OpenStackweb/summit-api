@@ -12,13 +12,14 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\Filters\IQueryApplyable;
 use Doctrine\ORM\QueryBuilder;
 
 /**
  * Class DoctrineFilterMapping
  * @package utils
  */
-class DoctrineFilterMapping extends FilterMapping
+class DoctrineFilterMapping extends FilterMapping implements IQueryApplyable
 {
 
     /**
@@ -44,7 +45,7 @@ class DoctrineFilterMapping extends FilterMapping
      * @param FilterElement $filter
      * @return QueryBuilder
      */
-    public function apply(QueryBuilder $query, FilterElement $filter)
+    public function apply(QueryBuilder $query, FilterElement $filter):QueryBuilder
     {
         $value = $filter->getValue();
         if (is_array($value)) {
@@ -106,7 +107,7 @@ class DoctrineFilterMapping extends FilterMapping
      * @param FilterElement $filter
      * @return string
      */
-    public function applyOr(QueryBuilder $query, FilterElement $filter)
+    public function applyOr(QueryBuilder $query, FilterElement $filter):string
     {
         $value = $filter->getValue();
         if (is_array($value)) {

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\Filters\IQueryApplyable;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 
@@ -19,7 +20,7 @@ use Doctrine\ORM\QueryBuilder;
  * Class DoctrineJoinFilterMapping
  * @package utils
  */
-class DoctrineJoinFilterMapping extends FilterMapping
+class DoctrineJoinFilterMapping extends FilterMapping implements IQueryApplyable
 {
     /**
      * @var string
@@ -52,7 +53,7 @@ class DoctrineJoinFilterMapping extends FilterMapping
      * @param FilterElement $filter
      * @return QueryBuilder
      */
-    public function apply(QueryBuilder $query, FilterElement $filter)
+    public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder
     {
         $value = $filter->getValue();
 
@@ -117,7 +118,7 @@ class DoctrineJoinFilterMapping extends FilterMapping
      * @param FilterElement $filter
      * @return string
      */
-    public function applyOr(QueryBuilder $query, FilterElement $filter)
+    public function applyOr(QueryBuilder $query, FilterElement $filter): string
     {
         $value = $filter->getValue();
         if (is_array($value)) {

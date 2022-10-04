@@ -120,6 +120,12 @@ class Summit extends SilverstripeBaseModel
     private $reassign_ticket_till_date;
 
     /**
+     * @ORM\Column(name="RegistrationAllowedRefundRequestTillDate", type="datetime")
+     * @var \DateTime
+     */
+    private $registration_allowed_refund_request_till_date;
+
+    /**
      * @ORM\Column(name="RegistrationDisclaimerContent", type="string")
      * @var string
      */
@@ -1076,6 +1082,7 @@ class Summit extends SilverstripeBaseModel
         $this->external_registration_feed_last_ingest_date = null;
         $this->speakers_announcement_emails = new ArrayCollection();
         $this->badge_view_types = new ArrayCollection();
+        $this->registration_allowed_refund_request_till_date = null;
     }
 
     /**
@@ -6083,5 +6090,37 @@ SQL;
         $viewType->clearSummit();;
     }
 
+    /**
+     * @return DateTime
+     */
+    public function getRegistrationAllowedRefundRequestTillDate(): ?DateTime
+    {
+        return $this->registration_allowed_refund_request_till_date;
+    }
+
+    /**
+     * @param DateTime $registration_allowed_refund_request_till_date
+     */
+    public function setRegistrationAllowedRefundRequestTillDate(?DateTime $registration_allowed_refund_request_till_date): void
+    {
+        $this->registration_allowed_refund_request_till_date = $registration_allowed_refund_request_till_date;
+    }
+
+    public function clearRegistrationAllowedRefundRequestTillDate():void{
+        $this->registration_allowed_refund_request_till_date = null;
+    }
+
+    /**
+     * @param Member $member
+     * @return bool
+     * @throws \Exception
+     */
+    public function canEmitRefundRequests(Member $member):bool{
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        return !is_null($this->registration_allowed_refund_request_till_date)
+            && $this->registration_allowed_refund_request_till_date <= $now;
+    }
+
     use SummitRegistrationStats;
+
 }

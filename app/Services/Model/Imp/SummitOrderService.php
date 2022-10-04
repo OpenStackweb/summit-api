@@ -1608,7 +1608,18 @@ final class SummitOrderService
             if (is_null($order))
                 throw new EntityNotFoundException('Order not found.');
 
-            $ticket = $order->getTicketById($ticket_id);
+            if(!$order->getSummit()->canEmitRefundRequests($current_user)){
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Refund Period is over for Summit %s.",
+                        $order->getSummit()->getName()
+                    )
+                );
+            }
+            $ticket
+                = $order->getTicketById($ticket_id);
             if (is_null($ticket))
                 throw new EntityNotFoundException('Ticket not found.');
 
@@ -1631,11 +1642,21 @@ final class SummitOrderService
      */
     public function requestRefundOrder(Member $current_user, int $order_id): SummitOrder{
         return $this->tx_service->transaction(function () use ($current_user, $order_id) {
-
             // only owner of the order could request a refund on a ticket
             $order = $current_user->getSummitRegistrationOrderById($order_id);
             if (is_null($order))
                 throw new EntityNotFoundException('Order not found.');
+
+            if(!$order->getSummit()->canEmitRefundRequests($current_user)){
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Refund Period is over for Summit %s.",
+                        $order->getSummit()->getName()
+                    )
+                );
+            }
 
             foreach ($order->getTickets() as $ticket){
                 if(!$ticket->isPaid()) continue;

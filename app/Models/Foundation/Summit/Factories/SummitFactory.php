@@ -236,6 +236,28 @@ final class SummitFactory
             }
         }
 
+        if(array_key_exists('registration_allowed_refund_request_till_date', $data)){
+            if (isset($data['registration_allowed_refund_request_till_date'])) {
+
+                $val = intval($data['registration_allowed_refund_request_till_date']);
+                if($val > 0) {
+                    $date = new \DateTime("@$val");
+                    $date->setTimezone($summit->getTimeZone());
+
+
+                    // set local time from UTC
+                    $summit->setRegistrationAllowedRefundRequestTillDate($date);
+                }
+                else
+                {
+                    $summit->clearRegistrationAllowedRefundRequestTillDate();
+                }
+            }
+            else{
+                $summit->clearRegistrationAllowedRefundRequestTillDate();
+            }
+        }
+
         if(array_key_exists('schedule_start_date', $data)) {
             if (isset($data['schedule_start_date'])) {
                 $val = intval($data['schedule_start_date']);

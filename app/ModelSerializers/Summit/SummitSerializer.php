@@ -111,6 +111,7 @@ class SummitSerializer extends SilverStripeSerializer
         'Modality' => 'modality:json_string',
         'AllowUpdateAttendeeExtraQuestions' => 'allow_update_attendee_extra_questions:json_boolean',
         'TimeZoneLabel' => 'time_zone_label:json_string',
+        'RegistrationAllowedRefundRequestTillDate' => 'registration_allowed_refund_request_till_date:datetime_epoch',
     ];
 
     protected static $allowed_relations = [

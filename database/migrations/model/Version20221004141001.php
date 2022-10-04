@@ -13,32 +13,26 @@
  **/
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
-use LaravelDoctrine\ORM\Facades\Registry;
-use models\summit\Summit;
-use models\utils\SilverstripeBaseModel;
+use LaravelDoctrine\Migrations\Schema\Builder;
+use LaravelDoctrine\Migrations\Schema\Table;
+
 /**
- * Class Version20220726224823
+ * Class Version20221004141001
  * @package Database\Migrations\Model
  */
-final class Version20220726224823 extends AbstractMigration
+final class Version20221004141001 extends AbstractMigration
 {
     /**
      * @param Schema $schema
      */
     public function up(Schema $schema): void
     {
-        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
-        $repository = $em->getRepository(Summit::class);
-        $summits = $repository->findAll();
-        foreach($summits as $summit){
-            $defaultView = $summit->getDefaultBadgeViewType();
-            if(is_null($defaultView)) continue;
-            foreach ($summit->getBadgeTypes() as $badgeType){
-                $badgeType->addAllowedViewType($defaultView);
-            }
-            $em->persist($summit);
+        $builder = new Builder($schema);
+        if ($builder->hasTable("Summit") && !$builder->hasColumn("Summit", "RegistrationAllowedRefundRequestTillDate")) {
+            $builder->table("Summit", function (Table $table) {
+                $table->timestamp('RegistrationAllowedRefundRequestTillDate')->setNotnull(false)->setDefault(null);
+            });
         }
-        $em->flush();
     }
 
     /**
@@ -46,6 +40,11 @@ final class Version20220726224823 extends AbstractMigration
      */
     public function down(Schema $schema): void
     {
-
+        $builder = new Builder($schema);
+        if ($builder->hasTable("Summit") && $builder->hasColumn("Summit", "RegistrationAllowedRefundRequestTillDate")) {
+            $builder->table("Summit", function (Table $table) {
+                $table->dropColumn('RegistrationAllowedRefundRequestTillDate');
+            });
+        }
     }
 }

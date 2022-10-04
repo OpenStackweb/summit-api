@@ -13,6 +13,7 @@
  **/
 
 
+use Illuminate\Support\Facades\Log;
 use models\main\Member;
 
 final class MemberFactory
@@ -49,6 +50,15 @@ final class MemberFactory
      * @return Member
      */
     public static function populateFromExternalProfile(Member $member, int $user_external_id, array $payload):Member{
+        Log::debug
+        (
+            sprintf
+            (
+                "MemberFactory::populateFromExternalProfile user_external_id %s payload %s",
+                $user_external_id,
+                json_encode($payload)
+            )
+        );
 
         $member->setActive(boolval($payload['active']));
         $member->setEmailVerified(boolval($payload['email_verified']));

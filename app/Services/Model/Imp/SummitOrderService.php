@@ -3604,15 +3604,22 @@ final class SummitOrderService
             foreach ($orders->getItems() as $order) {
                 if (!$order instanceof SummitOrder) continue;
                 Log::debug(sprintf("SummitOrderService::processSummitOrderReminders - summit %s order %s", $summit->getId(), $order->getId()));
+
+                $order_tickets = $order->getTickets();
+
                 try {
-                    $this->processOrderReminder($order);
+                    //specific case check: don't send order reminder if there is one ticket per order and is the same owner
+                    if ($order_tickets->count() != 1 || $order_tickets->first()->getOwnerEmail() !== $order->getOwnerEmail()) {
+                        $this->processOrderReminder($order);
+                    }
                 } catch (\Exception $ex) {
                     Log::error($ex);
                 }
-                foreach ($order->getTickets() as $ticket) {
+
+                foreach ($order_tickets as $ticket) {
                     try {
                         if (!$ticket->isActive()) {
-                            Log::warning(sprintf("SummitOrderService::processSummitOrderReminders - summit %s order %s skipping ticket %s ( not active)", $summit->getId(), $order->getId(), $ticket->getId()));
+                            Log::warning(sprintf("SummitOrderService::processSummitOrderReminders - summit %s order %s skipping ticket %s (not active)", $summit->getId(), $order->getId(), $ticket->getId()));
                             continue;
                         }
                         $this->processTicketReminder($ticket);

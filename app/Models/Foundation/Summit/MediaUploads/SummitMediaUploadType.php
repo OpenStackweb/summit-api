@@ -235,9 +235,13 @@ class SummitMediaUploadType extends SilverstripeBaseModel
 
     /**
      * @param int $min_uploads_qty
+     * @throws ValidationException
      */
     public function setMinUploadsQty(int $min_uploads_qty): void
     {
+        if($min_uploads_qty < 0)
+            throw new ValidationException("min_uploads_qty should be greater than zero.");
+
         $this->min_uploads_qty = $min_uploads_qty;
     }
 
@@ -253,9 +257,19 @@ class SummitMediaUploadType extends SilverstripeBaseModel
 
     /**
      * @param int $max_uploads_qty
+     * @throws ValidationException
      */
     public function setMaxUploadsQty(int $max_uploads_qty): void
     {
+        if($max_uploads_qty < 0)
+            throw new ValidationException("max_uploads_qty should be greater than zero.");
+
+        if($max_uploads_qty > 0 && $this->min_uploads_qty > 0){
+            // is not infinite, then should be greater or equal to min
+            if($max_uploads_qty < $this->min_uploads_qty){
+                throw new ValidationException("max_uploads_qty should be greater than min_uploads_qty.");
+            }
+        }
         $this->max_uploads_qty = $max_uploads_qty;
     }
 

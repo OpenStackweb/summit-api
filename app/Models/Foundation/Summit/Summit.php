@@ -6103,7 +6103,7 @@ SQL;
      */
     public function setRegistrationAllowedRefundRequestTillDate(?DateTime $registration_allowed_refund_request_till_date): void
     {
-        $this->registration_allowed_refund_request_till_date = $registration_allowed_refund_request_till_date;
+        $this->registration_allowed_refund_request_till_date =  $this->convertDateFromTimeZone2UTC($registration_allowed_refund_request_till_date);
     }
 
     public function clearRegistrationAllowedRefundRequestTillDate():void{

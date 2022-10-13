@@ -29,6 +29,11 @@ class SummitRegistrationInvitationCSVSerializer extends SilverStripeSerializer
         'Sent' => 'is_sent:jon_boolean',
     ];
 
+    protected static $allowed_relations = [
+        'allowed_ticket_types',
+        'tags',
+    ];
+
     /**
      * @param null $expand
      * @param array $fields
@@ -44,13 +49,22 @@ class SummitRegistrationInvitationCSVSerializer extends SilverStripeSerializer
         if (!count($relations)) $relations = $this->getAllowedRelations();
         $values  = parent::serialize($expand, $fields, $relations, $params);
 
-        $allowed_ticket_types = [];
-        foreach ($invitation->getTicketTypes() as $ticket_type){
-            $allowed_ticket_types[] = $ticket_type->getId();
+        if(in_array('allowed_ticket_types', $relations) && !isset($values['allowed_ticket_types'])){
+            $allowed_ticket_types = [];
+            foreach ($invitation->getTicketTypes() as $ticket_type){
+                $allowed_ticket_types[] = $ticket_type->getName();
+            }
+            $values['allowed_ticket_types'] = implode('|', $allowed_ticket_types);
         }
-        $values['allowed_ticket_types'] = $allowed_ticket_types;
+
+        if(in_array('tags', $relations) && !isset($values['tags'])){
+            $tags = [];
+            foreach ($invitation->getTags() as $tag){
+                $tags[] = $tag->getTag();
+            }
+            $values['tags'] = implode('|', $tags);
+        }
 
         return $values;
     }
-
 }

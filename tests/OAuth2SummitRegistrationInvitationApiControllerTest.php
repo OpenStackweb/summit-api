@@ -374,4 +374,30 @@ CSV;
         $this->assertNotEmpty($invitations);
         $this->assertResponseStatus(200);
     }
+
+    public function testExportInvitations2CSV(){
+
+        $params = [
+            'id'    => 3109,
+            'filter'=> 'is_accepted==false'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitRegistrationInvitationApiController@getAllBySummitCSV",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $this->assertNotEmpty($content);
+    }
 }

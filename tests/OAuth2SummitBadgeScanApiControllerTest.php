@@ -149,4 +149,31 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTest
         $this->assertTrue(!is_null($scan));
         return $scan;
     }
+
+    public function testExportSummitBadgeScans(){
+
+        $params = [
+            'id'    =>  3109,
+            'columns'  => 'scan_date,attendee_first_name,attendee_last_name,attendee_email,attendee_company',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitBadgeScanApiController@getAllBySummitCSV",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $this->assertNotEmpty($content);
+    }
 }

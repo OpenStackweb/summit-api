@@ -384,7 +384,7 @@ final class SummitTrackService
     {
         return $this->tx_service->transaction(function () use ($summit, $track_id, $file, $max_file_size) {
 
-            $allowed_extensions = ['png', 'jpg', 'jpeg', 'gif'];
+            $allowed_extensions = ['png', 'jpg', 'jpeg', 'gif', 'svg'];
 
             $track = $summit->getPresentationCategory($track_id);
 

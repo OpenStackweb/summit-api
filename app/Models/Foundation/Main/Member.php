@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\libs\Utils\PunnyCodeHelper;
 use App\Models\Foundation\Elections\Candidate;
 use App\Models\Foundation\Elections\Election;
 use App\Models\Foundation\Elections\Nomination;
@@ -590,7 +591,7 @@ class Member extends SilverstripeBaseModel
      */
     public function getSecondEmail()
     {
-        return $this->second_email;
+        return PunnyCodeHelper::decodeEmail($this->second_email);
     }
 
     /**
@@ -598,7 +599,7 @@ class Member extends SilverstripeBaseModel
      */
     public function setSecondEmail($second_email)
     {
-        $this->second_email = $second_email;
+        $this->second_email = PunnyCodeHelper::encodeEmail($second_email);
     }
 
     /**
@@ -606,7 +607,7 @@ class Member extends SilverstripeBaseModel
      */
     public function getThirdEmail()
     {
-        return $this->third_email;
+        return PunnyCodeHelper::decodeEmail($this->third_email);
     }
 
     /**
@@ -614,7 +615,7 @@ class Member extends SilverstripeBaseModel
      */
     public function setThirdEmail($third_email)
     {
-        $this->third_email = $third_email;
+        $this->third_email = PunnyCodeHelper::encodeEmail($third_email);
     }
 
     /**
@@ -622,7 +623,7 @@ class Member extends SilverstripeBaseModel
      */
     public function getEmail()
     {
-        return $this->email;
+        return PunnyCodeHelper::decodeEmail($this->email);
     }
 
     /**
@@ -631,7 +632,7 @@ class Member extends SilverstripeBaseModel
     public function setEmail($email)
     {
         Log::debug(sprintf("Member::setEmail %s (%s)", $email, $this->id));
-        $this->email = $email;
+        $this->email = PunnyCodeHelper::encodeEmail($email);
     }
 
     /**

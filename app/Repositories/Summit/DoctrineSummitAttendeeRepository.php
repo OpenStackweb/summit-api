@@ -176,8 +176,8 @@ final class DoctrineSummitAttendeeRepository
             ],
             'company'               => new DoctrineFilterMapping("e.company_name :operator :value"),
             'email'                => [
-                "m.email :operator :value",
-                "e.email :operator :value"
+                Filter::buildEmailField("m.email"),
+                Filter::buildEmailField("e.email")
             ],
             'external_order_id'    => new DoctrineFilterMapping("t.external_order_id :operator :value"),
             'external_attendee_id' => new DoctrineFilterMapping("t.external_attendee_id :operator :value"),

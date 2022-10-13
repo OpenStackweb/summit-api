@@ -15,6 +15,7 @@
 use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
 use App\Jobs\Emails\RevocationTicketEmail;
 use App\Jobs\Emails\SummitAttendeeTicketEmail;
+use App\libs\Utils\PunnyCodeHelper;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use App\Models\Foundation\Main\ExtraQuestions\ExtraQuestionAnswerHolder;
@@ -501,7 +502,7 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     public function setFirstName(string $first_name): void
     {
-        $this->first_name = $first_name;
+        $this->first_name = TextUtils::trim($first_name);
     }
 
     /**
@@ -521,7 +522,7 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     public function setSurname(string $surname): void
     {
-        $this->surname = $surname;
+        $this->surname = TextUtils::trim($surname);
     }
 
     /**
@@ -532,7 +533,7 @@ class SummitAttendee extends SilverstripeBaseModel
         if ($this->hasMember()) {
             return $this->member->getEmail();
         }
-        return $this->email;
+        return PunnyCodeHelper::decodeEmail($this->email);
     }
 
     /**
@@ -563,7 +564,7 @@ class SummitAttendee extends SilverstripeBaseModel
      */
     public function setEmail(string $email): void
     {
-        $this->email = strtolower(TextUtils::trim($email));
+        $this->email = PunnyCodeHelper::encodeEmail($email);
     }
 
     /**

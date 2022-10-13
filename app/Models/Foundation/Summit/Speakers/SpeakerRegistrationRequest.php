@@ -11,12 +11,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\libs\Utils\PunnyCodeHelper;
 use models\main\Member;
 use models\utils\RandomGenerator;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
-use Doctrine\Common\Collections\ArrayCollection;
-use phpDocumentor\Reflection\Types\Parent_;
 
 /**
  * Class SpeakerRegistrationRequest
@@ -75,7 +75,7 @@ class SpeakerRegistrationRequest extends SilverstripeBaseModel
      */
     public function getEmail()
     {
-        return $this->email;
+        return PunnyCodeHelper::decodeEmail($this->email);
     }
 
     /**
@@ -83,7 +83,7 @@ class SpeakerRegistrationRequest extends SilverstripeBaseModel
      */
     public function setEmail($email)
     {
-        $this->email = $email;
+        $this->email = PunnyCodeHelper::encodeEmail($email);
     }
 
     /**

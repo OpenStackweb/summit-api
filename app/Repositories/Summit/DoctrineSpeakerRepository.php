@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\libs\Utils\PunnyCodeHelper;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Illuminate\Support\Facades\Log;
@@ -109,10 +110,12 @@ final class DoctrineSpeakerRepository
                 "( LOWER(m.first_name) :operator LOWER(:value) )".
                 "OR ( LOWER(e.first_name) :operator LOWER(:value) )"
             ),
-            'email' => new DoctrineFilterMapping(
-                "( LOWER(m.email) :operator LOWER(:value) )".
-                "OR ( LOWER(rr.email) :operator LOWER(:value) )"
-            ),
+            'email' => [
+                Filter::buildEmailField('m.email'),
+                Filter::buildEmailField('m.second_email'),
+                Filter::buildEmailField('m.third_email'),
+                Filter::buildEmailField('rr.email'),
+            ],
             'id' => 'e.id',
             'member_id' => new DoctrineFilterMapping(
                 "( m.id :operator :value )"
@@ -615,7 +618,7 @@ SQL,
                 'full_name' => 'FullName',
                 'first_name' => 'FirstName',
                 'last_name' => 'LastName',
-                'email' => 'Email',
+                'email' => Filter::buildEmailField('Email'),
                 'id' => 'ID',
                 'featured' => 'Featured'
             ]);
@@ -893,7 +896,11 @@ SQL;
             $where_conditions = $filter->toRawSQL([
                 'first_name' => 'FirstName',
                 'last_name' => 'LastName',
-                'email' => 'Email',
+                'email' => [
+                    Filter::buildEmailField('Email'),
+                    Filter::buildEmailField('Email2'),
+                    Filter::buildEmailField('Email3'),
+                ],
                 'id' => 'ID',
                 'full_name' => "FullName",
                 'member_id' => "MemberID",
@@ -925,7 +932,9 @@ FROM (
            IFNULL(S.FirstName, M.FirstName) AS FirstName,
            IFNULL(S.LastName, M.Surname) AS LastName,
            CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-           IFNULL(M.Email,R.Email) AS Email
+           IFNULL(M.Email,R.Email) AS Email,
+           M.SecondEmail AS Email2,
+           M.ThirdEmail AS Email3
     FROM PresentationSpeaker S
         LEFT JOIN Member M ON M.ID = S.MemberID
         LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
@@ -966,6 +975,8 @@ FROM (
     IFNULL(S.FirstName, M.FirstName) AS FirstName,
 	IFNULL(S.LastName, M.Surname) AS LastName,
     IFNULL(M.Email,R.Email) AS Email,
+	M.SecondEmail AS Email2,
+    M.ThirdEmail AS Email3,
     CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
     S.PhotoID,
     S.BigPhotoID,
@@ -1044,6 +1055,8 @@ SQL;
      */
     public function getByEmail(string $email): ?PresentationSpeaker
     {
+        $email = PunnyCodeHelper::encodeEmail($email);
+
         return $this->getEntityManager()
             ->createQueryBuilder()
             ->select("s")
@@ -1142,7 +1155,7 @@ SQL;
                 'full_name' => 'FullName',
                 'first_name' => 'FirstName',
                 'last_name' => 'LastName',
-                'email' => 'Email',
+                'email' =>  Filter::buildEmailField('Email'),
                 'id' => 'ID',
                 'member_id' => "MemberID",
                 'member_user_external_id' => "MemberUserExternalID",

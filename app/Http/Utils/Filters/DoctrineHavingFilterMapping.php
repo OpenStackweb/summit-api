@@ -46,17 +46,17 @@ class DoctrineHavingFilterMapping extends DoctrineFilterMapping
      * @param FilterElement $filter
      * @return QueryBuilder
      */
-    public function apply(QueryBuilder $query, FilterElement $filter)
+    public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder
     {
         $param_count = $query->getParameters()->count();
-        $where       = $this->where;
-        $has_param   = false;
+        $where = $this->where;
+        $has_param = false;
 
         $value = $filter->getValue();
 
-        if(trim($value) == '' || is_null($value) ) return $query;
+        if (trim($value) == '' || is_null($value)) return $query;
 
-        if(is_array($value) && count($value) == 0) return $query;
+        if (is_array($value) && count($value) == 0) return $query;
 
         if (!empty($where)) {
             if (strstr($where, ":value")) {

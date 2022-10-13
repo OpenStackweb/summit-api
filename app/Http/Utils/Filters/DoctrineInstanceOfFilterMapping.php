@@ -11,13 +11,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Query\Expr\Join;
+
+use App\Http\Utils\Filters\IQueryApplyable;
 use Doctrine\ORM\QueryBuilder;
+
 /**
  * Class DoctrineInstanceOfFilterMapping
  * @package utils
  */
-final class DoctrineInstanceOfFilterMapping extends FilterMapping
+final class DoctrineInstanceOfFilterMapping extends FilterMapping implements IQueryApplyable
 {
 
     private $class_names = [];
@@ -39,16 +41,19 @@ final class DoctrineInstanceOfFilterMapping extends FilterMapping
 
     const InstanceOfDoctrine = 'INSTANCE OF';
 
-    private function translateClassName($value){
-        if(isset($this->class_names[$value])) return $this->class_names[$value];
+    private function translateClassName($value)
+    {
+        if (isset($this->class_names[$value])) return $this->class_names[$value];
         return $value;
     }
+
     /**
      * @param QueryBuilder $query
      * @param FilterElement $filter
      * @return QueryBuilder
      */
-    public function apply(QueryBuilder $query, FilterElement $filter){
+    public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder
+    {
         $where = str_replace(":class_name", $this->translateClassName($filter->getValue()), $this->where);
         return $query->andWhere($where);
     }
@@ -58,7 +63,8 @@ final class DoctrineInstanceOfFilterMapping extends FilterMapping
      * @param FilterElement $filter
      * @return string
      */
-    public function applyOr(QueryBuilder $query, FilterElement $filter){
+    public function applyOr(QueryBuilder $query, FilterElement $filter): string
+    {
         $where = str_replace(":class_name", $this->translateClassName($filter->getValue()), $this->where);
         return $where;
     }

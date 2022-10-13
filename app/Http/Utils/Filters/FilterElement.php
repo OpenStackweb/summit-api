@@ -63,6 +63,10 @@ class FilterElement extends AbstractFilterElement
         return $this->field;
     }
 
+    public function getRawValue(){
+        return $this->value;
+    }
+
     /**
      * @return mixed
      */
@@ -78,7 +82,7 @@ class FilterElement extends AbstractFilterElement
                     }
                     return $res;
                 }
-                return  empty($this->value) ? '' : "%".$this->value."%";
+                return empty($this->value) ? '' : "%".$this->value."%";
                 break;
             case 'start_like':
                 if(is_array($this->value)){

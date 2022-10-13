@@ -22,6 +22,7 @@ use App\Events\PresentationSpeakerUpdated;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use libs\utils\TextUtils;
 use models\main\File;
 use models\main\Member;
 use models\utils\PreRemoveEventArgs;
@@ -245,41 +246,49 @@ class PresentationSpeaker extends SilverstripeBaseModel
     private $announcement_summit_emails;
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getFirstName()
+    public function getFirstName():?string
     {
-        return $this->first_name;
+        $res = $this->first_name;
+        if(empty($res) && $this->hasMember()){
+            $res = $this->member->getFirstName();
+        }
+        return $res;
     }
 
     /**
      * @param string $first_name
      */
-    public function setFirstName($first_name)
+    public function setFirstName(string $first_name):void
     {
-        $this->first_name = $first_name;
+        $this->first_name = TextUtils::trim($first_name);
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getLastName()
+    public function getLastName():?string
     {
-        return $this->last_name;
+        $res = $this->last_name;
+        if(empty($res) && $this->hasMember()){
+            $res = $this->member->getLastName();
+        }
+        return $res;
     }
 
     /**
      * @param string $last_name
      */
-    public function setLastName($last_name)
+    public function setLastName(string $last_name):void
     {
-        $this->last_name = $last_name;
+        $this->last_name = TextUtils::trim($last_name);
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getTitle()
+    public function getTitle():?string
     {
         return html_entity_decode($this->title);
     }
@@ -287,15 +296,15 @@ class PresentationSpeaker extends SilverstripeBaseModel
     /**
      * @param string $title
      */
-    public function setTitle($title)
+    public function setTitle(string $title):void
     {
-        $this->title = $title;
+        $this->title = TextUtils::trim($title);
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getBio()
+    public function getBio():?string
     {
         return $this->bio;
     }
@@ -303,15 +312,15 @@ class PresentationSpeaker extends SilverstripeBaseModel
     /**
      * @param string $bio
      */
-    public function setBio($bio)
+    public function setBio(string $bio):void
     {
         $this->bio = $bio;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getIrcHandle()
+    public function getIrcHandle():?string
     {
         return $this->irc_handle;
     }
@@ -319,9 +328,9 @@ class PresentationSpeaker extends SilverstripeBaseModel
     /**
      * @param string $irc_handle
      */
-    public function setIrcHandle($irc_handle)
+    public function setIrcHandle(string $irc_handle):void
     {
-        $this->irc_handle = $irc_handle;
+        $this->irc_handle = TextUtils::trim($irc_handle);
     }
 
     /**
@@ -341,7 +350,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getTwitterName()
+    public function getTwitterName():?string
     {
         return self::parseTwitterUsername($this->twitter_name);
     }
@@ -469,7 +478,6 @@ class PresentationSpeaker extends SilverstripeBaseModel
      */
     public function presentations($summit_id, $published_ones = true)
     {
-
         return $this->presentations
             ->filter(function($p) use($published_ones, $summit_id){
                 $res = $published_ones? $p->isPublished(): true;

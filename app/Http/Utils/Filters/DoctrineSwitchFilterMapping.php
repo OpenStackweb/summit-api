@@ -11,14 +11,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\ORM\Query\Expr\Join;
+
+use App\Http\Utils\Filters\IQueryApplyable;
 use Doctrine\ORM\QueryBuilder;
 
 /**
  * Class DoctrineSwitchFilterMapping
  * @package utils
  */
-class DoctrineSwitchFilterMapping extends FilterMapping
+class DoctrineSwitchFilterMapping extends FilterMapping implements IQueryApplyable
 {
     /**
      * @var DoctrineCaseFilterMapping[]
@@ -40,15 +41,26 @@ class DoctrineSwitchFilterMapping extends FilterMapping
         throw new \Exception;
     }
 
+
     /**
      * @param QueryBuilder $query
      * @param FilterElement $filter
      * @return QueryBuilder
      */
-    public function apply(QueryBuilder $query, FilterElement $filter){
-        if(!isset($this->case_statements[$filter->getValue()])) return $query;
-        $case_statement = $this->case_statements[$filter->getValue()];
-        return $query->andWhere($case_statement->getCondition());
+    public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder
+    {
+        $value = $filter->getValue();
+        if(!is_array($value)) $value = [$value];
+        $condition = '';
+        foreach ($value as $v) {
+            if (!isset($this->case_statements[$v])) continue;
+            $case_statement = $this->case_statements[$v];
+            if(!empty($condition)) $condition .= ' OR ';
+            $condition .= ' ( '.$case_statement->getCondition().' ) ';
+        }
+        if(!empty($condition))
+            $condition = ' ( '.$condition.' ) ';
+        return $query->andWhere($condition);
     }
 
     /**
@@ -56,9 +68,17 @@ class DoctrineSwitchFilterMapping extends FilterMapping
      * @param FilterElement $filter
      * @return string
      */
-    public function applyOr(QueryBuilder $query, FilterElement $filter){
-        if(!isset($this->case_statements[$filter->getValue()])) return $query;
-        $case_statement = $this->case_statements[$filter->getValue()];
-        return $case_statement->getCondition();
+    public function applyOr(QueryBuilder $query, FilterElement $filter): string
+    {
+        $value = $filter->getValue();
+        if(!is_array($value)) $value = [$value];
+        $condition = '';
+        foreach ($value as $v) {
+            if (!isset($this->case_statements[$filter->getValue()])) continue;
+            $case_statement = $this->case_statements[$v];
+            if(!empty($condition)) $condition .= ' OR ';
+            $condition .= ' ( '.$case_statement->getCondition().' ) ';
+        }
+        return $condition;
     }
 }

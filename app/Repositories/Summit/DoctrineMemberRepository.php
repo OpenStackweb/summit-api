@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\libs\Utils\PunnyCodeHelper;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use models\main\IMemberRepository;
 use models\main\Member;
@@ -36,6 +38,7 @@ final class DoctrineMemberRepository
      */
     public function getByEmail($email): ?Member
     {
+        $email = PunnyCodeHelper::encodeEmail($email);
         return $this->getEntityManager()
             ->createQueryBuilder()
             ->select("e")
@@ -62,7 +65,6 @@ final class DoctrineMemberRepository
                 ->andWhere("m.first_name is not null")
                 ->andWhere("m.last_name is not null");
 
-
         if($filter->hasFilter("summit_id") || $filter->hasFilter("schedule_event_id")){
             $query = $query
                 ->leftJoin("m.schedule","sch")
@@ -83,7 +85,11 @@ final class DoctrineMemberRepository
                 'schedule_event_id' => 'evt.id',
                 'summit_id'         => 's.id',
                 'full_name'         => new DoctrineFilterMapping("concat(m.first_name, ' ', m.last_name) :operator :value"),
-                'email'             => ['m.email:json_string', 'm.second_email:json_string', 'm.third_email:json_string'],
+                'email'             => [
+                    Filter::buildEmailField('m.email'),
+                    Filter::buildEmailField('m.second_email'),
+                    Filter::buildEmailField('m.third_email')
+                ],
                 'group_slug'        => new DoctrineJoinFilterMapping
                 (
                     'm.groups',
@@ -192,7 +198,8 @@ final class DoctrineMemberRepository
      */
     public function getByEmailExclusiveLock($email): ?Member
     {
-        $query  =   $this->getEntityManager()
+        $email = PunnyCodeHelper::encodeEmail($email);
+        $query = $this->getEntityManager()
             ->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")

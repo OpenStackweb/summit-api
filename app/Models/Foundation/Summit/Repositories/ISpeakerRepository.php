@@ -68,7 +68,6 @@ interface ISpeakerRepository extends IBaseRepository
      */
     public function getByEmail(string $email):?PresentationSpeaker;
 
-
     /**
      * @param int $speaker_id
      * @param int $summit_id

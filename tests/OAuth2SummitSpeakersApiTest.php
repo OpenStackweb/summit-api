@@ -674,7 +674,9 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
     {
         $params = [
             'filter' => [
-                'member_user_external_id==' . self::$member->getUserExternalId()
+                'full_name=@smarcet,email=@hei@やる.ca',
+                'first_name=@hei@やる.ca',
+                'last_name=@hei@やる.ca',
             ]
         ];
 

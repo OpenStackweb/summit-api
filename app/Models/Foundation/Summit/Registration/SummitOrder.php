@@ -13,10 +13,12 @@
  **/
 use App\Events\PaymentSummitRegistrationOrderConfirmed;
 use App\Events\SummitOrderCanceled;
+use App\libs\Utils\PunnyCodeHelper;
 use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
+use libs\utils\TextUtils;
 use models\exceptions\ValidationException;
 use models\main\Company;
 use models\main\Member;
@@ -417,7 +419,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function setOwnerFirstName(string $owner_first_name): void
     {
-        $this->owner_first_name = $owner_first_name;
+        $this->owner_first_name = TextUtils::trim($owner_first_name);
     }
 
     /**
@@ -439,7 +441,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function setOwnerSurname(string $owner_surname): void
     {
-        $this->owner_surname = $owner_surname;
+        $this->owner_surname = TextUtils::trim($owner_surname);
     }
 
     /**
@@ -450,7 +452,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         if(!is_null($this->owner)){
             return $this->owner->getEmail();
         }
-        return $this->owner_email;
+        return PunnyCodeHelper::decodeEmail($this->owner_email);
     }
 
     public function clearOwner():void{
@@ -462,7 +464,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function setOwnerEmail(string $owner_email): void
     {
-        $this->owner_email = strtolower($owner_email);
+        $this->owner_email = PunnyCodeHelper::encodeEmail($owner_email);
     }
 
     /**

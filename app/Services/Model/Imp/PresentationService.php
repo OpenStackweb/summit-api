@@ -12,14 +12,11 @@
  * limitations under the License.
  **/
 
-use App\Events\PresentationMaterialDeleted;
-use App\Events\PresentationMaterialUpdated;
 use App\Facades\ResourceServerContext;
 use App\Http\Utils\FileSizeUtil;
 use App\Http\Utils\FileUploadInfo;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
-use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
 use App\Models\Foundation\Summit\Factories\PresentationFactory;
@@ -34,7 +31,6 @@ use App\Services\Filesystem\FileUploadStrategyFactory;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IFolderService;
 use Illuminate\Http\Request as LaravelRequest;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -110,14 +106,14 @@ final class PresentationService
      */
     public function __construct
     (
-        ISummitEventRepository $presentation_repository,
-        ISpeakerRepository $speaker_repository,
-        ITagRepository $tag_repository,
-        IFolderService $folder_service,
-        IFileUploader $file_uploader,
-        IFolderRepository $folder_repository,
+        ISummitEventRepository                     $presentation_repository,
+        ISpeakerRepository                         $speaker_repository,
+        ITagRepository                             $tag_repository,
+        IFolderService                             $folder_service,
+        IFileUploader                              $file_uploader,
+        IFolderRepository                          $folder_repository,
         IPresentationTrackChairScoreTypeRepository $presentation_track_chair_score_type_repository,
-        ITransactionService $tx_service
+        ITransactionService                        $tx_service
     )
     {
         parent::__construct($tx_service);
@@ -198,7 +194,7 @@ final class PresentationService
             return $video;
 
         });
-        Event::dispatch(new PresentationMaterialUpdated($video));
+
         return $video;
     }
 
@@ -229,7 +225,6 @@ final class PresentationService
 
             $presentation->removeVideo($video);
 
-            Event::dispatch(new PresentationMaterialDeleted($presentation, $video_id, 'PresentationVideo'));
         });
 
     }
@@ -249,7 +244,7 @@ final class PresentationService
 
             $member = ResourceServerContext::getCurrentUser(false);
             $selection_plan_id = $data['selection_plan_id'] ?? null;
-            if(is_null($selection_plan_id))
+            if (is_null($selection_plan_id))
                 throw new ValidationException("selection_plan_id is required.");
 
             $current_selection_plan = $summit->getSelectionPlanById(intval($selection_plan_id));
@@ -263,7 +258,7 @@ final class PresentationService
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
 
-            if(!$current_selection_plan->isSubmissionOpen()){
+            if (!$current_selection_plan->isSubmissionOpen()) {
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
 
@@ -408,11 +403,11 @@ final class PresentationService
      * @return Presentation
      * @throws \Exception
      */
-    private function saveOrUpdatePresentation(Summit $summit,
-                                              SelectionPlan $selection_plan,
-                                              Presentation $presentation,
+    private function saveOrUpdatePresentation(Summit              $summit,
+                                              SelectionPlan       $selection_plan,
+                                              Presentation        $presentation,
                                               PresentationSpeaker $current_speaker,
-                                              array $data
+                                              array               $data
     )
     {
         return $this->tx_service->transaction(function () use ($summit, $selection_plan, $presentation, $current_speaker, $data) {
@@ -434,7 +429,7 @@ final class PresentationService
                 );
             }
 
-            if(!$selection_plan->hasEventType($event_type)){
+            if (!$selection_plan->hasEventType($event_type)) {
                 throw new ValidationException
                 (
                     sprintf
@@ -644,10 +639,10 @@ final class PresentationService
     public function addSlideTo
     (
         LaravelRequest $request,
-        $presentation_id,
-        array $slide_data,
-        array $allowed_extensions = [],
-        $max_file_size = 10485760 // bytes
+                       $presentation_id,
+        array          $slide_data,
+        array          $allowed_extensions = [],
+                       $max_file_size = 10485760 // bytes
     )
     {
         $slide = $this->tx_service->transaction(function () use (
@@ -718,11 +713,11 @@ final class PresentationService
     public function updateSlide
     (
         LaravelRequest $request,
-        $presentation_id,
-        $slide_id,
-        array $slide_data,
-        array $allowed_extensions = [],
-        $max_file_size = 10485760 // bytes
+                       $presentation_id,
+                       $slide_id,
+        array          $slide_data,
+        array          $allowed_extensions = [],
+                       $max_file_size = 10485760 // bytes
     )
     {
 
@@ -804,7 +799,6 @@ final class PresentationService
 
         });
 
-        Event::dispatch(new PresentationMaterialUpdated($slide));
         return $slide;
     }
 
@@ -836,7 +830,6 @@ final class PresentationService
 
             $presentation->removeSlide($slide);
 
-            Event::dispatch(new PresentationMaterialDeleted($presentation, $slide_id, 'PresentationSlide'));
         });
     }
 
@@ -905,8 +898,6 @@ final class PresentationService
             return $link;
         });
 
-        Event::dispatch(new PresentationMaterialUpdated($link));
-
         return $link;
     }
 
@@ -937,7 +928,6 @@ final class PresentationService
 
             $presentation->removeLink($link);
 
-            Event::dispatch(new PresentationMaterialDeleted($presentation, $link_id, 'PresentationLink'));
         });
     }
 
@@ -954,9 +944,9 @@ final class PresentationService
     public function addMediaUploadTo
     (
         LaravelRequest $request,
-        Summit $summit,
-        int $presentation_id,
-        array $payload
+        Summit         $summit,
+        int            $presentation_id,
+        array          $payload
     ): PresentationMediaUpload
     {
         return $this->tx_service->transaction(function () use (
@@ -1026,7 +1016,7 @@ final class PresentationService
 
             $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
             if (!is_null($strategy)) {
-                $options = $mediaUploadType->isUseTemporaryLinksOnPublicStorage() ? []: 'public';
+                $options = $mediaUploadType->isUseTemporaryLinksOnPublicStorage() ? [] : 'public';
                 $strategy->save
                 (
                     $fileInfo->getFile(),
@@ -1042,7 +1032,7 @@ final class PresentationService
             if (!$presentation->isCompleted()) {
                 Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s is not complete", $presentation_id));
                 $type = $presentation->getType();
-                if($type instanceof PresentationType) {
+                if ($type instanceof PresentationType) {
                     $summitMandatoryMediaUploadTypes = $type->getMandatoryAllowedMediaUploadTypes();
                     $summitMediaUploadCount = count($summitMandatoryMediaUploadTypes);
 
@@ -1090,10 +1080,10 @@ final class PresentationService
     public function updateMediaUploadFrom
     (
         LaravelRequest $request,
-        Summit $summit,
-        int $presentation_id,
-        int $media_upload_id,
-        array $payload
+        Summit         $summit,
+        int            $presentation_id,
+        int            $media_upload_id,
+        array          $payload
     ): PresentationMediaUpload
     {
         return $this->tx_service->transaction(function () use (
@@ -1145,7 +1135,7 @@ final class PresentationService
 
                 $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
                 if (!is_null($strategy)) {
-                    $options = $mediaUploadType->isUseTemporaryLinksOnPublicStorage() ? []: 'public';
+                    $options = $mediaUploadType->isUseTemporaryLinksOnPublicStorage() ? [] : 'public';
                     $strategy->save
                     (
                         $fileInfo->getFile(),
@@ -1213,33 +1203,33 @@ final class PresentationService
      */
     public function castAttendeeVote(Summit $summit, Member $member, int $presentation_id): PresentationAttendeeVote
     {
-        return $this->tx_service->transaction(function () use($summit, $member, $presentation_id){
+        return $this->tx_service->transaction(function () use ($summit, $member, $presentation_id) {
 
             Log::debug(sprintf("PresentationService::castAttendeeVote summit %s member %s presentation %s", $summit->getId(), $member->getId(), $presentation_id));
             $presentation = $this->presentation_repository->getById($presentation_id);
-            if(is_null($presentation) || !$presentation instanceof Presentation || !$presentation->hasAccess($member))
+            if (is_null($presentation) || !$presentation instanceof Presentation || !$presentation->hasAccess($member))
                 throw new EntityNotFoundException("Presentation not found.");
 
-            if($presentation->getSummitId() !== $summit->getId())
+            if ($presentation->getSummitId() !== $summit->getId())
                 throw new EntityNotFoundException("Presentation not found.");
 
             Log::debug("PresentationService::castAttendeeVote get attendee by member");
             $attendee = $summit->getAttendeeByMember($member);
 
-            if(is_null($attendee))
+            if (is_null($attendee))
                 throw new ValidationException(sprintf("Current Member is not an attendee at Summit %s.", $summit->getId()));
 
             $currentTrack = $presentation->getCategory();
 
-            foreach($currentTrack->getGroups() as $currentTrackGroup){
-                Log::debug(sprintf( "PresentationService::castAttendeeVote processing track group %s", $currentTrackGroup->getId()));
+            foreach ($currentTrack->getGroups() as $currentTrackGroup) {
+                Log::debug(sprintf("PresentationService::castAttendeeVote processing track group %s", $currentTrackGroup->getId()));
                 // check voting period
-                if(!$currentTrackGroup->isAttendeeVotingPeriodOpen())
-                    throw new ValidationException(sprintf( "Attendee Voting Period for track group %s is closed.", $currentTrackGroup->getName()));
+                if (!$currentTrackGroup->isAttendeeVotingPeriodOpen())
+                    throw new ValidationException(sprintf("Attendee Voting Period for track group %s is closed.", $currentTrackGroup->getName()));
 
                 // check voting count
 
-                if(!$currentTrackGroup->canEmitAttendeeVote($attendee)){
+                if (!$currentTrackGroup->canEmitAttendeeVote($attendee)) {
                     throw new ValidationException(sprintf("You Reached the Max. allowed votes for Track Group %s [%s]",
                         $currentTrackGroup->getName(),
                         $currentTrackGroup->getMaxAttendeeVotes()));
@@ -1259,17 +1249,17 @@ final class PresentationService
      */
     public function unCastAttendeeVote(Summit $summit, Member $member, int $presentation_id): void
     {
-        $this->tx_service->transaction(function () use($summit, $member, $presentation_id){
+        $this->tx_service->transaction(function () use ($summit, $member, $presentation_id) {
             $presentation = $this->presentation_repository->getById($presentation_id);
-            if(is_null($presentation) || !$presentation instanceof Presentation)
+            if (is_null($presentation) || !$presentation instanceof Presentation)
                 throw new EntityNotFoundException("Presentation not found.");
 
-            if($presentation->getSummitId() !== $summit->getId())
+            if ($presentation->getSummitId() !== $summit->getId())
                 throw new EntityNotFoundException("Presentation not found.");
 
             $attendee = $summit->getAttendeeByMember($member);
 
-            if(is_null($attendee))
+            if (is_null($attendee))
                 throw new ValidationException(sprintf("Current Member is not an attendee at Summit %s.", $summit->getId()));
 
             $presentation->unCastAttendeeVote($attendee);
@@ -1283,37 +1273,37 @@ final class PresentationService
     (
         Summit $summit,
         Member $member,
-        int $selection_plan_id,
-        int $presentation_id,
-        int $score_type_id
-    ):PresentationTrackChairScore
+        int    $selection_plan_id,
+        int    $presentation_id,
+        int    $score_type_id
+    ): PresentationTrackChairScore
     {
-        return $this->tx_service->transaction(function () use($summit, $member, $selection_plan_id, $presentation_id, $score_type_id){
+        return $this->tx_service->transaction(function () use ($summit, $member, $selection_plan_id, $presentation_id, $score_type_id) {
 
             $selectionPlan = $summit->getSelectionPlanById($selection_plan_id);
 
-            if(is_null($selectionPlan))
+            if (is_null($selectionPlan))
                 throw new EntityNotFoundException("Selection Plan not found.");
 
-            if(!$selectionPlan->isSelectionOpen())
+            if (!$selectionPlan->isSelectionOpen())
                 throw new ValidationException(sprintf("Selection Period is over for Selection Plan %s", $selection_plan_id));
 
             $presentation = $this->presentation_repository->getById($presentation_id);
-            if(is_null($presentation) || !$presentation instanceof Presentation)
+            if (is_null($presentation) || !$presentation instanceof Presentation)
                 throw new EntityNotFoundException("Presentation not found.");
 
-            if($presentation->getSummitId() !== $summit->getId())
+            if ($presentation->getSummitId() !== $summit->getId())
                 throw new EntityNotFoundException("Presentation not found.");
 
-            if($presentation->getSelectionPlanId() !== $selection_plan_id)
+            if ($presentation->getSelectionPlanId() !== $selection_plan_id)
                 throw new EntityNotFoundException("Presentation not found.");
 
             $summit_track_chair = $summit->getTrackChairByMember($member);
 
-            if(is_null($summit_track_chair))
+            if (is_null($summit_track_chair))
                 throw new ValidationException(sprintf("Can't find a track chair for current member at Summit %s.", $summit->getId()));
 
-            if(!$summit_track_chair->isCategoryAllowed($presentation->getCategory())){
+            if (!$summit_track_chair->isCategoryAllowed($presentation->getCategory())) {
                 throw new ValidationException
                 (
                     sprintf
@@ -1327,7 +1317,7 @@ final class PresentationService
 
             $score_type = $this->presentation_track_chair_score_type_repository->getById($score_type_id);
 
-            if(is_null($score_type) || !$score_type instanceof PresentationTrackChairScoreType)
+            if (is_null($score_type) || !$score_type instanceof PresentationTrackChairScoreType)
                 throw new EntityNotFoundException("Score type not found.");
 
             //Check if exists a score of the same rating type/presentation for this track chair, if so replace it by this new one
@@ -1336,7 +1326,7 @@ final class PresentationService
             if (!is_null($track_chair_score)) {
 
                 // check if its the same type
-                if($track_chair_score->getType()->getId() === $score_type_id)
+                if ($track_chair_score->getType()->getId() === $score_type_id)
                     return $track_chair_score;
                 // if not delete it
                 $summit_track_chair->removeScore($track_chair_score);
@@ -1359,37 +1349,37 @@ final class PresentationService
     (
         Summit $summit,
         Member $member,
-        int $selection_plan_id,
-        int $presentation_id,
-        int $score_type_id
-    ):void
+        int    $selection_plan_id,
+        int    $presentation_id,
+        int    $score_type_id
+    ): void
     {
-        $this->tx_service->transaction(function () use($summit, $member, $selection_plan_id, $presentation_id, $score_type_id){
+        $this->tx_service->transaction(function () use ($summit, $member, $selection_plan_id, $presentation_id, $score_type_id) {
 
             $selectionPlan = $summit->getSelectionPlanById($selection_plan_id);
 
-            if(is_null($selectionPlan))
+            if (is_null($selectionPlan))
                 throw new EntityNotFoundException("Selection Plan not found.");
 
-            if(!$selectionPlan->isSelectionOpen())
+            if (!$selectionPlan->isSelectionOpen())
                 throw new ValidationException(sprintf("Selection Period is over for Selection Plan %s", $selection_plan_id));
 
             $presentation = $this->presentation_repository->getById($presentation_id);
-            if(is_null($presentation) || !$presentation instanceof Presentation)
+            if (is_null($presentation) || !$presentation instanceof Presentation)
                 throw new EntityNotFoundException("Presentation not found.");
 
-            if($presentation->getSummitId() !== $summit->getId())
+            if ($presentation->getSummitId() !== $summit->getId())
                 throw new EntityNotFoundException("Presentation not found.");
 
-            if($presentation->getSelectionPlanId() !== $selection_plan_id)
+            if ($presentation->getSelectionPlanId() !== $selection_plan_id)
                 throw new EntityNotFoundException("Presentation not found.");
 
             $summit_track_chair = $summit->getTrackChairByMember($member);
 
-            if(is_null($summit_track_chair))
+            if (is_null($summit_track_chair))
                 throw new ValidationException(sprintf("Can't find a track chair for current member at Summit %s.", $summit->getId()));
 
-            if(!$summit_track_chair->isCategoryAllowed($presentation->getCategory())){
+            if (!$summit_track_chair->isCategoryAllowed($presentation->getCategory())) {
                 throw new ValidationException
                 (
                     sprintf
@@ -1403,7 +1393,7 @@ final class PresentationService
 
             $score_type = $this->presentation_track_chair_score_type_repository->getById($score_type_id);
 
-            if(is_null($score_type) || !$score_type instanceof PresentationTrackChairScoreType)
+            if (is_null($score_type) || !$score_type instanceof PresentationTrackChairScoreType)
                 throw new EntityNotFoundException("Score type not found.");
 
             //Check if exists a score of the same rating type/presentation for this track chair, if so replace it by this new one

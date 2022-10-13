@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\OrderableChilds;
+use App\Models\Foundation\Summit\ScheduleEntity;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -21,6 +22,7 @@ use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
  * @ORM\Table(name="SummitVenueFloor")
+ * @ORM\HasLifecycleCallbacks
  * Class Summit
  * @package models\summit
  */
@@ -238,5 +240,7 @@ class SummitVenueFloor extends SilverstripeBaseModel
     public function recalculateRoomsOrder(SummitVenueRoom $room, $new_order){
         self::recalculateOrderForSelectable($this->rooms, $room, $new_order);
     }
+
+    use ScheduleEntity;
 
 }

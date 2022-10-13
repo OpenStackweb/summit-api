@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 
-use App\EntityPersisters\EntityEventPersister;
 use App\Events\MemberUpdated;
 use App\Events\NewMember;
 use App\Events\OrderDeleted;
@@ -22,53 +21,31 @@ use App\Events\RSVPCreated;
 use App\Events\RSVPUpdated;
 use App\Events\SummitOrderCanceled;
 use App\Events\TicketUpdated;
-use App\Factories\EntityEvents\FloorActionEntityEventFactory;
-use App\Factories\EntityEvents\LocationActionEntityEventFactory;
-use App\Factories\EntityEvents\LocationImageActionEntityEventFactory;
-use App\Factories\EntityEvents\MyFavoritesAddEntityEventFactory;
-use App\Factories\EntityEvents\MyFavoritesRemoveEntityEventFactory;
-use App\Factories\EntityEvents\MyScheduleAddEntityEventFactory;
-use App\Factories\EntityEvents\MyScheduleRemoveEntityEventFactory;
-use App\Factories\EntityEvents\PresentationMaterialCreatedEntityEventFactory;
-use App\Factories\EntityEvents\PresentationMaterialDeletedEntityEventFactory;
-use App\Factories\EntityEvents\PresentationMaterialUpdatedEntityEventFactory;
-use App\Factories\EntityEvents\PresentationSpeakerCreatedEntityEventFactory;
-use App\Factories\EntityEvents\PresentationSpeakerDeletedEntityEventFactory;
-use App\Factories\EntityEvents\PresentationSpeakerUpdatedEntityEventFactory;
-use App\Factories\EntityEvents\SummitActionEntityEventFactory;
-use App\Factories\EntityEvents\SummitEventCreatedEntityEventFactory;
-use App\Factories\EntityEvents\SummitEventDeletedEntityEventFactory;
-use App\Factories\EntityEvents\SummitEventTypeActionEntityEventFactory;
-use App\Factories\EntityEvents\SummitEventUpdatedEntityEventFactory;
-use App\Factories\EntityEvents\SummitTicketTypeActionEntityEventFactory;
-use App\Factories\EntityEvents\TrackActionEntityEventFactory;
-use App\Factories\EntityEvents\TrackGroupActionActionEntityEventFactory;
 use App\Jobs\CompensatePromoCodes;
 use App\Jobs\CompensateTickets;
-use App\Jobs\MemberAssocSummitOrders;
-use App\Jobs\ProcessSummitOrderPaymentConfirmation;
+use App\Jobs\Emails\BookableRooms\BookableRoomReservationCanceledEmail;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationCreatedEmail;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationPaymentConfirmedEmail;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationRefundAcceptedEmail;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationRefundRequestedAdminEmail;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationRefundRequestedOwnerEmail;
-use App\Jobs\Emails\BookableRooms\BookableRoomReservationCanceledEmail;
 use App\Jobs\Emails\Schedule\RSVPRegularSeatMail;
 use App\Jobs\Emails\Schedule\RSVPWaitListSeatMail;
+use App\Jobs\MemberAssocSummitOrders;
+use App\Jobs\ProcessScheduleEntityLifeCycleEvent;
+use App\Jobs\ProcessSummitOrderPaymentConfirmation;
 use App\Jobs\SynchAllPresentationActions;
-use App\Jobs\SynchPresentationActions;
 use App\Jobs\UpdateIDPMemberInfo;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\RSVP;
 use models\summit\Summit;
 use models\summit\SummitOrder;
 use models\summit\SummitRoomReservation;
-
+use App\Events\ScheduleEntityLifeCycleEvent;
 /**
  * Class EventServiceProvider
  * @package App\Providers
@@ -95,8 +72,20 @@ final class EventServiceProvider extends ServiceProvider
         parent::boot();
 
         Event::listen(\App\Events\MyScheduleAdd::class, function ($event) {
-            EntityEventPersister::persist(MyScheduleAddEntityEventFactory::build($event));
+
         });
+
+        Event::listen(\App\Events\MyFavoritesAdd::class, function ($event) {
+        });
+
+        Event::listen(\App\Events\MyScheduleRemove::class, function ($event) {
+        });
+
+        Event::listen(\App\Events\MyFavoritesRemove::class, function ($event) {
+        });
+
+
+        // bookable rooms events
 
         Event::listen(\Illuminate\Mail\Events\MessageSending::class, function ($event) {
             $devEmail = env('DEV_EMAIL_TO');
@@ -106,217 +95,12 @@ final class EventServiceProvider extends ServiceProvider
             return true;
         });
 
-        Event::listen(\App\Events\MyFavoritesAdd::class, function ($event) {
-            EntityEventPersister::persist(MyFavoritesAddEntityEventFactory::build($event));
-        });
-
-        Event::listen(\App\Events\MyScheduleRemove::class, function ($event) {
-            EntityEventPersister::persist(MyScheduleRemoveEntityEventFactory::build($event));
-        });
-
-        Event::listen(\App\Events\MyFavoritesRemove::class, function ($event) {
-            EntityEventPersister::persist(MyFavoritesRemoveEntityEventFactory::build($event));
-        });
-
-        Event::listen(\App\Events\SummitEventCreated::class, function ($event) {
-            EntityEventPersister::persist(SummitEventCreatedEntityEventFactory::build($event));
-
-            SynchPresentationActions::dispatch($event->getSummitEvent()->getId())->delay(now()->addSecond(5));
-
-        });
-
-        Event::listen(\App\Events\SummitEventUpdated::class, function ($event) {
-            EntityEventPersister::persist(SummitEventUpdatedEntityEventFactory::build($event));
-            //AdminSummitEventActionSyncWorkRequestPersister::persist(SummitEventUpdatedCalendarSyncWorkRequestFactory::build($event));
-        });
-
-        Event::listen(\App\Events\SummitEventDeleted::class, function ($event) {
-            EntityEventPersister::persist(SummitEventDeletedEntityEventFactory::build($event));
-
-            /*$request = SummitEventDeletedCalendarSyncWorkRequestFactory::build($event);
-            if(!is_null($request))
-                AdminSummitEventActionSyncWorkRequestPersister::persist($request);*/
-        });
-
-        Event::listen(\App\Events\PresentationMaterialCreated::class, function ($event) {
-            EntityEventPersister::persist(PresentationMaterialCreatedEntityEventFactory::build($event));
-        });
-
-        Event::listen(\App\Events\PresentationMaterialUpdated::class, function ($event) {
-            EntityEventPersister::persist(PresentationMaterialUpdatedEntityEventFactory::build(($event)));
-        });
-
-        Event::listen(\App\Events\PresentationMaterialDeleted::class, function ($event) {
-            EntityEventPersister::persist(PresentationMaterialDeletedEntityEventFactory::build($event));
-        });
-
-        Event::listen(\App\Events\PresentationSpeakerCreated::class, function ($event) {
-            EntityEventPersister::persist_list(PresentationSpeakerCreatedEntityEventFactory::build($event));
-        });
-
-        Event::listen(\App\Events\PresentationSpeakerUpdated::class, function ($event) {
-            EntityEventPersister::persist_list(PresentationSpeakerUpdatedEntityEventFactory::build($event));
-        });
-
-        Event::listen(\App\Events\PresentationSpeakerDeleted::class, function ($event) {
-            EntityEventPersister::persist_list(PresentationSpeakerDeletedEntityEventFactory::build($event));
-        });
-
-        // event types
-
-        Event::listen(\App\Events\SummitEventTypeInserted::class, function ($event) {
-            EntityEventPersister::persist(SummitEventTypeActionEntityEventFactory::build($event, 'INSERT'));
-        });
-
-        Event::listen(\App\Events\SummitEventTypeUpdated::class, function ($event) {
-            EntityEventPersister::persist(SummitEventTypeActionEntityEventFactory::build($event, 'UPDATE'));
-        });
-
-        Event::listen(\App\Events\SummitEventTypeDeleted::class, function ($event) {
-            EntityEventPersister::persist(SummitEventTypeActionEntityEventFactory::build($event, 'DELETE'));
-        });
-
-        // tracks
-
-        Event::listen(\App\Events\TrackInserted::class, function ($event) {
-            EntityEventPersister::persist(TrackActionEntityEventFactory::build($event, 'INSERT'));
-        });
-
-        Event::listen(\App\Events\TrackUpdated::class, function ($event) {
-            EntityEventPersister::persist(TrackActionEntityEventFactory::build($event, 'UPDATE'));
-        });
-
-        Event::listen(\App\Events\TrackDeleted::class, function ($event) {
-            EntityEventPersister::persist(TrackActionEntityEventFactory::build($event, 'DELETE'));
-        });
-
-        // locations events
-
-
-        Event::listen(\App\Events\SummitVenueRoomInserted::class, function ($event) {
-            EntityEventPersister::persist(LocationActionEntityEventFactory::build($event, 'INSERT'));
-        });
-
-        Event::listen(\App\Events\SummitVenueRoomUpdated::class, function ($event) {
-            EntityEventPersister::persist(LocationActionEntityEventFactory::build($event, 'UPDATE'));
-            /*$published_events = $event->getRelatedEventIds();
-            if(count($published_events) > 0){
-                AdminSummitLocationActionSyncWorkRequestPersister::persist
-                (
-                    AdminSummitLocationActionSyncWorkRequestFactory::build($event, 'UPDATE')
-                );
-            }*/
-        });
-
-        Event::listen(\App\Events\SummitVenueRoomDeleted::class, function ($event) {
-            EntityEventPersister::persist(LocationActionEntityEventFactory::build($event, 'DELETE'));
-            /*$published_events = $event->getRelatedEventIds();
-            if(count($published_events) > 0){
-                AdminSummitLocationActionSyncWorkRequestPersister::persist
-                (
-                    AdminSummitLocationActionSyncWorkRequestFactory::build($event, 'REMOVE')
-                );
-            }*/
-        });
-
-        Event::listen(\App\Events\LocationInserted::class, function ($event) {
-            EntityEventPersister::persist(LocationActionEntityEventFactory::build($event, 'INSERT'));
-        });
-
-        Event::listen(\App\Events\LocationUpdated::class, function ($event) {
-            EntityEventPersister::persist(LocationActionEntityEventFactory::build($event, 'UPDATE'));
-            /*$published_events = $event->getRelatedEventIds();
-            if(count($published_events) > 0){
-                AdminSummitLocationActionSyncWorkRequestPersister::persist
-                (
-                    AdminSummitLocationActionSyncWorkRequestFactory::build($event, 'UPDATE')
-                );
-            }*/
-        });
-
-        Event::listen(\App\Events\LocationDeleted::class, function ($event) {
-            EntityEventPersister::persist(LocationActionEntityEventFactory::build($event, 'DELETE'));
-            /*$published_events = $event->getRelatedEventIds();
-            if(count($published_events) > 0){
-                AdminSummitLocationActionSyncWorkRequestPersister::persist
-                (
-                    AdminSummitLocationActionSyncWorkRequestFactory::build($event, 'REMOVE')
-                );
-            }*/
-        });
-
-        Event::listen(\App\Events\FloorInserted::class, function ($event) {
-            EntityEventPersister::persist(FloorActionEntityEventFactory::build($event, 'INSERT'));
-        });
-
-        Event::listen(\App\Events\FloorUpdated::class, function ($event) {
-            EntityEventPersister::persist(FloorActionEntityEventFactory::build($event, 'UPDATE'));
-        });
-
-        Event::listen(\App\Events\FloorDeleted::class, function ($event) {
-            EntityEventPersister::persist(FloorActionEntityEventFactory::build($event, 'DELETE'));
-        });
-
-        // location images
-
-        Event::listen(\App\Events\LocationImageInserted::class, function ($event) {
-            EntityEventPersister::persist(LocationImageActionEntityEventFactory::build($event, 'INSERT'));
-        });
-
-        Event::listen(\App\Events\LocationImageUpdated::class, function ($event) {
-            EntityEventPersister::persist(LocationImageActionEntityEventFactory::build($event, 'UPDATE'));
-        });
-
-        Event::listen(\App\Events\LocationImageDeleted::class, function ($event) {
-            EntityEventPersister::persist(LocationImageActionEntityEventFactory::build($event, 'DELETE'));
-        });
-
-        // ticket types
-
-        Event::listen(\App\Events\SummitTicketTypeInserted::class, function ($event) {
-            EntityEventPersister::persist(SummitTicketTypeActionEntityEventFactory::build($event, 'INSERT'));
-        });
-
-        Event::listen(\App\Events\SummitTicketTypeUpdated::class, function ($event) {
-            EntityEventPersister::persist(SummitTicketTypeActionEntityEventFactory::build($event, 'UPDATE'));
-        });
-
-        Event::listen(\App\Events\SummitTicketTypeDeleted::class, function ($event) {
-            EntityEventPersister::persist(SummitTicketTypeActionEntityEventFactory::build($event, 'DELETE'));
-        });
-
-        // track groups
-
-        Event::listen(\App\Events\TrackGroupInserted::class, function ($event) {
-            EntityEventPersister::persist(TrackGroupActionActionEntityEventFactory::build($event, 'INSERT'));
-        });
-
-        Event::listen(\App\Events\TrackGroupUpdated::class, function ($event) {
-            EntityEventPersister::persist(TrackGroupActionActionEntityEventFactory::build($event, 'UPDATE'));
-        });
-
-        Event::listen(\App\Events\TrackGroupDeleted::class, function ($event) {
-            EntityEventPersister::persist(TrackGroupActionActionEntityEventFactory::build($event, 'DELETE'));
-        });
-
-        // summits
-
-        Event::listen(\App\Events\SummitUpdated::class, function ($event) {
-            EntityEventPersister::persist(SummitActionEntityEventFactory::build($event, 'UPDATE'));
-        });
-
-        Event::listen(\App\Events\SummitDeleted::class, function ($event) {
-            EntityEventPersister::persist(SummitActionEntityEventFactory::build($event, 'DELETE'));
-        });
-
-        // bookable rooms events
-
         Event::listen(\App\Events\BookableRoomReservationRefundAccepted::class, function ($event) {
             $repository = EntityManager::getRepository(SummitRoomReservation::class);
             $reservation = $repository->find($event->getReservationId());
             if (is_null($reservation) || !$reservation instanceof SummitRoomReservation) return;
 
-            Mail::queue(new BookableRoomReservationRefundAcceptedEmail($reservation));
+            BookableRoomReservationRefundAcceptedEmail::dispatch($reservation);
 
         });
 
@@ -326,7 +110,6 @@ final class EventServiceProvider extends ServiceProvider
             if (is_null($reservation) || !$reservation instanceof SummitRoomReservation) return;
 
             BookableRoomReservationCreatedEmail::dispatch($reservation);
-
         });
 
         Event::listen(\App\Events\PaymentBookableRoomReservationConfirmed::class, function ($event) {
@@ -418,7 +201,7 @@ final class EventServiceProvider extends ServiceProvider
             MemberAssocSummitOrders::dispatch($event->getMemberId());
         });
 
-        Event::listen(MemberUpdated::class, function($event){
+        Event::listen(MemberUpdated::class, function ($event) {
             if (!$event instanceof MemberUpdated) return;
             Log::debug(sprintf("EventServiceProvider::MemberUpdated - firing NewMemberAssocSummitOrders member id %s", $event->getMemberId()));
 
@@ -478,10 +261,24 @@ final class EventServiceProvider extends ServiceProvider
             if (!$event instanceof TicketUpdated) return;
             // publish profile changes to the IDP
             $attendee = $event->getAttendee();
-            UpdateIDPMemberInfo::dispatch( $attendee->getEmail(),
+            UpdateIDPMemberInfo::dispatch($attendee->getEmail(),
                 $attendee->getFirstName(),
                 $attendee->getSurname(),
                 $attendee->getCompanyName());
+        });
+
+        Event::listen(ScheduleEntityLifeCycleEvent::class, function($event){
+            if(!$event instanceof ScheduleEntityLifeCycleEvent) return;
+
+            Log::debug(sprintf("ScheduleEntityLifeCycleEvent event %s", $event));
+
+            ProcessScheduleEntityLifeCycleEvent::dispatch
+            (
+                $event->entity_operator,
+                $event->summit_id,
+                $event->entity_id,
+                $event->entity_type
+            );
         });
     }
 }

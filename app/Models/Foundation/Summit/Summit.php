@@ -21,6 +21,7 @@ use App\Models\Foundation\Summit\ISummitExternalScheduleFeedType;
 use App\Models\Foundation\Summit\ISummitModality;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
+use App\Models\Foundation\Summit\ScheduleEntity;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Foundation\Summit\Speakers\FeaturedSpeaker;
 use App\Models\Foundation\Summit\TrackTagGroup;
@@ -48,6 +49,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitRepository")
  * @ORM\Table(name="Summit")
+ * @ORM\HasLifecycleCallbacks
  * Class Summit
  * @package models\summit
  */
@@ -6192,4 +6194,6 @@ SQL;
         $type->clearSummit();
         self::resetOrderForSelectable($this->sponsorship_types);
     }
+
+    use ScheduleEntity;
 }

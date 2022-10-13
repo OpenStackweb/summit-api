@@ -1002,15 +1002,6 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                 ]
             ],
-            [
-                'name' => 'get-summit-entity-events',
-                'route' => '/api/v1/summits/{id}/entity-events',
-                'http_method' => 'GET',
-                'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
-                ],
-            ],
             // schedule settings
             [
                 'name' => 'get-schedule-settings',

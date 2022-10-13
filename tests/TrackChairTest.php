@@ -30,6 +30,7 @@ class TrackChairTest extends BrowserKitTestCase
         self::insertSummitTestData();
         self::insertMemberTestData(IGroup::TrackChairs);
         self::$summit_permission_group->addMember(self::$member);
+        self::$summit->setMarketingSiteUrl("https://test.com");
         self::$em->persist(self::$summit);
         self::$em->persist(self::$summit_permission_group);
         self::$em->flush();

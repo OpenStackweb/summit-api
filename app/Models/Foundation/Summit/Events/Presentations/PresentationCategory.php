@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Summit\ScheduleEntity;
 use Doctrine\ORM\Mapping AS ORM;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplate;
 use Doctrine\Common\Collections\Criteria;
@@ -31,6 +33,7 @@ use App\Models\Foundation\Main\IOrderable;
  *          inversedBy="presentation_categories"
  *     )
  * })
+ * @ORM\HasLifecycleCallbacks
  * @ORM\Table(name="PresentationCategory")
  * @package models\summit
  */
@@ -758,4 +761,5 @@ SQL;
         $this->order = $order;
     }
 
+    use ScheduleEntity;
 }

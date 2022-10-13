@@ -1,6 +1,6 @@
-<?php namespace App\Events;
-/**
- * Copyright 2016 OpenStack Foundation
+<?php namespace App\Services\Model;
+/*
+ * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,11 +12,18 @@
  * limitations under the License.
  **/
 
-/**
- * Class SummitEventCreated
- * @package App\Events
- */
-final class SummitEventCreated extends SummitEventEntityStateChanged
-{
 
+/**
+ * Interface IProcessScheduleEntityLifeCycleEventService
+ * @package App\Services\Model
+ */
+interface IProcessScheduleEntityLifeCycleEventService
+{
+    /**
+     * @param string $entity_operator
+     * @param int $summit_id
+     * @param int $entity_id
+     * @param string $entity_type
+     */
+    public function process(string $entity_operator, int $summit_id, int $entity_id, string $entity_type):void;
 }

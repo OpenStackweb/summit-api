@@ -20,6 +20,7 @@ use models\exceptions\ValidationException;
 /**
  * @ORM\Entity
  * @ORM\Table(name="SummitGeoLocatedLocation")
+ * @ORM\HasLifecycleCallbacks
  * Class SummitGeoLocatedLocation
  * @package models\summit
  */

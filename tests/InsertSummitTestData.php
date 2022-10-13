@@ -227,6 +227,7 @@ trait InsertSummitTestData
     protected static function insertSummitTestData(){
 
         DB::setDefaultConnection("model");
+
         self::$em = Registry::getManager(SilverstripeBaseModel::EntityManager);
         if (!self::$em ->isOpen()) {
             self::$em  = Registry::resetManager(SilverstripeBaseModel::EntityManager);

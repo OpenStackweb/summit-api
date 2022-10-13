@@ -26,7 +26,7 @@ class SummitEventWithFile extends SummitEvent
     /**
      * @return string
      */
-    public function getClassName(){
+    public function getClassName():string{
         return "SummitEventWithFile";
     }
 

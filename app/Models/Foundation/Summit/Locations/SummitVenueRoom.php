@@ -12,14 +12,13 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\IOrderable;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 use models\main\File;
 
 /**
  * @ORM\Entity
  * @ORM\Table(name="SummitVenueRoom")
+ * @ORM\HasLifecycleCallbacks
  * Class SummitVenueRoom
  * @package models\summit
  */

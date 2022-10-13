@@ -11,11 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Events\TrackGroupDeleted;
-use App\Events\TrackGroupInserted;
-use App\Events\TrackGroupUpdated;
+
 use App\Models\Foundation\Summit\Factories\PresentationCategoryGroupFactory;
-use Illuminate\Support\Facades\Event;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -23,6 +20,7 @@ use models\main\IGroupRepository;
 use models\summit\PresentationCategoryGroup;
 use models\summit\PrivatePresentationCategoryGroup;
 use models\summit\Summit;
+
 /**
  * Class PresentationCategoryGroupService
  * @package App\Services\Model
@@ -43,7 +41,7 @@ final class PresentationCategoryGroupService
      */
     public function __construct
     (
-        IGroupRepository $group_repository,
+        IGroupRepository    $group_repository,
         ITransactionService $tx_service
     )
     {
@@ -83,16 +81,6 @@ final class PresentationCategoryGroupService
             return $track_group;
         });
 
-        Event::dispatch
-        (
-            new TrackGroupInserted
-            (
-
-                $track_group->getId(),
-                $track_group->getSummitId(),
-                $track_group->getClassName()
-            )
-        );
 
         return $track_group;
     }
@@ -115,10 +103,10 @@ final class PresentationCategoryGroupService
                     throw new ValidationException
                     (
                         trans('validation_errors.PresentationCategoryGroupService.updateTrackGroup.NameAlreadyExists',
-                        [
-                            'name'      => trim($data['name']),
-                            'summit_id' => $summit->getId(),
-                        ])
+                            [
+                                'name' => trim($data['name']),
+                                'summit_id' => $summit->getId(),
+                            ])
                     );
                 }
             }
@@ -129,23 +117,12 @@ final class PresentationCategoryGroupService
                 throw new EntityNotFoundException
                 (
                     trans('not_found_errors.PresentationCategoryGroupService.updateTrackGroup.TrackGroupNotFound',
-                    [
-                        'track_group_id' => $track_group_id,
-                        'summit_id'      => $summit->getId(),
-                    ])
+                        [
+                            'track_group_id' => $track_group_id,
+                            'summit_id' => $summit->getId(),
+                        ])
                 );
             }
-
-            Event::dispatch
-            (
-                new TrackGroupUpdated
-                (
-
-                    $track_group->getId(),
-                    $track_group->getSummitId(),
-                    $track_group->getClassName()
-                )
-            );
 
             return PresentationCategoryGroupFactory::populate($summit, $track_group, $data);
 
@@ -178,16 +155,6 @@ final class PresentationCategoryGroupService
                     )
                 );
             }
-
-            Event::dispatch
-            (
-                new TrackGroupDeleted
-                (
-                    $track_group->getId(),
-                    $track_group->getSummitId(),
-                    $track_group->getClassName()
-                )
-            );
 
             $summit->removeCategoryGroup($track_group);
         });
@@ -238,15 +205,6 @@ final class PresentationCategoryGroupService
 
             $track_group->addCategory($track);
 
-            Event::dispatch
-            (
-                new TrackGroupUpdated
-                (
-                    $track_group->getId(),
-                    $track_group->getSummitId(),
-                    $track_group->getClassName()
-                )
-            );
         });
     }
 
@@ -295,16 +253,6 @@ final class PresentationCategoryGroupService
             }
 
             $track_group->removeCategory($track);
-
-            Event::dispatch
-            (
-                new TrackGroupUpdated
-                (
-                    $track_group->getId(),
-                    $track_group->getSummitId(),
-                    $track_group->getClassName()
-                )
-            );
 
         });
     }
@@ -368,15 +316,6 @@ final class PresentationCategoryGroupService
 
             $track_group->addToGroup($group);
 
-            Event::dispatch
-            (
-                new TrackGroupUpdated
-                (
-                    $track_group->getId(),
-                    $track_group->getSummitId(),
-                    $track_group->getClassName()
-                )
-            );
         });
     }
 
@@ -439,15 +378,6 @@ final class PresentationCategoryGroupService
 
             $track_group->removeFromGroup($group);
 
-            Event::dispatch
-            (
-                new TrackGroupUpdated
-                (
-                    $track_group->getId(),
-                    $track_group->getSummitId(),
-                    $track_group->getClassName()
-                )
-            );
         });
     }
 }

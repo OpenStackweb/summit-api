@@ -1,6 +1,6 @@
-<?php namespace App\Events;
-/**
- * Copyright 2018 OpenStack Foundation
+<?php
+/*
+ * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,11 +12,10 @@
  * limitations under the License.
  **/
 
-/**
- * Class SummitDeleted
- * @package App\Events
- */
-final class SummitDeleted extends SummitAction
-{
-
-}
+return [
+    'host' => env('RABBITMQ_HOST', '127.0.0.1'),
+    'port' => env('RABBITMQ_PORT', 5671),
+    'user' => env('RABBITMQ_LOGIN', 'guest'),
+    'password' => env('RABBITMQ_PASSWORD', 'guest'),
+    'vhost' => env('RABBITMQ_VHOST', '/'),
+];

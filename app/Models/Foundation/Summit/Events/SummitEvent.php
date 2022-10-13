@@ -13,27 +13,23 @@
  **/
 
 use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
-use App\Events\SummitEventCreated;
-use App\Events\SummitEventDeleted;
-use App\Events\SummitEventUpdated;
+use App\Models\Foundation\Summit\ScheduleEntity;
 use App\Models\Utils\Traits\HasImageTrait;
+use Cocur\Slugify\Slugify;
+use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\Event\PreUpdateEventArgs;
+use Doctrine\ORM\Mapping as ORM;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Company;
 use models\main\File;
 use models\main\Member;
 use models\main\Tag;
-use models\utils\PreRemoveEventArgs;
-use models\utils\SilverstripeBaseModel;
-use Doctrine\Common\Collections\ArrayCollection;
-use DateTime;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Config;
-use Cocur\Slugify\Slugify;
 use models\utils\One2ManyPropertyTrait;
-use Doctrine\ORM\Mapping AS ORM;
+use models\utils\SilverstripeBaseModel;
+
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitEventRepository")
  * @ORM\AssociationOverrides({
@@ -45,13 +41,13 @@ use Doctrine\ORM\Mapping AS ORM;
  * @ORM\Table(name="SummitEvent")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="ClassName", type="string")
+ * @ORM\HasLifecycleCallbacks
  * @ORM\DiscriminatorMap({
  *     "SummitEvent" = "SummitEvent",
  *     "Presentation" = "Presentation",
  *     "SummitGroupEvent" = "SummitGroupEvent",
  *     "SummitEventWithFile" = "SummitEventWithFile"
  * })
- * @ORM\HasLifecycleCallbacks
  * Class SummitEvent
  * @package models\summit
  */
@@ -279,14 +275,6 @@ class SummitEvent extends SilverstripeBaseModel
      * @var string
      */
     protected $meeting_url;
-    /**
-     * @var PreRemoveEventArgs
-     */
-    protected $pre_remove_events;
-    /**
-     * @var PreUpdateEventArgs
-     */
-    protected $pre_update_args;
 
     /**
      * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
@@ -422,7 +410,8 @@ class SummitEvent extends SilverstripeBaseModel
         }
     }
 
-    public function hasCategory():bool{
+    public function hasCategory(): bool
+    {
         return $this->getCategoryId() > 0;
     }
 
@@ -461,7 +450,7 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return DateTime|null
      */
-    public function getPublishedDate():?DateTime
+    public function getPublishedDate(): ?DateTime
     {
         return $this->published_date;
     }
@@ -600,7 +589,8 @@ class SummitEvent extends SilverstripeBaseModel
         return $this->type;
     }
 
-    public function hasType():bool{
+    public function hasType(): bool
+    {
         return $this->getTypeId() > 0;
     }
 
@@ -620,7 +610,8 @@ class SummitEvent extends SilverstripeBaseModel
         return $this;
     }
 
-    public function clearPublishingDates():void{
+    public function clearPublishingDates(): void
+    {
         $this->start_date = null;
         $this->end_date = null;
     }
@@ -628,7 +619,7 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return SummitAbstractLocation|null
      */
-    public function getLocation():?SummitAbstractLocation
+    public function getLocation(): ?SummitAbstractLocation
     {
         return $this->location;
     }
@@ -640,7 +631,7 @@ class SummitEvent extends SilverstripeBaseModel
      */
     public function setLocation(SummitAbstractLocation $location)
     {
-        if(!$this->type->isAllowsLocation())
+        if (!$this->type->isAllowsLocation())
             throw new ValidationException("Event Type does not allows Location.");
         $this->location = $location;
         return $this;
@@ -696,7 +687,8 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @param SummitEventFeedback $feedback
      */
-    public function removeFeedback(SummitEventFeedback $feedback){
+    public function removeFeedback(SummitEventFeedback $feedback)
+    {
         if (!$this->feedback->contains($feedback)) return;
         $this->feedback->removeElement($feedback);
         $feedback->clearOwner();
@@ -707,7 +699,7 @@ class SummitEvent extends SilverstripeBaseModel
      * @param int $feedback_id
      * @return SummitEventFeedback|null
      */
-    public function getFeedbackById(int $feedback_id):?SummitEventFeedback
+    public function getFeedbackById(int $feedback_id): ?SummitEventFeedback
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $feedback_id));
@@ -753,7 +745,7 @@ class SummitEvent extends SilverstripeBaseModel
         if (is_null($summit))
             throw new ValidationException('To publish you must assign a summit.');
 
-        if($this->type->isAllowsPublishingDates()) {
+        if ($this->type->isAllowsPublishingDates()) {
 
             $start_date = $this->getStartDate();
             $end_date = $this->getEndDate();
@@ -789,7 +781,7 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function isPublished():bool
+    public function isPublished(): bool
     {
         return $this->getPublished();
     }
@@ -805,10 +797,10 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return \DateTime|null
      */
-    public function getStartDate():?DateTime
+    public function getStartDate(): ?DateTime
     {
         $type = $this->type;
-        return  !is_null($type) && $type->isAllowsPublishingDates() ? $this->start_date: null;
+        return !is_null($type) && $type->isAllowsPublishingDates() ? $this->start_date : null;
     }
 
     /**
@@ -819,7 +811,7 @@ class SummitEvent extends SilverstripeBaseModel
     public function setStartDate(DateTime $value)
     {
         Log::debug(sprintf("SummitEvent::setStartDate id %s value %s", $this->id, $value->getTimestamp()));
-        if(!$this->type->isAllowsPublishingDates()){
+        if (!$this->type->isAllowsPublishingDates()) {
             throw new ValidationException("Type does not allows Publishing Period.");
         }
         $summit = $this->getSummit();
@@ -829,7 +821,7 @@ class SummitEvent extends SilverstripeBaseModel
         $end_date = $this->getEndDate();
 
         if (!is_null($end_date)) {
-            $newDuration= $end_date->getTimestamp() - $value->getTimestamp();
+            $newDuration = $end_date->getTimestamp() - $value->getTimestamp();
             Log::debug(sprintf("SummitEvent::setStartDate id %s setting new duration %s", $this->id, $newDuration));;
             $this->duration = $newDuration < 0 ? 0 : $newDuration;
         }
@@ -843,8 +835,9 @@ class SummitEvent extends SilverstripeBaseModel
      * @param DateTime $value
      * @throws ValidationException
      */
-    public function setRawStartDate(DateTime $value){
-        if(!$this->type->isAllowsPublishingDates()){
+    public function setRawStartDate(DateTime $value)
+    {
+        if (!$this->type->isAllowsPublishingDates()) {
             throw new ValidationException("Type does not allows Publishing Period.");
         }
         $end_date = $this->getEndDate();
@@ -858,10 +851,10 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return \DateTime|null
      */
-    public function getEndDate():?DateTime
+    public function getEndDate(): ?DateTime
     {
         $type = $this->type;
-        return !is_null($type) && $type->isAllowsPublishingDates() ? $this->end_date: null;
+        return !is_null($type) && $type->isAllowsPublishingDates() ? $this->end_date : null;
     }
 
     /**
@@ -873,7 +866,7 @@ class SummitEvent extends SilverstripeBaseModel
     {
         Log::debug(sprintf("SummitEvent::setEndDate id %s value %s", $this->id, $value->getTimestamp()));
 
-        if(!$this->type->isAllowsPublishingDates()){
+        if (!$this->type->isAllowsPublishingDates()) {
             throw new ValidationException("Type does not allows Publishing Period.");
         }
 
@@ -894,12 +887,14 @@ class SummitEvent extends SilverstripeBaseModel
         return $this;
     }
 
-    public function setRawEndDate(DateTime $value){
-        if(!$this->type->isAllowsPublishingDates()){
+    public function setRawEndDate(DateTime $value)
+    {
+        if (!$this->type->isAllowsPublishingDates()) {
             throw new ValidationException("Type does not allows Publishing Period.");
         }
         $this->end_date = $value;
     }
+
     /**
      * @return void
      */
@@ -910,66 +905,13 @@ class SummitEvent extends SilverstripeBaseModel
     }
 
     /**
-     * @ORM\PreRemove:
-     */
-    public function deleting($args)
-    {
-        $this->pre_remove_events = new PreRemoveEventArgs
-        (
-            [
-                'id' => $this->id,
-                'class_name' => $this->getClassName(),
-                'summit' => $this->summit,
-                'published' => $this->isPublished(),
-            ]
-        );
-    }
-
-    /**
      * @return string
      */
-    public function getClassName()
+    public function getClassName(): string
     {
         return "SummitEvent";
     }
 
-    /**
-     * @ORM\preRemove:
-     */
-    public function deleted($args)
-    {
-        if (is_null($this->summit)) return;
-        if ($this->summit->isDeleting()) return;
-        Event::dispatch(new SummitEventDeleted(null, $this->pre_remove_events));
-        $this->pre_remove_events = null;
-    }
-
-    /**
-     * @ORM\PreUpdate:
-     */
-    public function updating(PreUpdateEventArgs $args)
-    {
-        $this->pre_update_args = $args;
-    }
-
-    /**
-     * @ORM\PostUpdate:
-     */
-    public function updated($args)
-    {
-        Event::dispatch(new SummitEventUpdated($this, $this->pre_update_args));
-        $this->pre_update_args = null;
-    }
-
-    // events
-
-    /**
-     * @ORM\PostPersist
-     */
-    public function inserted($args)
-    {
-        Event::dispatch(new SummitEventCreated($this, $args));
-    }
 
     /**
      * @return ArrayCollection
@@ -1314,24 +1256,28 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return int
      */
-    public function getTotalAttendanceCount():int{
+    public function getTotalAttendanceCount(): int
+    {
         return $this->attendance_metrics->count();
     }
 
-    public function getAttendance(){
+    public function getAttendance()
+    {
         return $this->attendance_metrics;
     }
 
     /**
      * @return int
      */
-    public function getCurrentAttendanceCount():int{
+    public function getCurrentAttendanceCount(): int
+    {
         $criteria = Criteria::create();
         $criteria = $criteria->where(Criteria::expr()->isNull('outgress_date'));
         return $this->attendance_metrics->matching($criteria)->count();
     }
 
-    public function getCurrentAttendance(){
+    public function getCurrentAttendance()
+    {
         $criteria = Criteria::create();
         $criteria = $criteria->where(Criteria::expr()->isNull('outgress_date'));
         $criteria = $criteria->orderBy(['created' => Criteria::DESC]);
@@ -1344,26 +1290,27 @@ class SummitEvent extends SilverstripeBaseModel
      * @param Member|null $member
      * @return bool
      */
-    public function hasAccess(?Member $member):bool{
+    public function hasAccess(?Member $member): bool
+    {
 
-        if(is_null($member)) {
+        if (is_null($member)) {
             Log::debug("SummitEvent::hasAccess member is null");
             return false;
         }
 
-        Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s.",$member->getId(), $member->getEmail(), $this->id));
-        if($this->summit->isPubliclyOpen()) {
-            Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s summit is public open.",$member->getId(), $member->getEmail(), $this->id));
+        Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s.", $member->getId(), $member->getEmail(), $this->id));
+        if ($this->summit->isPubliclyOpen()) {
+            Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s summit is public open.", $member->getId(), $member->getEmail(), $this->id));
             return true;
         }
 
-        if($member->isAdmin() || $this->summit->isSummitAdmin($member) || $member->isTester()){
-            Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s is SuperAdmnin/Admin/SummitAdmin or Tester.",$member->getId(), $member->getEmail(), $this->id));
+        if ($member->isAdmin() || $this->summit->isSummitAdmin($member) || $member->isTester()) {
+            Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s is SuperAdmnin/Admin/SummitAdmin or Tester.", $member->getId(), $member->getEmail(), $this->id));
             return true;
         }
 
-        if($member->hasPaidTicketOnSummit($this->summit)){
-            if($this->category->getAllowedAccessLevels()->count() > 0){
+        if ($member->hasPaidTicketOnSummit($this->summit)) {
+            if ($this->category->getAllowedAccessLevels()->count() > 0) {
                 $eventAccessLevelsIds = $this->category->getAllowedAccessLevelsIds();
                 Log::debug
                 (
@@ -1377,18 +1324,18 @@ class SummitEvent extends SilverstripeBaseModel
                     )
                 );
                 // for each ticket check if we have the required access levels
-                foreach($member->getPaidSummitTickets($this->summit) as $ticket){
+                foreach ($member->getPaidSummitTickets($this->summit) as $ticket) {
                     $ticketAccessLevelsIds = $ticket->getBadgeAccessLevelsIds();
                     Log::debug(sprintf("SummitEvent::hasAccess checking access levels for ticket %s ticket access levels (%s).", $ticket->getId(), implode(",", $ticketAccessLevelsIds)));
-                    if(count(array_intersect($eventAccessLevelsIds, $ticketAccessLevelsIds))) return true;
+                    if (count(array_intersect($eventAccessLevelsIds, $ticketAccessLevelsIds))) return true;
                 }
-                Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has no access.",$member->getId(), $member->getEmail(), $this->id));
+                Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has no access.", $member->getId(), $member->getEmail(), $this->id));
                 return false;
             }
-            Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has a paid ticket.",$member->getId(), $member->getEmail(), $this->id));
+            Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has a paid ticket.", $member->getId(), $member->getEmail(), $this->id));
             return true;
         }
-        Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has no access.",$member->getId(), $member->getEmail(), $this->id));
+        Log::debug(sprintf("SummitEvent::hasAccess member %s (%s) event %s has no access.", $member->getId(), $member->getEmail(), $this->id));
 
         return false;
     }
@@ -1396,8 +1343,9 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function isMuxStream():bool{
-        if(empty($this->streaming_url)) return false;
+    public function isMuxStream(): bool
+    {
+        if (empty($this->streaming_url)) return false;
         if (preg_match("/(.*\.mux\.com)/i", $this->streaming_url)) return true;
         return false;
     }
@@ -1405,10 +1353,11 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return string|null
      */
-    public function getStreamThumbnailUrl():?string{
-        if($this->isMuxStream()){
+    public function getStreamThumbnailUrl(): ?string
+    {
+        if ($this->isMuxStream()) {
             $matches = [];
-            if(preg_match("/^(.*\.mux\.com)\/(.*)(\.m3u8)$/",$this->streaming_url, $matches)){
+            if (preg_match("/^(.*\.mux\.com)\/(.*)(\.m3u8)$/", $this->streaming_url, $matches)) {
                 return sprintf("https://image.mux.com/%s/thumbnail.jpg", $matches[2]);
             }
         }
@@ -1459,9 +1408,9 @@ class SummitEvent extends SilverstripeBaseModel
      * @param string $level
      * @throws ValidationException
      */
-    public function setLevel(string $level):void
+    public function setLevel(string $level): void
     {
-        if(!in_array($level, ISummitEventLevel::ValidLevels))
+        if (!in_array($level, ISummitEventLevel::ValidLevels))
             throw new ValidationException(sprintf("Level %s is invalid.", $level));
         $this->level = $level;
     }
@@ -1498,7 +1447,8 @@ class SummitEvent extends SilverstripeBaseModel
         $this->updated_by = $updated_by;
     }
 
-    public function getStreamingType():?string{
+    public function getStreamingType(): ?string
+    {
         return $this->streaming_type;
     }
 
@@ -1506,8 +1456,9 @@ class SummitEvent extends SilverstripeBaseModel
      * @param string $streaming_type
      * @throws ValidationException
      */
-    public function setStreamingType(string $streaming_type):void{
-        if(!in_array($streaming_type, self::ValidStreamingTypes))
+    public function setStreamingType(string $streaming_type): void
+    {
+        if (!in_array($streaming_type, self::ValidStreamingTypes))
             throw new ValidationException(sprintf("%s is not a valid streaming type", $streaming_type));
         $this->streaming_type = $streaming_type;
     }
@@ -1533,7 +1484,7 @@ class SummitEvent extends SilverstripeBaseModel
      */
     public function getDuration(): int
     {
-        if(!$this->duration && !is_null($this->start_date) && !is_null(!is_null($this->end_date))){
+        if (!$this->duration && !is_null($this->start_date) && !is_null(!is_null($this->end_date))) {
             $this->duration = $this->end_date->getTimestamp() - $this->start_date->getTimestamp();
         }
         return $this->duration;
@@ -1546,21 +1497,21 @@ class SummitEvent extends SilverstripeBaseModel
      */
     public function setDuration(int $duration_in_seconds, bool $skipDatesSetting = false): void
     {
-        if(!$this->type->isAllowsPublishingDates()){
+        if (!$this->type->isAllowsPublishingDates()) {
             throw new ValidationException("Type does not allows Publishing Period.");
         }
 
-        if($duration_in_seconds < 0 ){
+        if ($duration_in_seconds < 0) {
             throw new ValidationException('Duration should be greater or equal than zero.');
         }
 
-        if($duration_in_seconds > 0 && $duration_in_seconds < (self::MIN_EVENT_MINUTES * 60)){
-            throw new ValidationException(sprintf('Duration should be greater than %s minutes.',self::MIN_EVENT_MINUTES));
+        if ($duration_in_seconds > 0 && $duration_in_seconds < (self::MIN_EVENT_MINUTES * 60)) {
+            throw new ValidationException(sprintf('Duration should be greater than %s minutes.', self::MIN_EVENT_MINUTES));
         }
 
         $this->duration = $duration_in_seconds;
 
-        if(!$skipDatesSetting) {
+        if (!$skipDatesSetting) {
             $start_date = $this->getStartDate();
             if (!is_null($start_date)) {
 
@@ -1576,4 +1527,6 @@ class SummitEvent extends SilverstripeBaseModel
             }
         }
     }
+
+    use ScheduleEntity;
 }

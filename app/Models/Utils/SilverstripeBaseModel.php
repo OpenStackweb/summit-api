@@ -11,14 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Models\Utils\BaseEntity;
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Event\PreUpdateEventArgs;
+use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use LaravelDoctrine\ORM\Facades\Registry;
+
 /***
  * @ORM\MappedSuperclass
+ * @ORM\HasLifecycleCallbacks
  * Class SilverstripeBaseModel
  * @package models\utils
  */
@@ -28,13 +32,13 @@ class SilverstripeBaseModel extends BaseEntity
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="Created", type="datetime")
+     * @ORM\Column(name="Created", type="datetime", nullable=false)
      */
     protected $created;
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="LastEdited", type="datetime")
+     * @ORM\Column(name="LastEdited", type="datetime", nullable=false)
      */
     protected $last_edited;
 
@@ -49,8 +53,9 @@ class SilverstripeBaseModel extends BaseEntity
     /**
      * @return \DateTime|null
      */
-    public function getCreatedUTC(){
-        if(is_null($this->created)) return null;
+    public function getCreatedUTC()
+    {
+        if (is_null($this->created)) return null;
         return $this->getDateFromLocalToUTC($this->created);
     }
 
@@ -73,8 +78,9 @@ class SilverstripeBaseModel extends BaseEntity
     /**
      * @return \DateTime|null
      */
-    public function getLastEditedUTC(){
-        if(is_null($this->last_edited)) return null;
+    public function getLastEditedUTC()
+    {
+        if (is_null($this->last_edited)) return null;
         return $this->getDateFromLocalToUTC($this->last_edited);
     }
 
@@ -82,12 +88,13 @@ class SilverstripeBaseModel extends BaseEntity
      * @param \DateTime $value
      * @return \DateTime|null
      */
-    protected function getDateFromLocalToUTC(\DateTime $value){
-        if(is_null($value)) return null;
+    protected function getDateFromLocalToUTC(\DateTime $value)
+    {
+        if (is_null($value)) return null;
         $default_timezone = new \DateTimeZone(self::DefaultTimeZone);
-        $utc_timezone     = new \DateTimeZone("UTC");
-        $timestamp        = $value->format('Y-m-d H:i:s');
-        $local_date       = new \DateTime($timestamp, $default_timezone);
+        $utc_timezone = new \DateTimeZone("UTC");
+        $timestamp = $value->format('Y-m-d H:i:s');
+        $local_date = new \DateTime($timestamp, $default_timezone);
         return $local_date->setTimezone($utc_timezone);
     }
 
@@ -102,15 +109,16 @@ class SilverstripeBaseModel extends BaseEntity
 
     public function __construct()
     {
-        $now               = new \DateTime('now', new \DateTimeZone(self::DefaultTimeZone));
-        $this->created     = $now;
+        $now = new \DateTime('now', new \DateTimeZone(self::DefaultTimeZone));
+        $this->created = $now;
         $this->last_edited = $now;
     }
 
     /**
      * @return QueryBuilder
      */
-    protected function createQueryBuilder(){
+    protected function createQueryBuilder()
+    {
         return Registry::getManager(self::EntityManager)->createQueryBuilder();
     }
 
@@ -118,7 +126,8 @@ class SilverstripeBaseModel extends BaseEntity
      * @param string $dql
      * @return Query
      */
-    protected function createQuery($dql){
+    protected function createQuery($dql)
+    {
         return Registry::getManager(self::EntityManager)->createQuery($dql);
     }
 
@@ -126,7 +135,8 @@ class SilverstripeBaseModel extends BaseEntity
      * @param string $sql
      * @return mixed
      */
-    protected function prepareRawSQL($sql){
+    protected function prepareRawSQL($sql)
+    {
         return Registry::getManager(self::EntityManager)->getConnection()->prepare($sql);
     }
 
@@ -134,28 +144,41 @@ class SilverstripeBaseModel extends BaseEntity
      * @param string $sql
      * @return mixed
      */
-    protected static function prepareRawSQLStatic($sql){
+    protected static function prepareRawSQLStatic($sql)
+    {
         return Registry::getManager(self::EntityManager)->getConnection()->prepare($sql);
     }
 
     /**
      * @return EntityManager
      */
-    protected function getEM(){
+    protected function getEM()
+    {
         return Registry::getManager(self::EntityManager);
     }
 
     /**
      * @return EntityManager
      */
-    protected static function getEMStatic(){
+    protected static function getEMStatic()
+    {
         return Registry::getManager(self::EntityManager);
     }
 
     const EntityManager = 'model';
 
-    public function updateLastEdited():void{
-        $now               = new \DateTime('now', new \DateTimeZone(self::DefaultTimeZone));
+    public function updateLastEdited(): void
+    {
+        $now = new \DateTime('now', new \DateTimeZone(self::DefaultTimeZone));
         $this->last_edited = $now;
     }
+
+    /**
+     * @ORM\PreUpdate:
+     */
+    public function updating(PreUpdateEventArgs $args)
+    {
+        $this->updateLastEdited();
+    }
+
 }

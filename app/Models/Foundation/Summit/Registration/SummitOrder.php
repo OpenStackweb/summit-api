@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 use App\Events\PaymentSummitRegistrationOrderConfirmed;
-use App\Events\SummitOrderCanceled;
 use App\libs\Utils\PunnyCodeHelper;
 use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Config;
@@ -325,21 +324,17 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
             $this->status = IOrderConstants::ConfirmedStatus;
     }
 
-    /**
-     * @param bool $sendMail
-     */
-    public function setCancelled(bool $sendMail = true):void {
+
+    public function setCancelled():void {
         $ignore_statuses = [ IOrderConstants::PaidStatus,  IOrderConstants::CancelledStatus];
 
         if(in_array($this->status, $ignore_statuses)) return;
         $this->status = IOrderConstants::CancelledStatus;
-        list($tickets_to_return, $promo_codes_to_return) = $this->calculateTicketsAndPromoCodesToReturn();
 
         foreach ($this->getTickets() as $ticket){
             $ticket->setCancelled();
         }
 
-        Event::dispatch(new SummitOrderCanceled($this->id, $sendMail, $tickets_to_return, $promo_codes_to_return));
     }
 
     /**
@@ -362,6 +357,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
                 $promo_codes_to_return[$ticket->getPromoCode()->getCode()] +=1;
             }
         }
+
         return [$tickets_to_return, $promo_codes_to_return];
     }
 

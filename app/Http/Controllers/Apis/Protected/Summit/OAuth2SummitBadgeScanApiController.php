@@ -410,7 +410,7 @@ final class OAuth2SummitBadgeScanApiController
                 ];
 
                 foreach ($summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage) as $question){
-                    $allowed_columns[] = $question->getLabel();
+                    $allowed_columns[] = strip_tags($question->getLabel());
                 }
 
                 $columns_param = Request::input("columns", "");

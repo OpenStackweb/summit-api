@@ -2315,8 +2315,8 @@ final class SummitOrderService
      */
     public function deleteOrder(Summit $summit, int $order_id)
     {
-        $this->tx_service->transaction(function () use ($summit, $order_id) {
-            $order = $this->order_repository->getByIdExclusiveLock($order_id);
+        list($tickets_to_return, $promo_codes_to_return) = $this->tx_service->transaction(function () use ($summit, $order_id) {
+            $order = $this->order_repository->getById($order_id);
 
             if (is_null($order) || !$order instanceof SummitOrder)
                 throw new EntityNotFoundException("Order not found.");
@@ -2328,10 +2328,11 @@ final class SummitOrderService
             }
 
             $summit->removeOrder($order);
-
-            Event::dispatch(new OrderDeleted($order->getId(), $summit->getId(), $tickets_to_return, $promo_codes_to_return));
-
+          
+            return [$tickets_to_return, $promo_codes_to_return];
         });
+        
+        Event::dispatch(new OrderDeleted($order_id, $summit->getId(), $tickets_to_return, $promo_codes_to_return));
     }
 
     /**

@@ -51,6 +51,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 {
     use GetAndValidateJsonPayload;
 
+    use RequestProcessor;
+
     /**
      * @var ISummitService
      */
@@ -172,8 +174,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      */
     public function getAttendee($summit_id, $attendee_id)
     {
-        try {
-
+        return $this->processRequest(function() use($summit_id, $attendee_id){
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -192,14 +193,9 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     SerializerUtils::getFields(),
                     SerializerUtils::getRelations(),
                     ['serializer_type' => SerializerRegistry::SerializerType_Private]
-                ));
-        } catch (\HTTP401UnauthorizedException $ex1) {
-            Log::warning($ex1);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+                )
+            );
+        });
     }
 
     /**
@@ -575,7 +571,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      */
     public function addAttendee($summit_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id){
             if (!Request::isJson()) return $this->error400();
             $data = Request::json();
 
@@ -609,21 +605,20 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
             $attendee = $this->attendee_service->addAttendee($summit, $data->all());
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($attendee)->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412($ex1->getMessages());
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(
+                SerializerRegistry::getInstance()->getSerializer
+                (
+                    $attendee,
+                    SerializerRegistry::SerializerType_Private
+                )->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
+                    ['serializer_type' => SerializerRegistry::SerializerType_Private]
+                )
+            );
+        });
     }
 
     /**
@@ -633,7 +628,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      */
     public function deleteAttendee($summit_id, $attendee_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $attendee_id){
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -645,13 +640,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
             return $this->deleted();
 
-        } catch (\HTTP401UnauthorizedException $ex1) {
-            Log::warning($ex1);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -661,7 +650,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      */
     public function updateAttendee($summit_id, $attendee_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $attendee_id){
             if (!Request::isJson()) return $this->error400();
             $data = Request::json();
 
@@ -698,17 +687,20 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
             $attendee = $this->attendee_service->updateAttendee($summit, $attendee_id, $data->all());
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($attendee)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412($ex1->getMessages());
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(
+                SerializerRegistry::getInstance()->getSerializer
+                (
+                    $attendee,
+                    SerializerRegistry::SerializerType_Private
+                )->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
+                    ['serializer_type' => SerializerRegistry::SerializerType_Private]
+                )
+            );
+        });
     }
 
     /**
@@ -718,7 +710,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      */
     public function addAttendeeTicket($summit_id, $attendee_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $attendee_id){
             if (!Request::isJson()) return $this->error400();
             $data = Request::json();
 
@@ -764,16 +756,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations()
             ));
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412($ex1->getMessages());
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -784,26 +767,18 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      */
     public function deleteAttendeeTicket($summit_id, $attendee_id, $ticket_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $attendee_id, $ticket_id){
+
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $attendee = $this->repository->getById($attendee_id);
             if (is_null($attendee)) return $this->error404();
 
-            $ticket = $this->attendee_service->deleteAttendeeTicket($attendee, $ticket_id);
+            $this->attendee_service->deleteAttendeeTicket($attendee, $ticket_id);
 
             return $this->deleted();
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412($ex1->getMessages());
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -815,7 +790,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      */
     public function reassignAttendeeTicketByMember($summit_id, $attendee_id, $ticket_id, $other_member_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $attendee_id, $ticket_id, $other_member_id){
+
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -833,16 +809,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations()
             ));
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412($ex1->getMessages());
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+
+        });
     }
 
     /**
@@ -853,7 +821,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      */
     public function reassignAttendeeTicket($summit_id, $attendee_id, $ticket_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $attendee_id, $ticket_id){
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -876,16 +844,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations()
             ));
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412($ex1->getMessages());
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+
+        });
     }
 
     /**
@@ -902,7 +862,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      */
     public function send($summit_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id){
 
             if (!Request::isJson()) return $this->error400();
             $data = Request::json();
@@ -1000,19 +960,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
             return $this->ok();
 
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -1022,7 +970,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      */
     public function doVirtualCheckin($summit_id, $attendee_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $attendee_id){
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -1031,17 +979,13 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             if (is_null($attendee)) return $this->error404();
             $attendee = $this->attendee_service->doVirtualCheckin($summit, $attendee_id);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($attendee)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412($ex1->getMessages());
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404($ex2->getMessage());
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($attendee)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+
+        });
     }
 
 }

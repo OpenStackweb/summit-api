@@ -2425,26 +2425,29 @@ final class SummitOrderService
     public function addAttendeeBadgeFeature(Summit $summit, $ticket_id, int $feature_id): SummitAttendeeBadge
     {
         return $this->tx_service->transaction(function () use ($summit, $ticket_id, $feature_id) {
+
             $feature_type = $summit->getFeatureTypeById($feature_id);
             if (is_null($feature_type))
-                throw new EntityNotFoundException("feature type not found");
+                throw new EntityNotFoundException("Feature type not found.");
 
             $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
             if (is_null($ticket))
                 $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
 
             if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
-                throw new EntityNotFoundException('ticket not found');
+                throw new EntityNotFoundException('Ticket not found.');
 
             $order = $ticket->getOrder();
 
             if ($order->getSummitId() != $summit->getId())
-                throw new EntityNotFoundException('ticket not found');
+                throw new EntityNotFoundException('Ticket not found.');
 
             if (!$ticket->hasBadge())
-                throw new EntityNotFoundException('badge not found');
+                throw new EntityNotFoundException('Badge not found.');
 
             $badge = $ticket->getBadge();
+            if($badge->hasFeature($feature_type))
+                throw new ValidationException(sprintf("Badge already has feature %s.", $feature_type->getName()));
 
             $badge->addFeature($feature_type);
 
@@ -2465,24 +2468,27 @@ final class SummitOrderService
         return $this->tx_service->transaction(function () use ($summit, $ticket_id, $feature_id) {
             $feature_type = $summit->getFeatureTypeById($feature_id);
             if (is_null($feature_type))
-                throw new EntityNotFoundException("feature type not found");
+                throw new EntityNotFoundException("Feature type not found.");
 
             $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
             if (is_null($ticket))
                 $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
 
             if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
-                throw new EntityNotFoundException('ticket not found');
+                throw new EntityNotFoundException('Ticket not found.');
 
             $order = $ticket->getOrder();
 
             if ($order->getSummitId() != $summit->getId())
-                throw new EntityNotFoundException('ticket not found');
+                throw new EntityNotFoundException('Ticket not found.');
 
             if (!$ticket->hasBadge())
-                throw new EntityNotFoundException('badge not found');
+                throw new EntityNotFoundException('Badge not found.');
 
             $badge = $ticket->getBadge();
+
+            if(!$badge->hasFeature($feature_type))
+                throw new ValidationException(sprintf("Badge does not have feature %s.", $feature_type->getName()));
 
             $badge->removeFeature($feature_type);
 

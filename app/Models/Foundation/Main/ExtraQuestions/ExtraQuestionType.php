@@ -181,6 +181,16 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
     }
 
     /**
+     * @return string
+     */
+    public function getCSVLabel(): string
+    {
+        $label = strip_tags(strtolower(trim($this->label)));
+        $label = str_replace(",","\,", $label);
+        return $label;
+    }
+
+    /**
      * @param string $label
      */
     public function setLabel(string $label): void

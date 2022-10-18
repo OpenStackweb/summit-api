@@ -48,12 +48,12 @@ class SponsorUserInfoGrantCSVSerializer extends SponsorUserInfoGrantSerializer
             }
             foreach ($params['ticket_questions'] as $question) {
                 if (!$question instanceof SummitOrderExtraQuestionType) continue;
-                $values[$question->getLabel()] = '';
+                $label = $question->getCSVLabel();
+                $values[$label] = '';
                 if (!is_null($ticket_owner)) {
                     $value = $ticket_owner->getExtraQuestionAnswerValueByQuestion($question);
-                    Log::debug(sprintf("SponsorBadgeScanCSVSerializer::serialize question %s value %s", $question->getId(), $value));
                     if(is_null($value)) continue;
-                    $values[$question->getLabel()] = $question->getNiceValue($value);
+                    $values[$label] = $question->getNiceValue($value);
                 }
             }
         }

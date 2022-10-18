@@ -410,19 +410,23 @@ final class OAuth2SummitBadgeScanApiController
                 ];
 
                 foreach ($summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage) as $question){
-                    $allowed_columns[] = strip_tags($question->getLabel());
+                    $allowed_columns[] = $question->getCSVLabel();
                 }
 
                 $columns_param = Request::input("columns", "");
                 $columns = [];
                 if(!empty($columns_param))
                     $columns  = explode(',', $columns_param);
+
                 $diff     = array_diff($columns, $allowed_columns);
+
                 if(count($diff) > 0){
                     throw new ValidationException(sprintf("columns %s are not allowed!", implode(",", $diff)));
                 }
+
                 if(empty($columns))
                     $columns = $allowed_columns;
+
                 return $columns;
             },
             'attendees-badge-scans-',

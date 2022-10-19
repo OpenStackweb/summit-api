@@ -31,7 +31,22 @@ final class Filter
     const DateTimeEpoch = 'datetime_epoch';
     const Email = 'json_email';
     const ParamPrefix = "param_%s";
+    const ValuePlaceholder = ':value';
+    const OperatorPlaceholder = ':operator';
 
+    /**
+     * @param string $mapping
+     * @return string
+     */
+    private static function cleanMapping(string $mapping):string {
+        if (strstr($mapping, self::ValuePlaceholder)) {
+            $mapping = str_replace(self::ValuePlaceholder, "", $mapping);
+        }
+        if (strstr($mapping, self::OperatorPlaceholder)) {
+            $mapping = str_replace(self::OperatorPlaceholder, "", $mapping);
+        }
+        return trim($mapping);
+    }
     /**
      * @var array
      */
@@ -216,14 +231,14 @@ final class Filter
         if (is_array($value)) {
             $inner_condition = '( ';
             foreach ($value as $val) {
-                $inner_condition .= sprintf("%s %s :%s %s ", $mapping_parts[0], $op, sprintf(self::ParamPrefix, $param_idx), $sameOp);
+                $inner_condition .= sprintf("%s %s :%s %s ", self::cleanMapping($mapping_parts[0]), $op, sprintf(self::ParamPrefix, $param_idx), $sameOp);
                 $this->bindings[sprintf(self::ParamPrefix, $param_idx)] = $val;
                 ++$param_idx;
             }
             $inner_condition = substr($inner_condition, 0, (strlen($sameOp) + 1) * -1);
             $inner_condition .= ' )';
         } else {
-            $inner_condition = sprintf("%s %s :%s ", $mapping_parts[0], $op, sprintf(self::ParamPrefix, $param_idx));
+            $inner_condition = sprintf("%s %s :%s ", self::cleanMapping($mapping_parts[0]), $op, sprintf(self::ParamPrefix, $param_idx));
             $this->bindings[sprintf(self::ParamPrefix, $param_idx)] = $value;
             ++$param_idx;
         }

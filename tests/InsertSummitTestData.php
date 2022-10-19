@@ -37,6 +37,7 @@ use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
+use models\summit\SummitBadgeFeatureType;
 use models\summit\SummitBadgeType;
 use models\summit\SummitEvent;
 use models\summit\SummitEventType;
@@ -177,6 +178,11 @@ trait InsertSummitTestData
      * @var array | SummitAccessLevelType[]
      */
     static $access_levels;
+
+    /**
+     * @var array | SummitBadgeFeatureType[]
+     */
+    static $features;
 
     /**
      * @throws Exception

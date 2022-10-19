@@ -28,7 +28,8 @@ final class Filter
     const Int = 'json_int';
     const String = 'json_string';
     const DateTimeEpoch = 'datetime_epoch';
-
+    const OperatorPlaceholder = ':operator';
+    const ValuePlaceholder = ':value';
     /**
      * @var array
      */
@@ -97,7 +98,6 @@ final class Filter
         $res = $this->getFilter($field);
         return count($res) == 1 ? $res[0]:null;
     }
-
 
     /**
      * @param string $field
@@ -214,7 +214,7 @@ final class Filter
                     if (count($mapping) > 1) {
                         $value = $this->convertValue($value, $mapping[1]);
                     }
-                    $criteria->andWhere(Criteria::expr()->eq($mapping[0], $value));
+                    $criteria->andWhere(Criteria::expr()->eq(self::cleanMapping($mapping[0]), $value));
                 }
             } else if (is_array($filter)) {
                 // OR
@@ -230,7 +230,7 @@ final class Filter
                         if (count($mapping) > 1) {
                             $value = $this->convertValue($value, $mapping[1]);
                         }
-                        $criteria->orWhere(Criteria::expr()->eq($mapping[0], $value));
+                        $criteria->orWhere(Criteria::expr()->eq(self::cleanMapping($mapping[0]), $value));
 
                     }
                 }
@@ -238,6 +238,20 @@ final class Filter
             }
         }
         return $criteria;
+    }
+
+    /**
+     * @param string $mapping
+     * @return string
+     */
+    private static function cleanMapping(string $mapping):string {
+        if (strstr($mapping, self::ValuePlaceholder)) {
+            $mapping = str_replace(self::ValuePlaceholder, "", $mapping);
+        }
+        if (strstr($mapping, self::OperatorPlaceholder)) {
+            $mapping = str_replace(self::OperatorPlaceholder, "", $mapping);
+        }
+        return trim($mapping);
     }
 
     /**
@@ -285,7 +299,7 @@ final class Filter
                         if(is_array($value)){
                             $inner_condition = '( ';
                             foreach ($value as $val) {
-                                $inner_condition .= sprintf(" %s %s :%s %s ", $mapping[0], $filter->getOperator(), sprintf($param_prefix, $param_idx), $filter->getSameFieldOp());
+                                $inner_condition .= sprintf(" %s %s :%s %s ", self::cleanMapping($mapping[0]), $filter->getOperator(), sprintf($param_prefix, $param_idx), $filter->getSameFieldOp());
                                 $bindings[sprintf($param_prefix, $param_idx)] = $val;
                                 ++$param_idx;
                             }
@@ -295,7 +309,7 @@ final class Filter
                         }
                         else {
                             $bindings[sprintf($param_prefix, $param_idx)] = $value;
-                            $condition .= sprintf("%s %s :%s", $mapping_or[0], $filter->getOperator(), sprintf($param_prefix, $param_idx));
+                            $condition .= sprintf("%s %s :%s", self::cleanMapping($mapping_or[0]), $filter->getOperator(), sprintf($param_prefix, $param_idx));
                             ++$param_idx;
                         }
                         /**********************/
@@ -315,7 +329,8 @@ final class Filter
                     if(is_array($value)){
                         $inner_condition = '( ';
                         foreach ($value as $val) {
-                            $inner_condition .= sprintf(" %s %s :%s %s ", $mapping[0], $filter->getOperator(), sprintf($param_prefix, $param_idx), $filter->getSameFieldOp());
+
+                            $inner_condition .= sprintf(" %s %s :%s %s ", self::cleanMapping($mapping[0]), $filter->getOperator(), sprintf($param_prefix, $param_idx), $filter->getSameFieldOp());
                             $bindings[sprintf($param_prefix, $param_idx)] = $val;
                             ++$param_idx;
                         }
@@ -325,7 +340,7 @@ final class Filter
                     }
                     else {
                         $bindings[sprintf($param_prefix, $param_idx)] = $value;
-                        $condition .= sprintf("%s %s :%s", $mapping[0], $filter->getOperator(), sprintf($param_prefix, $param_idx));
+                        $condition .= sprintf("%s %s :%s", self::cleanMapping($mapping[0]), $filter->getOperator(), sprintf($param_prefix, $param_idx));
                         ++$param_idx;
                     }
 
@@ -377,7 +392,7 @@ final class Filter
                                 if(is_array($value)){
                                     $inner_condition = '( ';
                                     foreach ($value as $val) {
-                                        $inner_condition .= sprintf(" %s %s :%s %s ", $mapping_or[0], $e->getOperator(), sprintf($param_prefix, $param_idx), $e->getSameFieldOp());
+                                        $inner_condition .= sprintf(" %s %s :%s %s ", self::cleanMapping($mapping_or[0]), $e->getOperator(), sprintf($param_prefix, $param_idx), $e->getSameFieldOp());
                                         $bindings[sprintf($param_prefix, $param_idx)] = $val;
                                         ++$param_idx;
                                     }
@@ -387,7 +402,7 @@ final class Filter
                                 }
                                 else {
                                     $bindings[sprintf($param_prefix, $param_idx)] = $value;
-                                    $condition .= sprintf("%s %s :%s", $mapping_or[0], $e->getOperator(), sprintf($param_prefix, $param_idx));
+                                    $condition .= sprintf("%s %s :%s", self::cleanMapping($mapping_or[0]), $e->getOperator(), sprintf($param_prefix, $param_idx));
                                     ++$param_idx;
                                 }
                             }
@@ -407,7 +422,7 @@ final class Filter
                             if(is_array($value)){
                                 $inner_condition = '( ';
                                 foreach ($value as $val) {
-                                    $inner_condition .= sprintf(" %s %s :%s %s ", $mapping[0], $e->getOperator(), sprintf($param_prefix, $param_idx), $e->getSameFieldOp());
+                                    $inner_condition .= sprintf(" %s %s :%s %s ", self::cleanMapping($mapping[0]), $e->getOperator(), sprintf($param_prefix, $param_idx), $e->getSameFieldOp());
                                     $bindings[sprintf($param_prefix, $param_idx)] = $val;
                                     ++$param_idx;
                                 }
@@ -417,7 +432,7 @@ final class Filter
                             }
                             else {
                                 $bindings[sprintf($param_prefix, $param_idx)] = $value;
-                                $sub_or_query .= sprintf("%s %s :%s", $mapping[0], $e->getOperator(), sprintf($param_prefix, $param_idx));
+                                $sub_or_query .= sprintf("%s %s :%s", self::cleanMapping($mapping[0]), $e->getOperator(), sprintf($param_prefix, $param_idx));
                                 ++$param_idx;
                             }
                         }
@@ -535,7 +550,7 @@ final class Filter
                     if(is_array($value)){
                         $cond = '( ';
                         foreach ($value as $val) {
-                            $cond .= sprintf(" %s %s :%s %s ", $mapping[0], $op, sprintf($param_prefix, $param_idx), $filter->getSameFieldOp());
+                            $cond .= sprintf(" %s %s :%s %s ", self::cleanMapping($mapping[0]), $op, sprintf($param_prefix, $param_idx), $filter->getSameFieldOp());
                             $this->bindings[sprintf($param_prefix, $param_idx)] = $val;
                             ++$param_idx;
                         }
@@ -543,7 +558,7 @@ final class Filter
                         $cond .= ' )';
                     }
                     else {
-                        $cond = sprintf(' %s %s :%s', $mapping[0], $op, sprintf($param_prefix, $param_idx));
+                        $cond = sprintf(' %s %s :%s', self::cleanMapping($mapping[0]), $op, sprintf($param_prefix, $param_idx));
                         $this->bindings[sprintf($param_prefix, $param_idx)] = $filter->getValue();
                         ++$param_idx;
                     }

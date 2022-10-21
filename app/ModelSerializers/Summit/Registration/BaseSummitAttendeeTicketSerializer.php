@@ -80,6 +80,12 @@ class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getAppliedTaxes',
         ],
+        'order' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'order_id',
+            'getter' => 'getOrder',
+            'has' => 'hasOrder'
+        ],
     ];
 
     use RequestScopedCache;

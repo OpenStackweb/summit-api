@@ -454,7 +454,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitRegistrationAdmins
                 ]
             ],
-            // buy flow
+            // purchase flow
             [
                 'name'        => 'reserve-registration-order',
                 'route'       => '/api/v1/summits/{id}/orders/reserve',
@@ -496,7 +496,7 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
-                'name'        => 'get-all-my-registration-order-by-summit',
+                'name'        => 'get-all-my-registration-orders-by-summit',
                 'route'       => '/api/v1/summits/{id}/orders/me',
                 'http_method' => 'GET',
                 'scopes'      => [
@@ -541,6 +541,22 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'PUT',
                 'scopes'      => [
                     sprintf(SummitScopes::UpdateMyRegistrationOrders, $current_realm),
+                ],
+            ],
+            [
+                'name'        => 'get-my-order-by-id',
+                'route'       => '/api/v1/summits/all/orders/{order_id}',
+                'http_method' => 'GET',
+                'scopes'      => [
+                    sprintf(SummitScopes::ReadMyRegistrationOrders, $current_realm),
+                ],
+            ],
+            [
+                'name'        => 'get-my-tickets-by-order-id',
+                'route'       => '/api/v1/summits/all/orders/{order_id}/tickets',
+                'http_method' => 'GET',
+                'scopes'      => [
+                    sprintf(SummitScopes::ReadMyRegistrationOrders, $current_realm),
                 ],
             ],
             [
@@ -616,7 +632,15 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
-                'name'        => 'get-ticket-pdf',
+                'name'        => 'get-my-ticket-by-id',
+                'route'       => '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}',
+                'http_method' => 'GET',
+                'scopes'      => [
+                    sprintf(SummitScopes::ReadMyRegistrationOrders, $current_realm),
+                ],
+            ],
+            [
+                'name'        => 'get-my-ticket-pdf-by-order-id',
                 'route'       => '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}/pdf',
                 'http_method' => 'GET',
                 'scopes'      => [

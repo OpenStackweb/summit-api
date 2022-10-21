@@ -197,9 +197,13 @@ Route::group(array('prefix' => 'summits'), function () {
                     Route::delete('', 'OAuth2SummitOrdersApiController@requestRefundMyOrder');
                 });
                 Route::put('resend', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrdersApiController@reSendOrderEmail']);
+                Route::get('', 'OAuth2SummitOrdersApiController@getMyOrderById');
                 Route::put('', 'OAuth2SummitOrdersApiController@updateMyOrder');
                 Route::group(['prefix' => 'tickets'], function () {
+                    Route::get('', 'OAuth2SummitOrdersApiController@getMyTicketsByOrderId');
                     Route::group(['prefix' => '{ticket_id}'], function () {
+                        Route::get('', 'OAuth2SummitOrdersApiController@getMyTicketById');
+
                         Route::get('pdf', 'OAuth2SummitOrdersApiController@getTicketPDFByOrderId');
                         Route::group(['prefix' => 'refund'], function () {
                             Route::delete('', 'OAuth2SummitOrdersApiController@requestRefundMyTicket');

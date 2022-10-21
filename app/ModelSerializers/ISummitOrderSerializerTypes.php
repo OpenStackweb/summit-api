@@ -22,4 +22,5 @@ interface ISummitOrderSerializerTypes
     const ReservationType = 'RESERVATION';
     const CheckOutType    = 'CHECKOUT';
     const AdminType       = 'ADMIN';
+    const OwnType         = 'OWN';
 }

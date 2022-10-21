@@ -375,6 +375,7 @@ final class SerializerRegistry
             ISummitOrderSerializerTypes::CheckOutType => SummitOrderBaseSerializer::class,
             ISummitOrderSerializerTypes::ReservationType => SummitOrderReservationSerializer::class,
             ISummitOrderSerializerTypes::AdminType => SummitOrderAdminSerializer::class,
+            ISummitOrderSerializerTypes::OwnType => SummitOrderOwnSerializer::class,
         ];
 
         $this->registry['SummitOrderExtraQuestionAnswer'] = SummitOrderExtraQuestionAnswerSerializer::class;

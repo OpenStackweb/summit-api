@@ -13,51 +13,38 @@
  **/
 
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
-use App\Models\Foundation\Summit\SelectionPlan;
-use models\utils\One2ManyPropertyTrait;
+use Doctrine\Common\Collections\ArrayCollection;
+use models\summit\SummitOwned;
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitSelectionPlanExtraQuestionTypeRepository")
  * @ORM\Table(name="SummitSelectionPlanExtraQuestionType")
+ * @ORM\AssociationOverrides({
+ *     @ORM\AssociationOverride(
+ *          name="summit",
+ *          inversedBy="selection_plan_extra_questions"
+ *     )
+ * })
  * Class SummitSelectionPlanExtraQuestionType
  * @package App\Models\Foundation\Summit\ExtraQuestions
  */
 class SummitSelectionPlanExtraQuestionType extends ExtraQuestionType
 {
-    /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="extra_questions")
-     * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
-     * @var SelectionPlan
-     */
-    protected $selection_plan;
+    use SummitOwned;
 
     /**
-     * @return SelectionPlan
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType", mappedBy="question_type",  cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var AssignedSelectionPlanExtraQuestionType[]
      */
-    public function getSelectionPlan(): SelectionPlan
+    private $assignments;
+
+    public function __construct()
     {
-        return $this->selection_plan;
+        parent::__construct();
+        $this->assignments = new ArrayCollection();
     }
 
-    /**
-     * @param SelectionPlan $selection_plan
-     */
-    public function setSelectionPlan(SelectionPlan $selection_plan): void
-    {
-        $this->selection_plan = $selection_plan;
-    }
-
-    use One2ManyPropertyTrait;
-
-    protected $getIdMappings = [
-        'getSelectionPlanId' => 'selection_plan',
-    ];
-
-    protected $hasPropertyMappings = [
-        'hasSelectionPlan' => 'selection_plan',
-    ];
-
-    public function clearSelectionPlan():void{
-        $this->selection_plan = null;
+    public function getAssignments(){
+        return $this->assignments;
     }
 }

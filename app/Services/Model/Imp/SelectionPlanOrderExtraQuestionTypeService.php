@@ -21,6 +21,7 @@ use App\Services\Model\ISelectionPlanExtraQuestionTypeService;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\summit\Summit;
 
 /**
  * Class SelectionPlanOrderExtraQuestionTypeService
@@ -47,24 +48,27 @@ final class SelectionPlanOrderExtraQuestionTypeService
     }
 
     /**
-     * @inheritDoc
+     * @param Summit $summit
+     * @param array $payload
+     * @return SummitSelectionPlanExtraQuestionType
+     * @throws \Exception
      */
-    public function addExtraQuestion(SelectionPlan $selectionPlan, array $payload): SummitSelectionPlanExtraQuestionType
+    public function addExtraQuestion(Summit $summit, array $payload): SummitSelectionPlanExtraQuestionType
     {
-        return $this->tx_service->transaction(function () use ($selectionPlan, $payload) {
+        return $this->tx_service->transaction(function () use ($summit, $payload) {
             $name = trim($payload['name']);
-            $former_question = $selectionPlan->getExtraQuestionByName($name);
+            $former_question = $summit->getSelectionPlanExtraQuestionByName($name);
             if (!is_null($former_question))
                 throw new ValidationException("Question Name already exists for Selection Plan.");
 
             $label = trim($payload['label']);
-            $former_question = $selectionPlan->getExtraQuestionByName($label);
+            $former_question = $summit->getSelectionPlanExtraQuestionByName($label);
             if (!is_null($former_question))
                 throw new ValidationException("Question Label already exists for Selection Plan.");
 
             $question = SummitSelectionPlanExtraQuestionTypeFactory::build($payload);
 
-            $selectionPlan->addExtraQuestion($question);
+            $summit->addSelectionPlanExtraQuestion($question);
 
             return $question;
         });
@@ -73,24 +77,24 @@ final class SelectionPlanOrderExtraQuestionTypeService
     /**
      * @inheritDoc
      */
-    public function updateExtraQuestion(SelectionPlan $selectionPlan, int $question_id, array $payload): SummitSelectionPlanExtraQuestionType
+    public function updateExtraQuestion(Summit $summit, int $question_id, array $payload): SummitSelectionPlanExtraQuestionType
     {
-        return $this->tx_service->transaction(function () use ($selectionPlan, $question_id, $payload) {
+        return $this->tx_service->transaction(function () use ($summit, $question_id, $payload) {
 
-            $question = $selectionPlan->getExtraQuestionById($question_id);
+            $question = $summit->getExtraQuestionById($question_id);
             if (is_null($question))
                 throw new EntityNotFoundException("question not found");
 
             if (isset($payload['name'])) {
                 $name = trim($payload['name']);
-                $former_question = $selectionPlan->getExtraQuestionByName($name);
+                $former_question = $summit->getExtraQuestionByName($name);
                 if (!is_null($former_question) && $former_question->getId() != $question_id)
                     throw new ValidationException("Question Name already exists for Selection Plan.");
             }
 
             if (isset($payload['label'])) {
                 $label = trim($payload['label']);
-                $former_question = $selectionPlan->getExtraQuestionByLabel($label);
+                $former_question = $summit->getExtraQuestionByLabel($label);
                 if (!is_null($former_question) && $former_question->getId() != $question_id)
                     throw new ValidationException("Question Label already exists for Selection Plan.");
             }

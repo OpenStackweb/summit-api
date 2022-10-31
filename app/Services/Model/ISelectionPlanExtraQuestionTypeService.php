@@ -16,6 +16,7 @@ use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestion
 use App\Models\Foundation\Summit\SelectionPlan;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\summit\Summit;
 use models\summit\SummitOrderExtraQuestionType;
 /**
  * Interface ISelectionPlanExtraQuestionTypeService
@@ -24,44 +25,44 @@ use models\summit\SummitOrderExtraQuestionType;
 interface ISelectionPlanExtraQuestionTypeService
 {
     /**
-     * @param SelectionPlan $selectionPlan
+     * @param Summit $summit
      * @param array $payload
      * @return SummitOrderExtraQuestionType
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function addExtraQuestion(SelectionPlan $selectionPlan, array $payload):SummitSelectionPlanExtraQuestionType;
+    public function addExtraQuestion(Summit $summit, array $payload):SummitSelectionPlanExtraQuestionType;
 
     /**
-     * @param SelectionPlan $selectionPlan
+     * @param Summit $summit
      * @param int $question_id
      * @param array $payload
      * @return SummitOrderExtraQuestionType
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function updateExtraQuestion(SelectionPlan $selectionPlan, int $question_id, array $payload):SummitSelectionPlanExtraQuestionType;
+    public function updateExtraQuestion(Summit $summit, int $question_id, array $payload):SummitSelectionPlanExtraQuestionType;
 
     /**
-     * @param SelectionPlan $selectionPlan
+     * @param Summit $summit
      * @param int $question_id
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function deleteExtraQuestion(SelectionPlan $selectionPlan, int $question_id):void;
+    public function deleteExtraQuestion(Summit $summit, int $question_id):void;
 
     /**
-     * @param SelectionPlan $selectionPlan
+     * @param Summit $summit
      * @param int $question_id
      * @param array $payload
      * @return ExtraQuestionTypeValue
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function addExtraQuestionValue(SelectionPlan $selectionPlan, int $question_id, array $payload):ExtraQuestionTypeValue;
+    public function addExtraQuestionValue(Summit $summit, int $question_id, array $payload):ExtraQuestionTypeValue;
 
     /**
-     * @param SelectionPlan $selectionPlan
+     * @param Summit $summit
      * @param int $question_id
      * @param int $value_id
      * @param array $payload
@@ -69,14 +70,14 @@ interface ISelectionPlanExtraQuestionTypeService
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function updateExtraQuestionValue(SelectionPlan $selectionPlan, int $question_id, int $value_id, array $payload):ExtraQuestionTypeValue;
+    public function updateExtraQuestionValue(Summit $summit, int $question_id, int $value_id, array $payload):ExtraQuestionTypeValue;
 
     /**
-     * @param SelectionPlan $selectionPlan
+     * @param Summit $summit
      * @param int $question_id
      * @param int $value_id
      * @throws ValidationException
      * @throws EntityNotFoundException
      */
-    public function deleteExtraQuestionValue(SelectionPlan $selectionPlan, int $question_id, int $value_id):void;
+    public function deleteExtraQuestionValue(Summit $summit, int $question_id, int $value_id):void;
 }

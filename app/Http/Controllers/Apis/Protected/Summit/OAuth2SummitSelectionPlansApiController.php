@@ -883,23 +883,20 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
      * @param $selection_plan_id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function addExtraQuestion($summit_id, $selection_plan_id)
+    public function addExtraQuestion($summit_id)
     {
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
         if (is_null($summit)) return $this->error404();
 
-        $selection_plan = $summit->getSelectionPlanById(intval($selection_plan_id));
-        if (is_null($selection_plan)) return $this->error404();
-
-        $args = [$selection_plan];
+        $args = [$summit];
 
         return $this->_add(
             function ($payload) {
                 return SelectionPlanExtraQuestionValidationRulesFactory::build($payload);
             },
-            function ($payload, $selection_plan) {
-                return $this->selection_plan_extra_questions_service->addExtraQuestion($selection_plan, HTMLCleaner::cleanData($payload, ['label']));
+            function ($payload, $summit) {
+                return $this->selection_plan_extra_questions_service->addExtraQuestion($summit, HTMLCleaner::cleanData($payload, ['label']));
             },
             ...$args
         );

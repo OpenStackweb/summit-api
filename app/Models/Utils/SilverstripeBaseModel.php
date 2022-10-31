@@ -106,7 +106,6 @@ class SilverstripeBaseModel extends BaseEntity
         $this->last_edited = $last_edited;
     }
 
-
     public function __construct()
     {
         $now = new \DateTime('now', new \DateTimeZone(self::DefaultTimeZone));

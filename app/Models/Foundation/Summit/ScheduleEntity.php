@@ -29,7 +29,13 @@ trait ScheduleEntity
      */
     private function _getClassName(): string
     {
-        return (new ReflectionClass($this))->getShortName();
+        try {
+            return (new ReflectionClass($this))->getShortName();
+        }
+        catch (\Exception $ex){
+
+        }
+        return '';
     }
 
     /**
@@ -37,9 +43,19 @@ trait ScheduleEntity
      */
     private function _getSummitId(): int
     {
-        $rc = new ReflectionClass($this);
-        if (!$rc->hasProperty("summit")) return 0;
-        return $this->summit->id;
+        try {
+            $rc = new ReflectionClass($this);
+            if (!$rc->hasProperty("summit")) return 0;
+            if (is_null($this->summit)){
+                if($rc->hasProperty("former_summit_id"))
+                    return $this->former_summit_id;
+                return 0;
+            }
+            return $this->summit->id;
+        }
+        catch(\Exception $ex){
+        }
+        return 0;
     }
 
     /**

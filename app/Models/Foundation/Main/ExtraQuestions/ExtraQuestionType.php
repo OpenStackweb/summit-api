@@ -28,6 +28,7 @@ use Doctrine\ORM\Mapping AS ORM;
  * @ORM\Table(name="ExtraQuestionType")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="ClassName", type="string")
+ * @ORM\HasLifecycleCallbacks
  * @ORM\DiscriminatorMap({
  *     "ExtraQuestionType" = "ExtraQuestionType",
  *     "SummitSelectionPlanExtraQuestionType" = "App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType",

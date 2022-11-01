@@ -25,7 +25,9 @@ use Doctrine\ORM\NoResultException;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Member;
+use models\summit\AllowedPresentationActionType;
 use models\summit\Presentation;
+use models\summit\PresentationActionType;
 use models\summit\PresentationCategory;
 use models\summit\PresentationCategoryGroup;
 use models\summit\Summit;
@@ -53,6 +55,8 @@ class SelectionPlan extends SilverstripeBaseModel
     use SummitOwned;
 
     use TimeZoneEntity;
+
+    use OrderableChilds;
 
     const STATUS_SUBMISSION = 'SUBMISSION';
     const STATUS_SELECTION = 'SELECTION';
@@ -179,6 +183,12 @@ class SelectionPlan extends SilverstripeBaseModel
      * @var PresentationTrackChairRatingType
      */
     private $track_chair_rating_types;
+
+    /**
+     * @ORM\OneToMany(targetEntity="models\summit\AllowedPresentationActionType", mappedBy="selection_plan", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var AllowedPresentationActionType[]
+     */
+    private $presentation_action_types;
 
     /**
      * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType", mappedBy="selection_plan",cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
@@ -390,6 +400,7 @@ class SelectionPlan extends SilverstripeBaseModel
         $this->selection_lists = new ArrayCollection;
         $this->track_chair_rating_types = new ArrayCollection();
         $this->submission_lock_down_presentation_status_date = null;
+        $this->presentation_action_types = new ArrayCollection();
     }
 
     /**
@@ -1060,5 +1071,73 @@ class SelectionPlan extends SilverstripeBaseModel
         $criteria->where(Criteria::expr()->eq('question_type', $question));
         $res = $this->extra_questions->matching($criteria)->first();
         return $res === false ? null : $res;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getPresentationActionTypes(): ArrayCollection {
+        return $this->presentation_action_types->map(function ($entity) {
+            return $entity->getType();
+        });
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getPresentationActionTypesMaxOrder(): int {
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'DESC']);
+        $res = $this->presentation_action_types->matching($criteria)->first();
+        return $res === false ? 0 : $res->getOrder();
+    }
+
+    /**
+     * @param PresentationActionType $presentation_action_type
+     */
+    public function addPresentationActionType(PresentationActionType $presentation_action_type) {
+        $order = $this->getPresentationActionTypesMaxOrder();
+        $allowed_presentation_action_type = new AllowedPresentationActionType($presentation_action_type, $this, $order + 1);
+        $this->presentation_action_types->add($allowed_presentation_action_type);
+    }
+
+    /**
+     * @param PresentationActionType $presentation_action_type
+     */
+    public function removePresentationActionType(PresentationActionType $presentation_action_type) {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type', $presentation_action_type));
+        $presentation_action_type_assignment = $this->presentation_action_types->matching($criteria)->first();
+        if ($presentation_action_type_assignment === false) return;
+        $this->presentation_action_types->removeElement($presentation_action_type_assignment);
+        self::resetOrderForSelectable($this->presentation_action_types, AllowedPresentationActionType::class);
+    }
+
+    /**
+     * @param PresentationActionType $presentation_action_type
+     * @param int $order
+     * @throws ValidationException
+     */
+    public function updateOrder(PresentationActionType $presentation_action_type, int $order) {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type', $presentation_action_type));
+        $selection_plan_assignment = $this->presentation_action_types->matching($criteria)->first();
+        if ($selection_plan_assignment === false) return;
+        self::recalculateOrderForSelectable(
+            $this->presentation_action_types, $selection_plan_assignment, $order, AllowedPresentationActionType::class);
+    }
+
+    public function clearPresentationActionTypes() {
+        $this->presentation_action_types->clear();
+    }
+
+    /**
+     * @param PresentationActionType $presentation_action_type
+     * @return bool
+     */
+    public function isAllowedPresentationActionType(PresentationActionType $presentation_action_type): bool {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type', $presentation_action_type));
+        return $this->presentation_action_types->matching($criteria)->count() > 0;
     }
 }

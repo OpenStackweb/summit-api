@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Events\PresentationActionTypeCreated;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 use App\Models\Foundation\Main\IOrderable;
 use Illuminate\Support\Facades\Event;
@@ -47,6 +48,22 @@ class PresentationActionType extends SilverstripeBaseModel
     private $order;
 
     /**
+     * @ORM\OneToMany(targetEntity="models\summit\AllowedPresentationActionType", mappedBy="type", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var AllowedPresentationActionType[]
+     */
+    private $selection_plans;
+
+    /**
+     * PresentationActionType constructor.
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        $this->order = 1;
+        $this->selection_plans = new ArrayCollection;
+    }
+
+    /**
      * @return int
      */
     public function getOrder(): int
@@ -78,13 +95,6 @@ class PresentationActionType extends SilverstripeBaseModel
         $this->label = $label;
     }
 
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->order = 1;
-    }
-
     /**
      * @ORM\PostPersist
      */
@@ -93,4 +103,12 @@ class PresentationActionType extends SilverstripeBaseModel
         Event::dispatch(new PresentationActionTypeCreated($this));
     }
 
+    /**
+     * @return ArrayCollection
+     */
+    public function getSelectionPlans(): ArrayCollection {
+        return $this->selection_plans->map(function ($entity) {
+            return $entity->getSelectionPlan();
+        });
+    }
 }

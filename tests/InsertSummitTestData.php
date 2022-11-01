@@ -24,15 +24,22 @@ use Exception;
 use Illuminate\Support\Facades\DB;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use LaravelDoctrine\ORM\Facades\Registry;
+use models\main\Company;
 use models\main\Member;
 use models\main\SummitAdministratorPermissionGroup;
 use models\main\Tag;
+use models\summit\ISponsorshipTypeConstants;
 use models\summit\ISummitEventType;
 use models\summit\Presentation;
 use models\summit\PresentationCategory;
 use models\summit\PresentationCategoryGroup;
 use models\summit\PresentationSpeaker;
 use models\summit\PresentationType;
+use models\summit\Sponsor;
+use models\summit\SponsorAd;
+use models\summit\SponsorMaterial;
+use models\summit\SponsorshipType;
+use models\summit\SponsorSocialNetwork;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
@@ -139,6 +146,11 @@ trait InsertSummitTestData
     static $summit_permission_group_repository;
 
     /**
+     * @var ObjectRepository
+     */
+    static $company_repository;
+
+    /**
      * @var array|Presentation[]
      */
     static $presentations;
@@ -179,12 +191,39 @@ trait InsertSummitTestData
     static $access_levels;
 
     /**
+     * @var array | Company[]
+     */
+    static $companies;
+
+    /**
+     * @var array | Company[]
+     */
+    static $companies_without_sponsor;
+
+    /**
+     * @var array | Sponsor[]
+     */
+    static $sponsors;
+
+    /**
+     * @var SponsorshipType
+     */
+    static $default_sponsor_ship_type;
+
+    /**
      * @throws Exception
      */
     protected static function insertTestData(){
+
         DB::setDefaultConnection("model");
+        self::$em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        if (!self::$em ->isOpen()) {
+            self::$em  = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+        }
+
         //DB::table("Summit")->delete();
         self::$summit_repository = EntityManager::getRepository(Summit::class);
+        self::$company_repository = EntityManager::getRepository(Company::class);
         self::$summit_permission_group_repository = EntityManager::getRepository(SummitAdministratorPermissionGroup::class);
 
         self::$default_badge_type = new SummitBadgeType();
@@ -465,11 +504,6 @@ trait InsertSummitTestData
         self::$summit->addSelectionPlan(self::$default_selection_plan);
         self::$summit->addSelectionPlan(self::$default_selection_plan2);
 
-        self::$em = Registry::getManager(SilverstripeBaseModel::EntityManager);
-        if (!self::$em ->isOpen()) {
-            self::$em  = Registry::resetManager(SilverstripeBaseModel::EntityManager);
-        }
-
         self::$presentations = [];
 
         $start_date = clone($begin_date);
@@ -553,9 +587,71 @@ trait InsertSummitTestData
         self::$summit_permission_group->setTitle(sprintf("DEFAULT PERMISSION GROUP %s", str_random(16)));
         self::$summit_permission_group->addSummit(self::$summit);
 
+        // insert companies
+        self::$default_sponsor_ship_type = new SponsorshipType();
+        self::$default_sponsor_ship_type->setName("Default");
+        self::$default_sponsor_ship_type->setSize(ISponsorshipTypeConstants::BigSize);
+        self::$default_sponsor_ship_type->setOrder(1);
+        self::$em->persist(self::$default_sponsor_ship_type);
+
+        for($i = 0 ; $i < 20; $i++){
+            $c = new Company();
+            $c->setName(sprintf("Company %s %s", $i, str_random(16)));
+            $c->setIndustry(sprintf("Industry %s %s", $i, str_random(16)));
+
+            self::$em->persist($c);
+            self::$companies[] = $c;
+
+            $s = new Sponsor();
+            $s->setCompany($c);
+            $s->setIntro(sprintf("this is an intro %s %s", $i, str_random(16)));
+            $s->setMarquee(sprintf("this is a marquee %s %s", $i, str_random(16)));
+            $s->setVideoLink(sprintf("https://%s.%s.video.com", $i, str_random(16)));
+            $s->setChatLink(sprintf("https://%s.%s.chat.com", $i, str_random(16)));
+            $s->setExternalLink(sprintf("https://%s.%s.exterma;.com", $i, str_random(16)));
+            $s->setSponsorship(self::$default_sponsor_ship_type);
+
+            for($j = 0; $j < 10; $j ++){
+
+                $m = new SponsorMaterial();
+                $m->setName(sprintf("Material %s %s %s", $i, $j, str_random(16)));
+                $m->setOrder($j);
+                $m->setLink(sprintf("https://%s.%s.%s.com", $i, $j, str_random(10)));
+                $m->setType(SponsorMaterial::ValidTypes[ array_rand(SponsorMaterial::ValidTypes)]);
+                $s->addMaterial($m);
+
+                $sn = new SponsorSocialNetwork();
+                $sn->setLink(sprintf("https://%s.%s.%s.com", $i, $j, str_random(10)));
+                $sn->setIsEnabled(true);
+                $sn->setIconCssClass("icon");
+                $s->addSocialNetwork($sn);
+
+                $ad = new SponsorAd();
+                $ad->setText(sprintf("Text %s %s %s", $i, $j, str_random(16)));
+                $ad->setAlt(sprintf("Alt Text %s %s %s", $i, $j, str_random(16)));
+                $ad->setLink(sprintf("https://%s.%s.%s.com", $i, $j, str_random(10)));
+                $ad->setOrder($j);
+
+                $s->addAd($ad);
+            }
+
+            self::$summit->addSummitSponsor($s);
+            self::$sponsors[] = $s;
+        }
+
+        for($i = 0 ; $i < 20; $i++){
+            $c = new Company();
+            $c->setName(sprintf("Company %s %s", $i, str_random(16)));
+            $c->setIndustry(sprintf("Industry %s %s", $i, str_random(16)));
+
+            self::$em->persist($c);
+            self::$companies_without_sponsor[] = $c;
+        }
+
         self::$em->persist(self::$summit);
         self::$em->persist(self::$summit2);
         self::$em->persist(self::$summit_permission_group);
+
         self::$em->flush();
     }
 

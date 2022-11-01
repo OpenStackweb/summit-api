@@ -46,8 +46,11 @@ use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerActiveInvolvementRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerEditPermissionRequestRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerOrganizationalRoleRepository;
+use App\Models\Foundation\Summit\Repositories\ISponsorAdRepository;
+use App\Models\Foundation\Summit\Repositories\ISponsorMaterialRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorshipTypeRepository;
+use App\Models\Foundation\Summit\Repositories\ISponsorSocialNetworkRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAccessLevelTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRuleRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
@@ -108,7 +111,10 @@ use models\summit\SpeakerOrganizationalRole;
 use models\summit\SpeakerRegistrationRequest;
 use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\Sponsor;
+use models\summit\SponsorAd;
+use models\summit\SponsorMaterial;
 use models\summit\SponsorshipType;
+use models\summit\SponsorSocialNetwork;
 use models\summit\SponsorUserInfoGrant;
 use models\summit\SummitAbstractLocation;
 use models\summit\SummitAccessLevelType;
@@ -742,5 +748,29 @@ final class RepositoriesProvider extends ServiceProvider
                 return EntityManager::getRepository(SummitBadgeViewType::class);
             }
         );
+
+        App::singleton(
+            ISponsorAdRepository::class,
+            function(){
+                return EntityManager::getRepository(SponsorAd::class);
+            });
+
+        App::singleton(
+            ISponsorAdRepository::class,
+            function(){
+                return EntityManager::getRepository(SponsorAd::class);
+            });
+
+        App::singleton(
+            ISponsorMaterialRepository::class,
+            function(){
+                return EntityManager::getRepository(SponsorMaterial::class);
+            });
+
+        App::singleton(
+            ISponsorSocialNetworkRepository::class,
+            function(){
+                return EntityManager::getRepository(SponsorSocialNetwork::class);
+            });
     }
 }

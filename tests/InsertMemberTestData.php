@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\main\LegalAgreement;
@@ -19,6 +20,8 @@ use models\summit\PresentationSpeaker;
 use models\utils\SilverstripeBaseModel;
 use models\main\Group;
 use App\Models\Foundation\Main\IGroup;
+use Illuminate\Support\Facades\DB;
+
 /**
  * Trait InsertMemberTestData
  */
@@ -68,8 +71,9 @@ trait InsertMemberTestData
     /**
      * @param string $current_group_slug
      */
-    protected static function setMemberDefaultGroup(string  $current_group_slug){
-        if(!is_null(self::$group))
+    protected static function setMemberDefaultGroup(string $current_group_slug)
+    {
+        if (!is_null(self::$group))
             self::$em->remove(self::$group);
 
         self::$group = new Group();
@@ -88,20 +92,16 @@ trait InsertMemberTestData
      * InsertMemberTestData constructor.
      * @param string $current_group_slug
      */
-    protected static function insertMemberTestData(string  $current_group_slug){
-
-       // DB::setDefaultConnection("model");
-        //DB::table("Group_Members")->delete();
-        //DB::table("Group")->delete();
-        //DB::table("Member")->delete();
-        //DB::table("PresentationSpeaker")->delete();
+    protected static function insertMemberTestData(string $current_group_slug)
+    {
+        DB::setDefaultConnection("model");
 
         self::$em = Registry::getManager(SilverstripeBaseModel::EntityManager);
-        if (!self::$em ->isOpen()) {
-            self::$em  = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+        if (!self::$em->isOpen()) {
+            self::$em = Registry::resetManager(SilverstripeBaseModel::EntityManager);
         }
 
-        self::$group_repository =  EntityManager::getRepository(Group::class);
+        self::$group_repository = EntityManager::getRepository(Group::class);
         self::$member_repository = EntityManager::getRepository(Member::class);
 
         self::$group = new Group();
@@ -124,7 +124,7 @@ trait InsertMemberTestData
         self::$member->setUserExternalId(mt_rand());
         self::$member->add2Group(self::$group);
 
-        if($current_group_slug == IGroup::FoundationMembers){
+        if ($current_group_slug == IGroup::FoundationMembers) {
             $legal = new LegalAgreement();
             self::$member->addLegalAgreement($legal);
         }
@@ -154,7 +154,8 @@ trait InsertMemberTestData
         PresentationSpeaker::$bypass_events = false;
     }
 
-    protected static function clearMemberTestData(){
+    protected static function clearMemberTestData()
+    {
         try {
             if (!self::$em->isOpen()) {
                 self::$em = Registry::resetManager(SilverstripeBaseModel::EntityManager);
@@ -177,8 +178,7 @@ trait InsertMemberTestData
                 self::$em->remove(self::$group2);
 
             self::$em->flush();
-        }
-        catch (\Exception $ex){
+        } catch (\Exception $ex) {
 
         }
     }

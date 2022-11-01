@@ -32,7 +32,6 @@ use Cocur\Slugify\Slugify;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
@@ -3914,7 +3913,6 @@ SQL;
         $res = $sponsor === false ? 0 : $sponsor->getOrder();
         return is_null($res) ? 0 : $res;
     }
-
 
     /**
      * @param Sponsor $sponsor

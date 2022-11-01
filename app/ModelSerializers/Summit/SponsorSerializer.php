@@ -11,8 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\Sponsor;
+
 /**
  * Class SponsorSerializer
  * @package ModelSerializers
@@ -20,11 +22,18 @@ use models\summit\Sponsor;
 final class SponsorSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
-        'Order'         => 'order:json_int',
-        'SummitId'      => 'summit_id:json_int',
-        'CompanyId'     => 'company_id:json_int',
+        'Order' => 'order:json_int',
+        'SummitId' => 'summit_id:json_int',
+        'CompanyId' => 'company_id:json_int',
         'SponsorshipId' => 'sponsorship_id:json_int',
-        'Published'     => 'is_published:json_boolean',
+        'Published' => 'is_published:json_boolean',
+        'SideImageUrl' => 'side_image:json_url',
+        'HeaderImageUrl' => 'side_image:json_url',
+        'Marquee' => 'marquee:json_string',
+        'Intro' => 'intro:json_string',
+        'ExternalLink' => 'external_link:json_string',
+        'VideoLink' => 'video_link:json_string',
+        'ChatLink' => 'chat_link:json_string',
     ];
 
     protected static $allowed_relations = [
@@ -38,14 +47,14 @@ final class SponsorSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
     {
         $sponsor = $this->object;
         if (!$sponsor instanceof Sponsor) return [];
-        if(!count($relations)) $relations = $this->getAllowedRelations();
+        if (!count($relations)) $relations = $this->getAllowedRelations();
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if(in_array('members', $relations)) {
+        if (in_array('members', $relations)) {
             $members = [];
             foreach ($sponsor->getMembers() as $member) {
                 $members[] = $member->getId();
@@ -60,7 +69,7 @@ final class SponsorSerializer extends SilverStripeSerializer
                     case 'summit':
                         {
                             unset($values['summit_id']);
-                            $values['summit'] =  SerializerRegistry::getInstance()->getSerializer($sponsor->getSummit())->serialize(AbstractSerializer::filterExpandByPrefix($expand,'summit'),[
+                            $values['summit'] = SerializerRegistry::getInstance()->getSerializer($sponsor->getSummit())->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'summit'), [
                                 'id',
                                 'name',
                                 'start_date',
@@ -70,7 +79,7 @@ final class SponsorSerializer extends SilverStripeSerializer
                                 'ticket_qr_prefix',
                                 'badge_qr_prefix',
                                 'qr_registry_field_delimiter',
-                            ],['none']);
+                            ], ['none']);
                         }
                         break;
                     case 'members':
@@ -78,24 +87,24 @@ final class SponsorSerializer extends SilverStripeSerializer
                             unset($values['members']);
                             $members = [];
                             foreach ($sponsor->getMembers() as $member) {
-                                $members[] =  SerializerRegistry::getInstance()->getSerializer($member)->serialize(AbstractSerializer::filterExpandByPrefix($expand,'members'));
+                                $members[] = SerializerRegistry::getInstance()->getSerializer($member)->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'members'));
                             }
                             $values['members'] = $members;
                         }
                         break;
                     case 'company':
                         {
-                            if($sponsor->hasCompany()) {
+                            if ($sponsor->hasCompany()) {
                                 unset($values['company_id']);
-                                $values['company'] = SerializerRegistry::getInstance()->getSerializer($sponsor->getCompany())->serialize(AbstractSerializer::filterExpandByPrefix($expand,'company'));
+                                $values['company'] = SerializerRegistry::getInstance()->getSerializer($sponsor->getCompany())->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'company'));
                             }
                         }
                         break;
                     case 'sponsorship':
                         {
-                            if($sponsor->hasSponsorship()) {
+                            if ($sponsor->hasSponsorship()) {
                                 unset($values['sponsorship_id']);
-                                $values['sponsorship'] = SerializerRegistry::getInstance()->getSerializer($sponsor->getSponsorship())->serialize(AbstractSerializer::filterExpandByPrefix($expand,'sponsorship'));
+                                $values['sponsorship'] = SerializerRegistry::getInstance()->getSerializer($sponsor->getSponsorship())->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'sponsorship'));
                             }
                         }
                         break;

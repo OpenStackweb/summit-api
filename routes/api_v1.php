@@ -998,6 +998,19 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getAllBySummit']);
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@add']);
             Route::group(['prefix' => '{sponsor_id}'], function () {
+
+                // side image
+                Route::group(['prefix' => 'side-image'], function () {
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addSponsorSideImage']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@deleteSponsorSideImage']);
+                });
+
+                // header image
+                Route::group(['prefix' => 'header-image'], function () {
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addSponsorHeaderImage']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@deleteSponsorHeaderImage']);
+                });
+
                 Route::group(['prefix' => 'user-info-grants'], function () {
                     Route::post('me', ['uses' => 'OAuth2SummitBadgeScanApiController@addGrant']);
                 });
@@ -1010,6 +1023,41 @@ Route::group(array('prefix' => 'summits'), function () {
                         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@removeSponsorUser']);
                     });
                 });
+                // ads
+                Route::group(['prefix' => 'ads'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getAds']);
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addAd']);
+                    Route::group(['prefix' => '{ad_id}'], function () {
+                        Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getAd']);
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@updateAd']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@deleteAd']);
+                        Route::group(['prefix' => 'image'], function () {
+                            Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addAdImage']);
+                            Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@removeAdImage']);
+                        });
+                    });
+                });
+                // materials
+                Route::group(['prefix' => 'materials'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getMaterials']);
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addMaterial']);
+                    Route::group(['prefix' => '{material_id}'], function () {
+                        Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getMaterial']);
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@updateMaterial']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@deleteMaterial']);
+                    });
+                });
+                // social networks
+                Route::group(['prefix' => 'social-networks'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getSocialNetworks']);
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addSocialNetwork']);
+                    Route::group(['prefix' => '{social_network_id}'], function () {
+                        Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getSocialNetwork']);
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@updateSocialNetwork']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@deleteSocialNetwork']);
+                    });
+                });
+
             });
         });
 

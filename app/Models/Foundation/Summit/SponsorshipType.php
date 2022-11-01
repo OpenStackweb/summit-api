@@ -64,9 +64,9 @@ class SponsorshipType extends SilverstripeBaseModel implements IOrderable
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getLabel(): string
+    public function getLabel(): ?string
     {
         return $this->label;
     }

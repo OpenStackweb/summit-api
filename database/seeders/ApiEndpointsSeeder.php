@@ -1693,6 +1693,289 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'add-sponsor-header-image',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/header-image',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-sponsor-header-image',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/header-image',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-sponsor-side-image',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/side-image',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-sponsor-side-image',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/side-image',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            // ads
+            [
+                'name' => 'get-sponsor-ads',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/ads',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-sponsor-ad',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/ads',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'get-sponsor-ad',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/ads/{ad_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'update-sponsor-ad',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/ads/{ad_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-sponsor-ad',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/ads/{ad_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-sponsor-ad-image',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/ads/{ad_id}/image',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-sponsor-ad-image',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/ads/{ad_id}/image',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            // materials
+            [
+                'name' => 'get-sponsor-materials',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/materials',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-sponsor-material',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/materials',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'get-sponsor-material',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/materials/{material_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'update-sponsor-material',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/materials/{material_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-sponsor-material',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/materials/{material_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            // social networks
+            [
+                'name' => 'get-sponsor-social-networks',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/social-networks',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-sponsor-social-network',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/social-networks',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'get-sponsor-social-network',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/social-networks/{social_network_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'update-sponsor-social-network',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/social-networks/{social_network_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-sponsor-social-network',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/social-networks/{social_network_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            //
+            [
                 'name' => 'add-sponsor-user',
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/users/{member_id}',
                 'http_method' => 'PUT',

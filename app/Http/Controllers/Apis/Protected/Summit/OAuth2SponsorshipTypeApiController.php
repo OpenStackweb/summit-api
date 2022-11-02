@@ -12,16 +12,11 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Repositories\ISponsorshipTypeRepository;
+use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISponsorshipTypeService;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Request;
-use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
-use Exception;
 /**
  * Class OAuth2SponsorshipTypeApiController
  * @package App\Http\Controllers
@@ -29,6 +24,7 @@ use Exception;
 final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
 {
 
+    use RequestProcessor;
     /**
      * @var ISponsorshipTypeService
      */
@@ -103,41 +99,28 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
         return $this->summit_repository;
     }
 
+    use GetAndValidateJsonPayload;
     /**
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function add()
     {
-        try {
-            if (!Request::isJson()) return $this->error400();
-            $data = Request::json();
-            $payload = $data->all();
+        return $this->processRequest(function(){
 
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, SponsorshipTypeValidationRulesFactory::build($payload));
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonPayload(
+                SponsorshipTypeValidationRulesFactory::buildForAdd(),
+                true
+            );
 
             $sponsorship_type = $this->service->addSponsorShipType($payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($sponsorship_type)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($sponsorship_type)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -146,21 +129,18 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
      */
     public function get($id)
     {
-        try {
+        return $this->processRequest(function() use($id){
             $sponsorship_type = $this->repository->getById($id);
             if(is_null($sponsorship_type))
                 return $this->error404();
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($sponsorship_type)->serialize( Request::input('expand', '')));
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($sponsorship_type)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -169,36 +149,21 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
      */
     public function update($id)
     {
-        try {
-            if (!Request::isJson()) return $this->error400();
-            $data = Request::json();
-            $payload = $data->all();
-
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, SponsorshipTypeValidationRulesFactory::build($payload, true));
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+        return $this->processRequest(function() use($id){
+            $payload = $this->getJsonPayload(
+                SponsorshipTypeValidationRulesFactory::buildForUpdate(),
+                true
+            );
 
             $sponsorship_type = $this->service->updateSponsorShipType($id, $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($sponsorship_type)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->update(SerializerRegistry::getInstance()->getSerializer($sponsorship_type)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -207,18 +172,9 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
      */
     public function delete($id)
     {
-        try {
+        return $this->processRequest(function() use($id){
             $this->service->deleteSponsorShipType($id);
             return $this->deleted();
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 }

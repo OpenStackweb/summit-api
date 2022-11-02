@@ -71,7 +71,7 @@ final class DoctrineSponsorshipTypeRepository
             'name'  => 'e.name',
             'label' => 'e.label',
             'size'  => 'e.size',
-            'order' => 'e.orde',
+            'order' => 'e.order',
         ];
     }
 

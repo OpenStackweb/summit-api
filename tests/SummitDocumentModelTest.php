@@ -26,14 +26,14 @@ class SummitDocumentModelTest extends BrowserKitTestCase
     {
         parent::setUp();
 
-        self::insertTestData();
+        self::insertSummitTestData();
         self::$em->persist(self::$summit);
         self::$em->flush();
     }
 
     protected function tearDown():void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         parent::tearDown();
     }
 

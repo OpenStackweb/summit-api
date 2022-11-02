@@ -49,7 +49,9 @@ abstract class AbstractSerializer implements IModelSerializer
         $this->resource_server_context = $resource_server_context;
     }
 
-    protected static $array_mappings = [];
+    protected static $array_mappings = [
+        'Id' => 'id:json_int',
+    ];
 
     protected static $allowed_fields = [];
 
@@ -185,8 +187,6 @@ abstract class AbstractSerializer implements IModelSerializer
             }
 
             foreach ($hierarchy as $class_name) {
-
-                if ($class_name === AbstractSerializer::class) continue;
                 $refClass = new ReflectionClass($class_name);
                 if ($refClass->hasProperty("array_mappings")) {
                     $prop = $refClass->getProperty("array_mappings");

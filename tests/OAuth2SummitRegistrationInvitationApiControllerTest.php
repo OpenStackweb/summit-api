@@ -26,13 +26,13 @@ class OAuth2SummitRegistrationInvitationApiControllerTest extends ProtectedApiTe
     {
         parent::setUp();
 
-        self::insertTestData();
+        self::insertSummitTestData();
         self::$summit->seedDefaultEmailFlowEvents();
     }
 
     protected function tearDown():void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         parent::tearDown();
     }
 

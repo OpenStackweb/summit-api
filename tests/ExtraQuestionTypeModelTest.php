@@ -109,7 +109,7 @@ class ExtraQuestionTypeModelTest extends BrowserKitTestCase
     {
         parent::setUp();
 
-        self::insertTestData();
+        self::insertSummitTestData();
 
         $question1 = new SummitOrderExtraQuestionType();
         $question1->setUsage(SummitOrderExtraQuestionTypeConstants::BothQuestionUsage);
@@ -212,7 +212,7 @@ class ExtraQuestionTypeModelTest extends BrowserKitTestCase
 
     protected function tearDown(): void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         parent::tearDown();
     }
 

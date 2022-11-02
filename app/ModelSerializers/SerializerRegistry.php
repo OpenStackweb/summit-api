@@ -79,8 +79,11 @@ use App\ModelSerializers\Summit\RSVP\Templates\RSVPQuestionValueTemplateSerializ
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPSingleValueTemplateQuestionSerializer;
 use App\ModelSerializers\Summit\RSVPTemplateSerializer;
 use App\ModelSerializers\Summit\ScheduledSummitLocationBannerSerializer;
+use App\ModelSerializers\Summit\SponsorAdSerializer;
 use App\ModelSerializers\Summit\SponsorBadgeScanCSVSerializer;
 use App\ModelSerializers\Summit\SponsorBadgeScanSerializer;
+use App\ModelSerializers\Summit\SponsorMaterialSerializer;
+use App\ModelSerializers\Summit\SponsorSocialNetworkSerializer;
 use App\ModelSerializers\Summit\SponsorUserInfoGrantSerializer;
 use App\ModelSerializers\Summit\StripePaymentProfileSerializer;
 use App\ModelSerializers\Summit\SummitAttendeeBadgeSerializer;
@@ -88,6 +91,7 @@ use App\ModelSerializers\Summit\SummitEmailEventFlowSerializer;
 use App\ModelSerializers\Summit\SummitLocationBannerSerializer;
 use App\ModelSerializers\Summit\SummitScheduleConfigSerializer;
 use App\ModelSerializers\Summit\SummitSchedulePreFilterElementConfigSerializer;
+use App\ModelSerializers\Summit\SummitSponsorshipTypeSerializer;
 use App\ModelSerializers\Summit\TrackTagGroups\TrackTagGroupAllowedTagSerializer;
 use App\ModelSerializers\Summit\TrackTagGroups\TrackTagGroupSerializer;
 use App\ModelSerializers\SummitScheduleFilterElementConfigSerializer;
@@ -413,9 +417,14 @@ final class SerializerRegistry
         // summit sponsors
 
         $this->registry['SponsorshipType'] = SponsorshipTypeSerializer::class;
+        $this->registry['SummitSponsorshipType'] = SummitSponsorshipTypeSerializer::class;
         $this->registry['Sponsor'] = SponsorSerializer::class;
+        $this->registry['SponsorAd'] = SponsorAdSerializer::class;
+        $this->registry['SponsorMaterial'] = SponsorMaterialSerializer::class;
+        $this->registry['SponsorSocialNetwork'] = SponsorSocialNetworkSerializer::class;
 
         // locations
+
         $this->registry['SummitVenue'] = SummitVenueSerializer::class;
         $this->registry['SummitVenueRoom'] = SummitVenueRoomSerializer::class;
         $this->registry['SummitVenueFloor'] = SummitVenueFloorSerializer::class;

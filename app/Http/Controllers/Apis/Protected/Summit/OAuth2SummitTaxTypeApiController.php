@@ -39,7 +39,6 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
      */
     private $service;
 
-
     use GetAllBySummit;
 
     use GetSummitChildElementById;

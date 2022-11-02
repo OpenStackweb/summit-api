@@ -46,7 +46,7 @@ class SummitEventMetricsTest extends ProtectedApiTest
     protected function setUp():void
     {
         parent::setUp();
-        self::insertTestData();
+        self::insertSummitTestData();
         DB::setDefaultConnection("model");
         DB::table("Presentation")->delete();
         DB::table("SummitEvent")->delete();
@@ -66,7 +66,7 @@ class SummitEventMetricsTest extends ProtectedApiTest
 
     public function tearDown():void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         Mockery::close();
     }
 

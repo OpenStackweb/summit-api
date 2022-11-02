@@ -49,6 +49,7 @@ use App\Services\Model\Imp\SummitPresentationActionTypeService;
 use App\Services\Model\Imp\SummitRegistrationInvitationService;
 use App\Services\Model\Imp\SummitScheduleSettingsService;
 use App\Services\Model\Imp\SummitSelectedPresentationListService;
+use App\Services\Model\Imp\SummitSponsorshipTypeService;
 use App\Services\Model\Imp\TrackChairRankingService;
 use App\Services\Model\Imp\TrackChairService;
 use App\Services\Model\IOrganizationService;
@@ -82,6 +83,7 @@ use App\Services\Model\ISummitRegistrationInvitationService;
 use App\Services\Model\ISummitScheduleSettingsService;
 use App\Services\Model\ISummitSelectedPresentationListService;
 use App\Services\Model\ISummitSelectionPlanService;
+use App\Services\Model\ISummitSponsorshipTypeService;
 use App\Services\Model\ISummitTaxTypeService;
 use App\Services\Model\ISummitTicketTypeService;
 use App\Services\Model\ISummitTrackService;
@@ -421,6 +423,11 @@ final class ModelServicesProvider extends ServiceProvider
             IBadgeViewTypeService::class,
             BadgeViewTypeService::class,
         );
+
+        App::singleton(
+            ISummitSponsorshipTypeService::class,
+            SummitSponsorshipTypeService::class,
+        );
    }
 
     /**
@@ -482,6 +489,7 @@ final class ModelServicesProvider extends ServiceProvider
             IElectionService::class,
             ISummitScheduleSettingsService::class,
             IBadgeViewTypeService::class,
+            ISummitSponsorshipTypeService::class,
         ];
     }
 }

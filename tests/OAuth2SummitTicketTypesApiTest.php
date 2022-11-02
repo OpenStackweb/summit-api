@@ -25,12 +25,12 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTest
     protected function setUp(): void
     {
         parent::setUp();
-        self::insertTestData();
+        self::insertSummitTestData();
     }
 
     protected function tearDown(): void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         parent::tearDown();
     }
 

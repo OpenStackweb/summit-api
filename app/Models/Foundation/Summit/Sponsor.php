@@ -11,13 +11,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Http\Controllers\SponsorMaterialValidationRulesFactory;
 use App\Models\Foundation\Main\IOrderable;
+use App\Models\Foundation\Main\OrderableChilds;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
+use models\exceptions\ValidationException;
 use models\main\Company;
+use models\main\File;
 use models\main\Member;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
+
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSponsorRepository")
  * @ORM\AssociationOverrides({
@@ -34,6 +41,28 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
 {
     use SummitOwned;
 
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getSideImageId' => 'side_image',
+        'getHeaderImageId' => 'header_image',
+        'getHeaderImageMobileId' => 'header_image_mobile',
+        'getCarouselAdvertiseImageId' => 'carousel_advertise_image',
+        'getFeaturedEventId' => 'featured_event',
+        'getCompanyId' => 'company',
+        'getSponsorshipId' => 'sponsorship',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasSideImage' => 'side_image',
+        'hasHeaderImage' => 'header_image',
+        'hasHeaderImageMobile' => 'header_image_mobile',
+        'hasCarouselAdvertiseImage' => 'carousel_advertise_image',
+        'hasFeaturedEvent' => 'featured_event',
+        'hasCompany' => 'company',
+        'hasSponsorship' => 'sponsorship',
+    ];
+
     /**
      * @ORM\Column(name="`Order`", type="integer")
      * @var int
@@ -48,15 +77,22 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     protected $company;
 
     /**
+     * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent")
+     * @ORM\JoinColumn(name="FeaturedEventID", referencedColumnName="ID", onDelete="SET NULL")
+     * @var SummitEvent
+     */
+    protected $featured_event;
+
+    /**
      * @ORM\Column(name="IsPublished", type="boolean")
      * @var boolean
      */
     protected $is_published;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SponsorshipType")
-     * @ORM\JoinColumn(name="SponsorshipTypeID", referencedColumnName="ID", onDelete="SET NULL")
-     * @var SponsorshipType
+     * @ORM\ManyToOne(targetEntity="SummitSponsorshipType")
+     * @ORM\JoinColumn(name="SummitSponsorshipTypeID", referencedColumnName="ID", onDelete="SET NULL")
+     * @var SummitSponsorshipType
      */
     protected $sponsorship;
 
@@ -65,6 +101,24 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
      * @var SponsorUserInfoGrant[]
      */
     protected $user_info_grants;
+
+    /**
+     * @ORM\OneToMany(targetEntity="SponsorAd", mappedBy="sponsor", cascade={"persist"}, orphanRemoval=true)
+     * @var SponsorAd[]
+     */
+    protected $ads;
+
+    /**
+     * @ORM\OneToMany(targetEntity="SponsorMaterial", mappedBy="sponsor", cascade={"persist"}, orphanRemoval=true)
+     * @var SponsorMaterial[]
+     */
+    protected $materials;
+
+    /**
+     * @ORM\OneToMany(targetEntity="SponsorSocialNetwork", mappedBy="sponsor", cascade={"persist"}, orphanRemoval=true)
+     * @var SponsorSocialNetwork[]
+     */
+    protected $social_networks;
 
     /**
      * @ORM\ManyToMany(targetEntity="models\main\Member", inversedBy="sponsor_memberships")
@@ -77,6 +131,94 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     protected $members;
 
     /**
+     * @ORM\ManyToOne(targetEntity="models\main\File",cascade={"persist"})
+     * @ORM\JoinColumn(name="SideImageID", referencedColumnName="ID")
+     * @var File
+     */
+    protected $side_image;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
+     * @ORM\JoinColumn(name="HeaderImageID", referencedColumnName="ID")
+     * @var File
+     */
+    protected $header_image;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
+     * @ORM\JoinColumn(name="HeaderImageMobileID", referencedColumnName="ID")
+     * @var File
+     */
+    protected $header_image_mobile;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="models\main\File", cascade={"persist"})
+     * @ORM\JoinColumn(name="CarouselAdvertiseImageID", referencedColumnName="ID")
+     * @var File
+     */
+    protected $carousel_advertise_image;
+
+    /**
+     * @ORM\Column(name="Marquee", type="string")
+     * @var string
+     */
+    private $marquee;
+
+    /**
+     * @ORM\Column(name="HeaderImageAltText", type="string")
+     * @var string
+     */
+    private $header_image_alt_text;
+
+    /**
+     * @ORM\Column(name="SideImageAltText", type="string")
+     * @var string
+     */
+    private $side_image_alt_text;
+
+    /**
+     * @ORM\Column(name="HeaderImageMobileAltText", type="string")
+     * @var string
+     */
+    private $header_image_mobile_alt_text;
+
+    /**
+     * @ORM\Column(name="CarouselAdvertiseImageAltText", type="string")
+     * @var string
+     */
+    private $carousel_advertise_image_alt_text;
+
+    /**
+     * @ORM\Column(name="Intro", type="string")
+     * @var string
+     */
+    private $intro;
+
+    /**
+     * @ORM\Column(name="ExternalLink", type="string")
+     * @var string
+     */
+    private $external_link;
+
+    /**
+     * @ORM\Column(name="VideoLink", type="string")
+     * @var string
+     */
+    private $video_link;
+
+    /**
+     * @ORM\Column(name="ChatLink", type="string")
+     * @var string
+     */
+    private $chat_link;
+
+    /**
+     * @ORM\Column(name="ShowLogoInEventPage", type="boolean")
+     * @var boolean
+     */
+    private $show_logo_in_event_page;
+
+    /**
      * Sponsor constructor.
      */
     public function __construct()
@@ -84,7 +226,11 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         parent::__construct();
         $this->members = new ArrayCollection();
         $this->user_info_grants = new ArrayCollection();
+        $this->materials = new ArrayCollection();
+        $this->social_networks = new ArrayCollection();
+        $this->ads = new ArrayCollection();
         $this->is_published = true;
+        $this->show_logo_in_event_page = true;
     }
 
     /**
@@ -120,17 +266,17 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     }
 
     /**
-     * @return SponsorshipType
+     * @return SummitSponsorshipType
      */
-    public function getSponsorship():?SponsorshipType
+    public function getSponsorship(): ?SummitSponsorshipType
     {
         return $this->sponsorship;
     }
 
     /**
-     * @param SponsorshipType $sponsorship
+     * @param SummitSponsorshipType $sponsorship
      */
-    public function setSponsorship(SponsorshipType $sponsorship): void
+    public function setSponsorship(SummitSponsorshipType $sponsorship): void
     {
         $this->sponsorship = $sponsorship;
     }
@@ -143,44 +289,18 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         return $this->members;
     }
 
-    public function hasSponsorship():bool{
-        return $this->getSponsorshipId() > 0;
-    }
-
-    /**
-     * @return int
-     */
-    public function getSponsorshipId(){
-        try {
-            return is_null($this->sponsorship) ? 0 : $this->sponsorship->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
-    /**
-     * @return int
-     */
-    public function getCompanyId(){
-        try {
-            return is_null($this->company) ? 0 : $this->company->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
     /**
      * @param SponsorUserInfoGrant $grant
      */
-    public function addUserInfoGrant(SponsorUserInfoGrant $grant){
-        if($this->user_info_grants->contains($grant)) return;
+    public function addUserInfoGrant(SponsorUserInfoGrant $grant)
+    {
+        if ($this->user_info_grants->contains($grant)) return;
         $this->user_info_grants->add($grant);
         $grant->setSponsor($this);
     }
 
-    public function getUserInfoGrants(){
+    public function getUserInfoGrants()
+    {
         return $this->user_info_grants;
     }
 
@@ -188,7 +308,8 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
      * @param int $grant_id
      * @return SponsorUserInfoGrant|null
      */
-    public function getUserInfoGrantById(int $grant_id):?SponsorUserInfoGrant{
+    public function getUserInfoGrantById(int $grant_id): ?SponsorUserInfoGrant
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $grant_id));
         $grant = $this->user_info_grants->matching($criteria)->first();
@@ -199,7 +320,8 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
      * @param Member $member
      * @return bool
      */
-    public function hasGrant(Member $member):bool {
+    public function hasGrant(Member $member): bool
+    {
         return !is_null($this->getGrant($member));
     }
 
@@ -207,31 +329,29 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
      * @param Member $member
      * @return SponsorUserInfoGrant|null
      */
-    public function getGrant(Member $member):?SponsorUserInfoGrant {
+    public function getGrant(Member $member): ?SponsorUserInfoGrant
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('allowed_user', $member));
         $grant = $this->user_info_grants->matching($criteria)->first();
         return $grant === false ? null : $grant;
     }
 
-
-    public function hasCompany():bool{
-        return $this->getCompanyId() > 0;
-    }
-
     /**
      * @param Member $user
      */
-    public function addUser(Member $user){
-        if($this->members->contains($user)) return;
+    public function addUser(Member $user)
+    {
+        if ($this->members->contains($user)) return;
         $this->members->add($user);
     }
 
     /**
      * @param Member $user
      */
-    public function removeUser(Member $user){
-        if(!$this->members->contains($user)) return;
+    public function removeUser(Member $user)
+    {
+        if (!$this->members->contains($user)) return;
         $this->members->removeElement($user);
     }
 
@@ -250,5 +370,440 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     {
         $this->is_published = $is_published;
     }
+
+    /**
+     * @return string
+     */
+    public function getMarquee(): ?string
+    {
+        return $this->marquee;
+    }
+
+    /**
+     * @param string $marquee
+     */
+    public function setMarquee(string $marquee): void
+    {
+        $this->marquee = $marquee;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getIntro(): ?string
+    {
+        return $this->intro;
+    }
+
+    /**
+     * @param string $intro
+     */
+    public function setIntro(string $intro): void
+    {
+        $this->intro = $intro;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getExternalLink(): ?string
+    {
+        return $this->external_link;
+    }
+
+    /**
+     * @param string $external_link
+     */
+    public function setExternalLink(string $external_link): void
+    {
+        $this->external_link = $external_link;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getVideoLink(): ?string
+    {
+        return $this->video_link;
+    }
+
+    /**
+     * @param string $video_link
+     */
+    public function setVideoLink(string $video_link): void
+    {
+        $this->video_link = $video_link;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getChatLink(): ?string
+    {
+        return $this->chat_link;
+    }
+
+    /**
+     * @param string $chat_link
+     */
+    public function setChatLink(string $chat_link): void
+    {
+        $this->chat_link = $chat_link;
+    }
+
+    public function getSideImageUrl(): ?string
+    {
+        if ($this->hasSideImage())
+            return $this->side_image->getUrl();
+        return null;
+    }
+
+    public function getHeaderImageUrl(): ?string
+    {
+        if ($this->hasHeaderImage())
+            return $this->header_image->getUrl();
+        return null;
+    }
+
+    public function getHeaderImageMobileUrl(): ?string
+    {
+        if ($this->hasHeaderImageMobile())
+            return $this->header_image_mobile->getUrl();
+        return null;
+    }
+
+    public function getCarouselAdvertiseImageUrl(): ?string
+    {
+        if ($this->hasCarouselAdvertiseImage())
+            return $this->carousel_advertise_image->getUrl();
+        return null;
+    }
+
+    /**
+     * @param File $side_image
+     */
+    public function setSideImage(File $side_image): void
+    {
+        $this->side_image = $side_image;
+    }
+
+    public function clearSideImage(): void
+    {
+        $this->side_image = null;
+    }
+
+    /**
+     * @param File $header_image
+     */
+    public function setHeaderImage(File $header_image): void
+    {
+        $this->header_image = $header_image;
+    }
+
+    public function clearHeaderImage(): void
+    {
+        $this->header_image = null;
+    }
+
+    /**
+     * @param File $header_image_mobile
+     */
+    public function setHeaderImageMobile(File $header_image_mobile): void
+    {
+        $this->header_image_mobile = $header_image_mobile;
+    }
+
+    public function clearHeaderImageMobile(): void
+    {
+        $this->header_image_mobile = null;
+    }
+
+    /**
+     * @param File $carousel_advertise_image
+     */
+    public function setCarouselAdvertiseImage(File $carousel_advertise_image): void
+    {
+        $this->carousel_advertise_image = $carousel_advertise_image;
+    }
+
+    public function clearCarouselAdvertiseImage(): void
+    {
+        $this->carousel_advertise_image = null;
+    }
+
+    use OrderableChilds;
+
+    /**
+     * @return int
+     */
+    private function getAdMaxOrder(): int
+    {
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'DESC']);
+        $ad = $this->ads->matching($criteria)->first();
+        $res = $ad === false ? 0 : $ad->getOrder();
+        return is_null($res) ? 0 : $res;
+    }
+
+    /**
+     * @param SponsorAd $ad
+     * @param int $new_order
+     * @throws ValidationException
+     */
+    public function recalculateAdOrder(SponsorAd $ad, int $new_order)
+    {
+        self::recalculateOrderForSelectable($this->ads, $ad, $new_order);
+    }
+
+    /**
+     * @param int $ad_id
+     * @return SponsorAd|null
+     */
+    public function getAdById(int $ad_id): ?SponsorAd
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', intval($ad_id)));
+        $ad = $this->ads->matching($criteria)->first();
+        return $ad === false ? null : $ad;
+    }
+
+    /**
+     * @param SponsorAd $ad
+     */
+    public function addAd(SponsorAd $ad): void
+    {
+        if ($this->ads->contains($ad)) return;
+        $ad->setOrder($this->getAdMaxOrder() + 1);
+        $this->ads->add($ad);
+        $ad->setSponsor($this);
+    }
+
+    /**
+     * @param SponsorAd $ad
+     */
+    public function removeAd(SponsorAd $ad): void
+    {
+        if (!$this->ads->contains($ad)) return;
+        $this->ads->removeElement($ad);
+        $ad->clearSponsor();
+        self::resetOrderForSelectable($this->ads);
+    }
+
+    public function clearAds(): void
+    {
+        $this->ads->clear();
+    }
+
+    public function getAds()
+    {
+        return $this->ads;
+    }
+
+    /**
+     * @param int $material_id
+     * @return SponsorMaterial|null
+     */
+    public function getMaterialById(int $material_id): ?SponsorMaterial
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', intval($material_id)));
+        $material = $this->materials->matching($criteria)->first();
+        return $material === false ? null : $material;
+    }
+
+    /**
+     * @param string $name
+     * @return SponsorMaterial|null
+     */
+    public function getMaterialByName(string $name): ?SponsorMaterial
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('name', trim($name)));
+        $material = $this->materials->matching($criteria)->first();
+        return $material === false ? null : $material;
+    }
+
+    public function getMaterials()
+    {
+        return $this->materials;
+    }
+
+    /**
+     * @param SponsorMaterial $material
+     * @param int $new_order
+     * @throws ValidationException
+     */
+    public function recalculateMaterialOrder(SponsorMaterial $material, int $new_order)
+    {
+        self::recalculateOrderForSelectable($this->materials, $material, $new_order);
+    }
+
+    /**
+     * @return int
+     */
+    private function getMaterialMaxOrder(): int
+    {
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'DESC']);
+        $material = $this->materials->matching($criteria)->first();
+        $res = $material === false ? 0 : $material->getOrder();
+        return is_null($res) ? 0 : $res;
+    }
+
+    /**
+     * @param SponsorMaterial $material
+     */
+    public function addMaterial(SponsorMaterial $material): void
+    {
+        if ($this->materials->contains($material)) return;
+        $material->setOrder($this->getMaterialMaxOrder() + 1);
+        $this->materials->add($material);
+        $material->setSponsor($this);
+    }
+
+    /**
+     * @param SponsorMaterial $material
+     */
+    public function removeMaterial(SponsorMaterial $material): void
+    {
+        if (!$this->materials->contains($material)) return;
+        $this->materials->removeElement($material);
+        $material->clearSponsor();
+        self::resetOrderForSelectable($this->materials);
+    }
+
+    /**
+     * @param int $social_network_id
+     * @return SponsorSocialNetwork|null
+     */
+    public function getSocialNetworkById(int $social_network_id): ?SponsorSocialNetwork
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', intval($social_network_id)));
+        $social_network = $this->social_networks->matching($criteria)->first();
+        return $social_network === false ? null : $social_network;
+    }
+
+    /**
+     * @param SponsorSocialNetwork $social_network
+     */
+    public function addSocialNetwork(SponsorSocialNetwork $social_network): void
+    {
+        if ($this->social_networks->contains($social_network)) return;
+        $this->social_networks->add($social_network);
+        $social_network->setSponsor($this);
+    }
+
+    /**
+     * @param SponsorSocialNetwork $social_network
+     */
+    public function removeSocialNetwork(SponsorSocialNetwork $social_network): void
+    {
+        if (!$this->social_networks->contains($social_network)) return;
+        $this->social_networks->removeElement($social_network);
+        $social_network->clearSponsor();
+    }
+
+    public function getSocialNetworks()
+    {
+        return $this->social_networks;
+    }
+
+    /**
+     * @return SummitEvent|null
+     */
+    public function getFeaturedEvent(): ?SummitEvent
+    {
+        return $this->featured_event;
+    }
+
+    /**
+     * @param SummitEvent $featured_event
+     */
+    public function setFeaturedEvent(SummitEvent $featured_event): void
+    {
+        $this->featured_event = $featured_event;
+    }
+
+    /**
+     * @return string
+     */
+    public function getHeaderImageAltText(): ?string
+    {
+        return $this->header_image_alt_text;
+    }
+
+    /**
+     * @param string $header_image_alt_text
+     */
+    public function setHeaderImageAltText(string $header_image_alt_text): void
+    {
+        $this->header_image_alt_text = $header_image_alt_text;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSideImageAltText(): ?string
+    {
+        return $this->side_image_alt_text;
+    }
+
+    /**
+     * @param string $side_image_alt_text
+     */
+    public function setSideImageAltText(string $side_image_alt_text): void
+    {
+        $this->side_image_alt_text = $side_image_alt_text;
+    }
+
+    /**
+     * @return string
+     */
+    public function getHeaderImageMobileAltText(): ?string
+    {
+        return $this->header_image_mobile_alt_text;
+    }
+
+    /**
+     * @param string $header_image_mobile_alt_text
+     */
+    public function setHeaderImageMobileAltText(string $header_image_mobile_alt_text): void
+    {
+        $this->header_image_mobile_alt_text = $header_image_mobile_alt_text;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCarouselAdvertiseImageAltText(): ?string
+    {
+        return $this->carousel_advertise_image_alt_text;
+    }
+
+    /**
+     * @param string $carousel_advertise_image_alt_text
+     */
+    public function setCarouselAdvertiseImageAltText(string $carousel_advertise_image_alt_text): void
+    {
+        $this->carousel_advertise_image_alt_text = $carousel_advertise_image_alt_text;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isShowLogoInEventPage(): bool
+    {
+        return $this->show_logo_in_event_page;
+    }
+
+    /**
+     * @param bool $show_logo_in_event_page
+     */
+    public function setShowLogoInEventPage(bool $show_logo_in_event_page): void
+    {
+        $this->show_logo_in_event_page = $show_logo_in_event_page;
+    }
+
 
 }

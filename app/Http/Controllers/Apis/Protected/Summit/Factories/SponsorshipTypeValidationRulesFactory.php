@@ -1,6 +1,4 @@
 <?php namespace App\Http\Controllers;
-use models\summit\ISponsorshipTypeConstants;
-
 /**
  * Copyright 2019 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,33 +11,38 @@ use models\summit\ISponsorshipTypeConstants;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-
+use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
+use models\summit\ISponsorshipTypeConstants;
 /**
  * Class SponsorshipTypeValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SponsorshipTypeValidationRulesFactory
+final class SponsorshipTypeValidationRulesFactory extends AbstractValidationRulesFactory
 {
     /**
-     * @param array $data
-     * @param bool $update
+     * @param array $payload
      * @return array
      */
-    public static function build(array $data, $update = false){
-
-        if($update){
-            return [
-                'name'   => 'sometimes|string',
-                'label'  => 'sometimes|string',
-                'size'   => 'sometimes|string|in:'.implode(",", ISponsorshipTypeConstants::AllowedSizes),
-                'order'  => 'sometimes|integer|min:1',
-            ];
-        }
+    public static function buildForAdd(array $payload = []): array
+    {
         return [
             'name'  => 'required|string',
             'label' => 'required|string',
             'size'  => 'required|string|in:'.implode(",", ISponsorshipTypeConstants::AllowedSizes),
+        ];
+    }
+
+    /**
+     * @param array $payload
+     * @return array
+     */
+    public static function buildForUpdate(array $payload = []): array
+    {
+        return [
+            'name'   => 'sometimes|string',
+            'label'  => 'sometimes|string',
+            'size'   => 'sometimes|string|in:'.implode(",", ISponsorshipTypeConstants::AllowedSizes),
+            'order'  => 'sometimes|integer|min:1',
         ];
     }
 }

@@ -39,8 +39,41 @@ final class SponsorFactory
         if(isset($data['sponsorship']))
             $sponsor->setSponsorship($data['sponsorship']);
 
+        if(isset($data['featured_event']))
+            $sponsor->setFeaturedEvent($data['featured_event']);
+
         if(isset($data['is_published']))
             $sponsor->setIsPublished(boolval($data['is_published']));
+
+        if(isset($data['marquee']))
+            $sponsor->setMarquee(trim($data['marquee']));
+
+        if(isset($data['intro']))
+            $sponsor->setIntro(trim($data['intro']));
+
+        if(isset($data['external_link']))
+            $sponsor->setExternalLink(trim($data['external_link']));
+
+        if(isset($data['video_link']))
+            $sponsor->setVideoLink(trim($data['video_link']));
+
+        if(isset($data['chat_link']))
+            $sponsor->setChatLink(trim($data['chat_link']));
+
+        if(isset($data['side_image_alt_text']))
+            $sponsor->setSideImageAltText(trim($data['side_image_alt_text']));
+
+        if(isset($data['header_image_alt_text']))
+            $sponsor->setHeaderImageAltText(trim($data['header_image_alt_text']));
+
+        if(isset($data['header_image_mobile_alt_text']))
+            $sponsor->setHeaderImageMobileAltText(trim($data['header_image_mobile_alt_text']));
+
+        if(isset($data['carousel_advertise_image_alt_text']))
+            $sponsor->setCarouselAdvertiseImageAltText(trim($data['carousel_advertise_image_alt_text']));
+
+        if(isset($data['show_logo_in_event_page']))
+            $sponsor->setShowLogoInEventPage(boolval($data['show_logo_in_event_page']));
 
         return $sponsor;
     }

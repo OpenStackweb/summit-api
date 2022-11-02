@@ -29,12 +29,12 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         self::insertMemberTestData(IGroup::TrackChairs);
         self::$defaultMember = self::$member;
         self::$defaultMember2 = self::$member2;
-        self::insertTestData();
+        self::insertSummitTestData();
     }
 
     protected function tearDown():void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         self::clearMemberTestData();
         parent::tearDown();
     }

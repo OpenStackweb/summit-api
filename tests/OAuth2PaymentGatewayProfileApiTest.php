@@ -49,7 +49,7 @@ final class OAuth2PaymentGatewayProfileApiTest extends ProtectedApiTest
         self::$test_public_key = env('TEST_STRIPE_PUBLISHABLE_KEY');
         self::$live_secret_key = env('LIVE_STRIPE_SECRET_KEY');
         self::$live_public_key = env('LIVE_STRIPE_PUBLISHABLE_KEY');
-        self::insertTestData();
+        self::insertSummitTestData();
         // build payment profile and attach to summit
         $profile = PaymentGatewayProfileFactory::build(IPaymentConstants::ProviderStripe, [
             'application_type'     => IPaymentConstants::ApplicationTypeRegistration,
@@ -83,7 +83,7 @@ final class OAuth2PaymentGatewayProfileApiTest extends ProtectedApiTest
 
     protected function tearDown():void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         parent::tearDown();
     }
 

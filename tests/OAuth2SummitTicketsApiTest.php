@@ -64,7 +64,7 @@ final class OAuth2SummitTicketsApiTest extends ProtectedApiTest
         self::$live_secret_key = env('LIVE_STRIPE_SECRET_KEY');
         self::$live_public_key = env('LIVE_STRIPE_PUBLISHABLE_KEY');
 
-        self::insertTestData();
+        self::insertSummitTestData();
         self::InsertOrdersTestData();
         // build payment profile and attach to summit
         self::$profile = PaymentGatewayProfileFactory::build(IPaymentConstants::ProviderStripe, [
@@ -82,7 +82,7 @@ final class OAuth2SummitTicketsApiTest extends ProtectedApiTest
 
     protected function tearDown(): void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         parent::tearDown();
     }
 

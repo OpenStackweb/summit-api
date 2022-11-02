@@ -33,7 +33,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
     protected function setUp():void
     {
         parent::setUp();
-        self::insertTestData();
+        self::insertSummitTestData();
 
         $data = [
             'name'            => 'test bookable room',
@@ -55,7 +55,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
 
     protected function tearDown():void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         parent::tearDown();
     }
 

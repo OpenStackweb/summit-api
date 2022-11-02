@@ -993,14 +993,56 @@ Route::group(array('prefix' => 'summits'), function () {
             });
         });
 
+        // sponsorships-types
+        Route::group(['prefix' => 'sponsorships-types'], function () {
+
+            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipTypeApiController@getAllBySummit']);
+            Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipTypeApiController@add']);
+            Route::group(['prefix' => '{type_id}'], function () {
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipTypeApiController@get']);
+                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipTypeApiController@update']);
+                Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipTypeApiController@delete']);
+
+                Route::group(['prefix' => 'badge-image'], function () {
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipTypeApiController@addBadgeImage']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipTypeApiController@removeBadgeImage']);
+                });
+            });
+        });
+
         // sponsors
         Route::group(['prefix' => 'sponsors'], function () {
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getAllBySummit']);
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@add']);
             Route::group(['prefix' => '{sponsor_id}'], function () {
+
+                // side image
+                Route::group(['prefix' => 'side-image'], function () {
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addSponsorSideImage']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@deleteSponsorSideImage']);
+                });
+
+                // header image
+                Route::group(['prefix' => 'header-image'], function () {
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addSponsorHeaderImage']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@deleteSponsorHeaderImage']);
+                    Route::group(['prefix' => 'mobile'], function () {
+                        // mobile
+                        Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addSponsorHeaderImageMobile']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@deleteSponsorHeaderImageMobile']);
+                    });
+                });
+
+                // carousel image
+                Route::group(['prefix' => 'carousel-advertise-image'], function () {
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addSponsorCarouselAdvertiseImage']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@deleteSponsorCarouselAdvertiseImage']);
+                });
+
                 Route::group(['prefix' => 'user-info-grants'], function () {
                     Route::post('me', ['uses' => 'OAuth2SummitBadgeScanApiController@addGrant']);
                 });
+
                 Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@get']);
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@update']);
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@delete']);
@@ -1010,6 +1052,41 @@ Route::group(array('prefix' => 'summits'), function () {
                         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@removeSponsorUser']);
                     });
                 });
+                // ads
+                Route::group(['prefix' => 'ads'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getAds']);
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addAd']);
+                    Route::group(['prefix' => '{ad_id}'], function () {
+                        Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getAd']);
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@updateAd']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@deleteAd']);
+                        Route::group(['prefix' => 'image'], function () {
+                            Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addAdImage']);
+                            Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@removeAdImage']);
+                        });
+                    });
+                });
+                // materials
+                Route::group(['prefix' => 'materials'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getMaterials']);
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addMaterial']);
+                    Route::group(['prefix' => '{material_id}'], function () {
+                        Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getMaterial']);
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@updateMaterial']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@deleteMaterial']);
+                    });
+                });
+                // social networks
+                Route::group(['prefix' => 'social-networks'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getSocialNetworks']);
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addSocialNetwork']);
+                    Route::group(['prefix' => '{social_network_id}'], function () {
+                        Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getSocialNetwork']);
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@updateSocialNetwork']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@deleteSocialNetwork']);
+                    });
+                });
+
             });
         });
 

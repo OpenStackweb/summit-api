@@ -27,7 +27,7 @@ class TrackChairTest extends BrowserKitTestCase
     protected function setUp():void
     {
         parent::setUp();
-        self::insertTestData();
+        self::insertSummitTestData();
         self::insertMemberTestData(IGroup::TrackChairs);
         self::$summit_permission_group->addMember(self::$member);
         self::$em->persist(self::$summit);
@@ -38,7 +38,7 @@ class TrackChairTest extends BrowserKitTestCase
     protected function tearDown():void
     {
         self::clearMemberTestData();
-        self::clearTestData();
+        self::clearSummitTestData();
         parent::tearDown();
     }
 

@@ -45,7 +45,7 @@ class PresentationMediaUploadsTests
         parent::setUp();
         self::$media_file_type_repository = EntityManager::getRepository(SummitMediaFileType::class);
         $types = self::$media_file_type_repository->findAll();
-        self::insertTestData();
+        self::insertSummitTestData();
         self::$media_upload_type = new SummitMediaUploadType();
         self::$media_upload_type->setType($types[0]);
         self::$media_upload_type->setName('TEST');
@@ -69,7 +69,7 @@ class PresentationMediaUploadsTests
 
     protected function tearDown():void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         parent::tearDown();
     }
 

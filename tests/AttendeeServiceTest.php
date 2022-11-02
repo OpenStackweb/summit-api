@@ -33,12 +33,12 @@ final class AttendeeServiceTest extends TestCase
 
         self::insertMemberTestData(IGroup::TrackChairs);
         self::$defaultMember = self::$member;
-        self::insertTestData();
+        self::insertSummitTestData();
     }
 
     protected function tearDown(): void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         self::clearMemberTestData();
         parent::tearDown();
     }

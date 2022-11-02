@@ -25,7 +25,7 @@ final class MuxImportTest extends TestCase
 
     protected function tearDown():void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         parent::tearDown();
         \Mockery::close();
     }
@@ -33,7 +33,7 @@ final class MuxImportTest extends TestCase
     protected function setUp():void
     {
         parent::setUp();
-        self::insertTestData();
+        self::insertSummitTestData();
         $time_zone = self::$summit->getTimeZone();
         self::$presentations[0]->setStreamingUrl(env("MUX_STREAM_URL1"));
         $begin_date = new \DateTime("now", $time_zone);

@@ -17,6 +17,12 @@ use Doctrine\ORM\Mapping AS ORM;
 use models\main\Member;
 /**
  * @ORM\Entity
+ * @ORM\AssociationOverrides({
+ *     @ORM\AssociationOverride(
+ *          name="speaker",
+ *          inversedBy="discount_codes"
+ *     )
+ * })
  * @ORM\Table(name="SpeakerSummitRegistrationDiscountCode")
  * Class SpeakerSummitRegistrationDiscountCode
  * @package models\summit

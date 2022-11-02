@@ -70,7 +70,7 @@ final class SponsorshipTypeService
             if(!is_null($former_sponsorship_type))
                 throw new ValidationException("sponsorship type label already exists");
 
-            $sponsorship_type =  SponsorshipTypeFactory::build($payload);
+            $sponsorship_type = SponsorshipTypeFactory::build($payload);
             $max_order  = $this->repository->getMaxOrder();
             $sponsorship_type->setOrder($max_order + 1);
             $this->repository->add($sponsorship_type);
@@ -98,7 +98,6 @@ final class SponsorshipTypeService
                 if (!is_null($former_sponsorship_type) && $former_sponsorship_type->getId() != $sponsorship_type_id)
                     throw new ValidationException("sponsorship type name already exists");
             }
-
 
             if(isset($payload['label'])) {
                 $label = trim($payload['label']);

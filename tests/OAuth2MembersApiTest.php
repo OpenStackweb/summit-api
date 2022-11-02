@@ -26,7 +26,7 @@ final class OAuth2MembersApiTest extends ProtectedApiTest
     {
         $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
-        self::insertTestData();
+        self::insertSummitTestData();
         self::$summit_permission_group->addMember(self::$member);
         self::$summit_permission_group->addMember(self::$member2);
         self::$em->persist(self::$summit);
@@ -39,7 +39,7 @@ final class OAuth2MembersApiTest extends ProtectedApiTest
 
     public function tearDown():void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         Mockery::close();
     }
 

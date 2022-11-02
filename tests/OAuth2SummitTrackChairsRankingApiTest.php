@@ -22,12 +22,12 @@ final class OAuth2SummitTrackChairsRankingApiTest extends ProtectedApiTest
     protected function setUp(): void
     {
         parent::setUp();
-        self::insertTestData();
+        self::insertSummitTestData();
     }
 
     protected function tearDown(): void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         parent::tearDown();
     }
 

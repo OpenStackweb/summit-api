@@ -19,12 +19,12 @@ class OAuth2SummitAdministratorPermissionGroupApiControllerTest
     protected function setUp():void
     {
         parent::setUp();
-        self::insertTestData();
+        self::insertSummitTestData();
     }
 
     public function tearDown():void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         Mockery::close();
     }
 

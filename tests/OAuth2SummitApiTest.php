@@ -26,7 +26,7 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
     protected function setUp():void
     {
         parent::setUp();
-        self::insertTestData();
+        self::insertSummitTestData();
     }
 
     public function tearDown():void

@@ -57,12 +57,12 @@ final class StripeInterfaceTest extends TestCase
         self::$test_public_key = env('TEST_STRIPE_PUBLISHABLE_KEY');
         self::$live_secret_key = env('LIVE_STRIPE_SECRET_KEY');
         self::$live_public_key = env('LIVE_STRIPE_PUBLISHABLE_KEY');
-        self::insertTestData();
+        self::insertSummitTestData();
     }
 
     protected function tearDown():void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         parent::tearDown();
     }
 

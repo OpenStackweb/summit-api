@@ -25,7 +25,7 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTest
     protected function setUp():void
     {
         parent::setUp();
-        self::insertTestData();
+        self::insertSummitTestData();
         self::$summit->seedDefaultEmailFlowEvents();
 
         $fileUploader = App::make(IFileUploader::class);
@@ -67,7 +67,7 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTest
 
     protected function tearDown():void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         parent::tearDown();
     }
 

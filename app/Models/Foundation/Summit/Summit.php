@@ -32,7 +32,6 @@ use Cocur\Slugify\Slugify;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
@@ -518,6 +517,12 @@ class Summit extends SilverstripeBaseModel
      * @var Sponsor[]
      */
     private $summit_sponsors;
+
+    /**
+     * @ORM\OneToMany(targetEntity="SummitSponsorshipType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var SummitSponsorshipType[]
+     */
+    private $sponsorship_types;
 
     /**
      * @ORM\OneToMany(targetEntity="SummitTaxType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
@@ -1083,6 +1088,7 @@ class Summit extends SilverstripeBaseModel
         $this->speakers_announcement_emails = new ArrayCollection();
         $this->badge_view_types = new ArrayCollection();
         $this->registration_allowed_refund_request_till_date = null;
+        $this->sponsorship_types = new ArrayCollection();
     }
 
     /**
@@ -3881,7 +3887,7 @@ SQL;
     }
 
     /**
-     * @param string $badge_type_name
+     * @param int $id
      * @return Sponsor|null
      */
     public function getSummitSponsorById(int $id): ?Sponsor
@@ -3890,6 +3896,30 @@ SQL;
         $criteria->where(Criteria::expr()->eq('id', intval($id)));
         $sponsor = $this->summit_sponsors->matching($criteria)->first();
         return $sponsor === false ? null : $sponsor;
+    }
+
+    /**
+     * @param int $id
+     * @return Sponsor|null
+     */
+    public function getSummitSponsorshipTypeById(int $id): ?SummitSponsorshipType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', intval($id)));
+        $sponsorship = $this->sponsorship_types->matching($criteria)->first();
+        return $sponsorship === false ? null : $sponsorship;
+    }
+
+    /**
+     * @param SponsorshipType $type
+     * @return SummitSponsorshipType|null
+     */
+    public function getSummitSponsorshipTypeByType(SponsorshipType $type): ?SummitSponsorshipType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type', $type));
+        $sponsorship = $this->sponsorship_types->matching($criteria)->first();
+        return $sponsorship === false ? null : $sponsorship;
     }
 
     /**
@@ -3914,7 +3944,6 @@ SQL;
         $res = $sponsor === false ? 0 : $sponsor->getOrder();
         return is_null($res) ? 0 : $res;
     }
-
 
     /**
      * @param Sponsor $sponsor
@@ -6123,4 +6152,44 @@ SQL;
 
     use SummitRegistrationStats;
 
+    /**
+     * @return int
+     */
+    private function getSponsorShipTypeMaxOrder(): int
+    {
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'DESC']);
+        $type = $this->sponsorship_types->matching($criteria)->first();
+        return $type === false ? 0 : $type->getOrder();
+    }
+
+    /**
+     * @param SummitSponsorshipType $type
+     * @param int $new_order
+     * @throws ValidationException
+     */
+    public function recalculateSponsorShipTypeOrder(SummitSponsorshipType $type, $new_order)
+    {
+        self::recalculateOrderForSelectable($this->sponsorship_types, $type, $new_order);
+    }
+
+    /**
+     * @param SummitSponsorshipType $type
+     */
+    public function addSponsorshipType(SummitSponsorshipType $type){
+        if($this->sponsorship_types->contains($type)) return;
+        $type->setOrder($this->getSponsorShipTypeMaxOrder() + 1);
+        $this->sponsorship_types->add($type);
+        $type->setSummit($this);
+    }
+
+    /**
+     * @param SummitSponsorshipType $type
+     */
+    public function removeSponsorshipType(SummitSponsorshipType $type){
+        if(!$this->sponsorship_types->contains($type)) return;
+        $this->sponsorship_types->removeElement($type);
+        $type->clearSummit();
+        self::resetOrderForSelectable($this->sponsorship_types);
+    }
 }

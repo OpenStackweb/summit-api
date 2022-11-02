@@ -46,8 +46,11 @@ use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerActiveInvolvementRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerEditPermissionRequestRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerOrganizationalRoleRepository;
+use App\Models\Foundation\Summit\Repositories\ISponsorAdRepository;
+use App\Models\Foundation\Summit\Repositories\ISponsorMaterialRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorshipTypeRepository;
+use App\Models\Foundation\Summit\Repositories\ISponsorSocialNetworkRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAccessLevelTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRuleRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
@@ -71,6 +74,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepos
 use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitScheduleConfigRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSelectionPlanExtraQuestionTypeRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitTaxTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackChairRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
@@ -108,7 +112,10 @@ use models\summit\SpeakerOrganizationalRole;
 use models\summit\SpeakerRegistrationRequest;
 use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\Sponsor;
+use models\summit\SponsorAd;
+use models\summit\SponsorMaterial;
 use models\summit\SponsorshipType;
+use models\summit\SponsorSocialNetwork;
 use models\summit\SponsorUserInfoGrant;
 use models\summit\SummitAbstractLocation;
 use models\summit\SummitAccessLevelType;
@@ -132,6 +139,7 @@ use models\summit\SummitRegistrationInvitation;
 use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitRoomReservation;
 use models\summit\SummitScheduleConfig;
+use models\summit\SummitSponsorshipType;
 use models\summit\SummitTaxType;
 use models\summit\SummitTicketType;
 use models\summit\SummitTrackChair;
@@ -740,6 +748,37 @@ final class RepositoriesProvider extends ServiceProvider
             ISummitBadgeViewTypeRepository::class,
             function () {
                 return EntityManager::getRepository(SummitBadgeViewType::class);
+            }
+        );
+
+        App::singleton(
+            ISponsorAdRepository::class,
+            function(){
+                return EntityManager::getRepository(SponsorAd::class);
+            });
+
+        App::singleton(
+            ISponsorAdRepository::class,
+            function(){
+                return EntityManager::getRepository(SponsorAd::class);
+            });
+
+        App::singleton(
+            ISponsorMaterialRepository::class,
+            function(){
+                return EntityManager::getRepository(SponsorMaterial::class);
+            });
+
+        App::singleton(
+            ISponsorSocialNetworkRepository::class,
+            function(){
+                return EntityManager::getRepository(SponsorSocialNetwork::class);
+            });
+
+        App::singleton(
+            ISummitSponsorshipTypeRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitSponsorshipType::class);
             }
         );
     }

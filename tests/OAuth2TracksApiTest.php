@@ -26,7 +26,7 @@ final class OAuth2TracksApiTest extends ProtectedApiTest
     {
         $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
-        self::insertTestData();
+        self::insertSummitTestData();
         self::$summit_permission_group->addMember(self::$member);
         self::$em->persist(self::$summit);
         self::$em->persist(self::$summit_permission_group);
@@ -38,7 +38,7 @@ final class OAuth2TracksApiTest extends ProtectedApiTest
 
     protected function tearDown():void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         parent::tearDown();
     }
 

@@ -28,7 +28,7 @@ final class SummitOrderJobsTest extends TestCase
 
     protected function tearDown():void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         parent::tearDown();
         \Mockery::close();
     }
@@ -37,7 +37,7 @@ final class SummitOrderJobsTest extends TestCase
     protected function setUp():void
     {
         parent::setUp();
-        self::insertTestData();
+        self::insertSummitTestData();
     }
 
     public function testDispatchPaymentConfirmationJobWithNonExistentUser(){

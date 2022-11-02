@@ -26,12 +26,12 @@ class OAuth2SummitMetricsApiControllerTest extends ProtectedApiTest
         parent::setUp();
         self::insertMemberTestData(IGroup::TrackChairs);
         self::$defaultMember = self::$member;
-        self::insertTestData();
+        self::insertSummitTestData();
     }
 
     protected function tearDown():void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         self::clearMemberTestData();
         parent::tearDown();
     }

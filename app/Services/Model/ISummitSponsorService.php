@@ -11,9 +11,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Main\IFileConstants;
+use Illuminate\Http\UploadedFile;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\File;
 use models\summit\Sponsor;
+use models\summit\SponsorAd;
+use models\summit\SponsorMaterial;
+use models\summit\SponsorSocialNetwork;
 use models\summit\Summit;
 /**
  * Interface ISummitSponsorService
@@ -67,4 +74,173 @@ interface ISummitSponsorService
      * @throws ValidationException
      */
     public function removeSponsorUser(Summit $summit, int $sponsor_id, int $member_id):Sponsor;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @return File
+     */
+    public function addSponsorSideImage(Summit $summit, int $sponsor_id,  UploadedFile $file,  $max_file_size =  IFileConstants::MaxImageSizeInBytes):File;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     */
+    public function deleteSponsorSideImage(Summit $summit, int $sponsor_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @return File
+     */
+    public function addSponsorHeaderImage(Summit $summit, int $sponsor_id,  UploadedFile $file,  $max_file_size = IFileConstants::MaxImageSizeInBytes):File;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     */
+    public function deleteSponsorHeaderImage(Summit $summit, int $sponsor_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @return File
+     */
+    public function addSponsorHeaderImageMobile(Summit $summit, int $sponsor_id,  UploadedFile $file,  $max_file_size = IFileConstants::MaxImageSizeInBytes):File;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     */
+    public function deleteSponsorHeaderImageMobile(Summit $summit, int $sponsor_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @return File
+     */
+    public function addSponsorCarouselAdvertiseImage(Summit $summit, int $sponsor_id,  UploadedFile $file,  $max_file_size = IFileConstants::MaxImageSizeInBytes):File;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     */
+    public function deleteSponsorCarouselAdvertiseImage(Summit $summit, int $sponsor_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param array $payload
+     * @return SponsorAd
+     */
+    public function addSponsorAd(Summit $summit, int $sponsor_id, array $payload):SponsorAd;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $ad_id
+     * @param $
+     * @param array $payload
+     * @return SponsorAd
+     */
+    public function updateSponsorAd(Summit $summit, int $sponsor_id, int $ad_id, array $payload):SponsorAd;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $ad_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function deleteSponsorAd(Summit $summit, int $sponsor_id, int $ad_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $ad_id
+     * @param UploadedFile $file
+     * @param int $max_file_size
+     * @return File
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addSponsorAdImage(Summit $summit, int $sponsor_id, int $ad_id, UploadedFile $file, $max_file_size = IFileConstants::MaxImageSizeInBytes):File;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $ad_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function deleteSponsorAdImage(Summit $summit, int $sponsor_id, int $ad_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param array $payload
+     * @return SponsorMaterial
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addSponsorMaterial(Summit $summit, int $sponsor_id, array $payload):SponsorMaterial;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $material_id
+     * @param array $payload
+     * @return SponsorMaterial
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function updateSponsorMaterial(Summit $summit, int $sponsor_id, int $material_id, array $payload):SponsorMaterial;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $material_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function deleteSponsorMaterial(Summit $summit, int $sponsor_id, int $material_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param array $payload
+     * @return SponsorSocialNetwork
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addSponsorSocialNetwork(Summit $summit, int $sponsor_id, array $payload):SponsorSocialNetwork;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $social_network_id
+     * @param array $payload
+     * @return SponsorSocialNetwork
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function updateSponsorSocialNetwork(Summit $summit, int $sponsor_id, int $social_network_id, array $payload):SponsorSocialNetwork;
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param int $social_network_id
+     * @return SponsorSocialNetwork
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function deleteSponsorSocialNetwork(Summit $summit, int $sponsor_id, int $social_network_id):void;
 }

@@ -47,7 +47,7 @@ final class OAuth2SummitPresentationActionApiTest extends ProtectedApiTest
         self::$action2->setOrder(2);
         self::$summit->addPresentationActionType(self::$action2);
 
-        self::$summit->synchAllPresentationActions();
+        //self::$summit->synchAllPresentationActions();
 
         self::$em->persist(self::$summit);
         self::$em->flush();
@@ -64,7 +64,7 @@ final class OAuth2SummitPresentationActionApiTest extends ProtectedApiTest
             'id' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
             'presentation_id' => self::$presentations[0]->getId(),
-            'action_id' =>  self::$presentations[0]->getPresentationActions()[0]->getId(),
+            'action_type_id' => self::$action1->getId(),
             'expand' => 'type,presentation,created_by,updated_by'
         ];
 

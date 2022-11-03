@@ -60,9 +60,9 @@ final class OAuth2SummitPresentationActionApiController
      * @param $summit_id
      * @param $selection_plan_id
      * @param $presentation_id
-     * @param $action_id
+     * @param $action_type_id
      */
-    public function complete($summit_id, $selection_plan_id, $presentation_id, $action_id){
+    public function complete($summit_id, $selection_plan_id, $presentation_id, $action_type_id){
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -78,7 +78,7 @@ final class OAuth2SummitPresentationActionApiController
             if (!$authz)
                 return $this->error403();
 
-            $action = $this->service->updateAction($summit, intval($selection_plan_id), intval($presentation_id), intval($action_id), true );
+            $action = $this->service->updateAction($summit, intval($selection_plan_id), intval($presentation_id), intval($action_type_id), true );
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($action)->serialize(Request::input('expand', '')));
 
         } catch (ValidationException $ex) {
@@ -97,9 +97,9 @@ final class OAuth2SummitPresentationActionApiController
      * @param $summit_id
      * @param $selection_plan_id
      * @param $presentation_id
-     * @param $action_id
+     * @param $action_type_id
      */
-    public function uncomplete($summit_id, $selection_plan_id, $presentation_id, $action_id){
+    public function uncomplete($summit_id, $selection_plan_id, $presentation_id, $action_type_id){
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -115,7 +115,7 @@ final class OAuth2SummitPresentationActionApiController
             if (!$authz)
                 return $this->error403();
 
-            $action = $this->service->updateAction($summit, intval($selection_plan_id), intval($presentation_id), intval($action_id), false );
+            $action = $this->service->updateAction($summit, intval($selection_plan_id), intval($presentation_id), intval($action_type_id), false );
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($action)->serialize(Request::input('expand', '')));
         } catch (ValidationException $ex) {

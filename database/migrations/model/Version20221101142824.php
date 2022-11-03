@@ -33,9 +33,7 @@ class Version20221101142824 extends AbstractMigration
             $builder->create('PresentationActionType_SelectionPlan', function (Table $table) {
                 $table->integer("ID", true, false);
                 $table->primary("ID");
-                $table->timestamp('Created');
-                $table->timestamp('LastEdited');
-                $table->integer('CustomOrder')->setNotnull(true)->setDefault(0);
+                $table->integer('CustomOrder')->setNotnull(true)->setDefault(1);
 
                 // FK
 

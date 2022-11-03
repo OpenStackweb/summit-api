@@ -188,7 +188,7 @@ class SelectionPlan extends SilverstripeBaseModel
      * @ORM\OneToMany(targetEntity="models\summit\AllowedPresentationActionType", mappedBy="selection_plan", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var AllowedPresentationActionType[]
      */
-    private $presentation_action_types;
+    private $allowed_presentation_action_types;
 
     /**
      * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType", mappedBy="selection_plan",cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
@@ -400,7 +400,7 @@ class SelectionPlan extends SilverstripeBaseModel
         $this->selection_lists = new ArrayCollection;
         $this->track_chair_rating_types = new ArrayCollection();
         $this->submission_lock_down_presentation_status_date = null;
-        $this->presentation_action_types = new ArrayCollection();
+        $this->allowed_presentation_action_types = new ArrayCollection();
     }
 
     /**
@@ -1077,9 +1077,47 @@ class SelectionPlan extends SilverstripeBaseModel
      * @return ArrayCollection
      */
     public function getPresentationActionTypes(): ArrayCollection {
-        return $this->presentation_action_types->map(function ($entity) {
+        return $this->allowed_presentation_action_types->map(function ($entity) {
             return $entity->getType();
         });
+    }
+
+    /**
+     * @param PresentationActionType $type
+     * @return PresentationActionType|null
+     */
+    public function getPresentationActionType(PresentationActionType $type): ?PresentationActionType {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type', $type));
+        $presentation_action_type_assignment = $this->allowed_presentation_action_types->matching($criteria)->first();
+        if ($presentation_action_type_assignment === false ||
+            !$presentation_action_type_assignment instanceof AllowedPresentationActionType) return null;
+        return $presentation_action_type_assignment->getType();
+    }
+
+    /**
+     * @param int $type_id
+     * @return PresentationActionType|null
+     */
+    public function getPresentationActionTypeById(int $type_id): ?PresentationActionType {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type_id', $type_id));
+        $presentation_action_type_assignment = $this->allowed_presentation_action_types->matching($criteria)->first();
+        if ($presentation_action_type_assignment === false ||
+            !$presentation_action_type_assignment instanceof AllowedPresentationActionType) return null;
+        return $presentation_action_type_assignment->getType();
+    }
+
+    /**
+     * @param PresentationActionType $presentation_action_type
+     * @return int
+     */
+    public function getPresentationActionTypeOrder(PresentationActionType $presentation_action_type): int
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type', $presentation_action_type));
+        $res = $this->allowed_presentation_action_types->matching($criteria)->first();
+        return $res === false ? 0 : $res->getOrder();
     }
 
     /**
@@ -1088,7 +1126,7 @@ class SelectionPlan extends SilverstripeBaseModel
     public function getPresentationActionTypesMaxOrder(): int {
         $criteria = Criteria::create();
         $criteria->orderBy(['order' => 'DESC']);
-        $res = $this->presentation_action_types->matching($criteria)->first();
+        $res = $this->allowed_presentation_action_types->matching($criteria)->first();
         return $res === false ? 0 : $res->getOrder();
     }
 
@@ -1096,9 +1134,12 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param PresentationActionType $presentation_action_type
      */
     public function addPresentationActionType(PresentationActionType $presentation_action_type) {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type', $presentation_action_type));
+        if ($this->allowed_presentation_action_types->matching($criteria)->count() > 0) return;
         $order = $this->getPresentationActionTypesMaxOrder();
         $allowed_presentation_action_type = new AllowedPresentationActionType($presentation_action_type, $this, $order + 1);
-        $this->presentation_action_types->add($allowed_presentation_action_type);
+        $this->allowed_presentation_action_types->add($allowed_presentation_action_type);
     }
 
     /**
@@ -1107,28 +1148,28 @@ class SelectionPlan extends SilverstripeBaseModel
     public function removePresentationActionType(PresentationActionType $presentation_action_type) {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('type', $presentation_action_type));
-        $presentation_action_type_assignment = $this->presentation_action_types->matching($criteria)->first();
+        $presentation_action_type_assignment = $this->allowed_presentation_action_types->matching($criteria)->first();
         if ($presentation_action_type_assignment === false) return;
-        $this->presentation_action_types->removeElement($presentation_action_type_assignment);
-        self::resetOrderForSelectable($this->presentation_action_types, AllowedPresentationActionType::class);
+        $this->allowed_presentation_action_types->removeElement($presentation_action_type_assignment);
+        self::resetOrderForSelectable($this->allowed_presentation_action_types, AllowedPresentationActionType::class);
     }
 
     /**
      * @param PresentationActionType $presentation_action_type
-     * @param int $order
+     * @param int $new_order
      * @throws ValidationException
      */
-    public function updateOrder(PresentationActionType $presentation_action_type, int $order) {
+    public function recalculatePresentationActionTypeOrder(PresentationActionType $presentation_action_type, int $new_order) {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('type', $presentation_action_type));
-        $selection_plan_assignment = $this->presentation_action_types->matching($criteria)->first();
+        $selection_plan_assignment = $this->allowed_presentation_action_types->matching($criteria)->first();
         if ($selection_plan_assignment === false) return;
         self::recalculateOrderForSelectable(
-            $this->presentation_action_types, $selection_plan_assignment, $order, AllowedPresentationActionType::class);
+            $this->allowed_presentation_action_types, $selection_plan_assignment, $new_order, AllowedPresentationActionType::class);
     }
 
     public function clearPresentationActionTypes() {
-        $this->presentation_action_types->clear();
+        $this->allowed_presentation_action_types->clear();
     }
 
     /**
@@ -1138,6 +1179,6 @@ class SelectionPlan extends SilverstripeBaseModel
     public function isAllowedPresentationActionType(PresentationActionType $presentation_action_type): bool {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('type', $presentation_action_type));
-        return $this->presentation_action_types->matching($criteria)->count() > 0;
+        return $this->allowed_presentation_action_types->matching($criteria)->count() > 0;
     }
 }

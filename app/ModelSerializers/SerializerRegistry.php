@@ -269,6 +269,7 @@ final class SerializerRegistry
 
         $this->registry['PresentationActionType'] = PresentationActionTypeSerializer::class;
         $this->registry['PresentationAction'] = PresentationActionSerializer::class;
+        $this->registry['AllowedPresentationActionType'] = AllowedPresentationActionTypeSerializer::class;
 
         // track chairs
         $this->registry['PresentationTrackChairView'] = PresentationTrackChairViewSerializer::class;

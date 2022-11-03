@@ -12,7 +12,9 @@
  * limitations under the License.
  **/
 use App\Events\PresentationActionTypeCreated;
+use App\Models\Foundation\Summit\SelectionPlan;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 use App\Models\Foundation\Main\IOrderable;
 use Illuminate\Support\Facades\Event;
@@ -51,7 +53,7 @@ class PresentationActionType extends SilverstripeBaseModel
      * @ORM\OneToMany(targetEntity="models\summit\AllowedPresentationActionType", mappedBy="type", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var AllowedPresentationActionType[]
      */
-    private $selection_plans;
+    private $assigned_selection_plans;
 
     /**
      * PresentationActionType constructor.
@@ -59,12 +61,13 @@ class PresentationActionType extends SilverstripeBaseModel
     public function __construct()
     {
         parent::__construct();
-        $this->order = 1;
-        $this->selection_plans = new ArrayCollection;
+        $this->order = 0;
+        $this->assigned_selection_plans = new ArrayCollection;
     }
 
     /**
      * @return int
+     * @deprecated
      */
     public function getOrder(): int
     {
@@ -73,6 +76,7 @@ class PresentationActionType extends SilverstripeBaseModel
 
     /**
      * @param int $order
+     * @deprecated
      */
     public function setOrder($order): void
     {
@@ -106,8 +110,18 @@ class PresentationActionType extends SilverstripeBaseModel
     /**
      * @return ArrayCollection
      */
+    public function getSelectionPlanAssignmentOrder(int $selection_plan_id): int {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('selection_plan_id', $selection_plan_id));
+        $assigned_selection_plan = $this->assigned_selection_plans->matching($criteria)->first();
+        return $assigned_selection_plan === false ? 0 : $assigned_selection_plan->getOrder();
+    }
+
+    /**
+     * @return ArrayCollection
+     */
     public function getSelectionPlans(): ArrayCollection {
-        return $this->selection_plans->map(function ($entity) {
+        return $this->assigned_selection_plans->map(function ($entity) {
             return $entity->getSelectionPlan();
         });
     }

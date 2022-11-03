@@ -21,25 +21,25 @@ use models\summit\PresentationActionType;
  */
 class PresentationActionModelTest extends BrowserKitTestCase
 {
-    use \InsertSummitTestData;
+    use InsertSummitTestData;
 
-    use \InsertMemberTestData;
+    use InsertMemberTestData;
 
     static $action1 = null;
     static $action2 = null;
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
 
-        self::insertTestData();
+        self::insertSummitTestData();
         self::$em->persist(self::$summit);
         self::$em->flush();
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         parent::tearDown();
     }
 
@@ -58,7 +58,7 @@ class PresentationActionModelTest extends BrowserKitTestCase
         self::$em->persist(self::$summit);
         self::$em->flush();
 
-        self::$summit->synchAllPresentationActions();
+        //self::$summit->synchAllPresentationActions();
 
         foreach(self::$summit->getPresentations() as $presentation){
             $this->assertTrue(count($presentation->getPresentationActions()) == 2);

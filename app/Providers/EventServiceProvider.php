@@ -35,7 +35,6 @@ use App\Jobs\Emails\Schedule\RSVPWaitListSeatMail;
 use App\Jobs\MemberAssocSummitOrders;
 use App\Jobs\ProcessScheduleEntityLifeCycleEvent;
 use App\Jobs\ProcessSummitOrderPaymentConfirmation;
-use App\Jobs\SynchAllPresentationActions;
 use App\Jobs\UpdateAttendeeInfo;
 use App\Jobs\UpdateIDPMemberInfo;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -253,15 +252,6 @@ final class EventServiceProvider extends ServiceProvider
 
             if ($rsvp->getSeatType() == RSVP::SeatTypeWaitList)
                 RSVPWaitListSeatMail::dispatch($rsvp);
-        });
-
-        Event::listen(PresentationActionTypeCreated::class, function ($event) {
-
-            if (!$event instanceof PresentationActionTypeCreated) return;
-
-            $summit = $event->getActionType()->getSummit();
-
-            SynchAllPresentationActions::dispatch($summit->getId());
         });
 
         Event::listen(TicketUpdated::class, function ($event) {

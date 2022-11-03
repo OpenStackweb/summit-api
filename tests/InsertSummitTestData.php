@@ -31,6 +31,7 @@ use models\main\Tag;
 use models\summit\ISponsorshipTypeConstants;
 use models\summit\ISummitEventType;
 use models\summit\Presentation;
+use models\summit\PresentationActionType;
 use models\summit\PresentationCategory;
 use models\summit\PresentationCategoryGroup;
 use models\summit\PresentationSpeaker;
@@ -190,6 +191,11 @@ trait InsertSummitTestData
      * @var array | SummitAccessLevelType[]
      */
     static $access_levels;
+
+    /**
+     * @var PresentationActionType
+     */
+    static $default_presentation_action_type;
 
     /**
      * @var array | Company[]
@@ -512,6 +518,18 @@ trait InsertSummitTestData
         $track_chair_rating_type->setSelectionPlan(self::$default_selection_plan);
 
         self::$default_selection_plan->addTrackChairRatingType($track_chair_rating_type);
+
+        self::$default_presentation_action_type = new PresentationActionType();
+        self::$default_presentation_action_type->setLabel("TEST_PRESENTATION_ACTION_TYPE_1");
+        self::$default_presentation_action_type->setSummit(self::$summit);
+        self::$summit->addPresentationActionType(self::$default_presentation_action_type);
+        self::$default_selection_plan->addPresentationActionType(self::$default_presentation_action_type);
+
+        $presentation_action_type = new PresentationActionType();
+        $presentation_action_type->setLabel("TEST_PRESENTATION_ACTION_TYPE_2");
+        $presentation_action_type->setSummit(self::$summit);
+        self::$summit->addPresentationActionType($presentation_action_type);
+        self::$default_selection_plan->addPresentationActionType($presentation_action_type);
 
         self::$summit->addSelectionPlan(self::$default_selection_plan);
         self::$summit->addSelectionPlan(self::$default_selection_plan2);

@@ -16,8 +16,6 @@ namespace Database\Migrations\Model;
 
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
-use LaravelDoctrine\Migrations\Schema\Builder;
-use LaravelDoctrine\Migrations\Schema\Table;
 
 class Version20221101163314 extends AbstractMigration
 {
@@ -26,13 +24,13 @@ class Version20221101163314 extends AbstractMigration
      */
     public function up(Schema $schema): void
     {
-            //Populate all PresentationActionType-SelectionPlan possible relationships
-            //taking into account the current PresentationActionType global order
-            $sql = <<<SQL
+        //Populate all PresentationActionType-SelectionPlan possible relationships
+        //taking into account the current PresentationActionType global order
+        $sql = <<<SQL
     INSERT INTO PresentationActionType_SelectionPlan(PresentationActionTypeID, SelectionPlanID, CustomOrder, Created, LastEdited)
-    SELECT pat.Id, sp.ID, pat.`Order`, now(), now() FROM PresentationActionType pat INNER JOIN SelectionPlan sp ON pat.SummitID = sp.SummitID;
+    SELECT pat.ID, sp.ID, pat.`Order`, now(), now() FROM PresentationActionType pat INNER JOIN SelectionPlan sp ON pat.SummitID = sp.SummitID;
 SQL;
-            $this->addSql($sql);
+        $this->addSql($sql);
     }
 
     /**

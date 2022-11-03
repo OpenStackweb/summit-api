@@ -68,4 +68,26 @@ final class SummitSelectionPlanValidationRulesFactory extends AbstractValidation
             'presentation_speaker_notification_email_template'      =>  'sometimes|string|max:255',
         ];
     }
+
+    /**
+     * @param array $payload
+     * @return array
+     */
+    public static function buildForAddPresentationActionType(array $payload = []): array
+    {
+        return [
+            'order' => 'sometimes|integer|min:1',
+        ];
+    }
+
+    /**
+     * @param array $payload
+     * @return array
+     */
+    public static function buildForUpdatePresentationActionType(array $payload = []): array
+    {
+        return [
+            'order' => 'required|integer|min:1',
+        ];
+    }
 }

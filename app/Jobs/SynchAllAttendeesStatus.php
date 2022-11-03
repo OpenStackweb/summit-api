@@ -42,7 +42,7 @@ class SynchAllAttendeesStatus implements ShouldQueue
     private $summit_id;
 
     /**
-     * SynchAllPresentationActions constructor.
+     * SynchAllAttendeesStatus constructor.
      * @param int $summit_id
      */
     public function __construct(int $summit_id)

@@ -1616,25 +1616,21 @@ class Presentation extends SummitEvent
         return $res;
     }
 
-    public function initializeActions():void {
-        Log::debug(sprintf("Presentation::initializeActions presentation %s", $this->id));
-        foreach ($this->summit->getPresentationActionTypes() as $presentationActionType){
-            if(!$this->hasActionByType($presentationActionType)){
-                // create it
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "Presentation::initializeActions creating new presentation action for type %s",
-                        $presentationActionType->getLabel()
-                    )
-                );
-                $action = new PresentationAction();
-                $action->setType($presentationActionType);
-                $action->setPresentation($this);
-                $this->actions->add($action);
-            }
+    /**
+     * @param PresentationActionType $presentation_action_type
+     * @return PresentationAction
+     */
+    public function setActionByType(PresentationActionType $presentation_action_type): PresentationAction
+    {
+        $action = $this->getActionByType($presentation_action_type);
+        if(is_null($action)){
+            Log::debug("Presentation::setActionByType creating new presentation action for type {$presentation_action_type->getLabel()}");
+            $action = new PresentationAction();
+            $action->setType($presentation_action_type);
+            $action->setPresentation($this);
+            $this->actions->add($action);
         }
+        return $action;
     }
 
     /**

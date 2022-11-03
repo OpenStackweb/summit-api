@@ -14,16 +14,16 @@
 
 use App\Models\Foundation\Main\IOrderable;
 use App\Models\Foundation\Summit\SelectionPlan;
+use App\Models\Utils\BaseEntity;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\One2ManyPropertyTrait;
-use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="PresentationActionType_SelectionPlan")
  * Class AllowedPresentationActionType
  * @package models\summit
  */
-class AllowedPresentationActionType extends SilverstripeBaseModel implements IOrderable
+class AllowedPresentationActionType extends BaseEntity implements IOrderable
 {
     use One2ManyPropertyTrait;
     /**
@@ -31,6 +31,18 @@ class AllowedPresentationActionType extends SilverstripeBaseModel implements IOr
      * @var int
      */
     private $order;
+
+    /**
+     * @ORM\Column(name="PresentationActionTypeID", type="integer")
+     * @var int
+     */
+    private $type_id;
+
+    /**
+     * @ORM\Column(name="SelectionPlanID", type="integer")
+     * @var int
+     */
+    private $selection_plan_id;
 
     protected $getIdMappings = [
         'getTypeId' => 'type',
@@ -49,21 +61,20 @@ class AllowedPresentationActionType extends SilverstripeBaseModel implements IOr
      */
     public function __construct(PresentationActionType $type, SelectionPlan $selection_plan, int $order)
     {
-        parent::__construct();
         $this->type = $type;
         $this->selection_plan = $selection_plan;
         $this->order = $order;
     }
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\PresentationActionType", inversedBy="selection_plans", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="models\summit\PresentationActionType", inversedBy="assigned_selection_plans", cascade={"persist"}, fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="PresentationActionTypeID", referencedColumnName="ID", onDelete="SET NULL")
      * @var PresentationActionType
      */
     private $type;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="presentation_action_types", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="allowed_presentation_action_types", cascade={"persist"}, fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SelectionPlan
      */

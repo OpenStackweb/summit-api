@@ -1693,9 +1693,28 @@ class Presentation extends SummitEvent
         return $answer ? $answer : null;
     }
 
-    public function clearExtraQuestionAnswers()
+    /**
+     * @param SelectionPlan|null $selection_plan
+     */
+    public function clearExtraQuestionAnswers(SelectionPlan $selection_plan = null):void
     {
-        return $this->extra_question_answers->clear();
+        if(is_null($selection_plan))
+        {
+            $this->extra_question_answers->clear();
+            return;
+        }
+        // only clear the ones assigned to selection plan
+        $to_remove = [];
+        foreach ($this->extra_question_answers as $answer){
+            if($selection_plan->isExtraQuestionAssigned($answer->getQuestion())){
+                $to_remove[] = $answer;
+            }
+        }
+        // clear answers
+        foreach($to_remove as $a){
+            $this->extra_question_answers->removeElement($a);
+        }
+
     }
 
     /**

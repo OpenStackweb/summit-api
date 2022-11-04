@@ -24,9 +24,13 @@ final class Version20221031181921 extends AbstractMigration
      */
     public function up(Schema $schema): void
     {
+        // set the summit to the extra question type
         $sql = <<<SQL
 UPDATE SummitSelectionPlanExtraQuestionType
-SET SummitID = (SELECT SummitID FROM SelectionPlan WHERE SelectionPlan.ID = SummitSelectionPlanExtraQuestionType.SelectionPlanID);
+SET SummitID = (
+    SELECT SummitID FROM SelectionPlan 
+    INNER JOIN Summit ON Summit.ID = SummitID
+    WHERE SelectionPlan.ID = SummitSelectionPlanExtraQuestionType.SelectionPlanID);
 SQL;
 
         $this->addSql($sql);

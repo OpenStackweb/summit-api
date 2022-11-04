@@ -117,10 +117,11 @@ final class PresentationFactory
                     )
                 );
             }
-            $questions = $selection_plan->getExtraQuestions();
-            if ($questions->count() > 0) {
-                $presentation->clearExtraQuestionAnswers();
-                foreach ($questions as $question) {
+            $assigned_questions = $selection_plan->getExtraQuestions();
+            if ($assigned_questions->count() > 0) {
+                $presentation->clearExtraQuestionAnswers($selection_plan);
+                foreach ($assigned_questions as $assigned_question) {
+                    $question = $assigned_question->getQuestionType();
                     if (!$question instanceof SummitSelectionPlanExtraQuestionType) continue;
                     foreach ($extra_questions as $question_answer) {
                         if (intval($question_answer['question_id']) == $question->getId()) {

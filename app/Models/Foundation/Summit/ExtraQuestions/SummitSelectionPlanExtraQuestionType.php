@@ -36,15 +36,16 @@ class SummitSelectionPlanExtraQuestionType extends ExtraQuestionType
      * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType", mappedBy="question_type",  cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var AssignedSelectionPlanExtraQuestionType[]
      */
-    private $assignments;
+    private $assigned_selection_plans;
 
     public function __construct()
     {
         parent::__construct();
-        $this->assignments = new ArrayCollection();
+        $this->assigned_selection_plans = new ArrayCollection();
     }
 
     public function getAssignments(){
-        return $this->assignments;
+        return $this->assigned_selection_plans;
     }
+
 }

@@ -17,6 +17,7 @@ use App\Models\Foundation\Main\OrderableChilds;
 use App\Models\Foundation\Summit\AllowedCurrencies;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlowType;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use App\Models\Foundation\Summit\ISummitExternalScheduleFeedType;
 use App\Models\Foundation\Summit\ISummitModality;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
@@ -750,6 +751,12 @@ class Summit extends SilverstripeBaseModel
     private $speakers_announcement_emails;
 
     /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SummitSelectionPlanExtraQuestionType[]
+     */
+    private $selection_plan_extra_questions;
+
+    /**
      * @return string
      */
     public function getDatesLabel()
@@ -1091,6 +1098,7 @@ class Summit extends SilverstripeBaseModel
         $this->badge_view_types = new ArrayCollection();
         $this->registration_allowed_refund_request_till_date = null;
         $this->sponsorship_types = new ArrayCollection();
+        $this->selection_plan_extra_questions = new ArrayCollection();
     }
 
     /**
@@ -6196,4 +6204,57 @@ SQL;
     }
 
     use ScheduleEntity;
+
+    /**
+     * @param int $question_id
+     * @return SummitSelectionPlanExtraQuestionType|null
+     */
+    public function getSelectionPlanExtraQuestionById(int $question_id): ?SummitSelectionPlanExtraQuestionType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $question_id));
+        $question = $this->selection_plan_extra_questions->matching($criteria)->first();
+        return $question === false ? null : $question;
+    }
+
+    /**
+     * @param string $name
+     * @return SummitSelectionPlanExtraQuestionType|null
+     */
+    public function getSelectionPlanExtraQuestionByName(string $name): ?SummitSelectionPlanExtraQuestionType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('name', trim($name)));
+        $question = $this->selection_plan_extra_questions->matching($criteria)->first();
+        return $question === false ? null : $question;
+    }
+
+    /**
+     * @param string $label
+     * @return SummitSelectionPlanExtraQuestionType|null
+     */
+    public function getSelectionPlanExtraQuestionByLabel(string $label): ?SummitSelectionPlanExtraQuestionType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('label', trim($label)));
+        $question = $this->selection_plan_extra_questions->matching($criteria)->first();
+        return $question === false ? null : $question;
+    }
+
+    /**
+     * @param SummitSelectionPlanExtraQuestionType $question
+     */
+    public function addSelectionPlanExtraQuestion(SummitSelectionPlanExtraQuestionType $question)
+    {
+        if ($this->selection_plan_extra_questions->contains($question)) return;
+        $this->selection_plan_extra_questions->add($question);
+        $question->setSummit($this);
+    }
+
+    public function removeSelectionPlanExtraQuestion(SummitSelectionPlanExtraQuestionType $question)
+    {
+        if (!$this->selection_plan_extra_questions->contains($question)) return;
+        $this->selection_plan_extra_questions->removeElement($question);
+        $question->clearSummit();
+    }
 }

@@ -800,15 +800,93 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
      * Extra questions
      */
 
+
     /**
      * @param $summit_id
      * @param $selection_plan_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function getExtraQuestions($summit_id, $selection_plan_id)
+    public function getExtraQuestions($summit_id)
     {
 
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
 
+        return $this->_getAll(
+            function () {
+                return [
+                    'name' => ['=@', '=='],
+                    'type' => ['=@', '=='],
+                    'label' => ['=@', '=='],
+                ];
+            },
+            function () {
+                return [
+                    'name' => 'sometimes|string',
+                    'type' => 'sometimes|string',
+                    'label' => 'sometimes|string',
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'name',
+                    'label',
+                    'order',
+                ];
+            },
+            function ($filter) use ($summit) {
+                if ($filter instanceof Filter) {
+                    $filter->addFilterCondition
+                    (
+                        FilterElement::makeEqual('summit_id', $summit->getId())
+                    );
+                }
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) {
+                return $this->selection_plan_extra_questions_repository->getAllByPage
+                (
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
+    }
+
+    /**
+     * @param $summit_id
+     * @param $question_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getExtraQuestion($summit_id, $question_id){
+        return $this->processRequest(function() use($summit_id, $question_id){
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $question = $summit->getSelectionPlanExtraQuestionById(intval($question_id));
+            if (is_null($question)) return $this->error404('Question not found.');
+
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($question)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
+    /**
+     * @param $summit_id
+     * @param $selection_plan_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getExtraQuestionsBySelectionPlan($summit_id, $selection_plan_id)
+    {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
         if (is_null($summit)) return $this->error404();
 
@@ -865,7 +943,24 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
      * @param $selection_plan_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function getExtraQuestionsMetadata($summit_id, $selection_plan_id)
+    public function getExtraQuestionsMetadata($summit_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        return $this->ok
+        (
+            $this->selection_plan_extra_questions_repository->getQuestionsMetadata()
+        );
+    }
+
+
+    /**
+     * @param $summit_id
+     * @param $selection_plan_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getExtraQuestionsMetadataBySelectionPlan($summit_id, $selection_plan_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
         if (is_null($summit)) return $this->error404();
@@ -880,7 +975,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
 
     /**
      * @param $summit_id
-     * @param $selection_plan_id
      * @return \Illuminate\Http\JsonResponse
      */
     public function addExtraQuestion($summit_id)
@@ -902,17 +996,92 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         );
     }
 
+    /**
+     * @param $summit_id
+     * @param $question_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function updateExtraQuestion($summit_id, $question_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        $args = [$summit];
+
+        return $this->_update($question_id, function ($payload) {
+            return SelectionPlanExtraQuestionValidationRulesFactory::build($payload, true);
+        },
+            function ($question_id, $payload, $summit) {
+                return $this->selection_plan_extra_questions_service->updateExtraQuestion
+                (
+                    $summit,
+                    intval($question_id),
+                    HTMLCleaner::cleanData($payload, ['label'])
+                );
+            }, ...$args);
+    }
+
+    /**
+     * @param $summit_id
+     * @param $selection_plan_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function addExtraQuestionAndAssign($summit_id, $selection_plan_id){
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        $selection_plan = $summit->getSelectionPlanById(intval($selection_plan_id));
+        if (is_null($selection_plan)) return $this->error404();
+
+        $args = [$selection_plan_id];
+
+        return $this->_add(
+            function ($payload) {
+                return SelectionPlanExtraQuestionValidationRulesFactory::build($payload);
+            },
+            function ($payload, $selection_plan_id) {
+                  return $this->selection_plan_extra_questions_service->addExtraQuestionAndAssignTo($selection_plan_id, HTMLCleaner::cleanData($payload, ['label']));
+            },
+            ...$args
+        );
+    }
+
+    /**
+     * @param $summit_id
+     * @param $selection_plan_id
+     * @param $question_id
+     * @return mixed
+     */
+    public function assignExtraQuestion($summit_id, $selection_plan_id, $question_id){
+
+        return $this->processRequest(function() use($summit_id, $selection_plan_id, $question_id){
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $selection_plan = $summit->getSelectionPlanById(intval($selection_plan_id));
+            if (is_null($selection_plan)) return $this->error404();
+
+            $assigment = $this->selection_plan_extra_questions_service->assignExtraQuestion(intval($selection_plan_id), intval($question_id));
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($assigment)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
+
     use ParametrizedGetEntity;
 
     /**
      * @param $summit_id
      * @param $selection_plan_id
      * @param $question_id
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function getExtraQuestion($summit_id, $selection_plan_id, $question_id)
+    public function getExtraQuestionBySelectionPlan($summit_id, $selection_plan_id, $question_id)
     {
-
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
         if (is_null($summit)) return $this->error404();
 
@@ -932,7 +1101,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
      * @param $question_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function updateExtraQuestion($summit_id, $selection_plan_id, $question_id)
+    public function updateExtraQuestionBySelectionPlan($summit_id, $selection_plan_id, $question_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
         if (is_null($summit)) return $this->error404();
@@ -946,7 +1115,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
             return SelectionPlanExtraQuestionValidationRulesFactory::build($payload, true);
         },
             function ($question_id, $payload, $selection_plan) {
-                return $this->selection_plan_extra_questions_service->updateExtraQuestion
+                return $this->selection_plan_extra_questions_service->updateExtraQuestionBySelectionPlan()
                 (
                     $selection_plan,
                     intval($question_id),
@@ -959,22 +1128,18 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
 
     /**
      * @param $summit_id
-     * @param $selection_plan_id
      * @param $question_id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function deleteExtraQuestion($summit_id, $selection_plan_id, $question_id)
+    public function deleteExtraQuestion($summit_id, $question_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
         if (is_null($summit)) return $this->error404();
 
-        $selection_plan = $summit->getSelectionPlanById(intval($selection_plan_id));
-        if (is_null($selection_plan)) return $this->error404();
+        $args = [$summit];
 
-        $args = [$selection_plan];
-
-        return $this->_delete(intval($question_id), function ($question_id, $selection_plan) {
-            $this->selection_plan_extra_questions_service->deleteExtraQuestion($selection_plan, intval($question_id));
+        return $this->_delete(intval($question_id), function ($question_id, $summit) {
+            $this->selection_plan_extra_questions_service->deleteExtraQuestion($summit, intval($question_id));
         }, ...$args);
     }
 
@@ -984,7 +1149,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
      * @param $question_id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function addExtraQuestionValue($summit_id, $selection_plan_id, $question_id)
+    public function removeExtraQuestion($summit_id, $selection_plan_id, $question_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
         if (is_null($summit)) return $this->error404();
@@ -992,16 +1157,35 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
         if (is_null($selection_plan)) return $this->error404();
 
-        $args = [$selection_plan, intval($question_id)];
+        $args = [$selection_plan_id];
+
+        return $this->_delete(intval($question_id), function ($question_id, $selection_plan_id) {
+            $this->selection_plan_extra_questions_service->removeExtraQuestion($selection_plan_id, intval($question_id));
+        }, ...$args);
+    }
+
+    // Question Values
+
+    /**
+     * @param $summit_id
+     * @param $question_id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function addExtraQuestionValue($summit_id, $question_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        $args = [$summit, intval($question_id)];
 
         return $this->_add(
             function ($payload) {
                 return ExtraQuestionTypeValueValidationRulesFactory::build($payload);
             },
-            function ($payload, $selection_plan, $question_id) {
+            function ($payload, $summit, $question_id) {
                 return $this->selection_plan_extra_questions_service->addExtraQuestionValue
                 (
-                    $selection_plan, intval($question_id), $payload
+                    $summit, intval($question_id), $payload
                 );
             },
             ...$args);
@@ -1011,26 +1195,51 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
      * @param $summit_id
      * @param $selection_plan_id
      * @param $question_id
-     * @param $value_id
-     * @return \Illuminate\Http\JsonResponse|mixed
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function updateExtraQuestionValue($summit_id, $selection_plan_id, $question_id, $value_id)
+    public function addExtraQuestionValueBySelectionPlan($summit_id, $selection_plan_id, $question_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
         if (is_null($summit)) return $this->error404();
 
-        $selection_plan = $summit->getSelectionPlanById(intval($selection_plan_id));
+        $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
         if (is_null($selection_plan)) return $this->error404();
 
-        $args = [$selection_plan, intval($question_id)];
+        $args = [$summit, intval($question_id)];
+
+        return $this->_add(
+            function ($payload) {
+                return ExtraQuestionTypeValueValidationRulesFactory::build($payload);
+            },
+            function ($payload, $summit, $question_id) {
+                return $this->selection_plan_extra_questions_service->addExtraQuestionValue
+                (
+                    $summit, intval($question_id), $payload
+                );
+            },
+            ...$args);
+    }
+
+    /**
+     * @param $summit_id
+     * @param $question_id
+     * @param $value_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function updateExtraQuestionValue($summit_id, $question_id, $value_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        $args = [$summit, intval($question_id)];
 
         return $this->_update($value_id, function ($payload) {
             return ExtraQuestionTypeValueValidationRulesFactory::build($payload, false);
         },
-            function ($value_id, $payload, $selection_plan, $question_id) {
+            function ($value_id, $payload, $summit, $question_id) {
                 return $this->selection_plan_extra_questions_service->updateExtraQuestionValue
                 (
-                    $selection_plan,
+                    $summit,
                     intval($question_id),
                     intval($value_id),
                     $payload
@@ -1045,7 +1254,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
      * @param $value_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function deleteExtraQuestionValue($summit_id, $selection_plan_id, $question_id, $value_id)
+    public function updateExtraQuestionValueBySelectionPlan($summit_id, $selection_plan_id, $question_id, $value_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
         if (is_null($summit)) return $this->error404();
@@ -1053,10 +1262,60 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         $selection_plan = $summit->getSelectionPlanById(intval($selection_plan_id));
         if (is_null($selection_plan)) return $this->error404();
 
-        $args = [$selection_plan, intval($question_id)];
+        $args = [$summit, intval($question_id)];
 
-        return $this->_delete($value_id, function ($value_id, $selection_plan, $question_id) {
-            $this->selection_plan_extra_questions_service->deleteExtraQuestionValue($selection_plan, intval($question_id), intval($value_id));
+        return $this->_update($value_id, function ($payload) {
+            return ExtraQuestionTypeValueValidationRulesFactory::build($payload, false);
+        },
+            function ($value_id, $payload, $summit, $question_id) {
+                return $this->selection_plan_extra_questions_service->updateExtraQuestionValue
+                (
+                    $summit,
+                    intval($question_id),
+                    intval($value_id),
+                    $payload
+                );
+            }, ...$args);
+    }
+
+    /**
+     * @param $summit_id
+     * @param $question_id
+     * @param $value_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function deleteExtraQuestionValue($summit_id, $question_id, $value_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        $args = [$summit, intval($question_id)];
+
+        return $this->_delete($value_id, function ($value_id, $summit, $question_id) {
+            $this->selection_plan_extra_questions_service->deleteExtraQuestionValue($summit, intval($question_id), intval($value_id));
+        }
+            , ...$args);
+    }
+
+    /**
+     * @param $summit_id
+     * @param $selection_plan_id
+     * @param $question_id
+     * @param $value_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function deleteExtraQuestionValueBySelectionPlan($summit_id, $selection_plan_id, $question_id, $value_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        $selection_plan = $summit->getSelectionPlanById(intval($selection_plan_id));
+        if (is_null($selection_plan)) return $this->error404();
+
+        $args = [$summit, intval($question_id)];
+
+        return $this->_delete($value_id, function ($value_id, $summit, $question_id) {
+            $this->selection_plan_extra_questions_service->deleteExtraQuestionValue($summit, intval($question_id), intval($value_id));
         }
             , ...$args);
     }

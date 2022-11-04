@@ -17,26 +17,28 @@ use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Utils\BaseEntity;
 use models\utils\One2ManyPropertyTrait;
 use Doctrine\ORM\Mapping AS ORM;
+
 /**
  * @ORM\Entity
  * @ORM\Table(name="SummitSelectionPlanExtraQuestionType_SelectionPlan")
  * Class AssignedSelectionPlanExtraQuestionType
  * @package App\Models\Foundation\Summit\ExtraQuestions
  */
-class AssignedSelectionPlanExtraQuestionType extends BaseEntity
+class AssignedSelectionPlanExtraQuestionType
+    extends BaseEntity
     implements IOrderable
 {
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType", inversedBy="assignments")
-     * @ORM\JoinColumn(name="SummitSelectionPlanExtraQuestionTypeID", referencedColumnName="ID")
+     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType", inversedBy="assigned_selection_plans")
+     * @ORM\JoinColumn(name="SummitSelectionPlanExtraQuestionTypeID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SummitSelectionPlanExtraQuestionType
      */
     protected $question_type;
 
     /**
      * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="extra_questions")
-     * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
+     * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SelectionPlan
      */
     protected $selection_plan;
@@ -53,6 +55,17 @@ class AssignedSelectionPlanExtraQuestionType extends BaseEntity
     public function getSelectionPlan(): SelectionPlan
     {
         return $this->selection_plan;
+    }
+
+    /**
+     * @return SummitSelectionPlanExtraQuestionType
+     */
+    public function getQuestionType():SummitSelectionPlanExtraQuestionType{
+        return $this->question_type;
+    }
+
+    public function setQuestionType(SummitSelectionPlanExtraQuestionType $question):void{
+        $this->question_type = $question;
     }
 
     /**
@@ -80,15 +93,9 @@ class AssignedSelectionPlanExtraQuestionType extends BaseEntity
         $this->question_type = null;
     }
 
-    /**
-     * @param SelectionPlan|null $selection_plan
-     * @param SummitSelectionPlanExtraQuestionType|null $question_type
-     */
-    public function __construct(SelectionPlan $selection_plan = null, SummitSelectionPlanExtraQuestionType $question_type = null)
+    public function __construct()
     {
         $this->order = 1;
-        $this->selection_plan = $selection_plan;
-        $this->question_type = $question_type;
     }
 
     /**

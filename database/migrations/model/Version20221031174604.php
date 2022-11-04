@@ -24,10 +24,11 @@ final class Version20221031174604 extends AbstractMigration
      */
     public function up(Schema $schema): void
     {
+        // migrate current selection plan extra questions to new model
         $sql = <<<SQL
 INSERT INTO SummitSelectionPlanExtraQuestionType_SelectionPlan
-    (Created, LastEdited, SummitSelectionPlanExtraQuestionTypeID, SelectionPlanID, CustomOrder)
-SELECT NOW(),NOW(), ExtraQuestionType.ID,SelectionPlanID, `Order` from SummitSelectionPlanExtraQuestionType
+    (SummitSelectionPlanExtraQuestionTypeID, SelectionPlanID, CustomOrder)
+SELECT ExtraQuestionType.ID,SelectionPlanID, `Order` from SummitSelectionPlanExtraQuestionType
 inner join ExtraQuestionType ON ExtraQuestionType.ID = SummitSelectionPlanExtraQuestionType.ID;
 SQL;
 

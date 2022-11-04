@@ -32,17 +32,15 @@ final class Version20221031172853 extends AbstractMigration
 
                 $table->bigInteger("ID", true, false);
                 $table->primary("ID");
-                $table->timestamp('Created');
-                $table->timestamp('LastEdited');
                 $table->smallInteger('CustomOrder')->setNotnull(true)->setDefault(1);
 
                 $table->integer("SummitSelectionPlanExtraQuestionTypeID", false, false)->setNotnull(false)->setDefault('NULL');
                 $table->index("SummitSelectionPlanExtraQuestionTypeID", "SummitSelectionPlanExtraQuestionTypeID");
-                $table->foreign("SummitSelectionPlanExtraQuestionType", "SummitSelectionPlanExtraQuestionTypeID", "ID", ["onDelete" => "CASCADE"], "FK_SummitSelectionPlanExtraQuestionType_SelectionPlan_TypeID");
+                $table->foreign("SummitSelectionPlanExtraQuestionType", "SummitSelectionPlanExtraQuestionTypeID", "ID", ["onDelete" => "CASCADE"], "FK_AssignedSelectionPlan_Question_Type");
 
                 $table->integer("SelectionPlanID", false, false)->setNotnull(false)->setDefault('NULL');
                 $table->index("SelectionPlanID", "SelectionPlanID");
-                $table->foreign("SelectionPlan", "SelectionPlanID", "ID", ["onDelete" => "CASCADE"], "FK_SummitSelectionPlanExtraQuestionType_SelectionPlan_SelectionPlan");
+                $table->foreign("SelectionPlan", "SelectionPlanID", "ID", ["onDelete" => "CASCADE"], "FK_AssignedSelectionPlan_SelectionPlan");
                 $table->unique(['SummitSelectionPlanExtraQuestionTypeID', 'SelectionPlanID']);
 
             });

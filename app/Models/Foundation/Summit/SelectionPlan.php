@@ -181,7 +181,7 @@ class SelectionPlan extends SilverstripeBaseModel
     private $track_chair_rating_types;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType", mappedBy="selection_plan",  cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType", mappedBy="selection_plan",cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var AssignedSelectionPlanExtraQuestionType[]
      */
     private $extra_questions;
@@ -572,16 +572,17 @@ class SelectionPlan extends SilverstripeBaseModel
     {
         try {
             $query = $this->createQuery(
-                "SELECT q from  App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType aq 
+                "SELECT aq from App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType aq 
         JOIN aq.question_type q 
         JOIN aq.selection_plan sp    
         WHERE sp.id = :selection_plan_id and q.id = :question_id
         ");
 
-            return $query
+            $res = $query
                 ->setParameter('selection_plan_id', $this->getIdentifier())
                 ->setParameter('question_id', $question_id)
                 ->getSingleResult();
+            return $res->getQuestionType();
         }
         catch (NoResultException $ex){
 
@@ -597,16 +598,17 @@ class SelectionPlan extends SilverstripeBaseModel
     {
         try {
             $query = $this->createQuery(
-                "SELECT q from  App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType aq 
+                "SELECT aq from App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType aq 
         JOIN aq.question_type q 
         JOIN aq.selection_plan sp    
         WHERE sp.id = :selection_plan_id and q.name = :question_name
         ");
 
-            return $query
+            $res = $query
                 ->setParameter('selection_plan_id', $this->getIdentifier())
                 ->setParameter('question_name', trim($name))
                 ->getSingleResult();
+            return $res->getQuestionType();
         }
         catch (NoResultException $ex){
 
@@ -622,16 +624,17 @@ class SelectionPlan extends SilverstripeBaseModel
     {
         try {
             $query = $this->createQuery(
-                "SELECT q from  App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType aq 
+                "SELECT aq from App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType aq 
         JOIN aq.question_type q 
         JOIN aq.selection_plan sp    
         WHERE sp.id = :selection_plan_id and q.label = :question_label
         ");
 
-            return $query
+            $res = $query
                 ->setParameter('selection_plan_id', $this->getIdentifier())
                 ->setParameter('question_label', trim($label))
                 ->getSingleResult();
+            return $res->getQuestionType();
         }
         catch (NoResultException $ex){
 
@@ -644,81 +647,43 @@ class SelectionPlan extends SilverstripeBaseModel
      */
     private function getExtraQuestionMaxOrder(): int
     {
-        $query = $this->createQuery(
-            "SELECT aq from  App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType aq 
-        JOIN aq.selection_plan sp    
-        WHERE sp.id = :selection_plan_id ORDER BY aq.order DESC LIMIT 1");
-
-        try {
-            $question = $query
-                ->setParameter('selection_plan_id', $this->getIdentifier())
-                ->getSingleResult();
-            return $question->getOrder();
-        }
-        catch (\Exception $ex){
-
-        }
-        return 0;
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'DESC']);
+        $res = $this->extra_questions->matching($criteria)->first();
+        return $res === false ? 0 : $res->getOrder();
     }
 
     /**
      * @param SummitSelectionPlanExtraQuestionType $question
-     * @throws ValidationException
+     * @return AssignedSelectionPlanExtraQuestionType|null
      */
-    public function addExtraQuestion(SummitSelectionPlanExtraQuestionType $question)
+    public function addExtraQuestion(SummitSelectionPlanExtraQuestionType $question):?AssignedSelectionPlanExtraQuestionType
     {
-        $query = $this->createQuery(
-            "SELECT q from  App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType aq 
-        JOIN aq.question_type q 
-        JOIN aq.selection_plan sp    
-        WHERE sp.id = :selection_plan_id and q.id = :question_id
-        ");
 
-        $formerExtraQuestion = null;
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('question_type', $question));
+        $former_assignment = $this->extra_questions->matching($criteria)->first();
+        if ($former_assignment !== false) return null;
 
-        try {
-            $formerExtraQuestion = $query
-                ->setParameter('selection_plan_id', $this->getIdentifier())
-                ->setParameter('question_id', $question->getId())
-                ->getSingleResult();
-        }
-        catch (NoResultException $ex){
-
-        }
-
-        if ($formerExtraQuestion) {
-            throw new ValidationException(sprintf("Question %s already exists.", $question->getName()));
-        };
-
-        $assignment = new AssignedSelectionPlanExtraQuestionType($this, $question);
+        $assignment = new AssignedSelectionPlanExtraQuestionType();
         $assignment->setOrder($this->getExtraQuestionMaxOrder() + 1);
+        $assignment->setQuestionType($question);
+        $assignment->setSelectionPlan($this);
         $this->extra_questions->add($assignment);
+
+        return $assignment;
     }
 
     public function removeExtraQuestion(SummitSelectionPlanExtraQuestionType $question)
     {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('question_type', $question));
+        $former_assignment = $this->extra_questions->matching($criteria)->first();
+        if ($former_assignment === false) return;
 
-        $query = $this->createQuery(
-            "SELECT aq from  App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType aq 
-        JOIN aq.question_type q 
-        JOIN aq.selection_plan sp    
-        WHERE sp.id = :selection_plan_id and q.id = :question_id
-        ");
-
-        $formerExtraQuestion = null;
-
-        try {
-            $formerExtraQuestion = $query
-                ->setParameter('selection_plan_id', $this->getIdentifier())
-                ->setParameter('question_id', $question->getId())
-                ->getSingleResult();
-        }
-        catch (NoResultException $ex){
-            return;
-        }
-
-        $this->extra_questions->removeElement($formerExtraQuestion);
-        $formerExtraQuestion->clearSelectionPlan();
+        $this->extra_questions->removeElement($former_assignment);
+        self::resetOrderForSelectable($this->extra_questions);
+        $former_assignment->clearSelectionPlan();
     }
 
     use OrderableChilds;
@@ -728,46 +693,23 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param int $new_order
      * @throws ValidationException
      */
-    public function recalculateQuestionOrder(SummitSelectionPlanExtraQuestionType $question, $new_order)
+    public function recalculateQuestionOrder(SummitSelectionPlanExtraQuestionType $question, int $new_order)
     {
-
-        $query = $this->createQuery(
-            "SELECT aq from  App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType aq 
-        JOIN aq.question_type q 
-        JOIN aq.selection_plan sp    
-        WHERE sp.id = :selection_plan_id and q.id = :question_id
-        ");
-
-        $formerExtraQuestion = null;
-
-        try {
-            $formerExtraQuestion = $query
-                ->setParameter('selection_plan_id', $this->getIdentifier())
-                ->setParameter('question_id', $question->getId())
-                ->getSingleResult();
-        }
-        catch (NoResultException $ex){
-            return;
-        }
-
-        self::recalculateOrderForSelectable($this->extra_questions, $formerExtraQuestion, $new_order);
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('question_type', $question));
+        $assignment = $this->extra_questions->matching($criteria)->first();
+        if ($assignment === false) return;
+        self::recalculateOrderForSelectable($this->extra_questions, $assignment, $new_order, );
     }
 
     /**
-     * @return ArrayCollection|\Doctrine\Common\Collections\Collection
+     * @return ArrayCollection|\Doctrine\Common\Collections\Collection|AssignedSelectionPlanExtraQuestionType[]
      */
     public function getExtraQuestions()
     {
-        $query = $this->createQuery(
-            "SELECT aq from  App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType aq 
-        JOIN aq.question_type q 
-        JOIN aq.selection_plan sp    
-        WHERE sp.id = :selection_plan_id order by aq.order ASC
-        ");
-
-       return $query
-            ->setParameter('selection_plan_id', $this->getIdentifier())
-            ->getResult();
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'ASC']);
+        return $this->extra_questions->matching($criteria);
     }
 
     /**
@@ -775,12 +717,12 @@ class SelectionPlan extends SilverstripeBaseModel
      */
     public function getMandatoryExtraQuestions()
     {
-
         $query = $this->createQuery(
-            "SELECT q from  App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType aq 
+            "SELECT aq from App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType aq 
         JOIN aq.question_type q 
         JOIN aq.selection_plan sp    
         WHERE sp.id = :selection_plan_id and q.mandatory = :mandatory
+        by aq.order ASC
         ");
 
         return $query
@@ -1098,5 +1040,26 @@ class SelectionPlan extends SilverstripeBaseModel
     public function clearSubmissionLockDownPresentationStatusDate(): void
     {
         $this->submission_lock_down_presentation_status_date = null;
+    }
+
+    /**
+     * @param SummitSelectionPlanExtraQuestionType $question
+     * @return bool
+     */
+    public function isExtraQuestionAssigned(SummitSelectionPlanExtraQuestionType $question): bool {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('question_type', $question));
+        return $this->extra_questions->matching($criteria)->count() > 0;
+    }
+
+    /**
+     * @param SummitSelectionPlanExtraQuestionType $question
+     * @return AssignedSelectionPlanExtraQuestionType|null
+     */
+    public function getAssignedExtraQuestion(SummitSelectionPlanExtraQuestionType $question):?AssignedSelectionPlanExtraQuestionType{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('question_type', $question));
+        $res = $this->extra_questions->matching($criteria)->first();
+        return $res === false ? null : $res;
     }
 }

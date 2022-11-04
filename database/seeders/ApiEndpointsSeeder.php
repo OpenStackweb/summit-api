@@ -6225,27 +6225,52 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             // selection plans extra questions
+            // by summit
             [
                 'name' => 'get-selection-plan-extra-questions',
-                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions',
+                'route' => '/api/v1/summits/{id}/selection-plan-extra-questions',
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm),
                     sprintf(SummitScopes::ReadSummitData, $current_realm)
                 ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
             ],
             [
                 'name' => 'get-selection-plan-extra-questions-metadata',
-                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/metadata',
+                'route' => '/api/v1/summits/{id}/selection-plan-extra-questions/metadata',
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm),
                     sprintf(SummitScopes::ReadSummitData, $current_realm)
                 ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'get-selection-plan-extra-question',
+                'route' => '/api/v1/summits/{id}/selection-plan-extra-questions/{question_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
             ],
             [
                 'name' => 'add-selection-plan-extra-question',
-                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions',
+                'route' => '/api/v1/summits/{id}/selection-plan-extra-questions',
                 'http_method' => 'POST',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)
@@ -6257,17 +6282,8 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
-                'name' => 'get-selection-plan-extra-question',
-                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}',
-                'http_method' => 'GET',
-                'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
-                ],
-            ],
-            [
                 'name' => 'update-selection-plan-extra-question',
-                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}',
+                'route' => '/api/v1/summits/{id}/selection-plan-extra-questions/{question_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)
@@ -6279,8 +6295,8 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
-                'name' => 'delete-selection-plan-extra-question',
-                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}',
+                'name' => 'delete-selection-plan-extra-questions',
+                'route' => '/api/v1/summits/{id}/selection-plan-extra-questions/{question_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)
@@ -6289,11 +6305,12 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
-                ]
+                ],
             ],
+            // values
             [
                 'name' => 'add-selection-plan-extra-question_value',
-                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}/values',
+                'route' => '/api/v1/summits/{id}/selection-plan-extra-questions/{question_id}/values',
                 'http_method' => 'POST',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)
@@ -6305,8 +6322,8 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
-                'name' => 'update-selection-plan-extra-question_value',
-                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}/values/{value_id}',
+                'name' => 'update-selection-plan-extra-question-value',
+                'route' => '/api/v1/summits/{id}/selection-plan-extra-questions/{question_id}/values/{value_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)
@@ -6319,6 +6336,121 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'delete-selection-plan-extra-question_value',
+                'route' => '/api/v1/summits/{id}/selection-plan-extra-questions/{question_id}/values/{value_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            // by selection plan
+            [
+                'name' => 'get-selection-plan-extra-questions-by-selection-plan',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'get-selection-plan-extra-questions-metadata-by-selection-plan',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/metadata',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ],
+            ],
+
+            [
+                'name' => 'add-selection-plan-extra-question-and-assign-to-plan',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'assign-extra-question-2-plan',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'get-selection-plan-extra-question-by-selection-plan',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'update-selection-plan-extra-question-by-selection-plan',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'remove-selection-plan-extra-question',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-selection-plan-extra-question-value-by-selection-plan',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}/values',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'update-selection-plan-extra-question-value-by-selection-plan',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}/values/{value_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-selection-plan-extra-question-value-by-selection-plan',
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}/values/{value_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [

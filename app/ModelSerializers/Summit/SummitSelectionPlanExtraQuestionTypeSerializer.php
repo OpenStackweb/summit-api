@@ -1,4 +1,6 @@
 <?php namespace ModelSerializers;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+
 /**
  * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +21,25 @@
 final class SummitSelectionPlanExtraQuestionTypeSerializer extends ExtraQuestionTypeSerializer
 {
     protected static $array_mappings = [
-        'SelectionPlanId' => 'selection_plan_id:json_int',
+        'SummitID' => 'summit_id:json_int',
     ];
+
+    /**
+     * @param null $expand
+     * @param array $fields
+     * @param array $relations
+     * @param array $params
+     * @return array
+     */
+    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    {
+        $question = $this->object;
+        if (!$question instanceof ExtraQuestionType) return [];
+        if (!count($relations)) $relations = $this->getAllowedRelations();
+        $values = parent::serialize($expand, $fields, $relations, $params);
+        if (isset($values['order']))
+            unset($values['order']);
+        return $values;
+    }
 
 }

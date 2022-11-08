@@ -12,9 +12,6 @@
  * limitations under the License.
  **/
 
-use App\Events\SummitTicketTypeInserted;
-use App\Events\SummitTicketTypeDeleted;
-use App\Events\SummitTicketTypeUpdated;
 use App\Models\Foundation\Summit\Factories\SummitTicketTypeFactory;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
@@ -130,15 +127,6 @@ final class SummitTicketTypeService
             return $ticket_type;
         });
 
-        Event::dispatch
-        (
-            new SummitTicketTypeInserted
-            (
-                $ticket_type->getId(),
-                $ticket_type->getSummitId()
-            )
-        );
-
         return $ticket_type;
 
     }
@@ -211,18 +199,7 @@ final class SummitTicketTypeService
             if (!empty($currency) && !empty($summit_currency) && $summit_currency != $currency)
                 throw new ValidationException(sprintf("ticket type should have same currency as summit (%s)", $summit_currency));
 
-            $ticket_type = SummitTicketTypeFactory::populate($ticket_type, self::getTicketTypeParams($summit, $data));
-
-            Event::dispatch
-            (
-                new SummitTicketTypeUpdated
-                (
-                    $ticket_type->getId(),
-                    $ticket_type->getSummitId()
-                )
-            );
-
-            return $ticket_type;
+            return SummitTicketTypeFactory::populate($ticket_type, self::getTicketTypeParams($summit, $data));
         });
     }
 
@@ -252,15 +229,6 @@ final class SummitTicketTypeService
                     )
                 );
             }
-
-            Event::dispatch
-            (
-                new SummitTicketTypeDeleted
-                (
-                    $ticket_type->getId(),
-                    $ticket_type->getSummitId()
-                )
-            );
 
             $summit->removeTicketType($ticket_type);
         });
@@ -383,9 +351,8 @@ final class SummitTicketTypeService
             $all_ticket_types = [];
 
             // check if we can sell ticket type
-            foreach($summit->getTicketTypesByAudience(SummitTicketType::Audience_All) as $ticket_type){
-                if(!$ticket_type->canSell())
-                {
+            foreach ($summit->getTicketTypesByAudience(SummitTicketType::Audience_All) as $ticket_type) {
+                if (!$ticket_type->canSell()) {
                     Log::debug
                     (
                         sprintf
@@ -401,7 +368,7 @@ final class SummitTicketTypeService
 
             $invitation = $summit->getSummitRegistrationInvitationByEmail($member->getEmail());
 
-            if(!is_null($invitation)) {
+            if (!is_null($invitation)) {
 
                 Log::debug
                 (
@@ -413,7 +380,7 @@ final class SummitTicketTypeService
                     )
                 );
 
-                if($invitation->isAccepted()){
+                if ($invitation->isAccepted()) {
                     Log::debug
                     (
                         sprintf
@@ -441,9 +408,8 @@ final class SummitTicketTypeService
             );
 
             $without_invitation_tickets_types = [];
-            foreach ($summit->getTicketTypesByAudience(SummitTicketType::Audience_Without_Invitation) as $ticket_type){
-                if(!$ticket_type->canSell())
-                {
+            foreach ($summit->getTicketTypesByAudience(SummitTicketType::Audience_Without_Invitation) as $ticket_type) {
+                if (!$ticket_type->canSell()) {
                     Log::debug
                     (
                         sprintf

@@ -162,7 +162,6 @@ return [
         \App\Services\FileSystem\Dropbox\DropboxServiceProvider::class,
         services\BaseServicesProvider::class,
         services\ModelServicesProvider::class,
-        factories\FactoriesProvider::class,
         App\Http\Utils\UtilsProvider::class,
         // Doctrine ORM
         LaravelDoctrine\ORM\DoctrineServiceProvider::class,

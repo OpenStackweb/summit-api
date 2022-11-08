@@ -14,6 +14,7 @@
 use App\Models\Foundation\Main\IOrderable;
 use App\Models\Foundation\Summit\Locations\Banners\ScheduledSummitLocationBanner;
 use App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner;
+use App\Models\Foundation\Summit\ScheduleEntity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use models\exceptions\ValidationException;
@@ -50,6 +51,7 @@ use Doctrine\ORM\Mapping AS ORM;
  *     "SummitVenueRoom" = "SummitVenueRoom",
  *     "SummitBookableVenueRoom" = "SummitBookableVenueRoom"
  * })
+ * @ORM\HasLifecycleCallbacks
  * Class SummitAbstractLocation
  * @package models\summit
  */
@@ -310,5 +312,5 @@ class SummitAbstractLocation extends SilverstripeBaseModel implements IOrderable
         $this->short_name = $short_name;
     }
 
-
+    use ScheduleEntity;
 }

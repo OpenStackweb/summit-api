@@ -19,6 +19,7 @@ use models\exceptions\ValidationException;
 /**
  * @ORM\Entity
  * @ORM\Table(name="SummitVenue")
+ * @ORM\HasLifecycleCallbacks
  * Class SummitVenue
  * @package models\summit
  */

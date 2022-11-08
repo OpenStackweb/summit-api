@@ -454,7 +454,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
-            $this->presentation_service->deletePresentation($summit, $presentation_id);
+            $this->presentation_service->deletePresentation($summit, intval($presentation_id));
 
             return $this->deleted();
 

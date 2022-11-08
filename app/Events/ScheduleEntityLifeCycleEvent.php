@@ -1,6 +1,6 @@
 <?php namespace App\Events;
-/**
- * Copyright 2018 OpenStack Foundation
+/*
+ * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,64 +11,60 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use Illuminate\Queue\SerializesModels;
+
 /**
- * Class TrackGroupAction
+ * Class ScheduleEntityLifeCycleEvent
  * @package App\Events
  */
-abstract class TrackGroupAction
+final class ScheduleEntityLifeCycleEvent extends Event
 {
     use SerializesModels;
 
     /**
-     * @var int
+     * @var string
      */
-    protected $track_group_id;
+    public $entity_operator;
 
     /**
      * @var int
      */
-    protected $summit_id;
+    public $summit_id;
+
+    /**
+     * @var int
+     */
+    public $entity_id;
 
     /**
      * @var string
      */
-    protected $class_name;
+    public $entity_type;
 
     /**
-     * TrackGroupAction constructor.
-     * @param int $track_group_id
+     * @param string $entity_operator
      * @param int $summit_id
-     * @param string $class_name
+     * @param int $entity_id
+     * @param string $entity_type
      */
-    public function __construct($track_group_id, $summit_id, $class_name)
+    public function __construct(string $entity_operator, int $summit_id, int $entity_id, string $entity_type)
     {
-        $this->track_group_id = $track_group_id;
+        $this->entity_operator = $entity_operator;
         $this->summit_id = $summit_id;
-        $this->class_name = $class_name;
+        $this->entity_id = $entity_id;
+        $this->entity_type = $entity_type;
     }
 
-    /**
-     * @return string
-     */
-    public function getClassName()
-    {
-        return $this->class_name;
+    public function __toString():string{
+        return sprintf
+        (
+            "%s %s %s %s",
+            $this->entity_operator,
+            $this->summit_id,
+            $this->entity_id,
+            $this->entity_type
+        );
     }
 
-    /**
-     * @return int
-     */
-    public function getTrackGroupId()
-    {
-        return $this->track_group_id;
-    }
-
-    /**
-     * @return int
-     */
-    public function getSummitId()
-    {
-        return $this->summit_id;
-    }
 }

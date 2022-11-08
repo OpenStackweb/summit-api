@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+use App\Models\Foundation\Summit\ScheduleEntity;
 use models\exceptions\ValidationException;
 use Doctrine\ORM\Mapping AS ORM;
 /**
@@ -23,6 +24,7 @@ use Doctrine\ORM\Mapping AS ORM;
  *          inversedBy="order_extra_questions"
  *     )
  * })
+ * @ORM\HasLifecycleCallbacks
  * @ORM\Table(name="SummitOrderExtraQuestionType")
  * Class SummitOrderExtraQuestionType
  * @package models\summit
@@ -107,4 +109,5 @@ class SummitOrderExtraQuestionType extends ExtraQuestionType
         $this->external_id = $external_id;
     }
 
+    use ScheduleEntity;
 }

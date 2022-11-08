@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\ScheduleEntity;
 use Doctrine\Common\Collections\ArrayCollection;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
@@ -25,8 +26,9 @@ use Doctrine\ORM\Mapping AS ORM;
  * })
  * @ORM\Table(name="SummitEventType")
  * @ORM\InheritanceType("JOINED")
+ * @ORM\HasLifecycleCallbacks
  * @ORM\DiscriminatorColumn(name="ClassName", type="string")
- * @ORM\DiscriminatorMap({"SummitEventType" = "SummitEventType", "PresentationType" = "PresentationType", "SummitGroupEvent" = "SummitGroupEvent", "SummitEventWithFile" = "SummitEventWithFile"})
+ * @ORM\DiscriminatorMap({"SummitEventType" = "SummitEventType", "PresentationType" = "PresentationType"})
  */
 class SummitEventType extends SilverstripeBaseModel
 {
@@ -409,4 +411,5 @@ SQL;
         $this->allows_location_timeframe_collision = $allows_location_timeframe_collision;
     }
 
+    use ScheduleEntity;
 }

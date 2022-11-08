@@ -18,6 +18,7 @@ use Doctrine\ORM\Mapping AS ORM;
  * Class PresentationType
  * @ORM\Entity
  * @ORM\Table(name="PresentationType")
+ * @ORM\HasLifecycleCallbacks
  * @package models\summit
  */
 class PresentationType extends SummitEventType

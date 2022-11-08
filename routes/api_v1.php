@@ -484,8 +484,6 @@ Route::group(array('prefix' => 'summits'), function () {
             });
         });
 
-        Route::get('entity-events', 'OAuth2SummitApiController@getSummitEntityEvents');
-
         // notifications
         Route::group(['prefix' => 'notifications'], function () {
             Route::get('sent', 'OAuth2SummitNotificationsApiController@getAllApprovedByUser');

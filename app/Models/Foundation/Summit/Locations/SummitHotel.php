@@ -17,6 +17,7 @@ use Doctrine\ORM\Mapping AS ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="SummitHotel")
+ * @ORM\HasLifecycleCallbacks
  * Class SummitHotel
  * @package models\summit
  */

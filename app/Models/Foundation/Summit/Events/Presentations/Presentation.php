@@ -36,6 +36,7 @@ use models\utils\SilverstripeBaseModel;
  * Class Presentation
  * @ORM\Entity
  * @ORM\Table(name="Presentation")
+ * @ORM\HasLifecycleCallbacks
  * @package models\summit
  */
 class Presentation extends SummitEvent
@@ -56,7 +57,7 @@ class Presentation extends SummitEvent
     const PHASE_NEW = 0;
 
     /**
-     * Defines the phase where a presenation has been given a summary,
+     * Defines the phase where a presentation has been given a summary,
      * but no speakers have been added
      */
     const PHASE_SUMMARY = 1;
@@ -329,7 +330,7 @@ class Presentation extends SummitEvent
     /**
      * @return string
      */
-    public function getClassName()
+    public function getClassName():string
     {
         return self::ClassNamePresentation;
     }

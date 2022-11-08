@@ -12,18 +12,6 @@
  * limitations under the License.
  **/
 use App\Events\CreatedBookableRoomReservation;
-use App\Events\FloorDeleted;
-use App\Events\FloorInserted;
-use App\Events\FloorUpdated;
-use App\Events\LocationDeleted;
-use App\Events\LocationImageDeleted;
-use App\Events\LocationImageInserted;
-use App\Events\LocationImageUpdated;
-use App\Events\LocationInserted;
-use App\Events\LocationUpdated;
-use App\Events\SummitVenueRoomDeleted;
-use App\Events\SummitVenueRoomInserted;
-use App\Events\SummitVenueRoomUpdated;
 use App\Http\Utils\IFileUploader;
 use App\Models\Foundation\Summit\Factories\SummitLocationBannerFactory;
 use App\Models\Foundation\Summit\Factories\SummitLocationFactory;
@@ -202,16 +190,6 @@ final class SummitLocationService
             return $location;
         });
 
-        Event::dispatch
-        (
-            new LocationInserted
-            (
-                $location->getSummitId(),
-                $location->getId(),
-                $location->getClassName()
-            )
-        );
-
         return $location;
     }
 
@@ -319,17 +297,6 @@ final class SummitLocationService
                 $summit->recalculateLocationOrder($location, intval($data['order']));
             }
 
-            Event::dispatch
-            (
-                new LocationUpdated
-                (
-                    $location->getSummitId(),
-                    $location->getId(),
-                    $location->getClassName(),
-                    $summit->getScheduleEventsIdsPerLocation($location)
-                )
-            );
-
             return $location;
         });
     }
@@ -381,14 +348,6 @@ final class SummitLocationService
                 );
             }
 
-            Event::dispatch(new LocationDeleted
-                (
-                    $location->getSummitId(),
-                    $location->getId(),
-                    $location->getClassName(),
-                    $summit->getScheduleEventsIdsPerLocation($location))
-            );
-
             $summit->removeLocation($location);
         });
     }
@@ -403,7 +362,7 @@ final class SummitLocationService
      */
     public function addVenueFloor(Summit $summit, $venue_id, array $data)
     {
-        $floor = $this->tx_service->transaction(function () use ($summit, $venue_id, $data) {
+        return $this->tx_service->transaction(function () use ($summit, $venue_id, $data) {
 
             $venue = $summit->getLocation($venue_id);
 
@@ -472,18 +431,6 @@ final class SummitLocationService
 
             return $floor;
         });
-
-        Event::dispatch
-        (
-            new FloorInserted
-            (
-                $floor->getVenue()->getSummitId(),
-                $floor->getVenueId(),
-                $floor->getId()
-            )
-        );
-
-        return $floor;
     }
 
     /**
@@ -580,19 +527,8 @@ final class SummitLocationService
                 );
             }
 
-            $floor = SummitVenueFloorFactory::populate($floor, $data);
+            return SummitVenueFloorFactory::populate($floor, $data);
 
-            Event::dispatch
-            (
-                new FloorUpdated
-                (
-                    $floor->getVenue()->getSummitId(),
-                    $floor->getVenueId(),
-                    $floor->getId()
-                )
-            );
-
-            return $floor;
         });
     }
 
@@ -653,14 +589,6 @@ final class SummitLocationService
                     )
                 );
             }
-
-            Event::dispatch(new FloorDeleted
-                (
-                    $floor->getVenue()->getSummitId(),
-                    $floor->getVenueId(),
-                    $floor->getId()
-                )
-            );
 
             $venue->removeFloor($floor);
         });
@@ -764,16 +692,6 @@ final class SummitLocationService
 
             return $room;
         });
-
-        Event::dispatch
-        (
-            new SummitVenueRoomInserted
-            (
-                $room->getSummitId(),
-                $room->getId(),
-                $room->getClassName()
-            )
-        );
 
         return $room;
     }
@@ -911,18 +829,6 @@ final class SummitLocationService
                 }
             }
 
-            Event::dispatch
-            (
-                new SummitVenueRoomUpdated
-                (
-                    $room->getSummitId(),
-                    $room->getId(),
-                    $summit->getScheduleEventsIdsPerLocation($room),
-                    $old_floor_id,
-                    $new_floor_id
-                )
-            );
-
             return $room;
         });
 
@@ -993,16 +899,6 @@ final class SummitLocationService
                 $floor->removeRoom($room);
             }
 
-            Event::dispatch
-            (
-                new SummitVenueRoomDeleted
-                (
-                    $room->getSummitId(),
-                    $room->getId(),
-                    'SummitVenueRoom',
-                    $summit->getScheduleEventsIdsPerLocation($room)
-                )
-            );
         });
     }
 
@@ -1161,7 +1057,7 @@ final class SummitLocationService
      */
     public function addLocationMap(Summit $summit, $location_id, array $metadata, UploadedFile $file)
     {
-        $map = $this->tx_service->transaction(function () use ($summit, $location_id, $metadata, $file) {
+        return $this->tx_service->transaction(function () use ($summit, $location_id, $metadata, $file) {
             $max_file_size = config('file_upload.max_file_upload_size');
             $allowed_extensions = ['png', 'jpg', 'jpeg', 'gif', 'pdf'];
             $location = $summit->getLocation($location_id);
@@ -1221,19 +1117,6 @@ final class SummitLocationService
             $location->addMap($map);
             return $map;
         });
-
-        Event::dispatch
-        (
-            new LocationImageInserted
-            (
-                $map->getId(),
-                $map->getLocationId(),
-                $map->getLocation()->getSummitId(),
-                $map->getClassName()
-            )
-        );
-
-        return $map;
     }
 
     /**
@@ -1329,17 +1212,6 @@ final class SummitLocationService
                 $location->recalculateMapOrder($map, intval($metadata['order']));
             }
 
-            Event::dispatch
-            (
-                new LocationImageUpdated
-                (
-                    $map->getId(),
-                    $map->getLocationId(),
-                    $map->getLocation()->getSummitId(),
-                    $map->getClassName()
-                )
-            );
-
             return $map;
         });
     }
@@ -1401,17 +1273,6 @@ final class SummitLocationService
                     )
                 );
             }
-
-            Event::dispatch
-            (
-                new LocationImageDeleted
-                (
-                    $map->getId(),
-                    $map->getLocationId(),
-                    $map->getLocation()->getSummitId(),
-                    $map->getClassName()
-                )
-            );
 
             $location->removeMap($map);
 
@@ -1489,17 +1350,6 @@ final class SummitLocationService
             $location->addImage($image);
             return $image;
         });
-
-        Event::dispatch
-        (
-            new LocationImageInserted
-            (
-                $image->getId(),
-                $image->getLocationId(),
-                $image->getLocation()->getSummitId(),
-                $image->getClassName()
-            )
-        );
 
         return $image;
     }
@@ -1597,17 +1447,6 @@ final class SummitLocationService
                 $location->recalculateImageOrder($image, intval($metadata['order']));
             }
 
-            Event::dispatch
-            (
-                new LocationImageUpdated
-                (
-                    $image->getId(),
-                    $image->getLocationId(),
-                    $image->getLocation()->getSummitId(),
-                    $image->getClassName()
-                )
-            );
-
             return $image;
         });
     }
@@ -1669,17 +1508,6 @@ final class SummitLocationService
                     )
                 );
             }
-
-            Event::dispatch
-            (
-                new LocationImageDeleted
-                (
-                    $image->getId(),
-                    $image->getLocationId(),
-                    $image->getLocation()->getSummitId(),
-                    $image->getClassName()
-                )
-            );
 
             $location->removeImage($image);
 

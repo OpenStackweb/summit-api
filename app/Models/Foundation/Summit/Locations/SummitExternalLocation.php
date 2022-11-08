@@ -15,6 +15,7 @@ use Doctrine\ORM\Mapping AS ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="SummitExternalLocation")
+ * @ORM\HasLifecycleCallbacks
  * Class SummitExternalLocation
  * @package models\summit
  */

@@ -143,17 +143,7 @@ interface ISummitService
      * @throws ValidationException
      */
     public function deleteEventFeedback(Summit $summit, int $event_id, int $feedback_id):void;
-
-    /**
-     * @param Summit $summit
-     * @param null|int $member_id
-     * @param null|\DateTime $from_date
-     * @param null|int $from_id
-     * @param null|int $limit
-     * @return array
-     */
-    public function getSummitEntityEvents(Summit $summit, $member_id = null, \DateTime $from_date = null, $from_id = null, $limit = 25);
-
+    
     /**
      * @param Summit $summit
      * @param $external_order_id

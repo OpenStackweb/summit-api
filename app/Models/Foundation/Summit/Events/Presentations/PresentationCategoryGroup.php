@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\ScheduleEntity;
 use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -30,6 +31,7 @@ use Doctrine\Common\Collections\ArrayCollection;
  *     "PrivatePresentationCategoryGroup" = "PrivatePresentationCategoryGroup"
  * })
  * @package models\summit
+ * @ORM\HasLifecycleCallbacks
  */
 class PresentationCategoryGroup extends SilverstripeBaseModel
 {
@@ -381,4 +383,5 @@ SQL;
         $this->end_attendee_voting_period_date = null;
     }
 
+    use ScheduleEntity;
 }

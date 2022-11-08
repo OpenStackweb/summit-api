@@ -34,6 +34,7 @@ use App\Services\Model\Imp\CompanyService;
 use App\Services\Model\Imp\ElectionService;
 use App\Services\Model\Imp\PaymentGatewayProfileService;
 use App\Services\Model\Imp\PresentationVideoMediaUploadProcessor;
+use App\Services\Model\Imp\ProcessScheduleEntityLifeCycleEventService;
 use App\Services\Model\Imp\RegistrationIngestionService;
 use App\Services\Model\Imp\SelectionPlanOrderExtraQuestionTypeService;
 use App\Services\Model\Imp\SponsoredProjectService;
@@ -56,6 +57,7 @@ use App\Services\Model\IOrganizationService;
 use App\Services\Model\IPaymentGatewayProfileService;
 use App\Services\Model\IPresentationCategoryGroupService;
 use App\Services\Model\IPresentationVideoMediaUploadProcessor;
+use App\Services\Model\IProcessScheduleEntityLifeCycleEventService;
 use App\Services\Model\IRegistrationIngestionService;
 use App\Services\Model\IRSVPTemplateService;
 use App\Services\Model\IScheduleIngestionService;
@@ -426,7 +428,12 @@ final class ModelServicesProvider extends ServiceProvider
 
         App::singleton(
             ISummitSponsorshipTypeService::class,
-            SummitSponsorshipTypeService::class,
+            SummitSponsorshipTypeService::class
+        );
+
+        App::singleton(
+            IProcessScheduleEntityLifeCycleEventService::class,
+            ProcessScheduleEntityLifeCycleEventService::class,
         );
    }
 
@@ -490,6 +497,7 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitScheduleSettingsService::class,
             IBadgeViewTypeService::class,
             ISummitSponsorshipTypeService::class,
+            IProcessScheduleEntityLifeCycleEventService::class,
         ];
     }
 }

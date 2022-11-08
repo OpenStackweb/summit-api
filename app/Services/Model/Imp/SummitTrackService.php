@@ -12,15 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Events\TrackDeleted;
-use App\Events\TrackInserted;
-use App\Events\TrackUpdated;
+
 use App\Http\Utils\IFileUploader;
 use App\Models\Foundation\Summit\Factories\PresentationCategoryFactory;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
 use App\Models\Foundation\Summit\Repositories\ITrackQuestionTemplateRepository;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -28,7 +25,6 @@ use models\exceptions\ValidationException;
 use models\main\ITagRepository;
 use models\summit\PresentationCategory;
 use models\summit\Summit;
-use models\summit\SummitEvent;
 
 /**
  * Class SummitTrackService
@@ -68,11 +64,11 @@ final class SummitTrackService
      */
     public function __construct
     (
-        ISummitTrackRepository $track_repository,
-        ITagRepository $tag_repository,
+        ISummitTrackRepository           $track_repository,
+        ITagRepository                   $tag_repository,
         ITrackQuestionTemplateRepository $track_question_template_repository,
-        IFileUploader $file_uploader,
-        ITransactionService $tx_service
+        IFileUploader                    $file_uploader,
+        ITransactionService              $tx_service
     )
     {
         parent::__construct($tx_service);
@@ -91,7 +87,7 @@ final class SummitTrackService
      */
     public function addTrack(Summit $summit, array $data)
     {
-        $track =  $this->tx_service->transaction(function () use ($summit, $data) {
+        return $this->tx_service->transaction(function () use ($summit, $data) {
 
             if (!empty($data['code'])) {
                 $former_track = $summit->getPresentationCategoryByCode(trim($data['code']));
@@ -105,10 +101,10 @@ final class SummitTrackService
 
             $track = PresentationCategoryFactory::build($summit, $data);
 
-            if(isset($data['allowed_tags'])){
-                foreach($data['allowed_tags'] as $tag_value) {
+            if (isset($data['allowed_tags'])) {
+                foreach ($data['allowed_tags'] as $tag_value) {
                     $tackTagGroupAllowedTag = $summit->getAllowedTagOnTagTrackGroup($tag_value);
-                    if(is_null($tackTagGroupAllowedTag)){
+                    if (is_null($tackTagGroupAllowedTag)) {
                         throw new ValidationException(
                             sprintf("allowed_tags : tag value %s is not allowed on current track tag groups for summit %s", $tag_value, $summit->getId())
                         );
@@ -117,10 +113,10 @@ final class SummitTrackService
                 }
             }
 
-            if(isset($data['allowed_access_levels'])){
-                foreach($data['allowed_access_levels'] as $access_level_id) {
+            if (isset($data['allowed_access_levels'])) {
+                foreach ($data['allowed_access_levels'] as $access_level_id) {
                     $access_level = $summit->getBadgeAccessLevelTypeById(intval($access_level_id));
-                    if(is_null($access_level)){
+                    if (is_null($access_level)) {
                         throw new EntityNotFoundException(
                             sprintf("allowed_access_levels : access level %s does not exists.", $access_level_id)
                         );
@@ -133,10 +129,6 @@ final class SummitTrackService
 
             return $track;
         });
-
-        Event::dispatch(new TrackInserted($track->getSummitId(), $track->getId()));
-
-        return $track;
     }
 
     /**
@@ -150,6 +142,7 @@ final class SummitTrackService
     public function updateTrack(Summit $summit, $track_id, array $data)
     {
         Log::debug(sprintf("SummitTrackService::UpdateTrack %s ", $track_id));
+
         return $this->tx_service->transaction(function () use ($summit, $track_id, $data) {
 
             $track = $summit->getPresentationCategory($track_id);
@@ -174,11 +167,11 @@ final class SummitTrackService
 
             $track = PresentationCategoryFactory::populate($track, $data);
 
-            if(isset($data['allowed_tags'])){
+            if (isset($data['allowed_tags'])) {
                 $track->clearAllowedTags();
-                foreach($data['allowed_tags'] as $tag_value) {
+                foreach ($data['allowed_tags'] as $tag_value) {
                     $tackTagGroupAllowedTag = $summit->getAllowedTagOnTagTrackGroup($tag_value);
-                    if(is_null($tackTagGroupAllowedTag)){
+                    if (is_null($tackTagGroupAllowedTag)) {
                         throw new ValidationException(
                             sprintf("allowed_tags : tag value %s is not allowed on current track tag groups for summit %s", $tag_value, $summit->getId())
                         );
@@ -187,12 +180,12 @@ final class SummitTrackService
                 }
             }
 
-            if(isset($data['allowed_access_levels'])){
+            if (isset($data['allowed_access_levels'])) {
                 $track->clearAllowedAccessLevels();
-                foreach($data['allowed_access_levels'] as $access_level_id) {
+                foreach ($data['allowed_access_levels'] as $access_level_id) {
                     Log::debug(sprintf("SummitTrackService::UpdateTrack %s trying to add access level %s", $track_id, $access_level_id));
                     $access_level = $summit->getBadgeAccessLevelTypeById(intval($access_level_id));
-                    if(is_null($access_level)){
+                    if (is_null($access_level)) {
                         throw new EntityNotFoundException(
                             sprintf("allowed_access_levels : access level %s does not exists.", $access_level_id)
                         );
@@ -206,8 +199,6 @@ final class SummitTrackService
                 // request to update order
                 $summit->recalculateTrackOrder($track, intval($data['order']));
             }
-
-            Event::dispatch(new TrackUpdated($track->getSummitId(), $track->getId()));
 
             return $track;
 
@@ -235,14 +226,12 @@ final class SummitTrackService
 
             $summit_events = $track->getRelatedPublishedSummitEventsIds();
 
-            if(count($summit_events) > 0){
+            if (count($summit_events) > 0) {
                 throw new ValidationException
                 (
                     sprintf("track id %s could not be deleted bc its assigned to published events on summit id %s", $track_id, $summit->getId())
                 );
             }
-
-            Event::dispatch(new TrackDeleted($track->getSummitId(), $track->getId()));
 
             $this->track_repository->delete($track);
         });
@@ -257,38 +246,38 @@ final class SummitTrackService
      */
     public function copyTracks(Summit $from_summit, Summit $to_summit)
     {
-        $added_tracks = $this->tx_service->transaction(function () use ($from_summit, $to_summit) {
+        return $this->tx_service->transaction(function () use ($from_summit, $to_summit) {
 
-            if($from_summit->getId() == $to_summit->getId()){
+            if ($from_summit->getId() == $to_summit->getId()) {
                 throw new ValidationException
                 (
-                  trans
-                  (
-                      'validation_errors.SummitTrackService.copyTracks.SameSummit'
-                  )
+                    trans
+                    (
+                        'validation_errors.SummitTrackService.copyTracks.SameSummit'
+                    )
                 );
             }
 
             $added_tracks = [];
-            foreach($from_summit->getPresentationCategories() as $track_2_copy){
+            foreach ($from_summit->getPresentationCategories() as $track_2_copy) {
                 $former_track = $to_summit->getPresentationCategoryByTitle($track_2_copy->getTitle());
-                if(!is_null($former_track)) continue;
+                if (!is_null($former_track)) continue;
 
                 $former_track = $to_summit->getPresentationCategoryByCode($track_2_copy->getCode());
-                if(!is_null($former_track)) continue;
+                if (!is_null($former_track)) continue;
 
-                $data      = [
-                    'name'                      => $track_2_copy->getTitle(),
-                    'code'                      => $track_2_copy->getCode(),
-                    'color'                     => $track_2_copy->getColor(),
-                    'description'               => $track_2_copy->getDescription(),
-                    'session_count'             => $track_2_copy->getSessionCount(),
-                    'alternate_count'           => $track_2_copy->getAlternateCount(),
-                    'lightning_count'           => $track_2_copy->getLightningCount(),
+                $data = [
+                    'name' => $track_2_copy->getTitle(),
+                    'code' => $track_2_copy->getCode(),
+                    'color' => $track_2_copy->getColor(),
+                    'description' => $track_2_copy->getDescription(),
+                    'session_count' => $track_2_copy->getSessionCount(),
+                    'alternate_count' => $track_2_copy->getAlternateCount(),
+                    'lightning_count' => $track_2_copy->getLightningCount(),
                     'lightning_alternate_count' => $track_2_copy->getLightningAlternateCount(),
-                    'voting_visible'            => $track_2_copy->isVotingVisible(),
-                    'chair_visible'             => $track_2_copy->isChairVisible(),
-                    'order'                     => $track_2_copy->getOrder(),
+                    'voting_visible' => $track_2_copy->isVotingVisible(),
+                    'chair_visible' => $track_2_copy->isChairVisible(),
+                    'order' => $track_2_copy->getOrder(),
                 ];
 
                 $new_track = PresentationCategoryFactory::build($to_summit, $data);
@@ -300,11 +289,6 @@ final class SummitTrackService
             return $added_tracks;
         });
 
-        foreach ($added_tracks as $track){
-            Event::dispatch(new TrackInserted($track->getSummitId(), $track->getId()));
-        }
-
-        return $added_tracks;
     }
 
     /**
@@ -316,25 +300,25 @@ final class SummitTrackService
      */
     public function addTrackExtraQuestion($track_id, $question_id)
     {
-        return $this->tx_service->transaction(function() use($track_id, $question_id){
+        return $this->tx_service->transaction(function () use ($track_id, $question_id) {
             $track = $this->track_repository->getById($track_id);
-            if(is_null($track))
+            if (is_null($track))
                 throw new EntityNotFoundException(
                     trans
                     (
                         'not_found_errors.SummitTrackService.addTrackExtraQuestion.TrackNotFound',
-                        ['track_id' => $track_id ]
+                        ['track_id' => $track_id]
                     )
                 );
 
             $track_question_template = $this->track_question_template_repository->getById($question_id);
 
-            if(is_null($track_question_template))
+            if (is_null($track_question_template))
                 throw new EntityNotFoundException(
                     trans
                     (
                         'not_found_errors.SummitTrackService.addTrackExtraQuestion.QuestionNotFound',
-                        ['question_id' => $question_id ]
+                        ['question_id' => $question_id]
                     )
                 );
 
@@ -351,25 +335,25 @@ final class SummitTrackService
      */
     public function removeTrackExtraQuestion($track_id, $question_id)
     {
-        return $this->tx_service->transaction(function() use($track_id, $question_id){
+        return $this->tx_service->transaction(function () use ($track_id, $question_id) {
             $track = $this->track_repository->getById($track_id);
-            if(is_null($track))
+            if (is_null($track))
                 throw new EntityNotFoundException(
                     trans
                     (
                         'not_found_errors.SummitTrackService.removeTrackExtraQuestion.TrackNotFound',
-                        ['track_id' => $track_id ]
+                        ['track_id' => $track_id]
                     )
                 );
 
             $track_question_template = $this->track_question_template_repository->getById($question_id);
 
-            if(is_null($track_question_template))
+            if (is_null($track_question_template))
                 throw new EntityNotFoundException(
                     trans
                     (
                         'not_found_errors.SummitTrackService.removeTrackExtraQuestion.QuestionNotFound',
-                        ['question_id' => $question_id ]
+                        ['question_id' => $question_id]
                     )
                 );
 

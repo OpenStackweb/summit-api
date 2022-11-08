@@ -138,7 +138,6 @@ trait InsertMemberTestData
         self::$member2->setUserExternalId(mt_rand());
         self::$member2->add2Group(self::$group2);
 
-        PresentationSpeaker::$bypass_events = true;
         self::$speaker = new PresentationSpeaker();
         self::$speaker->setFirstName("Sebastian");
         self::$speaker->setLastName("Marcet");
@@ -151,7 +150,6 @@ trait InsertMemberTestData
         self::$em->flush();
 
         self::$member2->belongsToGroup(IGroup::BadgePrinters);
-        PresentationSpeaker::$bypass_events = false;
     }
 
     protected static function clearMemberTestData()

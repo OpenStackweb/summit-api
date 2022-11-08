@@ -82,10 +82,6 @@ trait ScheduleEntity
     public function updating(PreUpdateEventArgs $args)
     {
         parent::updating($args);
-        Event::dispatch(new ScheduleEntityLifeCycleEvent('UPDATE',
-            $this->_getSummitId(),
-            $this->id,
-            $this->_getClassName()));
     }
 
     /**
@@ -93,6 +89,10 @@ trait ScheduleEntity
      */
     public function updated($args)
     {
+        Event::dispatch(new ScheduleEntityLifeCycleEvent('UPDATE',
+            $this->_getSummitId(),
+            $this->id,
+            $this->_getClassName()));
     }
 
     // events

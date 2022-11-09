@@ -106,14 +106,14 @@ final class PresentationFactory
         if (count($extra_questions) && !is_null($selection_plan)) {
             // extra questions values
             $mandatory_questions = $selection_plan->getMandatoryExtraQuestions();
-            if (count($extra_questions) < $mandatory_questions->count()) {
+            if (count($extra_questions) < count($mandatory_questions)) {
                 throw new ValidationException
                 (
                     sprintf
                     (
                         "You neglected to fill in all mandatory questions for the presentation %s (%s) .",
                         count($extra_questions),
-                        $mandatory_questions->count()
+                        count($mandatory_questions)
                     )
                 );
             }

@@ -722,8 +722,7 @@ class SelectionPlan extends SilverstripeBaseModel
         JOIN aq.question_type q 
         JOIN aq.selection_plan sp    
         WHERE sp.id = :selection_plan_id and q.mandatory = :mandatory
-        by aq.order ASC
-        ");
+        order by aq.order ASC");
 
         return $query
             ->setParameter('selection_plan_id', $this->getIdentifier())

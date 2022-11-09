@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType;
+use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
 use ModelSerializers\SerializerRegistry;
 
@@ -40,13 +41,15 @@ final class AssignedSelectionPlanExtraQuestionTypeSerializer
         $assigment = $this->object;
         if (!$assigment instanceof AssignedSelectionPlanExtraQuestionType) return [];
         if (!count($relations)) $relations = $this->getAllowedRelations();
+        Log::debug(sprintf("AssignedSelectionPlanExtraQuestionTypeSerializer expand %s", $expand));
         $values = parent::serialize($expand, $fields, $relations, $params);
         $question_type = SerializerRegistry::getInstance()->getSerializer($assigment->getQuestionType())
             ->serialize
             (
-                AbstractSerializer::filterExpandByPrefix($expand,'extra_questions'),
-                AbstractSerializer::filterFieldsByPrefix($fields,'extra_questions'),
-                AbstractSerializer::filterFieldsByPrefix($relations,'extra_questions')
+                $expand,
+                $fields,
+                $relations,
+                $params
             );
 
         return array_merge($values, $question_type);

@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\Summit\SelectionPlan;
+use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\Many2OneExpandSerializer;
 use Libs\ModelSerializers\One2ManyExpandSerializer;
 
@@ -61,6 +62,8 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
         $selection_plan = $this->object;
         if (!$selection_plan instanceof SelectionPlan) return [];
         if (!count($relations)) $relations = $this->getAllowedRelations();
+        Log::debug(sprintf("SelectionPlanSerializer expand %s", $expand));
+
         $values = parent::serialize($expand, $fields, $relations, $params);
 
         if (in_array('track_groups', $relations) && !isset($values['track_groups'])) {

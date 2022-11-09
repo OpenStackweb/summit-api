@@ -30,6 +30,7 @@ final class DoctrineSummitSponsorshipTypeRepository
      */
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
         $query = $query->innerJoin("e.type", "t");
+        $query = $query->innerJoin("e.summit", "s");
         return $query;
     }
 
@@ -42,6 +43,7 @@ final class DoctrineSummitSponsorshipTypeRepository
             'name'  => 't.name:json_string',
             'label' => 't.label:json_string',
             'size'  => 't.size:json_string',
+            'summit_id' => 's.id',
         ];
     }
 

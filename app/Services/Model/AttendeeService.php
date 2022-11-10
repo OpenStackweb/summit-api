@@ -432,7 +432,6 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 $new_owner->sendInvitationEmail($ticket);
             }
 
-
             return $ticket;
         });
 
@@ -582,6 +581,46 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 );
 
             $owner->setSummitHallCheckedIn(true);
+        });
+    }
+
+    /**
+     * @param int $member_id
+     */
+    public function updateAttendeesByMemberId(int $member_id): void
+    {
+        $this->tx_service->transaction(function() use($member_id){
+
+            $member = $this->member_repository->getById($member_id);
+            if(!$member instanceof Member){
+                Log::debug(sprintf("AttendeeService::updateAttendeesByMemberId member %s not found.", $member_id));
+                return;
+            }
+
+            $attendees = $this->attendee_repository->getByMember($member);
+            if(!is_null($attendees)) {
+                foreach ($attendees as $attendee) {
+                    if (!$attendee instanceof SummitAttendee) continue;
+                    Log::debug(sprintf("AttendeeService::updateAttendeesByMemberId updating attendee %s with member %s", $attendee->getId(), $member_id));
+                    $attendee->setFirstName($member->getFirstName());
+                    $attendee->setSurname($member->getLastName());
+                    $attendee->setEmail($member->getEmail());
+                    $attendee->setCompanyName($member->getCompany());
+                }
+            }
+
+            $attendees = $this->attendee_repository->getByEmailAndMemberNotSet($member->getEmail());
+            if(!is_null($attendees)) {
+                foreach ($attendees as $attendee) {
+                    if (!$attendee instanceof SummitAttendee) continue;
+                    Log::debug(sprintf("AttendeeService::updateAttendeesByMemberId updating attendee %s with member %s ( member null )", $attendee->getId(), $member_id));
+                    $attendee->setMember($member);
+                    $attendee->setFirstName($member->getFirstName());
+                    $attendee->setSurname($member->getLastName());
+                    $attendee->setEmail($member->getEmail());
+                    $attendee->setCompanyName($member->getCompany());
+                }
+            }
         });
     }
 }

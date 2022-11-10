@@ -68,6 +68,8 @@ use models\summit\RSVP;
 use models\summit\Summit;
 use models\summit\SummitOrder;
 use models\summit\SummitRoomReservation;
+use App\Jobs\UpdateAttendeeInfo;
+use App\Events\Registration\MemberDataUpdatedExternally;
 
 /**
  * Class EventServiceProvider
@@ -416,6 +418,12 @@ final class EventServiceProvider extends ServiceProvider
             if (!$event instanceof NewMember) return;
             Log::debug(sprintf("EventServiceProvider::NewMember - firing NewMemberAssocSummitOrders member id %s", $event->getMemberId()));
             MemberAssocSummitOrders::dispatch($event->getMemberId());
+        });
+
+        Event::listen(MemberDataUpdatedExternally::class, function($event){
+            if (!$event instanceof MemberDataUpdatedExternally) return;
+            Log::debug(sprintf("EventServiceProvider::MemberDataUpdatedExternally - firing UpdateAttendeeInfo member id %s", $event->getMemberId()));
+            UpdateAttendeeInfo::dispatch($event->getMemberId());
         });
 
         Event::listen(MemberUpdated::class, function($event){

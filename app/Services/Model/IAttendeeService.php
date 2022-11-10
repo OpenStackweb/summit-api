@@ -124,4 +124,9 @@ interface IAttendeeService
      * @throws ValidationException
      */
     public function doCheckIn(Summit $summit, String $qr_code): void;
+
+    /**
+     * @param int $member_id
+     */
+    public function updateAttendeesByMemberId(int $member_id):void;
 }

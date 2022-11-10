@@ -17,7 +17,6 @@ use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
-use models\summit\SummitOrderExtraQuestionAnswer;
 /***
  * Trait ExtraQuestionAnswerHolder
  * @package App\Models\Foundation\Main\ExtraQuestions
@@ -25,7 +24,7 @@ use models\summit\SummitOrderExtraQuestionAnswer;
 trait ExtraQuestionAnswerHolder
 {
     /**
-     * @return SummitOrderExtraQuestionAnswer[] | ArrayCollection
+     * @return ExtraQuestionAnswer[] | ArrayCollection
      */
     public abstract function getExtraQuestionAnswers();
 
@@ -47,10 +46,12 @@ trait ExtraQuestionAnswerHolder
 
     public abstract function clearExtraQuestionAnswers():void;
 
+    public abstract function buildExtraQuestionAnswer():ExtraQuestionAnswer;
+
     /**
-     * @param SummitOrderExtraQuestionAnswer $answer
+     * @param ExtraQuestionAnswer $answer
      */
-    public abstract function addExtraQuestionAnswer(SummitOrderExtraQuestionAnswer $answer):void;
+    public abstract function addExtraQuestionAnswer(ExtraQuestionAnswer $answer):void;
 
     /**
      * @return ExtraQuestionAnswerSet
@@ -111,7 +112,6 @@ trait ExtraQuestionAnswerHolder
      */
     public function hadCompletedExtraQuestions(?array $answers = null): bool
     {
-
         $res = true;
         $formerAnswers = $this->getExtraAnswerSnapshot();
         Log::debug(sprintf("ExtraQuestionAnswerHolder::hadCompletedExtraQuestions formerAnswers %s", json_encode($formerAnswers->serialize())));
@@ -126,8 +126,9 @@ trait ExtraQuestionAnswerHolder
                 $question = $this->getQuestionById(intval($questionId));
                 if (is_null($question))
                     throw new ValidationException(sprintf("Question %s does not exists.", $questionId));
+
                 $value = trim($answer['answer'] ?? '');
-                $answer = new SummitOrderExtraQuestionAnswer();
+                $answer = $this->buildExtraQuestionAnswer();
                 $answer->setQuestion($question);
                 $answer->setValue($value);
                 $this->addExtraQuestionAnswer($answer);

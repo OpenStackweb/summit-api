@@ -888,6 +888,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
     public function getExtraQuestionsBySelectionPlan($summit_id, $selection_plan_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
         if (is_null($summit)) return $this->error404();
 
         return $this->_getAll(
@@ -1115,7 +1116,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
             return SelectionPlanExtraQuestionValidationRulesFactory::build($payload, true);
         },
             function ($question_id, $payload, $selection_plan) {
-                return $this->selection_plan_extra_questions_service->updateExtraQuestionBySelectionPlan()
+                return $this->selection_plan_extra_questions_service->updateExtraQuestionBySelectionPlan
                 (
                     $selection_plan,
                     intval($question_id),

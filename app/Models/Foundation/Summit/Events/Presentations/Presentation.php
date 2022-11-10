@@ -1683,6 +1683,7 @@ class Presentation extends SummitEvent
     public function getExtraQuestionAnswers()
     {
         $selection_plan = $this->selection_plan;
+        if(is_null($selection_plan)) return [];
         $res = [];
         foreach ($this->extra_question_answers as $answer){
             if($selection_plan->isExtraQuestionAssigned($answer->getQuestion())){
@@ -1708,6 +1709,7 @@ class Presentation extends SummitEvent
     public function clearExtraQuestionAnswers():void
     {
         $selection_plan = $this->selection_plan;
+        if(is_null($selection_plan)) return;
         // only clear the ones assigned to selection plan
         $to_remove = [];
         foreach ($this->extra_question_answers as $answer){

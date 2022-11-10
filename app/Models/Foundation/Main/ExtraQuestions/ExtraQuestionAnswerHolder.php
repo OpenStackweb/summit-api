@@ -124,8 +124,10 @@ trait ExtraQuestionAnswerHolder
             foreach ($answers as $answer) {
                 $questionId = $answer['question_id'] ?? 0;
                 $question = $this->getQuestionById(intval($questionId));
-                if (is_null($question))
-                    throw new ValidationException(sprintf("Question %s does not exists.", $questionId));
+                if (is_null($question)) {
+                    Log::warning(sprintf("Question %s does not exists.", $questionId));
+                    continue;
+                }
 
                 $value = trim($answer['answer'] ?? '');
                 $answer = $this->buildExtraQuestionAnswer();

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\Many2OneExpandSerializer;
 
 
@@ -55,7 +56,7 @@ class ExtraQuestionTypeSerializer extends SilverStripeSerializer
         if (!$question instanceof ExtraQuestionType) return [];
         if(!count($relations)) $relations = $this->getAllowedRelations();
         $values = parent::serialize($expand, $fields, $relations, $params);
-
+        Log::debug(sprintf("ExtraQuestionTypeSerializer expand %s", $expand));
         if(in_array('values', $relations) && !isset($values['values']) && $question->allowsValues()) {
             $question_values = [];
             foreach ($question->getValues() as $value) {

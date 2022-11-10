@@ -14,7 +14,10 @@
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use App\Models\Foundation\Summit\Repositories\ISummitSelectionPlanExtraQuestionTypeRepository;
 use App\Repositories\Main\DoctrineExtraQuestionTypeRepository;
+use Doctrine\ORM\QueryBuilder;
 use utils\DoctrineLeftJoinFilterMapping;
+use utils\Filter;
+
 /**
  * Class DoctrineSummitSelectionPlanExtraQuestionTypeRepository
  * @package App\Repositories\Summit
@@ -24,6 +27,22 @@ final class DoctrineSummitSelectionPlanExtraQuestionTypeRepository
     implements ISummitSelectionPlanExtraQuestionTypeRepository
 {
 
+    /**
+     * @param QueryBuilder $query
+     * @return QueryBuilder
+     */
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
+
+        if(!is_null($filter) && $filter->hasFilter("selection_plan_id")){
+            $query = $query->innerJoin("e.assigned_selection_plans", "a");
+            $query = $query->innerJoin("a.selection_plan", "sp");
+        }
+
+        if(!is_null($filter) && $filter->hasFilter("summit_id")){
+            $query = $query->innerJoin("e.summit", "s");
+        }
+        return $query;
+    }
 
     /**
      * @return array
@@ -31,12 +50,8 @@ final class DoctrineSummitSelectionPlanExtraQuestionTypeRepository
     protected function getFilterMappings()
     {
         return array_merge(parent::getFilterMappings() , [
-            'selection_plan_id' => new DoctrineLeftJoinFilterMapping
-            (
-                "e.selection_plan",
-                "s" ,
-                "s.id :operator :value"
-            )
+            'summit_id' => 's.id',
+            'selection_plan_id' => "sp.id",
         ]);
     }
 
@@ -45,7 +60,17 @@ final class DoctrineSummitSelectionPlanExtraQuestionTypeRepository
      */
     protected function getOrderMappings()
     {
-        return parent::getOrderMappings();
+        $args  = func_get_args();
+        $filter = count($args) > 0 ? $args[0] : null;
+        $mappings = [
+            'id'    => 'e.id',
+            'name'  => 'e.name',
+            'label' => 'e.label',
+        ];
+        if(!is_null($filter) && $filter->hasFilter("selection_plan_id")){
+           $mappings['order'] = 'sp.order';
+        }
+        return $mappings;
     }
 
     /**

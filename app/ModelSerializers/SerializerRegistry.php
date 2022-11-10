@@ -59,6 +59,7 @@ use App\ModelSerializers\Software\OpenStackReleaseSerializer;
 use App\ModelSerializers\Summit\AdminLawPayPaymentProfileSerializer;
 use App\ModelSerializers\Summit\AdminStripePaymentProfileSerializer;
 use App\ModelSerializers\Summit\AdminSummitSerializer;
+use App\ModelSerializers\Summit\AssignedSelectionPlanExtraQuestionTypeSerializer;
 use App\ModelSerializers\Summit\LawPayPaymentProfileSerializer;
 use App\ModelSerializers\Summit\PersonalCalendarShareInfoSerializer;
 use App\ModelSerializers\Summit\Presentation\SummitPresentationCommentSerializer;
@@ -216,6 +217,8 @@ final class SerializerRegistry
         $this->registry['SummitEmailEventFlow'] = SummitEmailEventFlowSerializer::class;
         $this->registry['SelectionPlan'] = SelectionPlanSerializer::class;
         $this->registry['SummitSelectionPlanExtraQuestionType'] = SummitSelectionPlanExtraQuestionTypeSerializer::class;
+        $this->registry['AssignedSelectionPlanExtraQuestionType'] = AssignedSelectionPlanExtraQuestionTypeSerializer::class;
+        
         $this->registry['SummitWIFIConnection'] = SummitWIFIConnectionSerializer::class;
         $this->registry['SummitType'] = SummitTypeSerializer::class;
         $this->registry['SummitEventType'] = SummitEventTypeSerializer::class;

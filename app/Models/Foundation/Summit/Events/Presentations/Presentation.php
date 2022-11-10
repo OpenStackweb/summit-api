@@ -12,8 +12,10 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+use App\Models\Foundation\Main\ExtraQuestions\ExtraQuestionAnswerHolder;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore;
-use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use App\Models\Foundation\Main\OrderableChilds;
 use App\Models\Utils\IStorageTypesConstants;
@@ -41,6 +43,8 @@ use models\utils\SilverstripeBaseModel;
  */
 class Presentation extends SummitEvent
 {
+    use ExtraQuestionAnswerHolder;
+
     const ClassName = 'Presentation';
 
     /**
@@ -1678,7 +1682,15 @@ class Presentation extends SummitEvent
      */
     public function getExtraQuestionAnswers()
     {
-        return $this->extra_question_answers;
+        $selection_plan = $this->selection_plan;
+        if(is_null($selection_plan)) return [];
+        $res = [];
+        foreach ($this->extra_question_answers as $answer){
+            if($selection_plan->isExtraQuestionAssigned($answer->getQuestion())){
+                $res[] = $answer;
+            }
+        }
+        return $res;
     }
 
     /**
@@ -1693,24 +1705,40 @@ class Presentation extends SummitEvent
         return $answer ? $answer : null;
     }
 
-    public function clearExtraQuestionAnswers()
+
+    public function clearExtraQuestionAnswers():void
     {
-        return $this->extra_question_answers->clear();
+        $selection_plan = $this->selection_plan;
+        if(is_null($selection_plan)) return;
+        // only clear the ones assigned to selection plan
+        $to_remove = [];
+        foreach ($this->extra_question_answers as $answer){
+            if($selection_plan->isExtraQuestionAssigned($answer->getQuestion())){
+                $to_remove[] = $answer;
+            }
+        }
+        // clear answers
+        foreach($to_remove as $a){
+            $this->extra_question_answers->removeElement($a);
+        }
+
     }
 
     /**
-     * @param PresentationExtraQuestionAnswer $answer
+     * @param ExtraQuestionAnswer $answer
      */
-    public function addExtraQuestionAnswer(PresentationExtraQuestionAnswer $answer){
+    public function addExtraQuestionAnswer(ExtraQuestionAnswer $answer){
+        if(!$answer instanceof PresentationExtraQuestionAnswer) return;
         if($this->extra_question_answers->contains($answer)) return;
         $this->extra_question_answers->add($answer);
         $answer->setPresentation($this);
     }
 
     /**
-     * @param PresentationExtraQuestionAnswer $answer
+     * @param ExtraQuestionAnswer $answer
      */
-    public function removeExtraQuestionAnswer(PresentationExtraQuestionAnswer $answer){
+    public function removeExtraQuestionAnswer(ExtraQuestionAnswer $answer){
+        if(!$answer instanceof PresentationExtraQuestionAnswer) return;
         if(!$this->extra_question_answers->contains($answer)) return;
         $this->extra_question_answers->removeElement($answer);
         $answer->clearPresentation();
@@ -2026,5 +2054,35 @@ SQL;
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('reviewer', $trackChair));
         return $this->track_chairs_scores->matching($criteria);
+    }
+
+    /**
+     * @return ExtraQuestionType[] | ArrayCollection
+     */
+    public function getExtraQuestions()
+    {
+        return $this->selection_plan->getExtraQuestions()->map(function ($a){ return $a->getQuestionType();});
+    }
+
+    /**
+     * @param int $questionId
+     * @return ExtraQuestionType|null
+     */
+    public function getQuestionById(int $questionId): ?ExtraQuestionType
+    {
+        return $this->selection_plan->getExtraQuestionById($questionId);
+    }
+
+    /**
+     * @return bool
+     */
+    public function canChangeAnswerValue(): bool
+    {
+        return true;
+    }
+
+    public function buildExtraQuestionAnswer(): ExtraQuestionAnswer
+    {
+        return new PresentationExtraQuestionAnswer();
     }
 }

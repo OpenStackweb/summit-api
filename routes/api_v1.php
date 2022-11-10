@@ -247,7 +247,30 @@ Route::group(array('prefix' => 'summits'), function () {
         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@deleteSummit']);
         Route::get('', ['middleware' => 'cache:' . Config::get('cache_api_response.get_summit_response_lifetime', 1200), 'uses' => 'OAuth2SummitApiController@getSummit'])->where('id', 'current|[0-9]+');
 
+        // selection plan extra questions ( by summit )
+
+        Route::group(['prefix' => 'selection-plan-extra-questions'], function () {
+            Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addExtraQuestion']);
+            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@getExtraQuestions']);
+            Route::get('metadata', ['uses' => 'OAuth2SummitSelectionPlansApiController@getExtraQuestionsMetadata']);
+            Route::group(['prefix' => '{question_id}'], function () {
+
+                Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@deleteExtraQuestion']);
+                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@updateExtraQuestion']);
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@getExtraQuestion']);
+
+                Route::group(['prefix' => 'values'], function () {
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addExtraQuestionValue']);
+                    Route::group(['prefix' => '{value_id}'], function () {
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@updateExtraQuestionValue']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@deleteExtraQuestionValue']);
+                    });
+                });
+            });
+        });
+
         // selection plans
+
         Route::group(['prefix' => 'selection-plans'], function () {
             Route::get('', ['uses' => 'OAuth2SummitSelectionPlansApiController@getAll']);
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addSelectionPlan']);
@@ -262,21 +285,26 @@ Route::group(array('prefix' => 'summits'), function () {
                     Route::delete('{track_group_id}', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@deleteTrackGroupToSelectionPlan']);
                 });
 
-                // extra questions
+                // extra questions ( by selection plan)
 
-                Route::group(['prefix' => 'extra-questions'], function(){
-                    Route::get('', ['uses' => 'OAuth2SummitSelectionPlansApiController@getExtraQuestions']);
-                    Route::get('metadata', [ 'uses' => 'OAuth2SummitSelectionPlansApiController@getExtraQuestionsMetadata']);
-                    Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addExtraQuestion']);
-                    Route::group(['prefix' => '{question_id}'], function(){
-                        Route::get('', ['uses' => 'OAuth2SummitSelectionPlansApiController@getExtraQuestion']);
-                        Route::put('', ['uses' => 'OAuth2SummitSelectionPlansApiController@updateExtraQuestion']);
-                        Route::delete('', ['uses' => 'OAuth2SummitSelectionPlansApiController@deleteExtraQuestion']);
+                Route::group(['prefix' => 'extra-questions'], function () {
+                    Route::get('', ['uses' => 'OAuth2SummitSelectionPlansApiController@getExtraQuestionsBySelectionPlan']);
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addExtraQuestionAndAssign']);
+                    Route::get('metadata', ['uses' => 'OAuth2SummitSelectionPlansApiController@getExtraQuestionsMetadataBySelectionPlan']);
+
+                    Route::group(['prefix' => '{question_id}'], function () {
+
+                        Route::get('', ['uses' => 'OAuth2SummitSelectionPlansApiController@getExtraQuestionBySelectionPlan']);
+                        Route::put('', ['uses' => 'OAuth2SummitSelectionPlansApiController@updateExtraQuestionBySelectionPlan']);
+                        Route::post('', ['uses' => 'OAuth2SummitSelectionPlansApiController@assignExtraQuestion']);
+                        // un-assign question from selection plan
+                        Route::delete('', ['uses' => 'OAuth2SummitSelectionPlansApiController@removeExtraQuestion']);
+
                         Route::group(['prefix' => 'values'], function () {
-                            Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addExtraQuestionValue']);
+                            Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addExtraQuestionValueBySelectionPlan']);
                             Route::group(['prefix' => '{value_id}'], function () {
-                                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@updateExtraQuestionValue']);
-                                Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@deleteExtraQuestionValue']);
+                                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@updateExtraQuestionValueBySelectionPlan']);
+                                Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@deleteExtraQuestionValueBySelectionPlan']);
                             });
                         });
                     });
@@ -284,8 +312,8 @@ Route::group(array('prefix' => 'summits'), function () {
 
                 // event types
 
-                Route::group(['prefix' => 'event-types'], function(){
-                    Route::group(['prefix' => '{event_type_id}'], function(){
+                Route::group(['prefix' => 'event-types'], function () {
+                    Route::group(['prefix' => '{event_type_id}'], function () {
                         Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@attachEventType']);
                         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@detachEventType']);
                     });
@@ -419,7 +447,7 @@ Route::group(array('prefix' => 'summits'), function () {
 
                 Route::group(['prefix' => 'track-chair-rating-types'], function () {
 
-                    Route::get('', [ 'uses' => 'OAuth2SummitTrackChairRatingTypesApiController@getTrackChairRatingTypes']);
+                    Route::get('', ['uses' => 'OAuth2SummitTrackChairRatingTypesApiController@getTrackChairRatingTypes']);
 
                     Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTrackChairRatingTypesApiController@addTrackChairRatingType']);
 
@@ -560,7 +588,7 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::get('', 'OAuth2SummitEventsApiController@getEvent');
 
                 Route::group(['prefix' => 'published'], function () {
-                    Route::get('', [ 'uses' => 'OAuth2SummitEventsApiController@getScheduledEvent']);
+                    Route::get('', ['uses' => 'OAuth2SummitEventsApiController@getScheduledEvent']);
                     Route::post('mail', 'OAuth2SummitEventsApiController@shareScheduledEventByEmail');
                     // media uploads
                     Route::group(['prefix' => 'media-uploads'], function () {
@@ -569,7 +597,7 @@ Route::group(array('prefix' => 'summits'), function () {
                 });
 
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@updateEvent']);
-                Route::put('live-info', [ 'uses' => 'OAuth2SummitEventsApiController@updateEventLiveInfo']);
+                Route::put('live-info', ['uses' => 'OAuth2SummitEventsApiController@updateEventLiveInfo']);
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@deleteEvent']);
                 Route::put('/publish', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@publishEvent']);
                 Route::delete('/publish', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@unPublishEvent']);
@@ -578,9 +606,9 @@ Route::group(array('prefix' => 'summits'), function () {
 
                 Route::group(['prefix' => 'feedback'], function () {
                     Route::get('', 'OAuth2SummitEventsApiController@getEventFeedback');
-                    Route::get('csv',  ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@getEventFeedbackCSV']);
+                    Route::get('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@getEventFeedbackCSV']);
                     Route::group(['prefix' => '{feedback_id}'], function () {
-                        Route::delete('', ['middleware' => 'auth.user', 'uses' =>'OAuth2SummitEventsApiController@deleteEventFeedback']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@deleteEventFeedback']);
                     });
                 });
 
@@ -612,11 +640,11 @@ Route::group(array('prefix' => 'summits'), function () {
 
         // presentations
         Route::group(['prefix' => 'presentations'], function () {
-            Route::get('', [ 'uses' => 'OAuth2SummitEventsApiController@getAllPresentations']);
+            Route::get('', ['uses' => 'OAuth2SummitEventsApiController@getAllPresentations']);
             Route::group(['prefix' => 'voteable'], function () {
-                Route::get('', [ 'uses' => 'OAuth2SummitEventsApiController@getAllVoteablePresentations']);
+                Route::get('', ['uses' => 'OAuth2SummitEventsApiController@getAllVoteablePresentations']);
                 Route::group(['prefix' => '{presentation_id}'], function () {
-                    Route::get('', [ 'uses' => 'OAuth2SummitEventsApiController@getVoteablePresentation']);
+                    Route::get('', ['uses' => 'OAuth2SummitEventsApiController@getVoteablePresentation']);
                 });
             });
 
@@ -681,10 +709,10 @@ Route::group(array('prefix' => 'summits'), function () {
 
                 // attendees votes
 
-                Route::group(['prefix' => 'attendee-votes'], function(){
+                Route::group(['prefix' => 'attendee-votes'], function () {
                     Route::get('', ['uses' => 'OAuth2PresentationApiController@getAttendeeVotes']);
                     Route::post('', ['uses' => 'OAuth2PresentationApiController@castAttendeeVote']);
-                    Route::delete('', [ 'uses' => 'OAuth2PresentationApiController@unCastAttendeeVote']);
+                    Route::delete('', ['uses' => 'OAuth2PresentationApiController@unCastAttendeeVote']);
                 });
             });
         });
@@ -1141,8 +1169,8 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeFeatureTypeApiController@update']);
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeFeatureTypeApiController@delete']);
                 Route::group(['prefix' => 'image'], function () {
-                    Route::post('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeFeatureTypeApiController@addFeatureImage']);
-                    Route::delete('', [ 'middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeFeatureTypeApiController@deleteFeatureImage']);
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeFeatureTypeApiController@addFeatureImage']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeFeatureTypeApiController@deleteFeatureImage']);
                 });
             });
         });
@@ -1197,7 +1225,7 @@ Route::group(array('prefix' => 'summits'), function () {
 
         // badge-view-types
 
-        Route::group(['prefix' => 'badge-view-types'], function() {
+        Route::group(['prefix' => 'badge-view-types'], function () {
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeViewTypeApiController@getAllBySummit']);
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitBadgeViewTypeApiController@add']);
             Route::group(['prefix' => '{badge_view_type_id}'], function () {
@@ -1354,7 +1382,7 @@ Route::group(array('prefix' => 'summits'), function () {
         // invitations
         Route::group(array('prefix' => 'registration-invitations'), function () {
 
-            Route::get('me', [ 'uses' => 'OAuth2SummitRegistrationInvitationApiController@getMyInvitation']);
+            Route::get('me', ['uses' => 'OAuth2SummitRegistrationInvitationApiController@getMyInvitation']);
 
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationInvitationApiController@getAllBySummit']);
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationInvitationApiController@add']);
@@ -1860,10 +1888,10 @@ Route::group(['prefix' => 'elections'], function () {
     Route::group(['prefix' => 'current'], function () {
         Route::group(['prefix' => 'candidates'], function () {
             Route::group(['prefix' => 'me'], function () {
-                Route::put('', [ 'uses' => 'OAuth2ElectionsApiController@updateMyCandidateProfile']);
+                Route::put('', ['uses' => 'OAuth2ElectionsApiController@updateMyCandidateProfile']);
             });
             Route::group(['prefix' => '{candidate_id}'], function () {
-                Route::post('', [ 'uses' => 'OAuth2ElectionsApiController@nominateCandidate']);
+                Route::post('', ['uses' => 'OAuth2ElectionsApiController@nominateCandidate']);
             });
         });
     });

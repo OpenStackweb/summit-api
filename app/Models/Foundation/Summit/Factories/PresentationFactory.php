@@ -12,13 +12,9 @@
  * limitations under the License.
  **/
 
-use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
-use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\summit\Presentation;
-use models\summit\PresentationExtraQuestionAnswer;
 use models\summit\PresentationLink;
-use models\utils\SilverstripeBaseModel;
 
 /**
  * Class PresentationFactory
@@ -100,52 +96,17 @@ final class PresentationFactory
                 $presentation->addLink($presentationLink);
             }
         }
+
         // extra questions
+
         $extra_questions = $payload['extra_questions'] ?? [];
-        $selection_plan = $presentation->getSelectionPlan();
-        if (count($extra_questions) && !is_null($selection_plan)) {
-            // extra questions values
-            $mandatory_questions = $selection_plan->getMandatoryExtraQuestions();
-            if (count($extra_questions) < $mandatory_questions->count()) {
-                throw new ValidationException
-                (
-                    sprintf
-                    (
-                        "You neglected to fill in all mandatory questions for the presentation %s (%s) .",
-                        count($extra_questions),
-                        $mandatory_questions->count()
-                    )
-                );
-            }
-            $questions = $selection_plan->getExtraQuestions();
-            if ($questions->count() > 0) {
-                $presentation->clearExtraQuestionAnswers();
-                foreach ($questions as $question) {
-                    if (!$question instanceof SummitSelectionPlanExtraQuestionType) continue;
-                    foreach ($extra_questions as $question_answer) {
-                        if (intval($question_answer['question_id']) == $question->getId()) {
-                            $value = trim($question_answer['answer']);
 
-                            if (empty($value) && $question->isMandatory())
-                                throw new ValidationException(sprintf('Question "%s" is mandatory', $question->getLabel()));
-
-                            if ($question->allowsValues() && !$question->allowValue($value)) {
-                                Log::warning(sprintf("value %s is not allowed for question %s", $value, $question->getName()));
-                                throw new ValidationException("The answer you provided is invalid");
-                            }
-
-                            $answer = new PresentationExtraQuestionAnswer();
-                            $answer->setQuestion($question);
-                            $answer->setValue($value);
-                            $presentation->addExtraQuestionAnswer($answer);
-                            break;
-                        }
-                    }
-                }
-
+        if (count($extra_questions)) {
+            $res = $presentation->hadCompletedExtraQuestions($extra_questions);
+            if (!$res) {
+                throw new ValidationException("You neglected to fill in all mandatory questions for the Presentation.");
             }
         }
-
         return $presentation;
     }
 }

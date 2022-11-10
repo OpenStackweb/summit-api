@@ -11,9 +11,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Models\Foundation\Summit\SelectionPlan;
+use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\Many2OneExpandSerializer;
 use Libs\ModelSerializers\One2ManyExpandSerializer;
+
 /**
  * Class SelectionPlanSerializer
  * @package App\ModelSerializers\Summit
@@ -21,22 +24,22 @@ use Libs\ModelSerializers\One2ManyExpandSerializer;
 final class SelectionPlanSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
-        'Name'                        => 'name:json_string',
-        'Enabled'                     => 'is_enabled:json_boolean',
-        'SubmissionBeginDate'         => 'submission_begin_date:datetime_epoch',
-        'SubmissionEndDate'           => 'submission_end_date:datetime_epoch',
+        'Name' => 'name:json_string',
+        'Enabled' => 'is_enabled:json_boolean',
+        'SubmissionBeginDate' => 'submission_begin_date:datetime_epoch',
+        'SubmissionEndDate' => 'submission_end_date:datetime_epoch',
         'SubmissionLockDownPresentationStatusDate' => 'submission_lock_down_presentation_status_date:datetime_epoch',
         'MaxSubmissionAllowedPerUser' => 'max_submission_allowed_per_user:json_int',
-        'VotingBeginDate'             => 'voting_begin_date:datetime_epoch',
-        'VotingEndDate'               => 'voting_end_date:datetime_epoch',
-        'SelectionBeginDate'          => 'selection_begin_date:datetime_epoch',
-        'SelectionEndDate'            => 'selection_end_date:datetime_epoch',
-        'SummitId'                    => 'summit_id:json_int',
-        'AllowNewPresentations'       => 'allow_new_presentations:json_boolean',
-        'SubmissionPeriodDisclaimer'  => 'submission_period_disclaimer:json_string',
-        'PresentationCreatorNotificationEmailTemplate'      => 'presentation_creator_notification_email_template:json_string',
-        'PresentationModeratorNotificationEmailTemplate'    => 'presentation_moderator_notification_email_template:json_string',
-        'PresentationSpeakerNotificationEmailTemplate'      => 'presentation_speaker_notification_email_template:json_string',
+        'VotingBeginDate' => 'voting_begin_date:datetime_epoch',
+        'VotingEndDate' => 'voting_end_date:datetime_epoch',
+        'SelectionBeginDate' => 'selection_begin_date:datetime_epoch',
+        'SelectionEndDate' => 'selection_end_date:datetime_epoch',
+        'SummitId' => 'summit_id:json_int',
+        'AllowNewPresentations' => 'allow_new_presentations:json_boolean',
+        'SubmissionPeriodDisclaimer' => 'submission_period_disclaimer:json_string',
+        'PresentationCreatorNotificationEmailTemplate' => 'presentation_creator_notification_email_template:json_string',
+        'PresentationModeratorNotificationEmailTemplate' => 'presentation_moderator_notification_email_template:json_string',
+        'PresentationSpeakerNotificationEmailTemplate' => 'presentation_speaker_notification_email_template:json_string',
     ];
 
     protected static $allowed_relations = [
@@ -58,7 +61,9 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
     {
         $selection_plan = $this->object;
         if (!$selection_plan instanceof SelectionPlan) return [];
-        if(!count($relations)) $relations = $this->getAllowedRelations();
+        if (!count($relations)) $relations = $this->getAllowedRelations();
+        Log::debug(sprintf("SelectionPlanSerializer expand %s", $expand));
+
         $values = parent::serialize($expand, $fields, $relations, $params);
 
         if (in_array('track_groups', $relations) && !isset($values['track_groups'])) {
@@ -69,12 +74,14 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
             $values['track_groups'] = $category_groups;
         }
 
-        if (in_array('extra_questions', $relations) && !isset($values['extra_questions'])) {
-            $extra_questions = [];
-            foreach ($selection_plan->getExtraQuestions() as $extraQuestion) {
-                $extra_questions[] = $extraQuestion->getId();
+        if (in_array('extra_questions', $relations)) {
+            if (!isset($values['extra_questions'])) {
+                $extra_questions = [];
+                foreach ($selection_plan->getExtraQuestions() as $extraQuestion) {
+                    $extra_questions[] = $extraQuestion->getQuestionType()->getId();
+                }
+                $values['extra_questions'] = $extra_questions;
             }
-            $values['extra_questions'] = $extra_questions;
         }
 
         if (in_array('event_types', $relations) && !isset($values['event_types'])) {

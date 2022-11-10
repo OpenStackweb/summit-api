@@ -652,20 +652,22 @@ SQL;
     }
 
     /**
-     * @param SummitOrderExtraQuestionAnswer $answer
+     * @param ExtraQuestionAnswer $answer
      */
-    public function addExtraQuestionAnswer(SummitOrderExtraQuestionAnswer $answer): void
+    public function addExtraQuestionAnswer(ExtraQuestionAnswer $answer): void
     {
+        if(!$answer instanceof SummitOrderExtraQuestionAnswer) return;
         if ($this->extra_question_answers->contains($answer)) return;
         $this->extra_question_answers->add($answer);
         $answer->setAttendee($this);
     }
 
     /**
-     * @param SummitOrderExtraQuestionAnswer $answer
+     * @param ExtraQuestionAnswer $answer
      */
-    public function removeExtraQuestionAnswer(SummitOrderExtraQuestionAnswer $answer)
+    public function removeExtraQuestionAnswer(ExtraQuestionAnswer $answer)
     {
+        if(!$answer instanceof SummitOrderExtraQuestionAnswer) return;
         if (!$this->extra_question_answers->contains($answer)) return;
         $this->extra_question_answers->removeElement($answer);
         $answer->clearAttendee();
@@ -1154,4 +1156,8 @@ SQL;
         return $native_query->getResult();
     }
 
+    public function buildExtraQuestionAnswer(): ExtraQuestionAnswer
+    {
+       return new SummitOrderExtraQuestionAnswer();
+    }
 }

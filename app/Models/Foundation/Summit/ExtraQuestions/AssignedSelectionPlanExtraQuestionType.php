@@ -34,20 +34,20 @@ class AssignedSelectionPlanExtraQuestionType
      * @ORM\JoinColumn(name="SummitSelectionPlanExtraQuestionTypeID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SummitSelectionPlanExtraQuestionType
      */
-    protected $question_type;
+    private $question_type;
 
     /**
      * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="extra_questions")
      * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID", onDelete="CASCADE")
      * @var SelectionPlan
      */
-    protected $selection_plan;
+    private $selection_plan;
 
     /**
      * @ORM\Column(name="`CustomOrder`", type="integer")
      * @var int
      */
-    protected $order;
+    private $order;
 
     /**
      * @return SelectionPlan

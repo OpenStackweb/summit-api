@@ -699,7 +699,7 @@ class SelectionPlan extends SilverstripeBaseModel
         $criteria->where(Criteria::expr()->eq('question_type', $question));
         $assignment = $this->extra_questions->matching($criteria)->first();
         if ($assignment === false) return;
-        self::recalculateOrderForSelectable($this->extra_questions, $assignment, $new_order, );
+        self::recalculateOrderForSelectable($this->extra_questions, $assignment, $new_order);
     }
 
     /**

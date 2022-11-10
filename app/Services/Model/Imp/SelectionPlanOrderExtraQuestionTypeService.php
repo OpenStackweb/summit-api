@@ -20,6 +20,7 @@ use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSelectionPlanExtraQuestionTypeRepository;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\Services\Model\ISelectionPlanExtraQuestionTypeService;
+use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -117,6 +118,16 @@ final class SelectionPlanOrderExtraQuestionTypeService
     {
         return $this->tx_service->transaction(function () use ($selection_plan, $question_id, $payload) {
 
+            Log::debug
+            (
+                sprintf
+                (
+                    "SelectionPlanOrderExtraQuestionTypeService::updateExtraQuestionBySelectionPlan selection_plan %s question id % payload %s",
+                    $selection_plan->getId(),
+                    $question_id,
+                    json_encode($payload)
+                ));
+
             $summit = $selection_plan->getSummit();
 
             $question = $this->updateExtraQuestion($summit, $question_id, $payload);
@@ -126,6 +137,7 @@ final class SelectionPlanOrderExtraQuestionTypeService
 
             if (isset($payload['order']) && intval($payload['order']) != $assignment->getOrder()) {
                 // request to update order
+                Log::debug(sprintf("SelectionPlanOrderExtraQuestionTypeService::updateExtraQuestionBySelectionPlan recalculating order"));
                 $selection_plan->recalculateQuestionOrder($question, intval($payload['order']));
             }
 

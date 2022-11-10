@@ -13,6 +13,7 @@
  **/
 
 use App\Events\NewMember;
+use App\Events\Registration\MemberDataUpdatedExternally;
 use App\Models\Foundation\Main\Factories\MemberFactory;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Main\Repositories\ILegalDocumentRepository;
@@ -377,6 +378,8 @@ final class MemberService
 
             if($is_new)
                 Event::dispatch(new NewMember($member->getId()));
+
+            Event::dispatch(new MemberDataUpdatedExternally($member->getId()));
 
             return $member;
         });

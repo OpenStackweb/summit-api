@@ -109,6 +109,7 @@ final class SelectionPlanOrderExtraQuestionTypeService
             return SummitSelectionPlanExtraQuestionTypeFactory::populate($question, $payload);
         });
     }
+
     /**
      * @inheritDoc
      */
@@ -123,7 +124,7 @@ final class SelectionPlanOrderExtraQuestionTypeService
             if(is_null($assignment))
                 throw new EntityNotFoundException("Question does not belongs to selection plan.");
 
-            if (isset($payload['order']) && intval($payload['order']) != $question->getOrder()) {
+            if (isset($payload['order']) && intval($payload['order']) != $assignment->getOrder()) {
                 // request to update order
                 $selection_plan->recalculateQuestionOrder($question, intval($payload['order']));
             }

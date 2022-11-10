@@ -429,7 +429,7 @@ SQL,
             ->from($this->getBaseEntity(), "e")
             ->leftJoin('e.summit', 's')
             ->leftJoin('e.member', 'm')
-            ->where("s.id = :summit_id")->andWhere("m.id = :member_id")
+            ->where("m.id = :member_id")
             ->setParameter("member_id", $member->getId());
 
         return $query->getQuery()->getResult();

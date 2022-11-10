@@ -122,7 +122,7 @@ final class SelectionPlanOrderExtraQuestionTypeService
             (
                 sprintf
                 (
-                    "SelectionPlanOrderExtraQuestionTypeService::updateExtraQuestionBySelectionPlan selection_plan %s question id % payload %s",
+                    "SelectionPlanOrderExtraQuestionTypeService::updateExtraQuestionBySelectionPlan selection_plan %s question id %s payload %s",
                     $selection_plan->getId(),
                     $question_id,
                     json_encode($payload)

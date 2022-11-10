@@ -1682,7 +1682,14 @@ class Presentation extends SummitEvent
      */
     public function getExtraQuestionAnswers()
     {
-        return $this->extra_question_answers;
+        $selection_plan = $this->selection_plan;
+        $res = [];
+        foreach ($this->extra_question_answers as $answer){
+            if($selection_plan->isExtraQuestionAssigned($answer->getQuestion())){
+                $res[] = $answer;
+            }
+        }
+        return $res;
     }
 
     /**

@@ -18,6 +18,7 @@ use App\Models\Foundation\Summit\Repositories\IPresentationSpeakerSummitAssistan
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
+use libs\utils\PaginationValidationRules;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
@@ -84,11 +85,7 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
 
             $values = Request::all();
 
-            $rules = array
-            (
-                'page' => 'integer|min:1',
-                'per_page' => 'required_with:page|integer|min:10|max:100',
-            );
+            $rules = PaginationValidationRules::get();
 
             $validation = Validator::make($values, $rules);
 

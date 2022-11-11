@@ -17,6 +17,7 @@ use App\Models\Foundation\Summit\Repositories\ITrackQuestionTemplateRepository;
 use App\Services\Model\ITrackQuestionTemplateService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
+use libs\utils\PaginationValidationRules;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use Exception;
@@ -66,11 +67,7 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
      */
     public function getTrackQuestionTemplates(){
         $values = Request::all();
-        $rules  = [
-
-            'page'     => 'integer|min:1',
-            'per_page' => 'required_with:page|integer|min:5|max:100',
-        ];
+        $rules  = PaginationValidationRules::get();
 
         try {
 

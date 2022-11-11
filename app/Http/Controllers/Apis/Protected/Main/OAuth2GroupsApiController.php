@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use libs\utils\PaginationValidationRules;
 use models\main\IGroupRepository;
 use models\oauth2\IResourceServerContext;
 use utils\Filter;
@@ -48,11 +50,7 @@ final class OAuth2GroupsApiController extends OAuth2ProtectedController
 
         $values = Request::all();
 
-        $rules = array
-        (
-            'page'     => 'integer|min:1',
-            'per_page' => 'required_with:page|integer|min:5|max:100',
-        );
+        $rules = PaginationValidationRules::get();
 
         try {
 

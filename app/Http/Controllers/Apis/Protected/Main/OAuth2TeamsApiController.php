@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
 use libs\utils\HTMLCleaner;
+use libs\utils\PaginationValidationRules;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\IChatTeamPushNotificationMessageRepository;
@@ -324,11 +325,7 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
 
         $values = Request::all();
 
-        $rules = array
-        (
-            'page'     => 'integer|min:1',
-            'per_page' => 'required_with:page|integer|min:5|max:100',
-        );
+        $rules = PaginationValidationRules::get();
 
         try {
 

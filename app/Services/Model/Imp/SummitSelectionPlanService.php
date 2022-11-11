@@ -20,6 +20,8 @@ use App\Models\Foundation\Summit\SelectionPlan;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\IMemberRepository;
+use models\main\Member;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\Presentation;
@@ -48,20 +50,29 @@ final class SummitSelectionPlanService
     private $resource_server_ctx;
 
     /**
-     * SummitSelectionPlanService constructor.
+     * @var IMemberRepository
+     */
+    private $member_repository;
+
+
+    /**
      * @param ISummitRepository $summit_repository
+     * @param IMemberRepository $member_repository
      * @param IResourceServerContext $resource_server_ctx
      * @param ITransactionService $tx_service
      */
     public function __construct
     (
         ISummitRepository $summit_repository,
+        IMemberRepository $member_repository,
         IResourceServerContext $resource_server_ctx,
         ITransactionService $tx_service
     )
     {
-        $this->summit_repository = $summit_repository;
         parent::__construct($tx_service);
+
+        $this->summit_repository = $summit_repository;
+        $this->member_repository = $member_repository;
         $this->resource_server_ctx = $resource_server_ctx;
     }
 
@@ -495,7 +506,7 @@ final class SummitSelectionPlanService
      * @inheritDoc
      */
     public function attachEventTypeToSelectionPlan(Summit $summit, int $selection_plan_id, int $event_type_id) {
-        return $this->tx_service->transaction(function() use($summit, $selection_plan_id, $event_type_id){
+        $this->tx_service->transaction(function() use($summit, $selection_plan_id, $event_type_id){
 
             $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
             if (is_null($selection_plan))
@@ -520,7 +531,7 @@ final class SummitSelectionPlanService
      * @inheritDoc
      */
     public function detachEventTypeFromSelectionPlan(Summit $summit, int $selection_plan_id, int $event_type_id) {
-        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $event_type_id) {
+        $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $event_type_id) {
 
             $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
             if (is_null($selection_plan))
@@ -544,6 +555,7 @@ final class SummitSelectionPlanService
             $selection_plan->removeEventType($event_type);
         });
     }
+
 
     /**
      * @inheritDoc
@@ -583,11 +595,42 @@ final class SummitSelectionPlanService
             return $presentation_action_type;
         });
     }
+    /**
+     * @param Summit $summit
+     * @param int $selection_plan_id
+     * @param int $member_id
+     * @throws \Exception
+     */
+    public function addAllowedMember(Summit $summit, int $selection_plan_id, int $member_id): void
+    {
+         $this->tx_service->transaction(function() use($summit, $selection_plan_id, $member_id){
+
+            $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
+            if (!$selection_plan instanceof SelectionPlan)
+                throw new EntityNotFoundException("Selection Plan not found.");
+
+            $member = $this->member_repository->getById($member_id);
+
+            if(!$member instanceof Member)
+                throw new EntityNotFoundException("Member not found.");
+
+            if($selection_plan->isAllowedMember($member))
+                throw new ValidationException("Member is already authorized on Selection Plan.");
+
+            $selection_plan->addAllowedMember($member);
+
+        });
+    }
 
     /**
-     * @inheritDoc
+     * @param Summit $summit
+     * @param int $selection_plan_id
+     * @param int $type_id
+     * @return mixed|void
+     * @throws \Exception
      */
-    public function removeAllowedPresentationActionType(Summit $summit, int $selection_plan_id, int $type_id) {
+    public function removeAllowedPresentationActionType(Summit $summit, int $selection_plan_id, int $type_id)
+    {
         return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $type_id) {
             $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
             if (is_null($selection_plan))
@@ -608,6 +651,32 @@ final class SummitSelectionPlanService
                     ]
                 ));
             $selection_plan->removePresentationActionType($presentation_action_type);
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $selection_plan_id
+     * @param int $member_id
+     * @throws \Exception
+     */
+    public function removeAllowedMember(Summit $summit, int $selection_plan_id, int $member_id): void
+    {
+        $this->tx_service->transaction(function() use($summit, $selection_plan_id, $member_id){
+
+            $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
+            if (!$selection_plan instanceof SelectionPlan)
+                throw new EntityNotFoundException("Selection Plan not found.");
+
+            $member = $this->member_repository->getById($member_id);
+
+            if(!$member instanceof Member)
+                throw new EntityNotFoundException("Member not found.");
+
+            if(!$selection_plan->isAllowedMember($member))
+                throw new ValidationException("Member is not authorized on Selection Plan.");
+
+            $selection_plan->removeAllowedMember($member);
         });
     }
 }

@@ -17,6 +17,7 @@ use App\Http\Utils\FileSizeUtil;
 use App\Http\Utils\FileUploadInfo;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
+use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
 use App\Models\Foundation\Summit\Factories\PresentationFactory;
@@ -266,6 +267,10 @@ final class PresentationService
                 throw new ValidationException(sprintf("Selection Plan %s does not allow new submissions", $current_selection_plan->getId()));
             }
 
+            if(!$current_selection_plan->isAllowedMember($member)){
+                throw new AuthzException(sprintf("Member is not Authorized on Selection Plan."));
+            }
+
             $current_speaker = $this->speaker_repository->getByMember($member);
 
             if (is_null($current_speaker))
@@ -379,6 +384,10 @@ final class PresentationService
 
             if (!$current_selection_plan->isSubmissionOpen()) {
                 throw new ValidationException(sprintf("Submission Period is Closed."));
+            }
+
+            if(!$current_selection_plan->isAllowedMember($member)){
+                throw new AuthzException(sprintf("Member is not Authorized on Selection Plan."));
             }
 
             $presentation->setUpdatedBy(ResourceServerContext::getCurrentUser(false));
@@ -521,11 +530,20 @@ final class PresentationService
             if (!$presentation instanceof Presentation)
                 throw new EntityNotFoundException(sprintf("presentation %s not found", $presentation_id));
 
+            $current_selection_plan = $presentation->getSelectionPlan();
+
+            if(is_null($current_selection_plan))
+                throw new ValidationException("Presentation is not assigned to any selection plan.");
+
             if (!$presentation->canEdit($current_speaker))
                 throw new ValidationException(sprintf("member %s can not edit presentation %s",
                     $member->getId(),
                     $presentation_id
                 ));
+
+            if(!$current_selection_plan->isAllowedMember($member)){
+                throw new AuthzException(sprintf("Member is not Authorized on Selection Plan."));
+            }
 
             $presentation->clearMediaUploads();
 
@@ -576,9 +594,15 @@ final class PresentationService
             if (!$current_selection_plan->IsEnabled()) {
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
+
             if (!$current_selection_plan->isSubmissionOpen()) {
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
+
+            if(!$current_selection_plan->isAllowedMember($member)){
+                throw new AuthzException(sprintf("Member is not Authorized on Selection Plan."));
+            }
+
 
             if (!$presentation->canEdit($current_speaker))
                 throw new ValidationException(sprintf("Member %s can not edit presentation %s.",

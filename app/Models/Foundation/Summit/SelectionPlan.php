@@ -24,6 +24,7 @@ use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
+use models\main\Group;
 use models\main\Member;
 use models\summit\AllowedPresentationActionType;
 use models\summit\Presentation;
@@ -153,7 +154,7 @@ class SelectionPlan extends SilverstripeBaseModel
     private $presentation_speaker_notification_email_template;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategoryGroup")
+     * @ORM\ManyToMany(targetEntity="models\summit\PresentationCategoryGroup", fetch="EXTRA_LAZY")
      * @ORM\JoinTable(name="SelectionPlan_CategoryGroups",
      *      joinColumns={@ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="PresentationCategoryGroupID", referencedColumnName="ID")}
@@ -163,7 +164,7 @@ class SelectionPlan extends SilverstripeBaseModel
     private $category_groups;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\SummitEventType")
+     * @ORM\ManyToMany(targetEntity="models\summit\SummitEventType", fetch="EXTRA_LAZY")
      * @ORM\JoinTable(name="SelectionPlan_SummitEventTypes",
      *      joinColumns={@ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="SummitEventTypeID", referencedColumnName="ID")}
@@ -173,7 +174,17 @@ class SelectionPlan extends SilverstripeBaseModel
     private $event_types;
 
     /**
-     * @ORM\OneToMany(targetEntity="models\summit\Presentation", mappedBy="selection_plan", cascade={"persist"})
+     * @ORM\ManyToMany(targetEntity="models\main\Member", fetch="EXTRA_LAZY", inversedBy="allowed_selection_plans", cascade={"persist","remove"})
+     * @ORM\JoinTable(name="SelectionPlan_AllowedMembers",
+     *      joinColumns={@ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="MemberID", referencedColumnName="ID")}
+     *      )
+     * @var Member[]
+     */
+    private $allowed_members;
+
+    /**
+     * @ORM\OneToMany(targetEntity="models\summit\Presentation", mappedBy="selection_plan", cascade={"persist"}, fetch="EXTRA_LAZY")
      * @var Presentation[]
      */
     private $presentations;
@@ -401,6 +412,7 @@ class SelectionPlan extends SilverstripeBaseModel
         $this->track_chair_rating_types = new ArrayCollection();
         $this->submission_lock_down_presentation_status_date = null;
         $this->allowed_presentation_action_types = new ArrayCollection();
+        $this->allowed_members = new ArrayCollection();
     }
 
     /**
@@ -411,9 +423,19 @@ class SelectionPlan extends SilverstripeBaseModel
         return $this->category_groups;
     }
 
+    /**
+     * @return ArrayCollection|SummitEventType[]
+     */
     public function getEventTypes()
     {
         return $this->event_types;
+    }
+
+    /**
+     * @return ArrayCollection|Member[]
+     */
+    public function getAllowedMembers(){
+        return $this->allowed_members;
     }
 
     /**
@@ -573,7 +595,6 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      *  Extra Questions
      */
-
 
     /**
      * @param int $question_id
@@ -1176,9 +1197,45 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param PresentationActionType $presentation_action_type
      * @return bool
      */
-    public function isAllowedPresentationActionType(PresentationActionType $presentation_action_type): bool {
+    public function isAllowedPresentationActionType(PresentationActionType $presentation_action_type): bool
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('type', $presentation_action_type));
         return $this->allowed_presentation_action_types->matching($criteria)->count() > 0;
+    }
+
+    /**
+     * @param Member $member
+     */
+    public function addAllowedMember(Member $member):void{
+        if($this->allowed_members->contains($member)) return;
+        $this->allowed_members->add($member);
+    }
+
+    /**
+     * @param Member $member
+     */
+    public function removeAllowedMember(Member $member):void{
+        if(!$this->allowed_members->contains($member)) return;
+        $this->allowed_members->removeElement($member);
+    }
+
+    /**
+     * @param Member $member
+     * @return bool
+     */
+    public function isAllowedMember(Member $member):bool{
+        if($this->getType() === self::PublicType) return true;
+        return $this->allowed_members->contains($member);
+    }
+
+    const PublicType = 'Public';
+    const PrivateType = 'Private';
+
+    /**
+     * @return string
+     */
+    public function getType():string{
+        return $this->allowed_members->count() > 0 ? self::PrivateType: self::PublicType;
     }
 }

@@ -288,6 +288,11 @@ class Member extends SilverstripeBaseModel
     private $groups;
 
     /**
+     * @ORM\ManyToMany(targetEntity="App\Models\Foundation\Summit\SelectionPlan", mappedBy="allowed_members", fetch="EXTRA_LAZY")
+     */
+    private $allowed_selection_plans;
+
+    /**
      * @ORM\ManyToMany(targetEntity="Models\Foundation\Main\CCLA\Team", inversedBy="members")
      * @ORM\JoinTable(name="Team_Members",
      *      joinColumns={@ORM\JoinColumn(name="MemberID", referencedColumnName="ID")},
@@ -408,6 +413,7 @@ class Member extends SilverstripeBaseModel
         $this->candidate_profiles = new  ArrayCollection();
         $this->subscribed_to_newsletter = false;
         $this->display_on_site = false;
+        $this->allowed_selection_plans = new ArrayCollection();
     }
 
     /**

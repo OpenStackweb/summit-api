@@ -11,12 +11,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use models\utils\IBaseRepository;
+use utils\Filter;
+use utils\Order;
+use utils\PagingInfo;
+use utils\PagingResponse;
+
 /**
  * Interface ISelectionPlanRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
 interface ISelectionPlanRepository extends IBaseRepository
 {
-
+    /**
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getAllAllowedMembersByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse;
 }

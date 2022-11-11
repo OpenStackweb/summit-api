@@ -40,6 +40,7 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
         'PresentationCreatorNotificationEmailTemplate' => 'presentation_creator_notification_email_template:json_string',
         'PresentationModeratorNotificationEmailTemplate' => 'presentation_moderator_notification_email_template:json_string',
         'PresentationSpeakerNotificationEmailTemplate' => 'presentation_speaker_notification_email_template:json_string',
+        'Type' => 'type:json_string',
     ];
 
     protected static $allowed_relations = [
@@ -47,7 +48,8 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
         'extra_questions',
         'event_types',
         'track_chair_rating_types',
-        'allowed_presentation_action_types'
+        'allowed_presentation_action_types',
+        'allowed_members',
     ];
 
 
@@ -109,6 +111,14 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
             $values['allowed_presentation_action_types'] = $allowed_presentation_action_types;
         }
 
+        if (in_array('allowed_members', $relations) && !isset($values['allowed_members'])) {
+            $allowed_members = [];
+            foreach ($selection_plan->getAllowedMembers() as $m) {
+                $allowed_members[] = $m->getId();
+            }
+            $values['allowed_members'] = $allowed_members;
+        }
+
         return $values;
     }
 
@@ -124,6 +134,10 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
         'event_types' => [
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getEventTypes',
+        ],
+        'allowed_members' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getAllowedMembers',
         ],
         'track_chair_rating_types' => [
             'type' => Many2OneExpandSerializer::class,

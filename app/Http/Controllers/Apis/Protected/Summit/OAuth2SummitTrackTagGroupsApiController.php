@@ -13,6 +13,7 @@
  **/
 use App\Models\Foundation\Summit\Repositories\ITrackTagGroupAllowedTagsRepository;
 use App\Services\Model\ISummitTrackTagGroupService;
+use libs\utils\PaginationValidationRules;
 use models\oauth2\IResourceServerContext;
 use Illuminate\Support\Facades\Validator;
 use ModelSerializers\SerializerRegistry;
@@ -116,10 +117,7 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
 
         $values = Request::all();
 
-        $rules = [
-            'page'     => 'integer|min:1',
-            'per_page' => 'required_with:page|integer|min:5|max:100',
-        ];
+        $rules = PaginationValidationRules::get();
 
         try {
 

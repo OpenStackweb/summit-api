@@ -1,6 +1,6 @@
-<?php namespace App\Http\Utils;
-/**
- * Copyright 2018 OpenStack Foundation
+<?php namespace libs\utils;
+/*
+ * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,13 +11,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+
 /**
- * Class PagingConstants
- * @package App\Http\Utils
+ * Class PaginationValidationRules
+ * @package libs\utils
  */
-final class PagingConstants
+final class PaginationValidationRules
 {
-    const DefaultPageSize = 5; // should be >= MinPageSize and <= MaxPageSize
-    const MinPageSize     = 5;
-    const MaxPageSize     = 100;
+
+    const PerPageMin = 5;
+    const PerPageMax = 500;
+
+    public static function get():array{
+        return [
+            'page' => 'integer|min:1',
+            'per_page' => sprintf('required_with:page|integer|min:%s|max:%s',self::PerPageMin, self::PerPageMax)
+        ];
+    }
 }

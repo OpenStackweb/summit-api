@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use libs\utils\PaginationValidationRules;
 use models\exceptions\ValidationException;
 use models\summit\Presentation;
 use models\summit\SummitEvent;
@@ -54,11 +55,7 @@ abstract class RetrieveSummitEventsStrategy
     {
         $values = Request::all();
 
-        $rules = [
-            'page' => 'integer|min:1',
-            'per_page' => 'required_with:page|integer|min:5|max:100',
-        ];
-
+        $rules = PaginationValidationRules::get();
         $validation = Validator::make($values, $rules);
 
         if ($validation->fails()) {

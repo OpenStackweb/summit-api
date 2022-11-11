@@ -11,13 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Http\Utils\PagingConstants;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPMultiValueQuestionTemplate;
 use App\Models\Foundation\Summit\Repositories\IRSVPTemplateRepository;
 use App\Services\Model\IRSVPTemplateService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
+use libs\utils\PaginationValidationRules;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\IMemberRepository;
@@ -91,10 +91,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
     public function getAllBySummit($summit_id){
 
         $values = Request::all();
-        $rules  = [
-            'page'     => 'integer|min:1',
-            'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::MinPageSize, PagingConstants::MaxPageSize),
-        ];
+        $rules  = PaginationValidationRules::get();
 
         try {
 
@@ -111,7 +108,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
 
             // default values
             $page     = 1;
-            $per_page = PagingConstants::DefaultPageSize;
+            $per_page = PaginationValidationRules::PerPageMin;
 
             if (Request::has('page')) {
                 $page     = intval(Request::input('page'));

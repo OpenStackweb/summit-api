@@ -12,13 +12,13 @@
  * limitations under the License.
  **/
 use App\Http\Utils\EpochCellFormatter;
-use App\Http\Utils\PagingConstants;
 use App\Models\Foundation\Summit\Events\Presentations\PresentationCategoryGroupConstants;
 use App\Models\Foundation\Summit\Repositories\IPresentationCategoryGroupRepository;
 use App\Services\Model\IPresentationCategoryGroupService;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use libs\utils\PaginationValidationRules;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
@@ -73,11 +73,7 @@ final class OAuth2PresentationCategoryGroupController
      */
     public function getAllBySummit($summit_id){
         $values = Request::all();
-        $rules  = [
-
-            'page'     => 'integer|min:1',
-            'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::DefaultPageSize, PagingConstants::MaxPageSize),
-        ];
+        $rules  = PaginationValidationRules::get();
 
         try {
 
@@ -93,7 +89,7 @@ final class OAuth2PresentationCategoryGroupController
 
             // default values
             $page     = 1;
-            $per_page = PagingConstants::DefaultPageSize;
+            $per_page = PaginationValidationRules::PerPageMin;
 
             if (Request::has('page')) {
                 $page     = intval(Request::input('page'));

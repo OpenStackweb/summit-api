@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use libs\utils\PaginationValidationRules;
 use models\utils\IBaseRepository;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -47,11 +49,7 @@ abstract class AbstractCompanyServiceApiController extends JsonController
     public function getAll(){
         $values = Request::all();
 
-        $rules = array
-        (
-            'page'     => 'integer|min:1',
-            'per_page' => 'required_with:page|integer|min:5|max:100',
-        );
+        $rules = PaginationValidationRules::get();
 
         try {
 
@@ -64,7 +62,7 @@ abstract class AbstractCompanyServiceApiController extends JsonController
 
             // default values
             $page     = 1;
-            $per_page = 5;
+            $per_page = PaginationValidationRules::PerPageMin;
 
             if (Request::has('page')) {
                 $page     = intval(Request::input('page'));

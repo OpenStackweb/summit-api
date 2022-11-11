@@ -13,11 +13,11 @@
  **/
 
 use App\Http\Utils\EpochCellFormatter;
-use App\Http\Utils\PagingConstants;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
+use libs\utils\PaginationValidationRules;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\summit\SummitBookableVenueRoom;
@@ -77,10 +77,7 @@ trait SummitBookableVenueRoomApi
      */
     public function getBookableVenueRooms($summit_id){
         $values = Request::all();
-        $rules  = [
-            'page'     => 'integer|min:1',
-            'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::MinPageSize, PagingConstants::MaxPageSize),
-        ];
+        $rules  = PaginationValidationRules::get();
 
         try {
 
@@ -96,7 +93,7 @@ trait SummitBookableVenueRoomApi
 
             // default values
             $page     = 1;
-            $per_page = PagingConstants::DefaultPageSize;
+            $per_page = PaginationValidationRules::PerPageMin;
 
             if (Request::has('page')) {
                 $page     = intval(Request::input('page'));
@@ -177,11 +174,7 @@ trait SummitBookableVenueRoomApi
      */
     public function getAllReservationsBySummit($summit_id){
         $values = Request::all();
-        $rules  = [
-
-            'page'     => 'integer|min:1',
-            'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::MinPageSize, PagingConstants::MaxPageSize),
-        ];
+        $rules  = PaginationValidationRules::get();
 
         try {
 
@@ -197,7 +190,7 @@ trait SummitBookableVenueRoomApi
 
             // default values
             $page     = 1;
-            $per_page = PagingConstants::DefaultPageSize;
+            $per_page = PaginationValidationRules::PerPageMin;
 
             if (Request::has('page')) {
                 $page     = intval(Request::input('page'));

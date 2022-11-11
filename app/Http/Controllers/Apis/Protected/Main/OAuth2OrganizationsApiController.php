@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Services\Model\IOrganizationService;
+use libs\utils\PaginationValidationRules;
 use models\main\IOrganizationRepository;
 use models\oauth2\IResourceServerContext;
 use ModelSerializers\SerializerRegistry;
@@ -58,11 +59,7 @@ final class OAuth2OrganizationsApiController extends OAuth2ProtectedController
 
         $values = Request::all();
 
-        $rules = [
-
-            'page'     => 'integer|min:1',
-            'per_page' => 'required_with:page|integer|min:5|max:100',
-        ];
+        $rules = PaginationValidationRules::get();
 
         try {
 

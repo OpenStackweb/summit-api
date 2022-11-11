@@ -12,10 +12,10 @@
  * limitations under the License.
  **/
 
-use App\Http\Utils\PagingConstants;
 use App\ModelSerializers\SerializerUtils;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
+use libs\utils\PaginationValidationRules;
 use models\exceptions\ValidationException;
 use utils\Filter;
 use utils\FilterParser;
@@ -92,11 +92,7 @@ trait ParametrizedGetAll
         ) {
             $values = Request::all();
 
-            $rules = [
-
-                'page' => 'integer|min:1',
-                'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::MinPageSize, PagingConstants::MaxPageSize),
-            ];
+            $rules = PaginationValidationRules::get();
 
             $validation = Validator::make($values, $rules);
 
@@ -107,7 +103,7 @@ trait ParametrizedGetAll
 
             // default values
             $page = 1;
-            $per_page = is_null($defaultPageSize) ? PagingConstants::DefaultPageSize : call_user_func($defaultPageSize);
+            $per_page = is_null($defaultPageSize) ? PaginationValidationRules::PerPageMin : call_user_func($defaultPageSize);
 
             if (Request::has('page')) {
                 $page = intval(Request::get('page'));
@@ -216,10 +212,7 @@ trait ParametrizedGetAll
         ) {
 
             $values = Request::all();
-            $rules = [
-                'page' => 'integer|min:1',
-                'per_page' => sprintf('required_with:page|integer|min:%s', PagingConstants::MinPageSize),
-            ];
+            $rules = PaginationValidationRules::get();
 
             $validation = Validator::make($values, $rules);
 

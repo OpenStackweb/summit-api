@@ -11,12 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Http\Utils\PagingConstants;
+
 use App\Models\Foundation\Summit\Repositories\ISummitBookableVenueRoomAttributeTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitBookableVenueRoomAttributeValueRepository;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
+use libs\utils\PaginationValidationRules;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
@@ -85,11 +86,7 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
      */
     public function getAllBookableRoomAttributeTypes($summit_id){
         $values = Request::all();
-        $rules  = [
-
-            'page'     => 'integer|min:1',
-            'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::MinPageSize, PagingConstants::MaxPageSize),
-        ];
+        $rules  = PaginationValidationRules::get();
 
         try {
 
@@ -105,7 +102,7 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
 
             // default values
             $page     = 1;
-            $per_page = PagingConstants::DefaultPageSize;
+            $per_page = PaginationValidationRules::PerPageMin;
 
             if (Request::has('page')) {
                 $page     = intval(Request::input('page'));
@@ -334,11 +331,7 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
      */
     public function getAllBookableRoomAttributeValues($summit_id, $type_id){
         $values = Request::all();
-        $rules  = [
-
-            'page'     => 'integer|min:1',
-            'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::MinPageSize, PagingConstants::MaxPageSize),
-        ];
+        $rules  = PaginationValidationRules::get();
 
         try {
 
@@ -357,7 +350,7 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
 
             // default values
             $page     = 1;
-            $per_page = PagingConstants::DefaultPageSize;
+            $per_page = PaginationValidationRules::PerPageMin;
 
             if (Request::has('page')) {
                 $page     = intval(Request::input('page'));

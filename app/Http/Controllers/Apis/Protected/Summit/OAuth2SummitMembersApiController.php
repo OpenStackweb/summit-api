@@ -14,10 +14,10 @@
 use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Http\Utils\CurrentAffiliationsCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
-use App\Http\Utils\PagingConstants;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
+use libs\utils\PaginationValidationRules;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\IMemberRepository;
@@ -379,10 +379,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
     public function getAllBySummit($summit_id){
         $values = Request::all();
 
-        $rules = [
-            'page'     => 'integer|min:1',
-            'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::MinPageSize, PagingConstants::MaxPageSize),
-        ];
+        $rules = PaginationValidationRules::get();
 
         try {
 
@@ -398,7 +395,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
 
             // default values
             $page     = 1;
-            $per_page = PagingConstants::DefaultPageSize;;
+            $per_page = PaginationValidationRules::PerPageMin;
 
             if (Request::has('page')) {
                 $page     = intval(Request::input('page'));

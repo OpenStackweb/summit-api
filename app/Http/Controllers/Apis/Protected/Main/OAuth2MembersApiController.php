@@ -11,9 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Http\Utils\PagingConstants;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\IMemberService;
+use libs\utils\PaginationValidationRules;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\IMemberRepository;
@@ -66,10 +66,7 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
         $values = Request::all();
 
-        $rules = [
-            'page'     => 'integer|min:1',
-            'per_page' => sprintf('required_with:page|integer|min:%s|max:%s', PagingConstants::MinPageSize, PagingConstants::MaxPageSize),
-        ];
+        $rules = PaginationValidationRules::get();
 
         try {
 
@@ -82,7 +79,7 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
             // default values
             $page     = 1;
-            $per_page = PagingConstants::DefaultPageSize;;
+            $per_page = PaginationValidationRules::PerPageMin;
 
             if (Request::has('page')) {
                 $page     = intval(Request::input('page'));

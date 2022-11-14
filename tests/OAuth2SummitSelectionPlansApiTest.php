@@ -62,7 +62,8 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
                     'extra_questions',
                     'extra_questions.values',
                     'track_chair_rating_types',
-                    'track_chair_rating_types.score_types'
+                    'track_chair_rating_types.score_types',
+                    'allowed_presentation_action_types'
                 ])
         ];
 

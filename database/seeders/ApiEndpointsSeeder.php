@@ -6535,7 +6535,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'presentation-action-complete',
-                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_id}/complete',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_type_id}/complete',
                 'http_method' => 'PUT',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm),
@@ -6550,7 +6550,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'presentation-action-uncomplete',
-                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_id}/incomplete',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_type_id}/incomplete',
                 'http_method' => 'DELETE',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)
@@ -6623,6 +6623,78 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'resolve-presentation-category-change-request',
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/category-change-requests/{category_change_request_id}',
                 'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            // selection plan allowed presentation action types
+            [
+                'name' => 'get-allowed-presentation-action-types',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-presentation-action-types',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
+                'name' => 'get-allowed-presentation-action-type',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-presentation-action-types/{type_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
+                'name' => 'add-allowed-presentation-action-type',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-presentation-action-types/{type_id}',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
+                'name' => 'update-allowed-presentation-action-type',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-presentation-action-types/{type_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
+                'name' => 'remove-allowed-presentation-action-type',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-presentation-action-types/{type_id}',
+                'http_method' => 'DELETE',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)
                 ],

@@ -5739,23 +5739,11 @@ SQL;
         return $action === false ? null : $action;
     }
 
-    public function synchAllPresentationActions(): void
-    {
-        foreach ($this->getPresentations() as $presentation) {
-            $presentation->initializeActions();
-        }
-    }
-
     public function synchAllAttendeesStatus(): void
     {
         foreach ($this->attendees as $attendee) {
             $attendee->updateStatus();
         }
-    }
-
-    public function synchPresentationAction(Presentation $presentation): void
-    {
-        $presentation->initializeActions();
     }
 
     /**

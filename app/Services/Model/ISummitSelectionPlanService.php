@@ -17,6 +17,7 @@ use App\Models\Foundation\Summit\SelectionPlan;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\summit\Presentation;
+use models\summit\PresentationActionType;
 use models\summit\Summit;
 use models\summit\SummitCategoryChange;
 use models\summit\SummitPresentationComment;
@@ -149,4 +150,26 @@ interface ISummitSelectionPlanService
      * @return void
      */
     public function detachEventTypeFromSelectionPlan(Summit $summit, int $selection_plan_id, int $event_type_id);
+
+    /**
+     * @param Summit $summit
+     * @param int $selection_plan_id
+     * @param int $type_id
+     * @param array $payload
+     * @return PresentationActionType
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function upsertAllowedPresentationActionType(
+        Summit $summit, int $selection_plan_id, int $type_id, array $payload): PresentationActionType;
+
+    /**
+     * @param Summit $summit
+     * @param int $selection_plan_id
+     * @param int $type_id
+     * @return void
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function removeAllowedPresentationActionType(Summit $summit, int $selection_plan_id, int $type_id);
 }

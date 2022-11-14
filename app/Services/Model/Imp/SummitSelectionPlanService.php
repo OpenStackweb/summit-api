@@ -23,6 +23,7 @@ use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\Presentation;
+use models\summit\PresentationActionType;
 use models\summit\PresentationType;
 use models\summit\Summit;
 use models\summit\SummitCategoryChange;
@@ -541,6 +542,69 @@ final class SummitSelectionPlanService
                     ]
                 ));
             $selection_plan->removeEventType($event_type);
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function upsertAllowedPresentationActionType(
+        Summit $summit, int $selection_plan_id, int $type_id, array $payload): PresentationActionType {
+
+        return $this->tx_service->transaction(function() use($summit, $selection_plan_id, $type_id, $payload) {
+            $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
+            if (is_null($selection_plan))
+                throw new EntityNotFoundException("Selection Plan not found.");
+
+            $presentation_action_type = $summit->getPresentationActionTypeById($type_id);
+            if (is_null($presentation_action_type))
+                throw new EntityNotFoundException("Presentation Action Type not found.");
+
+            if (!$presentation_action_type instanceof PresentationActionType) {
+                throw new ValidationException(trans(
+                        'validation_errors.SummitSelectionPlanService.addAllowedPresentationActionType.invalidPresentationActionType',
+                        ['type_id' => $presentation_action_type->getIdentifier()])
+                );
+            }
+            if (!$selection_plan->isAllowedPresentationActionType($presentation_action_type)) {
+                $selection_plan->addPresentationActionType($presentation_action_type);
+            }
+
+            if (isset($payload['order'])) {
+                $new_order = intval($payload['order']);
+                $current_order = $selection_plan->getPresentationActionTypeOrder($presentation_action_type);
+                if ($current_order != $new_order)
+                    $selection_plan->recalculatePresentationActionTypeOrder($presentation_action_type, $new_order);
+            }
+
+            return $presentation_action_type;
+        });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function removeAllowedPresentationActionType(Summit $summit, int $selection_plan_id, int $type_id) {
+        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $type_id) {
+            $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
+            if (is_null($selection_plan))
+                throw new EntityNotFoundException(trans
+                ('not_found_errors.SummitSelectionPlanService.removeAllowedPresentationActionType.SelectionPlanNotFound',
+                    [
+                        'selection_plan_id' => $selection_plan_id,
+                        'summit_id' => $summit->getId()
+                    ]
+                ));
+            $presentation_action_type = $summit->getPresentationActionTypeById($type_id);
+            if (is_null($presentation_action_type))
+                throw new EntityNotFoundException(trans
+                ('not_found_errors.SummitSelectionPlanService.removeAllowedPresentationActionType.PresentationActionTypeNotFound',
+                    [
+                        '$presentation_action_type' => $presentation_action_type,
+                        'summit_id' => $summit->getId()
+                    ]
+                ));
+            $selection_plan->removePresentationActionType($presentation_action_type);
         });
     }
 }

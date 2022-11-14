@@ -13,6 +13,7 @@
  **/
 
 use App\Http\Utils\EpochCellFormatter;
+use App\Models\Foundation\Summit\Repositories\IPresentationActionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitCategoryChangeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSelectionPlanExtraQuestionTypeRepository;
@@ -24,6 +25,7 @@ use models\exceptions\EntityNotFoundException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
+use ModelSerializers\AllowedPresentationActionTypeSerializer;
 use ModelSerializers\IPresentationSerializerTypes;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
@@ -71,12 +73,18 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
     private $selection_plan_extra_questions_repository;
 
     /**
+     * @var IPresentationActionTypeRepository
+     */
+    private $presentation_action_repository;
+
+    /**
      * OAuth2SummitSelectionPlansApiController constructor.
      * @param ISummitRepository $summit_repository
      * @param ISummitEventRepository $summit_event_repository
      * @param ISummitCategoryChangeRepository $category_change_request_repository
      * @param ISelectionPlanRepository $selection_plan_repository
      * @param ISummitSelectionPlanExtraQuestionTypeRepository $selection_plan_extra_questions_repository
+     * @param IPresentationActionTypeRepository $presentation_action_repository
      * @param ISummitSelectionPlanService $selection_plan_service
      * @param ISelectionPlanExtraQuestionTypeService $selection_plan_extra_questions_service
      * @param IResourceServerContext $resource_server_context
@@ -88,6 +96,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         ISummitCategoryChangeRepository                 $category_change_request_repository,
         ISelectionPlanRepository                        $selection_plan_repository,
         ISummitSelectionPlanExtraQuestionTypeRepository $selection_plan_extra_questions_repository,
+        IPresentationActionTypeRepository               $presentation_action_repository,
         ISummitSelectionPlanService                     $selection_plan_service,
         ISelectionPlanExtraQuestionTypeService          $selection_plan_extra_questions_service,
         IResourceServerContext                          $resource_server_context
@@ -99,6 +108,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         $this->summit_repository = $summit_repository;
         $this->summit_event_repository = $summit_event_repository;
         $this->category_change_request_repository = $category_change_request_repository;
+        $this->presentation_action_repository = $presentation_action_repository;
         $this->selection_plan_service = $selection_plan_service;
         $this->selection_plan_extra_questions_service = $selection_plan_extra_questions_service;
         $this->selection_plan_extra_questions_repository = $selection_plan_extra_questions_repository;
@@ -1351,6 +1361,167 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
             if (is_null($summit)) return $this->error404();
 
             $this->selection_plan_service->detachEventTypeFromSelectionPlan($summit, intval($selection_plan_id), intval($event_type_id));
+            return $this->deleted();
+        });
+    }
+
+    //Allowed Presentation Action Types
+
+    /**
+     * @param $summit_id
+     * @param $selection_plan_id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAllowedPresentationActionTypes($summit_id, $selection_plan_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        $selection_plan = $summit->getSelectionPlanById(intval($selection_plan_id));
+        if (is_null($selection_plan)) return $this->error404();
+
+        return $this->_getAll(
+            function () {
+                return [
+                    'label' => ['=@', '=='],
+                    'id' => ['=='],
+                ];
+            },
+            function () {
+                return [
+                    'label' => 'sometimes|string',
+                    'id' => 'sometimes|integer',
+                ];
+            },
+            function () {
+                return [
+                    'order',
+                ];
+            },
+            function ($filter) use ($summit, $selection_plan_id) {
+                if ($filter instanceof Filter) {
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+                    $filter->addFilterCondition(FilterElement::makeEqual('selection_plan_id', $selection_plan_id));
+                }
+                return $filter;
+            },
+            function () {},
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) {
+                return $this->presentation_action_repository->getAllByPage
+                (
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            },
+            [
+                'selection_plan_id' => $selection_plan_id,
+            ]
+        );
+    }
+
+    /**
+     * @param $summit_id
+     * @param $selection_plan_id
+     * @param $type_id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAllowedPresentationActionType($summit_id, $selection_plan_id, $type_id) {
+        return $this->processRequest(function() use($summit_id, $selection_plan_id, $type_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $selection_plan = $summit->getSelectionPlanById(intval($selection_plan_id));
+            if (is_null($selection_plan)) return $this->error404();
+
+            $presentation_action_type = $summit->getPresentationActionTypeById(intval($type_id));
+            if (is_null($presentation_action_type)) return $this->error404();
+
+            $allowed_presentation_action_type = $selection_plan->getPresentationActionType($presentation_action_type);
+            if (is_null($allowed_presentation_action_type)) return $this->error404();
+
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($allowed_presentation_action_type)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+                [
+                    'selection_plan_id' => $selection_plan_id,
+                ]
+            ));
+        });
+    }
+
+    /**
+     * @param $id
+     * @param $selection_plan_id
+     * @param $type_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function addAllowedPresentationActionType($id, $selection_plan_id, $type_id)
+    {
+        return $this->processRequest(function () use ($id, $selection_plan_id, $type_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($id);
+            if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonPayload(SummitSelectionPlanValidationRulesFactory::buildForAddPresentationActionType());
+
+            $allowed_presentation_action_type = $this->selection_plan_service->upsertAllowedPresentationActionType(
+                $summit, intval($selection_plan_id), intval($type_id), $payload);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($allowed_presentation_action_type)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+                [
+                    'selection_plan_id' => $selection_plan_id,
+                ]
+            ));
+        });
+    }
+
+    /**
+     * @param $id
+     * @param $selection_plan_id
+     * @param $type_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function updateAllowedPresentationActionType($id, $selection_plan_id, $type_id)
+    {
+        return $this->processRequest(function () use ($id, $selection_plan_id, $type_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($id);
+            if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonPayload(SummitSelectionPlanValidationRulesFactory::buildForUpdatePresentationActionType());
+
+            $allowed_presentation_action_type = $this->selection_plan_service->upsertAllowedPresentationActionType(
+                $summit, intval($selection_plan_id), intval($type_id), $payload);
+
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($allowed_presentation_action_type)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+                [
+                    'selection_plan_id' => $selection_plan_id,
+                ]
+            ));
+        });
+    }
+
+    /**
+     * @param $id
+     * @param $selection_plan_id
+     * @param $type_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function removeAllowedPresentationActionType($id, $selection_plan_id, $type_id)
+    {
+        return $this->processRequest(function () use ($id, $selection_plan_id, $type_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($id);
+            if (is_null($summit)) return $this->error404();
+
+            $this->selection_plan_service->removeAllowedPresentationActionType($summit, intval($selection_plan_id), intval($type_id));
             return $this->deleted();
         });
     }

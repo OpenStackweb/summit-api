@@ -14,7 +14,6 @@
 
 use App\Console\Commands\PresentationMaterialsCreateMUXAssetsCommand;
 use App\Console\Commands\PresentationMediaUploadsRegenerateTemporalLinks;
-use App\Console\Commands\SummitSyncAllPresentationActions;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Facades\App;
@@ -46,7 +45,6 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\PresentationMaterialsCreateMUXAssetsCommand::class,
         \App\Console\Commands\RecalculateAttendeesStatusCommand::class,
         \App\Console\Commands\EnableMP4SupportAtMUXCommand::class,
-        \App\Console\Commands\SummitSyncAllPresentationActions::class,
         \App\Console\Commands\SummitMediaUploadMigratePrivateToPublicStorage::class,
         \App\Console\Commands\PresentationMediaUploadsRegenerateTemporalLinks::class,
     ];

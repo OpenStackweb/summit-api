@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\IGroup;
+use App\Models\Foundation\Summit\SelectionPlan;
 use DateInterval;
 use DateTime;
 use models\summit\SummitSelectedPresentation;
@@ -979,5 +980,162 @@ final class OAuth2SelectionPlansApiTest extends ProtectedApiTest
         $presentations = json_decode($content);
         $this->assertTrue(!is_null($presentations));
         $this->assertTrue($presentations->total >= 1);
+    }
+
+    //Allowed Presentation Action Types
+
+    public function testGetPresentationActionTypesBySelectionPlan(){
+        $params = [
+            'id'                => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'page'              => 1,
+            'per_page'          => 10,
+            'order'             => '+order',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSelectionPlansApiController@getAllowedPresentationActionTypes",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $page = json_decode($content);
+        $this->assertTrue(!is_null($page));
+    }
+
+    public function testGetPresentationActionTypeBySelectionPlan(){
+        $params = [
+            'id'                => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'type_id'           => self::$default_presentation_action_type->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSelectionPlansApiController@getAllowedPresentationActionType",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $entity = json_decode($content);
+        $this->assertTrue(!is_null($entity));
+    }
+
+    public function testAddPresentationActionTypeToSelectionPlan(){
+        $order = 2;
+
+        $params = [
+            'id'                => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'type_id'           => self::$default_presentation_action_type->getId(),
+        ];
+
+        $data = [
+            'order' => $order,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectionPlansApiController@addAllowedPresentationActionType",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $entity = json_decode($content);
+        $this->assertTrue(!is_null($entity));
+        $this->assertTrue($entity->order === $order);
+    }
+
+    public function testUpdatePresentationActionTypeOrderInSelectionPlan(){
+        $new_order = 1;
+
+        $params = [
+            'id'                => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'type_id'           => self::$default_presentation_action_type->getId(),
+        ];
+
+        $data = [
+            'order' => $new_order,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSelectionPlansApiController@updateAllowedPresentationActionType",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $entity = json_decode($content);
+        $this->assertTrue(!is_null($entity));
+        $this->assertTrue($entity->order === $new_order);
+    }
+
+    public function testRemovePresentationActionTypeFromSelectionPlan(){
+        $params = [
+            'id'                => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'type_id'           => self::$default_presentation_action_type->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $this->action(
+            "DELETE",
+            "OAuth2SummitSelectionPlansApiController@removeAllowedPresentationActionType",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
     }
 }

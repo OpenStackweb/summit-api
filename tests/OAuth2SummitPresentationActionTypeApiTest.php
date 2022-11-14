@@ -14,7 +14,6 @@
 
 use App\Models\Foundation\Main\IGroup;
 use models\summit\PresentationActionType;
-use ProtectedApiTest;
 
 /**
  * Class OAuth2SummitPresentationActionTypeApiTest
@@ -22,18 +21,18 @@ use ProtectedApiTest;
  */
 final class OAuth2SummitPresentationActionTypeApiTest extends ProtectedApiTest
 {
-    use \InsertSummitTestData;
+    use InsertSummitTestData;
 
-    use \InsertMemberTestData;
+    use InsertMemberTestData;
 
     static $action1 = null;
     static $action2 = null;
 
-    protected function setUp()
+    protected function setUp():void
     {
         $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
-        self::insertTestData();
+        self::insertSummitTestData();
         self::$summit_permission_group->addMember(self::$member);
         self::$em->persist(self::$summit);
         self::$em->persist(self::$summit_permission_group);
@@ -54,9 +53,9 @@ final class OAuth2SummitPresentationActionTypeApiTest extends ProtectedApiTest
         self::$em->flush();
     }
 
-    protected function tearDown()
+    protected function tearDown():void
     {
-        self::clearTestData();
+        self::clearSummitTestData();
         parent::tearDown();
     }
 

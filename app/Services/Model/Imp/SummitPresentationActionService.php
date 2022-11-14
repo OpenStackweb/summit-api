@@ -31,9 +31,10 @@ implements ISummitPresentationActionService
     /**
      * @inheritDoc
      */
-    public function updateAction(Summit $summit, int $selection_plan_id, int $presentation_id, int $action_id, bool $isCompleted): ?PresentationAction
+    public function updateAction(
+        Summit $summit, int $selection_plan_id, int $presentation_id, int $presentation_action_type_id, bool $isCompleted): ?PresentationAction
     {
-        return $this->tx_service->transaction(function() use($summit, $selection_plan_id, $presentation_id, $action_id, $isCompleted){
+        return $this->tx_service->transaction(function() use($summit, $selection_plan_id, $presentation_id, $presentation_action_type_id, $isCompleted){
 
             $performer = ResourceServerContext::getCurrentUser(false);
             $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
@@ -45,10 +46,12 @@ implements ISummitPresentationActionService
             if(is_null($presentation))
                 throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
 
-            $action = $presentation->getActionById($action_id);
+            $presentation_action_type = $selection_plan->getPresentationActionTypeById($presentation_action_type_id);
 
-            if(is_null($action))
-                throw new EntityNotFoundException(sprintf("Action %s not found.", $action_id));
+            if(is_null($presentation_action_type))
+                throw new EntityNotFoundException(sprintf("Presentation action type %s not found.", $presentation_action_type_id));
+
+            $action = $presentation->setActionByType($presentation_action_type);
 
             $action->setUpdatedBy($performer);
             $action->setIsCompleted($isCompleted);

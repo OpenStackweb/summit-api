@@ -350,7 +350,7 @@ Route::group(array('prefix' => 'summits'), function () {
                         // presentation actions
 
                         Route::group(['prefix' => 'actions'], function () {
-                            Route::group(['prefix' => '{action_id}'], function () {
+                            Route::group(['prefix' => '{action_type_id}'], function () {
                                 Route::put('complete', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPresentationActionApiController@complete']);
                                 Route::delete('incomplete', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPresentationActionApiController@uncomplete']);
                             });
@@ -362,6 +362,18 @@ Route::group(array('prefix' => 'summits'), function () {
                             Route::post('{score_type_id}', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@addTrackChairScore']);
                             Route::delete('{score_type_id}', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@removeTrackChairScore']);
                         });
+                    });
+                });
+
+                // allowed presentation action types
+
+                Route::group(['prefix' => 'allowed-presentation-action-types'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@getAllowedPresentationActionTypes']);
+                    Route::group(['prefix' => '{type_id}'], function () {
+                        Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@getAllowedPresentationActionType']);
+                        Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addAllowedPresentationActionType']);
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@updateAllowedPresentationActionType']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@removeAllowedPresentationActionType']);
                     });
                 });
 

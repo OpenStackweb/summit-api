@@ -13,6 +13,7 @@
  **/
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\PresentationActionType;
+
 /**
  * Class PresentationActionTypeSerializer
  * @package ModelSerializers
@@ -37,6 +38,10 @@ final class PresentationActionTypeSerializer extends SilverStripeSerializer
         $action = $this->object;
         if (!$action instanceof PresentationActionType) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
+
+        if (array_has($params, 'selection_plan_id'))
+            $values['order'] = $action->getSelectionPlanAssignmentOrder(intval($params['selection_plan_id']));
+
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);
             foreach ($exp_expand as $relation) {

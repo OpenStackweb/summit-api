@@ -333,7 +333,7 @@ final class MemberService
      */
     public function registerExternalUserById($user_external_id): Member
     {
-        return $this->tx_service->transaction(function () use ($user_external_id) {
+        $member = $this->tx_service->transaction(function () use ($user_external_id) {
             // get external user from IDP
             $user_data = $this->user_ext_api->getUserById($user_external_id);
             if(is_null($user_data) || !isset($user_data['email'])){
@@ -379,10 +379,12 @@ final class MemberService
             if($is_new)
                 Event::dispatch(new NewMember($member->getId()));
 
-            Event::dispatch(new MemberDataUpdatedExternally($member->getId()));
-
             return $member;
         });
+
+        Event::dispatch(new MemberDataUpdatedExternally($member->getId()));
+
+        return $member;
     }
 
     /**

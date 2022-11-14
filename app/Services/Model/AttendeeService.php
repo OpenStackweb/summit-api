@@ -591,21 +591,40 @@ final class AttendeeService extends AbstractService implements IAttendeeService
     {
         $this->tx_service->transaction(function() use($member_id){
 
-            $member = $this->member_repository->getById($member_id);
+            $member = $this->member_repository->getByIdRefreshed($member_id);
+
             if(!$member instanceof Member){
                 Log::debug(sprintf("AttendeeService::updateAttendeesByMemberId member %s not found.", $member_id));
                 return;
             }
+
+            $fname = $member->getFirstName();
+            $lname = $member->getLastName();
+            $email = $member->getEmail();
+            $company = $member->getCompany();
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "AttendeeService::updateAttendeesByMemberId member %s fname %s lname %s email %s company %s",
+                    $member_id,
+                    $fname,
+                    $lname,
+                    $email,
+                    $company
+                )
+            );
 
             $attendees = $this->attendee_repository->getByMember($member);
             if(!is_null($attendees)) {
                 foreach ($attendees as $attendee) {
                     if (!$attendee instanceof SummitAttendee) continue;
                     Log::debug(sprintf("AttendeeService::updateAttendeesByMemberId updating attendee %s with member %s", $attendee->getId(), $member_id));
-                    $attendee->setFirstName($member->getFirstName());
-                    $attendee->setSurname($member->getLastName());
-                    $attendee->setEmail($member->getEmail());
-                    $attendee->setCompanyName($member->getCompany());
+                    $attendee->setFirstName($fname);
+                    $attendee->setSurname($lname);
+                    $attendee->setEmail($email);
+                    $attendee->setCompanyName($company);
                 }
             }
 
@@ -615,10 +634,10 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     if (!$attendee instanceof SummitAttendee) continue;
                     Log::debug(sprintf("AttendeeService::updateAttendeesByMemberId updating attendee %s with member %s ( member null )", $attendee->getId(), $member_id));
                     $attendee->setMember($member);
-                    $attendee->setFirstName($member->getFirstName());
-                    $attendee->setSurname($member->getLastName());
-                    $attendee->setEmail($member->getEmail());
-                    $attendee->setCompanyName($member->getCompany());
+                    $attendee->setFirstName($fname);
+                    $attendee->setSurname($lname);
+                    $attendee->setEmail($email);
+                    $attendee->setCompanyName($company);
                 }
             }
         });

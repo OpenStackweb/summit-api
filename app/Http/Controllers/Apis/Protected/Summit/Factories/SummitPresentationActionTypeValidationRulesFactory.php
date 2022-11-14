@@ -29,7 +29,6 @@ final class SummitPresentationActionTypeValidationRulesFactory
         if ($update) {
             return [
                 'label' => 'sometimes|string|max:255',
-                'order' => 'sometimes|integer|min:1',
             ];
         }
 

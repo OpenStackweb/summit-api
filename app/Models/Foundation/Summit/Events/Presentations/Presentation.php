@@ -1639,8 +1639,13 @@ class Presentation extends SummitEvent
      * @return int
      */
     private function actionSort($a,$b) {
-        $o1 = $a->getType()->getOrder();
-        $o2 = $b->getType()->getOrder();
+        if(!$a instanceof PresentationAction) return 0;
+        if(!$b instanceof PresentationAction) return 0;
+        $presentation = $a->getPresentation();
+        $selection_plan = $presentation->getSelectionPlan();
+        if(is_null($selection_plan)) return 0;
+        $o1 = $selection_plan->getPresentationActionTypeOrder($a->getType());
+        $o2 = $selection_plan->getPresentationActionTypeOrder($b->getType());
         if ($o1 == $o2) {
             return 0;
         }
@@ -1651,10 +1656,17 @@ class Presentation extends SummitEvent
      * @return array|PresentationAction[]
      */
     public function getPresentationActions(){
-        // ordered by type order
-        $array = $this->actions->toArray();
-        usort($array, [ $this , 'actionSort' ]);
-        return $array;
+
+        $selection_plan = $this->selection_plan;
+        if(is_null($selection_plan)) return [];
+        // need to filter by selection plan
+        $res = $this->actions->filter(function($e) use($selection_plan){
+           if(!$e instanceof PresentationAction) return false;
+           return $selection_plan->isAllowedPresentationActionType($e->getType());
+        })->toArray();
+
+        usort($res, [ $this , 'actionSort' ]);
+        return $res;
     }
 
     /**

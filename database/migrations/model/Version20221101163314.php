@@ -1,6 +1,4 @@
-<?php
-
-namespace Database\Migrations\Model;
+<?php namespace Database\Migrations\Model;
 /**
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +11,13 @@ namespace Database\Migrations\Model;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
-
-class Version20221101163314 extends AbstractMigration
+/**
+ * Class Version20221101163314
+ * @package Database\Migrations\Model
+ */
+final class Version20221101163314 extends AbstractMigration
 {
     /**
      * @param Schema $schema
@@ -27,8 +27,8 @@ class Version20221101163314 extends AbstractMigration
         //Populate all PresentationActionType-SelectionPlan possible relationships
         //taking into account the current PresentationActionType global order
         $sql = <<<SQL
-    INSERT INTO PresentationActionType_SelectionPlan(PresentationActionTypeID, SelectionPlanID, CustomOrder, Created, LastEdited)
-    SELECT pat.ID, sp.ID, pat.`Order`, now(), now() FROM PresentationActionType pat INNER JOIN SelectionPlan sp ON pat.SummitID = sp.SummitID;
+    INSERT INTO PresentationActionType_SelectionPlan(PresentationActionTypeID, SelectionPlanID, CustomOrder)
+    SELECT pat.ID, sp.ID, pat.`Order` FROM PresentationActionType pat INNER JOIN SelectionPlan sp ON pat.SummitID = sp.SummitID;
 SQL;
         $this->addSql($sql);
     }

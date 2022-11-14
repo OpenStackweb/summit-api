@@ -13,22 +13,26 @@
  **/
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
+use LaravelDoctrine\Migrations\Schema\Builder;
+use LaravelDoctrine\Migrations\Schema\Table;
 
 /**
- * Class Version20221109214446
+ * Class Version20221114160731
  * @package Database\Migrations\Model
  */
-final class Version20221109214446 extends AbstractMigration
+final class Version20221114160731 extends AbstractMigration
 {
     /**
      * @param Schema $schema
      */
     public function up(Schema $schema): void
     {
-        $sql = <<<SQL
-        ALTER TABLE `SummitEvent` CHANGE `SocialSummary` `SocialSummary` VARCHAR(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL;
-SQL;
-
+        $builder = new Builder($schema);
+        if ($builder->hasTable("PresentationActionType") && $builder->hasColumn("PresentationActionType", "`Order`")) {
+            $builder->table("PresentationActionType", function (Table $table) {
+                $table->dropColumn("`Order`");
+            });
+        }
     }
 
     /**

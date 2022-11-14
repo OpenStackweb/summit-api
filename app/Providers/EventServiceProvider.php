@@ -16,7 +16,6 @@ use App\Events\MemberUpdated;
 use App\Events\NewMember;
 use App\Events\OrderDeleted;
 use App\Events\PaymentSummitRegistrationOrderConfirmed;
-use App\Events\PresentationActionTypeCreated;
 use App\Events\Registration\MemberDataUpdatedExternally;
 use App\Events\RSVPCreated;
 use App\Events\RSVPUpdated;

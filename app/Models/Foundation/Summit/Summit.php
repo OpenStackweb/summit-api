@@ -5688,21 +5688,9 @@ SQL;
     public function addPresentationActionType(PresentationActionType $presentation_action_type)
     {
         if ($this->presentation_action_types->contains($presentation_action_type)) return $this;
-        $presentation_action_type->setOrder($this->getPresentationActionTypeMaxOrder() + 1);
         $this->presentation_action_types->add($presentation_action_type);
         $presentation_action_type->setSummit($this);
         return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getPresentationActionTypeMaxOrder(): int
-    {
-        $criteria = Criteria::create();
-        $criteria->orderBy(['order' => 'DESC']);
-        $action = $this->presentation_action_types->matching($criteria)->first();
-        return $action === false ? 0 : $action->getOrder();
     }
 
     /**
@@ -5710,9 +5698,7 @@ SQL;
      */
     public function getPresentationActionTypes()
     {
-        $criteria = Criteria::create();
-        $criteria->orderBy(["order" => Criteria::ASC]);
-        return $this->presentation_action_types->matching($criteria);
+        return $this->presentation_action_types;
     }
 
     /**

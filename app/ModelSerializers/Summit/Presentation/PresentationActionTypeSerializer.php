@@ -23,7 +23,6 @@ final class PresentationActionTypeSerializer extends SilverStripeSerializer
     protected static $array_mappings = [
         'Label' => 'label:json_string',
         'SummitId' => 'summit_id:json_int',
-        'Order' => 'order:json_int',
     ];
 
     /**

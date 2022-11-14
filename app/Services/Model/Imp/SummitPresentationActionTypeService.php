@@ -19,7 +19,6 @@ use App\Services\Model\AbstractService;
 use App\Services\Model\ISummitPresentationActionTypeService;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
 use models\summit\PresentationActionType;
 use models\summit\Summit;
 /**
@@ -54,8 +53,6 @@ final class SummitPresentationActionTypeService
     {
         return $this->tx_service->transaction(function() use($summit, $payload){
             $action = PresentationActionTypeFactory::build($payload);
-            $max_order = $summit->getPresentationActionTypeMaxOrder();
-            $action->setOrder($max_order + 1);
             $summit->addPresentationActionType($action);
             return $action;
         });
@@ -72,12 +69,7 @@ final class SummitPresentationActionTypeService
             if(is_null($action)){
                 throw new EntityNotFoundException(sprintf("PresentationActionType %s not found.", $action_type_id));
             }
-            $action = PresentationActionTypeFactory::populate($action, $payload);
-            if (isset($payload['order']) && intval($payload['order']) != $action->getOrder()) {
-                // request to update order
-                self::recalculateOrderForCollection($summit->getPresentationActionTypes()->toArray(), $action, intval($payload['order']));
-            }
-            return $action;
+            return PresentationActionTypeFactory::populate($action, $payload);
         });
     }
 

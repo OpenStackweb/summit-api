@@ -25,7 +25,6 @@ use models\exceptions\EntityNotFoundException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
-use ModelSerializers\AllowedPresentationActionTypeSerializer;
 use ModelSerializers\IPresentationSerializerTypes;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;

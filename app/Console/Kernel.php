@@ -64,9 +64,6 @@ class Kernel extends ConsoleKernel
         // summit json cache
         $schedule->command('summit:json-generator')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
 
-        // synch presentation actions
-        $schedule->command('summit:synch-presentation-actions')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
-
         // list of available summits
         $schedule->command('summit-list:json-generator')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
 

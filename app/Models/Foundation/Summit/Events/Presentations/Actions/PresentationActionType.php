@@ -11,13 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Events\PresentationActionTypeCreated;
-use App\Models\Foundation\Summit\SelectionPlan;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
-use App\Models\Foundation\Main\IOrderable;
-use Illuminate\Support\Facades\Event;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrinePresentationActionTypeRepository")
@@ -28,12 +24,10 @@ use models\utils\SilverstripeBaseModel;
  *          inversedBy="presentation_action_types"
  *     )
  * })
- * @ORM\HasLifecycleCallbacks
  * Class PresentationActionType
  * @package models\summit
  */
 class PresentationActionType extends SilverstripeBaseModel
-    implements IOrderable
 {
     use SummitOwned;
 
@@ -44,7 +38,7 @@ class PresentationActionType extends SilverstripeBaseModel
     private $label;
 
     /**
-     * @ORM\Column(name="`Order`", type="integer")
+     * @deprecated
      * @var int
      */
     private $order;
@@ -61,26 +55,7 @@ class PresentationActionType extends SilverstripeBaseModel
     public function __construct()
     {
         parent::__construct();
-        $this->order = 0;
         $this->assigned_selection_plans = new ArrayCollection;
-    }
-
-    /**
-     * @return int
-     * @deprecated
-     */
-    public function getOrder(): int
-    {
-        return $this->order;
-    }
-
-    /**
-     * @param int $order
-     * @deprecated
-     */
-    public function setOrder($order): void
-    {
-        $this->order = $order;
     }
 
     /**
@@ -97,14 +72,6 @@ class PresentationActionType extends SilverstripeBaseModel
     public function setLabel(string $label): void
     {
         $this->label = $label;
-    }
-
-    /**
-     * @ORM\PostPersist
-     */
-    public function inserted($args)
-    {
-        Event::dispatch(new PresentationActionTypeCreated($this));
     }
 
     /**

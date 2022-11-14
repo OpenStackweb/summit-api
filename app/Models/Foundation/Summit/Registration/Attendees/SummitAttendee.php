@@ -498,9 +498,9 @@ class SummitAttendee extends SilverstripeBaseModel
     }
 
     /**
-     * @param string $first_name
+     * @param string|null $first_name
      */
-    public function setFirstName(string $first_name): void
+    public function setFirstName(?string $first_name): void
     {
         $this->first_name = TextUtils::trim($first_name);
     }
@@ -518,9 +518,9 @@ class SummitAttendee extends SilverstripeBaseModel
     }
 
     /**
-     * @param string $surname
+     * @param string|null $surname
      */
-    public function setSurname(string $surname): void
+    public function setSurname(?string $surname): void
     {
         $this->surname = TextUtils::trim($surname);
     }
@@ -702,11 +702,11 @@ SQL;
     }
 
     /**
-     * @param string $company_name
+     * @param string|null $company_name
      */
-    public function setCompanyName(string $company_name): void
+    public function setCompanyName(?string $company_name): void
     {
-        $this->company_name = $company_name;
+        $this->company_name = TextUtils::trim($company_name);
     }
 
     /**

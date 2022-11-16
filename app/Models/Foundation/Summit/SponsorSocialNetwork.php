@@ -126,4 +126,9 @@ class SponsorSocialNetwork extends SilverstripeBaseModel
         $this->is_enabled = $is_enabled;
     }
 
+    public function __construct()
+    {
+        parent::__construct();
+        $this->is_enabled = true;
+    }
 }

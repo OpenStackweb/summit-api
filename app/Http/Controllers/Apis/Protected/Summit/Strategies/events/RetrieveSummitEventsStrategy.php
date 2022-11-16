@@ -36,7 +36,7 @@ abstract class RetrieveSummitEventsStrategy
     {
         // default values
         $page = 1;
-        $per_page = 5;
+        $per_page = PaginationValidationRules::PerPageMin;
 
         if (Request::has('page')) {
             $page = intval(Request::input('page'));
@@ -120,6 +120,8 @@ abstract class RetrieveSummitEventsStrategy
                 'page_random',
                 'custom_order',
                 'votes_count',
+                'duration',
+                'speakers_count',
             ]);
         }
         return $order;
@@ -225,7 +227,6 @@ abstract class RetrieveSummitEventsStrategy
             'meeting_url' => 'sometimes|string',
             'streaming_url' => 'sometimes|string',
             'etherpad_link' => 'sometimes|string',
-
         ];
     }
 }

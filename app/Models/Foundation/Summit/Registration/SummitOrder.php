@@ -202,6 +202,10 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     private $last_reminder_email_sent_date;
 
+    /** @deprecated
+     * @var mixed
+     */
+    private $company;
     /**
      * SummitOrder constructor.
      */

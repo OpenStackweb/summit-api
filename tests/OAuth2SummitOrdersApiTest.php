@@ -177,6 +177,76 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTest
     /**
      * @return mixed
      */
+    public function testGetAllTickets(){
+        $params = [
+            'id' => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'order'    => '+number',
+            'filter' => 'final_amount>0'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitTicketApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $page = json_decode($content);
+        $this->assertTrue(!is_null($page));
+        $this->assertNotEmpty($page->data);
+        return $page;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function testGetAllFreeTickets(){
+        $params = [
+            'id' => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'order'    => '+number',
+            'filter' => 'final_amount==0'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitTicketApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $page = json_decode($content);
+        $this->assertTrue(!is_null($page));
+        $this->assertEmpty($page->data);
+        return $page;
+    }
+
+    /**
+     * @return mixed
+     */
     public function testUpdateMyOrder(){
 
         $params = [

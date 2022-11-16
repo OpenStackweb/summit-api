@@ -23,6 +23,7 @@ use models\summit\SummitAttendeeTicketRefundRequest;
 use models\utils\IEntity;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
+use utils\DoctrineHavingFilterMapping;
 use utils\DoctrineJoinFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
@@ -126,6 +127,7 @@ final class DoctrineSummitAttendeeTicketRepository
                 ]
             ),
             'owner_status' => 'a.status',
+            'final_amount' => new DoctrineHavingFilterMapping("", "e.id", "((e.raw_cost + SUM(COALESCE(ta.amount, 0))) - e.discount) :operator :value"),
         ];
     }
 
@@ -142,6 +144,9 @@ final class DoctrineSummitAttendeeTicketRepository
         $query->leftJoin("b.type","bt");
         $query->leftJoin("bt.access_levels","al");
         $query->leftJoin("a.member","m");
+        if($filter->hasFilter('final_amount')){
+            $query = $query->leftJoin("e.applied_taxes", "ta");
+        }
         if($filter->hasFilter('ticket_type_id')){
             $query = $query->join("e.ticket_type", "tt");
         }

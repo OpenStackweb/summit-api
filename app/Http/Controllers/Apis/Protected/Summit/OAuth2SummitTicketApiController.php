@@ -111,6 +111,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'has_badge' => ['=='],
                     'view_type_id' => ['=='],
                     'promo_code_id' => ['=='],
+                    'final_amount' => ['==', '<>','>=','>'],
                 ];
             },
             function () {
@@ -136,6 +137,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'owner_status' => 'sometimes|string|in:' . implode(',', SummitAttendee::AllowedStatus),
                     'has_badge' => 'sometimes|boolean',
                     'promo_code_id' => 'sometimes|integer',
+                    'final_amount' => 'sometimes|numeric',
                 ];
             },
             function () {
@@ -193,6 +195,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'has_badge' => ['=='],
                     'view_type_id' => ['=='],
                     'promo_code_id' => ['=='],
+                    'final_amount' => ['==', '<>','>=','>'],
                 ];
             },
             function () {
@@ -218,6 +221,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'has_badge' => 'sometimes|boolean',
                     'view_type_id' => 'sometimes|integer',
                     'promo_code_id' => 'sometimes|integer',
+                    'final_amount' => 'sometimes|numeric',
                 ];
             },
             function () {
@@ -435,6 +439,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'status' => ['==', '<>'],
                     'order_owner_id' => ['==', '<>'],
                     'has_order_owner' => ['=='],
+                    'final_amount' => ['==', '<>','>=','>'],
                 ];
             },
             function () {
@@ -446,6 +451,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'order_owner_id' => 'sometimes|integer',
                     'has_order_owner' => 'sometimes|boolean',
                     'status' => sprintf('sometimes|in:%s', implode(',', IOrderConstants::ValidStatus)),
+                    'final_amount' => 'sometimes|numeric',
                 ];
             },
             function () {

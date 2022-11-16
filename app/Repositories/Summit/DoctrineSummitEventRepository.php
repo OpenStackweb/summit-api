@@ -366,6 +366,8 @@ final class DoctrineSummitEventRepository
             'random' => 'RAND()',
             'custom_order' => 'p.custom_order',
             'votes_count' => 'COUNT(av.id)',
+            'duration' => 'e.duration',
+            'speaker_count' => 'COUNT(sp.id)',
         ];
     }
 

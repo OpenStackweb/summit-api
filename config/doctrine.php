@@ -176,7 +176,12 @@ return [
     | DQL custom datetime functions
     |--------------------------------------------------------------------------
     */
-    'custom_datetime_functions' => [],
+    'custom_datetime_functions' => [
+        'DATEADD'  => DoctrineExtensions\Query\Mysql\DateAdd::class,
+        'DATEDIFF' => DoctrineExtensions\Query\Mysql\DateDiff::class,
+        'TIMESTAMPADD'      => DoctrineExtensions\Query\Mysql\TimestampAdd::class,
+        'TIMESTAMPDIFF'     => DoctrineExtensions\Query\Mysql\TimestampDiff::class,
+    ],
     /*
     |--------------------------------------------------------------------------
     | DQL custom numeric functions

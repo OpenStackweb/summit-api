@@ -367,7 +367,7 @@ final class DoctrineSummitEventRepository
             'custom_order' => 'p.custom_order',
             'votes_count' => 'COUNT(av.id)',
             'duration' => 'e.duration',
-            'speakers_count' => 'COUNT(sp.id)',
+            'speakers_count' => 'COUNT(DISTINCT(sp.id))',
         ];
     }
 

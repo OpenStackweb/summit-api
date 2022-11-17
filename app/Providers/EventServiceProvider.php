@@ -15,12 +15,11 @@
 use App\EntityPersisters\EntityEventPersister;
 use App\Events\MemberUpdated;
 use App\Events\NewMember;
-use App\Events\OrderDeleted;
 use App\Events\PaymentSummitRegistrationOrderConfirmed;
 use App\Events\PresentationActionTypeCreated;
+use App\Events\Registration\MemberDataUpdatedExternally;
 use App\Events\RSVPCreated;
 use App\Events\RSVPUpdated;
-use App\Events\SummitOrderCanceled;
 use App\Events\TicketUpdated;
 use App\Factories\EntityEvents\FloorActionEntityEventFactory;
 use App\Factories\EntityEvents\LocationActionEntityEventFactory;
@@ -43,20 +42,19 @@ use App\Factories\EntityEvents\SummitEventUpdatedEntityEventFactory;
 use App\Factories\EntityEvents\SummitTicketTypeActionEntityEventFactory;
 use App\Factories\EntityEvents\TrackActionEntityEventFactory;
 use App\Factories\EntityEvents\TrackGroupActionActionEntityEventFactory;
-use App\Jobs\CompensatePromoCodes;
-use App\Jobs\CompensateTickets;
-use App\Jobs\MemberAssocSummitOrders;
-use App\Jobs\ProcessSummitOrderPaymentConfirmation;
+use App\Jobs\Emails\BookableRooms\BookableRoomReservationCanceledEmail;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationCreatedEmail;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationPaymentConfirmedEmail;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationRefundAcceptedEmail;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationRefundRequestedAdminEmail;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationRefundRequestedOwnerEmail;
-use App\Jobs\Emails\BookableRooms\BookableRoomReservationCanceledEmail;
 use App\Jobs\Emails\Schedule\RSVPRegularSeatMail;
 use App\Jobs\Emails\Schedule\RSVPWaitListSeatMail;
+use App\Jobs\MemberAssocSummitOrders;
+use App\Jobs\ProcessSummitOrderPaymentConfirmation;
 use App\Jobs\SynchAllPresentationActions;
 use App\Jobs\SynchPresentationActions;
+use App\Jobs\UpdateAttendeeInfo;
 use App\Jobs\UpdateIDPMemberInfo;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\App;
@@ -65,11 +63,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\RSVP;
-use models\summit\Summit;
-use models\summit\SummitOrder;
 use models\summit\SummitRoomReservation;
-use App\Jobs\UpdateAttendeeInfo;
-use App\Events\Registration\MemberDataUpdatedExternally;
 
 /**
  * Class EventServiceProvider
@@ -357,56 +351,6 @@ final class EventServiceProvider extends ServiceProvider
 
         // registration
 
-        Event::listen(SummitOrderCanceled::class, function ($event) {
-            if (!$event instanceof SummitOrderCanceled) return;
-
-            $repository = EntityManager::getRepository(SummitOrder::class);
-            $order = $repository->find($event->getOrderId());
-            if (is_null($order) || !$order instanceof SummitOrder) return;
-
-            Log::debug(sprintf("EventServiceProvider::SummitOrderCanceled order id %s", $order->getId()));
-            /*
-             * removed for now
-             * if($event->shouldSendEmail())
-                Mail::queue(new SummitOrderCanceledEmail($order));
-            */
-            // compensate tickets types qty
-
-            foreach ($event->getTicketsToReturn() as $ticket_type_id => $qty) {
-                Log::debug(sprintf("EventServiceProvider::SummitOrderCanceled: firing CompensateTickets ticket_type_id %s qty %s", $ticket_type_id, $qty));
-                CompensateTickets::dispatch($ticket_type_id, $qty);
-            }
-            // compensate promo codes usages
-
-            foreach ($event->getPromoCodesToReturn() as $code => $qty) {
-                Log::debug(sprintf("EventServiceProvider::SummitOrderCanceled: firing CompensatePromoCodes code %s qty %s", $code, $qty));
-                CompensatePromoCodes::dispatch($order->getSummit(), $code, $qty);
-            }
-        });
-
-        Event::listen(OrderDeleted::class, function ($event) {
-            if (!$event instanceof OrderDeleted) return;
-
-            // compensate tickets types qty
-
-            Log::debug(sprintf("EventServiceProvider::OrderDeleted id %s", $event->getOrderId()));
-
-            $repository = EntityManager::getRepository(Summit::class);
-            $summit = $repository->find($event->getSummitId());
-            if (is_null($summit) || !$summit instanceof Summit) return;
-
-            foreach ($event->getTicketsToReturn() as $ticket_type_id => $qty) {
-                Log::debug(sprintf("EventServiceProvider::OrderDeleted: firing CompensateTickets ticket_type_id %s qty %s", $ticket_type_id, $qty));
-                CompensateTickets::dispatch($ticket_type_id, $qty);
-            }
-            // compensate promo codes usages
-
-            foreach ($event->getPromoCodesToReturn() as $code => $qty) {
-                Log::debug(sprintf("EventServiceProvider::OrderDeleted: firing CompensatePromoCodes code %s qty %s", $code, $qty));
-                CompensatePromoCodes::dispatch($summit, $code, $qty);
-            }
-        });
-
         Event::listen(PaymentSummitRegistrationOrderConfirmed::class, function ($event) {
             if (!$event instanceof PaymentSummitRegistrationOrderConfirmed) return;
             $order_id = $event->getOrderId();
@@ -420,13 +364,13 @@ final class EventServiceProvider extends ServiceProvider
             MemberAssocSummitOrders::dispatch($event->getMemberId());
         });
 
-        Event::listen(MemberDataUpdatedExternally::class, function($event){
+        Event::listen(MemberDataUpdatedExternally::class, function ($event) {
             if (!$event instanceof MemberDataUpdatedExternally) return;
             Log::debug(sprintf("EventServiceProvider::MemberDataUpdatedExternally - firing UpdateAttendeeInfo member id %s", $event->getMemberId()));
             UpdateAttendeeInfo::dispatch($event->getMemberId());
         });
 
-        Event::listen(MemberUpdated::class, function($event){
+        Event::listen(MemberUpdated::class, function ($event) {
             if (!$event instanceof MemberUpdated) return;
             Log::debug(sprintf("EventServiceProvider::MemberUpdated - firing NewMemberAssocSummitOrders member id %s", $event->getMemberId()));
 
@@ -486,7 +430,7 @@ final class EventServiceProvider extends ServiceProvider
             if (!$event instanceof TicketUpdated) return;
             // publish profile changes to the IDP
             $attendee = $event->getAttendee();
-            UpdateIDPMemberInfo::dispatch( $attendee->getEmail(),
+            UpdateIDPMemberInfo::dispatch($attendee->getEmail(),
                 $attendee->getFirstName(),
                 $attendee->getSurname(),
                 $attendee->getCompanyName());

@@ -35,7 +35,6 @@ use App\Services\Utils\ILockManagerService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -62,7 +61,7 @@ use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitTicketType;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use utils\PagingInfo;
-
+use Illuminate\Support\Facades\Log;
 /**
  * Class AbstractTask
  * @package App\Services\Model
@@ -1799,7 +1798,11 @@ final class SummitOrderService
             if (is_null($order) || !$order instanceof SummitOrder || $summit->getId() != $order->getSummitId())
                 throw new EntityNotFoundException("order not found");
 
-            $order->setCancelled(false);
+            list($tickets_to_return, $promo_codes_to_return) = $order->calculateTicketsAndPromoCodesToReturn();
+
+            $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return);
+
+            $order->setCancelled();
 
             return $order;
         });
@@ -1949,7 +1952,12 @@ final class SummitOrderService
                         }
                     }
 
+                    list($tickets_to_return, $promo_codes_to_return) = $order->calculateTicketsAndPromoCodesToReturn();
+
+                    $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return);
+
                     $order->setCancelled();
+
                     Log::warning(sprintf("SummitOrderService::revokeReservedOrdersOlderThanNMinutes order %s got cancelled", $order->getId()));
                 } catch (\Exception $ex) {
                     Log::warning($ex);
@@ -2329,6 +2337,44 @@ final class SummitOrderService
 
     /**
      * @param Summit $summit
+     * @param $tickets_to_return
+     * @param $promo_codes_to_return
+     * @return void
+     */
+    private function restoreTicketsPromoCodes(Summit $summit, $tickets_to_return, $promo_codes_to_return):void{
+
+        // restore tickets and promo-codes
+
+        foreach ($tickets_to_return as $ticket_type_id => $qty) {
+            $ticket_type = $this->ticket_type_repository->getByIdExclusiveLock($ticket_type_id);
+            if(!$ticket_type instanceof SummitTicketType) continue;
+            Log::debug(sprintf("SummitOrderService::restoreTicketsPromoCodes compensating ticket type %s on %s usages",$ticket_type_id, $qty));
+            try {
+                $ticket_type->restore($qty);
+            }
+            catch(ValidationException $ex){
+                Log::warning($ex);
+            }
+        }
+
+        // compensate promo codes usages
+
+        foreach ($promo_codes_to_return as $code => $qty) {
+            $promo_code = $this->promo_code_repository->getByValueExclusiveLock($summit, $code);
+            if(!$promo_code instanceof SummitRegistrationPromoCode) continue;
+            Log::debug(sprintf("SummitOrderService::restoreTicketsPromoCodes compensating promo code %s on %s usages", $code,  $qty));
+            try {
+                $promo_code->removeUsage($qty);
+            }
+            catch (ValidationException $ex){
+                Log::warning($ex);
+            }
+        }
+
+    }
+
+    /**
+     * @param Summit $summit
      * @param int $order_id
      * @return void
      * @throws EntityNotFoundException
@@ -2336,7 +2382,11 @@ final class SummitOrderService
      */
     public function deleteOrder(Summit $summit, int $order_id)
     {
-        list($tickets_to_return, $promo_codes_to_return) = $this->tx_service->transaction(function () use ($summit, $order_id) {
+
+      $this->tx_service->transaction(function () use ($summit, $order_id) {
+
+            Log::debug(sprintf("SummitOrderService::deleteOrder summit %s order id %s", $summit, $order_id));
+
             $order = $this->order_repository->getById($order_id);
 
             if (is_null($order) || !$order instanceof SummitOrder)
@@ -2348,12 +2398,12 @@ final class SummitOrderService
                 $ticket->setCancelled();
             }
 
+            $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return);
+
             $summit->removeOrder($order);
-          
-            return [$tickets_to_return, $promo_codes_to_return];
+
         });
         
-        Event::dispatch(new OrderDeleted($order_id, $summit->getId(), $tickets_to_return, $promo_codes_to_return));
     }
 
     /**

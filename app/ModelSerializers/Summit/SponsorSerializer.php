@@ -116,6 +116,18 @@ final class SponsorSerializer extends SilverStripeSerializer
                             }
                         }
                         break;
+                    case 'featured_event':
+                        {
+                            if ($sponsor->hasFeaturedEvent()) {
+                                unset($values['featured_event_id']);
+                                $values['featured_event'] = SerializerRegistry::getInstance()->getSerializer($sponsor->getFeaturedEvent())->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, 'featured_event'),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, 'featured_event')
+                                );
+                            }
+                        }
+                        break;
                 }
             }
         }

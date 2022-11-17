@@ -38,7 +38,7 @@ final class SponsorSerializer extends SilverStripeSerializer
         'ChatLink' => 'chat_link:json_string',
         'FeaturedEventId' => 'featured_event_id:json_int',
         'HeaderImageAltText' => 'header_image_alt_text:json_string',
-        'HeaderImageAltText' => 'header_image_alt_text:json_string',
+        'SideImageAltText'   => 'side_image_alt_text:json_string',
         'HeaderImageMobileAltText' => 'header_image_mobile_alt_text:json_string',
         'CarouselAdvertiseImageAltText' => 'carousel_advertise_image_alt_text:json_string',
         'ShowLogoInEventPage' => 'show_logo_in_event_page:json_boolean',

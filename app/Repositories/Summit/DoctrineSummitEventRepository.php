@@ -366,8 +366,11 @@ final class DoctrineSummitEventRepository
             'random' => 'RAND()',
             'custom_order' => 'p.custom_order',
             'votes_count' => 'COUNT(av.id)',
-            'duration' => 'e.duration',
-            'speakers_count' => 'COUNT(sp.id)',
+            'duration' => <<<SQL
+CASE WHEN e.start_date is NULL OR e.end_date IS NULL THEN e.duration
+ELSE TIMESTAMPDIFF(SECOND, e.start_date, e.end_date) END
+SQL,
+            'speakers_count' => 'COUNT(DISTINCT(sp.id))',
         ];
     }
 

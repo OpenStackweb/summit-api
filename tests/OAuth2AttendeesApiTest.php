@@ -103,10 +103,10 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($attendee));
     }
 
-    public function testGetAttendeeByID($attendee_id = 12923){
+    public function testGetAttendeeByID($attendee_id = 1){
 
         $params = [
-            'id'          => 23,
+            'id'          => 3109,
             'attendee_id' => $attendee_id,
             'expand'      => 'member,schedule,tickets,groups,rsvp,all_affiliations'
         ];
@@ -173,7 +173,7 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
         ];
 
         $data = [
-           'member_id' => $member_id
+           'member_id' => $member_id,
         ];
 
         $headers = [
@@ -226,7 +226,7 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
         $this->assertResponseStatus(204);
     }
 
-    public function testUpdateAttendee($summit_id = 27, $attendee_id = 18502){
+    public function testUpdateAttendee($summit_id = 3109, $attendee_id = 1){
 
 
         $params = [
@@ -266,6 +266,46 @@ class OAuth2AttendeesApiTest extends ProtectedApiTest
         $this->assertResponseStatus(201);
         $attendee = json_decode($content);
         $this->assertTrue(!is_null($attendee));
+        return $attendee;
+    }
+
+    public function testUpdateAttendeeNotesUnicode($summit_id = 3315, $attendee_id = 1){
+        $admin_notes = '嘗試特殊字符';
+
+        $params = [
+            'id' => $summit_id,
+            'attendee_id' => $attendee_id,
+            'expand'   => 'admin_notes'
+        ];
+
+        $data = [
+            'first_name' => 'Clint',
+            'surname' => 'Espinoza',
+            'email' => 'clint@gmail.com',
+            'admin_notes' => $admin_notes,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitAttendeesApiController@updateAttendee",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $attendee = json_decode($content);
+        $this->assertTrue(!is_null($attendee));
+        $this->assertEquals($attendee->admin_notes, $admin_notes);
         return $attendee;
     }
 

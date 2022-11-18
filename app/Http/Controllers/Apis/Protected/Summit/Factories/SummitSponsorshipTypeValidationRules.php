@@ -37,7 +37,8 @@ final class SummitSponsorshipTypeValidationRules extends AbstractValidationRules
             'sponsor_page_use_live_event_widget' => 'sometimes|boolean',
             'sponsor_page_use_schedule_widget' => 'sometimes|boolean',
             'sponsor_page_use_banner_widget' => 'sometimes|boolean',
-            'type_id' => 'required|integer'
+            'type_id' => 'required|integer',
+            'badge_image_alt_text' => 'sometimes|nullable|string|max:255',
         ];
     }
 
@@ -58,7 +59,8 @@ final class SummitSponsorshipTypeValidationRules extends AbstractValidationRules
             'sponsor_page_use_schedule_widget' => 'sometimes|boolean',
             'sponsor_page_use_banner_widget' => 'sometimes|boolean',
             'type_id' => 'sometimes|integer',
-            'order' => 'sometimes|integer|min:1'
+            'order' => 'sometimes|integer|min:1',
+            'badge_image_alt_text' => 'sometimes|nullable|string|max:255',
         ];
     }
 }

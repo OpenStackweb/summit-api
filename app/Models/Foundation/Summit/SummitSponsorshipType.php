@@ -161,6 +161,12 @@ class SummitSponsorshipType extends BaseEntity implements IOrderable
      */
     private $badge_image;
 
+    /**
+     * @ORM\Column(name="BadgeImageAltText", type="string")
+     * @var string
+     */
+    private $badge_image_alt_text;
+
     public function __construct()
     {
         $this->order = 1;
@@ -408,5 +414,22 @@ class SummitSponsorshipType extends BaseEntity implements IOrderable
     {
         $this->badge_image = $badge_image;
     }
+
+    /**
+     * @return string
+     */
+    public function getBadgeImageAltText(): ?string
+    {
+        return $this->badge_image_alt_text;
+    }
+
+    /**
+     * @param string $badge_image_alt_text
+     */
+    public function setBadgeImageAltText(string $badge_image_alt_text): void
+    {
+        $this->badge_image_alt_text = $badge_image_alt_text;
+    }
+
 
 }

@@ -269,7 +269,7 @@ class SummitSponsorshipType extends BaseEntity implements IOrderable
             return;
         }
 
-        if(!in_array($sponsor_page_template, self::ValidExpoHallTemplates))
+        if(!in_array($sponsor_page_template, self::ValidSponsorPageTemplates))
             throw new ValidationException(sprintf("%s is not a valid sponsor template.", $sponsor_page_template));
 
         $this->sponsor_page_template = $sponsor_page_template;

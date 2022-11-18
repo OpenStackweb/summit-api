@@ -614,7 +614,7 @@ final class SummitSelectionPlanService
             if(!$member instanceof Member)
                 throw new EntityNotFoundException("Member not found.");
 
-            if($selection_plan->isAllowedMember($member))
+            if($selection_plan->containsMember($member))
                 throw new ValidationException("Member is already authorized on Selection Plan.");
 
             $selection_plan->addAllowedMember($member);
@@ -673,7 +673,7 @@ final class SummitSelectionPlanService
             if(!$member instanceof Member)
                 throw new EntityNotFoundException("Member not found.");
 
-            if(!$selection_plan->isAllowedMember($member))
+            if(!$selection_plan->containsMember($member))
                 throw new ValidationException("Member is not authorized on Selection Plan.");
 
             $selection_plan->removeAllowedMember($member);

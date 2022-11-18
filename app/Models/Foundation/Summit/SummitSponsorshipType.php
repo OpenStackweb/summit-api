@@ -431,5 +431,4 @@ class SummitSponsorshipType extends BaseEntity implements IOrderable
         $this->badge_image_alt_text = $badge_image_alt_text;
     }
 
-
 }

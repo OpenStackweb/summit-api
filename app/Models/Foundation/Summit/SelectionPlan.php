@@ -1229,6 +1229,14 @@ class SelectionPlan extends SilverstripeBaseModel
         return $this->allowed_members->contains($member);
     }
 
+    /**
+     * @param Member $member
+     * @return bool
+     */
+    public function containsMember(Member $member):bool{
+        return $this->allowed_members->contains($member);
+    }
+
     const PublicType = 'Public';
     const PrivateType = 'Private';
 

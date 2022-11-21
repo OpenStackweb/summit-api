@@ -566,15 +566,18 @@ final class SummitSelectionPlanService
                         ['type_id' => $presentation_action_type->getIdentifier()])
                 );
             }
+
+            $current_order = $selection_plan->getPresentationActionTypeOrder($presentation_action_type);
+            $new_order = isset($payload['order']) ? intval($payload['order']) : null;
+
             if (!$selection_plan->isAllowedPresentationActionType($presentation_action_type)) {
                 $selection_plan->addPresentationActionType($presentation_action_type);
+            } else if ($new_order == null || $new_order === $current_order) {
+                throw new ValidationException("Presentation Action Type is already assigned to this Selection Plan in the order specified.");
             }
 
-            if (isset($payload['order'])) {
-                $new_order = intval($payload['order']);
-                $current_order = $selection_plan->getPresentationActionTypeOrder($presentation_action_type);
-                if ($current_order != $new_order)
-                    $selection_plan->recalculatePresentationActionTypeOrder($presentation_action_type, $new_order);
+            if ($new_order != null && $current_order != $new_order) {
+                $selection_plan->recalculatePresentationActionTypeOrder($presentation_action_type, $new_order);
             }
 
             return $presentation_action_type;

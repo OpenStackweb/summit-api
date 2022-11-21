@@ -5709,7 +5709,7 @@ SQL;
     {
         if (!$this->presentation_action_types->contains($presentation_action_type)) return $this;
         $this->presentation_action_types->removeElement($presentation_action_type);
-        $presentation_action_type->setSummit(null);
+        $presentation_action_type->clearSummit();
         return $this;
     }
 

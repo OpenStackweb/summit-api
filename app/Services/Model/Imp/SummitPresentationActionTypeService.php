@@ -84,6 +84,12 @@ final class SummitPresentationActionTypeService
                 throw new EntityNotFoundException(sprintf("PresentationActionType %s not found.", $action_type_id));
             }
 
+            //check if target action type is attached to any selection plan
+            if (!$action->getSelectionPlans()->isEmpty()) {
+                throw new ValidationException(sprintf(
+                    "PresentationActionType %s is attached to at least one selection plan.", $action_type_id));
+            }
+
             $summit->removePresentationActionType($action);
         });
     }

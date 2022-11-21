@@ -320,10 +320,11 @@ interface ISummitOrderService extends IProcessPaymentService
     /**
      * @param int $order_id
      * @param int $ticket_id
+     * @param array $payload
      * @return SummitAttendeeTicket
      * @throws EntityNotFoundException
      */
-    public function reInviteAttendee(int $order_id, int $ticket_id):SummitAttendeeTicket;
+    public function reInviteAttendee(int $order_id, int $ticket_id, array $payload):SummitAttendeeTicket;
 
     /**
      * @param Summit $summit

@@ -34,14 +34,13 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
     const DEFAULT_TEMPLATE = 'REGISTRATION_ATTENDEE_TICKET';
 
     /**
-     * SummitAttendeeTicketEmail constructor.
      * @param SummitAttendeeTicket $ticket
+     * @param array $payload
      */
-    public function __construct(SummitAttendeeTicket $ticket)
+    public function __construct(SummitAttendeeTicket $ticket, array $payload = [])
     {
         Log::debug("SummitAttendeeTicketEmail::__construct");
 
-        $payload = [];
         $attendee = $ticket->getOwner();
         $summit = $attendee->getSummit();
         $order = $ticket->getOrder();

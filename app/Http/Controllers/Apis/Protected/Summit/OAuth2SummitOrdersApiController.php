@@ -639,6 +639,7 @@ final class OAuth2SummitOrdersApiController
     public function reInviteAttendee($order_id, $ticket_id)
     {
         return $this->processRequest(function () use ($order_id, $ticket_id) {
+
             $current_user = $this->resource_server_context->getCurrentUser();
             if (is_null($current_user))
                 return $this->error403();
@@ -651,7 +652,10 @@ final class OAuth2SummitOrdersApiController
                 return $this->error403();
             }
 
-            $ticket = $this->service->reInviteAttendee(intval($order_id), intval($ticket_id));
+            $payload = $this->getJsonPayload(['message' => 'sometimes|string|max:1024'], true);
+
+            $ticket = $this->service->reInviteAttendee(intval($order_id), intval($ticket_id), $payload);
+
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)->serialize
             (
                 SerializerUtils::getExpand(),

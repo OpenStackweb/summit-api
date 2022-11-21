@@ -23,10 +23,10 @@ use models\summit\SummitRegistrationDiscountCode;
 class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
 {
     /**
-     * InviteAttendeeTicketEditionMail constructor.
      * @param SummitAttendeeTicket $ticket
+     * @param array $payload
      */
-    public function __construct(SummitAttendeeTicket $ticket)
+    public function __construct(SummitAttendeeTicket $ticket, array $payload = [])
     {
 
         Log::debug("InviteAttendeeTicketEditionMail::__construct");
@@ -34,7 +34,6 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
         $owner = $ticket->getOwner();
         $order = $ticket->getOrder();
         $summit = $order->getSummit();
-        $payload = [];
 
         $payload['order_owner_full_name'] = $order->getOwnerFullName();
         $payload['order_owner_company'] = $order->getOwnerCompanyName();

@@ -1419,17 +1419,29 @@ final class SummitOrderService
     /**
      * @param int $order_id
      * @param int $ticket_id
+     * @param array $payload
      * @return SummitAttendeeTicket
      * @throws \Exception
      */
-    public function reInviteAttendee(int $order_id, int $ticket_id): SummitAttendeeTicket
+    public function reInviteAttendee(int $order_id, int $ticket_id, array $payload): SummitAttendeeTicket
     {
 
-        return $this->tx_service->transaction(function () use ($order_id, $ticket_id) {
+        return $this->tx_service->transaction(function () use ($order_id, $ticket_id, $payload) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitOrderService::reInviteAttendee order id %s ticket id %s payload %s",
+                    $order_id,
+                    $ticket_id,
+                    json_encode($payload)
+                )
+            );
 
             $order = $this->order_repository->getByIdExclusiveLock($order_id);
 
-            if (is_null($order) || !$order instanceof SummitOrder)
+            if (!$order instanceof SummitOrder)
                 throw new EntityNotFoundException("order not found");
 
             $ticket = $order->getTicketById($ticket_id);
@@ -1448,7 +1460,7 @@ final class SummitOrderService
             $ticket->generateQRCode();
             $ticket->generateHash();
 
-            $attendee->sendInvitationEmail($ticket);
+            $attendee->sendInvitationEmail($ticket,false, $payload);
 
             return $ticket;
         });

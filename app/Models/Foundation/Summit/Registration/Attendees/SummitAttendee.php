@@ -429,8 +429,15 @@ class SummitAttendee extends SilverstripeBaseModel
     /**
      * @param SummitAttendeeTicket $ticket
      * @param bool $overrideTicketOwnerIsSameAsOrderOwnerRule
+     * @param array $payload
+     * @throws \Exception
      */
-    public function sendInvitationEmail(SummitAttendeeTicket $ticket, bool $overrideTicketOwnerIsSameAsOrderOwnerRule = false)
+    public function sendInvitationEmail
+    (
+        SummitAttendeeTicket $ticket,
+        bool $overrideTicketOwnerIsSameAsOrderOwnerRule = false,
+        array $payload = []
+    ):void
     {
 
         $email = $this->getEmail();
@@ -439,6 +446,7 @@ class SummitAttendee extends SilverstripeBaseModel
         Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s", $email));
 
         if ($ticket->getOwnerEmail() != $this->getEmail()) return;
+
         if (!$ticket->isPaid()) {
             Log::warning(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket is not paid", $email));
             return;
@@ -447,6 +455,7 @@ class SummitAttendee extends SilverstripeBaseModel
             Log::warning(sprintf("SummitAttendee::sendInvitationEmail attendee %s ticket is not active", $email));
             return;
         }
+
         $this->updateStatus();
         $ticket->generateHash();
 
@@ -455,11 +464,12 @@ class SummitAttendee extends SilverstripeBaseModel
             // adds a threshold of 10 minutes to avoid duplicates emails
             if (Cache::add(sprintf("%s_emit_ticket", $key), true, 10)) {
                 Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s sending SummitAttendeeTicketEmail", $email));
-                SummitAttendeeTicketEmail::dispatch($ticket);
+                SummitAttendeeTicketEmail::dispatch($ticket, $payload);
                 $ticket->getOwner()->markInvitationEmailSentDate();
             }
             return;
         }
+
         Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s is not complete", $email));
         $order = $ticket->getOrder();
         // if order owner is ticket owner then dont sent this email
@@ -471,7 +481,7 @@ class SummitAttendee extends SilverstripeBaseModel
             // adds a threshold of 10 minutes to avoid duplicates emails
             if (Cache::add(sprintf("%s_edit_ticket", $key), true, 10)) {
                 Log::debug(sprintf("SummitAttendee::sendInvitationEmail attendee %s sending InviteAttendeeTicketEditionMail", $email));
-                InviteAttendeeTicketEditionMail::dispatch($ticket);
+                InviteAttendeeTicketEditionMail::dispatch($ticket, $payload);
                 $ticket->getOwner()->markInvitationEmailSentDate();
             }
         }

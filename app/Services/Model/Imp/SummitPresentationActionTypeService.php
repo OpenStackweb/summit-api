@@ -19,6 +19,7 @@ use App\Services\Model\AbstractService;
 use App\Services\Model\ISummitPresentationActionTypeService;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
+use models\exceptions\ValidationException;
 use models\summit\PresentationActionType;
 use models\summit\Summit;
 /**
@@ -53,6 +54,12 @@ final class SummitPresentationActionTypeService
     {
         return $this->tx_service->transaction(function() use($summit, $payload){
             $action = PresentationActionTypeFactory::build($payload);
+
+            if ($summit->getPresentationActionTypeByLabel($action->getLabel()) != null) {
+                throw new ValidationException(
+                    "Summit {$summit->getId()} already contains a Presentation Action Type with label {$action->getLabel()}.");
+            }
+
             $summit->addPresentationActionType($action);
             return $action;
         });
@@ -68,6 +75,16 @@ final class SummitPresentationActionTypeService
             $action = $summit->getPresentationActionTypeById($action_type_id);
             if(is_null($action)){
                 throw new EntityNotFoundException(sprintf("PresentationActionType %s not found.", $action_type_id));
+            }
+
+            $registered_action_type = null;
+            if(isset($payload['label'])) {
+                $registered_action_type = $summit->getPresentationActionTypeByLabel(trim($payload['label']));
+            }
+
+            if ($registered_action_type != null && $registered_action_type->getId() != $action_type_id) {
+                throw new ValidationException(
+                    "Summit {$summit->getId()} already contains a Presentation Action Type with label {$registered_action_type->getLabel()}.");
             }
             return PresentationActionTypeFactory::populate($action, $payload);
         });

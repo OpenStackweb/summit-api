@@ -5725,6 +5725,18 @@ SQL;
         return $action === false ? null : $action;
     }
 
+    /**
+     * @param string $label
+     * @return PresentationActionType|null
+     */
+    public function getPresentationActionTypeByLabel(string $label): ?PresentationActionType
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('label', trim($label)));
+        $action = $this->presentation_action_types->matching($criteria)->first();
+        return $action === false ? null : $action;
+    }
+
     public function synchAllAttendeesStatus(): void
     {
         foreach ($this->attendees as $attendee) {

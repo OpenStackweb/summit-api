@@ -74,7 +74,6 @@ interface ISummitSelectionPlanService
      */
     public function deleteTrackGroupToSelectionPlan(Summit $summit, $selection_plan_id, $track_group_id);
 
-
     /**
      * @param Summit $summit
      * @param string $status
@@ -130,7 +129,6 @@ interface ISummitSelectionPlanService
      */
     public function resolvePresentationCategoryChangeRequest(Summit $summit, int $selection_plan_id, int $presentation_id, int $category_change_request_id, array $payload):?SummitCategoryChange;
 
-
     /**
      * @param Summit $summit
      * @param int $selection_plan_id
@@ -166,10 +164,29 @@ interface ISummitSelectionPlanService
     /**
      * @param Summit $summit
      * @param int $selection_plan_id
+     * @param int $member_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function addAllowedMember(Summit $summit, int $selection_plan_id, int $member_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $selection_plan_id
      * @param int $type_id
      * @return void
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
     public function removeAllowedPresentationActionType(Summit $summit, int $selection_plan_id, int $type_id);
+
+    /**
+     * @param Summit $summit
+     * @param int $selection_plan_id
+     * @param int $member_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function removeAllowedMember(Summit $summit, int $selection_plan_id, int $member_id):void;
+
 }

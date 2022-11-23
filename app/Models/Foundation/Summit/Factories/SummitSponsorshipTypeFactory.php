@@ -62,6 +62,9 @@ final class SummitSponsorshipTypeFactory
         if(isset($payload['sponsor_page_use_banner_widget']))
             $type->setSponsorPageUseBannerWidget(boolval($payload['sponsor_page_use_banner_widget']));
 
+        if(isset($payload['badge_image_alt_text']))
+            $type->setBadgeImageAltText(trim($payload['badge_image_alt_text']));
+
         return $type;
     }
 }

@@ -14,6 +14,7 @@
 use App\Models\Foundation\Summit\Repositories\ISponsorshipTypeRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISponsorshipTypeService;
+use Illuminate\Support\Facades\Log;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
@@ -150,14 +151,15 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
     public function update($id)
     {
         return $this->processRequest(function() use($id){
+            Log::debug(sprintf("OAuth2SponsorshipTypeApiController::update id %s", json_encode($id)));
             $payload = $this->getJsonPayload(
                 SponsorshipTypeValidationRulesFactory::buildForUpdate(),
                 true
             );
 
-            $sponsorship_type = $this->service->updateSponsorShipType($id, $payload);
+            $sponsorship_type = $this->service->updateSponsorShipType(intval($id), $payload);
 
-            return $this->update(SerializerRegistry::getInstance()->getSerializer($sponsorship_type)->serialize
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($sponsorship_type)->serialize
             (
                 SerializerUtils::getExpand(),
                 SerializerUtils::getFields(),

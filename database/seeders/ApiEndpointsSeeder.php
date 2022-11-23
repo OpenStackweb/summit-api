@@ -6489,7 +6489,47 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
-
+            // allowed-members
+            [
+                'name' => 'get-selection-plan-allowed-members',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-members',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'attach-selection-plan-allowed-member',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-members/{member_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'detach-selection-plan-allowed-member',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-members/{member_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             // selection plan presentations
             [
                 'name' => 'get-selection-plan-presentations',

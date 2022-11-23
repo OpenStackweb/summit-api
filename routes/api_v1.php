@@ -319,6 +319,16 @@ Route::group(array('prefix' => 'summits'), function () {
                     });
                 });
 
+                // allowed members
+
+                Route::group(['prefix' => 'allowed-members'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@getAllowedMembers']);
+                    Route::group(['prefix' => '{member_id}'], function () {
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addAllowedMember']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@removeAllowedMember']);
+                    });
+                });
+
                 // presentations
 
                 Route::group(['prefix' => 'presentations'], function () {

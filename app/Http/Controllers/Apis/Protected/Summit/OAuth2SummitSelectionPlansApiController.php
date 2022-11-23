@@ -1524,4 +1524,92 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
             return $this->deleted();
         });
     }
+
+    /**
+     * Allowed Members
+     */
+
+    /**
+     * @param $id
+     * @param $selection_plan_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getAllowedMembers($id, $selection_plan_id){
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($id);
+        if (is_null($summit)) return $this->error404();
+
+        $selection_plan = $summit->getSelectionPlanById(intval($selection_plan_id));
+        if(is_null($selection_plan)) return $this->error404();
+
+        return $this->_getAll(
+            function () {
+                return [
+                    'member_full_name' => ['@@', '=@'],
+                    'member_email' => ['@@', '=@']
+                ];
+            },
+            function () {
+                return [
+                    'member_full_name' => 'sometimes|string',
+                    'member_email' => 'sometimes|string',
+                ];
+            },
+            function () {
+                return [
+                    'member_full_name',
+                ];
+            },
+            function ($filter) use ($summit, $selection_plan_id) {
+                if ($filter instanceof Filter) {
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+                    $filter->addFilterCondition(FilterElement::makeEqual('id', $selection_plan_id));
+                }
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Admin;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) {
+                return $this->repository->getAllAllowedMembersByPage
+                (
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
+    }
+    /**
+     * @param $id
+     * @param $selection_plan_id
+     * @param $member_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function addAllowedMember($id, $selection_plan_id, $member_id){
+        return $this->processRequest(function () use ($id, $selection_plan_id, $member_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($id);
+            if (is_null($summit)) return $this->error404();
+
+            $this->selection_plan_service->addAllowedMember($summit, intval($selection_plan_id), intval($member_id));
+            return $this->updated();
+        });
+    }
+
+    /**
+     * @param $id
+     * @param $selection_plan_id
+     * @param $member_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function removeAllowedMember($id, $selection_plan_id, $member_id){
+        return $this->processRequest(function () use ($id, $selection_plan_id, $member_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($id);
+            if (is_null($summit)) return $this->error404();
+
+            $this->selection_plan_service->removeAllowedMember($summit, intval($selection_plan_id), intval($member_id));
+            return $this->deleted();
+        });
+    }
 }

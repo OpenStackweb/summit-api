@@ -11,8 +11,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Models\Foundation\Main\IGroup;
+use LaravelDoctrine\ORM\Facades\Registry;
 use models\summit\SummitOrderExtraQuestionTypeConstants;
+use models\utils\SilverstripeBaseModel;
+
 /**
  * Class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest
  */
@@ -23,7 +27,7 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
 
     use InsertMemberTestData;
 
-    protected function setUp():void
+    protected function setUp(): void
     {
         $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
@@ -32,32 +36,34 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         self::$em->persist(self::$summit);
         self::$em->persist(self::$summit_permission_group);
         self::$em->flush();
-        self::$summit->addTrackChair(self::$member, [ self::$defaultTrack ] );
+        self::$summit->addTrackChair(self::$member, [self::$defaultTrack]);
         self::$em->persist(self::$summit);
         self::$em->flush();
     }
 
-    protected function tearDown():void
+    protected function tearDown(): void
     {
         self::clearMemberTestData();
         self::clearSummitTestData();
         parent::tearDown();
     }
 
-    private function getHeaders() {
+    private function getHeaders()
+    {
         return [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
     }
 
-    public function testGetSelectionPlan(){
+    public function testGetSelectionPlan()
+    {
 
         $params = [
-            'id'                => self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
-            'expand'            =>
-                implode(',' , [
+            'expand' =>
+                implode(',', [
                     'track_groups',
                     'extra_questions',
                     'extra_questions.values',
@@ -81,13 +87,14 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
         $selectionPlan = json_decode($content);
         $this->assertTrue(!is_null($selectionPlan));
-        $this->assertTrue($selectionPlan->id >0);
-        $this->assertTrue(count($selectionPlan->track_chair_rating_types) >0);
-        $this->assertTrue(count($selectionPlan->track_chair_rating_types[0]->score_types) >0);
+        $this->assertTrue($selectionPlan->id > 0);
+        $this->assertTrue(count($selectionPlan->track_chair_rating_types) > 0);
+        $this->assertTrue(count($selectionPlan->track_chair_rating_types[0]->score_types) > 0);
         return $selectionPlan;
     }
 
-    public function testAddSelectionPlan(){
+    public function testAddSelectionPlan()
+    {
         $params = [
             'id' => self::$summit->getId(),
         ];
@@ -98,10 +105,10 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
             'allow_new_presentations' => true,
             'max_submission_allowed_per_user' => 1,
             'submission_begin_date' => 1649108093,
-            'submission_end_date'   => 1649109093,
-            'presentation_creator_notification_email_template'      => 'creator_email_template',
-            'presentation_moderator_notification_email_template'    => 'moderator_email_template',
-            'presentation_speaker_notification_email_template'      => 'speaker_email_template',
+            'submission_end_date' => 1649109093,
+            'presentation_creator_notification_email_template' => 'creator_email_template',
+            'presentation_moderator_notification_email_template' => 'moderator_email_template',
+            'presentation_speaker_notification_email_template' => 'speaker_email_template',
         ];
 
         $response = $this->action(
@@ -121,16 +128,17 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($selectionPlan));
     }
 
-    public function testUpdateSelectionPlan(){
+    public function testUpdateSelectionPlan()
+    {
         $params = [
-            'id'                => self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
         ];
 
         $data = [
-            'presentation_creator_notification_email_template'      => 'creator_email_template',
-            'presentation_moderator_notification_email_template'    => '',
-            'presentation_speaker_notification_email_template'      => 'speaker_email_template',
+            'presentation_creator_notification_email_template' => 'creator_email_template',
+            'presentation_moderator_notification_email_template' => '',
+            'presentation_speaker_notification_email_template' => 'speaker_email_template',
         ];
 
         $response = $this->action(
@@ -150,11 +158,12 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($selectionPlan));
     }
 
-    public function testAttachPresentationType(){
+    public function testAttachPresentationType()
+    {
         $params = [
-            'id'                => self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
-            'event_type_id'     => self::$defaultPresentationType->getId(),
+            'event_type_id' => self::$defaultPresentationType->getId(),
         ];
 
         $this->action(
@@ -171,11 +180,12 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         $this->assertTrue(self::$default_selection_plan->getEventTypes()->count() >= 1);
     }
 
-    public function testAttachNonPresentationEventType(){
+    public function testAttachNonPresentationEventType()
+    {
         $params = [
-            'id'                => self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
-            'event_type_id'     => self::$defaultEventType->getId(),
+            'event_type_id' => self::$defaultEventType->getId(),
         ];
 
         $this->action(
@@ -191,11 +201,12 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         $this->assertResponseStatus(412);
     }
 
-    public function testDetachEventType(){
+    public function testDetachEventType()
+    {
         $params = [
-            'id'                => self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
-            'event_type_id'     => self::$defaultEventType->getId(),
+            'event_type_id' => self::$defaultEventType->getId(),
         ];
 
         $this->action(
@@ -221,19 +232,20 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         $this->assertResponseStatus(204);
     }
 
-    public function testGetPresentationWithRatingTypes() {
+    public function testGetPresentationWithRatingTypes()
+    {
 
         $params = [
-            'id'                => self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
-            'page'              => 1,
-            'per_page'          => 10,
-            'expand'            => 'track_chair_scores,track_chair_scores.type,track_chair_scores.type.type'
+            'page' => 1,
+            'per_page' => 10,
+            'expand' => 'track_chair_scores,track_chair_scores.type,track_chair_scores.type.type'
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -250,5 +262,105 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         $this->assertResponseStatus(200);
         $presentations = json_decode($content);
         $this->assertTrue(!is_null($presentations));
+    }
+
+    public function testAddAllowedMember()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'member_id' => self::$member->getId()
+        ];
+
+        $this->action(
+            "PUT",
+            "OAuth2SummitSelectionPlansApiController@addAllowedMember",
+            $params,
+            [],
+            [],
+            [],
+            $this->getHeaders()
+        );
+
+        $this->assertResponseStatus(201);
+        $this->assertTrue(self::$default_selection_plan->getAllowedMembers()->count() >= 1);
+    }
+
+    public function testAddAllowedMemberAndGet()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'member_id' => self::$member->getId()
+        ];
+
+        $this->action(
+            "PUT",
+            "OAuth2SummitSelectionPlansApiController@addAllowedMember",
+            $params,
+            [],
+            [],
+            [],
+            $this->getHeaders()
+        );
+
+        $this->assertResponseStatus(201);
+        $this->assertTrue(self::$default_selection_plan->getAllowedMembers()->count() >= 1);
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'filter' => 'member_full_name@@'. self::$member->getFullName()
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSelectionPlansApiController@getAllowedMembers",
+            $params,
+            [],
+            [],
+            [],
+            $this->getHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $page = json_decode($content);
+        $this->assertTrue(!is_null($page));
+        $this->assertNotEmpty($page->data);
+    }
+
+    public function testAddAllowedMemberDelete()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'member_id' => self::$member->getId()
+        ];
+
+        $this->action(
+            "PUT",
+            "OAuth2SummitSelectionPlansApiController@addAllowedMember",
+            $params,
+            [],
+            [],
+            [],
+            $this->getHeaders()
+        );
+
+        $this->assertResponseStatus(201);
+        $this->assertTrue(self::$default_selection_plan->getAllowedMembers()->count() >= 1);
+
+        $this->action(
+            "DELETE",
+            "OAuth2SummitSelectionPlansApiController@removeAllowedMember",
+            $params,
+            [],
+            [],
+            [],
+            $this->getHeaders()
+        );
+
+        $this->assertResponseStatus(204);
     }
 }

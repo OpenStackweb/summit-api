@@ -139,12 +139,12 @@ Route::group(['prefix' => 'summits'], function () {
         // events
         Route::group(['prefix' => 'events'], function () {
             Route::group(['prefix' => 'published'], function () {
-                Route::get('', ['middleware' => 'cache:1200', 'uses' => 'OAuth2SummitEventsApiController@getScheduledEvents']);
+                Route::get('', [ 'uses' => 'OAuth2SummitEventsApiController@getScheduledEvents']);
             });
 
             Route::group(array('prefix' => '{event_id}'), function () {
                 Route::group(['prefix' => 'published'], function () {
-                    Route::get('', ['middleware' => 'cache:' . Config::get('cache_api_response.get_published_event_response_lifetime', 300), 'uses' => 'OAuth2SummitEventsApiController@getScheduledEvent']);
+                    Route::get('', ['uses' => 'OAuth2SummitEventsApiController@getScheduledEvent']);
                 });
             });
 

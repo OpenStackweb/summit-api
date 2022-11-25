@@ -106,7 +106,9 @@ return [
             |
             */
             'events'     => [
-                'listeners'   => [],
+                'listeners'   => [
+                    Doctrine\ORM\Events::onFlush => App\Audit\AuditEventListener::class
+                ],
                 'subscribers' => []
             ],
             'filters'    => [],

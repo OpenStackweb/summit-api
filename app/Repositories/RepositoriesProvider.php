@@ -91,6 +91,7 @@ use models\main\AssetsSyncRequest;
 use models\main\Company;
 use models\main\File;
 use models\main\Group;
+use models\main\IAuditLogRepository;
 use models\main\IOrganizationRepository;
 use models\main\Organization;
 use models\main\ProjectSponsorshipType;
@@ -143,6 +144,7 @@ use models\summit\SummitSponsorshipType;
 use models\summit\SummitTaxType;
 use models\summit\SummitTicketType;
 use models\summit\SummitTrackChair;
+use repositories\main\DoctrineAuditLogRepository;
 use repositories\main\DoctrineLegalDocumentRepository;
 
 /**
@@ -781,5 +783,11 @@ final class RepositoriesProvider extends ServiceProvider
                 return EntityManager::getRepository(SummitSponsorshipType::class);
             }
         );
+
+        App::singleton(
+            IAuditLogRepository::class,
+            function () {
+                return EntityManager::getRepository(DoctrineAuditLogRepository::class);
+            });
     }
 }

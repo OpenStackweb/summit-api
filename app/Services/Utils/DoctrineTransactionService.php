@@ -11,14 +11,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\TransactionIsolationLevel;
-use Illuminate\Support\Facades\Log;
-use libs\utils\ITransactionService;
+
+use App\Audit\AuditEventListener;
 use Closure;
-use LaravelDoctrine\ORM\Facades\Registry;
 use Doctrine\DBAL\Exception\RetryableException;
+use Doctrine\DBAL\TransactionIsolationLevel;
+use Doctrine\ORM\Events;
 use Exception;
+use Illuminate\Support\Facades\Log;
+use LaravelDoctrine\ORM\Facades\Registry;
+use libs\utils\ITransactionService;
+
 /**
  * Class DoctrineTransactionService
  * @package services\utils
@@ -75,6 +78,7 @@ final class DoctrineTransactionService implements ITransactionService
                 if (!$em->isOpen()) {
                     Log::warning("DoctrineTransactionService::transaction: entity manager is closed!, trying to re open...");
                     $em = Registry::resetManager($this->manager_name);
+
                     // new entity manager
                     $con = $em->getConnection();
                 }

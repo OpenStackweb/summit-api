@@ -65,6 +65,12 @@ final class SummitSponsorshipTypeFactory
         if(isset($payload['badge_image_alt_text']))
             $type->setBadgeImageAltText(trim($payload['badge_image_alt_text']));
 
+        if(isset($payload['should_display_on_lobby_page']))
+            $type->setShouldDisplayOnLobbyPage(boolval($payload['should_display_on_lobby_page']));
+
+        if(isset($payload['should_display_on_expo_hall_page']))
+            $type->setShouldDisplayOnExpoHallPage(boolval($payload['should_display_on_expo_hall_page']));
+
         return $type;
     }
 }

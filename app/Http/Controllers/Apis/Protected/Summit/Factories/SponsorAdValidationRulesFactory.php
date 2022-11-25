@@ -30,7 +30,7 @@ final class SponsorAdValidationRulesFactory extends AbstractValidationRulesFacto
         return [
             'link' => 'required|url|max:255',
             'text' => 'required|string|max:255',
-            'alt' => 'required|string|max:255',
+            'alt' => 'sometimes|string|max:255',
         ];
     }
 

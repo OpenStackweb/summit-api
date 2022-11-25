@@ -136,6 +136,18 @@ class SummitSponsorshipType extends BaseEntity implements IOrderable
     private $sponsor_page_use_schedule_widget;
 
     /**
+     * @ORM\Column(name="ShouldDisplayOnExpoHallPage", type="boolean")
+     * @var boolean
+     */
+    private $should_display_on_expo_hall_page;
+
+    /**
+     * @ORM\Column(name="ShouldDisplayOnLobbyPage", type="boolean")
+     * @var boolean
+     */
+    private $should_display_on_lobby_page;
+
+    /**
      * @ORM\Column(name="SponsorPageShouldUseBannerWidget", type="boolean")
      * @var boolean
      */
@@ -174,6 +186,8 @@ class SummitSponsorshipType extends BaseEntity implements IOrderable
         $this->sponsor_page_use_live_event_widget = true;
         $this->sponsor_page_use_schedule_widget = true;
         $this->sponsor_page_use_banner_widget = true;
+        $this->should_display_on_expo_hall_page = true;
+        $this->should_display_on_lobby_page = true;
     }
 
     /**
@@ -429,6 +443,38 @@ class SummitSponsorshipType extends BaseEntity implements IOrderable
     public function setBadgeImageAltText(string $badge_image_alt_text): void
     {
         $this->badge_image_alt_text = $badge_image_alt_text;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isShouldDisplayOnExpoHallPage(): bool
+    {
+        return $this->should_display_on_expo_hall_page;
+    }
+
+    /**
+     * @param bool $should_display_on_expo_hall_page
+     */
+    public function setShouldDisplayOnExpoHallPage(bool $should_display_on_expo_hall_page): void
+    {
+        $this->should_display_on_expo_hall_page = $should_display_on_expo_hall_page;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isShouldDisplayOnLobbyPage(): bool
+    {
+        return $this->should_display_on_lobby_page;
+    }
+
+    /**
+     * @param bool $should_display_on_lobby_page
+     */
+    public function setShouldDisplayOnLobbyPage(bool $should_display_on_lobby_page): void
+    {
+        $this->should_display_on_lobby_page = $should_display_on_lobby_page;
     }
 
 }

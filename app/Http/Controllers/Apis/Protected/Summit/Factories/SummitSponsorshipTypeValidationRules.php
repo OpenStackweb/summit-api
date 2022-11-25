@@ -39,6 +39,8 @@ final class SummitSponsorshipTypeValidationRules extends AbstractValidationRules
             'sponsor_page_use_banner_widget' => 'sometimes|boolean',
             'type_id' => 'required|integer',
             'badge_image_alt_text' => 'sometimes|nullable|string|max:255',
+            'should_display_on_expo_hall_page' => 'sometimes|boolean',
+            'should_display_on_lobby_page' => 'sometimes|boolean',
         ];
     }
 
@@ -61,6 +63,8 @@ final class SummitSponsorshipTypeValidationRules extends AbstractValidationRules
             'type_id' => 'sometimes|integer',
             'order' => 'sometimes|integer|min:1',
             'badge_image_alt_text' => 'sometimes|nullable|string|max:255',
+            'should_display_on_expo_hall_page' => 'sometimes|boolean',
+            'should_display_on_lobby_page' => 'sometimes|boolean',
         ];
     }
 }

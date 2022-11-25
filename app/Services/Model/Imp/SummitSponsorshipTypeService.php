@@ -155,7 +155,13 @@ implements ISummitSponsorshipTypeService
      */
     public function delete(Summit $summit, int $sponsorship_id): void
     {
-        // TODO: Implement delete() method.
+        $this->tx_service->transaction(function() use($summit, $sponsorship_id ){
+            $sponsorship_type = $summit->getSummitSponsorshipTypeById($sponsorship_id);
+            if(is_null($sponsorship_type))
+                throw new EntityNotFoundException('Summit Sponsorship not found.');
+
+            $summit->removeSponsorshipType($sponsorship_type);
+        });
     }
 
     /**

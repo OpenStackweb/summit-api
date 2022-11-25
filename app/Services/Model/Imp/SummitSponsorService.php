@@ -109,7 +109,8 @@ final class SummitSponsorService
             $payload['company'] = $company;
             $payload['sponsorship'] = $sponsorship_type;
 
-            if($featured_event_id){
+            if($featured_event_id && $featured_event_id > 0){
+
                 $featured_event = $summit->getEvent($featured_event_id);
                 if(is_null($featured_event))
                     throw new EntityNotFoundException("Featured Event not found.");
@@ -164,11 +165,17 @@ final class SummitSponsorService
             }
 
             if(isset($payload['featured_event_id'])){
-                $featured_event = $summit->getEvent(intval($payload['featured_event_id']));
-                if(is_null($featured_event))
-                    throw new EntityNotFoundException("Featured Event not found.");
 
-                $payload['featured_event'] = $featured_event;
+                $summit_sponsor->clearFeaturedEvent();
+                $featured_event_id = intval($payload['featured_event_id']);
+                if($featured_event_id > 0 ) {
+
+                    $featured_event = $summit->getEvent($featured_event_id);
+                    if (is_null($featured_event))
+                        throw new EntityNotFoundException("Featured Event not found.");
+
+                    $payload['featured_event'] = $featured_event;
+                }
             }
 
             if (!is_null($company))

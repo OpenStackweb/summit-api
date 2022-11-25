@@ -37,6 +37,8 @@ final class SummitSponsorshipTypeSerializer extends AbstractSerializer
         'BadgeImageAltText'  => 'badge_image_alt_text:json_string',
         'SummitID' => 'summit_id:json_int',
         'Order' => 'order:json_int',
+        'ShouldDisplayOnExpoHallPage' => 'should_display_on_expo_hall_page:json_boolean',
+        'ShouldDisplayOnLobbyPage' => 'should_display_on_lobby_page:json_boolean',
     ];
 
     protected static $expand_mappings = [

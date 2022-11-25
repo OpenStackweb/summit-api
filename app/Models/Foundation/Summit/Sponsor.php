@@ -717,6 +717,10 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         return $this->featured_event;
     }
 
+    public function clearFeaturedEvent():void{
+        $this->featured_event = null;
+    }
+
     /**
      * @param SummitEvent $featured_event
      */

@@ -50,8 +50,8 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
         'track_chair_rating_types',
         'allowed_presentation_action_types',
         'allowed_members',
+        'allowed_presentation_questions',
     ];
-
 
     /**
      * @param null $expand
@@ -117,6 +117,14 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
                 $allowed_members[] = $m->getId();
             }
             $values['allowed_members'] = $allowed_members;
+        }
+
+        if(in_array('allowed_presentation_questions', $relations)){
+            $allowed_presentation_questions = [];
+            foreach ($selection_plan->getAllowedPresentationQuestions() as $question){
+                $allowed_presentation_questions[] = $question->getType();
+            }
+            $values['allowed_presentation_questions'] = $allowed_presentation_questions;
         }
 
         return $values;

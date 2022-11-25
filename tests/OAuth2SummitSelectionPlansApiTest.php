@@ -14,6 +14,8 @@
 
 use App\Models\Foundation\Main\IGroup;
 use LaravelDoctrine\ORM\Facades\Registry;
+use models\summit\Presentation;
+use models\summit\SummitEvent;
 use models\summit\SummitOrderExtraQuestionTypeConstants;
 use models\utils\SilverstripeBaseModel;
 
@@ -109,6 +111,7 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
             'presentation_creator_notification_email_template' => 'creator_email_template',
             'presentation_moderator_notification_email_template' => 'moderator_email_template',
             'presentation_speaker_notification_email_template' => 'speaker_email_template',
+
         ];
 
         $response = $this->action(
@@ -126,6 +129,7 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         $this->assertResponseStatus(201);
         $selectionPlan = json_decode($content);
         $this->assertTrue(!is_null($selectionPlan));
+        $this->assertNotEmpty($selectionPlan->allowed_presentation_questions);
     }
 
     public function testUpdateSelectionPlan()
@@ -133,12 +137,14 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         $params = [
             'id' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
+
         ];
 
         $data = [
             'presentation_creator_notification_email_template' => 'creator_email_template',
             'presentation_moderator_notification_email_template' => '',
             'presentation_speaker_notification_email_template' => 'speaker_email_template',
+            'allowed_presentation_questions' => [SummitEvent::FieldLevel, SummitEvent::FieldTitle, Presentation::FieldWillAllSpeakersAttend]
         ];
 
         $response = $this->action(
@@ -156,6 +162,8 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         $this->assertResponseStatus(201);
         $selectionPlan = json_decode($content);
         $this->assertTrue(!is_null($selectionPlan));
+        $this->assertNotEmpty($selectionPlan->allowed_presentation_questions);
+        $this->assertTrue(count($selectionPlan->allowed_presentation_questions) === 3);
     }
 
     public function testAttachPresentationType()

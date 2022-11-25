@@ -20,11 +20,9 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use App\Models\Utils\TimeZoneEntity;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
-use models\main\Group;
 use models\main\Member;
 use models\summit\AllowedPresentationActionType;
 use models\summit\Presentation;
@@ -101,19 +99,19 @@ class SelectionPlan extends SilverstripeBaseModel
 
     /**
      * @ORM\Column(name="SubmissionLockDownPresentationStatusDate", type="datetime")
-     * @var \DateTime
+     * @var DateTime
      */
     private $submission_lock_down_presentation_status_date;
 
     /**
      * @ORM\Column(name="VotingBeginDate", type="datetime")
-     * @var \DateTime
+     * @var DateTime
      */
     private $voting_begin_date;
 
     /**
      * @ORM\Column(name="VotingEndDate", type="datetime")
-     * @var \DateTime
+     * @var DateTime
      */
     private $voting_end_date;
 
@@ -212,6 +210,12 @@ class SelectionPlan extends SilverstripeBaseModel
      * @var SummitSelectedPresentationList[]
      */
     private $selection_lists;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\SelectionPlanAllowedPresentationQuestion", mappedBy="selection_plan", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SelectionPlanAllowedPresentationQuestion[]
+     */
+    private $allowed_presentation_questions;
 
     /**
      * @return string
@@ -413,6 +417,62 @@ class SelectionPlan extends SilverstripeBaseModel
         $this->submission_lock_down_presentation_status_date = null;
         $this->allowed_presentation_action_types = new ArrayCollection();
         $this->allowed_members = new ArrayCollection();
+        $this->allowed_presentation_questions = new ArrayCollection();
+        $this->seedAllowedPresentationQuestions();
+    }
+
+    /**
+     * @return AllowedPresentationActionType[]
+     */
+    public function getAllowedPresentationActionTypes()
+    {
+        return $this->allowed_presentation_action_types;
+    }
+
+    /**
+     * @return SelectionPlanAllowedPresentationQuestion[]
+     */
+    public function getAllowedPresentationQuestions()
+    {
+        return $this->allowed_presentation_questions;
+    }
+
+    public function clearAllAllowedPresentationQuestions(){
+        $this->allowed_presentation_questions->clear();
+    }
+
+    /**
+     * @param string $type
+     * @throws ValidationException
+     */
+    public function addPresentationAllowedQuestion(string $type){
+
+        if(!Presentation::isAllowedPresentationQuestion(trim($type)))
+            throw new ValidationException(sprintf("Presentation question %s is not allowed.", $type));
+
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type', trim($type)));
+        if($this->allowed_presentation_questions->matching($criteria)->count() > 0)
+            throw new ValidationException(sprintf("Presentation Question %s is already allowed.", $type));
+
+        $question = new SelectionPlanAllowedPresentationQuestion($this, $type);
+
+        $this->allowed_presentation_questions->add($question);
+    }
+
+    /**
+     * @param string $type
+     * @return bool
+     * @throws ValidationException
+     */
+    public function isAllowedPresentationQuestion(string $type):bool{
+
+        if(!Presentation::isAllowedPresentationQuestion(trim($type)))
+            throw new ValidationException(sprintf("Presentation question %s is not allowed.", $type));
+
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type', trim($type)));
+        return $this->allowed_presentation_questions->matching($criteria)->count() > 0;
     }
 
     /**
@@ -1043,8 +1103,8 @@ class SelectionPlan extends SilverstripeBaseModel
     }
 
     /**
-     * @param SummitSelectionPlanExtraQuestionType $question
-     * @param int $new_order
+     * @param PresentationTrackChairRatingType $ratingType
+     * @param $new_order
      * @throws ValidationException
      */
     public function recalculateTrackChairRatingTypeOrder(PresentationTrackChairRatingType $ratingType, $new_order)
@@ -1245,5 +1305,29 @@ class SelectionPlan extends SilverstripeBaseModel
      */
     public function getType():string{
         return $this->allowed_members->count() > 0 ? self::PrivateType: self::PublicType;
+    }
+
+    /**
+     * @param array $payload
+     * @throws ValidationException
+     */
+    public function checkPresentationAllowedQuestions(array $payload):void{
+        $allowed_fields = Presentation::getAllowedFields();
+        foreach ($allowed_fields as $field){
+            Log::debug(sprintf("Selection Plan %s checking Presentation Field %s", $this->id, $field));
+
+            if(isset($payload[$field]) && !$this->isAllowedPresentationQuestion($field)){
+                throw new ValidationException(sprintf("Field %s is not allowed on Selection Plan %s", $field, $this->name));
+            }
+        }
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    public function seedAllowedPresentationQuestions():void{
+        foreach(Presentation::getAllowedFields() as $allowedField){
+            $this->addPresentationAllowedQuestion($allowedField);
+        }
     }
 }

@@ -556,7 +556,6 @@ final class SummitSelectionPlanService
         });
     }
 
-
     /**
      * @inheritDoc
      */

@@ -12,8 +12,6 @@
  * limitations under the License.
  **/
 
-
-
 use models\oauth2\IResourceServerContext;
 use models\utils\IBaseRepository;
 

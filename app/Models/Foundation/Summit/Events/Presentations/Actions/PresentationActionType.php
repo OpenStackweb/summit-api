@@ -24,6 +24,7 @@ use models\utils\SilverstripeBaseModel;
  *          inversedBy="presentation_action_types"
  *     )
  * })
+ * @ORM\HasLifecycleCallbacks
  * Class PresentationActionType
  * @package models\summit
  */

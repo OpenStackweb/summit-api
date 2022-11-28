@@ -47,6 +47,35 @@ class Presentation extends SummitEvent
 
     const ClassName = 'Presentation';
 
+    const FieldProblemAddressed = 'problem_addressed';
+    const FieldAttendeesExpectedToLearn = 'attendees_expected_learnt';
+    const FieldAttendingMedia = 'attending_media';
+    const FieldWillAllSpeakersAttend = 'will_all_speakers_attend';
+
+
+    const AllowedFields = [
+        //self::FieldProblemAddressed,
+        self::FieldAttendeesExpectedToLearn,
+        self::FieldAttendingMedia,
+        //self::FieldWillAllSpeakersAttend,
+    ];
+
+    /**
+     * @param string $type
+     * @return bool
+     */
+    public static function isAllowedPresentationQuestion(string $type):bool{
+        return in_array($type,Presentation::AllowedFields) ||
+            in_array($type,SummitEvent::AllowedFields);
+    }
+
+    /**
+     * @return array|string[]
+     */
+    public static function getAllowedFields():array{
+        return array_merge(Presentation::AllowedFields, SummitEvent::AllowedFields);
+    }
+
     /**
      * SELECTION STATUS (TRACK CHAIRS LIST)
      */

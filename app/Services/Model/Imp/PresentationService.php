@@ -281,9 +281,11 @@ final class PresentationService
             if (!$current_selection_plan->IsEnabled()) {
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
+
             if (!$current_selection_plan->isSubmissionOpen()) {
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
+
             // check qty
 
             $limit = $current_selection_plan->getSubmissionLimitFor();
@@ -306,6 +308,8 @@ final class PresentationService
                     'validation_errors.PresentationService.submitPresentation.limitReached',
                     ['limit' => $limit]));
 
+            $current_selection_plan->checkPresentationAllowedQuestions($data);
+
             $presentation = new Presentation();
             $presentation->setSelectionPlan($current_selection_plan);
 
@@ -316,6 +320,7 @@ final class PresentationService
 
             if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SUMMARY);
+
 
             $presentation = $this->saveOrUpdatePresentation
             (
@@ -389,6 +394,8 @@ final class PresentationService
             if(!$current_selection_plan->isAllowedMember($member)){
                 throw new AuthzException(sprintf("Member is not Authorized on Selection Plan."));
             }
+
+            $current_selection_plan->checkPresentationAllowedQuestions($data);
 
             $presentation->setUpdatedBy(ResourceServerContext::getCurrentUser(false));
 
@@ -476,6 +483,7 @@ final class PresentationService
 
             $presentation->setType($event_type);
             $presentation->setCategory($track);
+
             // tags
             if (isset($data['tags'])) {
                 $presentation->clearTags();

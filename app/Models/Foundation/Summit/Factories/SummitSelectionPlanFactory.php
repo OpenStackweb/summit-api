@@ -138,6 +138,11 @@ final class SummitSelectionPlanFactory
             );
         }
 
+        if(isset($data['allowed_presentation_questions'])){
+            $selection_plan->clearAllAllowedPresentationQuestions();
+            foreach($data['allowed_presentation_questions'] as $type)
+                $selection_plan->addPresentationAllowedQuestion($type);
+        }
         return $selection_plan;
     }
 }

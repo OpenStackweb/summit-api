@@ -73,6 +73,18 @@ class SummitEvent extends SilverstripeBaseModel
         'hasUpdatedBy' => 'updated_by',
     ];
 
+    const FieldTitle = 'title';
+    const FieldAbstract = 'description';
+    const FieldSocialDescription = 'social_description';
+    const FieldLevel = 'level';
+
+    const AllowedFields = [
+        // self::FieldTitle,
+        // self::FieldAbstract,
+        self::FieldSocialDescription,
+        self::FieldLevel,
+    ];
+
     /**
      * @ORM\Column(name="Title", type="string")
      * @var string

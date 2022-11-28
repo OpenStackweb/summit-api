@@ -46,7 +46,7 @@ final class PresentationFactory
                 $presentation->setSocialSummary(strip_tags(trim($payload['social_description'])));
 
             $event_type = $presentation->getType();
-            if (isset($payload['level']) && !is_null($event_type) && $event_type->isAllowsLevel())
+            if (isset($payload['level']) && !is_null($event_type))
                 $presentation->setLevel($payload['level']);
         }
 

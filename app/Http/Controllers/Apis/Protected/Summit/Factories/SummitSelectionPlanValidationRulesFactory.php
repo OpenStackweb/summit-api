@@ -41,6 +41,7 @@ final class SummitSelectionPlanValidationRulesFactory extends AbstractValidation
             'presentation_creator_notification_email_template'      =>  'sometimes|string|max:255',
             'presentation_moderator_notification_email_template'    =>  'sometimes|string|max:255',
             'presentation_speaker_notification_email_template'      =>  'sometimes|string|max:255',
+            'allowed_presentation_questions' => 'sometimes|string_array',
         ];
     }
 
@@ -66,6 +67,7 @@ final class SummitSelectionPlanValidationRulesFactory extends AbstractValidation
             'presentation_creator_notification_email_template'      =>  'sometimes|string|max:255',
             'presentation_moderator_notification_email_template'    =>  'sometimes|string|max:255',
             'presentation_speaker_notification_email_template'      =>  'sometimes|string|max:255',
+            'allowed_presentation_questions' => 'sometimes|string_array',
         ];
     }
 

@@ -11,44 +11,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Illuminate\Support\Facades\Config;
+
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 use ModelSerializers\SilverStripeSerializer;
 
 /**
  * Class SummitLocationImageSerializer
  * @package ModelSerializers\Locations
  */
-class SummitLocationImageSerializer  extends SilverStripeSerializer
+class SummitLocationImageSerializer extends SilverStripeSerializer
 {
-    protected static $array_mappings = array
-    (
+    protected static $array_mappings = [
         'Name'         => 'name:json_text',
         'Description'  => 'description:json_text',
         'ClassName'    => 'class_name:json_text',
         'LocationId'   => 'location_id:json_int',
         'Order'        => 'order:json_int',
-    );
+        'ImageUrl'     => 'image_url:json_url'
+    ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
-    {
-        $values = parent::serialize($expand, $fields, $relations, $params);
-
-        if($this->object->hasPicture())
-        {
-            $picture             = $this->object->getPicture();
-            $values['image_url'] = $picture->getUrl();
-        }
-        else
-        {
-            $values['image_url'] = null;
-        }
-        return $values;
-    }
+    protected static $expand_mappings = [
+        'location' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'location_id',
+            'getter' => 'getLocation',
+            'has' => 'hasLocation'
+        ],
+    ];
 }

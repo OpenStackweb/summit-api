@@ -15,7 +15,7 @@
 use App\Models\Foundation\Summit\Factories\SummitLocationFactory;
 use  LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\SummitBookableVenueRoom;
-
+use Mockery;
 /**
  * Class OAuth2SummitLocationsApiTest
  */
@@ -68,12 +68,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'order'    => '-order'
         ];
 
-        $headers =
-        [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
-
         $response = $this->action
         (
             "GET",
@@ -82,7 +76,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -101,12 +95,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'order'    => 'name-'
         ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
-
         $response = $this->action
         (
             "GET",
@@ -115,7 +103,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -131,12 +119,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'id' => $summit_id,
         ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
-
         $response = $this->action
         (
             "GET",
@@ -145,7 +127,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -166,12 +148,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             ]
         ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
-
         $response = $this->action
         (
             "GET",
@@ -180,7 +156,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -201,12 +177,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             ]
         ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
-
         $response = $this->action
         (
             "GET",
@@ -215,7 +185,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -227,26 +197,19 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
 
     public function testGetCurrentSummitVenues()
     {
-        $params = array
-        (
+        $params = [
             'id' => 'current',
-        );
-
-        $headers = array
-        (
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        );
+        ];
 
         $response = $this->action
         (
             "GET",
             "OAuth2SummitLocationsApiController@getVenues",
             $params,
-            array(),
-            array(),
-            array(),
-            $headers
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -263,21 +226,15 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'id' => 'current',
         );
 
-        $headers = array
-        (
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        );
-
         $response = $this->action
         (
             "GET",
             "OAuth2SummitLocationsApiController@getHotels",
             $params,
-            array(),
-            array(),
-            array(),
-            $headers
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -289,26 +246,19 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
 
     public function testGetCurrentSummitAirports()
     {
-        $params = array
-        (
+        $params = [
             'id' => 'current',
-        );
-
-        $headers = array
-        (
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        );
+        ];
 
         $response = $this->action
         (
             "GET",
             "OAuth2SummitLocationsApiController@getAirports",
             $params,
-            array(),
-            array(),
-            array(),
-            $headers
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -320,26 +270,19 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
 
     public function testGetCurrentSummitExternalLocations()
     {
-        $params = array
-        (
+        $params = [
             'id' => 'current',
-        );
-
-        $headers = array
-        (
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        );
+        ];
 
         $response = $this->action
         (
             "GET",
             "OAuth2SummitLocationsApiController@getExternalLocations",
             $params,
-            array(),
-            array(),
-            array(),
-            $headers
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -351,27 +294,21 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
 
     public function testGetCurrentSummitLocation()
     {
-        $params = array
-        (
+        $params =
+        [
             'id' => 'current',
-            'location_id' => 25
-        );
-
-        $headers = array
-        (
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        );
+            'location_id' => self::$mainVenue->getId()
+        ];
 
         $response = $this->action
         (
             "GET",
             "OAuth2SummitLocationsApiController@getLocation",
             $params,
-            array(),
-            array(),
-            array(),
-            $headers
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -381,129 +318,100 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($locations));
     }
 
-    public function testCurrentSummitLocationEventsWithFilter($summit_id = 7)
+    public function testCurrentSummitLocationEventsWithFilter()
     {
-        $params = array
-        (
-            'id'          => $summit_id,
+        $params = [
+            'id'          => self::$summit->getId(),
             'page'        => 1,
             'per_page'    => 50,
-            'location_id' => 52,
-            'filter'      => array
-            (
-                'tags=@Nova',
-                'speaker=@Todd'
-            )
-        );
-
-        $headers = array
-        (
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        );
-
+            'location_id' => self::$mainVenue->getId(),
+        ];
 
         $response = $this->action
         (
             "GET",
             "OAuth2SummitLocationsApiController@getLocationEvents",
             $params,
-            array(),
-            array(),
-            array(),
-            $headers
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
         $this->assertResponseStatus(200);
 
-        $events = json_decode($content);
-        $this->assertTrue(!is_null($events));
+        $page = json_decode($content);
+        $this->assertTrue(!is_null($page));
+        $this->assertNotEmpty($page->data);
     }
 
     public function testCurrentSummitPublishedLocationEventsWithFilter()
     {
-        $params = array
-        (
-            'id' => 23,
-            'location_id' => 311,
+        $params = [
+            'id'          => self::$summit->getId(),
+            'page'        => 1,
+            'per_page'    => 50,
+            'location_id' => self::$mainVenue->getId(),
             'filter' => [
-
-                'start_date>=1451479955'
+                'start_date>='.(time())
             ]
-        );
-
-        $headers = array
-        (
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        );
+        ];
 
         $response = $this->action
         (
             "GET",
             "OAuth2SummitLocationsApiController@getLocationPublishedEvents",
             $params,
-            array(),
-            array(),
-            array(),
-            $headers
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
         $this->assertResponseStatus(200);
 
-        $events = json_decode($content);
-        $this->assertTrue(!is_null($events));
+        $page = json_decode($content);
+        $this->assertTrue(!is_null($page));
+        $this->assertNotEmpty($page->data);
     }
 
     public function testCurrentSummitPublishedLocationTBAEvents()
     {
-        $params = array
-        (
-            'id'          => 23,
+        $params = [
+            'id'          => self::$summit->getId(),
             'location_id' => "tba",
-        );
-
-        $headers = array
-        (
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        );
+        ];
 
         $response = $this->action
         (
             "GET",
             "OAuth2SummitLocationsApiController@getLocationPublishedEvents",
             $params,
-            array(),
-            array(),
-            array(),
-            $headers
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
         $this->assertResponseStatus(200);
 
-        $events = json_decode($content);
-        $this->assertTrue(!is_null($events));
+        $page = json_decode($content);
+        $this->assertTrue(!is_null($page));
     }
 
-    public function testAddLocationWithoutClassName($summit_id = 24){
+    public function testAddLocationWithoutClassName(){
 
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $name       = str_random(16).'_location';
         $data = [
             'name'       => $name,
             'description' => 'test location',
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
         ];
 
         $response = $this->action(
@@ -513,7 +421,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -521,14 +429,13 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
         $this->assertResponseStatus(412);
     }
 
-
-    public function testAddLocationVenue($summit_id = 24){
+    public function testAddLocationVenue(){
 
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
-        $name       = str_random(16).'_location';
+        $name = str_random(16).'_location';
 
         $data = [
             'name'        => $name,
@@ -540,11 +447,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'description' => 'test location',
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "POST",
             "OAuth2SummitLocationsApiController@addLocation",
@@ -552,7 +454,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -568,13 +470,13 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
      * @param int $summit_id
      * @return mixed
      */
-    public function testAddLocationVenueLatLng($summit_id = 24){
+    public function testAddLocationVenueLatLng(){
 
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
-        $name       = str_random(16).'_location';
+        $name = str_random(16).'_location';
 
         $data = [
             'name'        => $name,
@@ -583,11 +485,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'class_name'  => \models\summit\SummitVenue::ClassName,
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "POST",
             "OAuth2SummitLocationsApiController@addLocation",
@@ -595,7 +492,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -611,10 +508,10 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
      * @param int $summit_id
      * @return mixed
      */
-    public function testAddLocationVenueLatLngInvalid($summit_id = 24){
+    public function testAddLocationVenueLatLngInvalid(){
 
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $name       = str_random(16).'_location';
@@ -626,11 +523,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'class_name'  => \models\summit\SummitVenue::ClassName,
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "POST",
             "OAuth2SummitLocationsApiController@addLocation",
@@ -638,7 +530,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -650,10 +542,10 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
      * @param int $summit_id
      * @return mixed
      */
-    public function testAddLocationHotelAddress($summit_id = 24){
+    public function testAddLocationHotelAddress(){
 
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $name       = str_random(16).'_hotel';
@@ -670,11 +562,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'capacity'    => 200
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "POST",
             "OAuth2SummitLocationsApiController@addLocation",
@@ -682,7 +569,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -707,11 +594,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'class_name'  => \models\summit\SummitHotel::ClassName,
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "PUT",
             "OAuth2SummitLocationsApiController@updateLocation",
@@ -719,7 +601,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -747,11 +629,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'name' => 'Sydney Convention and Exhibition Centre Update!'
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "PUT",
             "OAuth2SummitLocationsApiController@updateLocation",
@@ -759,7 +636,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -781,11 +658,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'location_id' => $hotel->id
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "DELETE",
             "OAuth2SummitLocationsApiController@deleteLocation",
@@ -793,7 +665,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -823,11 +695,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
            'number'      => $number
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "POST",
             "OAuth2SummitLocationsApiController@addVenueFloor",
@@ -835,7 +702,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -865,11 +732,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'description' => 'test floor update',
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "PUT",
             "OAuth2SummitLocationsApiController@updateVenueFloor",
@@ -877,7 +739,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -902,11 +764,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'floor_id' => $floor->id
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "DELETE",
             "OAuth2SummitLocationsApiController@deleteVenueFloor",
@@ -914,8 +771,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
-
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -941,11 +797,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'description' => 'test room',
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "POST",
             "OAuth2SummitLocationsApiController@addVenueRoom",
@@ -953,7 +804,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -987,12 +838,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'description' => 'test room',
         ];
 
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "POST",
             "OAuth2SummitLocationsApiController@addVenueFloorRoom",
@@ -1000,7 +845,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -1032,11 +877,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'floor_id'    => 23
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "PUT",
             "OAuth2SummitLocationsApiController@updateVenueFloorRoom",
@@ -1044,7 +884,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -1068,11 +908,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'room_id'  => 333
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "DELETE",
             "OAuth2SummitLocationsApiController@deleteVenueRoom",
@@ -1080,7 +915,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
@@ -1096,11 +931,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'expand'   => 'rooms'
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getVenueFloor",
@@ -1108,7 +938,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders(),
         );
 
         $content = $response->getContent();
@@ -1128,11 +958,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'expand'   => 'floor,venue'
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getVenueFloorRoom",
@@ -1140,7 +965,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders(),
         );
 
         $content = $response->getContent();
@@ -1164,11 +989,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'class_name' => \App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner::ClassName,
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "POST",
             "OAuth2SummitLocationsApiController@addLocationBanner",
@@ -1176,7 +996,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -1204,11 +1024,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'end_date'   => (1509876000+1000),
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "POST",
             "OAuth2SummitLocationsApiController@addLocationBanner",
@@ -1216,7 +1031,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -1237,12 +1052,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'order'       => '-id'
         ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
-
         $response = $this->action
         (
             "GET",
@@ -1251,7 +1060,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders(),
         );
 
         $content = $response->getContent();
@@ -1274,12 +1083,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'filter'      => 'class_name=='.\App\Models\Foundation\Summit\Locations\Banners\ScheduledSummitLocationBanner::ClassName
         ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
-
         $response = $this->action
         (
             "GET",
@@ -1288,7 +1091,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders(),
         );
 
         $content = $response->getContent();
@@ -1309,12 +1112,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'filter'      => 'class_name==test,class_name==test2'
         ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
-
         $response = $this->action
         (
             "GET",
@@ -1323,7 +1120,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders(),
         );
 
         $content = $response->getContent();
@@ -1342,11 +1139,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'banner_id'   => $banners->data[0]->id
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "DELETE",
             "OAuth2SummitLocationsApiController@deleteLocationBanner",
@@ -1354,7 +1146,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders(),
         );
 
         $content = $response->getContent();
@@ -1369,11 +1161,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'map_id'      => $map_id
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"       => "application/json"
-        ];
-
         $response = $this->action(
             "DELETE",
             "OAuth2SummitLocationsApiController@deleteLocationMap",
@@ -1381,7 +1168,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders(),
         );
 
         $content = $response->getContent();
@@ -1405,12 +1192,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             ],
         ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
-
         $response = $this->action
         (
             "GET",
@@ -1419,7 +1200,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders(),
         );
 
         $content = $response->getContent();
@@ -1437,12 +1218,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'day'      => $day,
         ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
-
         $response = $this->action
         (
             "GET",
@@ -1451,7 +1226,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders(),
         );
 
         $content = $response->getContent();
@@ -1480,11 +1255,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'end_datetime'   => 1572922800,
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "POST",
             "OAuth2SummitLocationsApiController@createBookableVenueRoomReservation",
@@ -1492,7 +1262,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -1510,12 +1280,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'expand' => 'room'
         ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
-
         $response = $this->action
         (
             "GET",
@@ -1524,7 +1288,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders(),
         );
 
         $content = $response->getContent();
@@ -1541,11 +1305,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'reservation_id' => $reservation_id
         ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
 
         $response = $this->action
         (
@@ -1555,7 +1314,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders(),
         );
 
         $content = $response->getContent();
@@ -1592,12 +1351,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'currency'       => 'USD',
          ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
-
         $response = $this->action
         (
             "POST",
@@ -1606,7 +1359,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -1656,12 +1409,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'currency'       => 'USD',
         ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
-
         $response = $this->action
         (
             "POST",
@@ -1670,7 +1417,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -1702,12 +1449,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'time_slot_cost' => 250,
         ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
-
         $response = $this->action
         (
             "PUT",
@@ -1716,7 +1457,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -1754,11 +1495,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'attribute_id' => $value->getId()
         ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
 
         $response = $this->action
         (
@@ -1768,7 +1504,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders(),
         );
 
         $content = $response->getContent();
@@ -1787,12 +1523,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'order'  => '+owner_name'
         ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
-
         $response = $this->action
         (
             "GET",
@@ -1801,7 +1531,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders(),
         );
 
         $content = $response->getContent();
@@ -1817,12 +1547,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'filter' => 'status==Canceled,owner_name=@Sebastian'
         ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
-
         $response = $this->action
         (
             "GET",
@@ -1831,7 +1555,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders(),
         );
 
         $content = $response->getContent();
@@ -1847,12 +1571,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'filter' => 'status==Canceled,owner_name=@Sebastian'
         ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
-
         $response = $this->action
         (
             "GET",
@@ -1861,7 +1579,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders(),
         );
 
         $csv = $response->getContent();
@@ -1875,12 +1593,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'filter' => 'status==Canceled,owner_name=@Sebastian'
         ];
 
-        $headers =
-            [
-                "HTTP_Authorization" => " Bearer " . $this->access_token,
-                "CONTENT_TYPE"       => "application/json"
-            ];
-
         $response = $this->action
         (
             "GET",
@@ -1889,7 +1601,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders(),
         );
 
         $content = $response->getContent();

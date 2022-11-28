@@ -11,8 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use models\summit\SummitGeoLocatedLocation;
-use ModelSerializers\SerializerRegistry;
+
+use Libs\ModelSerializers\Many2OneExpandSerializer;
 
 /**
  * Class SummitGeoLocatedLocationSerializer
@@ -40,37 +40,15 @@ class SummitGeoLocatedLocationSerializer extends SummitAbstractLocationSerialize
         'images',
     ];
 
-    /**
-     * @param null $expand
-     * @param array $fields
-     * @param array $relations
-     * @param array $params
-     * @return array
-     */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
-    {
-        $values   = parent::serialize($expand, $fields, $relations);
-        $location = $this->object;
-        if(!$location instanceof SummitGeoLocatedLocation) return [];
+    protected static $expand_mappings = [
+        'maps' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getMaps',
+        ],
+        'images' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getImages',
+        ],
+    ];
 
-        if (!count($relations)) $relations = $this->getAllowedRelations();
-        if(in_array('maps', $relations)) {
-            $maps = [];
-            foreach ($location->getMaps() as $image) {
-                if (!$image->hasPicture()) continue;
-                $maps[] = SerializerRegistry::getInstance()->getSerializer($image)->serialize();
-            }
-            $values['maps'] = $maps;
-        }
-        if(in_array('images', $relations)) {
-            // images
-            $images = [];
-            foreach ($location->getImages() as $image) {
-                if (!$image->hasPicture()) continue;
-                $images[] = SerializerRegistry::getInstance()->getSerializer($image)->serialize();
-            }
-            $values['images'] = $images;
-        }
-        return $values;
-    }
 }

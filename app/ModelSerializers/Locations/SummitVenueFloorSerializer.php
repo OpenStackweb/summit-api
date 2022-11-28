@@ -11,10 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\Many2OneExpandSerializer;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 use models\summit\SummitVenueFloor;
-use ModelSerializers\SerializerRegistry;
 use ModelSerializers\SilverStripeSerializer;
-use Illuminate\Support\Facades\Config;
 /**
  * Class SummitVenueFloorSerializer
  * @package ModelSerializers\Locations
@@ -27,8 +28,21 @@ final class SummitVenueFloorSerializer extends SilverStripeSerializer
         'Description' => 'description:json_string',
         'Number'      => 'number:json_int',
         'VenueId'     => 'venue_id:json_int',
+        'ImageUrl'    => 'image:json_url',
     ];
 
+    protected static $expand_mappings = [
+        'venue' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'venue_id',
+            'getter' => 'getVenue',
+            'has' => 'hasVenue'
+        ],
+        'rooms' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getRooms',
+        ],
+    ];
     /**
      * @param null $expand
      * @param array $fields
@@ -42,25 +56,6 @@ final class SummitVenueFloorSerializer extends SilverStripeSerializer
         $floor  = $this->object;
 
         if(!$floor instanceof SummitVenueFloor) return [];
-
-        // floor image
-        $values['image']= ($floor->getImage() !== null) ?
-            $floor->getImage()->getUrl()
-            : null;
-        // rooms
-        $rooms        = [];
-        $expand_rooms = !empty($expand) && strstr('rooms',$expand) !== false;
-
-        foreach($floor->getRooms() as $room)
-        {
-
-            $rooms[] = $expand_rooms ? SerializerRegistry::getInstance()->getSerializer($room)->serialize($expand, $fields, $relations, $params) :
-                intval($room->getId());
-
-        }
-
-        if(count($rooms) > 0)
-            $values['rooms'] = $rooms;
 
         return $values;
     }

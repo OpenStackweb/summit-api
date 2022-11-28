@@ -18,6 +18,7 @@ use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use models\exceptions\ValidationException;
 use models\main\File;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -28,6 +29,19 @@ use models\utils\SilverstripeBaseModel;
  */
 class SummitVenueFloor extends SilverstripeBaseModel
 {
+
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getVenueId' => 'venue',
+        'getImageId' => 'image',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasVenue' => 'venue',
+        'hasImage' => 'image',
+    ];
+
     /**
      * @ORM\Column(name="Name", type="string")
      */
@@ -88,7 +102,7 @@ class SummitVenueFloor extends SilverstripeBaseModel
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getDescription()
     {
@@ -98,7 +112,7 @@ class SummitVenueFloor extends SilverstripeBaseModel
     /**
      * @param string $description
      */
-    public function setDescription($description)
+    public function setDescription(string $description)
     {
         $this->description = $description;
     }
@@ -125,18 +139,6 @@ class SummitVenueFloor extends SilverstripeBaseModel
     public function getVenue()
     {
         return $this->venue;
-    }
-
-    /**
-     * @return int
-     */
-    public function getVenueId(){
-        try{
-            return $this->venue->getId();
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
     }
 
     /**
@@ -191,25 +193,6 @@ class SummitVenueFloor extends SilverstripeBaseModel
         $this->image = $image;
     }
 
-    /**
-     * @return bool
-     */
-    public function hasImage(){
-        return $this->getImageId() > 0;
-    }
-
-    /**
-     * @return int
-     */
-    public function getImageId(){
-        try{
-            return !is_null($this->image) ? $this->image->getId() : 0;
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
     public function clearImage(){
         $this->image = null;
     }
@@ -243,4 +226,13 @@ class SummitVenueFloor extends SilverstripeBaseModel
 
     use ScheduleEntity;
 
+    /**
+     * @return string|null
+     */
+    public function getImageUrl():?string{
+        if($this->hasImage()){
+            return $this->image->getUrl();
+        }
+        return null;
+    }
 }

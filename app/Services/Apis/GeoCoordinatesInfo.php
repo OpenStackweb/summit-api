@@ -33,7 +33,7 @@ final class GeoCoordinatesInfo
      * @param string $lat
      * @param string $lng
      */
-    public function __construct($lat, $lng)
+    public function __construct(string $lat = '', string $lng = '')
     {
         $this->lat = $lat;
         $this->lng = $lng;

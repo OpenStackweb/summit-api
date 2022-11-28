@@ -191,4 +191,20 @@ class SummitLocationImage extends SilverstripeBaseModel
     public function clearPicture(){
         $this->picture = null;
     }
+
+    /**
+     * @return string|null
+     */
+    public function getImageUrl():?string{
+        if($this->hasPicture())
+        {
+            $picture = $this->getPicture();
+            return $picture->getUrl();
+        }
+        return null;
+    }
+
+    public function hasLocation():bool{
+        return $this->getLocationId() > 0;
+    }
 }

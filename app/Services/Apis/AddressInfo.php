@@ -33,7 +33,7 @@ final class AddressInfo {
      * @param string $city
      * @param string $country
      */
-    public function __construct($address,$address1,$zip_code,$state,$city,$country){
+    public function __construct(string $address = '', ?string $address1 = '', ?string $zip_code = '', string $state = '', string $city = '', string $country = ''){
         $this->address  = $address;
         $this->address1 = $address1;
         $this->zip_code = $zip_code;

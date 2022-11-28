@@ -43,7 +43,7 @@ class SummitAbstractLocationSerializer
 
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if(in_array('published_events', $relations)){
+        if(in_array('published_events', $relations) && !isset($values['published_events'])){
             $events = [];
             foreach ($location->getPublishedEvents() as $e){
                 $events[] = $e->getId();

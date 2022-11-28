@@ -11,8 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-use Libs\ModelSerializers\AbstractSerializer;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 use models\summit\SummitVenueRoom;
 use ModelSerializers\SerializerRegistry;
 /**
@@ -28,7 +27,22 @@ class SummitVenueRoomSerializer extends SummitAbstractLocationSerializer
         'OverrideBlackouts' => 'override_blackouts:json_boolean',
     ];
 
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    protected static $expand_mappings = [
+        'venue' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'venue_id',
+            'getter' => 'getVenue',
+            'has' => 'hasVenue'
+        ],
+        'floor' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'floor_id',
+            'getter' => 'getFloor',
+            'has' => 'hasFloor'
+        ],
+    ];
+
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $room   = $this->object;
         if(!$room instanceof SummitVenueRoom) return [];
@@ -36,29 +50,6 @@ class SummitVenueRoomSerializer extends SummitAbstractLocationSerializer
 
         if($room->hasImage()){
             $values['image'] = SerializerRegistry::getInstance()->getSerializer($room->getImage())->serialize();
-        }
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                $relation = trim($relation);
-                switch ($relation) {
-                    case 'floor': {
-                        if($room->hasFloor()) {
-                            unset($values['floor_id']);
-                            $values['floor'] = SerializerRegistry::getInstance()->getSerializer($room->getFloor())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                        }
-                    }
-                    break;
-                    case 'venue': {
-                        if($room->hasVenue()) {
-                            unset($values['venue_id']);
-                            $values['venue'] = SerializerRegistry::getInstance()->getSerializer($room->getVenue())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                        }
-                    }
-                    break;
-                }
-            }
         }
 
         return $values;

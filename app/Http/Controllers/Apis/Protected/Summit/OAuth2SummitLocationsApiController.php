@@ -19,14 +19,9 @@ use App\Models\Foundation\Summit\Repositories\ISummitLocationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ILocationService;
-use Exception;
 use Illuminate\Http\Request as LaravelRequest;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
 use libs\utils\HTMLCleaner;
-use libs\utils\PaginationValidationRules;
-use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\IMemberRepository;
 use models\oauth2\IResourceServerContext;
@@ -43,10 +38,7 @@ use models\summit\SummitVenue;
 use models\summit\SummitVenueRoom;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISummitService;
-use utils\Filter;
 use utils\FilterParser;
-use utils\FilterParserException;
-use utils\OrderParser;
 use utils\PagingInfo;
 use utils\PagingResponse;
 
@@ -158,8 +150,8 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         if (is_null($summit)) return $this->error404();
 
         return $this->_getAll(
-            function(){
-                return  [
+            function () {
+                return [
                     'class_name' => ['=='],
                     'name' => ['==', '=@'],
                     'description' => ['=@'],
@@ -173,7 +165,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                     'is_main' => ['=='],
                 ];
             },
-            function(){
+            function () {
                 return [
                     'class_name' => sprintf('sometimes|in:%s', implode(',', SummitLocationConstants::$valid_first_level_class_names)),
                     'name' => 'sometimes|string',
@@ -188,22 +180,22 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                     'is_main' => 'sometimes|boolean',
                 ];
             },
-            function(){
+            function () {
                 return [
                     'id',
                     'name',
                     'order'
                 ];
             },
-            function($filter){
+            function ($filter) {
                 return $filter;
             },
-            function(){
+            function () {
                 return SerializerRegistry::SerializerType_Public;
             },
             null,
             null,
-            function ($page, $per_page, $filter, $order, $applyExtraFilters) use($summit) {
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
                 return $this->location_repository->getBySummit
                 (
                     $summit,
@@ -221,7 +213,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function getVenues($summit_id)
     {
-       return $this->processRequest(function() use ($summit_id){
+        return $this->processRequest(function () use ($summit_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -256,7 +248,8 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function getExternalLocations($summit_id)
     {
-        return $this->processRequest(function() use($summit_id){
+        return $this->processRequest(function () use ($summit_id) {
+
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -290,7 +283,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function getHotels($summit_id)
     {
-        return $this->processRequest(function() use($summit_id){
+        return $this->processRequest(function () use ($summit_id) {
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -324,7 +317,8 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function getAirports($summit_id)
     {
-        return $this->processRequest(function() use($summit_id){
+        return $this->processRequest(function () use ($summit_id) {
+
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -378,50 +372,25 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     }
 
     /**
-     * @param string $summit_id
-     * @param string $location_id
+     * @param $summit_id
+     * @param $location_id
      * @param bool $published
-     * @return PagingResponse
-     * @throws EntityNotFoundException
-     * @throws ValidationException
+     * @return \Illuminate\Http\JsonResponse|mixed
      */
     private function _getLocationEvents($summit_id, $location_id, $published = true)
     {
         $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
         if (is_null($summit))
-            throw new EntityNotFoundException;
+            if (is_null($summit)) return $this->error404();
 
         if (strtolower($location_id) !== "tbd") {
             $location = $summit->getLocation(intval($location_id));
-            if (is_null($location))
-                throw new EntityNotFoundException;
+            if (is_null($location)) return $this->error404();
         }
 
-        $values = Request::all();
-
-        $rules = PaginationValidationRules::get();
-
-        $validation = Validator::make($values, $rules);
-
-        if ($validation->fails()) {
-            $ex = new ValidationException();
-            throw $ex->setMessages($validation->messages()->toArray());
-        }
-
-        // default values
-        $page = 1;
-        $per_page = PaginationValidationRules::PerPageMin;
-
-        if (Request::has('page')) {
-            $page = intval(Request::input('page'));
-            $per_page = intval(Request::input('per_page'));
-        }
-
-        $filter = null;
-
-        if (Request::has('filter')) {
-            $filter = FilterParser::parse(Request::input('filter'),
-                [
+        return $this->_getAll(
+            function () {
+                return [
                     'title' => ['=@', '=='],
                     'start_date' => ['>', '<', '<=', '>=', '=='],
                     'end_date' => ['>', '<', '<=', '>=', '=='],
@@ -429,36 +398,61 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                     'tags' => ['=@', '=='],
                     'event_type_id' => ['=='],
                     'track_id' => ['==']
-                ]);
-        }
-
-        $order = null;
-
-        if (Request::has('order')) {
-            $order = OrderParser::parse(Request::input('order'),
-                [
+                ];
+            },
+            function () {
+                return [
+                    'title' => 'sometimes|string',
+                    'start_date' => 'sometimes|date_format:U',
+                    'end_date' => 'sometimes|date_format:U',
+                    'speaker' => 'sometimes|string',
+                    'tags' =>'sometimes|string',
+                    'event_type_id' =>  'sometimes|integer',
+                    'track_id' => 'sometimes|integer',
+                ];
+            },
+            function () {
+                return [
                     'title',
                     'start_date',
                     'end_date',
                     'id',
                     'created',
-                ]);
-        }
+                ];
+            },
+            function ($filter) use($summit_id, $location_id, $published){
+                $filter->addFilterCondition(FilterParser::buildFilter('summit_id', '==', $summit_id));
 
-        if (is_null($filter)) $filter = new Filter();
+                if (intval($location_id) > 0)
+                    $filter->addFilterCondition(FilterParser::buildFilter('location_id', '==', $location_id));
 
-        $filter->addFilterCondition(FilterParser::buildFilter('summit_id', '==', $summit_id));
+                if ($published) {
+                    $filter->addFilterCondition(FilterParser::buildFilter('published', '==', 1));
+                }
 
-        if (intval($location_id) > 0)
-            $filter->addFilterCondition(FilterParser::buildFilter('location_id', '==', $location_id));
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($location_id) {
 
-        if ($published) {
-            $filter->addFilterCondition(FilterParser::buildFilter('published', '==', 1));
-        }
-
-        return strtolower($location_id) === "tbd" ?
-            $this->event_repository->getAllByPageLocationTBD(new PagingInfo($page, $per_page), $filter, $order) :
-            $this->event_repository->getAllByPage(new PagingInfo($page, $per_page), $filter, $order);
+                return strtolower($location_id) === "tbd" ?
+                    $this->event_repository->getAllByPageLocationTBD
+                    (
+                        new PagingInfo($page, $per_page), call_user_func($applyExtraFilters, $filter), $order
+                    )
+                    :
+                    $this->event_repository->getAllByPage
+                    (
+                        new PagingInfo($page, $per_page),
+                        call_user_func($applyExtraFilters, $filter),
+                        $order
+                    );
+            }
+        );
     }
 
     /**
@@ -468,21 +462,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function getLocationEvents($summit_id, $location_id)
     {
-        try {
-            return $this->ok($this->_getLocationEvents($summit_id, $location_id, false)->toArray(Request::input('expand', '')));
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412($ex2->getMessages());
-        } catch (FilterParserException $ex3) {
-            Log::warning($ex3);
-            return $this->error412($ex3->getMessages());
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        return $this->_getLocationEvents($summit_id, $location_id, false);
     }
 
     /**
@@ -492,18 +472,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function getLocationPublishedEvents($summit_id, $location_id)
     {
-        try {
-            return $this->ok($this->_getLocationEvents($summit_id, $location_id, true)->toArray(Request::input('expand', '')));
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412($ex2->getMessages());
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        return $this->_getLocationEvents($summit_id, $location_id, true);
     }
 
     /**
@@ -529,11 +498,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function getVenueFloor($summit_id, $venue_id, $floor_id)
     {
-        try {
-
-            $expand = Request::input('expand', '');
-            $relations = Request::input('relations', '');
-            $relations = !empty($relations) ? explode(',', $relations) : [];
+       return $this->processRequest(function() use($summit_id, $venue_id, $floor_id){
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -554,17 +519,13 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 return $this->error404();
             }
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($floor)->serialize($expand, [], $relations));
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($floor)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -575,11 +536,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function getVenueRoom($summit_id, $venue_id, $room_id)
     {
-        try {
-
-            $expand = Request::input('expand', '');
-            $relations = Request::input('relations', '');
-            $relations = !empty($relations) ? explode(',', $relations) : [];
+        return $this->processRequest(function() use($summit_id, $venue_id, $room_id){
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -600,17 +557,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 return $this->error404();
             }
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($room)->serialize($expand, [], $relations));
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($room)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -622,11 +574,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function getVenueFloorRoom($summit_id, $venue_id, $floor_id, $room_id)
     {
-        try {
-
-            $expand = Request::input('expand', '');
-            $relations = Request::input('relations', '');
-            $relations = !empty($relations) ? explode(',', $relations) : [];
+        return $this->processRequest(function() use($summit_id, $venue_id, $floor_id , $room_id){
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -653,19 +601,16 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 return $this->error404();
             }
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($room)->serialize($expand, [], $relations));
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($room)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
+    use GetAndValidateJsonPayload;
     /***
      * Add Locations Endpoints
      */
@@ -676,40 +621,22 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function addLocation($summit_id)
     {
-        try {
-
-            if (!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+        return $this->processRequest(function() use($summit_id){
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $rules = SummitLocationValidationRulesFactory::build($payload);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonPayload( SummitLocationValidationRulesFactory::build($this->getJsonData()), true);
 
             $location = $this->location_service->addLocation($summit, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($location)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($location)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+
+        });
     }
 
     /**
@@ -718,38 +645,23 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function addVenue($summit_id)
     {
-        try {
-            if (!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+        return $this->processRequest(function() use($summit_id){
+
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonData();
             $payload['class_name'] = SummitVenue::ClassName;
-            $rules = SummitLocationValidationRulesFactory::build($payload);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonPayload( SummitLocationValidationRulesFactory::build($payload), true);
 
             $location = $this->location_service->addLocation($summit, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($location)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($location)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -758,38 +670,24 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function addExternalLocation($summit_id)
     {
-        try {
-            if (!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+        return $this->processRequest(function() use($summit_id){
+
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonData();
             $payload['class_name'] = SummitExternalLocation::ClassName;
-            $rules = SummitLocationValidationRulesFactory::build($payload);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonPayload( SummitLocationValidationRulesFactory::build($payload), true);
 
             $location = $this->location_service->addLocation($summit, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($location)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($location)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+
+        });
     }
 
     /**
@@ -798,38 +696,23 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function addHotel($summit_id)
     {
-        try {
-            if (!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+        return $this->processRequest(function() use($summit_id){
+
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonData();
             $payload['class_name'] = SummitHotel::ClassName;
-            $rules = SummitLocationValidationRulesFactory::build($payload);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonPayload( SummitLocationValidationRulesFactory::build($payload), true);
 
             $location = $this->location_service->addLocation($summit, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($location)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($location)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -838,38 +721,23 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function addAirport($summit_id)
     {
-        try {
-            if (!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+        return $this->processRequest(function() use($summit_id){
+
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonData();
             $payload['class_name'] = SummitAirport::ClassName;
-            $rules = SummitLocationValidationRulesFactory::build($payload);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonPayload( SummitLocationValidationRulesFactory::build($payload), true);
 
             $location = $this->location_service->addLocation($summit, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($location)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($location)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
 
@@ -880,41 +748,24 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function addVenueFloor($summit_id, $venue_id)
     {
-        try {
-            if (!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+        return $this->processRequest(function() use($summit_id, $venue_id){
+
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
-            $rules = [
+            $payload = $this->getJsonPayload([
                 'name' => 'required|string|max:50',
                 'number' => 'required|integer',
                 'description' => 'sometimes|string',
-            ];
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            ], true);
 
             $floor = $this->location_service->addVenueFloor($summit, $venue_id, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($floor)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($floor)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -924,38 +775,22 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function addVenueRoom($summit_id, $venue_id)
     {
-        try {
-            if (!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+        return $this->processRequest(function() use($summit_id, $venue_id){
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonData();
             $payload['class_name'] = SummitVenueRoom::ClassName;
-            $rules = SummitLocationValidationRulesFactory::build($payload);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonPayload( SummitLocationValidationRulesFactory::build($payload), true);
 
             $room = $this->location_service->addVenueRoom($summit, $venue_id, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($room)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($room)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -965,40 +800,25 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function addVenueFloorRoom($summit_id, $venue_id, $floor_id)
     {
-        try {
-            if (!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+        return $this->processRequest(function() use($summit_id, $venue_id, $floor_id){
+
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonData();
             $payload['class_name'] = SummitVenueRoom::ClassName;
-            $rules = SummitLocationValidationRulesFactory::build($payload);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonPayload( SummitLocationValidationRulesFactory::build($payload), true);
 
             $payload['floor_id'] = intval($floor_id);
 
             $room = $this->location_service->addVenueRoom($summit, $venue_id, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($room)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($room)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -1012,40 +832,23 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function updateLocation($summit_id, $location_id)
     {
-        try {
-
-            if (!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+        return $this->processRequest(function() use($summit_id, $location_id){
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+            $payload = $this->getJsonData();
+            $payload = $this->getJsonPayload( SummitLocationValidationRulesFactory::build($payload, true), true);
 
-            $rules = SummitLocationValidationRulesFactory::build($payload, true);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
 
             $location = $this->location_service->updateLocation($summit, $location_id, $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($location)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($location)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+
+        });
     }
 
     /**
@@ -1055,40 +858,24 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function updateVenue($summit_id, $venue_id)
     {
-        try {
-
-            if (!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+        return $this->processRequest(function() use($summit_id, $venue_id){
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonData();
             $payload['class_name'] = SummitVenue::ClassName;
-            $rules = SummitLocationValidationRulesFactory::build($payload, true);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonPayload(SummitLocationValidationRulesFactory::build($payload, true), true);
 
             $location = $this->location_service->updateLocation($summit, $venue_id, $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($location)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($location)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+
+        });
     }
 
     /**
@@ -1099,41 +886,26 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function updateVenueFloor($summit_id, $venue_id, $floor_id)
     {
-        try {
-            if (!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+        return $this->processRequest(function() use($summit_id, $venue_id, $floor_id){
+
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
-            $rules = [
+
+            $payload = $this->getJsonPayload([
                 'name' => 'sometimes|string|max:50',
                 'number' => 'sometimes|integer',
                 'description' => 'sometimes|string',
-            ];
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            ], true);
 
             $floor = $this->location_service->updateVenueFloor($summit, $venue_id, $floor_id, $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($floor)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($floor)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+
+        });
     }
 
     /**
@@ -1144,38 +916,23 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function updateVenueRoom($summit_id, $venue_id, $room_id)
     {
-        try {
-            if (!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+        return $this->processRequest(function() use($summit_id, $venue_id, $room_id){
+
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonData();
             $payload['class_name'] = SummitVenueRoom::ClassName;
-            $rules = SummitLocationValidationRulesFactory::build($payload, true);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonPayload(SummitLocationValidationRulesFactory::build($payload, true), true);
 
             $room = $this->location_service->updateVenueRoom($summit, $venue_id, $room_id, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($room)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($room)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -1187,41 +944,25 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function updateVenueFloorRoom($summit_id, $venue_id, $floor_id, $room_id)
     {
-        try {
-            if (!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+        return $this->processRequest(function() use($summit_id, $venue_id, $floor_id, $room_id){
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonData();
             $payload['class_name'] = SummitVenueRoom::ClassName;
-            $rules = SummitLocationValidationRulesFactory::build($payload, true);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload =  $this->getJsonPayload(SummitLocationValidationRulesFactory::build($payload, true), true);
 
             if (!isset($payload['floor_id']))
                 $payload['floor_id'] = intval($floor_id);
 
             $room = $this->location_service->updateVenueRoom($summit, $venue_id, $room_id, $payload);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($room)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($room)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
 
@@ -1232,40 +973,23 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function updateHotel($summit_id, $hotel_id)
     {
-        try {
-
-            if (!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+        return $this->processRequest(function() use($summit_id, $hotel_id){
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonData();
             $payload['class_name'] = SummitHotel::ClassName;
-            $rules = SummitLocationValidationRulesFactory::build($payload, true);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonPayload(SummitLocationValidationRulesFactory::build($payload, true), true);
 
             $location = $this->location_service->updateLocation($summit, $hotel_id, $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($location)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($location)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -1275,40 +999,23 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function updateAirport($summit_id, $airport_id)
     {
-        try {
-
-            if (!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+        return $this->processRequest(function() use($summit_id, $airport_id){
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonData();
             $payload['class_name'] = SummitAirport::ClassName;
-            $rules = SummitLocationValidationRulesFactory::build($payload, true);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonPayload(SummitLocationValidationRulesFactory::build($payload, true), true);
 
             $location = $this->location_service->updateLocation($summit, $airport_id, $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($location)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($location)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -1318,40 +1025,23 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function updateExternalLocation($summit_id, $external_location_id)
     {
-        try {
-
-            if (!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+        return $this->processRequest(function() use($summit_id, $external_location_id){
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+            $payload = $this->getJsonData();
             $payload['class_name'] = SummitExternalLocation::ClassName;
-            $rules = SummitLocationValidationRulesFactory::build($payload, true);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($payload, $rules);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonPayload(SummitLocationValidationRulesFactory::build($payload, true), true);
 
             $location = $this->location_service->updateLocation($summit, $external_location_id, $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($location)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($location)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+
+        });
     }
 
     /**
@@ -1365,7 +1055,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function deleteLocation($summit_id, $location_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $location_id){
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -1373,21 +1063,19 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             $this->location_service->deleteLocation($summit, $location_id);
 
             return $this->deleted();
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
+
     }
 
+    /**
+     * @param $summit_id
+     * @param $venue_id
+     * @param $floor_id
+     * @return mixed
+     */
     public function deleteVenueFloor($summit_id, $venue_id, $floor_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $venue_id, $floor_id){
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -1395,21 +1083,19 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             $this->location_service->deleteVenueFloor($summit, $venue_id, $floor_id);
 
             return $this->deleted();
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+
+        });
     }
 
+    /**
+     * @param $summit_id
+     * @param $venue_id
+     * @param $room_id
+     * @return mixed
+     */
     public function deleteVenueRoom($summit_id, $venue_id, $room_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $venue_id, $room_id){
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -1417,16 +1103,8 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             $this->location_service->deleteVenueRoom($summit, $venue_id, $room_id);
 
             return $this->deleted();
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+
+        });
     }
 
     /**
@@ -1440,37 +1118,15 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function getLocationBanners($summit_id, $location_id)
     {
-        $values = Request::all();
-        $rules = PaginationValidationRules::get();
+        $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
 
-        try {
+        $location = $summit->getLocation($location_id);
+        if (is_null($location)) return $this->error404();
 
-            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $location = $summit->getLocation($location_id);
-            if (is_null($location)) return $this->error404();
-
-            $validation = Validator::make($values, $rules);
-
-            if ($validation->fails()) {
-                $ex = new ValidationException();
-                throw $ex->setMessages($validation->messages()->toArray());
-            }
-
-            // default values
-            $page = 1;
-            $per_page = PaginationValidationRules::PerPageMin;
-
-            if (Request::has('page')) {
-                $page = intval(Request::input('page'));
-                $per_page = intval(Request::input('per_page'));
-            }
-
-            $filter = null;
-
-            if (Request::has('filter')) {
-                $filter = FilterParser::parse(Request::input('filter'), [
+        return $this->_getAll(
+            function(){
+                return [
                     'class_name' => ['=='],
                     'title' => ['==', '=@'],
                     'content' => ['=@'],
@@ -1478,63 +1134,39 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                     'enabled' => ['=='],
                     'start_date' => ['>', '<', '<=', '>=', '=='],
                     'end_date' => ['>', '<', '<=', '>=', '=='],
-                ]);
-            }
-
-            if (is_null($filter)) $filter = new Filter();
-
-            $filter->validate([
-                'class_name' => sprintf('sometimes|in:%s', implode(',', SummitLocationBannerConstants::$valid_class_names)),
-                'title' => 'sometimes|string',
-                'content' => 'sometimes|string',
-                'type' => sprintf('sometimes|in:%s', implode(',', SummitLocationBannerConstants::$valid_types)),
-                'enabled' => 'sometimes|boolean',
-                'start_date' => 'sometimes|date_format:U',
-                'end_date' => 'sometimes|date_format:U',
-            ], [
-                'class_name.in' => sprintf
-                (
-                    ":attribute has an invalid value ( valid values are %s )",
-                    implode(", ", SummitLocationBannerConstants::$valid_class_names)
-                )
-            ]);
-
-            $order = null;
-
-            if (Request::has('order')) {
-                $order = OrderParser::parse(Request::input('order'), [
+                ];
+            },
+            function(){
+                return [
+                    'class_name' => sprintf('sometimes|in:%s', implode(',', SummitLocationBannerConstants::$valid_class_names)),
+                    'title' => 'sometimes|string',
+                    'content' => 'sometimes|string',
+                    'type' => sprintf('sometimes|in:%s', implode(',', SummitLocationBannerConstants::$valid_types)),
+                    'enabled' => 'sometimes|boolean',
+                    'start_date' => 'sometimes|date_format:U',
+                    'end_date' => 'sometimes|date_format:U',
+                ];
+            },
+            function(){
+                return  [
                     'id',
                     'title',
                     'start_date',
                     'end_date'
-                ]);
+                ];
+            },
+            function ($filter) {
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($location) {
+                return $this->location_banners_repository->getBySummitLocation($location, new PagingInfo($page, $per_page), call_user_func($applyExtraFilters, $filter), $order);
             }
-
-            $data = $this->location_banners_repository->getBySummitLocation($location, new PagingInfo($page, $per_page), $filter, $order);
-
-            return $this->ok
-            (
-                $data->toArray
-                (
-                    Request::input('expand', ''),
-                    [],
-                    [],
-                    []
-                )
-            );
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        );
     }
 
     /**
@@ -1544,33 +1176,13 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function addLocationBanner($summit_id, $location_id)
     {
-        try {
-
-            if (!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+        return $this->processRequest(function() use($summit_id, $location_id){
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $rules = SummitLocationBannerValidationRulesFactory::build($payload);
-            // Creates a Validator instance and validates the data.
-            $messages = [
-                'class_name.in' => sprintf
-                (
-                    ":attribute has an invalid value ( valid values are %s )",
-                    implode(", ", SummitLocationBannerConstants::$valid_class_names)
-                )
-            ];
-            $validation = Validator::make($payload, $rules, $messages);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonData();
+            $payload = $this->getJsonPayload(SummitLocationBannerValidationRulesFactory::build($payload), true);
 
             $banner = $this->location_service->addLocationBanner
             (
@@ -1582,17 +1194,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 )
             );
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($banner)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($banner)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -1603,7 +1210,8 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function deleteLocationBanner($summit_id, $location_id, $banner_id)
     {
-        try {
+
+        return $this->processRequest(function() use($summit_id, $location_id, $banner_id){
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -1611,16 +1219,8 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             $this->location_service->deleteLocationBanner($summit, $location_id, $banner_id);
 
             return $this->deleted();
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(['message' => $ex2->getMessage()]);
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+
+        });
     }
 
     /**
@@ -1631,33 +1231,13 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function updateLocationBanner($summit_id, $location_id, $banner_id)
     {
-        try {
-
-            if (!Request::isJson()) return $this->error400();
-            $payload = Request::json()->all();
+        return $this->processRequest(function() use($summit_id, $location_id, $banner_id){
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $rules = SummitLocationBannerValidationRulesFactory::build($payload, true);
-            // Creates a Validator instance and validates the data.
-            $messages = [
-                'class_name.in' => sprintf
-                (
-                    ":attribute has an invalid value ( valid values are %s )",
-                    implode(", ", SummitLocationBannerConstants::$valid_class_names)
-                )
-            ];
-            $validation = Validator::make($payload, $rules, $messages);
-
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonData();
+            $payload = $this->getJsonPayload(SummitLocationBannerValidationRulesFactory::build($payload, true), true);
 
             $banner = $this->location_service->updateLocationBanner
             (
@@ -1670,17 +1250,13 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 )
             );
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($banner)->serialize());
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($banner)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+
+        });
     }
 
     /**
@@ -1696,11 +1272,8 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function getLocationMap($summit_id, $location_id, $map_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $location_id, $map_id){
 
-            $expand = Request::input('expand', '');
-            $relations = Request::input('relations', '');
-            $relations = !empty($relations) ? explode(',', $relations) : [];
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -1718,12 +1291,13 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 return $this->error404();
             }
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($map)->serialize($expand, [], $relations));
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($map)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
 
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -1735,7 +1309,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     public function addLocationMap(LaravelRequest $request, $summit_id, $location_id)
     {
 
-        try {
+        return $this->processRequest(function() use($request, $summit_id, $location_id){
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -1770,20 +1344,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 $file
             );
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($map)->serialize());
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($map)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -1795,8 +1361,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function updateLocationMap(LaravelRequest $request, $summit_id, $location_id, $map_id)
     {
-
-        try {
+        return $this->processRequest(function() use($request, $summit_id, $location_id, $map_id){
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -1826,20 +1391,13 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 $request->hasFile('file') ? $request->file('file') : null
             );
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($map)->serialize());
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($map)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+
+        });
     }
 
     /**
@@ -1850,24 +1408,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function deleteLocationMap($summit_id, $location_id, $map_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $location_id, $map_id){
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $this->location_service->deleteLocationMap($summit, $location_id, $map_id);
             return $this->deleted();
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -1882,11 +1428,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function getLocationImage($summit_id, $location_id, $image_id)
     {
-        try {
-
-            $expand = Request::input('expand', '');
-            $relations = Request::input('relations', '');
-            $relations = !empty($relations) ? explode(',', $relations) : [];
+        return $this->processRequest(function() use($summit_id, $location_id, $image_id){
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -1905,12 +1447,13 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 return $this->error404();
             }
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($image)->serialize($expand, [], $relations));
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($image)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
 
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -1921,8 +1464,8 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function addLocationImage(LaravelRequest $request, $summit_id, $location_id)
     {
+        return $this->processRequest(function() use($request, $summit_id, $location_id){
 
-        try {
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -1956,20 +1499,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 $file
             );
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($image)->serialize());
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($image)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -1981,23 +1516,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function updateLocationImage(LaravelRequest $request, $summit_id, $location_id, $image_id)
     {
+        return $this->processRequest(function() use($request, $summit_id, $location_id, $image_id){
 
-        try {
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
-            $data = $request->all();
-            $rules = SummitLocationImageValidationRulesFactory::build(true);
-            // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data, $rules);
 
-            if ($validation->fails()) {
-                $messages = $validation->messages()->toArray();
-
-                return $this->error412
-                (
-                    $messages
-                );
-            }
+            $payload = $this->getJsonPayload(SummitLocationImageValidationRulesFactory::build(true), true);
 
             $image = $this->location_service->updateLocationImage
             (
@@ -2006,25 +1530,17 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                 $image_id,
                 HTMLCleaner::cleanData
                 (
-                    $data, ['description']
+                    $payload, ['description']
                 ),
                 $request->hasFile('file') ? $request->file('file') : null
             );
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($image)->serialize());
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($image)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -2035,37 +1551,24 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      */
     public function deleteLocationImage($summit_id, $location_id, $image_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $location_id, $image_id){
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $this->location_service->deleteLocationImage($summit, $location_id, $image_id);
             return $this->deleted();
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
-
 
     /**
      * @param LaravelRequest $request
      * @param $summit_id
      * @param $venue_id
      * @param $room_id
-     * @return \Illuminate\Http\JsonResponse|mixed
+     * @return mixed
      */
     public function addVenueRoomImage(LaravelRequest $request, $summit_id, $venue_id, $room_id)
     {
-        try {
+        return $this->processRequest(function() use($request, $summit_id, $venue_id, $room_id){
 
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
@@ -2095,32 +1598,24 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
 
             $photo = $this->location_service->addRoomImage($summit, intval($venue_id), intval($room_id), $file);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($photo)->serialize());
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($photo)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
 
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
      * @param $summit_id
      * @param $venue_id
      * @param $room_id
-     * @return \Illuminate\Http\JsonResponse|mixed
+     * @return mixed
      */
     public function removeVenueRoomImage($summit_id, $venue_id, $room_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $venue_id, $room_id){
 
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
@@ -2145,21 +1640,13 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
 
             $room = $this->location_service->removeRoomImage($summit, intval($venue_id), intval($room_id));
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($room)->serialize());
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($room)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
 
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -2167,11 +1654,11 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @param $venue_id
      * @param $floor_id
-     * @return \Illuminate\Http\JsonResponse|mixed
+     * @return mixed
      */
     public function addVenueFloorImage(LaravelRequest $request, $summit_id, $venue_id, $floor_id)
     {
-        try {
+        return $this->processRequest(function() use($request, $summit_id, $venue_id, $floor_id) {
 
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
@@ -2201,32 +1688,25 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
 
             $photo = $this->location_service->addFloorImage($summit, intval($venue_id), intval($floor_id), $file);
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($photo)->serialize());
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($photo)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
 
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
      * @param $summit_id
      * @param $venue_id
      * @param $floor_id
-     * @return \Illuminate\Http\JsonResponse|mixed
+     * @return mixed
      */
     public function removeVenueFloorImage($summit_id, $venue_id, $floor_id)
     {
-        try {
+        return $this->processRequest(function () use($summit_id, $venue_id, $floor_id) {
 
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
@@ -2251,21 +1731,13 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
 
             $floor = $this->location_service->removeFloorImage($summit, intval($venue_id), intval($floor_id));
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($floor)->serialize());
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($floor)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
 
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     // bookable rooms

@@ -241,9 +241,6 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 return [
                     'tag' => ['=@', '=='],
                 ];
-                // always set
-                $values['streaming_url'] = $presentation->getStreamingUrl();
-                $values['streaming_type'] = $presentation->getStreamingType();
             },
             function () {
                 return [

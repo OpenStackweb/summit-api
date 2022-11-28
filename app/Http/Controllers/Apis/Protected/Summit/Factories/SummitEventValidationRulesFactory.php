@@ -72,7 +72,7 @@ final class SummitEventValidationRulesFactory
 
         return [
             'title' => 'required|string|max:255',
-            'description' => 'required|string|max:2200',
+            'description' => 'sometimes|string|max:2200',
             'type_id' => 'required|integer',
             'location_id' => 'sometimes|integer',
             'start_date' => 'sometimes|required|date_format:U',
@@ -131,36 +131,38 @@ final class SummitEventValidationRulesFactory
         if ($update) {
             return [
                 'title' => 'required|string|max:255',
-                'description' => 'required|string|max:2200',
+                'description' => 'sometimes|string|max:2200',
                 'social_description' => 'sometimes|string|max:300',
-                'attendees_expected_learnt' => 'required|string|max:1100',
+                'attendees_expected_learnt' => 'sometimes|string|max:1100',
                 'will_all_speakers_attend' => 'sometimes|boolean',
                 'type_id' => 'required|integer',
                 'track_id' => 'required|integer',
-                'attending_media' => 'required|boolean',
+                'attending_media' => 'sometimes|boolean',
                 'links' => 'sometimes|url_array',
                 'tags' => 'sometimes|string_array',
                 'extra_questions' => 'sometimes|extra_question_dto_array',
                 'disclaimer_accepted' => 'sometimes|boolean',
                 'selection_plan_id' => 'required|integer',
                 'duration' => 'sometimes|integer',
+                'level' => 'sometimes|string',
             ];
         }
 
         return [
             'title' => 'required|string|max:255',
-            'description' => 'required|string|max:2200',
+            'description' => 'sometimes|string|max:2200',
             'social_description' => 'sometimes|string|max:300',
-            'attendees_expected_learnt' => 'required|string|max:1100',
+            'attendees_expected_learnt' => 'sometimes|string|max:1100',
             'type_id' => 'required|integer',
             'track_id' => 'required|integer',
-            'attending_media' => 'required|boolean',
+            'attending_media' => 'sometimes|boolean',
             'will_all_speakers_attend' => 'sometimes|boolean',
             'links' => 'sometimes|url_array',
             'tags' => 'sometimes|string_array',
             'extra_questions' => 'sometimes|extra_question_dto_array',
             'disclaimer_accepted' => 'sometimes|boolean',
             'duration' => 'sometimes|integer',
+            'level' => 'sometimes|string',
         ];
     }
 }

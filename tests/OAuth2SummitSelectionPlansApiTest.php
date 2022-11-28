@@ -137,7 +137,6 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         $params = [
             'id' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
-
         ];
 
         $data = [
@@ -277,20 +276,23 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         $params = [
             'id' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
-            'member_id' => self::$member->getId()
         ];
 
-        $this->action(
-            "PUT",
+        $response = $this->action(
+            "POST",
             "OAuth2SummitSelectionPlansApiController@addAllowedMember",
             $params,
             [],
             [],
             [],
-            $this->getHeaders()
+            $this->getHeaders(),
+            json_encode([
+                'email' => self::$member->getEmail()
+            ])
         );
 
         $this->assertResponseStatus(201);
+        $content = $response->getContent();
         $this->assertTrue(self::$default_selection_plan->getAllowedMembers()->count() >= 1);
     }
 
@@ -299,17 +301,19 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         $params = [
             'id' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
-            'member_id' => self::$member->getId()
         ];
 
         $this->action(
-            "PUT",
+            "POST",
             "OAuth2SummitSelectionPlansApiController@addAllowedMember",
             $params,
             [],
             [],
             [],
-            $this->getHeaders()
+            $this->getHeaders(),
+            json_encode([
+                'email' => self::$member->getEmail()
+            ])
         );
 
         $this->assertResponseStatus(201);
@@ -317,13 +321,11 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
 
         $params = [
             'id' => self::$summit->getId(),
-            'selection_plan_id' => self::$default_selection_plan->getId(),
-            'filter' => 'member_full_name@@'. self::$member->getFullName()
         ];
 
         $response = $this->action(
             "GET",
-            "OAuth2SummitSelectionPlansApiController@getAllowedMembers",
+            "OAuth2SummitSelectionPlansApiController@getMySelectionPlans",
             $params,
             [],
             [],
@@ -343,17 +345,19 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         $params = [
             'id' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
-            'member_id' => self::$member->getId()
         ];
 
         $this->action(
-            "PUT",
+            "POST",
             "OAuth2SummitSelectionPlansApiController@addAllowedMember",
             $params,
             [],
             [],
             [],
-            $this->getHeaders()
+            $this->getHeaders(),
+            json_encode([
+                'email' => self::$member->getEmail()
+            ])
         );
 
         $this->assertResponseStatus(201);
@@ -366,7 +370,10 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
             [],
             [],
             [],
-            $this->getHeaders()
+            $this->getHeaders(),
+            json_encode([
+                'email' => self::$member->getEmail()
+            ])
         );
 
         $this->assertResponseStatus(204);

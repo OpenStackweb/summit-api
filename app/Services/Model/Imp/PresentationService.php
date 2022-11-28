@@ -267,7 +267,7 @@ final class PresentationService
                 throw new ValidationException(sprintf("Selection Plan %s does not allow new submissions", $current_selection_plan->getId()));
             }
 
-            if(!$current_selection_plan->isAllowedMember($member)){
+            if(!$current_selection_plan->isAllowedMember($member->getEmail())){
                 throw new AuthzException(sprintf("Member is not Authorized on Selection Plan."));
             }
 
@@ -391,7 +391,7 @@ final class PresentationService
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
 
-            if(!$current_selection_plan->isAllowedMember($member)){
+            if(!$current_selection_plan->isAllowedMember($member->getEmail())){
                 throw new AuthzException(sprintf("Member is not Authorized on Selection Plan."));
             }
 
@@ -549,7 +549,7 @@ final class PresentationService
                     $presentation_id
                 ));
 
-            if(!$current_selection_plan->isAllowedMember($member)){
+            if(!$current_selection_plan->isAllowedMember($member->getEmail())){
                 throw new AuthzException(sprintf("Member is not Authorized on Selection Plan."));
             }
 
@@ -607,7 +607,7 @@ final class PresentationService
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
 
-            if(!$current_selection_plan->isAllowedMember($member)){
+            if(!$current_selection_plan->isAllowedMember($member->getEmail())){
                 throw new AuthzException(sprintf("Member is not Authorized on Selection Plan."));
             }
 

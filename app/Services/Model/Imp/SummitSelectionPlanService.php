@@ -14,14 +14,19 @@
 
 use App\Jobs\Emails\PresentationSelections\PresentationCategoryChangeRequestCreatedEmail;
 use App\Jobs\Emails\PresentationSelections\PresentationCategoryChangeRequestResolvedEmail;
+use App\Jobs\ProcessSelectionPlanAllowedMemberData;
 use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\Factories\SummitSelectionPlanFactory;
 use App\Models\Foundation\Summit\SelectionPlan;
+use App\Services\FileSystem\IFileDownloadStrategy;
+use App\Services\FileSystem\IFileUploadStrategy;
+use App\Services\Utils\CSVReader;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
-use models\main\IMemberRepository;
-use models\main\Member;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\Presentation;
@@ -50,30 +55,38 @@ final class SummitSelectionPlanService
     private $resource_server_ctx;
 
     /**
-     * @var IMemberRepository
+     * @var IFileUploadStrategy
      */
-    private $member_repository;
+    private $upload_strategy;
+
+    /**
+     * @var IFileDownloadStrategy
+     */
+    private $download_strategy;
 
 
     /**
      * @param ISummitRepository $summit_repository
-     * @param IMemberRepository $member_repository
+     * @param IFileUploadStrategy $upload_strategy
+     * @param IFileDownloadStrategy $download_strategy
      * @param IResourceServerContext $resource_server_ctx
      * @param ITransactionService $tx_service
      */
     public function __construct
     (
-        ISummitRepository $summit_repository,
-        IMemberRepository $member_repository,
+        ISummitRepository      $summit_repository,
+        IFileUploadStrategy    $upload_strategy,
+        IFileDownloadStrategy  $download_strategy,
         IResourceServerContext $resource_server_ctx,
-        ITransactionService $tx_service
+        ITransactionService    $tx_service
     )
     {
         parent::__construct($tx_service);
 
         $this->summit_repository = $summit_repository;
-        $this->member_repository = $member_repository;
         $this->resource_server_ctx = $resource_server_ctx;
+        $this->upload_strategy = $upload_strategy;
+        $this->download_strategy = $download_strategy;
     }
 
     /**
@@ -266,22 +279,22 @@ final class SummitSelectionPlanService
      */
     public function markPresentationAsViewed(Summit $summit, int $selection_plan_id, int $presentation_id): Presentation
     {
-        return $this->tx_service->transaction(function() use($summit, $selection_plan_id, $presentation_id){
+        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $presentation_id) {
 
             $current_member = $this->resource_server_ctx->getCurrentUser();
-            if(is_null($current_member))
+            if (is_null($current_member))
                 throw new AuthzException("User not Found");
 
             $selection_plan = $summit->getSelectionPlanById(intval($selection_plan_id));
             if (is_null($selection_plan))
                 throw new EntityNotFoundException("Selection Plan not found.");
 
-            if(!$selection_plan->isSelectionOpen())
+            if (!$selection_plan->isSelectionOpen())
                 throw new ValidationException(sprintf("Selection period is not open for selection plan %s", $selection_plan->getId()));
 
             $presentation = $selection_plan->getPresentation(intval($presentation_id));
 
-            if(is_null($presentation))
+            if (is_null($presentation))
                 throw new EntityNotFoundException("Presentation not found.");
 
             $category = $presentation->getCategory();
@@ -290,7 +303,7 @@ final class SummitSelectionPlanService
 
             $isAuth = $summit->isTrackChairAdmin($current_member) || $summit->isTrackChair($current_member, $category);
 
-            if(!$isAuth)
+            if (!$isAuth)
                 throw new ValidationException(sprintf("Presentation %s has changed to track %s", $presentation->getTitle(), $category->getTitle()));
 
             $presentation->addTrackChairView($current_member);
@@ -305,28 +318,28 @@ final class SummitSelectionPlanService
     public function addPresentationComment
     (
         Summit $summit,
-        int $selection_plan_id,
-        int $presentation_id,
-        array $payload
+        int    $selection_plan_id,
+        int    $presentation_id,
+        array  $payload
     ): SummitPresentationComment
     {
-        return $this->tx_service->transaction(function() use($summit, $selection_plan_id, $presentation_id, $payload){
+        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $presentation_id, $payload) {
 
             $current_member = $this->resource_server_ctx->getCurrentUser();
 
-            if(is_null($current_member))
+            if (is_null($current_member))
                 throw new AuthzException("User not Found");
 
             $selection_plan = $summit->getSelectionPlanById(intval($selection_plan_id));
             if (is_null($selection_plan))
                 throw new EntityNotFoundException("Selection Plan not found.");
 
-            if(!$selection_plan->isSelectionOpen())
+            if (!$selection_plan->isSelectionOpen())
                 throw new ValidationException(sprintf("Selection period is not open for selection plan %s", $selection_plan->getId()));
 
             $presentation = $selection_plan->getPresentation(intval($presentation_id));
 
-            if(is_null($presentation))
+            if (is_null($presentation))
                 throw new EntityNotFoundException("Presentation not found.");
 
             $category = $presentation->getCategory();
@@ -335,7 +348,7 @@ final class SummitSelectionPlanService
 
             $isAuth = $summit->isTrackChairAdmin($current_member) || $summit->isTrackChair($current_member, $category);
 
-            if(!$isAuth)
+            if (!$isAuth)
                 throw new ValidationException(sprintf("Presentation %s has changed to track %s", $presentation->getTitle(), $category->getTitle()));
 
             return $presentation->addTrackChairComment($current_member, trim($payload['body']), boolval($payload['is_public']));
@@ -348,22 +361,22 @@ final class SummitSelectionPlanService
      */
     public function createPresentationCategoryChangeRequest(Summit $summit, int $selection_plan_id, int $presentation_id, int $new_category_id): ?SummitCategoryChange
     {
-        return $this->tx_service->transaction(function() use($summit, $selection_plan_id, $presentation_id, $new_category_id){
+        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $presentation_id, $new_category_id) {
 
             $current_member = $this->resource_server_ctx->getCurrentUser();
-            if(is_null($current_member))
+            if (is_null($current_member))
                 throw new AuthzException("User not Found");
 
             $selection_plan = $summit->getSelectionPlanById(intval($selection_plan_id));
             if (is_null($selection_plan))
                 throw new EntityNotFoundException("Selection Plan not found.");
 
-            if(!$selection_plan->isSelectionOpen())
+            if (!$selection_plan->isSelectionOpen())
                 throw new ValidationException(sprintf("Selection period is not open for selection plan %s", $selection_plan->getId()));
 
             $presentation = $selection_plan->getPresentation(intval($presentation_id));
 
-            if(is_null($presentation))
+            if (is_null($presentation))
                 throw new EntityNotFoundException("Presentation not found.");
 
             $category = $presentation->getCategory();
@@ -372,15 +385,15 @@ final class SummitSelectionPlanService
 
             $new_category = $summit->getPresentationCategory($new_category_id);
 
-            if(is_null($new_category) || !$new_category->isChairVisible())
+            if (is_null($new_category) || !$new_category->isChairVisible())
                 throw new EntityNotFoundException("New Category not found.");
 
             $isAuth = $summit->isTrackChairAdmin($current_member) || $summit->isTrackChair($current_member, $category);
 
-            if(!$isAuth)
+            if (!$isAuth)
                 throw new AuthzException(sprintf("User %s is not authorized to perform this action.", $current_member->getId()));
 
-            $change_request = $presentation->addCategoryChangeRequest($current_member,  $new_category);
+            $change_request = $presentation->addCategoryChangeRequest($current_member, $new_category);
 
             $presentation->addTrackChairNotification
             (
@@ -406,22 +419,22 @@ final class SummitSelectionPlanService
      */
     public function resolvePresentationCategoryChangeRequest(Summit $summit, int $selection_plan_id, int $presentation_id, int $category_change_request_id, array $payload): ?SummitCategoryChange
     {
-        return $this->tx_service->transaction(function() use($summit, $selection_plan_id, $presentation_id, $category_change_request_id, $payload){
+        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $presentation_id, $category_change_request_id, $payload) {
 
             $current_member = $this->resource_server_ctx->getCurrentUser();
-            if(is_null($current_member))
+            if (is_null($current_member))
                 throw new AuthzException("User not Found");
 
             $selection_plan = $summit->getSelectionPlanById(intval($selection_plan_id));
             if (is_null($selection_plan))
                 throw new EntityNotFoundException("Selection Plan not found.");
 
-            if(!$selection_plan->isSelectionOpen())
+            if (!$selection_plan->isSelectionOpen())
                 throw new ValidationException(sprintf("Selection period is not open for selection plan %s", $selection_plan->getId()));
 
             $presentation = $selection_plan->getPresentation(intval($presentation_id));
 
-            if(is_null($presentation))
+            if (is_null($presentation))
                 throw new EntityNotFoundException("Presentation not found.");
 
             $category = $presentation->getCategory();
@@ -430,10 +443,10 @@ final class SummitSelectionPlanService
 
             $change_request = $presentation->getCategoryChangeRequest($category_change_request_id);
 
-            if(is_null($change_request))
+            if (is_null($change_request))
                 throw new EntityNotFoundException("Category Change Request not found.");
 
-            if(!$change_request->isPending()){
+            if (!$change_request->isPending()) {
                 throw new ValidationException("Change request has already been  approved/rejected.");
             }
 
@@ -441,7 +454,7 @@ final class SummitSelectionPlanService
 
             $isAuth = $summit->isTrackChairAdmin($current_member) || $summit->isTrackChair($current_member, $newCategory);
 
-            if(!$isAuth)
+            if (!$isAuth)
                 throw new AuthzException(sprintf("User %s is not authorized to perform this action.", $current_member->getId()));
 
             if ($presentation->isSelectedByAnyone()) {
@@ -456,10 +469,10 @@ final class SummitSelectionPlanService
                 throw new ValidationException("The presentation is already in this category.");
             }
 
-            $approved = (boolean) $payload['approved'];
-            $reason =  $payload['reason'] ?? 'No reason.';
+            $approved = (boolean)$payload['approved'];
+            $reason = $payload['reason'] ?? 'No reason.';
 
-            if($approved){
+            if ($approved) {
                 $change_request->approve($current_member, $reason);
                 $presentation->clearViews();;
                 $presentation->setCategory($newCategory);
@@ -475,18 +488,16 @@ final class SummitSelectionPlanService
                     )
                 );
 
-                foreach($presentation->getPendingCategoryChangeRequests() as $pending_request){
-                    if($pending_request->getId() == $change_request->getId()) continue;
-                    $pending_request->reject($current_member, sprintf( "Request ID %s was approved instead.", $change_request->getId()));
+                foreach ($presentation->getPendingCategoryChangeRequests() as $pending_request) {
+                    if ($pending_request->getId() == $change_request->getId()) continue;
+                    $pending_request->reject($current_member, sprintf("Request ID %s was approved instead.", $change_request->getId()));
                 }
-            }
-
-            else{
+            } else {
                 $change_request->reject($current_member, $reason);
                 $presentation->addTrackChairNotification(
                     $current_member,
                     sprintf(
-                        "{member} rejected %s's request to move this presentation from %s to %s because : %s" ,
+                        "{member} rejected %s's request to move this presentation from %s to %s because : %s",
                         $change_request->getRequester()->getFullName(),
                         $category->getTitle(),
                         $newCategory->getTitle(),
@@ -505,8 +516,9 @@ final class SummitSelectionPlanService
     /**
      * @inheritDoc
      */
-    public function attachEventTypeToSelectionPlan(Summit $summit, int $selection_plan_id, int $event_type_id) {
-        $this->tx_service->transaction(function() use($summit, $selection_plan_id, $event_type_id){
+    public function attachEventTypeToSelectionPlan(Summit $summit, int $selection_plan_id, int $event_type_id)
+    {
+        $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $event_type_id) {
 
             $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
             if (is_null($selection_plan))
@@ -530,7 +542,8 @@ final class SummitSelectionPlanService
     /**
      * @inheritDoc
      */
-    public function detachEventTypeFromSelectionPlan(Summit $summit, int $selection_plan_id, int $event_type_id) {
+    public function detachEventTypeFromSelectionPlan(Summit $summit, int $selection_plan_id, int $event_type_id)
+    {
         $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $event_type_id) {
 
             $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
@@ -560,9 +573,10 @@ final class SummitSelectionPlanService
      * @inheritDoc
      */
     public function upsertAllowedPresentationActionType(
-        Summit $summit, int $selection_plan_id, int $type_id, array $payload): PresentationActionType {
+        Summit $summit, int $selection_plan_id, int $type_id, array $payload): PresentationActionType
+    {
 
-        return $this->tx_service->transaction(function() use($summit, $selection_plan_id, $type_id, $payload) {
+        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $type_id, $payload) {
             $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
             if (is_null($selection_plan))
                 throw new EntityNotFoundException("Selection Plan not found.");
@@ -592,32 +606,6 @@ final class SummitSelectionPlanService
             }
 
             return $presentation_action_type;
-        });
-    }
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
-     * @param int $member_id
-     * @throws \Exception
-     */
-    public function addAllowedMember(Summit $summit, int $selection_plan_id, int $member_id): void
-    {
-         $this->tx_service->transaction(function() use($summit, $selection_plan_id, $member_id){
-
-            $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
-            if (!$selection_plan instanceof SelectionPlan)
-                throw new EntityNotFoundException("Selection Plan not found.");
-
-            $member = $this->member_repository->getById($member_id);
-
-            if(!$member instanceof Member)
-                throw new EntityNotFoundException("Member not found.");
-
-            if($selection_plan->containsMember($member))
-                throw new ValidationException("Member is already authorized on Selection Plan.");
-
-            $selection_plan->addAllowedMember($member);
-
         });
     }
 
@@ -656,26 +644,151 @@ final class SummitSelectionPlanService
     /**
      * @param Summit $summit
      * @param int $selection_plan_id
-     * @param int $member_id
+     * @param string $email
      * @throws \Exception
      */
-    public function removeAllowedMember(Summit $summit, int $selection_plan_id, int $member_id): void
+    public function addAllowedMember(Summit $summit, int $selection_plan_id, string $email): void
     {
-        $this->tx_service->transaction(function() use($summit, $selection_plan_id, $member_id){
+        $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $email) {
 
             $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
             if (!$selection_plan instanceof SelectionPlan)
                 throw new EntityNotFoundException("Selection Plan not found.");
 
-            $member = $this->member_repository->getById($member_id);
+            if ($selection_plan->containsMember(trim($email)))
+                throw new ValidationException("Member is already authorized on Selection Plan.");
 
-            if(!$member instanceof Member)
-                throw new EntityNotFoundException("Member not found.");
+            $selection_plan->addAllowedMember($email);
 
-            if(!$selection_plan->containsMember($member))
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $selection_plan_id
+     * @param string $email
+     * @throws \Exception
+     */
+    public function removeAllowedMember(Summit $summit, int $selection_plan_id, string $email): void
+    {
+        $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $email) {
+
+            $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
+            if (!$selection_plan instanceof SelectionPlan)
+                throw new EntityNotFoundException("Selection Plan not found.");
+
+            if (!$selection_plan->containsMember($email))
                 throw new ValidationException("Member is not authorized on Selection Plan.");
 
-            $selection_plan->removeAllowedMember($member);
+            $selection_plan->removeAllowedMember($email);
         });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $selection_plan_id
+     * @param UploadedFile $csv_file
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function importAllowedMembers(Summit $summit, int $selection_plan_id, UploadedFile $csv_file): void
+    {
+        Log::debug(sprintf("SelectionPlanService::importAllowedMembers - summit %s selection plan %s", $summit->getId(), $selection_plan_id));
+
+        $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
+        if (!$selection_plan instanceof SelectionPlan)
+            throw new EntityNotFoundException("Selection Plan not found.");
+
+        $allowed_extensions = ['txt'];
+
+        if (!in_array($csv_file->extension(), $allowed_extensions)) {
+            throw new ValidationException("file does not has a valid extension ('csv').");
+        }
+
+        $real_path = $csv_file->getRealPath();
+        $filename = pathinfo($real_path);
+        $filename = $filename['filename'] ?? sprintf("file%s", time());
+        $basename = sprintf("%s_%s.csv", $filename, time());
+        $path = "tmp/selection_plans_allowed_members";
+        $csv_data = File::get($real_path);
+        if (empty($csv_data))
+            throw new ValidationException("file content is empty!");
+
+        $this->upload_strategy->save($csv_file, $path, $basename);
+
+        $reader = CSVReader::buildFrom($csv_data);
+
+        // check needed columns (headers names)
+        /*
+            columns
+            * email ( mandatory)
+         */
+
+        // validate format with col names
+
+        if (!$reader->hasColumn("email"))
+            throw new ValidationException
+            (
+                "email column is missing"
+            );
+
+        ProcessSelectionPlanAllowedMemberData::dispatch($summit->getId(), $selection_plan_id, $basename);
+    }
+
+    /**
+     * @param int $summit_id
+     * @param int $selection_plan_id
+     * @param string $filename
+     * @throws EntityNotFoundException
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function processAllowedMemberData(int $summit_id, int $selection_plan_id, string $filename): void
+    {
+        $path = sprintf("tmp/tickets_imports/%s", $filename);
+        Log::debug(sprintf("SelectionPlanService::processAllowedMemberData summit %s selection_plan_id %s filename %s", $summit_id, $selection_plan_id, $filename));
+
+        if (!$this->download_strategy->exists($path)) {
+            Log::warning
+            (
+                sprintf
+                (
+                    "SelectionPlanService::processAllowedMemberData file %s does not exist on storage %s",
+                    $path,
+                    $this->download_strategy->getDriver()
+                )
+            );
+
+            throw new ValidationException(sprintf("file %s does not exists.", $filename));
+        }
+
+        $csv_data = $this->download_strategy->get($path);
+
+        $selection_plan = $this->tx_service->transaction(function () use ($summit_id, $selection_plan_id) {
+            $summit = $this->summit_repository->getById($summit_id);
+            if (is_null($summit) || !$summit instanceof Summit)
+                throw new EntityNotFoundException(sprintf("summit %s does not exists.", $summit_id));
+
+            $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
+            if (!$selection_plan instanceof SelectionPlan)
+                throw new EntityNotFoundException("Selection Plan not found.");
+
+            return $selection_plan;
+        });
+
+
+        $reader = CSVReader::buildFrom($csv_data);
+
+        foreach ($reader as $idx => $row) {
+
+            $this->tx_service->transaction(function () use ($selection_plan, $reader, $row) {
+
+                Log::debug(sprintf("SelectionPlanService::processAllowedMemberData processing row %s", json_encode($row)));
+
+                $selection_plan->addAllowedMember($row['email']);
+            });
+        }
+
+        Log::debug(sprintf("SelectionPlanService::processAllowedMemberData deleting file %s from storage %s", $path, $this->download_strategy->getDriver()));
+        $this->download_strategy->delete($path);
     }
 }

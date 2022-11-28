@@ -273,6 +273,7 @@ Route::group(array('prefix' => 'summits'), function () {
 
         Route::group(['prefix' => 'selection-plans'], function () {
             Route::get('', ['uses' => 'OAuth2SummitSelectionPlansApiController@getAll']);
+            Route::get('me','OAuth2SummitSelectionPlansApiController@getMySelectionPlans');
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addSelectionPlan']);
             Route::group(['prefix' => '{selection_plan_id}'], function () {
 
@@ -322,11 +323,10 @@ Route::group(array('prefix' => 'summits'), function () {
                 // allowed members
 
                 Route::group(['prefix' => 'allowed-members'], function () {
-                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@getAllowedMembers']);
-                    Route::group(['prefix' => '{member_id}'], function () {
-                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addAllowedMember']);
-                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@removeAllowedMember']);
-                    });
+                    Route::get('', ['uses' => 'OAuth2SummitSelectionPlansApiController@getAllowedMembers']);
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addAllowedMember']);
+                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@removeAllowedMember']);
+                    Route::post('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@importAllowedMembers']);
                 });
 
                 // presentations

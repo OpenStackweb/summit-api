@@ -6151,6 +6151,15 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'get-all-my-selection-plans',
+                'route' => '/api/v1/summits/{id}/selection-plans/me',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ],
+            ],
+            [
                 'name' => 'get-selection-plan-by-id',
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}',
                 'http_method' => 'GET',
@@ -6506,8 +6515,8 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'attach-selection-plan-allowed-member',
-                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-members/{member_id}',
-                'http_method' => 'PUT',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-members',
+                'http_method' => 'POST',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)
                 ],
@@ -6519,8 +6528,21 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'detach-selection-plan-allowed-member',
-                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-members/{member_id}',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-members',
                 'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'import-selection-plan-allowed-members',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-members/csv',
+                'http_method' => 'POST',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)
                 ],

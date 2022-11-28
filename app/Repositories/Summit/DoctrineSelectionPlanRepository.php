@@ -14,10 +14,10 @@
 
 use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\Models\Foundation\Summit\SelectionPlan;
+use App\Models\Foundation\Summit\SelectionPlanAllowedMember;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
-use models\main\Member;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
@@ -53,6 +53,9 @@ final class DoctrineSelectionPlanRepository
         if ($filter->hasFilter("summit_id")) {
             $query = $query->join('e.summit', 's');
         }
+        if ($filter->hasFilter("allowed_member_email")) {
+            $query = $query->leftJoin('e.allowed_members', 'am');
+        }
         return $query;
     }
 
@@ -80,6 +83,8 @@ final class DoctrineSelectionPlanRepository
                     ),
                 ]
             ),
+            'allowed_member_email' => 'SIZE(e.allowed_members) = 0 OR am.email',
+            'is_enabled' => 'e.is_enabled',
         ];
     }
 
@@ -94,23 +99,22 @@ final class DoctrineSelectionPlanRepository
         $query = $this->getEntityManager()
             ->createQueryBuilder()
             ->select("m")
-            ->from(Member::class, "m")
-            ->innerJoin("m.allowed_selection_plans", "sp")
+            ->from(SelectionPlanAllowedMember::class, "m")
+            ->innerJoin("m.selection_plan", "sp")
             ->innerJoin("sp.summit", "s");
 
         if (!is_null($filter)) {
             $filter->apply2Query($query, [
                 'summit_id' => 's.id',
                 'id' => 'sp.id',
-                'member_full_name' => new DoctrineFilterMapping("( CONCAT(LOWER(m.first_name), ' ', LOWER(m.last_name)) :operator LOWER(:value) )"),
                 'member_email' => new DoctrineFilterMapping("LOWER(m.email) :operator LOWER(:value)")
             ]);
         }
 
         if (!is_null($order)) {
             $order->apply2Query($query, [
-                "member_full_name" => <<<SQL
-LOWER(CONCAT(m.first_name, ' ', m.last_name))
+                "email" => <<<SQL
+LOWER(m.email)
 SQL,
             ]);
         }

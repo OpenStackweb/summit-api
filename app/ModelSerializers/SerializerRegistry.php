@@ -80,6 +80,7 @@ use App\ModelSerializers\Summit\RSVP\Templates\RSVPQuestionValueTemplateSerializ
 use App\ModelSerializers\Summit\RSVP\Templates\RSVPSingleValueTemplateQuestionSerializer;
 use App\ModelSerializers\Summit\RSVPTemplateSerializer;
 use App\ModelSerializers\Summit\ScheduledSummitLocationBannerSerializer;
+use App\ModelSerializers\Summit\SelectionPlanAllowedMemberSerializer;
 use App\ModelSerializers\Summit\SponsorAdSerializer;
 use App\ModelSerializers\Summit\SponsorBadgeScanCSVSerializer;
 use App\ModelSerializers\Summit\SponsorBadgeScanSerializer;
@@ -218,6 +219,7 @@ final class SerializerRegistry
         $this->registry['SelectionPlan'] = SelectionPlanSerializer::class;
         $this->registry['SummitSelectionPlanExtraQuestionType'] = SummitSelectionPlanExtraQuestionTypeSerializer::class;
         $this->registry['AssignedSelectionPlanExtraQuestionType'] = AssignedSelectionPlanExtraQuestionTypeSerializer::class;
+        $this->registry['SelectionPlanAllowedMember'] = SelectionPlanAllowedMemberSerializer::class;
         
         $this->registry['SummitWIFIConnection'] = SummitWIFIConnectionSerializer::class;
         $this->registry['SummitType'] = SummitTypeSerializer::class;

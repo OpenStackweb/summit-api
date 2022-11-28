@@ -59,10 +59,10 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
         parent::tearDown();
     }
 
-    public function testGetCurrentSummitLocations($summit_id = 23)
+    public function testGetCurrentSummitLocations()
     {
         $params = [
-            'id'       => $summit_id,
+            'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 5,
             'order'    => '-order'

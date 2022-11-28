@@ -20,8 +20,7 @@ use ModelSerializers\SerializerRegistry;
  */
 class SummitGeoLocatedLocationSerializer extends SummitAbstractLocationSerializer
 {
-    protected static $array_mappings = array
-    (
+    protected static $array_mappings = [
         'Address1'        => 'address_1:json_string',
         'Address2'        => 'address_2:json_string',
         'ZipCode'         => 'zip_code',
@@ -34,7 +33,12 @@ class SummitGeoLocatedLocationSerializer extends SummitAbstractLocationSerialize
         'DisplayOnSite'   => 'display_on_site:json_boolean',
         'DetailsPage'     => 'details_page:json_boolean',
         'LocationMessage' => 'location_message:json_string',
-    );
+    ];
+
+    protected static $allowed_relations = [
+        'maps',
+        'images',
+    ];
 
     /**
      * @param null $expand
@@ -48,23 +52,25 @@ class SummitGeoLocatedLocationSerializer extends SummitAbstractLocationSerialize
         $values   = parent::serialize($expand, $fields, $relations);
         $location = $this->object;
         if(!$location instanceof SummitGeoLocatedLocation) return [];
-        // maps
-        $maps   = [];
-        foreach($location->getMaps() as $image)
-        {
-            if(!$image->hasPicture()) continue;
-            $maps[] = SerializerRegistry::getInstance()->getSerializer($image)->serialize();
-        }
-        $values['maps'] = $maps;
-        // images
-        $images   = [];
-        foreach($location->getImages() as $image)
-        {
-            if(!$image->hasPicture()) continue;
-            $images[] = SerializerRegistry::getInstance()->getSerializer($image)->serialize();
-        }
-        $values['images'] = $images;
 
+        if (!count($relations)) $relations = $this->getAllowedRelations();
+        if(in_array('maps', $relations)) {
+            $maps = [];
+            foreach ($location->getMaps() as $image) {
+                if (!$image->hasPicture()) continue;
+                $maps[] = SerializerRegistry::getInstance()->getSerializer($image)->serialize();
+            }
+            $values['maps'] = $maps;
+        }
+        if(in_array('images', $relations)) {
+            // images
+            $images = [];
+            foreach ($location->getImages() as $image) {
+                if (!$image->hasPicture()) continue;
+                $images[] = SerializerRegistry::getInstance()->getSerializer($image)->serialize();
+            }
+            $values['images'] = $images;
+        }
         return $values;
     }
 }

@@ -88,6 +88,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      */
     private $summit_service;
 
+    use RequestProcessor;
     /**
      * OAuth2SummitSpeakersApiController constructor.
      * @param ISummitRepository $summit_repository
@@ -474,7 +475,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      */
     public function getSummitSpeaker($summit_id, $speaker_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $speaker_id){
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -497,23 +498,14 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             (
                 SerializerRegistry::getInstance()->getSerializer($speaker, $serializer_type)->serialize
                 (
-                    Request::input('expand', ''),
-                    [],
-                    [],
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
                     ['summit_id' => $summit_id, 'published' => true, 'summit' => $summit]
                 )
             );
 
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412($ex1->getMessages());
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -522,7 +514,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      */
     public function getMySummitSpeaker($summit_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id){
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -535,9 +527,9 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             (
                 SerializerRegistry::getInstance()->getSerializer($speaker, $serializer_type)->serialize
                 (
-                    Request::input('expand', ''),
-                    [],
-                    [],
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
                     [
                         'summit_id' => $summit_id,
                         'published' => Request::input('published', false),
@@ -545,17 +537,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     ]
                 )
             );
-
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412($ex1->getMessages());
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -563,7 +545,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      */
     public function getMySpeaker()
     {
-        try {
+        return $this->processRequest(function(){
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
@@ -576,23 +558,13 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             (
                 SerializerRegistry::getInstance()->getSerializer($speaker, $serializer_type)->serialize
                 (
-                    Request::input('expand', ''),
-                    [],
-                    [],
-                    []
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
                 )
             );
 
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412($ex1->getMessages());
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**

@@ -16,7 +16,6 @@ use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SummitVenue;
 use ModelSerializers\SerializerRegistry;
 
-
 /**
  * Class SummitVenueSerializer
  * @package ModelSerializers\Locations
@@ -27,6 +26,12 @@ final class SummitVenueSerializer extends SummitGeoLocatedLocationSerializer
     (
         'IsMain' => 'is_main::json_boolean',
     );
+
+
+    protected static $allowed_relations = [
+        'rooms',
+        'floors',
+    ];
 
     /**
      * @param null $expand
@@ -40,25 +45,28 @@ final class SummitVenueSerializer extends SummitGeoLocatedLocationSerializer
         $values = parent::serialize($expand, $fields, $relations, $params);
         $venue  = $this->object;
         if(!$venue instanceof  SummitVenue) return [];
-        // rooms
-        $rooms = [];
-        foreach($venue->getRooms() as $room)
-        {
-            $rooms[] = $room->getId();
+        if (!count($relations)) $relations = $this->getAllowedRelations();
+        if(in_array('rooms', $relations)) {
+            // rooms
+            $rooms = [];
+            foreach ($venue->getRooms() as $room) {
+                $rooms[] = $room->getId();
+            }
+
+            if (count($rooms) > 0)
+                $values['rooms'] = $rooms;
         }
 
-        if(count($rooms) > 0)
-            $values['rooms'] = $rooms;
+        if(in_array('floors', $relations)) {
+            // floors
+            $floors = [];
+            foreach ($venue->getFloors() as $floor) {
+                $floors[] = $floor->getId();
+            }
 
-        // floors
-        $floors = [];
-        foreach($venue->getFloors() as $floor)
-        {
-            $floors[] = $floor->getId();
+            if (count($floors) > 0)
+                $values['floors'] = $floors;
         }
-
-        if(count($floors) > 0)
-            $values['floors'] = $floors;
 
         if (!empty($expand)) {
             foreach (explode(',', $expand) as $relation) {
@@ -66,23 +74,27 @@ final class SummitVenueSerializer extends SummitGeoLocatedLocationSerializer
                 switch ($relation) {
                     case 'rooms':
                         {
-                            if($venue->hasRooms()) {
-                                $rooms = [];
-                                foreach ($venue->getRooms() as $room) {
-                                    $rooms[] = SerializerRegistry::getInstance()->getSerializer($room)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            if(in_array('rooms', $relations)) {
+                                if ($venue->hasRooms()) {
+                                    $rooms = [];
+                                    foreach ($venue->getRooms() as $room) {
+                                        $rooms[] = SerializerRegistry::getInstance()->getSerializer($room)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                    }
+                                    $values['rooms'] = $rooms;
                                 }
-                                $values['rooms'] = $rooms;
                             }
                         }
                         break;
                     case 'floors':
                         {
-                            if($venue->hasFloors()) {
-                                $floors = [];
-                                foreach ($venue->getFloors() as $floor) {
-                                    $floors[] = SerializerRegistry::getInstance()->getSerializer($floor)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            if(in_array('floors', $relations)) {
+                                if ($venue->hasFloors()) {
+                                    $floors = [];
+                                    foreach ($venue->getFloors() as $floor) {
+                                        $floors[] = SerializerRegistry::getInstance()->getSerializer($floor)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                                    }
+                                    $values['floors'] = $floors;
                                 }
-                                $values['floors'] = $floors;
                             }
                         }
                         break;

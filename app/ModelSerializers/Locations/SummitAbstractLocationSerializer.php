@@ -11,21 +11,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use models\summit\SummitAbstractLocation;
 use ModelSerializers\SilverStripeSerializer;
 
 /**
  * Class SummitAbstractLocationSerializer
  * @package ModelSerializers\Locations
  */
-class SummitAbstractLocationSerializer extends SilverStripeSerializer
+class SummitAbstractLocationSerializer
+    extends SilverStripeSerializer
 {
-    protected static $array_mappings = array
-    (
+    protected static $array_mappings = [
         'Name'         => 'name:json_string',
-        'ShortName'         => 'short_name:json_string',
+        'ShortName'    => 'short_name:json_string',
         'Description'  => 'description:json_string',
         'LocationType' => 'location_type',
         'Order'        => 'order:json_int',
         'ClassName'    => 'class_name:json_string',
-    );
+    ];
+
+    protected static $allowed_relations = [
+        'published_events',
+    ];
+
+    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
+    {
+        $location = $this->object;
+        if (!$location instanceof SummitAbstractLocation) return [];
+        if (!count($relations)) $relations = $this->getAllowedRelations();
+
+        $values = parent::serialize($expand, $fields, $relations, $params);
+
+        if(in_array('published_events', $relations)){
+            $events = [];
+            foreach ($location->getPublishedEvents() as $e){
+                $events[] = $e->getId();
+            }
+            $values['published_events'] = $events;
+        }
+
+        return $values;
+    }
 }

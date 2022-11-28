@@ -38,8 +38,8 @@ final class SponsorSocialNetworkFactory
             $social_network->setLink(trim($data['link']));
         if(isset($data['icon_css_class']))
             $social_network->setIconCssClass(trim($data['icon_css_class']));
-        if (isset($payload['is_enabled'])) {
-            $social_network->setIsEnabled(boolval($payload['is_enabled']));
+        if (isset($data['is_enabled'])) {
+            $social_network->setIsEnabled(boolval($data['is_enabled']));
         }
         return $social_network;
     }

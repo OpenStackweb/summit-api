@@ -793,6 +793,7 @@ final class SummitSelectionPlanService
             $this->tx_service->transaction(function () use ($selection_plan, $reader, $row) {
 
                 Log::debug(sprintf("SelectionPlanService::processAllowedMemberData processing row %s", json_encode($row)));
+                if(empty(trim($row['email']))) return;
 
                 $selection_plan->addAllowedMember(trim($row['email']));
             });

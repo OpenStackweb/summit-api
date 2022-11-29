@@ -1266,6 +1266,7 @@ class SelectionPlan extends SilverstripeBaseModel
      * @throws ValidationException
      */
     public function addAllowedMember(string $email):?SelectionPlanAllowedMember{
+        if(empty($email)) return null;
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('email', trim($email)));
         if($this->allowed_members->matching($criteria)->count() > 0)

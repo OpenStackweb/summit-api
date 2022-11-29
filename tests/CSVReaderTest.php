@@ -35,6 +35,9 @@ CSV;
 
         $this->assertTrue($reader->hasColumn("email"));
 
+        foreach ($reader as $row) {
+            $this->assertTrue(!empty($row['email']));
+        }
     }
 
     public function test3ColCSV()

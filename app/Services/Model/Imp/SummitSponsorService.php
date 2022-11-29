@@ -658,10 +658,13 @@ final class SummitSponsorService
             if (is_null($material))
                 throw new EntityNotFoundException("Sponsor Material not found.");
 
-            $former_material = $summit_sponsor->getMaterialByName(trim($payload['name']));
+            if(isset($payload['name'])) {
+                $former_material = $summit_sponsor->getMaterialByName(trim($payload['name']));
 
-            if(!is_null($former_material) && $material->getId() !== $former_material->getId())
-                throw new ValidationException(sprintf("Material name %s already exists on sponsor %s.", $former_material->getName(), $summit_sponsor->getId()));
+                if (!is_null($former_material) && $material->getId() !== $former_material->getId())
+                    throw new ValidationException(sprintf("Material name %s already exists on sponsor %s.", $former_material->getName(), $summit_sponsor->getId()));
+
+            }
 
             $material = SponsorMaterialFactory::populate($material, $payload);
 

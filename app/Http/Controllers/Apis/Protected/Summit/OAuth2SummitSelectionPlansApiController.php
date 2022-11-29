@@ -1596,8 +1596,16 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
 
             $payload = $this->getJsonPayload(['email' => 'required|email'], true);
 
-            $this->selection_plan_service->addAllowedMember($summit, intval($selection_plan_id), $payload['email']);
-            return $this->created();
+            $allowed_member = $this->selection_plan_service->addAllowedMember($summit, intval($selection_plan_id), $payload['email']);
+
+            return $this->created(
+                SerializerRegistry::getInstance()->getSerializer($allowed_member)->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
+            );
         });
     }
 
@@ -1606,14 +1614,12 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
      * @param $selection_plan_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function removeAllowedMember($id, $selection_plan_id){
-        return $this->processRequest(function () use ($id, $selection_plan_id) {
+    public function removeAllowedMember($id, $selection_plan_id, $allowed_member_id){
+        return $this->processRequest(function () use ($id, $selection_plan_id, $allowed_member_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($id);
             if (is_null($summit)) return $this->error404();
 
-            $payload = $this->getJsonPayload(['email' => 'required|email'], true);
-
-            $this->selection_plan_service->removeAllowedMember($summit, intval($selection_plan_id), $payload['email']);
+            $this->selection_plan_service->removeAllowedMember($summit, intval($selection_plan_id), $allowed_member_id);
             return $this->deleted();
         });
     }
@@ -1651,7 +1657,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
      * @param $id
      * @return mixed
      */
-
     public function getMySelectionPlans($id){
         return $this->processRequest(function() use($id){
 

@@ -18,6 +18,7 @@ use App\Jobs\ProcessSelectionPlanAllowedMemberData;
 use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\Factories\SummitSelectionPlanFactory;
 use App\Models\Foundation\Summit\SelectionPlan;
+use App\Models\Foundation\Summit\SelectionPlanAllowedMember;
 use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Utils\CSVReader;
@@ -645,11 +646,12 @@ final class SummitSelectionPlanService
      * @param Summit $summit
      * @param int $selection_plan_id
      * @param string $email
+     * @return SelectionPlanAllowedMember
      * @throws \Exception
      */
-    public function addAllowedMember(Summit $summit, int $selection_plan_id, string $email): void
+    public function addAllowedMember(Summit $summit, int $selection_plan_id, string $email): SelectionPlanAllowedMember
     {
-        $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $email) {
+        return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $email) {
 
             $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
             if (!$selection_plan instanceof SelectionPlan)
@@ -658,7 +660,7 @@ final class SummitSelectionPlanService
             if ($selection_plan->containsMember(trim($email)))
                 throw new ValidationException("Member is already authorized on Selection Plan.");
 
-            $selection_plan->addAllowedMember($email);
+            return $selection_plan->addAllowedMember($email);
 
         });
     }
@@ -666,21 +668,23 @@ final class SummitSelectionPlanService
     /**
      * @param Summit $summit
      * @param int $selection_plan_id
-     * @param string $email
+     * @param int $allowed_member_id
      * @throws \Exception
      */
-    public function removeAllowedMember(Summit $summit, int $selection_plan_id, string $email): void
+    public function removeAllowedMember(Summit $summit, int $selection_plan_id, int $allowed_member_id): void
     {
-        $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $email) {
+        $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $allowed_member_id) {
 
             $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
             if (!$selection_plan instanceof SelectionPlan)
                 throw new EntityNotFoundException("Selection Plan not found.");
 
-            if (!$selection_plan->containsMember($email))
+           $allowed_member = $selection_plan->getAllowedMemberById($allowed_member_id);
+
+           if(is_null($allowed_member))
                 throw new ValidationException("Member is not authorized on Selection Plan.");
 
-            $selection_plan->removeAllowedMember($email);
+            $selection_plan->removeAllowedMember($allowed_member);
         });
     }
 

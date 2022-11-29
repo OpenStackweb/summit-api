@@ -347,7 +347,7 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
             'selection_plan_id' => self::$default_selection_plan->getId(),
         ];
 
-        $this->action(
+        $response = $this->action(
             "POST",
             "OAuth2SummitSelectionPlansApiController@addAllowedMember",
             $params,
@@ -361,7 +361,15 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
         );
 
         $this->assertResponseStatus(201);
-        $this->assertTrue(self::$default_selection_plan->getAllowedMembers()->count() >= 1);
+        $content = $response->getContent();
+        $entity = json_decode($content);
+        $this->assertTrue($entity->id > 1);
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'allowed_member_id' => $entity->id,
+        ];
 
         $this->action(
             "DELETE",
@@ -371,9 +379,6 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
             [],
             [],
             $this->getHeaders(),
-            json_encode([
-                'email' => self::$member->getEmail()
-            ])
         );
 
         $this->assertResponseStatus(204);

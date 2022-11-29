@@ -325,7 +325,9 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::group(['prefix' => 'allowed-members'], function () {
                     Route::get('', ['uses' => 'OAuth2SummitSelectionPlansApiController@getAllowedMembers']);
                     Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addAllowedMember']);
-                    Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@removeAllowedMember']);
+                    Route::group(['prefix' => '{allowed_member_id}'], function () {
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@removeAllowedMember']);
+                    });
                     Route::post('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@importAllowedMembers']);
                 });
 

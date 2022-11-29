@@ -6528,7 +6528,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'detach-selection-plan-allowed-member',
-                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-members',
+                'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-members/{allowed_member_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
                     sprintf(SummitScopes::WriteSummitData, $current_realm)

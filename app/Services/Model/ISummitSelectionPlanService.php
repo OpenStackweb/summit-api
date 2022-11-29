@@ -14,6 +14,7 @@
 
 use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\SelectionPlan;
+use App\Models\Foundation\Summit\SelectionPlanAllowedMember;
 use Illuminate\Http\UploadedFile;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -178,17 +179,18 @@ interface ISummitSelectionPlanService
      * @param string $email
      * @throws EntityNotFoundException
      * @throws ValidationException
+     * @return SelectionPlanAllowedMember
      */
-    public function addAllowedMember(Summit $summit, int $selection_plan_id, string $email):void;
+    public function addAllowedMember(Summit $summit, int $selection_plan_id, string $email):SelectionPlanAllowedMember;
 
     /**
      * @param Summit $summit
      * @param int $selection_plan_id
-     * @param string $email
+     * @param int $allowed_member_id
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function removeAllowedMember(Summit $summit, int $selection_plan_id, string $email):void;
+    public function removeAllowedMember(Summit $summit, int $selection_plan_id, int $allowed_member_id):void;
 
     /**
      * @param Summit $summit

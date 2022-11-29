@@ -1262,24 +1262,56 @@ class SelectionPlan extends SilverstripeBaseModel
 
     /**
      * @param string $email
+     * @return SelectionPlanAllowedMember|null
+     * @throws ValidationException
      */
-    public function addAllowedMember(string $email):void{
+    public function addAllowedMember(string $email):?SelectionPlanAllowedMember{
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('email', trim($email)));
-        if($this->allowed_members->matching($criteria)->count() > 0) return;
+        if($this->allowed_members->matching($criteria)->count() > 0)
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "email %s already allowed for selection plan %s",
+                    $email,
+                    $this->id
+                )
+            );
+
         $allowed_member = new SelectionPlanAllowedMember($this, trim($email));
         $this->allowed_members->add($allowed_member);
+        return $allowed_member;
     }
 
     /**
      * @param string $email
      */
-    public function removeAllowedMember(string $email):void{
+    public function removeAllowedMemberByEmail(string $email):void{
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('email', trim($email)));
         $res = $this->allowed_members->matching($criteria)->first();
         if(!$res) return;
         $this->allowed_members->removeElement($res);
+    }
+
+    /**
+     * @param int $id
+     * @return SelectionPlanAllowedMember|null
+     */
+    public function getAllowedMemberById(int $id):?SelectionPlanAllowedMember{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $id));
+        $res = $this->allowed_members->matching($criteria)->first();
+        return !$res ? null: $res;
+    }
+
+    /**
+     * @param SelectionPlanAllowedMember $allowedMember
+     */
+    public function removeAllowedMember(SelectionPlanAllowedMember $allowedMember):void{
+        if(!$this->allowed_members->contains($allowedMember)) return;
+        $this->allowed_members->removeElement($allowedMember);
     }
 
     /**

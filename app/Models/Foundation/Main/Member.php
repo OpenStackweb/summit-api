@@ -1489,11 +1489,6 @@ SQL;
             if(empty($photoUrl) && !empty($default_pic))
                 $photoUrl = $default_pic;
 
-            if (empty($photo_url) && !empty($this->getTwitterHandle())) {
-                $twitterName = $this->getTwitterHandle();
-                $photoUrl = sprintf("https://avatars.io/twitter/%s", trim(trim($twitterName, '@')));
-            }
-
             if(empty($photoUrl))
                 $photoUrl = $this->getGravatarUrl();
 

@@ -768,10 +768,13 @@ final class SummitSelectionPlanService
 
         $csv_data = $this->download_strategy->get($path);
 
+        Log::debug(sprintf("SelectionPlanService::processAllowedMemberData got CSV %s", $csv_data));
+
         $selection_plan = $this->tx_service->transaction(function () use ($summit_id, $selection_plan_id) {
+
             $summit = $this->summit_repository->getById($summit_id);
             if (!$summit instanceof Summit)
-                throw new EntityNotFoundException(sprintf("summit %s does not exists.", $summit_id));
+                throw new EntityNotFoundException(sprintf("Summit %s does not exists.", $summit_id));
 
             $selection_plan = $summit->getSelectionPlanById($selection_plan_id);
             if (!$selection_plan instanceof SelectionPlan)
@@ -780,6 +783,8 @@ final class SummitSelectionPlanService
             return $selection_plan;
         });
 
+        if(!$selection_plan instanceof SelectionPlan)
+            throw new EntityNotFoundException();
 
         $reader = CSVReader::buildFrom($csv_data);
 
@@ -789,7 +794,7 @@ final class SummitSelectionPlanService
 
                 Log::debug(sprintf("SelectionPlanService::processAllowedMemberData processing row %s", json_encode($row)));
 
-                $selection_plan->addAllowedMember($row['email']);
+                $selection_plan->addAllowedMember(trim($row['email']));
             });
         }
 

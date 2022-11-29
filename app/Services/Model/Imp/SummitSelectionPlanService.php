@@ -718,8 +718,6 @@ final class SummitSelectionPlanService
         if (empty($csv_data))
             throw new ValidationException("file content is empty!");
 
-        $this->upload_strategy->save($csv_file, $path, $basename);
-
         $reader = CSVReader::buildFrom($csv_data);
 
         // check needed columns (headers names)
@@ -733,8 +731,10 @@ final class SummitSelectionPlanService
         if (!$reader->hasColumn("email"))
             throw new ValidationException
             (
-                "email column is missing"
+                "Email column is missing."
             );
+
+        $this->upload_strategy->save($csv_file, $path, $basename);
 
         ProcessSelectionPlanAllowedMemberData::dispatch($summit->getId(), $selection_plan_id, $basename);
     }
@@ -748,7 +748,8 @@ final class SummitSelectionPlanService
      */
     public function processAllowedMemberData(int $summit_id, int $selection_plan_id, string $filename): void
     {
-        $path = sprintf("tmp/tickets_imports/%s", $filename);
+        $path = sprintf("tmp/selection_plans_allowed_members/%s", $filename);
+
         Log::debug(sprintf("SelectionPlanService::processAllowedMemberData summit %s selection_plan_id %s filename %s", $summit_id, $selection_plan_id, $filename));
 
         if (!$this->download_strategy->exists($path)) {
@@ -769,7 +770,7 @@ final class SummitSelectionPlanService
 
         $selection_plan = $this->tx_service->transaction(function () use ($summit_id, $selection_plan_id) {
             $summit = $this->summit_repository->getById($summit_id);
-            if (is_null($summit) || !$summit instanceof Summit)
+            if (!$summit instanceof Summit)
                 throw new EntityNotFoundException(sprintf("summit %s does not exists.", $summit_id));
 
             $selection_plan = $summit->getSelectionPlanById($selection_plan_id);

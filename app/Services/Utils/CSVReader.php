@@ -51,20 +51,19 @@ final class CSVReader implements Iterator {
         Log::debug(sprintf("CSVReader::buildFrom content %s", $content));
         $data    = str_getcsv($content,"\n"  );
         Log::debug(sprintf("CSVReader::buildFrom data %s", json_encode($data)));
-        $idx     = 0;
+
         $header  = [];
         $lines   = [];
-        foreach($data as $row)
+        foreach($data as $idx => $row)
         {
             $row = str_getcsv($row, ",");
-            Log::debug(sprintf("CSVReader::buildFrom row %s", json_encode($row)));
-            ++$idx;
-            if($idx === 1) {
-
+            Log::debug(sprintf("CSVReader::buildFrom row %s idx %s", json_encode($row), $idx));
+            if($idx === 0) {
                 foreach($row as $idx => $val){
                     // check the encoding of the header values
                     if(mb_detect_encoding($val) == 'UTF-8')
                         $val = iconv('utf-8', 'ascii//TRANSLIT', $val);
+                    Log::debug(sprintf("CSVReader::buildFrom adding %s to header", $val));
                     $header[] = $val;
                 }
                 continue;

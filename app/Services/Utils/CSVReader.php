@@ -39,6 +39,7 @@ final class CSVReader implements Iterator {
     {
         $this->header = $header;
         $this->lines  = $lines;
+        Log::debug(sprintf("CSVReader::__construct header %s lines %s", json_encode($header), json_encode($l)));
     }
 
     /**

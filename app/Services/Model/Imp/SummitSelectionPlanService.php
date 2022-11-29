@@ -788,7 +788,7 @@ final class SummitSelectionPlanService
 
         $reader = CSVReader::buildFrom($csv_data);
 
-        foreach ($reader as $idx => $row) {
+        foreach ($reader as $row) {
 
             $this->tx_service->transaction(function () use ($selection_plan, $reader, $row) {
 
@@ -799,6 +799,6 @@ final class SummitSelectionPlanService
         }
 
         Log::debug(sprintf("SelectionPlanService::processAllowedMemberData deleting file %s from storage %s", $path, $this->download_strategy->getDriver()));
-        $this->download_strategy->delete($path);
+        //$this->download_strategy->delete($path);
     }
 }

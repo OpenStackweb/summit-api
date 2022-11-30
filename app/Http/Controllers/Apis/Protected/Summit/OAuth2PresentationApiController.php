@@ -293,8 +293,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      */
     public function submitPresentation($summit_id)
     {
-        try {
 
+        return $this->processRequest(function() use($summit_id){
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -329,16 +329,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations()
             ));
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404(['message' => $ex1->getMessage()]);
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412($ex2->getMessages());
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+
+        });
     }
 
     /**
@@ -348,7 +340,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      */
     public function updatePresentationSubmission($summit_id, $presentation_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $presentation_id){
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -389,16 +381,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations()
             ));
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412($ex2->getMessages());
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -408,7 +391,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      */
     public function completePresentationSubmission($summit_id, $presentation_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $presentation_id){
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -427,16 +410,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations()
             ));
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412($ex2->getMessages());
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -446,7 +420,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      */
     public function deletePresentation($summit_id, $presentation_id)
     {
-        try {
+        return $this->processRequest(function() use($summit_id, $presentation_id){
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -458,16 +432,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             return $this->deleted();
 
-        } catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        } catch (EntityNotFoundException $ex2) {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     // Slides

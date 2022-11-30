@@ -321,9 +321,11 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTest
 
         $params = [
             'id' => self::$summit->getId(),
+            'expand' => 'track_groups,extra_questions,extra_questions.values'
         ];
 
-        $response = $this->action(
+        $response = $this->action
+        (
             "GET",
             "OAuth2SummitSelectionPlansApiController@getMySelectionPlans",
             $params,

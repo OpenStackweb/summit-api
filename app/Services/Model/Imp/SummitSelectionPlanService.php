@@ -793,13 +793,27 @@ final class SummitSelectionPlanService
             $this->tx_service->transaction(function () use ($selection_plan, $reader, $row) {
 
                 Log::debug(sprintf("SelectionPlanService::processAllowedMemberData processing row %s", json_encode($row)));
-                if(empty(trim($row['email']))) return;
+                $email = trim($row['email']);
+                if(empty($email)) return;
+                if($selection_plan->isAllowedMember($email)){
 
-                $selection_plan->addAllowedMember(trim($row['email']));
+                    Log::warning
+                    (
+                        sprintf
+                        (
+                            "SelectionPlanService::processAllowedMemberData mail %s is already added to selection plan %s",
+                            $email,
+                            $selection_plan->getId()
+                        )
+                    );
+
+                    return;
+                }
+                $selection_plan->addAllowedMember($email);
             });
         }
 
         Log::debug(sprintf("SelectionPlanService::processAllowedMemberData deleting file %s from storage %s", $path, $this->download_strategy->getDriver()));
-        //$this->download_strategy->delete($path);
+        $this->download_strategy->delete($path);
     }
 }

@@ -12,8 +12,11 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Foundation\Summit\TrackTagGroup;
 use DateInterval;
@@ -472,6 +475,20 @@ trait InsertSummitTestData
         self::$default_selection_plan->setSelectionEndDate($submission_end_date);
         self::$default_selection_plan->setIsEnabled(true);
         self::$default_selection_plan->addTrackGroup(self::$defaultTrackGroup);
+
+        // create extra questions
+
+        $q = new SummitSelectionPlanExtraQuestionType();
+        $q->setType(ExtraQuestionTypeConstants::CheckBoxListQuestionType);
+        $q->setLabel("TEST");
+        $q->setName("TEST");
+        self::$summit->addSelectionPlanExtraQuestion($q);
+        $v = new ExtraQuestionTypeValue();
+        $v->setLabel("TEST");
+        $v->setValue("TEST");
+        $q->addValue($v);
+
+        self::$default_selection_plan->addExtraQuestion($q);
 
         // sel plan 2
 

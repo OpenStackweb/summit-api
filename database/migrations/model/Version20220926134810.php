@@ -27,16 +27,6 @@ final class Version20220926134810 extends AbstractMigration
     {
 
         $sql = <<<SQL
-DELETE FROM SummitEvent_Tags WHERE NOT EXISTS ( SELECT 1 FROM SummitEvent WHERE SummitEvent.ID = SummitEvent_Tags.SummitEventID);
-DELETE FROM SummitEvent_Tags WHERE NOT EXISTS ( SELECT 1 FROM Tag WHERE Tag.ID = SummitEvent_Tags.TagID);
-ALTER TABLE `SummitEvent_Tags` ADD CONSTRAINT `FK_SummitEvent_Tags_SummitEvent` FOREIGN KEY (`SummitEventID`) REFERENCES `SummitEvent`(`ID`) ON DELETE CASCADE ON UPDATE RESTRICT;
-ALTER TABLE `SummitEvent_Tags` ADD CONSTRAINT `FK_SummitEvent_Tags_Tag` FOREIGN KEY (`TagID`) REFERENCES `Tag`(`ID`) ON DELETE CASCADE ON UPDATE RESTRICT;
-ALTER TABLE `TrackTagGroup_AllowedTags` ADD CONSTRAINT `FK_TrackTagGroup_AllowedTags_TrackTagGroupID` FOREIGN KEY (`TrackTagGroupID`) REFERENCES `TrackTagGroup`(`ID`) ON DELETE CASCADE ON UPDATE RESTRICT;
-ALTER TABLE `TrackTagGroup_AllowedTags` ADD CONSTRAINT `FK_TrackTagGroup_AllowedTags_Tag` FOREIGN KEY (`TagID`) REFERENCES `Tag`(`ID`) ON DELETE CASCADE ON UPDATE RESTRICT;
-ALTER TABLE `DefaultTrackTagGroup_AllowedTags` ADD CONSTRAINT `FK_DefaultTrackTagGroup_AllowedTags_DefaultTrackTagGroup` FOREIGN KEY (`DefaultTrackTagGroupID`) REFERENCES `DefaultTrackTagGroup`(`ID`) ON DELETE CASCADE ON UPDATE RESTRICT;
-ALTER TABLE `DefaultTrackTagGroup_AllowedTags` ADD CONSTRAINT `FK_DefaultTrackTagGroup_AllowedTags_Tag` FOREIGN KEY (`TagID`) REFERENCES `Tag`(`ID`) ON DELETE CASCADE ON UPDATE RESTRICT;
-ALTER TABLE `PresentationCategory_AllowedTags` ADD CONSTRAINT `FK_PresentationCategory_AllowedTags_PresentationCategory` FOREIGN KEY (`PresentationCategoryID`) REFERENCES `PresentationCategory`(`ID`) ON DELETE CASCADE ON UPDATE RESTRICT;
-ALTER TABLE `PresentationCategory_AllowedTags` ADD CONSTRAINT `FK_PresentationCategory_AllowedTags_Tag` FOREIGN KEY (`TagID`) REFERENCES `Tag`(`ID`) ON DELETE CASCADE ON UPDATE RESTRICT;
 SQL;
         foreach(explode(';', $sql) as $statement){
             if(!empty($statement))

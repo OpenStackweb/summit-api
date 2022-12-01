@@ -172,12 +172,8 @@ class SelectionPlan extends SilverstripeBaseModel
     private $event_types;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\main\Member", fetch="EXTRA_LAZY", inversedBy="allowed_selection_plans", cascade={"persist","remove"})
-     * @ORM\JoinTable(name="SelectionPlan_AllowedMembers",
-     *      joinColumns={@ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="MemberID", referencedColumnName="ID")}
-     *      )
-     * @var Member[]
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\SelectionPlanAllowedMember", mappedBy="selection_plan", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SelectionPlanAllowedMember[]
      */
     private $allowed_members;
 
@@ -492,7 +488,7 @@ class SelectionPlan extends SilverstripeBaseModel
     }
 
     /**
-     * @return ArrayCollection|Member[]
+     * @return ArrayCollection|SelectionPlanAllowedMember[]
      */
     public function getAllowedMembers(){
         return $this->allowed_members;
@@ -1265,36 +1261,79 @@ class SelectionPlan extends SilverstripeBaseModel
     }
 
     /**
-     * @param Member $member
+     * @param string $email
+     * @return SelectionPlanAllowedMember|null
+     * @throws ValidationException
      */
-    public function addAllowedMember(Member $member):void{
-        if($this->allowed_members->contains($member)) return;
-        $this->allowed_members->add($member);
+    public function addAllowedMember(string $email):?SelectionPlanAllowedMember{
+        if(empty($email)) return null;
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('email', trim($email)));
+        if($this->allowed_members->matching($criteria)->count() > 0)
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "email %s already allowed for selection plan %s",
+                    $email,
+                    $this->id
+                )
+            );
+
+        $allowed_member = new SelectionPlanAllowedMember($this, trim($email));
+        $this->allowed_members->add($allowed_member);
+        return $allowed_member;
     }
 
     /**
-     * @param Member $member
+     * @param string $email
      */
-    public function removeAllowedMember(Member $member):void{
-        if(!$this->allowed_members->contains($member)) return;
-        $this->allowed_members->removeElement($member);
+    public function removeAllowedMemberByEmail(string $email):void{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('email', trim($email)));
+        $res = $this->allowed_members->matching($criteria)->first();
+        if(!$res) return;
+        $this->allowed_members->removeElement($res);
     }
 
     /**
-     * @param Member $member
+     * @param int $id
+     * @return SelectionPlanAllowedMember|null
+     */
+    public function getAllowedMemberById(int $id):?SelectionPlanAllowedMember{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $id));
+        $res = $this->allowed_members->matching($criteria)->first();
+        return !$res ? null: $res;
+    }
+
+    /**
+     * @param SelectionPlanAllowedMember $allowedMember
+     */
+    public function removeAllowedMember(SelectionPlanAllowedMember $allowedMember):void{
+        if(!$this->allowed_members->contains($allowedMember)) return;
+        $this->allowed_members->removeElement($allowedMember);
+    }
+
+    /**
+     * @param string $email
      * @return bool
      */
-    public function isAllowedMember(Member $member):bool{
+    public function isAllowedMember(string $email):bool{
         if($this->getType() === self::PublicType) return true;
-        return $this->allowed_members->contains($member);
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('email', trim($email)));
+        return $this->allowed_members->matching($criteria)->count() > 0;
     }
 
     /**
-     * @param Member $member
+     * @param string $email
      * @return bool
      */
-    public function containsMember(Member $member):bool{
-        return $this->allowed_members->contains($member);
+    public function containsMember(string $email):bool{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('email', trim($email)));
+        return $this->allowed_members->matching($criteria)->count() > 0;
     }
 
     const PublicType = 'Public';

@@ -16,10 +16,10 @@ use Doctrine\DBAL\Schema\Schema as Schema;
 use LaravelDoctrine\Migrations\Schema\Builder;
 use LaravelDoctrine\Migrations\Schema\Table;
 /**
- * Class Version20221111143627
+ * Class Version20221128210849
  * @package Database\Migrations\Model
  */
-final class Version20221111143627 extends AbstractMigration
+final class Version20221128210849 extends AbstractMigration
 {
     /**
      * @param Schema $schema
@@ -27,21 +27,13 @@ final class Version20221111143627 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $builder = new Builder($schema);
-        if (!$builder->hasTable("SelectionPlan_AllowedMembers")) {
-            $builder->create("SelectionPlan_AllowedMembers", function (Table $table) {
-
-                $table->integer("ID", true, false);
-                $table->primary("ID");
-
-                // FK
-                $table->integer("SelectionPlanID", false, false)->setNotnull(false)->setDefault('NULL');
-                $table->index("SelectionPlanID", "SelectionPlanID");
-                $table->foreign("SelectionPlan", "SelectionPlanID", "ID", ["onDelete" => "CASCADE"], 'FK_SelectionPlan_AllowedMembers_SP');
-
-                $table->integer("MemberID", false, false)->setNotnull(false)->setDefault('NULL');
+        if ($schema->hasTable("SelectionPlan_AllowedMembers")) {
+            $builder->table('SelectionPlan_AllowedMembers', function (Table $table) {
+                $table->string('Email')->setLength(255)->setNotnull(false);
+                $table->index(['Email'],'SelectionPlan_AllowedMembers_Email');
+                $table->unique(['Email', 'SelectionPlanID'], 'IDX_UNIQUE_SelectionPlan_AllowedMembers');
             });
         }
-
     }
 
     /**
@@ -49,7 +41,6 @@ final class Version20221111143627 extends AbstractMigration
      */
     public function down(Schema $schema): void
     {
-        $builder = new Builder($schema);
-        $builder->dropIfExists('SelectionPlan_AllowedMembers');
+
     }
 }

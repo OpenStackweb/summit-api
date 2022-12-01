@@ -14,6 +14,8 @@
 
 use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\SelectionPlan;
+use App\Models\Foundation\Summit\SelectionPlanAllowedMember;
+use Illuminate\Http\UploadedFile;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\summit\Presentation;
@@ -164,15 +166,6 @@ interface ISummitSelectionPlanService
     /**
      * @param Summit $summit
      * @param int $selection_plan_id
-     * @param int $member_id
-     * @throws EntityNotFoundException
-     * @throws ValidationException
-     */
-    public function addAllowedMember(Summit $summit, int $selection_plan_id, int $member_id):void;
-
-    /**
-     * @param Summit $summit
-     * @param int $selection_plan_id
      * @param int $type_id
      * @return void
      * @throws EntityNotFoundException
@@ -183,10 +176,38 @@ interface ISummitSelectionPlanService
     /**
      * @param Summit $summit
      * @param int $selection_plan_id
-     * @param int $member_id
+     * @param string $email
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     * @return SelectionPlanAllowedMember
+     */
+    public function addAllowedMember(Summit $summit, int $selection_plan_id, string $email):SelectionPlanAllowedMember;
+
+    /**
+     * @param Summit $summit
+     * @param int $selection_plan_id
+     * @param int $allowed_member_id
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function removeAllowedMember(Summit $summit, int $selection_plan_id, int $member_id):void;
+    public function removeAllowedMember(Summit $summit, int $selection_plan_id, int $allowed_member_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $selection_plan_id
+     * @param UploadedFile $csv_file
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function importAllowedMembers(Summit $summit, int $selection_plan_id,UploadedFile $csv_file):void;
+
+    /**
+     * @param int $summit_id
+     * @param int $selection_plan_id
+     * @param string $filename
+     * @throws EntityNotFoundException
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function processAllowedMemberData(int $summit_id, int $selection_plan_id, string $filename):void;
 
 }

@@ -20,6 +20,8 @@ use App\Models\Foundation\Summit\Repositories\ISummitSelectionPlanExtraQuestionT
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISelectionPlanExtraQuestionTypeService;
 use App\Services\Model\ISummitSelectionPlanService;
+use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Support\Facades\Request;
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
 use models\oauth2\IResourceServerContext;
@@ -29,7 +31,9 @@ use ModelSerializers\IPresentationSerializerTypes;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterElement;
+use utils\FilterParser;
 use utils\PagingInfo;
+use utils\PagingResponse;
 
 /**
  * Class OAuth2SummitSelectionPlansApiController
@@ -1535,6 +1539,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function getAllowedMembers($id, $selection_plan_id){
+
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($id);
         if (is_null($summit)) return $this->error404();
 
@@ -1544,19 +1549,17 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         return $this->_getAll(
             function () {
                 return [
-                    'member_full_name' => ['@@', '=@'],
-                    'member_email' => ['@@', '=@']
+                    'email' => ['@@', '=@']
                 ];
             },
             function () {
                 return [
-                    'member_full_name' => 'sometimes|string',
-                    'member_email' => 'sometimes|string',
+                    'email' => 'sometimes|string',
                 ];
             },
             function () {
                 return [
-                    'member_full_name',
+                    'email',
                 ];
             },
             function ($filter) use ($summit, $selection_plan_id) {
@@ -1584,32 +1587,94 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
     /**
      * @param $id
      * @param $selection_plan_id
-     * @param $member_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function addAllowedMember($id, $selection_plan_id, $member_id){
-        return $this->processRequest(function () use ($id, $selection_plan_id, $member_id) {
+    public function addAllowedMember($id, $selection_plan_id){
+        return $this->processRequest(function () use ($id, $selection_plan_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($id);
             if (is_null($summit)) return $this->error404();
 
-            $this->selection_plan_service->addAllowedMember($summit, intval($selection_plan_id), intval($member_id));
-            return $this->updated();
+            $payload = $this->getJsonPayload(['email' => 'required|email'], true);
+
+            $allowed_member = $this->selection_plan_service->addAllowedMember($summit, intval($selection_plan_id), $payload['email']);
+
+            return $this->created(
+                SerializerRegistry::getInstance()->getSerializer($allowed_member)->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
+            );
         });
     }
 
     /**
      * @param $id
      * @param $selection_plan_id
-     * @param $member_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function removeAllowedMember($id, $selection_plan_id, $member_id){
-        return $this->processRequest(function () use ($id, $selection_plan_id, $member_id) {
+    public function removeAllowedMember($id, $selection_plan_id, $allowed_member_id){
+        return $this->processRequest(function () use ($id, $selection_plan_id, $allowed_member_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($id);
             if (is_null($summit)) return $this->error404();
 
-            $this->selection_plan_service->removeAllowedMember($summit, intval($selection_plan_id), intval($member_id));
+            $this->selection_plan_service->removeAllowedMember($summit, intval($selection_plan_id), $allowed_member_id);
             return $this->deleted();
+        });
+    }
+
+    /**
+     * @param LaravelRequest $request
+     * @param $id
+     * @param $selection_plan_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function importAllowedMembers(LaravelRequest $request, $id, $selection_plan_id)
+    {
+
+        return $this->processRequest(function () use ($request, $id, $selection_plan_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $file = $request->file('file');
+            if (is_null($file)) {
+                return $this->error412(array('file param not set!'));
+            }
+
+            $this->selection_plan_service->importAllowedMembers($summit,$selection_plan_id, $file);
+
+            return $this->ok();
+
+        });
+    }
+
+    /**
+     * @param $id
+     * @return mixed
+     */
+    public function getMySelectionPlans($id){
+        return $this->processRequest(function() use($id){
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $filter = new Filter();
+            $filter->addFilterCondition(FilterParser::buildFilter('summit_id','==', intval($id)));
+            $filter->addFilterCondition(FilterParser::buildFilter('is_enabled','==',true));
+            $filter->addFilterCondition(FilterParser::buildFilter('allowed_member_email','==', $current_member->getEmail()));
+
+            $page = $this->repository->getAllByPage(new PagingInfo(1,1000), $filter);
+
+            return $this->ok($page->toArray(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+            ));
         });
     }
 }

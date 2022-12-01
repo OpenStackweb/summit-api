@@ -151,6 +151,9 @@ final class ModelServicesProvider extends ServiceProvider
         App::when(SummitOrderService::class)->needs(IFileDownloadStrategy::class)->give(SwiftStorageFileDownloadStrategy::class);
         App::when(SummitOrderService::class)->needs(IFileUploadStrategy::class)->give(SwiftStorageFileUploadStrategy::class);
 
+        App::when(SummitSelectionPlanService::class)->needs(IFileDownloadStrategy::class)->give(SwiftStorageFileDownloadStrategy::class);
+        App::when(SummitSelectionPlanService::class)->needs(IFileUploadStrategy::class)->give(SwiftStorageFileUploadStrategy::class);
+
         // add bindings for service
         App::singleton(ISummitService::class, SummitService::class);
 

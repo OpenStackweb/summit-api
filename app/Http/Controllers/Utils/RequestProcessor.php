@@ -14,6 +14,7 @@
 
 use App\Http\Exceptions\HTTP400BadRequestException;
 use App\Http\Exceptions\HTTP403ForbiddenException;
+use App\Models\Exceptions\AuthzException;
 use models\exceptions\ValidationException;
 use models\exceptions\EntityNotFoundException;
 use Exception;
@@ -32,6 +33,10 @@ trait RequestProcessor
     public function processRequest(Closure $callback){
         try{
             return $callback($this);
+        }
+        catch (AuthzException $ex){
+            Log::warning($ex);
+            return $this->error403();
         }
         catch(\InvalidArgumentException $ex){
             Log::warning($ex);

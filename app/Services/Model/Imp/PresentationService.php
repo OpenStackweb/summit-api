@@ -634,7 +634,6 @@ final class PresentationService
 
             $title = $presentation->getTitle();
             $abstract = $presentation->getAbstract();
-            $level = $presentation->getLevel();
 
             if (empty($title)) {
                 throw new ValidationException('Title is Mandatory.');
@@ -642,10 +641,6 @@ final class PresentationService
 
             if (empty($abstract)) {
                 throw new ValidationException('Abstract is mandatory.');
-            }
-
-            if ($presentation->getType()->isAllowsLevel() && empty($level)) {
-                throw new ValidationException('Level is mandatory.');
             }
 
             $presentation->setProgress(Presentation::PHASE_COMPLETE);

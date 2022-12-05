@@ -1691,6 +1691,17 @@ SQL;
     }
 
     /**
+     * @param Summit $summit
+     * @return bool
+     */
+    public function hasRegistrationOrderForSummit(Summit $summit):bool
+    {
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq("summit", $summit));
+        return $this->summit_registration_orders->matching($criteria)->count() > 0;
+    }
+
+    /**
      * @param int $order_id
      * @return SummitOrder|null
      */

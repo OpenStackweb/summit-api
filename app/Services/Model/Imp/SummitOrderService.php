@@ -256,8 +256,10 @@ final class ReserveOrderTask extends AbstractTask
             $tickets = $this->payload['tickets'];
 
             if (!is_null($this->owner) && strtolower($this->owner->getEmail()) != strtolower($owner_email)) {
-                throw new ValidationException(sprintf("owner email differs from logged user email"));
+                throw new ValidationException(sprintf("Owner email differs from logged user email."));
             }
+
+            $should_auto_assign_first_ticket = !$this->owner->hasRegistrationOrderForSummit($this->summit);
 
             $payment_gateway = $this->summit->getPaymentGateWayPerApp
             (
@@ -280,11 +282,12 @@ final class ReserveOrderTask extends AbstractTask
             (
                 sprintf
                 (
-                    "ReserveOrderTask::run - email %s first_name %s last_name %s company %s",
+                    "ReserveOrderTask::run - email %s first_name %s last_name %s company %s should_auto_assign_first_ticket %b",
                     $owner_email,
                     $owner_first_name,
                     $owner_last_name,
-                    $owner_company_name
+                    $owner_company_name,
+                    $should_auto_assign_first_ticket
                 )
             );
 
@@ -301,18 +304,32 @@ final class ReserveOrderTask extends AbstractTask
             $default_badge_type = $this->summit->getDefaultBadgeType();
             // local tx attendees storage
             $local_attendees = [];
+            $index = 0;
             // tickets
             foreach ($tickets as $ticket_dto) {
 
+                Log::debug(sprintf("ReserveOrderTask::run Processing ticket #%s payload %s", $index, json_encode($ticket_dto)));
                 if (!isset($ticket_dto['type_id']))
                     throw new ValidationException('type_id is mandatory');
 
                 $type_id = $ticket_dto['type_id'];
+
                 $promo_code_value = isset($ticket_dto['promo_code']) ? $ticket_dto['promo_code'] : null;
-                $attendee_first_name = isset($ticket_dto['attendee_first_name']) ? $ticket_dto['attendee_first_name'] : null;
-                $attendee_last_name = isset($ticket_dto['attendee_last_name']) ? $ticket_dto['attendee_last_name'] : null;
-                $attendee_email = isset($ticket_dto['attendee_email']) ? $ticket_dto['attendee_email'] : null;
-                $attendee_company = isset($ticket_dto['attendee_company']) ? $ticket_dto['attendee_company'] : null;
+                // attendee data
+                if($index === 0 && $should_auto_assign_first_ticket){
+                    Log::debug("ReserveOrderTask::run auto assigning first ticket");
+                    $attendee_first_name = $this->owner->getFirstName();
+                    $attendee_last_name =  $this->owner->getLastName();
+                    $attendee_email =  $this->owner->getEmail();
+                    $attendee_company = $this->owner->getCompany();
+                }
+                else {
+                    // use what we have on payload
+                    $attendee_first_name = isset($ticket_dto['attendee_first_name']) ? $ticket_dto['attendee_first_name'] : null;
+                    $attendee_last_name = isset($ticket_dto['attendee_last_name']) ? $ticket_dto['attendee_last_name'] : null;
+                    $attendee_email = isset($ticket_dto['attendee_email']) ? $ticket_dto['attendee_email'] : null;
+                    $attendee_company = isset($ticket_dto['attendee_company']) ? $ticket_dto['attendee_company'] : null;
+                }
 
                 // if attendee is order owner , and company is null , set the company order
                 if (!empty($attendee_email) && $attendee_email == $owner_email) {
@@ -400,6 +417,7 @@ final class ReserveOrderTask extends AbstractTask
                 $order->addTicket($ticket);
                 $ticket->generateQRCode();
                 $ticket->generateHash();
+                ++$index;
             }
 
             if (is_null($this->owner)) {

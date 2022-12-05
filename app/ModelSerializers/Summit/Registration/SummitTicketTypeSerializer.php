@@ -29,6 +29,7 @@ final class SummitTicketTypeSerializer extends SilverStripeSerializer
         'SummitId' => 'summit_id:json_int',
         'Cost' => 'cost:json_float',
         'Currency' => 'currency:json_string',
+        'CurrencySymbol' => 'currency_symbol:json_string',
         'Quantity2Sell' => 'quantity_2_sell:json_int',
         'MaxQuantityPerOrder' => 'max_quantity_per_order:json_int',
         'SalesStartDate' => 'sales_start_date:datetime_epoch',

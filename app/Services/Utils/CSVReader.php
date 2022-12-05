@@ -61,6 +61,8 @@ final class CSVReader implements Iterator {
             if($idx === 1) {
 
                 foreach($row as $idx => $val){
+                    // remove BOM
+                    $val = str_replace("\xEF\xBB\xBF",'',$val);
                     // check the encoding of the header values
                     if(mb_detect_encoding($val) == 'UTF-8')
                         $val = iconv('utf-8', 'ascii//TRANSLIT', $val);

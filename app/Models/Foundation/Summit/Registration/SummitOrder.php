@@ -866,6 +866,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
 
     public function getCurrencySymbol():string{
         $ticket = $this->tickets->first();
+        if(!$ticket instanceof SummitAttendeeTicket) return 'TBD';
         return $ticket->getCurrencySymbol();
     }
 

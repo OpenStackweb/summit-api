@@ -37,6 +37,16 @@ class SummitTicketType extends SilverstripeBaseModel
 {
     use SummitOwned;
 
+    const USD_Currency = 'USD';
+    const EUR_Currency = 'EUR';
+    const GBP_Currency = 'GBP';
+
+    const AllowedCurrencies = [
+        self::USD_Currency,
+        self::EUR_Currency,
+        self::GBP_Currency,
+    ];
+
     const Audience_All = 'All';
     const Audience_With_Invitation = 'WithInvitation';
     const Audience_Without_Invitation = 'WithoutInvitation';
@@ -254,9 +264,13 @@ class SummitTicketType extends SilverstripeBaseModel
 
     /**
      * @param string $currency
+     * @throws ValidationException
      */
     public function setCurrency(string $currency): void
     {
+        if(!in_array($currency, self::AllowedCurrencies))
+            throw new ValidationException(sprintf("Currency %s is not allowed.", $currency));
+
         $this->currency = $currency;
     }
 
@@ -380,7 +394,16 @@ class SummitTicketType extends SilverstripeBaseModel
      */
     public function getCurrencySymbol(): ?string
     {
-        return "$";
+        switch ($this->currency){
+            case self::USD_Currency:
+                return '$';
+            case self::EUR_Currency:
+                return '€';
+            case self::GBP_Currency:
+                return '£';
+            default:
+                return '$';
+        }
     }
 
     /**

@@ -60,6 +60,8 @@ final class CSVReader implements Iterator {
             Log::debug(sprintf("CSVReader::buildFrom row %s idx %s", json_encode($row), $idx));
             if($idx === 0) {
                 foreach($row as $idx => $val){
+                    // remove BOM
+                    $val = str_replace("\xEF\xBB\xBF",'',$val);
                     // check the encoding of the header values
                     if(mb_detect_encoding($val) == 'UTF-8')
                         $val = iconv('utf-8', 'ascii//TRANSLIT', $val);

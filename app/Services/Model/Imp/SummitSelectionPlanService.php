@@ -795,7 +795,7 @@ final class SummitSelectionPlanService
                 Log::debug(sprintf("SelectionPlanService::processAllowedMemberData processing row %s", json_encode($row)));
                 $email = trim($row['email']);
                 if(empty($email)) return;
-                if($selection_plan->isAllowedMember($email)){
+                if($selection_plan->containsMember($email)){
 
                     Log::warning
                     (

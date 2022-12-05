@@ -599,7 +599,8 @@ final class OAuth2SummitOrdersApiController
                 'attendee_email' => 'required|string|max:255|email',
                 'attendee_company' => 'nullable|string|max:255',
                 'disclaimer_accepted' => 'nullable|boolean',
-                'extra_questions' => 'sometimes|extra_question_dto_array'
+                'extra_questions' => 'sometimes|extra_question_dto_array',
+                'message' => 'sometimes|string|max:1024',
             ]);
 
             $ticket = $this->service->ownerAssignTicket($current_user, intval($order_id), intval($ticket_id), $payload);

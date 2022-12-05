@@ -1408,7 +1408,7 @@ final class SummitOrderService
             $ticket->generateHash();
             $attendee->updateStatus();
             if($summit->isRegistrationSendTicketEmailAutomatically())
-                $attendee->sendInvitationEmail($ticket);
+                $attendee->sendInvitationEmail($ticket, false, $payload);
 
             return $ticket;
 

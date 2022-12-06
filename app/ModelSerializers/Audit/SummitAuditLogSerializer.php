@@ -1,5 +1,4 @@
-<?php namespace App\Models\Foundation\Main\Repositories;
-
+<?php namespace App\ModelSerializers\Audit;
 /**
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,16 +12,24 @@
  * limitations under the License.
  **/
 
-use models\utils\IBaseRepository;
-use utils\Filter;
-use utils\Order;
-use utils\PagingInfo;
-use utils\PagingResponse;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 
 /**
- * Interface IAuditLogRepository
- * @package App\Models\Foundation\Main\Repositories
+ * Class SummitAuditLogSerializer
+ * @package ModelSerializers
  */
-interface IAuditLogRepository extends IBaseRepository
+class SummitAuditLogSerializer extends AuditLogSerializer
 {
+    protected static $array_mappings = [
+        'SummitId' => 'summit_id:json_int',
+    ];
+
+    protected static $expand_mappings = [
+        'summit' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'summit_id',
+            'getter' => 'getSummit',
+            'has' => 'hasSummit'
+        ],
+    ];
 }

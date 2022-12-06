@@ -40,6 +40,7 @@ class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer
         'Currency'           => 'currency:json_string',
         'TaxesAmount'        => 'taxes_amount:json_float',
         'Active'             => 'is_active:json_bool',
+        'QRCode'             => 'qr_code:json_string',
     ];
 
     protected static $allowed_relations = [

@@ -35,6 +35,7 @@ final class ApiScopesSeeder extends Seeder
         DB::table('api_scopes')->delete();
 
         $this->seedSummitScopes();
+        $this->seedAuditLogScopes();
         $this->seedMembersScopes();
         $this->seedTeamsScopes();
         $this->seedTagsScopes();
@@ -395,6 +396,33 @@ final class ApiScopesSeeder extends Seeder
 
         EntityManager::flush();
 
+    }
+
+    private function seedAuditLogScopes()
+    {
+        $current_realm = Config::get('app.scope_base_realm');
+        $api = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'audit-logs']);
+
+        $scopes = [
+            [
+                'name' => sprintf(SummitScopes::ReadAuditLogs, $current_realm),
+                'short_description' => 'Get Audit Logs Data',
+                'description' => 'Grants read only access for Audit Logs Data',
+            ]
+        ];
+
+        foreach ($scopes as $scope_info) {
+            $scope = new ApiScope();
+            $scope->setName($scope_info['name']);
+            $scope->setShortDescription($scope_info['short_description']);
+            $scope->setDescription($scope_info['description']);
+            $scope->setActive(true);
+            $scope->setDefault(false);
+            $scope->setApi($api);
+            EntityManager::persist($scope);
+        }
+
+        EntityManager::flush();
     }
 
     private function seedMembersScopes(){

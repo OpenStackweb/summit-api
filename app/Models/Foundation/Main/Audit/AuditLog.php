@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use Doctrine\ORM\Mapping AS ORM;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
 /**
@@ -28,6 +29,16 @@ use models\utils\SilverstripeBaseModel;
  */
 abstract class AuditLog extends SilverstripeBaseModel
 {
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getUserId' => 'user',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasUser' => 'user',
+    ];
+
     /**
      * @ORM\ManyToOne(targetEntity="models\main\Member")
      * @ORM\JoinColumn(name="UserID", referencedColumnName="ID")

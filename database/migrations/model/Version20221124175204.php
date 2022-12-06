@@ -26,7 +26,10 @@ class Version20221124175204 extends AbstractMigration
                 $table->text("Action")->setNotnull(true);
                 $table->integer("UserID", false, false)->setNotnull(false)->setDefault('NULL');
                 $table->index("UserID", "UserID");
-                $table->foreign("Member", "UserID", "ID", ["onDelete" => "CASCADE"]);
+                $table->foreign("Member",
+                    "UserID",
+                    "ID", ["onDelete" => "CASCADE"],
+                    "FK_AuditLog_Member");
             });
         }
 
@@ -37,7 +40,11 @@ class Version20221124175204 extends AbstractMigration
                 $table->integer("SummitID");
                 $table->index("SummitID", "SummitID");
 
-                $table->foreign("AuditLog", "ID", "ID", ["onDelete" => "CASCADE"], 'FK_SummitAuditLog_AuditLog');
+                $table->foreign("AuditLog",
+                    "ID",
+                    "ID",
+                    ["onDelete" => "CASCADE"],
+                    "FK_SummitAuditLog_AuditLog");
             });
         }
 
@@ -48,7 +55,11 @@ class Version20221124175204 extends AbstractMigration
                 $table->integer("EventID");
                 $table->index("EventID", "EventID");
 
-                $table->foreign("AuditLog", "ID", "ID", ["onDelete" => "CASCADE"], 'FK_SummitEventAuditLog_AuditLog');
+                $table->foreign("AuditLog",
+                    "ID",
+                    "ID",
+                    ["onDelete" => "CASCADE"],
+                    "FK_SummitEventAuditLog_AuditLog");
             });
         }
     }

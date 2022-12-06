@@ -14,6 +14,7 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\summit\Summit;
 use models\summit\SummitEvent;
+use models\utils\One2ManyPropertyTrait;
 
 /**
  * @ORM\Entity
@@ -24,6 +25,16 @@ use models\summit\SummitEvent;
 class SummitEventAuditLog extends SummitAuditLog
 {
     const ClassName = 'SummitEventAuditLog';
+
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getEventId' => 'event',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasEvent' => 'event',
+    ];
 
     /**
      * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent")

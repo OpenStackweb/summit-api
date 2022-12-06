@@ -14,11 +14,41 @@
 
 class OAuth2AuditLogApiTest extends ProtectedApiTest
 {
-    public function testGetAuditLog()
+    public function testGetSummitAuditLog()
     {
         $params = [
-            'filter' => ['summit_id==3315', 'event_id==106509'],
-            'order'  => '+id'
+            'filter' => ['class_name==SummitAuditLog', 'summit_id==3337'],
+            'order'  => '+user_id',
+            'expand' => 'summit,event'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2AuditLogController@getAll",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $audit_log = json_decode($content);
+        $this->assertTrue(!is_null($audit_log));
+        $this->assertResponseStatus(200);
+    }
+
+    public function testGetSummitEventAuditLog()
+    {
+        $params = [
+            'filter' => ['class_name==SummitEventAuditLog', 'summit_id==3337', 'event_id==107141', 'user_email==smarcet+gfc76kzwxp@gmail.com'],
+            'order'  => '+id',
+            'expand' => 'event'
         ];
 
         $headers = [

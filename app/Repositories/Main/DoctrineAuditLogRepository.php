@@ -13,7 +13,7 @@
  **/
 
 use App\Models\Foundation\Main\Repositories\IAuditLogRepository;
-use Doctrine\ORM\Tools\Pagination\Paginator;
+use Doctrine\ORM\QueryBuilder;
 use models\main\AuditLog;
 use App\Repositories\SilverStripeDoctrineRepository;
 use models\main\Member;
@@ -22,9 +22,6 @@ use models\main\SummitEventAuditLog;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineInstanceOfFilterMapping;
 use utils\Filter;
-use utils\Order;
-use utils\PagingInfo;
-use utils\PagingResponse;
 
 /**
  * Class DoctrineAuditLogRepository
@@ -34,19 +31,40 @@ final class DoctrineAuditLogRepository
     extends SilverStripeDoctrineRepository
     implements IAuditLogRepository
 {
-//    protected function getFilterMappings(): array
-//    {
-//        return [
-//            'summit_id'      => new DoctrineFilterMapping("sal.summit_id :operator :value"),
-//            'event_id'       => new DoctrineFilterMapping("seal.event_id :operator :value"),
-//            'user_id'        => new DoctrineFilterMapping("u.id :operator :value"),
-//            'user_email'     => new DoctrineFilterMapping("u.email :operator :value"),
-//            'user_full_name' => new DoctrineFilterMapping("concat(u.first_name, ' ', u.last_name) :operator :value"),
-//            'action'         => 'e.action:json_string',
-//        ];
-//    }
+    /**
+     * @return string
+     */
+    protected function getBaseEntity()
+    {
+        return AuditLog::class;
+    }
 
-    protected function getCustomFilterMappings(): array
+    /**
+     * @param QueryBuilder $query
+     * @param Filter|null $filter
+     * @return QueryBuilder
+     */
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null): QueryBuilder
+    {
+        $query = $query->leftJoin(Member::class, 'u', 'WITH', 'e.user = u.id');
+
+        if ($filter instanceof Filter) {
+            if ($filter->hasFilter("summit_id")) {
+                $query = $query->leftJoin(SummitAuditLog::class, 'sal', 'WITH', 'e.id = sal.id');
+            }
+
+            if ($filter->hasFilter("event_id")) {
+                $query = $query->leftJoin(SummitEventAuditLog::class, 'seal', 'WITH', 'e.id = seal.id');
+            }
+        }
+
+        return $query;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getFilterMappings(): array
     {
         return [
             'class_name' => new DoctrineInstanceOfFilterMapping(
@@ -69,61 +87,13 @@ final class DoctrineAuditLogRepository
     {
         return [
             'id' => 'e.id',
-            'user_id' => 'e.user_id',
+            'user_id' => 'u.id',
+            'user_full_name' => <<<SQL
+LOWER(CONCAT(u.first_name, ' ', u.last_name))
+SQL,
+            'user_email' => <<<SQL
+LOWER(u.email)
+SQL,
         ];
-    }
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return AuditLog::class;
-    }
-
-    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse
-    {
-        $query = $this->getEntityManager()->createQueryBuilder()
-            ->distinct("e")
-            ->select("e")
-            ->from($this->getBaseEntity(), "e")
-            ->leftJoin(SummitAuditLog::class, 'sal', 'WITH', 'e.id = sal.id')
-            ->leftJoin(SummitEventAuditLog::class, 'seal', 'WITH', 'e.id = seal.id')
-            ->leftJoin(Member::class, 'u', 'WITH', 'e.user = u.id');
-
-        $query = $this->applyExtraJoins($query, $filter);
-
-        if (!is_null($filter)) {
-            $filter->apply2Query($query, $this->getCustomFilterMappings());
-        }
-
-        if (!is_null($order)) {
-            $order->apply2Query($query, [
-                'id' => 'e.id',
-            ]);
-        } else {
-            //default order
-            $query = $query->addOrderBy("e.id", 'ASC');
-        }
-
-        $query = $query
-            ->setFirstResult($paging_info->getOffset())
-            ->setMaxResults($paging_info->getPerPage());
-
-        $paginator = new Paginator($query);
-        $total = $paginator->count();
-        $data = [];
-
-        foreach ($paginator as $entity)
-            $data[] = $entity;
-
-        return new PagingResponse
-        (
-            $total,
-            $paging_info->getPerPage(),
-            $paging_info->getCurrentPage(),
-            $paging_info->getLastPage($total),
-            $data
-        );
     }
 }

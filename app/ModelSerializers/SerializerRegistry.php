@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use App\ModelSerializers\Audit\SummitAuditLogSerializer;
+use App\ModelSerializers\Audit\SummitEventAuditLogSerializer;
 use App\ModelSerializers\CCLA\TeamSerializer;
 use App\ModelSerializers\Elections\CandidateSerializer;
 use App\ModelSerializers\Elections\ElectionSerializer;
@@ -161,6 +163,11 @@ final class SerializerRegistry
         $this->registry['ApiEndpoint'] = ApiEndpointSerializer::class;
         $this->registry['ApiScope'] = ApiScopeSerializer::class;
         $this->registry['ApiEndpointAuthzGroup'] = ApiEndpointAuthzGroupSerializer::class;
+
+        //Audit log
+
+        $this->registry['SummitAuditLog'] = SummitAuditLogSerializer::class;
+        $this->registry['SummitEventAuditLog'] = SummitEventAuditLogSerializer::class;
 
         // elections
 

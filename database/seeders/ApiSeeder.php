@@ -162,5 +162,15 @@ final class ApiSeeder extends Seeder
 
         EntityManager::flush();
 
+        //audit logs
+
+        $api = new Api();
+        $api->setName('audit-logs');
+        $api->setActive(true);
+        $api->setDescription('Audit logs API');
+
+        EntityManager::persist($api);
+
+        EntityManager::flush();
     }
 }

@@ -1,4 +1,4 @@
-<?php namespace models\main;
+<?php namespace App\Models\Foundation\Main\Repositories;
 
 /**
  * Copyright 2022 OpenStack Foundation
@@ -21,7 +21,7 @@ use utils\PagingResponse;
 
 /**
  * Interface IAuditLogRepository
- * @package models\main
+ * @package App\Models\Foundation\Main\Repositories
  */
 interface IAuditLogRepository extends IBaseRepository
 {

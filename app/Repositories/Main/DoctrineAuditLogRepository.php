@@ -12,12 +12,14 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\Repositories\IAuditLogRepository;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use models\main\AuditLog;
-use models\main\IAuditLogRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
+use models\main\Member;
 use models\main\SummitAuditLog;
 use models\main\SummitEventAuditLog;
+use utils\DoctrineFilterMapping;
 use utils\DoctrineInstanceOfFilterMapping;
 use utils\Filter;
 use utils\Order;
@@ -32,13 +34,17 @@ final class DoctrineAuditLogRepository
     extends SilverStripeDoctrineRepository
     implements IAuditLogRepository
 {
-    protected function getFilterMappings(): array
-    {
-        return [
-            'user' => 'e.user:json_string',
-            'action' => 'e.action:json_string',
-        ];
-    }
+//    protected function getFilterMappings(): array
+//    {
+//        return [
+//            'summit_id'      => new DoctrineFilterMapping("sal.summit_id :operator :value"),
+//            'event_id'       => new DoctrineFilterMapping("seal.event_id :operator :value"),
+//            'user_id'        => new DoctrineFilterMapping("u.id :operator :value"),
+//            'user_email'     => new DoctrineFilterMapping("u.email :operator :value"),
+//            'user_full_name' => new DoctrineFilterMapping("concat(u.first_name, ' ', u.last_name) :operator :value"),
+//            'action'         => 'e.action:json_string',
+//        ];
+//    }
 
     protected function getCustomFilterMappings(): array
     {
@@ -49,7 +55,13 @@ final class DoctrineAuditLogRepository
                     SummitAuditLog::ClassName => SummitAuditLog::class,
                     SummitEventAuditLog::ClassName => SummitEventAuditLog::class,
                 ]
-            )
+            ),
+            'summit_id'      => new DoctrineFilterMapping("sal.summit :operator :value"),
+            'event_id'       => new DoctrineFilterMapping("seal.event :operator :value"),
+            'user_id'        => new DoctrineFilterMapping("u.id :operator :value"),
+            'user_email'     => new DoctrineFilterMapping("u.email :operator :value"),
+            'user_full_name' => new DoctrineFilterMapping("concat(u.first_name, ' ', u.last_name) :operator :value"),
+            'action'         => 'e.action:json_string',
         ];
     }
 
@@ -57,7 +69,7 @@ final class DoctrineAuditLogRepository
     {
         return [
             'id' => 'e.id',
-            'user' => 'e.user',
+            'user_id' => 'e.user_id',
         ];
     }
 
@@ -76,7 +88,8 @@ final class DoctrineAuditLogRepository
             ->select("e")
             ->from($this->getBaseEntity(), "e")
             ->leftJoin(SummitAuditLog::class, 'sal', 'WITH', 'e.id = sal.id')
-            ->leftJoin(SummitEventAuditLog::class, 'seal', 'WITH', 'e.id = seal.id');
+            ->leftJoin(SummitEventAuditLog::class, 'seal', 'WITH', 'e.id = seal.id')
+            ->leftJoin(Member::class, 'u', 'WITH', 'e.user = u.id');
 
         $query = $this->applyExtraJoins($query, $filter);
 

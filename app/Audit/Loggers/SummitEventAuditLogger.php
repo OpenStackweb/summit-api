@@ -48,6 +48,11 @@ class SummitEventAuditLogger implements ILogger
             $entity
         );
         $entity_manager->persist($entry);
+
+        // For the onFlush handler, we need to compute the changeset for new entities manually:
+        // http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/reference/events.html#onflush
+        // "If you create and persist a new entity in onFlush, then calling EntityManager#persist() is not enough. You
+        // have to execute an additional call to $unitOfWork->computeChangeSet($classMetadata, $entity)."
         $entity_manager->getUnitOfWork()->computeChangeSet($entity_manager->getClassMetadata(get_class($entry)), $entry);
     }
 }

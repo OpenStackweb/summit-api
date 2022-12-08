@@ -2393,7 +2393,7 @@ final class SummitOrderService
 
       $this->tx_service->transaction(function () use ($summit, $order_id) {
 
-            Log::debug(sprintf("SummitOrderService::deleteOrder summit %s order id %s", $summit, $order_id));
+            Log::debug(sprintf("SummitOrderService::deleteOrder summit %s order id %s", $summit->getId(), $order_id));
 
             $order = $this->order_repository->getById($order_id);
 

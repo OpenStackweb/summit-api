@@ -16,6 +16,11 @@ use Illuminate\Support\Facades\Route;
 
 //OAuth2 Protected API
 
+// audit log
+Route::group(['prefix' => 'audit-logs'], function () {
+    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2AuditLogController@getAll']);
+});
+
 // members
 Route::group(['prefix' => 'members'], function () {
     Route::get('', 'OAuth2MembersApiController@getAll');
@@ -1745,6 +1750,7 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationCompaniesApiController@delete']);
             });
         });
+
     });
 });
 

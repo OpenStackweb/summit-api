@@ -36,6 +36,7 @@ class ApiEndpointsSeeder extends Seeder
         DB::table('api_endpoints')->delete();
 
         $this->seedSummitEndpoints();
+        $this->seedAuditLogEndpoints();
         $this->seedMemberEndpoints();
         $this->seedTagsEndpoints();
         $this->seedCompaniesEndpoints();
@@ -7373,6 +7374,25 @@ class ApiEndpointsSeeder extends Seeder
             ],
         ]);
 
+    }
+
+    private function seedAuditLogEndpoints() {
+        $current_realm = Config::get('app.scope_base_realm');
+
+        $this->seedApiEndpoints('audit-logs', [
+            [
+                'name'        => 'get-summit-audit-log',
+                'route'       => '/api/v1/audit-logs',
+                'http_method' => 'GET',
+                'scopes'      => [
+                    sprintf(SummitScopes::ReadAuditLogs, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators
+                ]
+            ]
+        ]);
     }
 
     /**

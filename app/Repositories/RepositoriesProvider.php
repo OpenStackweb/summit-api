@@ -15,6 +15,7 @@
 use App\Models\Foundation\Elections\Election;
 use App\Models\Foundation\Elections\IElectionsRepository;
 use App\Models\Foundation\Main\Language;
+use App\Models\Foundation\Main\Repositories\IAuditLogRepository;
 use App\Models\Foundation\Main\Repositories\ILanguageRepository;
 use App\Models\Foundation\Main\Repositories\ILegalDocumentRepository;
 use App\Models\Foundation\Main\Repositories\IProjectSponsorshipTypeRepository;
@@ -88,6 +89,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\main\AssetsSyncRequest;
+use models\main\AuditLog;
 use models\main\Company;
 use models\main\File;
 use models\main\Group;
@@ -781,5 +783,11 @@ final class RepositoriesProvider extends ServiceProvider
                 return EntityManager::getRepository(SummitSponsorshipType::class);
             }
         );
+
+        App::singleton(
+            IAuditLogRepository::class,
+            function () {
+                return EntityManager::getRepository(AuditLog::class);
+            });
     }
 }

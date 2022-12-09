@@ -120,6 +120,7 @@ class AccessTokenServiceStub implements IAccessTokenService
             sprintf(SummitScopes::Allow2PresentationAttendeeVote, $url),
             ElectionScopes::NominatesCandidates,
             ElectionScopes::WriteMyCandidateProfile,
+            sprintf(SummitScopes::ReadAuditLogs, $url),
         );
 
         return AccessToken::createFromParams(

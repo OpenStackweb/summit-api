@@ -77,7 +77,7 @@ class AuditLogStrategy
             $description = $formatter->format($subject, $change_set);
         }
 
-        if ($entity != null && $formatter != null) {
+        if ($entity != null && $formatter != null && $description != null) {
             $logger->createAuditLogEntry($this->em, $entity, $description);
         }
     }

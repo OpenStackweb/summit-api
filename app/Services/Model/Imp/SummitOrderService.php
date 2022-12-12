@@ -259,7 +259,7 @@ final class ReserveOrderTask extends AbstractTask
                 throw new ValidationException(sprintf("Owner email differs from logged user email."));
             }
 
-            $should_auto_assign_first_ticket = !$this->owner->hasRegistrationOrderForSummit($this->summit);
+            $should_auto_assign_first_ticket = !$this->owner->hasPaidRegistrationOrderForSummit($this->summit);
 
             $payment_gateway = $this->summit->getPaymentGateWayPerApp
             (

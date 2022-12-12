@@ -1694,10 +1694,11 @@ SQL;
      * @param Summit $summit
      * @return bool
      */
-    public function hasRegistrationOrderForSummit(Summit $summit):bool
+    public function hasPaidRegistrationOrderForSummit(Summit $summit):bool
     {
         $criteria = Criteria::create()
-            ->where(Criteria::expr()->eq("summit", $summit));
+            ->where(Criteria::expr()->eq('summit', $summit))
+            ->andWhere(Criteria::expr()->eq('status',IOrderConstants::PaidStatus));
         return $this->summit_registration_orders->matching($criteria)->count() > 0;
     }
 

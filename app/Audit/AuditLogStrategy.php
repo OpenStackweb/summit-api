@@ -15,6 +15,7 @@ namespace App\Audit;
  * limitations under the License.
  **/
 
+use App\Audit\ConcreteFormatters\ChildEntityFormatters\ChildEntityFormatterFactory;
 use App\Audit\ConcreteFormatters\EntityCollectionUpdateAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityCreationAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityDeletionAuditLogFormatter;
@@ -59,7 +60,14 @@ class AuditLogStrategy
 
         switch ($event_type) {
             case self::EVENT_COLLECTION_UPDATE:
-                $formatter = new EntityCollectionUpdateAuditLogFormatter();
+                $child_entity = null;
+                if (count($subject) > 0) {
+                    $child_entity = $subject[0];
+                } else if (count($subject->getSnapshot()) > 0) {
+                    $child_entity = $subject->getSnapshot()[0];
+                }
+                $child_entity_formatter = $child_entity != null ? ChildEntityFormatterFactory::build($child_entity) : null;
+                $formatter = new EntityCollectionUpdateAuditLogFormatter($child_entity_formatter);
                 $entity = $subject->getOwner();
                 break;
             case self::EVENT_ENTITY_CREATION:

@@ -30,7 +30,8 @@ class EntityUpdateAuditLogFormatter implements IAuditLogFormatter
         return [
             'last_created',
             'last_updated',
-            'last_edited'
+            'last_edited',
+            'updated_by'
         ];
     }
 

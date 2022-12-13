@@ -1,7 +1,4 @@
 <?php namespace ModelSerializers;
-use models\summit\Presentation;
-use models\summit\SummitEvent;
-
 /**
  * Copyright 2016 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +11,7 @@ use models\summit\SummitEvent;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use models\summit\Presentation;
 /**
  * Class AdminPresentationSerializer
  * @package ModelSerializers
@@ -40,11 +37,33 @@ class AdminPresentationSerializer extends PresentationSerializer
     protected static $array_mappings = [
         'Rank'              => 'rank:json_int',
         'SelectionStatus'   => 'selection_status:json_string',
+        'ViewsCount'  => 'views_count:json_int',
+        'CommentsCount' => 'comments_count:json_int',
+        'PopularityScore' => 'popularity_score:json_float',
+        'VotesCount'      => 'votes_count:json_int',
+        'VotesAverage' => 'votes_average:json_float',
+        'VotesTotalPoints' => 'votes_total_points:json_int',
+        'TrackChairAvgScore' => 'track_chair_avg_score:json_float',
+        'PassersCount' => 'passers_count:json_int',
+        'LikersCount' => 'likers_count:json_int',
+        'SelectorsCount' => 'selectors_count:json_int',
     ];
 
     protected static $allowed_fields = [
         'rank',
         'selection_status',
+        'views_count',
+        'comments_count',
+        'popularity_score',
+        'votes_count',
+        'votes_average',
+        'votes_total_points',
+        'track_chair_avg_score',
+        'remaining_selections',
+        'passers_count',
+        'likers_count',
+        'selectors_count',
+        'track_chair_scores_avg',
     ];
 
     /**
@@ -82,6 +101,9 @@ class AdminPresentationSerializer extends PresentationSerializer
             $values['streaming_type'] = $presentation->getStreamingType();
         if(in_array("etherpad_link",$fields))
             $values['etherpad_link'] = $presentation->getEtherpadLink();
+
+        $values['track_chair_scores_avg'] = $presentation->getTrackChairAvgScoresPerRakingType();
+
 
         return $values;
     }

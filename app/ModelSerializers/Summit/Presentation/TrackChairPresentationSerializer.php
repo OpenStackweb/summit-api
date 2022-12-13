@@ -24,32 +24,11 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
 
     protected static $array_mappings = [
         'GroupSelected' => 'is_group_selected:json_bool',
-        'ViewsCount'  => 'views_count:json_int',
-        'CommentsCount' => 'comments_count:json_int',
-        'PopularityScore' => 'popularity_score:json_float',
-        'VotesCount'      => 'votes_count:json_int',
-        'VotesAverage' => 'votes_average:json_float',
-        'VotesTotalPoints' => 'votes_total_points:json_int',
-        'TrackChairAvgScore' => 'track_chair_avg_score:json_float',
-        'PassersCount' => 'passers_count:json_int',
-        'LikersCount' => 'likers_count:json_int',
-        'SelectorsCount' => 'selectors_count:json_int',
         'PendingCategoryChangeRequestsCount' => 'pending_category_change_requests_count:json_int',
      ];
 
     protected static $allowed_fields = [
         'is_group_selected',
-        'views_count',
-        'comments_count',
-        'popularity_score',
-        'votes_count',
-        'votes_average',
-        'votes_total_points',
-        'track_chair_avg_score',
-        'remaining_selections',
-        'passers_count',
-        'likers_count',
-        'selectors_count',
         'pending_category_change_requests_count',
         'viewed',
         'selected',
@@ -188,7 +167,6 @@ class TrackChairPresentationSerializer extends AdminPresentationSerializer
             }
             $values['track_chair_scores'] = $track_chair_scores;
 
-            $values['track_chair_scores_avg'] = $presentation->getTrackChairAvgScoresPerRakingType();
         };
 
         if (!empty($expand)) {

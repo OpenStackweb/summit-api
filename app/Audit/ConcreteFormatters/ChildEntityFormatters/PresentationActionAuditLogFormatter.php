@@ -29,7 +29,7 @@ class PresentationActionAuditLogFormatter implements IChildEntityAuditLogFormatt
         switch ($child_entity_action_type) {
             case IChildEntityAuditLogFormatter::CHILD_ENTITY_CREATION:
                 $status_desc = $subject->isCompleted() ? "complete" : "incomplete";
-                return "A new PresentationAction with Type ID {$subject->getType()->getID()} and status \"{$status_desc}\" was added to the collection";
+                return "A new PresentationAction of Type \"{$subject->getType()->getLabel()} ({$subject->getType()->getID()})\" and status \"{$status_desc}\" was added to the collection";
             case IChildEntityAuditLogFormatter::CHILD_ENTITY_DELETION:
                 return "PresentationAction with ID {$subject->getID()} was removed from the collection";
         }

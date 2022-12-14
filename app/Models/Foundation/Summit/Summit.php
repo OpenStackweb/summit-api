@@ -6118,7 +6118,7 @@ SQL;
     public function canEmitRefundRequests(Member $member):bool{
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
         return !is_null($this->registration_allowed_refund_request_till_date)
-            && $this->registration_allowed_refund_request_till_date <= $now;
+            && $this->registration_allowed_refund_request_till_date >= $now;
     }
 
     use SummitRegistrationStats;

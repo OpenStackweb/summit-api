@@ -45,11 +45,7 @@ trait GetAndValidateJsonPayload
            throw new HTTP400BadRequestException("Request has no JSON content.");
         }
 
-        if(!Request::isJson()){
-            return [];
-        }
-
-        $payload = $this->getJsonData();
+        $payload = $validate_json_payload ? $this->getJsonData() : Request::all();
         // Creates a Validator instance and validates the data.
         $validation = Validator::make($payload, $validation_rules, $messages);
 

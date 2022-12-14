@@ -1521,7 +1521,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $payload = $this->getJsonPayload(SummitLocationImageValidationRulesFactory::build(true), true);
+            $payload = $this->getJsonPayload(SummitLocationImageValidationRulesFactory::build(true));
 
             $image = $this->location_service->updateLocationImage
             (

@@ -20,14 +20,19 @@
 class SummitOrderReservationSerializer extends SummitOrderBaseSerializer
 {
     protected static $array_mappings = [
-        'RawAmount'                 => 'raw_amount:json_float',
-        'FinalAmount'               => 'amount:json_float',
-        'TaxesAmount'               => 'taxes_amount:json_float',
-        'DiscountAmount'            => 'discount_amount:json_float',
+        'RawAmount' => 'raw_amount:json_float',
+        'RawAmountInCents' => 'raw_amount_in_cents:json_int',
+        'FinalAmount' => 'amount:json_float',
+        'FinalAmountInCents' => 'amount_in_cents:json_int',
+        'TaxesAmount' => 'taxes_amount:json_float',
+        'TaxesAmountInCents' => 'taxes_amount_in_cents:json_int',
+        'DiscountAmount' => 'discount_amount:json_float',
+        'DiscountAmountInCents' => 'discount_amount_in_cents:json_int',
         'PaymentGatewayClientToken' => 'payment_gateway_client_token:json_string',
-        'PaymentGatewayCartId'      => 'payment_gateway_cart_id:json_string',
-        'Hash'                      => 'hash:json_string',
-        'HashCreationDate'          => 'hash_creation_date:datetime_epoch',
-        'RefundedAmount'            => 'refunded_amount:json_float',
+        'PaymentGatewayCartId' => 'payment_gateway_cart_id:json_string',
+        'Hash' => 'hash:json_string',
+        'HashCreationDate' => 'hash_creation_date:datetime_epoch',
+        'RefundedAmount' => 'refunded_amount:json_float',
+        'RefundedAmountInCents' => 'refunded_amount_in_cents:json_int',
     ];
 }

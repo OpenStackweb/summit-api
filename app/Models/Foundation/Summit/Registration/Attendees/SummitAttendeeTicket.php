@@ -241,6 +241,11 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         return $this->raw_cost;
     }
 
+    public function getRawCostInCents():?int{
+        $raw_cost = $this->raw_cost * 100;
+        return intval(round($raw_cost));
+    }
+
     /**
      * @param float $raw_cost
      */
@@ -681,6 +686,11 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         return $totalRefundedAmount;
     }
 
+    public function getRefundedAmountInCents():int{
+        $amount = $this->getRefundedAmount();
+        return intval(round($amount * 100));
+    }
+
     /**
      * @param float $amount
      * @return bool
@@ -849,10 +859,21 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     {
         $amount = $this->raw_cost;
         $amount -= $this->discount;
+
         foreach ($this->applied_taxes as $tax) {
             $amount += $tax->getAmount();
         }
         return $amount;
+    }
+
+    /**
+     * @return int
+     */
+    public function getFinalAmountInCents(): int
+    {
+        $amount = $this->getFinalAmount();
+
+        return intval(round($amount * 100));
     }
 
     /**
@@ -894,6 +915,18 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     }
 
     /**
+     * @return int
+     */
+    public function getTaxesAmountInCents(): int
+    {
+        $amount = 0.0;
+        foreach ($this->getAppliedTaxes() as $appliedTax) {
+            $amount += $appliedTax->getAmount();
+        }
+        return intval(round($amount * 100 ));
+    }
+
+    /**
      * @return SummitAttendeeTicketTax[]
      */
     public function getAppliedTaxes()
@@ -907,6 +940,15 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     public function getDiscount(): float
     {
         return $this->discount;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDiscountInCents(): int
+    {
+        $discount = $this->discount;
+        return intval(round($discount * 100 ));
     }
 
     /**

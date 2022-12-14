@@ -120,7 +120,7 @@ final class SummitTicketTypeService
                 $currency = $ticket_type->getCurrency();
                 $summit_currency = $summit->getDefaultTicketTypeCurrency();
                 if (!empty($currency) && !empty($summit_currency) && $summit_currency != $currency)
-                    throw new ValidationException(sprintf("ticket type should have same currency as summit (%s)", $summit_currency));
+                    throw new ValidationException(sprintf("Ticket type should have same currency as summit (%s).", $summit_currency));
             }
 
             $summit->addTicketType($ticket_type);
@@ -195,9 +195,11 @@ final class SummitTicketTypeService
             }
 
             $summit_currency = $summit->getDefaultTicketTypeCurrency();
-            $currency = $ticket_type->getCurrency();
-            if (!empty($currency) && !empty($summit_currency) && $summit_currency != $currency)
-                throw new ValidationException(sprintf("ticket type should have same currency as summit (%s)", $summit_currency));
+            if (isset($data['currency'])) {
+                $currency = trim($data['currency']);
+                if (!empty($currency) && !empty($summit_currency) && $summit_currency != $currency)
+                    throw new ValidationException(sprintf("Ticket type should have same currency as summit (%s).", $summit_currency));
+            }
 
             return SummitTicketTypeFactory::populate($ticket_type, self::getTicketTypeParams($summit, $data));
         });

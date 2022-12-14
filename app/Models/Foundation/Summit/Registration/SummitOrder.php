@@ -797,6 +797,14 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     }
 
     /**
+     * @return int
+     */
+    public function getRawAmountInCent():int{
+        $amount = $this->getRawAmount();
+        return intval(round($amount * 100));
+    }
+
+    /**
      * @return float
      */
     public function getFinalAmount():float {
@@ -805,6 +813,14 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
             $amount += $ticket->getFinalAmount();
         }
         return $amount;
+    }
+
+    /**
+     * @return int
+     */
+    public function getFinalAmountInCents():int {
+        $amount = $this->getFinalAmount();
+        return intval(round($amount * 100));
     }
 
     /**
@@ -842,6 +858,14 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     }
 
     /**
+     * @return int
+     */
+    public function getTaxesAmountInCents(): int{
+        $amount = $this->getTaxesAmount();
+        return intval(round($amount * 100));
+    }
+
+    /**
      * @return float
      */
     public function getDiscountAmount(): float{
@@ -850,6 +874,14 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
             $amount += $ticket->getDiscount();
         }
         return $amount;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDiscountAmountInCents(): int{
+        $amount = $this->getDiscountAmount();
+        return intval(round($amount * 100));
     }
 
     /**
@@ -978,5 +1010,13 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
             $totalRefundedAmount += $ticket->getRefundedAmount();
         }
         return $totalRefundedAmount;
+    }
+
+    /**
+     * @return int
+     */
+    public function getRefundedAmountInCents():int{
+        $totalRefundedAmount = $this->getRefundedAmount();
+        return intval(round($totalRefundedAmount * 100));
     }
 }

@@ -105,6 +105,13 @@ final class StripeApi implements IPaymentGatewayAPI
              * For example, to charge ¥500, simply provide an amount value of 500.
              */
             $amount = $amount * 100;
+
+            Log::debug(sprintf("StripeApi::generatePayment amount before rounding %s", $amount));
+
+            $amount = round($amount);
+
+            Log::debug(sprintf("StripeApi::generatePayment amount after rounding %s", $amount));
+
         }
 
         $request = [
@@ -294,6 +301,7 @@ final class StripeApi implements IPaymentGatewayAPI
                 'charge' => $charge->id,
                 'reason' => $reason
             ];
+
             if ($amount > 0) {
                 if (!self::isZeroDecimalCurrency($currency)) {
                     /**
@@ -302,8 +310,13 @@ final class StripeApi implements IPaymentGatewayAPI
                      * For zero-decimal currencies, still provide amounts as an integer but without multiplying by 100.
                      * For example, to charge ¥500, simply provide an amount value of 500.
                      */
+
                     $amount = $amount * 100;
+                    Log::debug(sprintf("StripeApi::refundPayment amount %s before rounding", $amount));
+                    $amount = round($amount);
+                    Log::debug(sprintf("StripeApi::refundPayment amount %s after rounding", $amount));
                 }
+
                 $params['amount'] = intval($amount);
             }
 

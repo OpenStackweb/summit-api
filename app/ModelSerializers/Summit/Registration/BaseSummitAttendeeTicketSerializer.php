@@ -16,6 +16,7 @@ use App\ModelSerializers\Traits\RequestScopedCache;
 use Libs\ModelSerializers\Many2OneExpandSerializer;
 use Libs\ModelSerializers\One2ManyExpandSerializer;
 use models\summit\SummitAttendeeTicket;
+
 /**
  * Class BaseSummitAttendeeTicketSerializer
  * @package ModelSerializers
@@ -23,24 +24,29 @@ use models\summit\SummitAttendeeTicket;
 class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
-        'Number'             => 'number:json_string',
-        'Status'             => 'status:json_string',
-        'ExternalOrderId'    => 'external_order_id:json_string',
+        'Number' => 'number:json_string',
+        'Status' => 'status:json_string',
+        'ExternalOrderId' => 'external_order_id:json_string',
         'ExternalAttendeeId' => 'external_attendee_id:json_string',
-        'BoughtDate'         => 'bought_date:datetime_epoch',
-        'TicketTypeId'       => 'ticket_type_id:json_int',
-        'OwnerId'            => 'owner_id:json_int',
-        'OrderId'            => 'order_id:json_int',
-        'BadgeId'            => 'badge_id:json_int',
-        'PromoCodeId'        => 'promo_code_id:json_int',
-        'RawCost'            => 'raw_cost:json_float',
-        'FinalAmount'        => 'final_amount:json_float',
-        'Discount'           => 'discount:json_float',
-        'RefundedAmount'     => 'refunded_amount:json_float',
-        'Currency'           => 'currency:json_string',
-        'TaxesAmount'        => 'taxes_amount:json_float',
-        'Active'             => 'is_active:json_bool',
-        'QRCode'             => 'qr_code:json_string',
+        'BoughtDate' => 'bought_date:datetime_epoch',
+        'TicketTypeId' => 'ticket_type_id:json_int',
+        'OwnerId' => 'owner_id:json_int',
+        'OrderId' => 'order_id:json_int',
+        'BadgeId' => 'badge_id:json_int',
+        'PromoCodeId' => 'promo_code_id:json_int',
+        'RawCost' => 'raw_cost:json_float',
+        'RawCostInCents' => 'raw_cost_in_cents:json_int',
+        'FinalAmount' => 'final_amount:json_float',
+        'FinalAmountInCents' => 'final_amount_in_cents:json_int',
+        'Discount' => 'discount:json_float',
+        'DiscountInCents' => 'discount_in_cents:json_int',
+        'RefundedAmount' => 'refunded_amount:json_float',
+        'RefundedAmountInCents' => 'refunded_amount_in_cents:json_int',
+        'Currency' => 'currency:json_string',
+        'TaxesAmount' => 'taxes_amount:json_float',
+        'TaxesAmountInCents' => 'taxes_amount_in_cents:json_int',
+        'Active' => 'is_active:json_bool',
+        'QRCode' => 'qr_code:json_string',
     ];
 
     protected static $allowed_relations = [

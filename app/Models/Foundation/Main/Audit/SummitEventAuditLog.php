@@ -30,10 +30,12 @@ class SummitEventAuditLog extends SummitAuditLog
 
     protected $getIdMappings = [
         'getEventId' => 'event',
+        'getUserId'  => 'user',
     ];
 
     protected $hasPropertyMappings = [
         'hasEvent' => 'event',
+        'hasUser'  => 'user',
     ];
 
     /**

@@ -446,8 +446,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         unset($event->tags);*/
         $params = array
         (
-            'id' => 23,
-            'event_id' => 19255,
+            'id' => 3343,
+            'event_id' => 107221,
         );
 
         $data = array

@@ -24,7 +24,6 @@ interface IChildEntityAuditLogFormatter
 {
     public const CHILD_ENTITY_CREATION = 'child_entity_creation';
     public const CHILD_ENTITY_DELETION = 'child_entity_deletion';
-    public const CHILD_ENTITY_UPDATE = 'child_entity_update';
 
     /**
      * @param $subject

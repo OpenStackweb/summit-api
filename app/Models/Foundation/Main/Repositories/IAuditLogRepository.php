@@ -13,11 +13,9 @@
  * limitations under the License.
  **/
 
+use DateTime;
+use Doctrine\DBAL\Exception;
 use models\utils\IBaseRepository;
-use utils\Filter;
-use utils\Order;
-use utils\PagingInfo;
-use utils\PagingResponse;
 
 /**
  * Interface IAuditLogRepository
@@ -25,4 +23,10 @@ use utils\PagingResponse;
  */
 interface IAuditLogRepository extends IBaseRepository
 {
+    /**
+     * @param int $summit_id
+     * @param DateTime $date_backward_from
+     * @throws Exception
+     */
+    public function deleteOldLogEntries(int $summit_id, DateTime $date_backward_from);
 }

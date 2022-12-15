@@ -20,7 +20,13 @@ use App\Audit\ConcreteFormatters\EntityCollectionUpdateAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityCreationAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityDeletionAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityUpdateAuditLogFormatter;
+use App\Audit\Loggers\SummitEventAuditLogger;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\PersistentCollection;
+use Illuminate\Support\Facades\Log;
+use models\summit\PresentationAction;
+use models\summit\PresentationExtraQuestionAnswer;
+use models\summit\SummitEvent;
 
 /**
  * Class AuditLogFormatterStrategy
@@ -42,51 +48,67 @@ class AuditLogStrategy
         $this->em = $em;
     }
 
+    private function resolveAuditableEntity($subject) {
+        if ($subject instanceof SummitEvent) return $subject;
+
+        if ($subject instanceof PersistentCollection && $subject->getOwner() instanceof SummitEvent) {
+            return $subject->getOwner();
+        }
+
+        if ($subject instanceof PresentationAction || $subject instanceof PresentationExtraQuestionAnswer) {
+            return $subject->getPresentation();
+        }
+
+        return null;
+    }
+
     /**
      * @param $subject
      * @param $change_set
      * @param $event_type
      * @return void
      */
-    public function audit($subject, $change_set, $event_type)
-    {
-        $logger = LoggerFactory::build($subject);
+    public function audit($subject, $change_set, $event_type) {
+        try {
+            $entity = $this->resolveAuditableEntity($subject);
 
-        if ($logger == null) return;
+            if ($entity == null) return;
 
-        $entity = $subject;
-        $formatter = null;
-        $description = null;
+            $logger = new SummitEventAuditLogger();
 
-        switch ($event_type) {
-            case self::EVENT_COLLECTION_UPDATE:
-                $child_entity = null;
-                if (count($subject) > 0) {
-                    $child_entity = $subject[0];
-                } else if (count($subject->getSnapshot()) > 0) {
-                    $child_entity = $subject->getSnapshot()[0];
-                }
-                $child_entity_formatter = $child_entity != null ? ChildEntityFormatterFactory::build($child_entity) : null;
-                $formatter = new EntityCollectionUpdateAuditLogFormatter($child_entity_formatter);
-                $entity = $subject->getOwner();
-                break;
-            case self::EVENT_ENTITY_CREATION:
-                $formatter = new EntityCreationAuditLogFormatter();
-                break;
-            case self::EVENT_ENTITY_DELETION:
-                $formatter = new EntityDeletionAuditLogFormatter();
-                break;
-            case self::EVENT_ENTITY_UPDATE:
-                $formatter = new EntityUpdateAuditLogFormatter();
-                break;
-        }
+            $formatter = null;
 
-        if ($formatter != null) {
+            switch ($event_type) {
+                case self::EVENT_COLLECTION_UPDATE:
+                    $child_entity = null;
+                    if (count($subject) > 0) {
+                        $child_entity = $subject[0];
+                    } else if (count($subject->getSnapshot()) > 0) {
+                        $child_entity = $subject->getSnapshot()[0];
+                    }
+                    $child_entity_formatter = $child_entity != null ? ChildEntityFormatterFactory::build($child_entity) : null;
+                    $formatter = new EntityCollectionUpdateAuditLogFormatter($child_entity_formatter);
+                    break;
+                case self::EVENT_ENTITY_CREATION:
+                    $formatter = new EntityCreationAuditLogFormatter();
+                    break;
+                case self::EVENT_ENTITY_DELETION:
+                    $formatter = new EntityDeletionAuditLogFormatter();
+                    break;
+                case self::EVENT_ENTITY_UPDATE:
+                    $formatter = new EntityUpdateAuditLogFormatter();
+                    break;
+            }
+
+            if ($formatter == null) return;
+
             $description = $formatter->format($subject, $change_set);
-        }
 
-        if ($entity != null && $formatter != null && $description != null) {
-            $logger->createAuditLogEntry($this->em, $entity, $description);
+            if ($description != null) {
+                $logger->createAuditLogEntry($this->em, $entity, $description);
+            }
+        } catch (\Exception $ex){
+            Log::warning($ex);
         }
     }
 }

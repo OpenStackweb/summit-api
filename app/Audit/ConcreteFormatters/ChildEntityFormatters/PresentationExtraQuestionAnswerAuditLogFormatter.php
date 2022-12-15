@@ -28,11 +28,9 @@ class PresentationExtraQuestionAnswerAuditLogFormatter implements IChildEntityAu
     public function format($subject, $child_entity_action_type): ?string {
         switch ($child_entity_action_type) {
             case IChildEntityAuditLogFormatter::CHILD_ENTITY_CREATION:
-                return "A new PresentationExtraQuestionAnswer for Question ID {$subject->getQuestion()->getID()} was added to the collection";
+                return "A new PresentationExtraQuestionAnswer for Question ID {$subject->getQuestion()->getID()} and value \"{$subject->getValue()}\" was added to the collection";
             case IChildEntityAuditLogFormatter::CHILD_ENTITY_DELETION:
                 return "PresentationExtraQuestionAnswer with ID {$subject->getID()} was removed from the collection";
-            case IChildEntityAuditLogFormatter::CHILD_ENTITY_UPDATE:
-                return "PresentationExtraQuestionAnswer with ID {$subject->getID()} was updated";
         }
         return "";
     }

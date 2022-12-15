@@ -68,3 +68,11 @@ php artisan queue:work
 
 # message broker
 php artisan queue:work message_broker
+
+# Audit Log Management
+
+## purge
+php artisan audit:purge-log _SUMMIT_ID_ _DATE_BACKWARD_FROM_
+
+- SUMMIT_ID: Summit id to clear audit log from
+- DATE_BACKWARD_FROM: Maximum date to delete starting from the beginning

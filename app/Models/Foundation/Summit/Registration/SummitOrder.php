@@ -799,7 +799,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     /**
      * @return int
      */
-    public function getRawAmountInCent():int{
+    public function getRawAmountInCents():int{
         $amount = $this->getRawAmount();
         return intval(round($amount * 100));
     }

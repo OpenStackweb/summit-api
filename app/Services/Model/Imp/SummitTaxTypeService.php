@@ -94,7 +94,8 @@ final class SummitTaxTypeService
 
                 $former_tax = $summit->getTaxTypeByName($name);
 
-                if (!is_null($former_tax)) throw new ValidationException("there is another tax type with same name!");
+                if (!is_null($former_tax) && $former_tax->getId() !== $tax_type->getId())
+                    throw new ValidationException("There is another tax type with same name!");
             }
 
             return SummitTaxTypeFactory::populate($tax_type, $data);

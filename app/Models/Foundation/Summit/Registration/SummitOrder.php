@@ -17,6 +17,7 @@ use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
+use libs\utils\JsonUtils;
 use libs\utils\TextUtils;
 use models\exceptions\ValidationException;
 use models\main\Company;
@@ -808,19 +809,23 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      * @return float
      */
     public function getFinalAmount():float {
-        $amount = 0.0;
-        foreach ($this->tickets as $ticket){
-            $amount += $ticket->getFinalAmount();
-        }
-        return $amount;
+        $amount_in_cents = $this->getFinalAmountInCents();
+        return $amount_in_cents > 0 ? $amount_in_cents / 100.00 : 0;
     }
 
     /**
      * @return int
      */
     public function getFinalAmountInCents():int {
-        $amount = $this->getFinalAmount();
-        return intval(round($amount * 100));
+
+        $amount_in_cents = 0;
+        foreach ($this->tickets as $ticket){
+            $amount_in_cents += $ticket->getFinalAmountInCents();
+        }
+
+        Log::debug(sprintf("SummitOrder::getFinalAmountInCents id %s amount_in_cents %s", $this->id, $amount_in_cents));
+
+        return $amount_in_cents;
     }
 
     /**
@@ -848,40 +853,83 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      * @return float
      */
     public function getTaxesAmount(): float{
+        $taxes = $this->getAppliedTaxes();
         $amount = 0.0;
-        foreach ($this->tickets as $ticket){
-            foreach($ticket->getAppliedTaxes() as $appliedTax){
-                $amount += $appliedTax->getAmount();
-            }
+        foreach ($taxes as $tax){
+            $amount += $tax['amount'];
         }
         return $amount;
+    }
+
+    /**
+     * @return array
+     */
+    public function getAppliedTaxes():array{
+
+        $applied_taxes = [];
+
+        foreach ($this->tickets as $ticket){
+            foreach($ticket->getAppliedTaxes() as $appliedTax){
+
+                $tax = $appliedTax->getTax();
+
+                if(!isset($applied_taxes[$tax->getId()])){
+                    $applied_taxes[$tax->getId()] = [
+                        'id' => $tax->getId(),
+                        'name' => $tax->getName(),
+                        'tax_id' => $tax->getTaxId(),
+                        'rate' => $tax->getRate(),
+                        'amount_in_cents' => 0,
+                    ];
+                }
+
+                $amount_in_cents = intval(round($appliedTax->getAmount() * 100));
+                Log::debug(sprintf("SummitOrder::getAppliedTaxes tax %s amount %s amount_in_cents %s", $tax->getName(), $appliedTax->getAmount(), $amount_in_cents));
+                $applied_taxes[$tax->getId()]['amount_in_cents'] =  $applied_taxes[$tax->getId()]['amount_in_cents'] + $amount_in_cents;
+
+            }
+        }
+
+
+        $res = [];
+        foreach ($applied_taxes as $tax_id => $applied_tax){
+            Log::debug(sprintf("SummitOrder::getAppliedTaxes tax %s amount_in_cents %s", $applied_tax['name'], $applied_tax['amount_in_cents']));
+            $applied_tax['amount'] = $applied_tax['amount_in_cents'] > 0 ? JsonUtils::toJsonFloat( $applied_tax['amount_in_cents'] / 100 ) : 0;
+            $res[] = $applied_tax;
+        }
+
+        return $res;
     }
 
     /**
      * @return int
      */
     public function getTaxesAmountInCents(): int{
-        $amount = $this->getTaxesAmount();
-        return intval(round($amount * 100));
+        $taxes = $this->getAppliedTaxes();
+        $amount = 0;
+        foreach ($taxes as $tax){
+            $amount += $tax['amount_in_cents'];
+        }
+        return $amount;
     }
 
     /**
      * @return float
      */
     public function getDiscountAmount(): float{
-        $amount = 0.0;
-        foreach ($this->tickets as $ticket){
-            $amount += $ticket->getDiscount();
-        }
-        return $amount;
+        $amount_in_cents = $this->getDiscountAmountInCents();
+        return $amount_in_cents > 0 ? $amount_in_cents / 100.00 : 0 ;
     }
 
     /**
      * @return int
      */
     public function getDiscountAmountInCents(): int{
-        $amount = $this->getDiscountAmount();
-        return intval(round($amount * 100));
+        $amount_in_cents = 0;
+        foreach ($this->tickets as $ticket){
+            $amount_in_cents += intval(round($ticket->getDiscount() * 100));
+        }
+        return $amount_in_cents;
     }
 
     /**

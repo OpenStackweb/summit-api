@@ -27,7 +27,8 @@ use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
+
 /**
  * @ORM\Entity
  * @ORM\Table(name="SummitAttendeeTicket")
@@ -241,7 +242,8 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         return $this->raw_cost;
     }
 
-    public function getRawCostInCents():?int{
+    public function getRawCostInCents(): ?int
+    {
         $raw_cost = $this->raw_cost * 100;
         return intval(round($raw_cost));
     }
@@ -286,25 +288,26 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         return $this->qr_code;
     }
 
-    public function generateHash():void
+    public function generateHash(): void
     {
         $token = $this->number;
         if (!is_null($this->order)) {
             $token .= $this->order->getHash();
         }
-        $salt                     = random_bytes(16);
-        if(!empty($this->hash)){
+        $salt = random_bytes(16);
+        if (!empty($this->hash)) {
             $former_hash = new SummitAttendeeTicketFormerHash($this->hash, $this);
             $this->former_hashes->add($former_hash);
         }
-        $this->hash               = hash('sha256', $token.$salt.time());
+        $this->hash = hash('sha256', $token . $salt . time());
         $this->hash_creation_date = new \DateTime('now', new \DateTimeZone('UTC'));
     }
 
     /**
      * @throws ValidationException
      */
-    public function sendPublicEditEmail(){
+    public function sendPublicEditEmail()
+    {
         if (!$this->isPaid())
             throw new ValidationException("ticket is not paid");
 
@@ -375,7 +378,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     public function generateNumber(): string
     {
         $summit = $this->getOrder()->getSummit();
-        $this->number = strtoupper(str_replace(".", "", uniqid($summit->getTicketQRPrefix().'_', true)));
+        $this->number = strtoupper(str_replace(".", "", uniqid($summit->getTicketQRPrefix() . '_', true)));
         return $this->number;
     }
 
@@ -398,7 +401,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getExternalOrderId():?string
+    public function getExternalOrderId(): ?string
     {
         return $this->external_order_id;
     }
@@ -414,7 +417,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getExternalAttendeeId():?string
+    public function getExternalAttendeeId(): ?string
     {
         return $this->external_attendee_id;
     }
@@ -458,8 +461,8 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     public function setTicketType(SummitTicketType $ticket_type)
     {
         $this->ticket_type = $ticket_type;
-        $this->raw_cost    = $this->ticket_type->getCost();
-        $this->currency    = $this->ticket_type->getCurrency();
+        $this->raw_cost = $this->ticket_type->getCost();
+        $this->currency = $this->ticket_type->getCurrency();
         return $this->ticket_type->applyTo($this);
     }
 
@@ -468,8 +471,9 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      * @return SummitAttendeeTicket
      * @throws ValidationException
      */
-    public function upgradeTicketType(SummitTicketType $ticket_type){
-        if(is_null($this->ticket_type))
+    public function upgradeTicketType(SummitTicketType $ticket_type)
+    {
+        if (is_null($this->ticket_type))
             throw new ValidationException("Ticket has not a previous ticket type set.");
         $this->ticket_type = $ticket_type;
         return $this->ticket_type->applyTo($this);
@@ -498,7 +502,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     /**
      * @return SummitAttendee|null
      */
-    public function getOwner():?SummitAttendee
+    public function getOwner(): ?SummitAttendee
     {
         return $this->owner;
     }
@@ -534,14 +538,16 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function isPaid():bool {
+    public function isPaid(): bool
+    {
         return $this->status == IOrderConstants::PaidStatus;
     }
 
     /**
      * @return bool
      */
-    public function isCancelled():bool {
+    public function isCancelled(): bool
+    {
         return $this->status == IOrderConstants::CancelledStatus;
     }
 
@@ -552,7 +558,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      */
     public function generateQRCode(): string
     {
-        if(is_null($this->order)){
+        if (is_null($this->order)) {
             throw new ValidationException("ticket has not order set");
         }
 
@@ -604,7 +610,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     public function setPaid($set_bought_date = true)
     {
         $this->status = IOrderConstants::PaidStatus;
-        if($set_bought_date)
+        if ($set_bought_date)
             $this->bought_date = new \DateTime('now', new \DateTimeZone('UTC'));
     }
 
@@ -629,8 +635,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     {
         try {
             return is_null($this->promo_code) ? 0 : $this->promo_code->getId();
-        }
-        catch(\Exception $ex){
+        } catch (\Exception $ex) {
             return 0;
         }
     }
@@ -654,7 +659,8 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function isRefundRequested():bool{
+    public function isRefundRequested(): bool
+    {
         return $this->hasPendingRefundRequests();
     }
 
@@ -663,8 +669,9 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      * @param string|null $notes
      * @throws ValidationException
      */
-    function cancelRefundRequest(?Member $rejectedBy = null, ?string $notes = null):SummitAttendeeTicketRefundRequest {
-        if(!$this->hasPendingRefundRequests())
+    function cancelRefundRequest(?Member $rejectedBy = null, ?string $notes = null): SummitAttendeeTicketRefundRequest
+    {
+        if (!$this->hasPendingRefundRequests())
             throw new ValidationException(sprintf("You can not cancel any refund on this ticket"));
         $request = $this->getPendingRefundRequest();
 
@@ -676,17 +683,19 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     /**
      * @return float
      */
-    public function getRefundedAmount():float{
+    public function getRefundedAmount(): float
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('status', ISummitRefundRequestConstants::ApprovedStatus));
         $totalRefundedAmount = 0.0;
-        foreach($this->refund_requests->matching($criteria) as $request){
+        foreach ($this->refund_requests->matching($criteria) as $request) {
             $totalRefundedAmount += $request->getRefundedAmount();
         }
         return $totalRefundedAmount;
     }
 
-    public function getRefundedAmountInCents():int{
+    public function getRefundedAmountInCents(): int
+    {
         $amount = $this->getRefundedAmount();
         return intval(round($amount * 100));
     }
@@ -696,16 +705,17 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      * @return bool
      * @throws ValidationException
      */
-    public function canRefund(float $amount):bool{
+    public function canRefund(float $amount): bool
+    {
 
-        if($this->isFree()){
+        if ($this->isFree()) {
             throw new ValidationException("Can not refund a Free Ticket.");
         }
 
         $finalAmount = $this->getFinalAmount();
         $alreadyRefundedAmount = $this->getRefundedAmount();
         Log::debug(sprintf("SummitAttendeeTicket::canRefund amount %s finalAmount %s alreadyRefundedAmount %s", $amount, $finalAmount, $alreadyRefundedAmount));
-        if($finalAmount < ($alreadyRefundedAmount + $amount) ){
+        if ($finalAmount < ($alreadyRefundedAmount + $amount)) {
             throw new ValidationException("Can not refund an amount greater than Amount Paid.");
         }
 
@@ -715,8 +725,9 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function isBadgePrinted():bool{
-        if($this->hasBadge()){
+    public function isBadgePrinted(): bool
+    {
+        if ($this->hasBadge()) {
             $badge = $this->getBadge();
             return $badge->isPrinted();
         }
@@ -731,24 +742,24 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     public function requestRefund(?Member $requestedBy = null): ?SummitAttendeeTicketRefundRequest
     {
         if ($this->status != IOrderConstants::PaidStatus)
-            throw new ValidationException(sprintf( "You can not request a refund for this ticket %s ( invalid status %s).", $this->number, $this->status));
+            throw new ValidationException(sprintf("You can not request a refund for this ticket %s ( invalid status %s).", $this->number, $this->status));
 
         $summit = $this->getOrder()->getSummit();
         $begin_date = $summit->getBeginDate();
-        if(is_null($begin_date))
-            throw new ValidationException(sprintf( "You can not request a refund for this ticket %s ( summit has not begin date).", $this->number));
+        if (is_null($begin_date))
+            throw new ValidationException(sprintf("You can not request a refund for this ticket %s ( summit has not begin date).", $this->number));
 
-        if($this->isBadgePrinted())
-            throw new ValidationException(sprintf( "You can not request a refund for this ticket %s ( badge already printed).", $this->number));
+        if ($this->isBadgePrinted())
+            throw new ValidationException(sprintf("You can not request a refund for this ticket %s ( badge already printed).", $this->number));
 
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
 
-        if($now > $begin_date){
+        if ($now > $begin_date) {
             Log::debug("SummitAttendeeTicket::requestRefund: now is greater than Summit.BeginDate");
             throw new ValidationException("You can not request a refund after summit started.");
         }
 
-        if($this->hasPendingRefundRequests()){
+        if ($this->hasPendingRefundRequests()) {
             throw new ValidationException("A refund on a Ticket its already being processed.");
         }
 
@@ -772,7 +783,8 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function hasPendingRefundRequests():bool{
+    public function hasPendingRefundRequests(): bool
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('status', ISummitRefundRequestConstants::RefundRequestedStatus));
         return $this->refund_requests->matching($criteria)->count() > 0;
@@ -781,7 +793,8 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     /**
      * @return SummitAttendeeTicketRefundRequest|null
      */
-    public function getPendingRefundRequest():?SummitAttendeeTicketRefundRequest{
+    public function getPendingRefundRequest(): ?SummitAttendeeTicketRefundRequest
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('status', ISummitRefundRequestConstants::RefundRequestedStatus));
         $criteria = Criteria::create();
@@ -802,11 +815,11 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     public function refund
     (
         ?Member $approvedBy,
-        float $amount,
-        string $paymentGatewayRes = null,
-        string $notes = null,
-        bool $shouldSendEmail = true
-    ):SummitAttendeeTicketRefundRequest
+        float   $amount,
+        string  $paymentGatewayRes = null,
+        string  $notes = null,
+        bool    $shouldSendEmail = true
+    ): SummitAttendeeTicketRefundRequest
     {
         if (!$this->canRefund($amount))
             throw new ValidationException
@@ -814,13 +827,13 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
                 sprintf
                 (
                     "Can not request a refund on Ticket %s.",
-                   $this->id
+                    $this->id
                 )
             );
 
         $request = $this->getPendingRefundRequest();
 
-        if(is_null($request)){
+        if (is_null($request)) {
             $request = new SummitAttendeeTicketRefundRequest($approvedBy);
             $request->setTicket($this);
             $this->refund_requests->add($request);
@@ -828,7 +841,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
 
         $request->approve($approvedBy, $amount, $paymentGatewayRes, $notes);
 
-        if($shouldSendEmail)
+        if ($shouldSendEmail)
             SummitTicketRefundAccepted::dispatch($this, $request);
 
         return $request;
@@ -857,12 +870,46 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      */
     public function getFinalAmount(): float
     {
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitAttendeeTicket::getFinalAmount id %s raw cost %s discount %s",
+                $this->id,
+                $this->raw_cost,
+                $this->discount
+            )
+        );
+
         $amount = $this->raw_cost;
         $amount -= $this->discount;
 
         foreach ($this->applied_taxes as $tax) {
-            $amount += $tax->getAmount();
+
+            $tax_amount_in_cents = $tax->getAmountInCents();
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitAttendeeTicket::getFinalAmount id %s tax %s tax amount in cents %s",
+                    $this->id,
+                    $tax->getTax()->getName(),
+                    $tax_amount_in_cents
+                )
+            );
+            $amount += $tax_amount_in_cents > 0 ? $tax_amount_in_cents / 100 : 0;
         }
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitAttendeeTicket::getFinalAmount id %s amount %s",
+                $this->id,
+                $amount
+            )
+        );
+
         return $amount;
     }
 
@@ -879,11 +926,11 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     /**
      * @return float
      */
-    public function getTicketTypeCost():float{
+    public function getTicketTypeCost(): float
+    {
         try {
             return $this->ticket_type->getCost();
-        }
-        catch (\Exception $ex){
+        } catch (\Exception $ex) {
             return 0.0;
         }
     }
@@ -891,14 +938,16 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     /**
      * @return float
      */
-    public function getFinalAmountAdjusted(): float{
+    public function getFinalAmountAdjusted(): float
+    {
         return $this->getFinalAmount() - $this->getRefundedAmount();
     }
 
     /**
      * @return bool
      */
-    public function isFree():bool {
+    public function isFree(): bool
+    {
         return $this->getFinalAmount() == 0;
     }
 
@@ -923,7 +972,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         foreach ($this->getAppliedTaxes() as $appliedTax) {
             $amount += $appliedTax->getAmount();
         }
-        return intval(round($amount * 100 ));
+        return intval(round($amount * 100));
     }
 
     /**
@@ -948,7 +997,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     public function getDiscountInCents(): int
     {
         $discount = $this->discount;
-        return intval(round($discount * 100 ));
+        return intval(round($discount * 100));
     }
 
     /**
@@ -957,7 +1006,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      */
     public function setDiscount(float $amount)
     {
-        $this->discount = $amount > $this->raw_cost ? $this->raw_cost: $amount;
+        $this->discount = $amount > $this->raw_cost ? $this->raw_cost : $amount;
         return $this;
     }
 
@@ -969,42 +1018,47 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getOwnerFullName():?string{
-        if(is_null($this->owner)) return null;
+    public function getOwnerFullName(): ?string
+    {
+        if (is_null($this->owner)) return null;
         return $this->owner->getFullName();
     }
 
     /**
      * @return string
      */
-    public function getOwnerFirstName():?string{
-        if(is_null($this->owner)) return null;
+    public function getOwnerFirstName(): ?string
+    {
+        if (is_null($this->owner)) return null;
         return $this->owner->getFirstName();
     }
 
     /**
      * @return string
      */
-    public function getOwnerSurname():?string{
-        if(is_null($this->owner)) return null;
+    public function getOwnerSurname(): ?string
+    {
+        if (is_null($this->owner)) return null;
         return $this->owner->getSurname();
     }
+
     /**
      * @return string
      */
-    public function getOwnerCompany():?string{
-        if(is_null($this->owner)) return null;
+    public function getOwnerCompany(): ?string
+    {
+        if (is_null($this->owner)) return null;
         return $this->owner->getCompanyName();
     }
 
     /**
      * @return string
      */
-    public function getOwnerEmail():?string{
+    public function getOwnerEmail(): ?string
+    {
         try {
-            return is_null($this->owner)? null : $this->owner->getEmail();
-        }
-        catch (\Exception $ex){
+            return is_null($this->owner) ? null : $this->owner->getEmail();
+        } catch (\Exception $ex) {
             return null;
         }
     }
@@ -1012,65 +1066,71 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     /**
      * @return int|null
      */
-    public function getBadgeTypeId():?int{
-        if(is_null($this->badge)) return 0;
+    public function getBadgeTypeId(): ?int
+    {
+        if (is_null($this->badge)) return 0;
         return $this->badge->getType()->getId();
     }
 
     /**
      * @return null|string
      */
-    public function getBadgeTypeName():?string{
-        if(is_null($this->badge)) return null;
+    public function getBadgeTypeName(): ?string
+    {
+        if (is_null($this->badge)) return null;
         return $this->badge->getType()->getName();
     }
 
     /**
      * @return null|string
      */
-    public function getTicketTypeName():?string{
-        if(is_null($this->ticket_type)) return null;
+    public function getTicketTypeName(): ?string
+    {
+        if (is_null($this->ticket_type)) return null;
         return $this->ticket_type->getName();
     }
 
     /**
      * @return array
      */
-    public function getBadgeFeaturesNames():array {
+    public function getBadgeFeaturesNames(): array
+    {
         $res = [];
-        if(is_null($this->badge)) return [];
-        foreach ($this->badge->getFeatures() as $feature){
+        if (is_null($this->badge)) return [];
+        foreach ($this->badge->getFeatures() as $feature) {
             $res[] = $feature->getName();
         }
-        foreach ($this->badge->getType()->getBadgeFeatures() as $feature){
-            if(in_array($feature->getName(),$res)) continue;
+        foreach ($this->badge->getType()->getBadgeFeatures() as $feature) {
+            if (in_array($feature->getName(), $res)) continue;
             $res[] = $feature->getName();
         }
 
         return $res;
     }
 
-    public function getBadgeFeatures():array{
+    public function getBadgeFeatures(): array
+    {
         $res = [];
-        if(is_null($this->badge)) return [];
+        if (is_null($this->badge)) return [];
 
-        foreach ($this->badge->getFeatures() as $feature){
+        foreach ($this->badge->getFeatures() as $feature) {
             $res[$feature->getId()] = $feature;
         }
 
-        foreach ($this->badge->getType()->getBadgeFeatures() as $feature){
-            if(key_exists($feature->getId(), $res)) continue;
+        foreach ($this->badge->getType()->getBadgeFeatures() as $feature) {
+            if (key_exists($feature->getId(), $res)) continue;
             $res[$feature->getId()] = $feature;
         }
 
         return $res;
     }
 
-    public function getBadgeAccessLevels():array{
+    public function getBadgeAccessLevels(): array
+    {
         $res = [];
-        if(is_null($this->badge)) return [];
+        if (is_null($this->badge)) return [];
 
-        foreach ($this->badge->getType()->getAccessLevels() as $accessLevel){
+        foreach ($this->badge->getType()->getAccessLevels() as $accessLevel) {
             $res[$accessLevel->getId()] = $accessLevel;
         }
 
@@ -1080,15 +1140,19 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     /**
      * @return array|int[]
      */
-    public function getBadgeAccessLevelsIds():array{
-        if(is_null($this->badge)) return [];
-        return $this->badge->getType()->getAccessLevels()->map(function($al){ return $al->getId();})->toArray();
+    public function getBadgeAccessLevelsIds(): array
+    {
+        if (is_null($this->badge)) return [];
+        return $this->badge->getType()->getAccessLevels()->map(function ($al) {
+            return $al->getId();
+        })->toArray();
     }
 
     /**
      * @return null|string
      */
-    public function getPromoCodeValue():?string{
+    public function getPromoCodeValue(): ?string
+    {
         return $this->hasPromoCode() ? $this->promo_code->getCode() : null;
     }
 
@@ -1096,13 +1160,14 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      * @param Member $member
      * @return bool
      */
-    public function canEditTicket(Member $member):bool{
-        if($member->isAdmin()) return true;
-        if($member->isOnGroup(IGroup::BadgePrinters)) return true;
+    public function canEditTicket(Member $member): bool
+    {
+        if ($member->isAdmin()) return true;
+        if ($member->isOnGroup(IGroup::BadgePrinters)) return true;
         // i am ticket owner
-        if($this->hasOwner() && $this->owner->getEmail() == $member->getEmail()) return true;
+        if ($this->hasOwner() && $this->owner->getEmail() == $member->getEmail()) return true;
         // i am order owner
-        if($this->order->getOwnerEmail() == $member->getEmail()) return true;
+        if ($this->order->getOwnerEmail() == $member->getEmail()) return true;
         return false;
     }
 
@@ -1124,7 +1189,8 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         $this->is_active = false;
     }
 
-    public function getRefundedRequests(){
+    public function getRefundedRequests()
+    {
         return $this->refund_requests;
     }
 }

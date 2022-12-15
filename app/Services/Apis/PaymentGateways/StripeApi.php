@@ -20,6 +20,7 @@ use models\summit\IPaymentConstants;
 use models\summit\SummitOrder;
 use Stripe\Charge;
 use Exception;
+use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Event;
 use Stripe\Refund;
@@ -133,7 +134,14 @@ final class StripeApi implements IPaymentGatewayAPI
 
         Log::debug(sprintf("StripeApi::generatePayment creating payment intent %s", json_encode($request)));
 
-        $intent = PaymentIntent::create($request);
+        try {
+            $intent = PaymentIntent::create($request);
+        }
+        catch (ApiErrorException $ex){
+            Log::warning($ex);
+            throw new ValidationException($ex->getMessage());
+        }
+
         Log::debug(sprintf("StripeApi::generatePayment intent id %s", $intent->id));
         return [
             'client_token' => $intent->client_secret,

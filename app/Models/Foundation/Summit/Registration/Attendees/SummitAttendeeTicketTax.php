@@ -77,6 +77,14 @@ class SummitAttendeeTicketTax extends BaseEntity
     }
 
     /**
+     * @return int
+     */
+    public function getAmountInCents(): int
+    {
+        return intval(round($this->amount * 100));
+    }
+
+    /**
      * @param float $amount
      */
     public function setAmount(float $amount): void

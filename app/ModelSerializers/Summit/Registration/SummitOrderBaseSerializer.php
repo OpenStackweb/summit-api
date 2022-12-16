@@ -15,6 +15,7 @@
 use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SummitOrder;
+
 /**
  * Class SummitOrderBaseSerializer
  * @package App\ModelSerializers
@@ -22,16 +23,18 @@ use models\summit\SummitOrder;
 class SummitOrderBaseSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
-        'Number'            => 'number:json_string',
-        'Status'            => 'status:json_string',
-        'PaymentMethod'     => 'payment_method:json_string',
-        'OwnerFirstName'    => 'owner_first_name:json_string',
-        'OwnerSurname'      => 'owner_last_name:json_string',
-        'OwnerEmail'        => 'owner_email:json_string',
-        'OwnerCompanyName'  => 'owner_company:json_string',
-        'CompanyId'         => 'owner_company_id:json_int',
-        'OwnerId'           => 'owner_id:json_string',
-        'SummitId'          => 'summit_id:json_int',
+        'Number' => 'number:json_string',
+        'Status' => 'status:json_string',
+        'PaymentMethod' => 'payment_method:json_string',
+        'OwnerFirstName' => 'owner_first_name:json_string',
+        'OwnerSurname' => 'owner_last_name:json_string',
+        'OwnerEmail' => 'owner_email:json_string',
+        'OwnerCompanyName' => 'owner_company:json_string',
+        'CompanyId' => 'owner_company_id:json_int',
+        'OwnerId' => 'owner_id:json_string',
+        'SummitId' => 'summit_id:json_int',
+        'Currency' => 'currency:json_string',
+        'CurrencySymbol' => 'currency_symbol:json_string',
     ];
 
     protected static $allowed_relations = [

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Utils\Traits\FinancialTrait;
 use App\Services\Apis\CartAlreadyPaidException;
 use App\Services\Apis\IPaymentGatewayAPI;
 use Illuminate\Http\Request as LaravelRequest;
@@ -20,6 +21,7 @@ use models\summit\IPaymentConstants;
 use models\summit\SummitOrder;
 use Stripe\Charge;
 use Exception;
+use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Event;
 use Stripe\Refund;
@@ -35,6 +37,8 @@ use Illuminate\Support\Facades\Log;
  */
 final class StripeApi implements IPaymentGatewayAPI
 {
+    use FinancialTrait;
+
     const Version = '2019-12-03';
 
     /**
@@ -104,13 +108,7 @@ final class StripeApi implements IPaymentGatewayAPI
              * For zero-decimal currencies, still provide amounts as an integer but without multiplying by 100.
              * For example, to charge ¥500, simply provide an amount value of 500.
              */
-            $amount = $amount * 100;
-
-            Log::debug(sprintf("StripeApi::generatePayment amount before rounding %s", $amount));
-
-            $amount = round($amount);
-
-            Log::debug(sprintf("StripeApi::generatePayment amount after rounding %s", $amount));
+            $amount = self::convertToCents($amount);
 
         }
 
@@ -133,40 +131,19 @@ final class StripeApi implements IPaymentGatewayAPI
 
         Log::debug(sprintf("StripeApi::generatePayment creating payment intent %s", json_encode($request)));
 
-        $intent = PaymentIntent::create($request);
+        try {
+            $intent = PaymentIntent::create($request);
+        }
+        catch (ApiErrorException $ex){
+            Log::warning($ex);
+            throw new ValidationException($ex->getMessage());
+        }
+
         Log::debug(sprintf("StripeApi::generatePayment intent id %s", $intent->id));
         return [
             'client_token' => $intent->client_secret,
             'cart_id' => $intent->id,
         ];
-    }
-
-    /**
-     * @param string $currency
-     * @return bool
-     * @see https://stripe.com/docs/currencies#zero-decimal
-     */
-    private static function isZeroDecimalCurrency(string $currency): bool
-    {
-        $zeroDecimalCurrencies = [
-            'JPY',
-            'BIF',
-            'CLP',
-            'DJF',
-            'GNF',
-            'KMF',
-            'KRW',
-            'MGA',
-            'PYG',
-            'RWF',
-            'UGX',
-            'VND',
-            'VUV',
-            'XAF',
-            'XOF',
-            'XPF',
-        ];
-        return in_array($currency, $zeroDecimalCurrencies);
     }
 
     /**
@@ -311,10 +288,7 @@ final class StripeApi implements IPaymentGatewayAPI
                      * For example, to charge ¥500, simply provide an amount value of 500.
                      */
 
-                    $amount = $amount * 100;
-                    Log::debug(sprintf("StripeApi::refundPayment amount %s before rounding", $amount));
-                    $amount = round($amount);
-                    Log::debug(sprintf("StripeApi::refundPayment amount %s after rounding", $amount));
+                    $amount = self::convertToCents($amount);
                 }
 
                 $params['amount'] = intval($amount);

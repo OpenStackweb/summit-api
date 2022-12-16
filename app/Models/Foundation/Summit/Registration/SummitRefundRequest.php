@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Utils\Traits\FinancialTrait;
 use models\main\Member;
 use models\utils\One2ManyPropertyTrait;
 use Doctrine\ORM\Mapping AS ORM;
@@ -32,6 +33,8 @@ use models\utils\SilverstripeBaseModel;
 class SummitRefundRequest extends SilverstripeBaseModel
 {
     use One2ManyPropertyTrait;
+
+    use FinancialTrait;
 
     protected $getIdMappings = [
         'getRequestedById' => 'requested_by',
@@ -165,6 +168,14 @@ class SummitRefundRequest extends SilverstripeBaseModel
     public function getRefundedAmount(): float
     {
         return $this->refunded_amount;
+    }
+
+    /**
+     * @return int
+     */
+    public function getRefundedAmountInCents(): int
+    {
+        return self::convertToCents($this->refunded_amount);
     }
 
     /**

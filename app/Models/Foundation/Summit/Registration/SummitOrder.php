@@ -11,19 +11,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Events\PaymentSummitRegistrationOrderConfirmed;
 use App\libs\Utils\PunnyCodeHelper;
+use App\Models\Utils\Traits\FinancialTrait;
 use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
+use libs\utils\JsonUtils;
 use libs\utils\TextUtils;
 use models\exceptions\ValidationException;
 use models\main\Company;
 use models\main\Member;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
+
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitOrderRepository")
  * @ORM\AssociationOverrides({
@@ -39,6 +43,8 @@ use Doctrine\ORM\Mapping AS ORM;
 class SummitOrder extends SilverstripeBaseModel implements IQREntity
 {
     use SummitOwned;
+
+    use FinancialTrait;
 
     /**
      * @ORM\Column(name="Number", type="string")
@@ -209,31 +215,33 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     public function __construct()
     {
         parent::__construct();
-        $this->tickets                = new ArrayCollection();
+        $this->tickets = new ArrayCollection();
         $this->extra_question_answers = new ArrayCollection();
-        $this->status                 = IOrderConstants::ReservedStatus;
-        $this->payment_method         = IOrderConstants::OnlinePaymentMethod;
+        $this->status = IOrderConstants::ReservedStatus;
+        $this->payment_method = IOrderConstants::OnlinePaymentMethod;
     }
 
-    public function setPaymentMethodOffline(){
+    public function setPaymentMethodOffline()
+    {
         $this->payment_method = IOrderConstants::OfflinePaymentMethod;
     }
 
-    public function generateHash(){
+    public function generateHash()
+    {
         $email = $this->getOwnerEmail();
-        if(empty($email))
+        if (empty($email))
             throw new ValidationException("owner email is null");
 
         $fname = $this->getOwnerFirstName();
-        if(empty($fname))
+        if (empty($fname))
             throw new ValidationException("owner first name is null");
 
         $lname = $this->getOwnerSurname();
-        if(empty($lname))
+        if (empty($lname))
             throw new ValidationException("owner last name is null");
 
-        $token = $this->number.'.'.$email.'.'.$fname.".".$lname;
-        $token = $token . random_bytes(16).time();
+        $token = $this->number . '.' . $email . '.' . $fname . "." . $lname;
+        $token = $token . random_bytes(16) . time();
         $this->hash = hash('sha256', $token);
         $this->hash_creation_date = new \DateTime('now', new \DateTimeZone('UTC'));
     }
@@ -242,13 +250,14 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      * @return bool
      * @throws \Exception
      */
-    public function canPubliclyEdit():bool {
-        if(empty($this->hash) || is_null($this->hash_creation_date)) return false;
+    public function canPubliclyEdit(): bool
+    {
+        if (empty($this->hash) || is_null($this->hash_creation_date)) return false;
         $ttl_minutes = intval(Config::get("registration.order_public_edit_ttl", 10));
         Log::debug(sprintf("SummitOrder::canPubliclyEdit id %s ttl %s", $this->id, $ttl_minutes));
         $eol = new \DateTime('now', new \DateTimeZone('UTC'));
-        $eol->sub(new \DateInterval('PT'.$ttl_minutes.'M'));
-        if($this->hash_creation_date <= $eol) {
+        $eol->sub(new \DateInterval('PT' . $ttl_minutes . 'M'));
+        if ($this->hash_creation_date <= $eol) {
             Log::debug(sprintf("SummitOrder::canPubliclyEdit id %s ttl %s is void", $this->id, $ttl_minutes));
             return false;
         }
@@ -259,8 +268,9 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     /**
      * @return string
      */
-    public function generateNumber():string{
-        $this->number = strtoupper(str_replace(".","", uniqid($this->summit->getOrderQRPrefix().'_', true)));
+    public function generateNumber(): string
+    {
+        $this->number = strtoupper(str_replace(".", "", uniqid($this->summit->getOrderQRPrefix() . '_', true)));
         $this->generateQRCode();
         return $this->number;
     }
@@ -289,21 +299,23 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         return $this->status;
     }
 
-    public function setPaidStatus(){
+    public function setPaidStatus()
+    {
         $this->status = IOrderConstants::PaidStatus;
         $this->approved_payment_date = new \DateTime('now', new \DateTimeZone('UTC'));
     }
 
-    public function setPaid(){
+    public function setPaid()
+    {
         Log::debug(sprintf("SummitOrder::setPaid order %s", $this->id));
-        if($this->isPaid()){
+        if ($this->isPaid()) {
             Log::warning(sprintf("SummitOrder %s is already Paid.", $this->getId()));
             return;
         }
 
         $this->setPaidStatus();
 
-        foreach($this->tickets as $ticket){
+        foreach ($this->tickets as $ticket) {
             $ticket->setPaid();
         }
 
@@ -313,25 +325,28 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     /**
      * @param null|string $error
      */
-    public function setPaymentError(?string $error):void{
-        if(empty($error)) return;
+    public function setPaymentError(?string $error): void
+    {
+        if (empty($error)) return;
         $this->status = IOrderConstants::ErrorStatus;
         $this->last_error = $error;
     }
 
-    public function setConfirmed(){
-        if($this->status == IOrderConstants::ReservedStatus)
+    public function setConfirmed()
+    {
+        if ($this->status == IOrderConstants::ReservedStatus)
             $this->status = IOrderConstants::ConfirmedStatus;
     }
 
 
-    public function setCancelled():void {
-        $ignore_statuses = [ IOrderConstants::PaidStatus,  IOrderConstants::CancelledStatus];
+    public function setCancelled(): void
+    {
+        $ignore_statuses = [IOrderConstants::PaidStatus, IOrderConstants::CancelledStatus];
 
-        if(in_array($this->status, $ignore_statuses)) return;
+        if (in_array($this->status, $ignore_statuses)) return;
         $this->status = IOrderConstants::CancelledStatus;
 
-        foreach ($this->getTickets() as $ticket){
+        foreach ($this->getTickets() as $ticket) {
             $ticket->setCancelled();
         }
     }
@@ -339,20 +354,21 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     /**
      * @return array
      */
-    public function calculateTicketsAndPromoCodesToReturn():array {
+    public function calculateTicketsAndPromoCodesToReturn(): array
+    {
 
         $tickets_to_return = [];
         $promo_codes_to_return = [];
 
-        foreach($this->tickets as $ticket){
+        foreach ($this->tickets as $ticket) {
 
-            if(!isset($tickets_to_return[$ticket->getTicketTypeId()]))
+            if (!isset($tickets_to_return[$ticket->getTicketTypeId()]))
                 $tickets_to_return[$ticket->getTicketTypeId()] = 0;
             $tickets_to_return[$ticket->getTicketTypeId()] += 1;
-            if($ticket->hasPromoCode()){
-                if(!isset($promo_codes_to_return[$ticket->getPromoCode()->getCode()]))
+            if ($ticket->hasPromoCode()) {
+                if (!isset($promo_codes_to_return[$ticket->getPromoCode()->getCode()]))
                     $promo_codes_to_return[$ticket->getPromoCode()->getCode()] = 0;
-                $promo_codes_to_return[$ticket->getPromoCode()->getCode()] +=1;
+                $promo_codes_to_return[$ticket->getPromoCode()->getCode()] += 1;
             }
         }
 
@@ -370,7 +386,8 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     /**
      * @return bool
      */
-    public function isOfflineOrder():bool{
+    public function isOfflineOrder(): bool
+    {
         return $this->payment_method == IOrderConstants::OfflinePaymentMethod;
     }
 
@@ -396,10 +413,10 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     public function getOwnerFirstName(): ?string
     {
         $res = '';
-        if($this->hasOwner()){
+        if ($this->hasOwner()) {
             $res = $this->owner->getFirstName();
         }
-        if(empty($res))
+        if (empty($res))
             $res = $this->owner_first_name;
         return $res;
     }
@@ -418,10 +435,10 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     public function getOwnerSurname(): ?string
     {
         $res = '';
-        if($this->hasOwner()){
+        if ($this->hasOwner()) {
             $res = $this->owner->getLastName();
         }
-        if(empty($res))
+        if (empty($res))
             $res = $this->owner_surname;
         return $res;
     }
@@ -439,13 +456,14 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getOwnerEmail(): ?string
     {
-        if(!is_null($this->owner)){
+        if (!is_null($this->owner)) {
             return $this->owner->getEmail();
         }
         return PunnyCodeHelper::decodeEmail($this->owner_email);
     }
 
-    public function clearOwner():void{
+    public function clearOwner(): void
+    {
         $this->owner = null;
     }
 
@@ -462,7 +480,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getOwnerCompanyName(): ?string
     {
-        if($this->hasOwnerCompany())
+        if ($this->hasOwnerCompany())
             return $this->owner_company->getName();
         return $this->owner_company_name;
     }
@@ -694,8 +712,9 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     /**
      * @param SummitAttendeeTicket $ticket
      */
-    public function addTicket(SummitAttendeeTicket $ticket){
-        if($this->tickets->contains($ticket)) return;
+    public function addTicket(SummitAttendeeTicket $ticket)
+    {
+        if ($this->tickets->contains($ticket)) return;
         $this->tickets->add($ticket);
         $ticket->setOrder($this);
     }
@@ -704,7 +723,8 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      * @param int $ticket_id
      * @return SummitAttendeeTicket|null
      */
-    public function getTicketById(int $ticket_id):?SummitAttendeeTicket{
+    public function getTicketById(int $ticket_id): ?SummitAttendeeTicket
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', intval($ticket_id)));
         $ticket = $this->tickets->matching($criteria)->first();
@@ -719,18 +739,21 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         return $this->extra_question_answers;
     }
 
-    public function clearExtraQuestionAnswers(){
+    public function clearExtraQuestionAnswers()
+    {
         $this->extra_question_answers->clear();
     }
 
-    public function addExtraQuestionAnswer(SummitOrderExtraQuestionAnswer $answer){
-        if($this->extra_question_answers->contains($answer)) return;
+    public function addExtraQuestionAnswer(SummitOrderExtraQuestionAnswer $answer)
+    {
+        if ($this->extra_question_answers->contains($answer)) return;
         $this->extra_question_answers->add($answer);
         $answer->setOrder($this);
     }
 
-    public function removeExtraQuestionAnswer(SummitOrderExtraQuestionAnswer $answer){
-        if(!$this->extra_question_answers->contains($answer)) return;
+    public function removeExtraQuestionAnswer(SummitOrderExtraQuestionAnswer $answer)
+    {
+        if (!$this->extra_question_answers->contains($answer)) return;
         $this->extra_question_answers->removeElement($answer);
         $answer->clearOrder();
     }
@@ -750,11 +773,11 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     /**
      * @return int
      */
-    public function getOwnerId(){
+    public function getOwnerId()
+    {
         try {
             return is_null($this->owner) ? 0 : $this->owner->getId();
-        }
-        catch(\Exception $ex){
+        } catch (\Exception $ex) {
             return 0;
         }
     }
@@ -762,18 +785,19 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     /**
      * @return bool
      */
-    public function hasOwnerCompany():bool{
+    public function hasOwnerCompany(): bool
+    {
         return $this->getCompanyId() > 0;
     }
 
     /**
      * @return int
      */
-    public function getCompanyId():int{
+    public function getCompanyId(): int
+    {
         try {
             return is_null($this->owner_company) ? 0 : $this->owner_company->getId();
-        }
-        catch(\Exception $ex){
+        } catch (\Exception $ex) {
             return 0;
         }
     }
@@ -781,132 +805,190 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     /**
      * @return bool
      */
-    public function hasOwner():bool{
+    public function hasOwner(): bool
+    {
         return $this->getOwnerId() > 0;
     }
 
     /**
      * @return float
      */
-    public function getRawAmount():float{
-        $amount = 0.0;
-        foreach ($this->tickets as $ticket){
-            $amount += $ticket->getRawCost();
-        }
-        return $amount;
+    public function getRawAmount(): float
+    {
+        return self::convertToUnit($this->getRawAmountInCents());
     }
 
     /**
      * @return int
      */
-    public function getRawAmountInCents():int{
-        $amount = $this->getRawAmount();
-        return intval(round($amount * 100));
+    public function getRawAmountInCents(): int
+    {
+        $amount_in_cents = 0;
+        foreach ($this->tickets as $ticket) {
+            $amount_in_cents += $ticket->getRawCostInCents();
+        }
+        return $amount_in_cents;
     }
 
     /**
      * @return float
      */
-    public function getFinalAmount():float {
-        $amount = 0.0;
-        foreach ($this->tickets as $ticket){
-            $amount += $ticket->getFinalAmount();
-        }
-        return $amount;
+    public function getFinalAmount(): float
+    {
+        return self::convertToUnit($this->getFinalAmountInCents());
     }
 
     /**
      * @return int
      */
-    public function getFinalAmountInCents():int {
-        $amount = $this->getFinalAmount();
-        return intval(round($amount * 100));
+    public function getFinalAmountInCents(): int
+    {
+
+        $amount_in_cents = 0;
+
+        foreach ($this->tickets as $ticket) {
+            $amount_in_cents += $ticket->getFinalAmountInCents();
+        }
+
+        return $amount_in_cents;
     }
 
     /**
      * @return float
      */
-    public function getFinalAmountAdjusted(): float{
+    public function getFinalAmountAdjusted(): float
+    {
         return $this->getFinalAmount() - $this->getRefundedAmount();
     }
 
     /**
      * @return bool
      */
-    public function isFree():bool {
-        return $this->getFinalAmount() == 0;
+    public function isFree(): bool
+    {
+        return $this->getFinalAmountInCents() == 0;
     }
 
     /**
      * @return bool
      */
-    public function hasPaymentInfo():bool{
+    public function hasPaymentInfo(): bool
+    {
         return !empty($this->payment_gateway_cart_id) || !empty($this->payment_gateway_client_token);
     }
 
     /**
      * @return float
      */
-    public function getTaxesAmount(): float{
+    public function getTaxesAmount(): float
+    {
+        $taxes = $this->getAppliedTaxes();
         $amount = 0.0;
-        foreach ($this->tickets as $ticket){
-            foreach($ticket->getAppliedTaxes() as $appliedTax){
-                $amount += $appliedTax->getAmount();
-            }
+        foreach ($taxes as $tax) {
+            $amount += $tax['amount'];
         }
         return $amount;
     }
 
     /**
+     * @return array
+     */
+    public function getAppliedTaxes(): array
+    {
+
+        $applied_taxes = [];
+
+        foreach ($this->tickets as $ticket) {
+            foreach ($ticket->getAppliedTaxes() as $appliedTax) {
+
+                $tax = $appliedTax->getTax();
+
+                if (!isset($applied_taxes[$tax->getId()])) {
+                    $applied_taxes[$tax->getId()] = [
+                        'id' => $tax->getId(),
+                        'name' => $tax->getName(),
+                        'tax_id' => $tax->getTaxId(),
+                        'rate' => $tax->getRate(),
+                        'amount_in_cents' => 0,
+                    ];
+                }
+
+                $amount_in_cents = $appliedTax->getAmountInCents();
+                Log::debug(sprintf("SummitOrder::getAppliedTaxes tax %s amount %s amount_in_cents %s", $tax->getName(), $appliedTax->getAmount(), $amount_in_cents));
+                $applied_taxes[$tax->getId()]['amount_in_cents'] = $applied_taxes[$tax->getId()]['amount_in_cents'] + $amount_in_cents;
+            }
+        }
+
+
+        $res = [];
+        foreach ($applied_taxes as $tax_id => $applied_tax) {
+            Log::debug(sprintf("SummitOrder::getAppliedTaxes tax %s amount_in_cents %s", $applied_tax['name'], $applied_tax['amount_in_cents']));
+            $applied_tax['amount'] = JsonUtils::toJsonFloat(self::convertToUnit($applied_tax['amount_in_cents']));
+            $res[] = $applied_tax;
+        }
+
+        return $res;
+    }
+
+    /**
      * @return int
      */
-    public function getTaxesAmountInCents(): int{
-        $amount = $this->getTaxesAmount();
-        return intval(round($amount * 100));
+    public function getTaxesAmountInCents(): int
+    {
+        $taxes = $this->getAppliedTaxes();
+        $amount = 0;
+        foreach ($taxes as $tax) {
+            $amount += $tax['amount_in_cents'];
+        }
+        return $amount;
     }
 
     /**
      * @return float
      */
-    public function getDiscountAmount(): float{
-        $amount = 0.0;
-        foreach ($this->tickets as $ticket){
-            $amount += $ticket->getDiscount();
-        }
-        return $amount;
+    public function getDiscountAmount(): float
+    {
+        return self::convertToUnit($this->getDiscountAmountInCents());
     }
 
     /**
      * @return int
      */
-    public function getDiscountAmountInCents(): int{
-        $amount = $this->getDiscountAmount();
-        return intval(round($amount * 100));
+    public function getDiscountAmountInCents(): int
+    {
+        $amount_in_cents = 0;
+        foreach ($this->tickets as $ticket) {
+            $amount_in_cents += $ticket->getDiscountInCents();
+        }
+        return $amount_in_cents;
     }
 
     /**
      * @return string
      */
-    public function getCurrency():string{
+    public function getCurrency(): string
+    {
         $ticket = $this->tickets->first();
         return $ticket->getCurrency();
     }
 
-    public function getCurrencySymbol():string{
+    public function getCurrencySymbol(): string
+    {
         $ticket = $this->tickets->first();
-        if(!$ticket instanceof SummitAttendeeTicket) return 'TBD';
+        if (!$ticket instanceof SummitAttendeeTicket) return 'TBD';
         return $ticket->getCurrencySymbol();
     }
 
     /**
      * @return string
      */
-    public function getOwnerFullName():string {
+    public function getOwnerFullName(): string
+    {
         $res = "";
-        if($this->hasOwner()){
+        if ($this->hasOwner()) {
             $res = $this->owner->getFullName();
         }
-        if(empty($res))
+        if (empty($res))
             $res = sprintf("%s %s", $this->owner_first_name, $this->owner_surname);
         return $res;
     }
@@ -914,14 +996,16 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     /**
      * @return bool
      */
-    public function isPaid():bool {
+    public function isPaid(): bool
+    {
         return $this->status == IOrderConstants::PaidStatus;
     }
 
     /**
      * @return bool
      */
-    public function isCancelled():bool {
+    public function isCancelled(): bool
+    {
         return $this->status == IOrderConstants::CancelledStatus;
     }
 
@@ -929,12 +1013,13 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      * @return bool
      * @throws \Exception
      */
-    public function isVoid():bool{
-        $ttl_minutes =  intval(Config::get("registration.reservation_lifetime", 30));
+    public function isVoid(): bool
+    {
+        $ttl_minutes = intval(Config::get("registration.reservation_lifetime", 30));
         $eol = new \DateTime('now', new \DateTimeZone('UTC'));
         $eol->sub(new \DateInterval('PT' . $ttl_minutes . 'M'));
         Log::debug(sprintf("SummitOrder::isVoid status %s created %s eol %s", $this->status, $this->getCreatedUTC()->format('Y-m-d H:i:s'), $eol->format("Y-m-d H:i:s")));
-        return (($this->status == IOrderConstants::ErrorStatus || $this->status == IOrderConstants::ReservedStatus)  && $this->getCreatedUTC() <= $eol);
+        return (($this->status == IOrderConstants::ErrorStatus || $this->status == IOrderConstants::ReservedStatus) && $this->getCreatedUTC() <= $eol);
     }
 
     /**
@@ -962,16 +1047,17 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     /**
      * @return bool
      */
-    public function isSingleOrder():bool{
-        if($this->tickets->count() > 1){
+    public function isSingleOrder(): bool
+    {
+        if ($this->tickets->count() > 1) {
             return false;
         }
 
         $ticket = $this->tickets->first();
 
-        if(!$ticket instanceof SummitAttendeeTicket) return false;
+        if (!$ticket instanceof SummitAttendeeTicket) return false;
 
-        if($ticket->getOwnerEmail() != $this->getOwnerEmail()) return false;
+        if ($ticket->getOwnerEmail() != $this->getOwnerEmail()) return false;
 
         return true;
     }
@@ -979,9 +1065,10 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     /**
      * @return SummitAttendeeTicket|null
      */
-    public function getFirstTicket():?SummitAttendeeTicket{
-        if(is_null($this->tickets)) return null;
-        if($this->tickets->count() == 0) return null;
+    public function getFirstTicket(): ?SummitAttendeeTicket
+    {
+        if (is_null($this->tickets)) return null;
+        if ($this->tickets->count() == 0) return null;
         return $this->tickets->first();
     }
 
@@ -1004,19 +1091,20 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     /**
      * @return float
      */
-    public function getRefundedAmount():float{
-        $totalRefundedAmount = 0.0;
-        foreach($this->tickets as $ticket){
-            $totalRefundedAmount += $ticket->getRefundedAmount();
-        }
-        return $totalRefundedAmount;
+    public function getRefundedAmount(): float
+    {
+        return self::convertToUnit($this->getRefundedAmountInCents());
     }
 
     /**
      * @return int
      */
-    public function getRefundedAmountInCents():int{
-        $totalRefundedAmount = $this->getRefundedAmount();
-        return intval(round($totalRefundedAmount * 100));
+    public function getRefundedAmountInCents(): int
+    {
+        $amount_in_cents = 0;
+        foreach ($this->tickets as $ticket) {
+            $amount_in_cents += $ticket->getRefundedAmountInCents();
+        }
+        return $amount_in_cents;
     }
 }

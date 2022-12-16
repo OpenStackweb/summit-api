@@ -87,6 +87,7 @@ class RegisteredMemberOrderPaidMail extends AbstractEmailJob
                 'ticket_type_name' => $ticket->getTicketType()->getName(),
                 'has_owner' => false,
                 'price' => FormatUtils::getNiceFloat($ticket->getFinalAmount()),
+                'net_selling_price' => FormatUtils::getNiceFloat($ticket->getNetSellingPrice()),
                 'currency' => $ticket->getCurrency(),
                 'currency_symbol' => $ticket->getCurrencySymbol(),
                 'need_details' => false,

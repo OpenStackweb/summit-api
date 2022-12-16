@@ -687,19 +687,19 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      */
     public function getRefundedAmount(): float
     {
-        return self::convertToUnit($this->getRefundedAmountInCents());
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('status', ISummitRefundRequestConstants::ApprovedStatus));
+        $amount = 0.0;
+        foreach ($this->refund_requests->matching($criteria) as $request) {
+            if (!$request instanceof SummitAttendeeTicketRefundRequest) continue;
+            $amount += $request->getRefundedAmount();
+        }
+        return $amount;
     }
 
     public function getRefundedAmountInCents(): int
     {
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('status', ISummitRefundRequestConstants::ApprovedStatus));
-        $amount_in_cents = 0;
-        foreach ($this->refund_requests->matching($criteria) as $request) {
-            if (!$request instanceof SummitAttendeeTicketRefundRequest) continue;
-            $amount_in_cents += $request->getRefundedAmountInCents();
-        }
-        return $amount_in_cents;
+        return self::convertToCents($this->getRefundedAmount());
     }
 
     /**
@@ -713,11 +713,11 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         if ($this->isFree()) {
             throw new ValidationException("Can not refund a Free Ticket.");
         }
-        $amount_in_cents = self::convertToCents($amount);
-        $finalAmount = $this->getFinalAmountInCents();
-        $alreadyRefundedAmount = $this->getRefundedAmountInCents();
-        Log::debug(sprintf("SummitAttendeeTicket::canRefund amount_in_cents %s finalAmount %s alreadyRefundedAmount %s", $amount_in_cents, $finalAmount, $alreadyRefundedAmount));
-        if ($finalAmount < ($alreadyRefundedAmount + $amount_in_cents)) {
+
+        $finalAmount = $this->getFinalAmount();
+        $alreadyRefundedAmount = $this->getRefundedAmount();
+        Log::debug(sprintf("SummitAttendeeTicket::canRefund amount %s finalAmount %s alreadyRefundedAmount %s", $amount, $finalAmount, $alreadyRefundedAmount));
+        if ($finalAmount < ($alreadyRefundedAmount + $amount)) {
             throw new ValidationException("Can not refund an amount greater than Amount Paid.");
         }
 
@@ -867,7 +867,8 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         }
     }
 
-    public function getNetAmount():float{
+    public function getNetSellingPrice(): float
+    {
         return ($this->raw_cost - $this->discount);
     }
 

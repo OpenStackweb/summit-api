@@ -35,6 +35,7 @@ class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer
         'BadgeId' => 'badge_id:json_int',
         'PromoCodeId' => 'promo_code_id:json_int',
         'RawCost' => 'raw_cost:json_float',
+        'NetSellingPrice' => 'net_selling_cost:json_float',
         'RawCostInCents' => 'raw_cost_in_cents:json_int',
         'FinalAmount' => 'final_amount:json_float',
         'FinalAmountInCents' => 'final_amount_in_cents:json_int',

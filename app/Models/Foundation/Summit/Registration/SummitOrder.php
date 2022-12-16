@@ -843,18 +843,20 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
             $type = $ticket->getTicketType();
             if(!isset($net_amount_x_ticket_types[$type->getId()])){
                 $net_amount_x_ticket_types[$type->getId()] = [
-                    'net_amount' => 0.0,
+                    'net_selling_amount' => 0.0,
                     'taxes' => $type->getAppliedTaxes()->toArray()
                 ];
             }
-            $net_amount_x_ticket_types[$type->getId()]['net_amount'] += $ticket->getNetAmount();
+            $net_amount_x_ticket_types[$type->getId()]['net_selling_amount'] += $ticket->getNetSellingPrice();
         }
 
+        // grooup net selling amount per ticket type
         foreach ($net_amount_x_ticket_types as $type_id => $net_amount_x_ticket_type){
-            $net_amount = $net_amount_x_ticket_type['net_amount'];
-            $amount =+ $net_amount;
+            $net_selling_amount = $net_amount_x_ticket_type['net_selling_amount'];
+            $amount =+ $net_selling_amount;
             foreach ($net_amount_x_ticket_type['taxes'] as $tax){
-                $tax_amount = (round($net_amount * $tax->getRate())) / 100.00;
+                $tax_amount = ( round($net_selling_amount * $tax->getRate()) ) / 100.00;
+
                 Log::debug
                 (
                     sprintf
@@ -865,6 +867,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
                         $tax_amount
                     )
                 );
+
                 $amount += $tax_amount;
             }
         }
@@ -945,10 +948,9 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
             }
         }
 
-
         $res = [];
         foreach ($applied_taxes as $tax_id => $applied_tax) {
-            $applied_tax['amount_in_cents'] = self::convertToCents($applied_tax['amount_in_cents']);
+            $applied_tax['amount_in_cents'] = self::convertToCents($applied_tax['amount']);
             $res[] = $applied_tax;
         }
 
@@ -1117,7 +1119,11 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getRefundedAmount(): float
     {
-        return self::convertToUnit($this->getRefundedAmountInCents());
+        $amount = 0.0;
+        foreach ($this->tickets as $ticket) {
+            $amount += $ticket->getRefundedAmount();
+        }
+        return $amount;
     }
 
     /**
@@ -1125,10 +1131,6 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getRefundedAmountInCents(): int
     {
-        $amount_in_cents = 0;
-        foreach ($this->tickets as $ticket) {
-            $amount_in_cents += $ticket->getRefundedAmountInCents();
-        }
-        return $amount_in_cents;
+       return self::convertToCents($this->getRefundedAmount());
     }
 }

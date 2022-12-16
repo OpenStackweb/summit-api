@@ -948,7 +948,11 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getDiscountAmount(): float
     {
-        return self::convertToUnit($this->getDiscountAmountInCents());
+        $amount = 0.0;
+        foreach ($this->tickets as $ticket) {
+            $amount += $ticket->getDiscount();
+        }
+        return $amount;
     }
 
     /**
@@ -956,11 +960,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getDiscountAmountInCents(): int
     {
-        $amount_in_cents = 0;
-        foreach ($this->tickets as $ticket) {
-            $amount_in_cents += $ticket->getDiscountInCents();
-        }
-        return $amount_in_cents;
+        return self::convertToCents($this->getDiscountAmount());
     }
 
     /**

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use Libs\ModelSerializers\AbstractSerializer;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 use models\summit\SummitAttendeeTicketTax;
 /**
  * Class SummitAttendeeTicketTaxSerializer
@@ -21,8 +22,24 @@ final class SummitAttendeeTicketTaxSerializer extends AbstractSerializer
 {
     protected static $array_mappings = [
         'Amount'   => 'amount:json_float',
+        'AmountInCents' => 'amount_in_cents:json_int',
         'TaxId'    => 'tax_id:json_int',
         'TicketId' => 'ticket_id:json_int',
+    ];
+
+    protected static $expand_mappings = [
+        'tax' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'tax_id',
+            'getter' => 'getTax',
+            'has' => 'hasTax'
+        ],
+        'ticket' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'ticket_id',
+            'getter' => 'getTicket',
+            'has' => 'hasTicket'
+        ],
     ];
 
     /**
@@ -32,38 +49,11 @@ final class SummitAttendeeTicketTaxSerializer extends AbstractSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $tax_applied = $this->object;
         if (!$tax_applied instanceof SummitAttendeeTicketTax) return [];
-        $values = parent::serialize($expand, $fields, $relations, $params);
-        if (!count($relations)) $relations = $this->getAllowedRelations();
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-                    case 'tax':
-                        {
-                            if ($tax_applied->hasTax()) {
-                                unset($values['tax_id']);
-                                $values['tax'] = SerializerRegistry::getInstance()->getSerializer($tax_applied->getTax())->serialize($expand);
-                            }
-                        }
-                        break;
-                    case 'ticket':
-                        {
-                            if ($tax_applied->hasTicket()) {
-                                unset($values['ticket_id']);
-                                $values['ticket'] = SerializerRegistry::getInstance()->getSerializer($tax_applied->getTicket())->serialize($expand);
-                            }
-                        }
-                        break;
-                }
-
-            }
-        }
-        return $values;
+        return parent::serialize($expand, $fields, $relations, $params);
     }
 
 }

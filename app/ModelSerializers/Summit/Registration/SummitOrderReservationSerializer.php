@@ -11,8 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-
+use models\summit\SummitOrder;
 /**
  * Class SummitOrderReservationSerializer
  * @package App\ModelSerializers
@@ -35,4 +34,28 @@ class SummitOrderReservationSerializer extends SummitOrderBaseSerializer
         'RefundedAmount' => 'refunded_amount:json_float',
         'RefundedAmountInCents' => 'refunded_amount_in_cents:json_int',
     ];
+
+
+    protected static $allowed_relations = [
+        'applied_taxes',
+    ];
+
+    /**
+     * @param null $expand
+     * @param array $fields
+     * @param array $relations
+     * @param array $params
+     * @return array
+     */
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
+    {
+        if (!count($relations)) $relations = $this->getAllowedRelations();
+        $order = $this->object;
+        if (!$order instanceof SummitOrder) return [];
+        $values = parent::serialize($expand, $fields, $relations, $params);
+        if (in_array('applied_taxes', $relations)) {
+            $values['applied_taxes'] = $order->getAppliedTaxes();
+        }
+        return $values;
+    }
 }

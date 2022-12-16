@@ -43,6 +43,7 @@ class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer
         'RefundedAmount' => 'refunded_amount:json_float',
         'RefundedAmountInCents' => 'refunded_amount_in_cents:json_int',
         'Currency' => 'currency:json_string',
+        'CurrencySymbol' => 'currency_symbol:json_string',
         'TaxesAmount' => 'taxes_amount:json_float',
         'TaxesAmountInCents' => 'taxes_amount_in_cents:json_int',
         'Active' => 'is_active:json_bool',
@@ -104,7 +105,7 @@ class BaseSummitAttendeeTicketSerializer extends SilverStripeSerializer
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         return $this->cache(
             $this->getRequestKey

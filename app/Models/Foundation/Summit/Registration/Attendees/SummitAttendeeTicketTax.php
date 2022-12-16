@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Utils\BaseEntity;
+use App\Models\Utils\Traits\FinancialTrait;
 use models\utils\One2ManyPropertyTrait;
 use Doctrine\ORM\Mapping AS ORM;
 
@@ -24,6 +25,8 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class SummitAttendeeTicketTax extends BaseEntity
 {
+    use FinancialTrait;
+
     use One2ManyPropertyTrait;
 
     protected $getIdMappings = [
@@ -81,7 +84,7 @@ class SummitAttendeeTicketTax extends BaseEntity
      */
     public function getAmountInCents(): int
     {
-        return intval(round($this->amount * 100));
+        return self::convertToCents($this->amount);
     }
 
     /**

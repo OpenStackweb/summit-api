@@ -882,9 +882,8 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getTaxesAmount(): float
     {
-        $taxes = $this->getAppliedTaxes();
         $amount = 0.0;
-        foreach ($taxes as $tax) {
+        foreach ($this->getAppliedTaxes() as $tax) {
             $amount += $tax['amount'];
         }
         return $amount;
@@ -910,20 +909,17 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
                         'tax_id' => $tax->getTaxId(),
                         'rate' => $tax->getRate(),
                         'amount_in_cents' => 0,
+                        'amount' => 0.00,
                     ];
                 }
-
-                $amount_in_cents = $appliedTax->getAmountInCents();
-                Log::debug(sprintf("SummitOrder::getAppliedTaxes tax %s amount %s amount_in_cents %s", $tax->getName(), $appliedTax->getAmount(), $amount_in_cents));
-                $applied_taxes[$tax->getId()]['amount_in_cents'] = $applied_taxes[$tax->getId()]['amount_in_cents'] + $amount_in_cents;
+                $applied_taxes[$tax->getId()]['amount'] = $applied_taxes[$tax->getId()]['amount'] + $appliedTax->getAmount();
             }
         }
 
 
         $res = [];
         foreach ($applied_taxes as $tax_id => $applied_tax) {
-            Log::debug(sprintf("SummitOrder::getAppliedTaxes tax %s amount_in_cents %s", $applied_tax['name'], $applied_tax['amount_in_cents']));
-            $applied_tax['amount'] = JsonUtils::toJsonFloat(self::convertToUnit($applied_tax['amount_in_cents']));
+            $applied_tax['amount_in_cents'] = self::convertToCents($applied_tax['amount_in_cents']);
             $res[] = $applied_tax;
         }
 
@@ -935,9 +931,8 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getTaxesAmountInCents(): int
     {
-        $taxes = $this->getAppliedTaxes();
         $amount = 0;
-        foreach ($taxes as $tax) {
+        foreach ($this->getAppliedTaxes() as $tax) {
             $amount += $tax['amount_in_cents'];
         }
         return $amount;

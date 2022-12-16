@@ -44,7 +44,7 @@ abstract class AuditLog extends SilverstripeBaseModel
      * @ORM\JoinColumn(name="UserID", referencedColumnName="ID")
      * @var Member
      */
-    private $user;
+    protected $user;
 
     /**
      * @ORM\Column(name="Action", type="string")

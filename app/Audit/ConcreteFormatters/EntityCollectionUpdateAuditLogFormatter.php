@@ -2,7 +2,9 @@
 
 namespace App\Audit\ConcreteFormatters;
 
+use App\Audit\ConcreteFormatters\ChildEntityFormatters\IChildEntityAuditLogFormatter;
 use App\Audit\IAuditLogFormatter;
+use Doctrine\ORM\PersistentCollection;
 use Illuminate\Support\Facades\Log;
 use ReflectionClass;
 use ReflectionException;
@@ -28,18 +30,55 @@ use ReflectionException;
 class EntityCollectionUpdateAuditLogFormatter implements IAuditLogFormatter
 {
     /**
+     * @var IChildEntityAuditLogFormatter
+     */
+    private $child_entity_formatter;
+
+    public function __construct(?IChildEntityAuditLogFormatter $child_entity_formatter)
+    {
+        $this->child_entity_formatter = $child_entity_formatter;
+    }
+
+    /**
      * @inheritDoc
      */
     public function format($subject, $change_set): ?string {
         try {
-            $collection_sample = $subject->first();
-            $collection_class_name = (new ReflectionClass($collection_sample))->getShortName();
-            $old_col_count = count($subject->getSnapshot());
-            $new_col_count = count($subject);
-            $col_operation_text = $old_col_count > $new_col_count ? "removed from" : "added to";
+            $res = null;
 
-            return "Item {$col_operation_text} collection \"{$collection_class_name}\". " .
-                "Collection original length was {$old_col_count}. Collection current length is {$new_col_count}.";
+            if ($this->child_entity_formatter != null) {
+                $changes = [];
+
+                $insertDiff = $subject->getInsertDiff();
+
+                foreach ($insertDiff as $child_changed_entity) {
+                    $changes[] = $this->child_entity_formatter
+                        ->format($child_changed_entity, IChildEntityAuditLogFormatter::CHILD_ENTITY_CREATION);
+                }
+
+                $deleteDiff = $subject->getDeleteDiff();
+
+                foreach ($deleteDiff as $child_changed_entity) {
+                    $changes[] = $this->child_entity_formatter
+                        ->format($child_changed_entity, IChildEntityAuditLogFormatter::CHILD_ENTITY_DELETION);
+                }
+                $res = $res . implode("|", $changes);
+            } else {
+                $old_col_count = count($subject->getSnapshot());
+                $new_col_count = count($subject);
+                $collection_class_name = "";
+                if ($new_col_count > 0) {
+                    $collection_sample = $subject[0];
+                    $collection_class_name = (new ReflectionClass($collection_sample))->getShortName();
+                } else if ($old_col_count > 0) {
+                    $collection_sample = $subject->getSnapshot()[0];
+                    $collection_class_name = (new ReflectionClass($collection_sample))->getShortName();
+                }
+                $col_operation_text = $old_col_count > $new_col_count ? "removed from" : "added to";
+                $res = $res . "Item {$col_operation_text} collection \"{$collection_class_name}\". Collection original length was {$old_col_count}. Collection current length is {$new_col_count}.";
+            }
+            return $res;
+
         } catch (ReflectionException $e) {
             Log::error($e);
             return null;

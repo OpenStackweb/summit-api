@@ -5,6 +5,7 @@ namespace App\Audit\ConcreteFormatters;
 use App\Audit\IAuditLogFormatter;
 use App\Models\Utils\BaseEntity;
 use DateTime;
+use phpDocumentor\Reflection\Types\Boolean;
 use ReflectionClass;
 
 /**
@@ -30,7 +31,8 @@ class EntityUpdateAuditLogFormatter implements IAuditLogFormatter
         return [
             'last_created',
             'last_updated',
-            'last_edited'
+            'last_edited',
+            'updated_by'
         ];
     }
 
@@ -58,6 +60,9 @@ class EntityUpdateAuditLogFormatter implements IAuditLogFormatter
             if ($old_value instanceof DateTime || $new_value instanceof DateTime) {
                 $old_value = $old_value != null ? $old_value->format('Y-m-d H:i:s') : "";
                 $new_value = $new_value != null ? $new_value->format('Y-m-d H:i:s') : "";
+            } else if (is_bool($old_value ) || is_bool($new_value)) {
+                $old_value = $old_value ? 'true' : 'false';
+                $new_value = $new_value ? 'true' : 'false';
             } else {
                 $old_value = print_r($old_value, true);
                 $new_value = print_r($new_value, true);

@@ -17,9 +17,9 @@ class OAuth2AuditLogApiTest extends ProtectedApiTest
     public function testGetSummitAuditLog()
     {
         $params = [
-            'filter' => ['class_name==SummitAuditLog', 'summit_id==3337'],
+            'filter' => ['class_name==SummitAuditLog', 'summit_id==3343'],
             'order'  => '+user_id',
-            'expand' => 'summit,event'
+            'expand' => 'event,user'
         ];
 
         $headers = [
@@ -46,9 +46,9 @@ class OAuth2AuditLogApiTest extends ProtectedApiTest
     public function testGetSummitEventAuditLog()
     {
         $params = [
-            'filter' => ['class_name==SummitEventAuditLog', 'summit_id==3337', 'event_id==107141', 'user_email==smarcet+gfc76kzwxp@gmail.com'],
+            'filter' => ['class_name==SummitEventAuditLog', 'summit_id==3343', 'event_id==107221', 'user_email==cespin+500@gmail.com'],
             'order'  => '+id',
-            'expand' => 'event'
+            'expand' => 'event,user'
         ];
 
         $headers = [

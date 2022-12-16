@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\Main\Repositories\IAuditLogRepository;
+use DateTime;
 use Doctrine\ORM\QueryBuilder;
 use models\main\AuditLog;
 use App\Repositories\SilverStripeDoctrineRepository;
@@ -95,5 +96,14 @@ SQL,
 LOWER(u.email)
 SQL,
         ];
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function deleteOldLogEntries(int $summit_id, DateTime $date_backward_from)
+    {
+        $query = "DELETE FROM AuditLog WHERE ID IN (SELECT ID FROM SummitAuditLog WHERE SummitID = {$summit_id}) AND Created < '{$date_backward_from->format('Y-m-d')}';";
+        $this->getEntityManager()->getConnection()->executeStatement($query);
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Audit;
+namespace App\Audit\ConcreteFormatters\ChildEntityFormatters;
 
 /**
  * Copyright 2022 OpenStack Foundation
@@ -15,21 +15,20 @@ namespace App\Audit;
  * limitations under the License.
  **/
 
-use App\Audit\Loggers\SummitEventAuditLogger;
-use Doctrine\ORM\PersistentCollection;
-use models\summit\SummitEvent;
 
 /**
- * Class AuditLogFormatterStrategy
- * @package App\Audit
+ * Interface IChildEntityAuditLogFormatter
+ * @package App\Audit\ConcreteFormatters\ChildEntityFormatters
  */
-class LoggerFactory {
+interface IChildEntityAuditLogFormatter
+{
+    public const CHILD_ENTITY_CREATION = 'child_entity_creation';
+    public const CHILD_ENTITY_DELETION = 'child_entity_deletion';
 
-    public static function build($entity): ?ILogger {
-        if ($entity instanceof SummitEvent ||
-            $entity instanceof PersistentCollection && $entity->getOwner() instanceof SummitEvent) {
-            return new SummitEventAuditLogger();
-        }
-        return null;
-    }
+    /**
+     * @param $subject
+     * @param $child_entity_action_type
+     * @return string|null
+     */
+    public function format($subject, $child_entity_action_type):?string;
 }

@@ -30,6 +30,11 @@ class AuditLogSerializer extends SilverStripeSerializer
         return SerializerRegistry::SerializerType_Public;
     }
 
+    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    {
+        return parent::serialize($expand, $fields, $relations, $params);
+    }
+
     protected static $array_mappings = [
         'Action' => 'action:json_string',
         'UserId' => 'user_id:json_int',

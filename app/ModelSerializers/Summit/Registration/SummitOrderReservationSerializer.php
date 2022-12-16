@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use models\summit\SummitOrder;
+use libs\utils\JsonUtils;
 /**
  * Class SummitOrderReservationSerializer
  * @package App\ModelSerializers
@@ -54,7 +55,14 @@ class SummitOrderReservationSerializer extends SummitOrderBaseSerializer
         if (!$order instanceof SummitOrder) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
         if (in_array('applied_taxes', $relations)) {
-            $values['applied_taxes'] = $order->getAppliedTaxes();
+            $applied_taxes = $order->getAppliedTaxes();
+
+            for($i = 0 ; $i < count($applied_taxes) ; $i++)
+            {
+                $applied_taxes[$i]['amount'] = JsonUtils::toJsonFloat($applied_taxes[$i]['amount']);
+            }
+
+            $values['applied_taxes'] = $applied_taxes;
         }
         return $values;
     }

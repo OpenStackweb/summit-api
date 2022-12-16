@@ -19,7 +19,6 @@ use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
-use libs\utils\JsonUtils;
 use libs\utils\TextUtils;
 use models\exceptions\ValidationException;
 use models\main\Company;

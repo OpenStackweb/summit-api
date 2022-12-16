@@ -836,10 +836,28 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     {
         Log::debug(sprintf("SummitOrder::getFinalAmount id %s", $this->id));
 
+        $net_amount_x_ticket_types = [];
         $amount = 0.0;
 
         foreach ($this->tickets as $ticket) {
-            $amount += $ticket->getFinalAmount();
+            $type = $ticket->getTicketType();
+            if(!isset($net_amount_x_ticket_types[$type->getId()])){
+                $net_amount_x_ticket_types[$type->getId()] = [
+                    'net_amount' => 0.0,
+                    'taxes' => [
+                        $type->getAppliedTaxes()->toArray()
+                    ],
+                ];
+            }
+            $net_amount_x_ticket_types[$type->getId()]['net_amount'] += $ticket->getNetAmount();
+        }
+
+        foreach ($net_amount_x_ticket_types as $type_id => $net_amount_x_ticket_type){
+            $net_amount = $net_amount_x_ticket_type['net_amount'];
+            $amount =+ $net_amount;
+            foreach ($net_amount_x_ticket_type['taxes'] as $tax){
+                $amount += ($net_amount * $tax->getRate()) / 100.00;
+            }
         }
 
         Log::debug(sprintf("SummitOrder::getFinalAmount id %s amount %s", $this->id, $amount));

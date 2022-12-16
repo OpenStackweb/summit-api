@@ -867,6 +867,10 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         }
     }
 
+    public function getNetAmount():float{
+        return ($this->raw_cost - $this->discount);
+    }
+
     /**
      * @return float
      */

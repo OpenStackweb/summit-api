@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\AllowedCurrencies;
+use App\Models\Utils\Traits\FinancialTrait;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
@@ -36,6 +37,8 @@ use Doctrine\ORM\Mapping AS ORM;
 class SummitTicketType extends SilverstripeBaseModel
 {
     use SummitOwned;
+
+    use FinancialTrait;
 
     const USD_Currency = 'USD';
     const EUR_Currency = 'EUR';
@@ -244,6 +247,14 @@ class SummitTicketType extends SilverstripeBaseModel
     public function getCost(): float
     {
         return $this->cost;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCostInCents(): int
+    {
+        return self::convertToCents($this->cost);
     }
 
     /**

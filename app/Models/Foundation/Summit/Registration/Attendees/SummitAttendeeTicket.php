@@ -19,6 +19,7 @@ use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestOwner;
 use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
 use App\Jobs\ProcessTicketRefundRequest;
 use App\Models\Foundation\Main\IGroup;
+use App\Models\Utils\Traits\FinancialTrait;
 use Doctrine\Common\Collections\Criteria;
 use App\Models\Foundation\Summit\AllowedCurrencies;
 use Illuminate\Support\Facades\Config;
@@ -39,6 +40,8 @@ use Doctrine\ORM\Mapping as ORM;
 class SummitAttendeeTicket extends SilverstripeBaseModel
     implements IQREntity
 {
+
+    use FinancialTrait;
 
     /**
      * @ORM\Column(name="ExternalOrderId", type="string")
@@ -242,10 +245,9 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         return $this->raw_cost;
     }
 
-    public function getRawCostInCents(): ?int
+    public function getRawCostInCents(): int
     {
-        $raw_cost = $this->raw_cost * 100;
-        return intval(round($raw_cost));
+        return self::convertToCents($this->raw_cost);
     }
 
     /**
@@ -685,19 +687,19 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      */
     public function getRefundedAmount(): float
     {
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('status', ISummitRefundRequestConstants::ApprovedStatus));
-        $totalRefundedAmount = 0.0;
-        foreach ($this->refund_requests->matching($criteria) as $request) {
-            $totalRefundedAmount += $request->getRefundedAmount();
-        }
-        return $totalRefundedAmount;
+        return self::convertToUnit($this->getRefundedAmountInCents());
     }
 
     public function getRefundedAmountInCents(): int
     {
-        $amount = $this->getRefundedAmount();
-        return intval(round($amount * 100));
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('status', ISummitRefundRequestConstants::ApprovedStatus));
+        $amount_in_cents = 0;
+        foreach ($this->refund_requests->matching($criteria) as $request) {
+            if (!$request instanceof SummitAttendeeTicketRefundRequest) continue;
+            $amount_in_cents += $request->getRefundedAmountInCents();
+        }
+        return $amount_in_cents;
     }
 
     /**
@@ -711,11 +713,11 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
         if ($this->isFree()) {
             throw new ValidationException("Can not refund a Free Ticket.");
         }
-
-        $finalAmount = $this->getFinalAmount();
-        $alreadyRefundedAmount = $this->getRefundedAmount();
-        Log::debug(sprintf("SummitAttendeeTicket::canRefund amount %s finalAmount %s alreadyRefundedAmount %s", $amount, $finalAmount, $alreadyRefundedAmount));
-        if ($finalAmount < ($alreadyRefundedAmount + $amount)) {
+        $amount_in_cents = self::convertToCents($amount);
+        $finalAmount = $this->getFinalAmountInCents();
+        $alreadyRefundedAmount = $this->getRefundedAmountInCents();
+        Log::debug(sprintf("SummitAttendeeTicket::canRefund amount_in_cents %s finalAmount %s alreadyRefundedAmount %s", $amount_in_cents, $finalAmount, $alreadyRefundedAmount));
+        if ($finalAmount < ($alreadyRefundedAmount + $amount_in_cents)) {
             throw new ValidationException("Can not refund an amount greater than Amount Paid.");
         }
 
@@ -870,47 +872,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      */
     public function getFinalAmount(): float
     {
-        Log::debug
-        (
-            sprintf
-            (
-                "SummitAttendeeTicket::getFinalAmount id %s raw cost %s discount %s",
-                $this->id,
-                $this->raw_cost,
-                $this->discount
-            )
-        );
-
-        $amount = $this->raw_cost;
-        $amount -= $this->discount;
-
-        foreach ($this->applied_taxes as $tax) {
-
-            $tax_amount_in_cents = $tax->getAmountInCents();
-            Log::debug
-            (
-                sprintf
-                (
-                    "SummitAttendeeTicket::getFinalAmount id %s tax %s tax amount in cents %s",
-                    $this->id,
-                    $tax->getTax()->getName(),
-                    $tax_amount_in_cents
-                )
-            );
-            $amount += $tax_amount_in_cents > 0 ? $tax_amount_in_cents / 100 : 0;
-        }
-
-        Log::debug
-        (
-            sprintf
-            (
-                "SummitAttendeeTicket::getFinalAmount id %s amount %s",
-                $this->id,
-                $amount
-            )
-        );
-
-        return $amount;
+        return self::convertToUnit($this->getFinalAmountInCents());
     }
 
     /**
@@ -918,9 +880,14 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      */
     public function getFinalAmountInCents(): int
     {
-        $amount = $this->getFinalAmount();
+        $amount_in_cents = $this->getRawCostInCents();
+        $amount_in_cents -= $this->getDiscountInCents();
 
-        return intval(round($amount * 100));
+        foreach ($this->applied_taxes as $tax) {
+            $amount_in_cents += $tax->getAmountInCents();
+        }
+
+        return $amount_in_cents;
     }
 
     /**
@@ -936,11 +903,27 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     }
 
     /**
+     * @return int
+     */
+    public function getTicketTypeCostInCents(): int
+    {
+        return $this->ticket_type->getCostInCents();
+    }
+
+    /**
      * @return float
      */
     public function getFinalAmountAdjusted(): float
     {
-        return $this->getFinalAmount() - $this->getRefundedAmount();
+        return self::convertToUnit($this->getFinalAmountAdjustedInCents());
+    }
+
+    /**
+     * @return int
+     */
+    public function getFinalAmountAdjustedInCents(): int
+    {
+        return $this->getFinalAmountInCents() - $this->getRefundedAmountInCents();
     }
 
     /**
@@ -948,7 +931,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      */
     public function isFree(): bool
     {
-        return $this->getFinalAmount() == 0;
+        return $this->getFinalAmountInCents() == 0;
     }
 
     /**
@@ -956,11 +939,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      */
     public function getTaxesAmount(): float
     {
-        $amount = 0.0;
-        foreach ($this->getAppliedTaxes() as $appliedTax) {
-            $amount += $appliedTax->getAmount();
-        }
-        return $amount;
+        return self::convertToUnit($this->getTaxesAmountInCents());
     }
 
     /**
@@ -968,11 +947,11 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      */
     public function getTaxesAmountInCents(): int
     {
-        $amount = 0.0;
+        $amount_in_cents = 0;
         foreach ($this->getAppliedTaxes() as $appliedTax) {
-            $amount += $appliedTax->getAmount();
+            $amount_in_cents += $appliedTax->getAmountInCents();
         }
-        return intval(round($amount * 100));
+        return $amount_in_cents;
     }
 
     /**
@@ -996,8 +975,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      */
     public function getDiscountInCents(): int
     {
-        $discount = $this->discount;
-        return intval(round($discount * 100));
+        return self::convertToCents($this->discount);
     }
 
     /**

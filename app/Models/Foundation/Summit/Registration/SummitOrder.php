@@ -834,11 +834,15 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getFinalAmount(): float
     {
+        Log::debug(sprintf("SummitOrder::getFinalAmount id %s", $this->id));
+
         $amount = 0.0;
 
         foreach ($this->tickets as $ticket) {
             $amount += $ticket->getFinalAmount();
         }
+
+        Log::debug(sprintf("SummitOrder::getFinalAmount id %s amount %s", $this->id, $amount));
 
         return $amount;
     }

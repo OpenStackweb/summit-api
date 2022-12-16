@@ -872,14 +872,29 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
      */
     public function getFinalAmount(): float
     {
+        Log::debug(sprintf("SummitAttendeeTicket::getFinalAmount id %s", $this->id));
+
         $amount = $this->getRawCost();
         $amount -= $this->getDiscount();
 
-        foreach ($this->applied_taxes as $tax) {
-            $amount += $tax->getAmount();
+        $taxes = 0.0;
+        foreach ($this->applied_taxes as $applied_tax) {
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitAttendeeTicket::getFinalAmount id %s tax %s rate %s amount %s",
+                    $this->id,
+                    $applied_tax->getTax()->getName(),
+                    $applied_tax->getTax()->getRate(),
+                    $applied_tax->getAmount()
+                )
+            );
+
+            $taxes += $applied_tax->getAmount();
         }
-        Log::debug(sprintf("SummitAttendeeTicket::getFinalAmount id %s amount %s", $this->id, $amount));
-        return $amount;
+        Log::debug(sprintf("SummitAttendeeTicket::getFinalAmount id %s amount %s taxes %s", $this->id, $amount, $taxes));
+        return ($amount + $taxes);
     }
 
     /**

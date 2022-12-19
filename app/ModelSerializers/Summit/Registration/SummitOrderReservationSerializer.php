@@ -20,19 +20,19 @@ use libs\utils\JsonUtils;
 class SummitOrderReservationSerializer extends SummitOrderBaseSerializer
 {
     protected static $array_mappings = [
-        'RawAmount' => 'raw_amount:json_float',
+        'RawAmount' => 'raw_amount:json_money',
         'RawAmountInCents' => 'raw_amount_in_cents:json_int',
-        'FinalAmount' => 'amount:json_float',
+        'FinalAmount' => 'amount:json_money',
         'FinalAmountInCents' => 'amount_in_cents:json_int',
-        'TaxesAmount' => 'taxes_amount:json_float',
+        'TaxesAmount' => 'taxes_amount:json_money',
         'TaxesAmountInCents' => 'taxes_amount_in_cents:json_int',
-        'DiscountAmount' => 'discount_amount:json_float',
+        'DiscountAmount' => 'discount_amount:json_money',
         'DiscountAmountInCents' => 'discount_amount_in_cents:json_int',
         'PaymentGatewayClientToken' => 'payment_gateway_client_token:json_string',
         'PaymentGatewayCartId' => 'payment_gateway_cart_id:json_string',
         'Hash' => 'hash:json_string',
         'HashCreationDate' => 'hash_creation_date:datetime_epoch',
-        'RefundedAmount' => 'refunded_amount:json_float',
+        'RefundedAmount' => 'refunded_amount:json_money',
         'RefundedAmountInCents' => 'refunded_amount_in_cents:json_int',
     ];
 
@@ -59,7 +59,7 @@ class SummitOrderReservationSerializer extends SummitOrderBaseSerializer
 
             for($i = 0 ; $i < count($applied_taxes) ; $i++)
             {
-                $applied_taxes[$i]['amount'] = JsonUtils::toJsonFloat($applied_taxes[$i]['amount']);
+                $applied_taxes[$i]['amount'] = JsonUtils::toJsonMoney($applied_taxes[$i]['amount']);
             }
 
             $values['applied_taxes'] = $applied_taxes;

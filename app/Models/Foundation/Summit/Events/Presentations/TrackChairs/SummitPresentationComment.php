@@ -16,7 +16,7 @@ use models\main\Member;
 use models\utils\SilverstripeBaseModel;
 /**
  * Class SummitPresentationComment
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitPresentationCommentRepository")
  * @ORM\Table(name="SummitPresentationComment")
  * @package models\summit
  */

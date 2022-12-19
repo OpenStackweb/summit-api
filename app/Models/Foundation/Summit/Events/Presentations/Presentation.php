@@ -1273,6 +1273,14 @@ class Presentation extends SummitEvent
     }
 
     /**
+     * @param SummitPresentationComment $comment
+     */
+    public function addPresentationComment(SummitPresentationComment $comment):void{
+        $this->comments->add($comment);
+        $comment->setPresentation($this);
+    }
+
+    /**
      * @param Member $commenter
      * @param string $body
      * @return SummitPresentationComment
@@ -2121,5 +2129,25 @@ SQL;
     public function buildExtraQuestionAnswer(): ExtraQuestionAnswer
     {
         return new PresentationExtraQuestionAnswer();
+    }
+
+    /**
+     * @param int $comment_id
+     * @return SummitPresentationComment|null
+     */
+    public function getComment(int $comment_id):?SummitPresentationComment{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $comment_id));
+        $res = $this->comments->matching($criteria)->first();
+        if($res === false) return null;
+        return $res;
+    }
+
+    /**
+     * @param SummitPresentationComment $comment
+     */
+    public function removeComment(SummitPresentationComment $comment):void{
+        if(!$this->comments->contains($comment)) return;
+        $this->comments->removeElement($comment);
     }
 }

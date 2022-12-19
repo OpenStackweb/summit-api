@@ -197,4 +197,206 @@ final class OAuth2PresentationApiTest extends ProtectedApiTest
         $this->assertTrue($presentation->track_chair_avg_score > 0.0);
         $this->assertTrue(count($presentation->track_chair_scores) > 0);
     }
+
+    public function testAddPresentationComment(){
+        // 1st
+        $params = [
+            'id'                => self::$summit->getId(),
+            'presentation_id'   => self::$default_selection_plan->getPresentations()[0]->getId(),
+        ];
+
+        $payload = [
+            'body' => 'this is a body',
+            'is_public' => true,
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationApiController@addComment",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($payload)
+        );
+
+        $this->assertResponseStatus(201);
+
+        $content = $response->getContent();
+
+        $comment = json_decode($content);
+
+        $this->assertTrue(!is_null($comment));
+        $this->assertEquals('this is a body', $comment->body);
+    }
+
+    public function testAddAndGetPresentationComment(){
+        // 1st
+        $params = [
+            'id'                => self::$summit->getId(),
+            'presentation_id'   => self::$default_selection_plan->getPresentations()[0]->getId(),
+        ];
+
+        $payload = [
+            'body' => 'this is a body',
+            'is_public' => true,
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationApiController@addComment",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($payload)
+        );
+
+        $this->assertResponseStatus(201);
+
+        $content = $response->getContent();
+
+        $comment = json_decode($content);
+
+        $this->assertTrue(!is_null($comment));
+        $this->assertEquals('this is a body', $comment->body);
+
+        $params = [
+            'id'                => self::$summit->getId(),
+            'presentation_id'   => self::$default_selection_plan->getPresentations()[0]->getId(),
+            'filter' => 'is_public==1'
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2PresentationApiController@getComments",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+        );
+
+        $this->assertResponseStatus(200);
+
+        $content = $response->getContent();
+
+        $page = json_decode($content);
+
+        $this->assertTrue(!is_null($page));
+        $this->assertNotEmpty($page->data);
+    }
+
+    public function testAddAndUpdatePresentationComment(){
+        // 1st
+        $params = [
+            'id'                => self::$summit->getId(),
+            'presentation_id'   => self::$default_selection_plan->getPresentations()[0]->getId(),
+        ];
+
+        $payload = [
+            'body' => 'this is a body',
+            'is_public' => true,
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationApiController@addComment",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($payload)
+        );
+
+        $this->assertResponseStatus(201);
+
+        $content = $response->getContent();
+
+        $comment = json_decode($content);
+
+        $this->assertTrue(!is_null($comment));
+        $this->assertEquals('this is a body', $comment->body);
+
+        $payload = [
+            'body' => 'this is a body update',
+        ];
+
+        $params['comment_id'] = $comment->id;
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2PresentationApiController@updateComment",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($payload)
+        );
+
+        $this->assertResponseStatus(201);
+
+        $content = $response->getContent();
+
+        $comment = json_decode($content);
+
+        $this->assertTrue(!is_null($comment));
+        $this->assertEquals('this is a body update', $comment->body);
+    }
+
+    public function testAddAndDeletePresentationComment(){
+        // 1st
+        $params = [
+            'id'                => self::$summit->getId(),
+            'presentation_id'   => self::$default_selection_plan->getPresentations()[0]->getId(),
+        ];
+
+        $payload = [
+            'body' => 'this is a body',
+            'is_public' => true,
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationApiController@addComment",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($payload)
+        );
+
+        $this->assertResponseStatus(201);
+
+        $content = $response->getContent();
+
+        $comment = json_decode($content);
+
+        $this->assertTrue(!is_null($comment));
+        $this->assertEquals('this is a body', $comment->body);
+
+        $params = [
+            'id'                => self::$summit->getId(),
+            'presentation_id'   => self::$default_selection_plan->getPresentations()[0]->getId(),
+            'comment_id' => $comment->id
+        ];
+
+        $this->action(
+            "DELETE",
+            "OAuth2PresentationApiController@deleteComment",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+        );
+
+        $this->assertResponseStatus(204);
+
+    }
 }

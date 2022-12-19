@@ -16,6 +16,7 @@ use App\Http\Utils\FileTypes;
 use App\Http\Utils\MultipartFormDataCleaner;
 use App\Jobs\VideoStreamUrlMUXProcessingForSummitJob;
 use App\Models\Foundation\Main\IGroup;
+use App\Models\Foundation\Summit\Repositories\ISummitPresentationCommentRepository;
 use App\ModelSerializers\SerializerUtils;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request as LaravelRequest;
@@ -30,9 +31,13 @@ use models\oauth2\IResourceServerContext;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
 use models\summit\Presentation;
+use models\summit\SummitPresentationComment;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use services\model\IPresentationService;
+use utils\Filter;
+use utils\FilterElement;
+use utils\PagingInfo;
 
 /**
  * Class OAuth2PresentationApiController
@@ -65,11 +70,17 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
     private $member_repository;
 
     /**
+     * @var ISummitPresentationCommentRepository
+     */
+    private $presentation_comments_repository;
+
+    /**
      * OAuth2PresentationApiController constructor.
      * @param IPresentationService $presentation_service
      * @param ISummitRepository $summit_repository
      * @param ISummitEventRepository $presentation_repository
      * @param IMemberRepository $member_repository
+     * @params ISummitPresentationCommentRepository $presentation_comments_repository
      * @param IResourceServerContext $resource_server_context
      */
     public function __construct
@@ -78,6 +89,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         ISummitRepository      $summit_repository,
         ISummitEventRepository $presentation_repository,
         IMemberRepository      $member_repository,
+        ISummitPresentationCommentRepository $presentation_comments_repository,
         IResourceServerContext $resource_server_context
     )
     {
@@ -86,6 +98,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         $this->presentation_service = $presentation_service;
         $this->member_repository = $member_repository;
         $this->summit_repository = $summit_repository;
+        $this->presentation_comments_repository = $presentation_comments_repository;
     }
 
     //presentations
@@ -1191,6 +1204,150 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $this->presentation_service->removeTrackChairScore($summit, $current_member, intval($selection_plan_id), intval($presentation_id), intval($score_type_id));
 
             return $this->deleted();
+        });
+    }
+
+    use ParametrizedGetAll;
+
+    /**
+     * @param $summit_id
+     * @param $presentation_id
+     * @return JsonResponse
+     */
+    public function getComments($summit_id, $presentation_id){
+
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        return $this->_getAll(
+            function () {
+                return [
+                    'is_activity' => ['=='],
+                    'is_public' => ['=='],
+                    'creator_id' => ['=='],
+                    'body' => ['==','@@', '=@'],
+                ];
+            },
+            function () {
+                return [
+                    'is_activity' => 'sometimes|boolean',
+                    'is_public' => 'sometimes|boolean',
+                    'creator_id' => 'sometimes|integer',
+                    'body' => 'sometimes|string',
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'creator_id'
+                ];
+            },
+            function ($filter) use ($summit, $presentation_id) {
+                if ($filter instanceof Filter) {
+                    $filter->addFilterCondition(FilterElement::makeEqual('presentation_id', intval($presentation_id)));
+                }
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) {
+                return $this->presentation_comments_repository->getAllByPage
+                (
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
+    }
+
+    public function getComment($summit_id, $presentation_id, $comment_id){
+        return $this->processRequest(function() use($summit_id, $presentation_id, $comment_id){
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $presentation = $summit->getEvent(intval($presentation_id));
+            if(!$presentation instanceof Presentation)
+                return $this->error404();
+            $comment = $presentation->getComment(intval($comment_id));
+            if(!$comment instanceof SummitPresentationComment)
+                return $this->error404();
+
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($comment)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
+    /**
+     * @param $summit_id
+     * @param $presentation_id
+     * @param $comment_id
+     * @return mixed
+     */
+    public function deleteComment($summit_id, $presentation_id, $comment_id){
+        return $this->processRequest(function() use($summit_id, $presentation_id, $comment_id){
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $this->presentation_service->deletePresentationComment($summit, intval($presentation_id), intval($comment_id));
+
+            return $this->deleted();
+        });
+    }
+
+
+    /**
+     * @param $summit_id
+     * @param $presentation_id
+     * @return mixed
+     */
+    public function addComment($summit_id, $presentation_id){
+        return $this->processRequest(function() use($summit_id, $presentation_id){
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonPayload(SummitPresentationCommentValidationRulesFactory::buildForAdd(), true);
+            $current_user = $this->resource_server_context->getCurrentUser(false, false);
+            $comment = $this->presentation_service->createPresentationComment($summit, intval($presentation_id), $current_user, $payload);
+
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($comment)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $presentation_id
+     * @param $comment_id
+     * @return mixed
+     */
+    public function updateComment($summit_id, $presentation_id, $comment_id){
+        return $this->processRequest(function() use($summit_id, $presentation_id, $comment_id){
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonPayload(SummitPresentationCommentValidationRulesFactory::buildForUpdate(), true);
+
+            $comment = $this->presentation_service->updatePresentationComment($summit, intval($presentation_id), intval($comment_id), $payload);
+
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($comment)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
         });
     }
 }

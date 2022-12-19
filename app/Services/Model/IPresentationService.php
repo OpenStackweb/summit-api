@@ -24,6 +24,8 @@ use models\summit\PresentationSlide;
 use models\summit\PresentationVideo;
 use models\summit\Summit;
 use Illuminate\Http\Request as LaravelRequest;
+use models\summit\SummitPresentationComment;
+
 /**
  * Interface IPresentationService
  * @package services\model
@@ -249,4 +251,35 @@ interface IPresentationService
         int $presentation_id,
         int $score_type_id
     ):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $presentation_id
+     * @param int $comment_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function deletePresentationComment(Summit $summit, int $presentation_id, int $comment_id):void;
+
+    /**
+     * @param Summit $summit
+     * @param int $presentation_id
+     * @param Member $current_user
+     * @param array $payload
+     * @return SummitPresentationComment
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function createPresentationComment(Summit $summit, int $presentation_id, Member $current_user, array $payload):SummitPresentationComment;
+
+    /**
+     * @param Summit $summit
+     * @param int $presentation_id
+     * @param int $comment_id
+     * @param array $payload
+     * @return SummitPresentationComment
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function updatePresentationComment(Summit $summit, int $presentation_id, int $comment_id, array $payload):SummitPresentationComment;
 }

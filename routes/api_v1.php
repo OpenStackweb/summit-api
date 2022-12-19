@@ -725,7 +725,6 @@ Route::group(array('prefix' => 'summits'), function () {
                 });
 
                 // media uploads
-
                 Route::group(['prefix' => 'media-uploads'], function () {
                     Route::get('', 'OAuth2PresentationApiController@getPresentationMediaUploads');
                     Route::post('', 'OAuth2PresentationApiController@addPresentationMediaUpload');
@@ -737,11 +736,20 @@ Route::group(array('prefix' => 'summits'), function () {
                 });
 
                 // attendees votes
-
                 Route::group(['prefix' => 'attendee-votes'], function () {
                     Route::get('', ['uses' => 'OAuth2PresentationApiController@getAttendeeVotes']);
                     Route::post('', ['uses' => 'OAuth2PresentationApiController@castAttendeeVote']);
                     Route::delete('', ['uses' => 'OAuth2PresentationApiController@unCastAttendeeVote']);
+                });
+
+                Route::group(['prefix' => 'comments'], function(){
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@getComments']);
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@addComment']);
+                    Route::group(['prefix' => '{comment_id}'], function(){
+                        Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@getComment']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@deleteComment']);
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@updateComment']);
+                    });
                 });
             });
         });

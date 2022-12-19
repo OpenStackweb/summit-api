@@ -70,6 +70,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitMediaUploadTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitMetricRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderExtraQuestionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitPresentationCommentRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRefundPolicyTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
@@ -136,6 +137,7 @@ use models\summit\SummitMediaUploadType;
 use models\summit\SummitMetric;
 use models\summit\SummitOrder;
 use models\summit\SummitOrderExtraQuestionType;
+use models\summit\SummitPresentationComment;
 use models\summit\SummitRefundPolicyType;
 use models\summit\SummitRegistrationInvitation;
 use models\summit\SummitRegistrationPromoCode;
@@ -789,5 +791,12 @@ final class RepositoriesProvider extends ServiceProvider
             function () {
                 return EntityManager::getRepository(AuditLog::class);
             });
+
+        App::singleton(
+            ISummitPresentationCommentRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitPresentationComment::class);
+            }
+        );
     }
 }

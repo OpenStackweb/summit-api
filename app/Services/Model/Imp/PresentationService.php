@@ -25,6 +25,7 @@ use App\Models\Foundation\Summit\Factories\PresentationLinkFactory;
 use App\Models\Foundation\Summit\Factories\PresentationMediaUploadFactory;
 use App\Models\Foundation\Summit\Factories\PresentationSlideFactory;
 use App\Models\Foundation\Summit\Factories\PresentationVideoFactory;
+use App\Models\Foundation\Summit\Factories\SummitPresentationCommentFactory;
 use App\Models\Foundation\Summit\Repositories\IPresentationTrackChairScoreTypeRepository;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Utils\IStorageTypesConstants;
@@ -50,6 +51,7 @@ use models\summit\PresentationSpeaker;
 use models\summit\PresentationType;
 use models\summit\PresentationVideo;
 use models\summit\Summit;
+use models\summit\SummitPresentationComment;
 
 /**
  * Class PresentationService
@@ -1434,6 +1436,73 @@ final class PresentationService
 
             $summit_track_chair->removeScore($track_chair_score);
 
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $presentation_id
+     * @param int $comment_id
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function deletePresentationComment(Summit $summit, int $presentation_id, int $comment_id): void
+    {
+        $this->tx_service->transaction(function() use($summit, $presentation_id, $comment_id){
+            $presentation = $summit->getEvent($presentation_id);
+            if(!$presentation instanceof Presentation)
+                throw new EntityNotFoundException("Presentation not found.");
+
+            $comment = $presentation->getComment($comment_id);
+            if(!$comment instanceof SummitPresentationComment)
+                throw new EntityNotFoundException("Presentation Comment not found.");
+
+            $presentation->removeComment($comment);
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $presentation_id
+     * @param int $comment_id
+     * @param array $payload
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function updatePresentationComment(Summit $summit, int $presentation_id, int $comment_id, array $payload): SummitPresentationComment
+    {
+        return $this->tx_service->transaction(function() use($summit, $presentation_id, $comment_id, $payload){
+            $presentation = $summit->getEvent($presentation_id);
+            if(!$presentation instanceof Presentation)
+                throw new EntityNotFoundException("Presentation not found.");
+
+            $comment = $presentation->getComment($comment_id);
+            if(!$comment instanceof SummitPresentationComment)
+                throw new EntityNotFoundException("Presentation Comment not found.");
+
+            return SummitPresentationCommentFactory::populate($comment, $payload);
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $presentation_id
+     * @param Member $current_user
+     * @param array $payload
+     * @return SummitPresentationComment
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function createPresentationComment(Summit $summit, int $presentation_id, Member $current_user, array $payload): SummitPresentationComment
+    {
+        return $this->tx_service->transaction(function() use($summit, $presentation_id, $current_user, $payload){
+            $presentation = $summit->getEvent($presentation_id);
+            if(!$presentation instanceof Presentation)
+                throw new EntityNotFoundException("Presentation not found.");
+
+            $comment = SummitPresentationCommentFactory::build($current_user, $payload);
+            $presentation->addPresentationComment($comment);
+            return $comment;
         });
     }
 }

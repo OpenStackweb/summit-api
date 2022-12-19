@@ -862,7 +862,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
             $ticketTax = new SummitAttendeeTicketTax();
             $ticketTax->setTicket($this);
             $ticketTax->setTax($tax);
-            $ticketTax->setAmount(($amount * $tax->getRate()) / 100.00);
+            $ticketTax->setAmount($tax->applyTo($amount, false));
             $this->applied_taxes->add($ticketTax);
         }
     }

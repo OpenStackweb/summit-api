@@ -152,11 +152,26 @@ class SummitTaxType extends SilverstripeBaseModel
     }
 
     public function getRoundingPrecision():int{
-        return 0;
+        return 2;
     }
 
-    public function applyTo(float $amount):float{
-        return ( round($amount * $this->getRate(), $this->getRoundingPrecision(), $this->getRoundingPrecision()) ) / 100.00;
+    /**
+     * @param float $amount
+     * @param bool $should_apply_rounding
+     * @return float
+     */
+    public function applyTo(float $amount, bool $should_apply_rounding = true):float{
+        $res = $amount * $this->getRate();
+        return $should_apply_rounding ? $this->round($res) / 100.00 :
+        $res / 100.00;
+    }
+
+    /**
+     * @param float $amount
+     * @return float
+     */
+    public function round(float $amount):float{
+        return round($amount, $this->getRoundingPrecision(), $this->getRoundingStrategy());
     }
 
 }

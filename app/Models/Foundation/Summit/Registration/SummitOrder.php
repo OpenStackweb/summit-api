@@ -836,39 +836,34 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     {
         Log::debug(sprintf("SummitOrder::getFinalAmount id %s", $this->id));
 
-        $net_amount_x_ticket_types = [];
+        $taxes = [];
         $amount = 0.0;
 
         foreach ($this->tickets as $ticket) {
-            $type = $ticket->getTicketType();
-            if(!isset($net_amount_x_ticket_types[$type->getId()])){
-                $net_amount_x_ticket_types[$type->getId()] = [
-                    'net_selling_amount' => 0.0,
-                    'taxes' => $type->getAppliedTaxes()->toArray()
-                ];
+            $amount += $ticket->getNetSellingPrice();
+            foreach ($ticket->getAppliedTaxes() as $appliedTax)
+            {
+                $tax = $appliedTax->getTax();
+                if(!isset($taxes[$tax->getId()])){
+                    $taxes[$tax->getId()] = [
+                        'tax' => $tax,
+                        'amount' => 0.0
+                    ];
+                }
+                $taxes[$tax->getId()]['amount'] += $appliedTax->getAmount();
             }
-            $net_amount_x_ticket_types[$type->getId()]['net_selling_amount'] += $ticket->getNetSellingPrice();
         }
 
-        // group net selling amount per ticket type
-        foreach ($net_amount_x_ticket_types as $type_id => $net_amount_x_ticket_type){
-            $net_selling_amount = $net_amount_x_ticket_type['net_selling_amount'];
-            $amount =+ $net_selling_amount;
-            foreach ($net_amount_x_ticket_type['taxes'] as $tax){
-                $tax_amount = $tax->applyTo($net_selling_amount);
-                Log::debug
-                (
-                    sprintf
-                    (
-                        "SummitOrder::getFinalAmount id %s tax %s rate %s amount %s", $this->id,
-                        $tax->getName(),
-                        $tax->getRate(),
-                        $tax_amount
-                    )
-                );
+        Log::debug(sprintf("SummitOrder::getFinalAmount id %s net amount %s", $this->id, $amount));
 
-                $amount += $tax_amount;
-            }
+        // apply taxes
+        foreach ($taxes as $tax_id => $tax_detail){
+            $tax_amount = $tax_detail['amount'];
+            $tax = $tax_detail['tax'];
+            Log::debug(sprintf("SummitOrder::getFinalAmount id %s tax %s tax amount %s", $this->id, $tax->getName(), $tax_amount));
+            $tax_amount = $tax->round($tax_amount);
+            Log::debug(sprintf("SummitOrder::getFinalAmount id %s tax %s tax amount after rounding %s", $this->id, $tax->getName(), $tax_amount));
+            $amount += $tax_amount;
         }
 
         Log::debug(sprintf("SummitOrder::getFinalAmount id %s amount %s", $this->id, $amount));

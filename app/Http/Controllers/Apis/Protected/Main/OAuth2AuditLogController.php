@@ -73,8 +73,10 @@ final class OAuth2AuditLogController extends OAuth2ProtectedController
                 return [
                     'id',
                     'user_id',
+                    'event_id',
+                    'created',
                     'user_email',
-                    'user_full_name'
+                    'user_full_name',
                 ];
             },
             function($filter) {

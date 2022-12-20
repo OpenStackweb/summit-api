@@ -468,6 +468,10 @@ final class SummitFactory
             $summit->setSupportEmail(trim($data['support_email']));
         }
 
+        if(isset($data['registration_slug_prefix'])){
+            $summit->setRegistrationSlugPrefix(trim($data['registration_slug_prefix']));
+        }
+
         return $summit;
     }
 }

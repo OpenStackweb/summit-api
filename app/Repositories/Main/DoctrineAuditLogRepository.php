@@ -20,6 +20,7 @@ use App\Repositories\SilverStripeDoctrineRepository;
 use models\main\Member;
 use models\main\SummitAuditLog;
 use models\main\SummitEventAuditLog;
+use models\summit\SummitEvent;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineInstanceOfFilterMapping;
 use utils\Filter;
@@ -50,12 +51,16 @@ final class DoctrineAuditLogRepository
         $query = $query->leftJoin(Member::class, 'u', 'WITH', 'e.user = u.id');
 
         if ($filter instanceof Filter) {
-            if ($filter->hasFilter("summit_id")) {
-                $query = $query->leftJoin(SummitAuditLog::class, 'sal', 'WITH', 'e.id = sal.id');
-            }
-
-            if ($filter->hasFilter("event_id")) {
-                $query = $query->leftJoin(SummitEventAuditLog::class, 'seal', 'WITH', 'e.id = seal.id');
+            $e = $filter->getFilter("class_name");
+            foreach($e as $f){
+                if ($f->getValue() === "SummitAuditLog" || $f->getValue() === "SummitEventAuditLog") {
+                    $query = $query->leftJoin(SummitAuditLog::class, 'sal', 'WITH', 'e.id = sal.id');
+                    if ($f->getValue() === "SummitEventAuditLog") {
+                        $query = $query->leftJoin(SummitEventAuditLog::class, 'seal', 'WITH', 'e.id = seal.id')
+                                    ->leftJoin(SummitEvent::class, 'ev', 'WITH', 'ev.id = seal.event');
+                    }
+                    break;
+                }
             }
         }
 
@@ -86,8 +91,12 @@ final class DoctrineAuditLogRepository
 
     protected function getOrderMappings(): array
     {
-        return [
+        $args  = func_get_args();
+        $filter = count($args) > 0 ? $args[0] : null;
+
+        $order_mappings = [
             'id' => 'e.id',
+            'created' => 'e.created',
             'user_id' => 'u.id',
             'user_full_name' => <<<SQL
 LOWER(CONCAT(u.first_name, ' ', u.last_name))
@@ -96,6 +105,17 @@ SQL,
 LOWER(u.email)
 SQL,
         ];
+
+        if($filter instanceof Filter && $filter->hasFilter("class_name")){
+            $e = $filter->getFilter("class_name");
+            foreach($e as $f){
+                if ($f->getValue() === "SummitEventAuditLog") {
+                    $order_mappings['event_id'] = 'ev.id';
+                    break;
+                }
+            }
+        }
+        return $order_mappings;
     }
 
     /**

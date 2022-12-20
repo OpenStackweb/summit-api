@@ -2133,10 +2133,16 @@ SQL;
 
     public function generateRegistrationSlugPrefix(): void
     {
-        $newSlug = $this->getSlug("");
-        if (empty($this->registration_slug_prefix) || $this->registration_slug_prefix != $newSlug) {
-            $this->registration_slug_prefix = $newSlug;
+        if (empty($this->registration_slug_prefix)) {
+            $this->registration_slug_prefix = $this->getSlug("");
         }
+    }
+
+    /**
+     * @param string $registration_slug_prefix
+     */
+    public function setRegistrationSlugPrefix(string $registration_slug_prefix){
+        $this->registration_slug_prefix = $registration_slug_prefix;
     }
 
     /**

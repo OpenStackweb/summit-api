@@ -119,9 +119,12 @@ final class ProcessScheduleEntityLifeCycleEventService
             }
 
             if ($entity_type === 'PresentationSpeaker') {
-                foreach ($this->summit_repository->getNotEnded() as $summit) {
+                foreach ($this->summit_repository->getAll() as $summit) {
                     if (!$summit instanceof Summit) continue;
                     if ($summit->getSpeaker($entity_id)) {
+
+                        Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process publishing speaker %s to summit %s",
+                        $entity_id, $summit->getId()));
                         // speaker is present on this summit
                         $this->rabbit_service->publish(
                             [

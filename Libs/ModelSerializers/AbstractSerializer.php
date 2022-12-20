@@ -346,6 +346,11 @@ abstract class AbstractSerializer implements IModelSerializer
                                 $value = JsonUtils::toJsonFloat($value);
                             }
                             break;
+                        case 'json_money':
+                            {
+                                $value = JsonUtils::toJsonMoney($value);
+                            }
+                            break;
                         case 'json_obfuscated_email':
                         {
                             $value = JsonUtils::toObfuscatedEmail($value);

@@ -97,6 +97,15 @@ class SummitAbstractLocation extends SilverstripeBaseModel implements IOrderable
      */
     protected $banners;
 
+
+    /**
+     * @ORM\OneToMany(targetEntity="models\summit\SummitEvent", mappedBy="location", cascade={"persist"}, fetch="EXTRA_LAZY")
+     * @ORM\Cache("NONSTRICT_READ_WRITE")
+     * @var SummitEvent[]
+     */
+    protected $events;
+
+
     public static $metadata = [
         'name'         => 'string',
         'short_name'   => 'string',
@@ -118,7 +127,8 @@ class SummitAbstractLocation extends SilverstripeBaseModel implements IOrderable
         parent::__construct();
         $this->order   = 0;
         $this->type    = self::TypeNone;
-        $this->banners = new ArrayCollection;
+        $this->banners = new ArrayCollection();
+        $this->events = new ArrayCollection();
     }
 
     /**
@@ -312,5 +322,24 @@ class SummitAbstractLocation extends SilverstripeBaseModel implements IOrderable
         $this->short_name = $short_name;
     }
 
+    /**
+     * @return ArrayCollection|SummitEvent[]
+     */
+    public function getEvents()
+    {
+        return $this->events;
+    }
+
+    /**
+     * @return ArrayCollection|\Doctrine\Common\Collections\Collection
+     */
+    public function getPublishedEvents(){
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('published', true));
+        return $this->events->matching($criteria);
+    }
+
     use ScheduleEntity;
+
+
 }

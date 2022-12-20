@@ -13,6 +13,9 @@
  **/
 
 use App\Security\ElectionScopes;
+use App\Services\Apis\AddressInfo;
+use App\Services\Apis\GeoCoordinatesInfo;
+use App\Services\Apis\IGeoCodingAPI;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use models\oauth2\AccessToken;
@@ -272,6 +275,33 @@ abstract class ProtectedApiTest extends \Tests\BrowserKitTestCase
         self::$service = new AccessTokenServiceStub();
 
         App::singleton(IAccessTokenService::class, function () { return self::$service; });
+
+        $geoCodingApiMock = Mockery::mock(IGeoCodingAPI::class);
+
+        $geoCodingApiMock->shouldReceive('getAddressInfo')->andReturn
+        (
+            new AddressInfo
+            (
+                "ADDRESS",
+                "ADDRESS 1",
+                "1234",
+                "STATE",
+                "CITY",
+                "USA"))->zeroOrMoreTimes();
+
+        $geoCodingApiMock->shouldReceive('getGeoCoordinates')->andReturn
+        (
+            new GeoCoordinatesInfo
+            (
+                "99.99",
+                "99.99"
+            )
+        )->zeroOrMoreTimes();
+        // replace implementation with mock on IOC containter
+        App::singleton(IGeoCodingAPI::class, function() use ($geoCodingApiMock){
+            return $geoCodingApiMock;
+        });
+
         return $app;
     }
 

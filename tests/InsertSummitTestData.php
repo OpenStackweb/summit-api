@@ -560,6 +560,7 @@ trait InsertSummitTestData
         if (self::$defaultMember != null) {
             $speaker1->setMember(self::$defaultMember);
         }
+
         $speaker1->setFirstName("Sebastian");
         $speaker1->setLastName("Marcet");
         $speaker1->setBio("This is the Bio");
@@ -598,6 +599,7 @@ trait InsertSummitTestData
             $presentation->setStartDate($start_date);
             $presentation->setEndDate($end_date);
             $presentation->addSpeaker($speaker1);
+            $presentation->setLocation(self::$mainVenue);
             self::$default_selection_plan2->addPresentation($presentation);
             self::$presentations[] = $presentation;
             $presentation->publish();
@@ -628,6 +630,7 @@ trait InsertSummitTestData
             $event->setType( self::$defaultEventType );
             self::$summit->addEvent($event);
             self::$presentations[] = $event;
+
         }
 
         self::$summit_permission_group = new SummitAdministratorPermissionGroup();

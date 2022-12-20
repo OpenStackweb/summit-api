@@ -17,8 +17,8 @@
  */
 final class SummitAirportSerializer extends SummitExternalLocationSerializer
 {
-    protected static $array_mappings = array
-    (
+    protected static $array_mappings = [
+
         'AirportType' => 'airport_type:json_string',
-    );
+    ];
 }

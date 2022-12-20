@@ -16,6 +16,7 @@ use App\Services\Model\AbstractService;
 use App\Services\Model\IProcessScheduleEntityLifeCycleEventService;
 use App\Services\Utils\RabbitPublisherService;
 use Illuminate\Support\Facades\Log;
+use libs\utils\ICacheService;
 use libs\utils\ITransactionService;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
@@ -30,6 +31,7 @@ final class ProcessScheduleEntityLifeCycleEventService
 
 {
 
+    const CacheTTL = 5;
     /**
      * @var ISummitRepository
      */
@@ -41,16 +43,24 @@ final class ProcessScheduleEntityLifeCycleEventService
     private $rabbit_service;
 
     /**
+     * @var ICacheService
+     */
+    private $cache_service;
+
+    /**
+     * @param ICacheService $cache_service
      * @param ISummitRepository $summit_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
     (
+        ICacheService       $cache_service,
         ISummitRepository   $summit_repository,
         ITransactionService $tx_service
     )
     {
         parent::__construct($tx_service);
+        $this->cache_service = $cache_service;
         $this->rabbit_service = new RabbitPublisherService('entities-updates-broker');
         $this->summit_repository = $summit_repository;
     }
@@ -76,6 +86,37 @@ final class ProcessScheduleEntityLifeCycleEventService
                     $entity_operator
                 )
             );
+
+            $cache_key = sprintf("%s:%s:%s:%s", $summit_id, $entity_id, $entity_type, $entity_operator);
+
+            if ($this->cache_service->exists($cache_key)) {
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "ProcessScheduleEntityLifeCycleEventService::process %s %s %s %s alredy processed.",
+                        $summit_id,
+                        $entity_id,
+                        $entity_type,
+                        $entity_operator
+                    ));
+                return;
+            }
+
+            $res = $this->cache_service->addSingleValue($cache_key, $cache_key, self::CacheTTL);
+            if(!$res){
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "ProcessScheduleEntityLifeCycleEventService::process %s %s %s %s alredy processed.",
+                        $summit_id,
+                        $entity_id,
+                        $entity_type,
+                        $entity_operator
+                    ));
+                return;
+            }
 
             if ($entity_type === 'PresentationSpeaker') {
                 foreach ($this->summit_repository->getNotEnded() as $summit) {

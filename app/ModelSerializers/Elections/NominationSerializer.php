@@ -18,7 +18,7 @@ use ModelSerializers\SilverStripeSerializer;
  * Class NominationSerializer
  * @package App\ModelSerializers\Elections
  */
-class NominationSerializer  extends SilverStripeSerializer
+class NominationSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
         'CandidateId' => 'candidate_id:json_int',

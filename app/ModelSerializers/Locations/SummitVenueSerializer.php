@@ -12,10 +12,8 @@
  * limitations under the License.
  **/
 
-use Libs\ModelSerializers\AbstractSerializer;
+use Libs\ModelSerializers\Many2OneExpandSerializer;
 use models\summit\SummitVenue;
-use ModelSerializers\SerializerRegistry;
-
 
 /**
  * Class SummitVenueSerializer
@@ -28,6 +26,22 @@ final class SummitVenueSerializer extends SummitGeoLocatedLocationSerializer
         'IsMain' => 'is_main::json_boolean',
     );
 
+    protected static $allowed_relations = [
+        'rooms',
+        'floors',
+    ];
+
+    protected static $expand_mappings = [
+        'floors' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getFloors',
+        ],
+        'rooms' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getRooms',
+        ],
+    ];
+
     /**
      * @param null $expand
      * @param array $fields
@@ -37,59 +51,32 @@ final class SummitVenueSerializer extends SummitGeoLocatedLocationSerializer
      */
     public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array() )
     {
-        $values = parent::serialize($expand, $fields, $relations, $params);
         $venue  = $this->object;
         if(!$venue instanceof  SummitVenue) return [];
-        // rooms
-        $rooms = [];
-        foreach($venue->getRooms() as $room)
-        {
-            $rooms[] = $room->getId();
-        }
-
-        if(count($rooms) > 0)
-            $values['rooms'] = $rooms;
-
-        // floors
-        $floors = [];
-        foreach($venue->getFloors() as $floor)
-        {
-            $floors[] = $floor->getId();
-        }
-
-        if(count($floors) > 0)
-            $values['floors'] = $floors;
-
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                $relation = trim($relation);
-                switch ($relation) {
-                    case 'rooms':
-                        {
-                            if($venue->hasRooms()) {
-                                $rooms = [];
-                                foreach ($venue->getRooms() as $room) {
-                                    $rooms[] = SerializerRegistry::getInstance()->getSerializer($room)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                                }
-                                $values['rooms'] = $rooms;
-                            }
-                        }
-                        break;
-                    case 'floors':
-                        {
-                            if($venue->hasFloors()) {
-                                $floors = [];
-                                foreach ($venue->getFloors() as $floor) {
-                                    $floors[] = SerializerRegistry::getInstance()->getSerializer($floor)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                                }
-                                $values['floors'] = $floors;
-                            }
-                        }
-                        break;
-
-                }
+        if (!count($relations)) $relations = $this->getAllowedRelations();
+        $values = parent::serialize($expand, $fields, $relations, $params);
+        if(in_array('rooms', $relations) && !isset($values['rooms'])) {
+            // rooms
+            $rooms = [];
+            foreach ($venue->getRooms() as $room) {
+                $rooms[] = $room->getId();
             }
+
+            if (count($rooms) > 0)
+                $values['rooms'] = $rooms;
         }
+
+        if(in_array('floors', $relations) && !isset($values['floors'])) {
+            // floors
+            $floors = [];
+            foreach ($venue->getFloors() as $floor) {
+                $floors[] = $floor->getId();
+            }
+
+            if (count($floors) > 0)
+                $values['floors'] = $floors;
+        }
+
 
         return $values;
     }

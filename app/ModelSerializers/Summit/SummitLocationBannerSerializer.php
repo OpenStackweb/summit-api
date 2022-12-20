@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner;
-use ModelSerializers\SerializerRegistry;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 use ModelSerializers\SilverStripeSerializer;
 /**
  * Class SummitLocationBannerSerializer
@@ -21,13 +21,21 @@ use ModelSerializers\SilverStripeSerializer;
 class SummitLocationBannerSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
-
         'Title'         => 'title:json_string',
         'Content'       => 'content:json_string',
         'Type'          => 'type:json_string',
         'Enabled'       => 'enabled:json_boolean',
         'LocationId'    => 'location_id:json_int',
         'ClassName'     => 'class_name:json_string',
+    ];
+
+    protected static $expand_mappings = [
+        'location' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'location_id',
+            'getter' => 'getLocation',
+            'has' => 'hasLocation'
+        ],
     ];
 
     /**
@@ -43,19 +51,6 @@ class SummitLocationBannerSerializer extends SilverStripeSerializer
         $banner  = $this->object;
         if(!$banner instanceof SummitLocationBanner) return [];
 
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                switch (trim($relation)) {
-                    case 'location': {
-                        if($banner->hasLocation()){
-                            unset($values['location_id']);
-                            $values['location'] = SerializerRegistry::getInstance()->getSerializer($banner->getLocation())->serialize();
-                        }
-                    }
-                    break;
-                }
-            }
-        }
         return $values;
     }
 }

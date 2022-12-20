@@ -19,7 +19,6 @@ use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
-use libs\utils\JsonUtils;
 use libs\utils\TextUtils;
 use models\exceptions\ValidationException;
 use models\main\Company;
@@ -835,7 +834,41 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getFinalAmount(): float
     {
-        return self::convertToUnit($this->getFinalAmountInCents());
+        Log::debug(sprintf("SummitOrder::getFinalAmount id %s", $this->id));
+
+        $taxes = [];
+        $amount = 0.0;
+
+        foreach ($this->tickets as $ticket) {
+            $amount += $ticket->getNetSellingPrice();
+            foreach ($ticket->getAppliedTaxes() as $appliedTax)
+            {
+                $tax = $appliedTax->getTax();
+                if(!isset($taxes[$tax->getId()])){
+                    $taxes[$tax->getId()] = [
+                        'tax' => $tax,
+                        'amount' => 0.0
+                    ];
+                }
+                $taxes[$tax->getId()]['amount'] += $appliedTax->getAmount();
+            }
+        }
+
+        Log::debug(sprintf("SummitOrder::getFinalAmount id %s net amount %s", $this->id, $amount));
+
+        // apply taxes
+        foreach ($taxes as $tax_id => $tax_detail){
+            $tax_amount = $tax_detail['amount'];
+            $tax = $tax_detail['tax'];
+            Log::debug(sprintf("SummitOrder::getFinalAmount id %s tax %s tax amount %s", $this->id, $tax->getName(), $tax_amount));
+            $tax_amount = $tax->round($tax_amount);
+            Log::debug(sprintf("SummitOrder::getFinalAmount id %s tax %s tax amount after rounding %s", $this->id, $tax->getName(), $tax_amount));
+            $amount += $tax_amount;
+        }
+
+        Log::debug(sprintf("SummitOrder::getFinalAmount id %s amount %s", $this->id, $amount));
+
+        return $amount;
     }
 
     /**
@@ -843,14 +876,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getFinalAmountInCents(): int
     {
-
-        $amount_in_cents = 0;
-
-        foreach ($this->tickets as $ticket) {
-            $amount_in_cents += $ticket->getFinalAmountInCents();
-        }
-
-        return $amount_in_cents;
+        return self::convertToCents($this->getFinalAmount());
     }
 
     /**
@@ -882,9 +908,8 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getTaxesAmount(): float
     {
-        $taxes = $this->getAppliedTaxes();
         $amount = 0.0;
-        foreach ($taxes as $tax) {
+        foreach ($this->getAppliedTaxes() as $tax) {
             $amount += $tax['amount'];
         }
         return $amount;
@@ -910,20 +935,17 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
                         'tax_id' => $tax->getTaxId(),
                         'rate' => $tax->getRate(),
                         'amount_in_cents' => 0,
+                        'amount' => 0.00,
                     ];
                 }
 
-                $amount_in_cents = $appliedTax->getAmountInCents();
-                Log::debug(sprintf("SummitOrder::getAppliedTaxes tax %s amount %s amount_in_cents %s", $tax->getName(), $appliedTax->getAmount(), $amount_in_cents));
-                $applied_taxes[$tax->getId()]['amount_in_cents'] = $applied_taxes[$tax->getId()]['amount_in_cents'] + $amount_in_cents;
+                $applied_taxes[$tax->getId()]['amount'] = $applied_taxes[$tax->getId()]['amount'] + $appliedTax->getAmount();
             }
         }
 
-
         $res = [];
         foreach ($applied_taxes as $tax_id => $applied_tax) {
-            Log::debug(sprintf("SummitOrder::getAppliedTaxes tax %s amount_in_cents %s", $applied_tax['name'], $applied_tax['amount_in_cents']));
-            $applied_tax['amount'] = JsonUtils::toJsonFloat(self::convertToUnit($applied_tax['amount_in_cents']));
+            $applied_tax['amount_in_cents'] = self::convertToCents($applied_tax['amount']);
             $res[] = $applied_tax;
         }
 
@@ -935,9 +957,8 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getTaxesAmountInCents(): int
     {
-        $taxes = $this->getAppliedTaxes();
         $amount = 0;
-        foreach ($taxes as $tax) {
+        foreach ($this->getAppliedTaxes() as $tax) {
             $amount += $tax['amount_in_cents'];
         }
         return $amount;
@@ -948,7 +969,11 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getDiscountAmount(): float
     {
-        return self::convertToUnit($this->getDiscountAmountInCents());
+        $amount = 0.0;
+        foreach ($this->tickets as $ticket) {
+            $amount += $ticket->getDiscount();
+        }
+        return $amount;
     }
 
     /**
@@ -956,11 +981,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getDiscountAmountInCents(): int
     {
-        $amount_in_cents = 0;
-        foreach ($this->tickets as $ticket) {
-            $amount_in_cents += $ticket->getDiscountInCents();
-        }
-        return $amount_in_cents;
+        return self::convertToCents($this->getDiscountAmount());
     }
 
     /**
@@ -1093,7 +1114,11 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getRefundedAmount(): float
     {
-        return self::convertToUnit($this->getRefundedAmountInCents());
+        $amount = 0.0;
+        foreach ($this->tickets as $ticket) {
+            $amount += $ticket->getRefundedAmount();
+        }
+        return $amount;
     }
 
     /**
@@ -1101,10 +1126,6 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function getRefundedAmountInCents(): int
     {
-        $amount_in_cents = 0;
-        foreach ($this->tickets as $ticket) {
-            $amount_in_cents += $ticket->getRefundedAmountInCents();
-        }
-        return $amount_in_cents;
+       return self::convertToCents($this->getRefundedAmount());
     }
 }

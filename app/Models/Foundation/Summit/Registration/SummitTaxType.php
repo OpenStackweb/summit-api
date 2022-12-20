@@ -147,4 +147,31 @@ class SummitTaxType extends SilverstripeBaseModel
         return $this->ticket_types->contains($ticket_type);
     }
 
+    public function getRoundingStrategy():int{
+        return PHP_ROUND_HALF_UP;
+    }
+
+    public function getRoundingPrecision():int{
+        return 2;
+    }
+
+    /**
+     * @param float $amount
+     * @param bool $should_apply_rounding
+     * @return float
+     */
+    public function applyTo(float $amount, bool $should_apply_rounding = true):float{
+        $res = $amount * $this->getRate();
+        return $should_apply_rounding ? $this->round($res) / 100.00 :
+        $res / 100.00;
+    }
+
+    /**
+     * @param float $amount
+     * @return float
+     */
+    public function round(float $amount):float{
+        return round($amount, $this->getRoundingPrecision(), $this->getRoundingStrategy());
+    }
+
 }

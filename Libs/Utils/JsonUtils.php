@@ -105,6 +105,16 @@ abstract class JsonUtils
 
     /**
      * @param string $value
+     * @return float|null
+     */
+    public static function toJsonMoney($value)
+    {
+        if(empty($value)) return 0.00;
+        return floatval(round($value, 2, PHP_ROUND_HALF_UP));
+    }
+
+    /**
+     * @param string $value
      * @return int
      */
     public static function toEpoch($value)

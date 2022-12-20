@@ -5281,6 +5281,90 @@ class ApiEndpointsSeeder extends Seeder
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm)
                 ],
             ],
+            // comments
+            [
+                'name' => 'get-presentation-comments',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/comments',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::TrackChairsAdmins,
+                    IGroup::TrackChairs,
+                ]
+            ],
+            [
+                'name' => 'get-presentation-comment',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/comments/{comment_id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::TrackChairsAdmins,
+                    IGroup::TrackChairs,
+                ]
+            ],
+            [
+                'name' => 'add-presentation-comment',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/comments',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteEventData, $current_realm),
+                    sprintf(SummitScopes::WritePresentationData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::TrackChairsAdmins,
+                    IGroup::TrackChairs,
+                ]
+            ],
+            [
+                'name' => 'update-presentation-comment',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/comments/{comment_id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteEventData, $current_realm),
+                    sprintf(SummitScopes::WritePresentationData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::TrackChairsAdmins,
+                    IGroup::TrackChairs,
+                ]
+            ],
+            [
+                'name' => 'delete-presentation-comment',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/comments/{comment_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteEventData, $current_realm),
+                    sprintf(SummitScopes::WritePresentationData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::TrackChairsAdmins,
+                    IGroup::TrackChairs,
+                ]
+            ],
             // voteable presentations
             [
                 'name' => 'get-voteable-presentations',

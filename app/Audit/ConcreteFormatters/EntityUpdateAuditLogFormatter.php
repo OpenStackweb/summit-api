@@ -2,6 +2,7 @@
 
 namespace App\Audit\ConcreteFormatters;
 
+use App\Audit\ConcreteFormatters\ChildEntityFormatters\IChildEntityAuditLogFormatter;
 use App\Audit\IAuditLogFormatter;
 use App\Models\Utils\BaseEntity;
 use DateTime;
@@ -27,6 +28,16 @@ use ReflectionClass;
  */
 class EntityUpdateAuditLogFormatter implements IAuditLogFormatter
 {
+    /**
+     * @var IChildEntityAuditLogFormatter
+     */
+    private $child_entity_formatter;
+
+    public function __construct(?IChildEntityAuditLogFormatter $child_entity_formatter)
+    {
+        $this->child_entity_formatter = $child_entity_formatter;
+    }
+
     protected function getIgnoredFields() {
         return [
             'last_created',
@@ -52,6 +63,14 @@ class EntityUpdateAuditLogFormatter implements IAuditLogFormatter
             $old_value = $change_values[0];
             $new_value = $change_values[1];
 
+            if ($this->child_entity_formatter != null) {
+                $res[] = $this->child_entity_formatter
+                    ->format($subject,
+                        IChildEntityAuditLogFormatter::CHILD_ENTITY_UPDATE,
+                        "Property \"{$prop_name}\" has changed from \"{$old_value}\" to \"{$new_value}\"");
+                continue;
+            }
+
             if ($old_value instanceof BaseEntity || $new_value instanceof BaseEntity) {
                 $res[] = "Property \"{$prop_name}\" of entity \"{$class_name}\" has changed";
                 continue;
@@ -67,7 +86,6 @@ class EntityUpdateAuditLogFormatter implements IAuditLogFormatter
                 $old_value = print_r($old_value, true);
                 $new_value = print_r($new_value, true);
             }
-
             $res[] = "Property \"{$prop_name}\" of entity \"{$class_name}\" has changed from \"{$old_value}\" to \"{$new_value}\"";
         }
 

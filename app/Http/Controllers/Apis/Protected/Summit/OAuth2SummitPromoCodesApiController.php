@@ -93,6 +93,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             function () {
                 return [
                     'code' => ['@@', '=@', '=='],
+                    'description' => ['@@', '=@'],
                     'creator' => ['@@', '=@', '=='],
                     'creator_email' => ['@@', '=@', '=='],
                     'owner' => ['@@', '=@', '=='],
@@ -108,6 +109,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 return [
                     'class_name' => sprintf('sometimes|in:%s', implode(',', PromoCodesConstants::$valid_class_names)),
                     'code' => 'sometimes|string',
+                    'description' => 'sometimes|string',
                     'creator' => 'sometimes|string',
                     'creator_email' => 'sometimes|string',
                     'owner' => 'sometimes|string',
@@ -162,6 +164,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             function () {
                 return [
                     'code' => ['@@', '=@', '=='],
+                    'description' => ['@@', '=@'],
                     'creator' => ['@@', '=@', '=='],
                     'creator_email' => ['@@', '=@', '=='],
                     'owner' => ['@@', '=@', '=='],
@@ -177,6 +180,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 return [
                     'class_name' => sprintf('sometimes|in:%s', implode(',', PromoCodesConstants::$valid_class_names)),
                     'code' => 'sometimes|string',
+                    'description' => 'sometimes|string',
                     'creator' => 'sometimes|string',
                     'creator_email' => 'sometimes|string',
                     'owner' => 'sometimes|string',

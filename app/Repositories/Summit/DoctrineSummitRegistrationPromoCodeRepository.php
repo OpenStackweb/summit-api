@@ -67,6 +67,7 @@ class DoctrineSummitRegistrationPromoCodeRepository
     {
         return [
             'code'          => 'pc.code:json_string',
+            'description'   => 'pc.description:json_string',
             'sponsor' => new DoctrineFilterMapping
             (
                 "(spnr.name :operator :value) OR (spnr2.name :operator :value)"

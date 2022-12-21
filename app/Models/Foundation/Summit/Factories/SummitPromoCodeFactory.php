@@ -103,6 +103,9 @@ final class SummitPromoCodeFactory
         if(isset($data['code']))
             $promo_code->setCode(trim($data['code']));
 
+        if(isset($data['description']))
+            $promo_code->setDescription(trim($data['description']));
+
         if(isset($data['quantity_available']))
             $promo_code->setQuantityAvailable(intval($data['quantity_available']));
 

@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\QueryBuilder;
 use models\summit\IOrderConstants;
@@ -52,22 +53,24 @@ final class DoctrineSummitAttendeeTicketRepository
     protected function getFilterMappings()
     {
         return [
-            'id'                  => 'e.id:json_int',
-            'number'              => 'e.number:json_string',
-            'is_active'           => 'e.is_active',
-            'order_number'        => 'o.number:json_string',
-            'owner_name'          => "COALESCE(LOWER(CONCAT(a.first_name, ' ', a.surname)),LOWER(CONCAT(m.first_name, ' ', m.last_name)))",
-            'owner_company'       => 'a.company_name:json_string',
-            'owner_first_name'    => "COALESCE(LOWER(a.first_name),LOWER(m.first_name))",
-            'owner_last_name'     => "COALESCE(LOWER(a.surname),LOWER(m.last_name))",
-            'owner_email'         => ['m.email:json_string', 'm.second_email:json_string', 'm.third_email:json_string','a.email:json_string'],
-            'summit_id'           => 's.id:json_int',
-            'order_owner_id'      => 'ord_m.id:json_int',
-            'owner_id'            => 'a.id:json_int',
-            'member_id'           => 'm.id:json_int',
-            'order_id'            => 'o.id:json_int',
-            'status'              => 'e.status:json_string',
-            'promo_code_id'       => 'pc.id:json_int',
+            'id' => 'e.id:json_int',
+            'number' => 'e.number:json_string',
+            'is_active' => 'e.is_active',
+            'order_number' => 'o.number:json_string',
+            'owner_name' => "COALESCE(LOWER(CONCAT(a.first_name, ' ', a.surname)),LOWER(CONCAT(m.first_name, ' ', m.last_name)))",
+            'owner_company' => 'a.company_name:json_string',
+            'owner_first_name' => "COALESCE(LOWER(a.first_name),LOWER(m.first_name))",
+            'owner_last_name' => "COALESCE(LOWER(a.surname),LOWER(m.last_name))",
+            'owner_email' => ['m.email:json_string', 'm.second_email:json_string', 'm.third_email:json_string', 'a.email:json_string'],
+            'summit_id' => 's.id:json_int',
+            'order_owner_id' => 'ord_m.id:json_int',
+            'owner_id' => 'a.id:json_int',
+            'member_id' => 'm.id:json_int',
+            'order_id' => 'o.id:json_int',
+            'status' => 'e.status:json_string',
+            'promo_code_id' => 'pc.id:json_int',
+            'promo_code_description' => 'pc.description:json_string',
+            'promo_code' => 'pc.code:json_string',
             'has_requested_refund_requests' => new DoctrineSwitchFilterMapping([
                     '1' => new DoctrineCaseFilterMapping(
                         'true',
@@ -93,7 +96,7 @@ final class DoctrineSummitAttendeeTicketRepository
             'access_level_type_name' => 'al.name :operator :value',
             'ticket_type_id' => 'tt.id:json_int',
             'view_type_id' => 'avt.id:json_int',
-            'has_owner' =>  new DoctrineSwitchFilterMapping([
+            'has_owner' => new DoctrineSwitchFilterMapping([
                     '1' => new DoctrineCaseFilterMapping(
                         'true',
                         "a is not null"
@@ -104,7 +107,7 @@ final class DoctrineSummitAttendeeTicketRepository
                     ),
                 ]
             ),
-            'has_order_owner' =>  new DoctrineSwitchFilterMapping([
+            'has_order_owner' => new DoctrineSwitchFilterMapping([
                     '1' => new DoctrineCaseFilterMapping(
                         'true',
                         "ord_m is not null"
@@ -115,7 +118,7 @@ final class DoctrineSummitAttendeeTicketRepository
                     ),
                 ]
             ),
-            'has_badge' =>  new DoctrineSwitchFilterMapping([
+            'has_badge' => new DoctrineSwitchFilterMapping([
                     '1' => new DoctrineCaseFilterMapping(
                         'true',
                         "b is not null"
@@ -135,25 +138,26 @@ final class DoctrineSummitAttendeeTicketRepository
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null){
-        $query->join("e.order","o");
-        $query->join("o.summit","s");
-        $query->leftJoin("o.owner","ord_m");
-        $query->leftJoin("e.owner","a");
-        $query->leftJoin("e.badge","b");
-        $query->leftJoin("b.type","bt");
-        $query->leftJoin("bt.access_levels","al");
-        $query->leftJoin("a.member","m");
-        if($filter->hasFilter('final_amount')){
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
+    {
+        $query->join("e.order", "o");
+        $query->join("o.summit", "s");
+        $query->leftJoin("o.owner", "ord_m");
+        $query->leftJoin("e.owner", "a");
+        $query->leftJoin("e.badge", "b");
+        $query->leftJoin("b.type", "bt");
+        $query->leftJoin("bt.access_levels", "al");
+        $query->leftJoin("a.member", "m");
+        if ($filter->hasFilter('final_amount')) {
             $query = $query->leftJoin("e.applied_taxes", "ta");
         }
-        if($filter->hasFilter('ticket_type_id')){
+        if ($filter->hasFilter('ticket_type_id')) {
             $query = $query->join("e.ticket_type", "tt");
         }
-        if($filter->hasFilter('promo_code_id')){
+        if ($filter->hasFilter('promo_code_id')) {
             $query = $query->leftJoin("e.promo_code", "pc");
         }
-        if($filter->hasFilter('view_type_id')){
+        if ($filter->hasFilter('view_type_id')) {
             $query = $query->join("bt.allowed_view_types", "avt");
         }
         return $query;
@@ -165,12 +169,12 @@ final class DoctrineSummitAttendeeTicketRepository
     protected function getOrderMappings()
     {
         return [
-            'id'     => 'e.id',
+            'id' => 'e.id',
             'number' => 'e.number',
             'status' => 'e.status',
-            'owner_first_name'        => 'COALESCE(LOWER(a.first_name), LOWER(m.first_name))',
-            'owner_last_name'         => 'COALESCE(LOWER(a.surname), LOWER(m.last_name))',
-            "owner_name"         => <<<SQL
+            'owner_first_name' => 'COALESCE(LOWER(a.first_name), LOWER(m.first_name))',
+            'owner_last_name' => 'COALESCE(LOWER(a.surname), LOWER(m.last_name))',
+            "owner_name" => <<<SQL
 COALESCE(LOWER(CONCAT(a.first_name, ' ', a.surname)),LOWER(CONCAT(m.first_name, ' ', m.last_name)))
 SQL,
         ];
@@ -183,7 +187,7 @@ SQL,
      */
     public function getByExternalOrderIdAndExternalAttendeeId($external_order_id, $external_attendee_id)
     {
-        $query  = $this->getEntityManager()->createQueryBuilder()
+        $query = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e");
 
@@ -207,13 +211,13 @@ SQL,
         $external_attendee_id
     ): ?SummitAttendeeTicket
     {
-        $query  = $this->getEntityManager()->createQueryBuilder()
+        $query = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e");
 
         return $query
-            ->join("e.order","o")
-            ->join("e.owner","ow")
+            ->join("e.order", "o")
+            ->join("e.owner", "ow")
             ->where('o.external_id = :external_order_id')
             ->andWhere('ow.external_id = :external_attendee_id')
             ->setParameter('external_order_id', $external_order_id)
@@ -241,7 +245,7 @@ SQL,
      */
     public function existNumber(string $number): bool
     {
-       return $this->count(['number' => $number]) > 0;
+        return $this->count(['number' => $number]) > 0;
     }
 
     /**
@@ -264,7 +268,8 @@ SQL,
      * @param string $hash
      * @return SummitAttendeeTicket|null
      */
-    public function getByNumberExclusiveLock(string $number):?SummitAttendeeTicket{
+    public function getByNumberExclusiveLock(string $number): ?SummitAttendeeTicket
+    {
         return $this->getEntityManager()->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")
@@ -317,18 +322,18 @@ SQL,
     public function getBySummitAndExternalOrderIdAndExternalAttendeeIdExclusiveLock
     (
         Summit $summit,
-        $external_order_id,
-        $external_attendee_id
+               $external_order_id,
+               $external_attendee_id
     ): ?SummitAttendeeTicket
     {
-        $query  = $this->getEntityManager()->createQueryBuilder()
+        $query = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e");
 
         return $query
-            ->join("e.order","o")
-            ->join("o.summit","s")
-            ->join("e.owner","ow")
+            ->join("e.order", "o")
+            ->join("o.summit", "s")
+            ->join("e.owner", "ow")
             ->where('e.external_order_id = :external_order_id')
             ->andWhere('e.external_attendee_id = :external_attendee_id')
             ->andWhere('s.id = :summit_id')
@@ -346,16 +351,16 @@ SQL,
      * @param string $external_attendee_id
      * @return SummitAttendeeTicket|null
      */
-    public function getByExternalAttendeeIdExclusiveLock(Summit $summit, string $external_attendee_id):?SummitAttendeeTicket
+    public function getByExternalAttendeeIdExclusiveLock(Summit $summit, string $external_attendee_id): ?SummitAttendeeTicket
     {
-        $query  = $this->getEntityManager()->createQueryBuilder()
+        $query = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e");
 
         return $query
-            ->join("e.order","o")
-            ->join("o.summit","s")
-            ->join("e.owner","ow")
+            ->join("e.order", "o")
+            ->join("o.summit", "s")
+            ->join("e.owner", "ow")
             ->where('ow.external_id = :external_attendee_id')
             ->andWhere('s.id = :summit_id')
             ->setParameter('external_attendee_id', $external_attendee_id)
@@ -370,7 +375,8 @@ SQL,
      * @param QueryBuilder $query
      * @return QueryBuilder
      */
-    protected function applyExtraFilters(QueryBuilder $query){
+    protected function applyExtraFilters(QueryBuilder $query)
+    {
         $query = $query->andWhere("e.status <> :cancelled")->setParameter("cancelled", IOrderConstants::CancelledStatus);
         return $query;
     }

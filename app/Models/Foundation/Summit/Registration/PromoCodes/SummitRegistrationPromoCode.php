@@ -11,13 +11,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
+
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitRegistrationPromoCodeRepository")
  * @ORM\Table(name="SummitRegistrationPromoCode")
@@ -42,6 +44,12 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      * @var string
      */
     protected $code;
+
+    /**
+     * @ORM\Column(name="Description", type="string")
+     * @var string
+     */
+    protected $description;
 
     /**
      * @ORM\Column(name="ExternalId", type="string")
@@ -125,29 +133,32 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      */
     protected $allowed_ticket_types;
 
-    public function setSummit($summit){
+    public function setSummit($summit)
+    {
         $this->summit = $summit;
     }
 
     /**
      * @return Summit
      */
-    public function getSummit(){
+    public function getSummit()
+    {
         return $this->summit;
     }
 
-    public function clearSummit(){
+    public function clearSummit()
+    {
         $this->summit = null;
     }
 
     /**
      * @return int
      */
-    public function getSummitId(){
+    public function getSummitId()
+    {
         try {
             return $this->summit->getId();
-        }
-        catch(\Exception $ex){
+        } catch (\Exception $ex) {
             return 0;
         }
     }
@@ -164,10 +175,10 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      * @param $code
      * @throws ValidationException
      */
-    public function setCode(string $code):void
+    public function setCode(string $code): void
     {
         $new_code = strtoupper(trim($code));
-        if(empty($new_code))
+        if (empty($new_code))
             throw new ValidationException("code can not be empty!");
         $this->code = $new_code;
     }
@@ -239,29 +250,31 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     public function __construct()
     {
         parent::__construct();
-        $this->email_sent           = false;
-        $this->redeemed             = false;
-        $this->quantity_available   = 0;
-        $this->quantity_used        = 0;
-        $this->valid_since_date     = null;
-        $this->valid_until_date     = null;
-        $this->badge_features       = new ArrayCollection();
+        $this->email_sent = false;
+        $this->redeemed = false;
+        $this->quantity_available = 0;
+        $this->quantity_used = 0;
+        $this->valid_since_date = null;
+        $this->valid_until_date = null;
+        $this->badge_features = new ArrayCollection();
         $this->allowed_ticket_types = new ArrayCollection();
     }
 
     /**
      * @return bool
      */
-    public function canUse():bool {
-        if(!$this->hasQuantityAvailable()) return false;
+    public function canUse(): bool
+    {
+        if (!$this->hasQuantityAvailable()) return false;
         return $this->isLive();
     }
 
-    public function hasQuantityAvailable():bool{
+    public function hasQuantityAvailable(): bool
+    {
         $quantity_available = $this->quantity_available;
         $quantity_used = $this->quantity_used;
 
-        if($quantity_available > 0 && $quantity_available  <= $quantity_used) return false;
+        if ($quantity_available > 0 && $quantity_available <= $quantity_used) return false;
         return true;
     }
 
@@ -271,17 +284,19 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      * @return bool
      * @throw ValidationException
      */
-    public function checkSubject(string $email, ?string $company):bool{
+    public function checkSubject(string $email, ?string $company): bool
+    {
         return true;
     }
 
     /**
      * @return bool
      */
-    public function isLive():bool {
+    public function isLive(): bool
+    {
         // if valid period is not set , that is valid_since_date == valid_until_date == null , then promo code lives forever
         $now_utc = new \DateTime('now', new \DateTimeZone('UTC'));
-        if(!is_null($this->valid_since_date) && !is_null($this->valid_until_date) && ($now_utc < $this->valid_since_date || $now_utc > $this->valid_until_date)){
+        if (!is_null($this->valid_since_date) && !is_null($this->valid_until_date) && ($now_utc < $this->valid_since_date || $now_utc > $this->valid_until_date)) {
             return false;
         }
         return true;
@@ -291,7 +306,8 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      * @param int $usage
      * @throws ValidationException
      */
-    public function addUsage(int $usage){
+    public function addUsage(int $usage)
+    {
 
         $quantity_used = $this->quantity_used;
         $quantity_available = $this->quantity_available;
@@ -310,7 +326,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
 
         $newVal = $quantity_used + $usage;
 
-        if($quantity_available > 0 && $newVal > $quantity_available){
+        if ($quantity_available > 0 && $newVal > $quantity_available) {
             throw new ValidationException
             (
                 sprintf
@@ -322,14 +338,15 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
             );
         }
 
-        $this->quantity_used  = $newVal;
+        $this->quantity_used = $newVal;
     }
 
     /**
      * @param int $to_restore
      * @throws ValidationException
      */
-    public function removeUsage(int $to_restore){
+    public function removeUsage(int $to_restore)
+    {
 
         $quantity_used = $this->quantity_used;
         $quantity_available = $this->quantity_available;
@@ -346,28 +363,29 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
             )
         );
 
-      $newVal = $quantity_used - $to_restore;
-      if($newVal < 0) // we want to restore more than we used
-          throw new ValidationException
-          (
-              sprintf
-              (
+        $newVal = $quantity_used - $to_restore;
+        if ($newVal < 0) // we want to restore more than we used
+            throw new ValidationException
+            (
+                sprintf
+                (
 
-                  "Can not restore %s usages from Promo Code %s (%s).",
-                  $to_restore,
-                  $this->code,
-                  $quantity_used
-              )
-          );
+                    "Can not restore %s usages from Promo Code %s (%s).",
+                    $to_restore,
+                    $this->code,
+                    $quantity_used
+                )
+            );
 
         $this->quantity_used = $newVal;
 
         Log::info(sprintf("SummitRegistrationPromoCode::removeUsage quantity_used %s", $this->quantity_used));
     }
 
-    public function canBeAppliedTo(SummitTicketType $ticketType):bool{
+    public function canBeAppliedTo(SummitTicketType $ticketType): bool
+    {
         Log::debug(sprintf("SummitRegistrationPromoCode::canBeAppliedTo Ticket type %s.", $ticketType->getId()));
-        if($this->allowed_ticket_types->count() > 0){
+        if ($this->allowed_ticket_types->count() > 0) {
             $criteria = Criteria::create();
             $criteria->where(Criteria::expr()->eq('id', intval($ticketType->getId())));
             return $this->allowed_ticket_types->matching($criteria)->count() > 0;
@@ -375,18 +393,19 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         return true;
     }
 
-    public function setSourceAdmin(){
+    public function setSourceAdmin()
+    {
         $this->source = 'ADMIN';
     }
 
     /**
      * @return int
      */
-    public function getCreatorId(){
+    public function getCreatorId()
+    {
         try {
-            return is_null($this->creator) ? 0: $this->creator->getId();
-        }
-        catch(\Exception $ex){
+            return is_null($this->creator) ? 0 : $this->creator->getId();
+        } catch (\Exception $ex) {
             return 0;
         }
     }
@@ -394,7 +413,8 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function hasCreator(){
+    public function hasCreator()
+    {
         return $this->getCreatorId() > 0;
     }
 
@@ -403,28 +423,31 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getClassName(){
+    public function getClassName()
+    {
         return self::ClassName;
     }
 
     public static $metadata = [
-        'class_name'           => self::ClassName,
-        'code'                 => 'string',
-        'email_sent'           => 'boolean',
-        'redeemed'             => 'boolean',
-        'quantity_available'   => 'integer',
-        'valid_since_date'     => 'datetime',
-        'valid_until_date'     => 'datetime',
-        'source'               => ['CSV','ADMIN'],
-        'summit_id'            => 'integer',
-        'creator_id'           => 'integer',
+        'class_name' => self::ClassName,
+        'code' => 'string',
+        'description' => 'string',
+        'email_sent' => 'boolean',
+        'redeemed' => 'boolean',
+        'quantity_available' => 'integer',
+        'valid_since_date' => 'datetime',
+        'valid_until_date' => 'datetime',
+        'source' => ['CSV', 'ADMIN'],
+        'summit_id' => 'integer',
+        'creator_id' => 'integer',
         'allowed_ticket_types' => 'array',
     ];
 
     /**
      * @return array
      */
-    public static function getMetadata(){
+    public static function getMetadata()
+    {
         return self::$metadata;
     }
 
@@ -444,7 +467,8 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         return $this->allowed_ticket_types;
     }
 
-    public function getQuantityUsed():int{
+    public function getQuantityUsed(): int
+    {
         return $this->quantity_used;
     }
 
@@ -462,7 +486,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      */
     public function setQuantityAvailable(int $quantity_available): void
     {
-        if($quantity_available < 0)
+        if ($quantity_available < 0)
             throw new ValidationException("quantity_available should be greater than zero.");
         $this->quantity_available = $quantity_available;
     }
@@ -502,32 +526,36 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     /**
      * @param SummitTicketType $ticket_type
      */
-    public function addAllowedTicketType(SummitTicketType $ticket_type){
-        if($this->allowed_ticket_types->contains($ticket_type)) return;
+    public function addAllowedTicketType(SummitTicketType $ticket_type)
+    {
+        if ($this->allowed_ticket_types->contains($ticket_type)) return;
         $this->allowed_ticket_types->add($ticket_type);
     }
 
     /**
      * @param SummitTicketType $ticket_type
      */
-    public function removeAllowedTicketType(SummitTicketType $ticket_type){
-        if(!$this->allowed_ticket_types->contains($ticket_type)) return;
+    public function removeAllowedTicketType(SummitTicketType $ticket_type)
+    {
+        if (!$this->allowed_ticket_types->contains($ticket_type)) return;
         $this->allowed_ticket_types->removeElement($ticket_type);
     }
 
     /**
      * @param SummitBadgeFeatureType $feature_type
      */
-    public function addBadgeFeatureType(SummitBadgeFeatureType $feature_type){
-        if($this->badge_features->contains($feature_type)) return;
+    public function addBadgeFeatureType(SummitBadgeFeatureType $feature_type)
+    {
+        if ($this->badge_features->contains($feature_type)) return;
         $this->badge_features->add($feature_type);
     }
 
     /**
      * @param SummitBadgeFeatureType $feature_type
      */
-    public function removeBadgeFeatureType(SummitBadgeFeatureType $feature_type){
-        if(!$this->badge_features->contains($feature_type)) return;
+    public function removeBadgeFeatureType(SummitBadgeFeatureType $feature_type)
+    {
+        if (!$this->badge_features->contains($feature_type)) return;
         $this->badge_features->removeElement($feature_type);
     }
 
@@ -536,9 +564,10 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      * @return SummitAttendeeTicket
      * @throws ValidationException
      */
-    public function applyTo(SummitAttendeeTicket $ticket):SummitAttendeeTicket{
+    public function applyTo(SummitAttendeeTicket $ticket): SummitAttendeeTicket
+    {
         $badge = $ticket->hasBadge() ? $ticket->getBadge() : null;
-        if(is_null($badge))
+        if (is_null($badge))
             throw new ValidationException(sprintf("Ticket %s has not badge set.", $ticket->getId()));
         // apply the promo code code to badge
         $badge->applyPromoCode($this);
@@ -562,4 +591,19 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         $this->external_id = $external_id;
     }
 
+    /**
+     * @return string
+     */
+    public function getDescription(): string
+    {
+        return $this->description;
+    }
+
+    /**
+     * @param string $description
+     */
+    public function setDescription(string $description): void
+    {
+        $this->description = $description;
+    }
 }

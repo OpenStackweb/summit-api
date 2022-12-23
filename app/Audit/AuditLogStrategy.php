@@ -96,7 +96,8 @@ class AuditLogStrategy
                     $formatter = new EntityDeletionAuditLogFormatter();
                     break;
                 case self::EVENT_ENTITY_UPDATE:
-                    $formatter = new EntityUpdateAuditLogFormatter();
+                    $child_entity_formatter = ChildEntityFormatterFactory::build($subject);
+                    $formatter = new EntityUpdateAuditLogFormatter($child_entity_formatter);
                     break;
             }
 

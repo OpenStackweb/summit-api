@@ -154,7 +154,7 @@ final class DoctrineSummitAttendeeTicketRepository
         if ($filter->hasFilter('ticket_type_id')) {
             $query = $query->join("e.ticket_type", "tt");
         }
-        if ($filter->hasFilter('promo_code_id')) {
+        if ($filter->hasFilter('promo_code_id') || $filter->hasFilter('promo_code_description') || $filter->hasFilter('promo_code') ) {
             $query = $query->leftJoin("e.promo_code", "pc");
         }
         if ($filter->hasFilter('view_type_id')) {

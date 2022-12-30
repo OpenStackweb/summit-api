@@ -25,7 +25,7 @@ class PresentationActionAuditLogFormatter implements IChildEntityAuditLogFormatt
     /**
      * @inheritDoc
      */
-    public function format($subject, string $child_entity_action_type, ?string $additional_info): ?string {
+    public function format($subject, string $child_entity_action_type, ?string $additional_info = ""): ?string {
         switch ($child_entity_action_type) {
             case IChildEntityAuditLogFormatter::CHILD_ENTITY_CREATION:
                 $status_desc = $subject->isCompleted() ? "complete" : "incomplete";

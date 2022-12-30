@@ -25,7 +25,7 @@ class PresentationExtraQuestionAnswerAuditLogFormatter implements IChildEntityAu
     /**
      * @inheritDoc
      */
-    public function format($subject, string $child_entity_action_type, ?string $additional_info): ?string {
+    public function format($subject, string $child_entity_action_type, ?string $additional_info = ""): ?string {
         switch ($child_entity_action_type) {
             case IChildEntityAuditLogFormatter::CHILD_ENTITY_CREATION:
                 return "A new PresentationExtraQuestionAnswer for Question \"{$subject->getQuestion()->getName()} ({$subject->getQuestion()->getID()})\" and value \"{$subject->getValue()}\" was added to the collection";

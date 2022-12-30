@@ -32,5 +32,5 @@ interface IChildEntityAuditLogFormatter
      * @param string|null $additional_info
      * @return string|null
      */
-    public function format($subject, string $child_entity_action_type, ?string $additional_info):?string;
+    public function format($subject, string $child_entity_action_type, ?string $additional_info = ""):?string;
 }

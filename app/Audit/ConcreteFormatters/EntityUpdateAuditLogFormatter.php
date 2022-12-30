@@ -86,7 +86,10 @@ class EntityUpdateAuditLogFormatter implements IAuditLogFormatter
                 $old_value = print_r($old_value, true);
                 $new_value = print_r($new_value, true);
             }
-            $res[] = "Property \"{$prop_name}\" of entity \"{$class_name}\" has changed from \"{$old_value}\" to \"{$new_value}\"";
+
+            if ($old_value != $new_value) {
+                $res[] = "Property \"{$prop_name}\" of entity \"{$class_name}\" has changed from \"{$old_value}\" to \"{$new_value}\"";
+            }
         }
 
         if (count($res) == 0) return null;

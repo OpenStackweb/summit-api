@@ -896,4 +896,38 @@ CSV;
         $content = $response->getContent();
         $this->assertResponseStatus(412);
     }
+
+    public function testGetAllTicketsByPromoCodeTag()
+    {
+        $params = [
+            'id' => 3343,
+            'page' => 1,
+            'per_page' => 10,
+            'filter' => [
+                'promo_code_tag_id==23',
+            ],
+            'order' => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitTicketApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $tickets = json_decode($content);
+        $this->assertTrue(!is_null($tickets));
+        return $tickets;
+    }
 }

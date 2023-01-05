@@ -23,10 +23,7 @@ use App\Repositories\SilverStripeDoctrineRepository;
 use models\summit\SummitAttendeeTicketRefundRequest;
 use models\utils\IEntity;
 use utils\DoctrineCaseFilterMapping;
-use utils\DoctrineFilterMapping;
 use utils\DoctrineHavingFilterMapping;
-use utils\DoctrineJoinFilterMapping;
-use utils\DoctrineLeftJoinFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
 
@@ -71,6 +68,8 @@ final class DoctrineSummitAttendeeTicketRepository
             'promo_code_id' => 'pc.id:json_int',
             'promo_code_description' => 'pc.description:json_string',
             'promo_code' => 'pc.code:json_string',
+            'promo_code_tag_id' => 'pct.id:json_int',
+            'promo_code_tag' => 'pct.tag:json_string',
             'has_requested_refund_requests' => new DoctrineSwitchFilterMapping([
                     '1' => new DoctrineCaseFilterMapping(
                         'true',
@@ -156,6 +155,12 @@ final class DoctrineSummitAttendeeTicketRepository
         }
         if ($filter->hasFilter('promo_code_id')) {
             $query = $query->leftJoin("e.promo_code", "pc");
+        }
+        if ($filter->hasFilter('promo_code_tag_id') || $filter->hasFilter('promo_code_tag')) {
+            if (!collect($query->getAllAliases())->contains('pc')) {
+                $query = $query->leftJoin("e.promo_code", "pc");
+            }
+            $query = $query->leftJoin("pc.tags", "pct");
         }
         if ($filter->hasFilter('view_type_id')) {
             $query = $query->join("bt.allowed_view_types", "avt");

@@ -136,10 +136,11 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
 
     /**
      * @ORM\ManyToMany(targetEntity="models\main\Tag", cascade={"persist"}, inversedBy="events", fetch="EXTRA_LAZY")
-     * @ORM\JoinTable(name="SummitRegistrationPromoCode_Tags,
+     * @ORM\JoinTable(name="SummitRegistrationPromoCode_Tags",
      *      joinColumns={@ORM\JoinColumn(name="SummitRegistrationPromoCodeID", referencedColumnName="ID")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="TagID", referencedColumnName="ID")}
      *      )
+     * @var Tag[]
      */
     private $tags;
 

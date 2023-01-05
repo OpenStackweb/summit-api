@@ -11,6 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\Many2OneExpandSerializer;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 use models\summit\SummitRegistrationPromoCode;
 /**
  * Class SummitRegistrationPromoCodeSerializer
@@ -35,6 +38,7 @@ class SummitRegistrationPromoCodeSerializer extends SilverStripeSerializer
     protected static $allowed_relations = [
         'badge_features',
         'allowed_ticket_types',
+        'tags',
     ];
 
     /**
@@ -51,9 +55,8 @@ class SummitRegistrationPromoCodeSerializer extends SilverStripeSerializer
         $code            = $this->object;
         if(!$code instanceof SummitRegistrationPromoCode) return [];
         $values          = parent::serialize($expand, $fields, $relations, $params);
-        $serializer_type = SerializerRegistry::SerializerType_Public;
 
-        if(in_array('badge_features', $relations)) {
+        if(in_array('badge_features', $relations) && !isset($values['badge_features'])) {
             $features = [];
             foreach ($code->getBadgeFeatures() as $feature) {
                 $features[] = $feature->getId();
@@ -61,7 +64,7 @@ class SummitRegistrationPromoCodeSerializer extends SilverStripeSerializer
             $values['badge_features'] = $features;
         }
 
-        if(in_array('allowed_ticket_types', $relations)) {
+        if(in_array('allowed_ticket_types', $relations) && !isset($values['allowed_ticket_types'])) {
             $ticket_types = [];
             foreach ($code->getAllowedTicketTypes() as $ticket_type) {
                 $ticket_types[] = $ticket_type->getId();
@@ -69,46 +72,33 @@ class SummitRegistrationPromoCodeSerializer extends SilverStripeSerializer
             $values['allowed_ticket_types'] = $ticket_types;
         }
 
-        if(isset($params['serializer_type']))
-            $serializer_type = $params['serializer_type'];
-
-        if (!empty($expand)) {
-            foreach (explode(',', $expand) as $relation) {
-                switch (trim($relation)) {
-                    case 'creator': {
-                        if($code->hasCreator()){
-                            unset($values['creator_id']);
-                            $values['creator'] = SerializerRegistry::getInstance()->getSerializer
-                            (
-                                $code->getCreator(),
-                                $serializer_type
-                            )->serialize($expand);
-                        }
-                    }
-                    break;
-                    case 'badge_features': {
-                        unset($values['badge_features']);
-                        $features = [];
-                        foreach ($code->getBadgeFeatures() as $feature) {
-                            $features[] = SerializerRegistry::getInstance()->getSerializer($feature)->serialize($expand);
-                        }
-                        $values['badge_features'] = $features;
-                    }
-                        break;
-                    case 'allowed_ticket_types': {
-                        unset($values['allowed_ticket_types']);
-
-                        $ticket_types = [];
-                        foreach ($code->getAllowedTicketTypes() as $ticket_type) {
-                            $ticket_types[] = SerializerRegistry::getInstance()->getSerializer($ticket_type)->serialize($expand);
-                        }
-                        $values['allowed_ticket_types'] = $ticket_types;
-                    }
-                    break;
-                }
+        if(in_array('tags', $relations) && !isset($values['tags'])) {
+            $tags = [];
+            foreach ($code->getTags() as $tag) {
+                $tags[] = $tag->getId();
             }
+            $values['tags'] = $tags;
         }
-
         return $values;
     }
+
+    protected static $expand_mappings = [
+        'creator' => [
+            'type' => One2ManyExpandSerializer::class,
+            'getter' => 'getCreator',
+            'has' => 'hasCreator',
+        ],
+        'badge_features' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getBadgeFeatures',
+        ],
+        'allowed_ticket_types' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getAllowedTicketTypes',
+        ],
+        'tags' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getTags',
+        ],
+    ];
 }

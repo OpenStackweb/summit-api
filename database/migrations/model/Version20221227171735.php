@@ -32,8 +32,6 @@ class Version20221227171735 extends AbstractMigration
 
                 $table->bigInteger("ID", true, false);
                 $table->primary("ID");
-                $table->timestamp('Created');
-                $table->timestamp('LastEdited');
 
                 $table->integer("SummitRegistrationPromoCodeID", false, false)->setNotnull(false)->setDefault('NULL');
                 $table->index("SummitRegistrationPromoCodeID", "SummitRegistrationPromoCodeID");

@@ -233,7 +233,7 @@ final class SummitPromoCodeService
 
             $promo_code = SummitPromoCodeFactory::populate($promo_code, $summit, $data, $this->getPromoCodeParams($summit, $data));
 
-            if (!is_null($current_user))
+            if (!is_null($current_user) && !$promo_code->hasCreator())
                 $promo_code->setCreator($current_user);
 
             $promo_code->setSourceAdmin();

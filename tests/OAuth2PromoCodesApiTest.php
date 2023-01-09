@@ -632,4 +632,40 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($promo_code));
         return $promo_code;
     }
+
+    public function testAddTagsToPromoCode($summit_id  = 3343, $promo_code_id = 1, $track_id = 39330){
+
+        $params = [
+            'id'            => $summit_id,
+            'promo_code_id' => $promo_code_id,
+            'expand'        => 'creator,tags,allowed_ticket_types,badge_features'
+        ];
+
+        $data = [
+            'class_name' => \models\summit\SummitRegistrationPromoCode::ClassName,
+            'tags'           => ['Artificial Intelligence']
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitPromoCodesApiController@updatePromoCodeBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $promo_code = json_decode($content);
+        $this->assertTrue(!is_null($promo_code));
+        return $promo_code;
+    }
 }

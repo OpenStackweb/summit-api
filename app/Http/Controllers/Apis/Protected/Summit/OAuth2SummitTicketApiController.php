@@ -113,6 +113,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'promo_code_id' => ['=='],
                     'promo_code' => ['==','@@', '=@'],
                     'promo_code_description' => ['@@', '=@'],
+                    'promo_code_tag_id' => ['=='],
+                    'promo_code_tag' => ['==','@@', '=@'],
                     'final_amount' => ['==', '<>','>=','>'],
                 ];
             },
@@ -141,6 +143,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'promo_code_id' => 'sometimes|integer',
                     'promo_code' => 'sometimes|string',
                     'promo_code_description' => 'sometimes|string',
+                    'promo_code_tag_id' => 'sometimes|integer',
+                    'promo_code_tag' => 'sometimes|string',
                     'final_amount' => 'sometimes|numeric',
                 ];
             },

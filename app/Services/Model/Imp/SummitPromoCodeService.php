@@ -26,7 +26,9 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\ICompanyRepository;
 use models\main\IMemberRepository;
+use models\main\ITagRepository;
 use models\main\Member;
+use models\main\Tag;
 use models\summit\IOwnablePromoCode;
 use models\summit\ISpeakerRepository;
 use models\summit\ISummitRepository;
@@ -82,11 +84,17 @@ final class SummitPromoCodeService
     private $ticket_repository;
 
     /**
+     * @var ITagRepository
+     */
+    private $tag_repository;
+
+    /**
      * @param IMemberRepository $member_repository
      * @param ICompanyRepository $company_repository
      * @param ISpeakerRepository $speaker_repository
      * @param ISummitRepository $summit_repository
      * @param ISummitAttendeeTicketRepository $ticket_repository
+     * @param ITagRepository $tag_repository
      * @param ISummitRegistrationPromoCodeRepository $repository
      * @param ITransactionService $tx_service
      */
@@ -97,6 +105,7 @@ final class SummitPromoCodeService
         ISpeakerRepository  $speaker_repository,
         ISummitRepository   $summit_repository,
         ISummitAttendeeTicketRepository $ticket_repository,
+        ITagRepository      $tag_repository,
         ISummitRegistrationPromoCodeRepository $repository,
         ITransactionService $tx_service
     )
@@ -107,6 +116,7 @@ final class SummitPromoCodeService
         $this->speaker_repository = $speaker_repository;
         $this->summit_repository = $summit_repository;
         $this->ticket_repository = $ticket_repository;
+        $this->tag_repository = $tag_repository;
         $this->repository = $repository;
     }
 
@@ -229,6 +239,20 @@ final class SummitPromoCodeService
                 if (!is_null($old_promo_code) && $old_promo_code->getId() != $promo_code_id)
                     throw new ValidationException(sprintf("Promo Code %s already exits on summit id %s for promo code id %s.", trim($data['code']), $summit->getId(), $old_promo_code->getId()));
 
+            }
+
+            // tags
+            if (isset($data['tags'])) {
+                $promo_code->clearTags();
+
+                foreach ($data['tags'] as $tag_value) {
+                    $tag = $this->tag_repository->getByTag($tag_value);
+
+                    if (is_null($tag)) {
+                        $tag = new Tag($tag_value);
+                    }
+                    $promo_code->addTag($tag);
+                }
             }
 
             $promo_code = SummitPromoCodeFactory::populate($promo_code, $summit, $data, $this->getPromoCodeParams($summit, $data));

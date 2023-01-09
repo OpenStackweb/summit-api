@@ -2443,4 +2443,44 @@ SQL;
         $this->company = $company;
     }
 
+    /**
+     * @param string $github_user
+     */
+    public function setGithubUser(string $github_user): void
+    {
+        $this->github_user = $github_user;
+    }
+
+    /**
+     * @param string $linked_in_profile
+     */
+    public function setLinkedInProfile(string $linked_in_profile): void
+    {
+        $this->linked_in_profile = $linked_in_profile;
+    }
+
+    /**
+     * @param string $irc_handle
+     */
+    public function setIrcHandle(string $irc_handle): void
+    {
+        $this->irc_handle = $irc_handle;
+    }
+
+    /**
+     * @param string $twitter_handle
+     */
+    public function setTwitterHandle(string $twitter_handle): void
+    {
+        $this->twitter_handle = $twitter_handle;
+    }
+
+    /**
+     * @param string $gender
+     */
+    public function setGender(string $gender): void
+    {
+        $this->gender = $gender;
+    }
+
 }

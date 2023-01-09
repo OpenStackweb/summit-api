@@ -72,6 +72,11 @@ final class MemberFactory
         $member->setThirdEmail($payload['third_email'] ?? '');
         $member->setCountry($payload['country_iso_code'] ?? '');
         $member->setState($payload['state'] ?? '');
+        $member->setGithubUser($payload['github_user'] ?? '');
+        $member->setLinkedInProfile($payload['linked_in_profile'] ?? '');
+        $member->setIrcHandle($payload['irc'] ?? '');
+        $member->setGender($payload['gender'] ?? '');
+        $member->setTwitterHandle($payload['twitter_name'] ?? '');
 
         if(isset($user_data['pic']))
             $member->setExternalPic($payload['pic']);

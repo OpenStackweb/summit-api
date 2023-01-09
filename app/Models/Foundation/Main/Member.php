@@ -46,6 +46,7 @@ use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * @ORM\Table(name="`Member`")
+ * @ORM\HasLifecycleCallbacks
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineMemberRepository")
  * Class Member
  * @package models\main

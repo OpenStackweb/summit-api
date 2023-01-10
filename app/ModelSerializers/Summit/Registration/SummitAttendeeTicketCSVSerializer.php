@@ -31,7 +31,7 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
         'OwnerEmail' => 'attendee_email:json_string',
         'OwnerCompany' => 'attendee_company:json_string',
         'ExternalAttendeeId' => 'external_attendee_id:json_string',
-        'BoughtDate' => 'bought_date:datetime_epoch',
+        'BoughtDate' => 'purchase_date:datetime_epoch',
         'TicketTypeId' => 'ticket_type_id:json_int',
         'TicketTypeName' => 'ticket_type_name:json_string',
         'OrderId' => 'order_id:json_int',

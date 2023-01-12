@@ -17,6 +17,7 @@ use App\Http\Utils\MultipartFormDataCleaner;
 use App\Jobs\VideoStreamUrlMUXProcessingForSummitJob;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitPresentationCommentRepository;
+use App\Models\Foundation\Summit\SelectionPlan;
 use App\ModelSerializers\SerializerUtils;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request as LaravelRequest;
@@ -37,7 +38,9 @@ use ModelSerializers\SerializerRegistry;
 use services\model\IPresentationService;
 use utils\Filter;
 use utils\FilterElement;
+use utils\FilterParser;
 use utils\PagingInfo;
+use utils\PagingResponse;
 
 /**
  * Class OAuth2PresentationApiController
@@ -1344,6 +1347,71 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($comment)->serialize
             (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $presentation_id
+     * @return mixed
+     */
+    public function getPresentationsExtraQuestions($summit_id, $presentation_id){
+        return $this->processRequest(function() use($summit_id, $presentation_id){
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $presentation = $summit->getEvent(intval($presentation_id));
+
+            if(!$presentation instanceof Presentation) return $this->error404();
+
+            $filter = null;
+
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::get('filter'), [
+                    'selection_plan_id' => ['=='],
+                ]);
+            }
+
+            if (is_null($filter)) $filter = new Filter();
+
+            $filter->validate([
+                'selection_plan_id' => 'sometimes|integer'
+            ]);
+
+            $selection_plan_id = 'all';
+            if($filter->hasFilter('selection_plan_id')){
+                $element = $filter->getUniqueFilter('selection_plan_id');
+                $selection_plan_id = intval($element->getRawValue());
+            }
+
+            $selection_plan = $selection_plan_id === 'all' ? null : $summit->getSelectionPlanById(intval($selection_plan_id));
+            $res = [];
+
+            foreach ($presentation->getAllExtraQuestionAnswers() as $answer){
+                if($selection_plan instanceof SelectionPlan){
+                    if($selection_plan->isExtraQuestionAssigned($answer->getQuestion())){
+                        $res[] = $answer;
+                    }
+                    continue;
+                }
+                $res[] = $answer;
+            }
+
+            $response    = new PagingResponse
+            (
+                count($res),
+                count($res),
+                1,
+                1,
+                $res
+            );
+
+            return $this->ok($response->toArray(
                 SerializerUtils::getExpand(),
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations()

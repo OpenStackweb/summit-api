@@ -702,6 +702,11 @@ Route::group(array('prefix' => 'summits'), function () {
                     });
                 });
 
+                // extra-questions
+                Route::group(['prefix' => 'extra-questions'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@getPresentationsExtraQuestions']);
+                });
+
                 // slides
                 Route::group(['prefix' => 'slides'], function () {
                     Route::get('', 'OAuth2PresentationApiController@getPresentationSlides');

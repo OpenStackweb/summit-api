@@ -5455,6 +5455,21 @@ class ApiEndpointsSeeder extends Seeder
                     sprintf(SummitScopes::WritePresentationData, $current_realm)
                 ],
             ],
+            //extra-questions
+            [
+                'name' => 'get-presentation-extra-questions',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/extra-questions',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             //videos
             [
                 'name' => 'get-presentation-videos',

@@ -1738,6 +1738,10 @@ class Presentation extends SummitEvent
         return $res;
     }
 
+    public function getAllExtraQuestionAnswers(){
+        return $this->extra_question_answers;
+    }
+
     /**
      * @param SummitSelectionPlanExtraQuestionType $question
      * @return PresentationExtraQuestionAnswer|null

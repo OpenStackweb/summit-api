@@ -101,7 +101,7 @@ final class PresentationFactory
 
         $extra_questions = $payload['extra_questions'] ?? [];
 
-        if (count($extra_questions)) {
+        if ($presentation->hasSelectionPlan() && count($extra_questions)) {
             $res = $presentation->hadCompletedExtraQuestions($extra_questions);
             if (!$res) {
                 throw new ValidationException("You neglected to fill in all mandatory questions for the Presentation.");

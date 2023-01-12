@@ -2106,6 +2106,7 @@ SQL;
      */
     public function getExtraQuestions()
     {
+        if(!$this->hasSelectionPlan()) return [];
         return $this->selection_plan->getExtraQuestions()->map(function ($a){ return $a->getQuestionType();});
     }
 
@@ -2115,6 +2116,7 @@ SQL;
      */
     public function getQuestionById(int $questionId): ?ExtraQuestionType
     {
+        if(!$this->hasSelectionPlan()) return null;
         return $this->selection_plan->getExtraQuestionById($questionId);
     }
 

@@ -31,7 +31,7 @@ final class ProcessScheduleEntityLifeCycleEventService
 
 {
 
-    const CacheTTL = 5;
+    const CacheTTL = 2;
     /**
      * @var ISummitRepository
      */
@@ -94,7 +94,7 @@ final class ProcessScheduleEntityLifeCycleEventService
                 (
                     sprintf
                     (
-                        "ProcessScheduleEntityLifeCycleEventService::process %s %s %s %s alredy processed.",
+                        "ProcessScheduleEntityLifeCycleEventService::process %s %s %s %s already processed.",
                         $summit_id,
                         $entity_id,
                         $entity_type,
@@ -109,7 +109,7 @@ final class ProcessScheduleEntityLifeCycleEventService
                 (
                     sprintf
                     (
-                        "ProcessScheduleEntityLifeCycleEventService::process %s %s %s %s alredy processed.",
+                        "ProcessScheduleEntityLifeCycleEventService::process %s %s %s %s can not add value to cache ( already exists ).",
                         $summit_id,
                         $entity_id,
                         $entity_type,
@@ -137,6 +137,9 @@ final class ProcessScheduleEntityLifeCycleEventService
                 }
                 return;
             }
+
+            Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process publishing summit %s entity id %",
+                $summit_id, $entity_id));
 
             $this->rabbit_service->publish([
                 'summit_id' => $summit_id,

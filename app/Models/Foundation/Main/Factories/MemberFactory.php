@@ -78,7 +78,7 @@ final class MemberFactory
         $member->setGender($payload['gender'] ?? '');
         $member->setTwitterHandle($payload['twitter_name'] ?? '');
 
-        if(isset($user_data['pic']))
+        if(isset($payload['pic']))
             $member->setExternalPic($payload['pic']);
 
         return $member;

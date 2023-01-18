@@ -1,5 +1,6 @@
 <?php namespace ModelSerializers;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 
 /**
  * Copyright 2021 OpenStack Foundation
@@ -34,11 +35,19 @@ final class SummitSelectionPlanExtraQuestionTypeSerializer extends ExtraQuestion
     public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
     {
         $question = $this->object;
-        if (!$question instanceof ExtraQuestionType) return [];
+        if (!$question instanceof SummitSelectionPlanExtraQuestionType) return [];
         if (!count($relations)) $relations = $this->getAllowedRelations();
         $values = parent::serialize($expand, $fields, $relations, $params);
         if (isset($values['order']))
             unset($values['order']);
+
+        if(isset($params['selection_plan_id'])){
+            $selection_plan_id = intval($params['selection_plan_id']);
+            $order = $question->getOrderByAssignedSelectionPlan($selection_plan_id);
+            if(!is_null($order)){
+                $values['order'] = $order;
+            }
+        }
         return $values;
     }
 

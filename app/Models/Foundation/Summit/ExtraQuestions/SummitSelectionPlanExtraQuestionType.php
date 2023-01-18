@@ -48,4 +48,15 @@ class SummitSelectionPlanExtraQuestionType extends ExtraQuestionType
         return $this->assigned_selection_plans;
     }
 
+    /**
+     * @param int $selection_plan_id
+     * @return int|null
+     */
+    public function getOrderByAssignedSelectionPlan(int $selection_plan_id):?int{
+        $value = $this->assigned_selection_plans->filter(function($e) use($selection_plan_id){
+            return $e->getSelectionPlan()->getId() === $selection_plan_id;
+        })->first();
+        return $value === false ? null : $value->getOrder();
+    }
+
 }

@@ -67,8 +67,9 @@ final class DoctrineSummitSelectionPlanExtraQuestionTypeRepository
             'name'  => 'e.name',
             'label' => 'e.label',
         ];
+
         if(!is_null($filter) && $filter->hasFilter("selection_plan_id")){
-           $mappings['order'] = 'sp.order';
+           $mappings['order'] = 'a.order';
         }
         return $mappings;
     }

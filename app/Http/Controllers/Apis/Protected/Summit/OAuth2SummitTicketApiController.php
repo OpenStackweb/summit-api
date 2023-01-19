@@ -147,7 +147,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'promo_code_tag' => 'sometimes|string',
                     'final_amount' => 'sometimes|numeric',
                 ];
-            },
+            },'sometimes|string',
             function () {
                 return [
                     'id',
@@ -204,6 +204,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'view_type_id' => ['=='],
                     'promo_code_id' => ['=='],
                     'promo_code' => ['==','@@', '=@'],
+                    'promo_code_tag' => ['==','@@', '=@'],
+                    'promo_code_tag_id' => ['=='],
                     'promo_code_description' => ['@@', '=@'],
                     'final_amount' => ['==', '<>','>=','>'],
                 ];
@@ -232,7 +234,9 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'view_type_id' => 'sometimes|integer',
                     'promo_code_id' => 'sometimes|integer',
                     'promo_code' => 'sometimes|string',
+                    'promo_code_tag' => 'sometimes|string',
                     'promo_code_description' => 'sometimes|string',
+                    'promo_code_tag_id' => 'sometimes|integer',
                     'final_amount' => 'sometimes|numeric',
                 ];
             },

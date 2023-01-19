@@ -294,6 +294,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'currency',
                     'badge_type_id',
                     'badge_type_name',
+                    'promo_code_tags',
                 ];
 
                 foreach ($summit->getBadgeFeaturesTypes() as $featuresType) {

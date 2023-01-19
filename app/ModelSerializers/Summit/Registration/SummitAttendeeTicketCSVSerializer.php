@@ -92,6 +92,14 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
             $values['attendee_checked_in'] = $ticket->getOwner()->hasCheckedIn();
         }
 
+        if($ticket->hasPromoCode()) {
+            $tags = [];
+            foreach ($ticket->getPromoCode()->getTags() as $tag){
+                $tags[] = $tag->getTag();
+            }
+            $values['promo_code_tags'] = implode('|', $tags );
+        }
+
         return $values;
     }
 }

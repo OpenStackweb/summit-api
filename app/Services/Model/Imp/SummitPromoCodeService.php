@@ -210,6 +210,20 @@ final class SummitPromoCodeService
 
             $promo_code->setSourceAdmin();
 
+            // tags
+            if (isset($data['tags'])) {
+                $promo_code->clearTags();
+
+                foreach ($data['tags'] as $tag_value) {
+                    $tag = $this->tag_repository->getByTag($tag_value);
+
+                    if (is_null($tag)) {
+                        $tag = new Tag($tag_value);
+                    }
+                    $promo_code->addTag($tag);
+                }
+            }
+
             return $promo_code;
         });
     }

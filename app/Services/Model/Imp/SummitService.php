@@ -2923,7 +2923,7 @@ final class SummitService extends AbstractService implements ISummitService
         /*
             columns (min)
             * title
-            * abstract
+            * description
             * type_id (int) or type (string type name)
             * track_id (int) or track ( string track name)
          */
@@ -2935,9 +2935,9 @@ final class SummitService extends AbstractService implements ISummitService
                 throw new ValidationException('title column missing');
             }
 
-            if (!in_array("abstract", $header)) {
-                Log::warning("SummitService::importEventData abstract column is missing.");
-                throw new ValidationException('abstract column missing');
+            if (!in_array("description", $header)) {
+                Log::warning("SummitService::importEventData description column is missing.");
+                throw new ValidationException('description column missing');
             }
 
             $type_data_present = in_array("type_id", $header) ||
@@ -3051,9 +3051,9 @@ final class SummitService extends AbstractService implements ISummitService
                         $event->setTitle(html_entity_decode($title));
                     }
 
-                    if (isset($row['abstract'])) {
-                        $abstract = trim($row['abstract']);
-                        Log::debug(sprintf("SummitService::processEventData setting abstract %s", $abstract));
+                    if (isset($row['description'])) {
+                        $abstract = trim($row['description']);
+                        Log::debug(sprintf("SummitService::processEventData setting description %s", $abstract));
                         $event->setAbstract(html_entity_decode($abstract));
                     }
 
@@ -3152,31 +3152,31 @@ final class SummitService extends AbstractService implements ISummitService
 
                         if (!is_null($event_type) && $event_type instanceof PresentationType && $event_type->isUseSpeakers()) {
 
-                            $speakers = isset($row['speakers']) ? $row['speakers'] : '';
-                            Log::debug(sprintf("SummitService::processEventData event %s processing speakers %s", $event->getId(), $row['speakers']));
+                            $speakers = isset($row['speaker_emails']) ? $row['speaker_emails'] : '';
+                            Log::debug(sprintf("SummitService::processEventData event %s processing speaker_emails %s", $event->getId(), $speakers));
                             $speakers = explode('|', $speakers);
 
                             $speakers_names = [];
-                            if (isset($row["speakers_names"])) {
-                                $speakers_names = isset($row['speakers_names']) ?
-                                    $row['speakers_names'] : '';
-                                Log::debug(sprintf("SummitService::processEventData event %s processing speakers_names %s", $event->getId(), $row['speakers_names']));
+                            if (isset($row["speaker_fullnames"])) {
+                                $speakers_names = isset($row['speaker_fullnames']) ?
+                                    $row['speaker_fullnames'] : '';
+                                Log::debug(sprintf("SummitService::processEventData event %s processing speaker_fullnames %s", $event->getId(), $speakers_names));
                                 $speakers_names = explode('|', $speakers_names);
                             }
 
                             $speakers_companies = [];
-                            if (isset($row["speakers_companies"])) {
-                                $speakers_companies = isset($row['speakers_companies']) ?
-                                    $row['speakers_companies'] : '';
-                                Log::debug(sprintf("SummitService::processEventData event %s processing speakers_companies %s", $event->getId(), $row['speakers_companies']));
+                            if (isset($row["speaker_companies"])) {
+                                $speakers_companies = isset($row['speaker_companies']) ?
+                                    $row['speaker_companies'] : '';
+                                Log::debug(sprintf("SummitService::processEventData event %s processing speaker_companies %s", $event->getId(), $speakers_companies));
                                 $speakers_companies = explode('|', $speakers_companies);
                             }
 
                             $speakers_titles = [];
-                            if (isset($row["speakers_titles"])) {
-                                $speakers_titles = isset($row['speakers_titles']) ?
-                                    $row['speakers_titles'] : '';
-                                Log::debug(sprintf("SummitService::processEventData event %s processing speakers_titles %s", $event->getId(), $row['speakers_titles']));
+                            if (isset($row["speaker_titles"])) {
+                                $speakers_titles = isset($row['speaker_titles']) ?
+                                    $row['speaker_titles'] : '';
+                                Log::debug(sprintf("SummitService::processEventData event %s processing speaker_titles %s", $event->getId(), $speakers_titles));
                                 $speakers_titles = explode('|', $speakers_titles);
                             }
 

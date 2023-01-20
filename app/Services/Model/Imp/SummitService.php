@@ -3162,11 +3162,11 @@ final class SummitService
                                             'email' => $speaker_email
                                         ];
 
-                                        if(!empty($speaker_first_name)){
+                                        if(!empty($speaker_first_name) && $speaker_first_name != $speaker_email){
                                             $payload['first_name'] = $speaker_first_name;
                                         }
 
-                                        if(!empty($speaker_last_name)){
+                                        if(!empty($speaker_last_name) && $speaker_last_name != $speaker_email){
                                             $payload['last_name'] = $speaker_last_name;
                                         }
 

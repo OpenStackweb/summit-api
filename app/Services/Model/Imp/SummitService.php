@@ -3157,21 +3157,29 @@ final class SummitService
                                         $speaker = $this->speaker_service->addSpeaker($payload, null, false);
                                     } else {
                                         Log::debug(sprintf("SummitService::processEventData speaker %s already exists, updating ", $speaker_email));
+
                                         $payload = [
-                                            'first_name' => $speaker_first_name,
-                                            'last_name' => $speaker_last_name,
                                             'email' => $speaker_email
                                         ];
 
-                                        if (array_key_exists($idx, $speakers_companies)) {
+                                        if(!empty($speaker_first_name)){
+                                            $payload['first_name'] = $speaker_first_name;
+                                        }
+
+                                        if(!empty($speaker_last_name)){
+                                            $payload['last_name'] = $speaker_last_name;
+                                        }
+
+                                        if (array_key_exists($idx, $speakers_companies) && !empty($speakers_companies[$idx])) {
                                             $payload['company'] = $speakers_companies[$idx];
                                         }
 
-                                        if (array_key_exists($idx, $speakers_titles)) {
+                                        if (array_key_exists($idx, $speakers_titles) && !empty($speakers_titles[$idx])) {
                                             $payload['title'] = $speakers_titles[$idx];
                                         }
 
                                         Log::debug(sprintf("SummitService::processEventData updating speaker %s", json_encode($payload)));
+
                                         $this->speaker_service->updateSpeaker($speaker, $payload);
                                     }
 

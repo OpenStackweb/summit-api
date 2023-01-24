@@ -245,6 +245,8 @@ final class PresentationService
     {
         return $this->tx_service->transaction(function () use ($summit, $data) {
 
+            Log::debug(sprintf("PresentationService::submitPresentation summit %s payload %s", $summit->getId(), json_encode($data)));
+
             $member = ResourceServerContext::getCurrentUser(false);
             $selection_plan_id = $data['selection_plan_id'] ?? null;
             if (is_null($selection_plan_id))
@@ -291,7 +293,25 @@ final class PresentationService
             // check qty
 
             $limit = $current_selection_plan->getSubmissionLimitFor();
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "PresentationService::submitPresentation summit %s payload %s selection plan %s selection plan submission limit %s",
+                    $summit->getId(),
+                    json_encode($data),
+                    $current_selection_plan->getId(),
+                    $limit
+                )
+            );
+
             $presentations = [];
+
+            foreach ($current_speaker->getPresentationsBySelectionPlanAndRole($current_selection_plan, PresentationSpeaker::ROLE_CREATOR) as $p) {
+                if (isset($presentations[$p->getId()])) continue;
+                $presentations[$p->getId()] = $p->getId();
+            }
 
             foreach ($current_speaker->getPresentationsBySelectionPlanAndRole($current_selection_plan, PresentationSpeaker::ROLE_MODERATOR) as $p) {
                 if (isset($presentations[$p->getId()])) continue;
@@ -304,6 +324,18 @@ final class PresentationService
             }
 
             $count = count($presentations);
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "PresentationService::submitPresentation summit %s speaker %s (%s) presentations count %s",
+                    $summit->getId(),
+                    $current_speaker->getEmail(),
+                    $current_speaker->getId(),
+                    $count
+                )
+            );
 
             if ($count >= $limit)
                 throw new ValidationException(trans(

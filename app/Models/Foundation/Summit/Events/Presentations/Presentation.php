@@ -51,13 +51,13 @@ class Presentation extends SummitEvent
     const FieldAttendeesExpectedToLearn = 'attendees_expected_learnt';
     const FieldAttendingMedia = 'attending_media';
     const FieldWillAllSpeakersAttend = 'will_all_speakers_attend';
-
+    const FieldLinks = 'links';
 
     const AllowedFields = [
         //self::FieldProblemAddressed,
         self::FieldAttendeesExpectedToLearn,
         self::FieldAttendingMedia,
-        //self::FieldWillAllSpeakersAttend,
+        self::FieldLinks,
     ];
 
     /**

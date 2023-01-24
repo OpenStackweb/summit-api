@@ -80,7 +80,7 @@ class SummitEvent extends SilverstripeBaseModel
 
     const AllowedFields = [
         // self::FieldTitle,
-        // self::FieldAbstract,
+        self::FieldAbstract,
         self::FieldSocialDescription,
         self::FieldLevel,
     ];

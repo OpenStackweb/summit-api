@@ -12,25 +12,33 @@
  * limitations under the License.
  **/
 
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessExcerptEmail;
-use App\Jobs\Emails\Registration\Attendees\GenericSummitAttendeeEmail;
-use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
-use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use App\Models\Foundation\Summit\EmailFlows\SummitEmailFlowType;
+use App\Jobs\Emails\BookableRooms\BookableRoomReservationCanceledEmail;
+use App\Jobs\Emails\BookableRooms\BookableRoomReservationCreatedEmail;
+use App\Jobs\Emails\BookableRooms\BookableRoomReservationPaymentConfirmedEmail;
+use App\Jobs\Emails\BookableRooms\BookableRoomReservationRefundAcceptedEmail;
+use App\Jobs\Emails\BookableRooms\BookableRoomReservationRefundRequestedAdminEmail;
+use App\Jobs\Emails\BookableRooms\BookableRoomReservationRefundRequestedOwnerEmail;
 use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
-use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlowType;
-use LaravelDoctrine\ORM\Facades\Registry;
-use models\utils\SilverstripeBaseModel;
-// registration
-use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
+use App\Jobs\Emails\PresentationSelections\PresentationCategoryChangeRequestCreatedEmail;
+use App\Jobs\Emails\PresentationSelections\PresentationCategoryChangeRequestResolvedEmail;
+use App\Jobs\Emails\PresentationSelections\SpeakerEmail;
+use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
+use App\Jobs\Emails\PresentationSubmissions\Invitations\InviteSubmissionEmail;
+use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
+use App\Jobs\Emails\PresentationSubmissions\PresentationModeratorNotificationEmail;
+use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedAlternateEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedOnlyEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedRejectedEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateOnlyEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateRejectedEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessExcerptEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedOnlyEmail;
 use App\Jobs\Emails\RegisteredMemberOrderPaidMail;
-use App\Jobs\Emails\RevocationTicketEmail;
-use App\Jobs\Emails\SummitAttendeeTicketEmail;
-use App\Jobs\Emails\UnregisteredMemberOrderPaidMail;
-use App\Jobs\Emails\Registration\Reminders\SummitOrderReminderEmail;
-use App\Jobs\Emails\Registration\Reminders\SummitTicketReminderEmail;
+use App\Jobs\Emails\Registration\Attendees\GenericSummitAttendeeEmail;
+use App\Jobs\Emails\Registration\Invitations\InviteSummitRegistrationEmail;
+use App\Jobs\Emails\Registration\Invitations\ReInviteSummitRegistrationEmail;
+use App\Jobs\Emails\Registration\MemberPromoCodeEmail;
 use App\Jobs\Emails\Registration\Refunds\SummitOrderRefundAccepted;
 use App\Jobs\Emails\Registration\Refunds\SummitOrderRefundRequestAdmin;
 use App\Jobs\Emails\Registration\Refunds\SummitOrderRefundRequestOwner;
@@ -38,36 +46,31 @@ use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundAccepted;
 use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRejected;
 use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestAdmin;
 use App\Jobs\Emails\Registration\Refunds\SummitTicketRefundRequestOwner;
-use App\Jobs\Emails\Registration\MemberPromoCodeEmail;
+use App\Jobs\Emails\Registration\Reminders\SummitOrderReminderEmail;
+use App\Jobs\Emails\Registration\Reminders\SummitTicketReminderEmail;
 use App\Jobs\Emails\Registration\SpeakerPromoCodeEMail;
-use App\Jobs\Emails\Registration\Invitations\InviteSummitRegistrationEmail;
-use App\Jobs\Emails\Registration\Invitations\ReInviteSummitRegistrationEmail;
-// bookable rooms
-use App\Jobs\Emails\BookableRooms\BookableRoomReservationCanceledEmail;
-use App\Jobs\Emails\BookableRooms\BookableRoomReservationCreatedEmail;
-use App\Jobs\Emails\BookableRooms\BookableRoomReservationPaymentConfirmedEmail;
-use App\Jobs\Emails\BookableRooms\BookableRoomReservationRefundAcceptedEmail;
-use App\Jobs\Emails\BookableRooms\BookableRoomReservationRefundRequestedAdminEmail;
-use App\Jobs\Emails\BookableRooms\BookableRoomReservationRefundRequestedOwnerEmail;
-// schedule
+use App\Jobs\Emails\RevocationTicketEmail;
 use App\Jobs\Emails\Schedule\RSVPRegularSeatMail;
 use App\Jobs\Emails\Schedule\RSVPWaitListSeatMail;
 use App\Jobs\Emails\Schedule\ShareEventEmail;
+use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
+use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
+use App\Jobs\Emails\SummitAttendeeTicketEmail;
+use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
+use App\Jobs\Emails\UnregisteredMemberOrderPaidMail;
+use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlowType;
+use App\Models\Foundation\Summit\EmailFlows\SummitEmailFlowType;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use LaravelDoctrine\ORM\Facades\Registry;
+use models\utils\SilverstripeBaseModel;
+
+// registration
+// bookable rooms
+// schedule
 // Presentation Submission
-use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
-use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedAlternateEmail;
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedOnlyEmail;
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedRejectedEmail;
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateOnlyEmail;
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateRejectedEmail;
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedOnlyEmail;
-use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
-use App\Jobs\Emails\PresentationSubmissions\PresentationModeratorNotificationEmail;
 // Presentation Selections
-use App\Jobs\Emails\PresentationSelections\PresentationCategoryChangeRequestCreatedEmail;
-use App\Jobs\Emails\PresentationSelections\PresentationCategoryChangeRequestResolvedEmail;
-use App\Jobs\Emails\PresentationSelections\SpeakerEmail;
+
 /**
  * Class SummitEmailFlowTypeSeeder
  */
@@ -75,8 +78,6 @@ final class SummitEmailFlowTypeSeeder extends Seeder
 {
     public function run()
     {
-
-
         DB::setDefaultConnection("model");
         DB::table("SummitEmailFlowType")->delete();
         DB::table("SummitEmailEventFlowType")->delete();
@@ -84,7 +85,6 @@ final class SummitEmailFlowTypeSeeder extends Seeder
 
         self::seed();
     }
-
 
     public static function seed(){
         $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
@@ -332,6 +332,11 @@ final class SummitEmailFlowTypeSeeder extends Seeder
                 'name' => PresentationSpeakerSelectionProcessExcerptEmail::EVENT_NAME,
                 'slug' => PresentationSpeakerSelectionProcessExcerptEmail::EVENT_SLUG,
                 'default_email_template' => PresentationSpeakerSelectionProcessExcerptEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => InviteSubmissionEmail::EVENT_NAME,
+                'slug' => InviteSubmissionEmail::EVENT_SLUG,
+                'default_email_template' => InviteSubmissionEmail::DEFAULT_TEMPLATE
             ],
 
         ], $flow);

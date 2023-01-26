@@ -35,9 +35,9 @@ trait SummitOwned
     }
 
     /**
-     * @return Summit
+     * @return Summit|null
      */
-    public function getSummit():Summit{
+    public function getSummit():?Summit{
         return $this->summit;
     }
 

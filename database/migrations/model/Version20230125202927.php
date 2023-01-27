@@ -1,8 +1,6 @@
-<?php
-
-namespace Database\Migrations\Model;
+<?php namespace Database\Migrations\Model;
 /**
- * Copyright 2022 OpenStack Foundation
+ * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,10 +16,10 @@ use Doctrine\DBAL\Schema\Schema as Schema;
 use LaravelDoctrine\Migrations\Schema\Builder;
 use LaravelDoctrine\Migrations\Schema\Table;
 /**
- * Class Version20221227171735
+ * Class Version20230125202927
  * @package Database\Migrations\Model
  */
-final class Version20221227171735 extends AbstractMigration
+final class Version20230125202927 extends AbstractMigration
 {
     /**
      * @param Schema $schema
@@ -29,21 +27,23 @@ final class Version20221227171735 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $builder = new Builder($schema);
-        if (!$schema->hasTable("SummitRegistrationPromoCode_Tags")) {
-            $builder->create("SummitRegistrationPromoCode_Tags", function (Table $table) {
+        if (!$schema->hasTable("SummitSubmissionInvitation_Tags")) {
+            $builder->create('SummitSubmissionInvitation_Tags', function (Table $table) {
 
-                $table->bigInteger("ID", true, false);
+                $table->bigInteger("ID", true, true);
                 $table->primary("ID");
+                $table->timestamp('Created');
+                $table->timestamp('LastEdited');
 
-                $table->integer("SummitRegistrationPromoCodeID", false, false)->setNotnull(false)->setDefault('NULL');
-                $table->index("SummitRegistrationPromoCodeID", "SummitRegistrationPromoCodeID");
-                $table->foreign("SummitRegistrationPromoCode", "SummitRegistrationPromoCodeID", "ID", ["onDelete" => "CASCADE"], "FK_SummitRegistrationPromoCode_Tags_PromoCode");
+                $table->integer("SummitSubmissionInvitationID", false, true)->setNotnull(false)->setDefault('NULL');
+                $table->index("SummitSubmissionInvitationID", "SummitSubmissionInvitationID");
+                $table->foreign("SummitSubmissionInvitation", "SummitSubmissionInvitationID", "ID", ["onDelete" => "CASCADE"], "FK_SummitSubmissionInvitation_Tags_Invitation");
 
                 $table->integer("TagID", false, false)->setNotnull(false)->setDefault('NULL');
                 $table->index("TagID", "TagID");
-                $table->foreign("Tag", "TagID", "ID", ["onDelete" => "CASCADE"], "FK_SummitRegistrationPromoCode_Tags_Tag");
+                $table->foreign("Tag", "TagID", "ID", ["onDelete" => "CASCADE"], "FK_SummitSubmissionInvitation_Tags_Tag");
 
-                $table->unique(['SummitRegistrationPromoCodeID', 'TagID']);
+                $table->unique(['SummitSubmissionInvitationID', 'TagID']);
 
             });
         }
@@ -54,8 +54,8 @@ final class Version20221227171735 extends AbstractMigration
      */
     public function down(Schema $schema): void
     {
-        if ($schema->hasTable("SummitRegistrationPromoCode_Tags")) {
-            $schema->dropTable("SummitRegistrationPromoCode_Tags");
+        if ($schema->hasTable("SummitSubmissionInvitation_Tags")) {
+            $schema->dropTable('SummitSubmissionInvitation_Tags');
         }
     }
 }

@@ -199,4 +199,10 @@ interface ISpeakerService
      * @param Filter|null $filter
      */
     public function sendEmails(int $summit_id, array $payload, Filter $filter = null):void;
+
+    /**
+     * @param Member $member
+     * @return PresentationSpeaker|null
+     */
+    public function getSpeakerByMember(Member $member):?PresentationSpeaker;
 }

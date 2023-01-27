@@ -11,13 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
 use App\Models\Foundation\Summit\SelectionPlan;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
-use models\summit\SummitTrackChair;
+
 /**
  * Interface ITrackChairRankingService
  * @package App\Services\Model

@@ -548,8 +548,9 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
-            $speaker = $this->speaker_repository->getByMember($current_member);
-            if (is_null($speaker)) return $this->error404();
+            $speaker = $this->service->getSpeakerByMember($current_member);
+            if (is_null($speaker))
+                return $this->error404();
 
             $serializer_type = SerializerRegistry::SerializerType_Private;
 

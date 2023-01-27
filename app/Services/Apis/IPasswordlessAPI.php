@@ -1,6 +1,6 @@
-<?php
-/**
- * Copyright 2020 OpenStack Foundation
+<?php namespace App\Services\Apis;
+/*
+ * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,9 +12,18 @@
  * limitations under the License.
  **/
 
-return [
-    'base_url' => env('CFP_APP_BASE_URL', null),
-    'support_email' => env('CFP_SUPPORT_EMAIL', null),
-    'client_id' => env('CFP_OAUTH2_CLIENT_ID', null),
-    'scopes' => env('CFP_OAUTH2_SCOPES', null),
-];
+interface IPasswordlessAPI
+{
+    /**
+     * @param string $email
+     * @param string $client_id
+     * @param string $scope
+     * @return mixed
+     */
+    public function generateInlineOTP
+    (
+        string $email,
+        string $client_id,
+        string $scope
+    );
+}

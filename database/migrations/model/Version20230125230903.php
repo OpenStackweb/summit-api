@@ -1,6 +1,6 @@
 <?php namespace Database\Migrations\Model;
 /**
- * Copyright 2019 OpenStack Foundation
+ * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,22 +11,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\summit\Summit;
 use models\utils\SilverstripeBaseModel;
 /**
- * Class Version20200924210244
+ * Class Version20230125230903
  * @package Database\Migrations\Model
  */
-class Version20200924210244 extends AbstractMigration
+final class Version20230125230903 extends AbstractMigration
 {
     /**
      * @param Schema $schema
      */
-    public function up(Schema $schema):void
+    public function up(Schema $schema): void
     {
         $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
         $repository = $em->getRepository(Summit::class);
@@ -41,7 +40,7 @@ class Version20200924210244 extends AbstractMigration
     /**
      * @param Schema $schema
      */
-    public function down(Schema $schema):void
+    public function down(Schema $schema): void
     {
 
     }

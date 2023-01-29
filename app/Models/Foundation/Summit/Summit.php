@@ -6249,4 +6249,11 @@ SQL;
         $this->selection_plan_extra_questions->removeElement($question);
         $question->clearSummit();
     }
+
+    public function parseDateTime(int $epoch):?Datetime
+    {
+        $datetime = new \DateTime("@$epoch");
+        $datetime->setTimezone($this->getTimeZone());
+        return $datetime;
+    }
 }

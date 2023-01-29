@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\Speakers\FeaturedSpeaker;
 use App\Models\Utils\IStorageTypesConstants;
 use Illuminate\Http\UploadedFile;
@@ -576,9 +577,9 @@ interface ISummitService
     /**
      * @param array $data
      * @param Summit $summit
-     * @param SummitEvent $event
-     * @return SummitEvent
+     * @param IPublishableEvent $event
+     * @return IPublishableEvent
      * @throws ValidationException
      */
-    public function updateDuration(array $data, Summit $summit, SummitEvent $event):SummitEvent;
+    public function updateDuration(array $data, Summit $summit, IPublishableEvent $event):IPublishableEvent;
 }

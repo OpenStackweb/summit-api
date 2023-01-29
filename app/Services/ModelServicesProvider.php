@@ -61,6 +61,7 @@ use App\Services\Model\IProcessScheduleEntityLifeCycleEventService;
 use App\Services\Model\IRegistrationIngestionService;
 use App\Services\Model\IRSVPTemplateService;
 use App\Services\Model\IScheduleIngestionService;
+use App\Services\Model\IScheduleService;
 use App\Services\Model\ISelectionPlanExtraQuestionTypeService;
 use App\Services\Model\ISponsoredProjectService;
 use App\Services\Model\ISponsorshipTypeService;
@@ -99,6 +100,7 @@ use App\Services\Model\OrganizationService;
 use App\Services\Model\PresentationCategoryGroupService;
 use App\Services\Model\RSVPTemplateService;
 use App\Services\Model\ScheduleIngestionService;
+use App\Services\Model\ScheduleService;
 use App\Services\Model\SponsorshipTypeService;
 use App\Services\Model\SummitAccessLevelTypeService;
 use App\Services\Model\SummitBadgeFeatureTypeService;
@@ -438,6 +440,11 @@ final class ModelServicesProvider extends ServiceProvider
             IProcessScheduleEntityLifeCycleEventService::class,
             ProcessScheduleEntityLifeCycleEventService::class,
         );
+
+        App::singleton(
+            IScheduleService::class,
+            ScheduleService::class,
+        );
    }
 
     /**
@@ -501,6 +508,7 @@ final class ModelServicesProvider extends ServiceProvider
             IBadgeViewTypeService::class,
             ISummitSponsorshipTypeService::class,
             IProcessScheduleEntityLifeCycleEventService::class,
+            IScheduleService::class,
         ];
     }
 }

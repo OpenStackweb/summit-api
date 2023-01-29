@@ -12,15 +12,18 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\IPublishableEvent;
+use models\utils\IBaseRepository;
+
 /**
- * Interface ISummitProposedScheduleRepository
+ * Interface ISummitEventPublishRepository
  * @package models\summit
  */
-interface ISummitProposedScheduleRepository extends ISummitEventPublishRepository
+interface ISummitEventPublishRepository extends IBaseRepository
 {
     /**
-     * @param string $source
-     * @return SummitProposedSchedule[]
+     * @param IPublishableEvent $event
+     * @return IPublishableEvent[]
      */
-    public function getBySource(string $source): array;
+    public function getPublishedOnSameTimeFrame(IPublishableEvent $event): array;
 }

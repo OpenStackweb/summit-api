@@ -41,8 +41,8 @@ use App\Services\Filesystem\FileDownloadStrategyFactory;
 use App\Services\Filesystem\FileUploadStrategyFactory;
 use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
-use App\Services\Model\AbstractService;
 use App\Services\Model\IMemberService;
+use App\Services\Model\AbstractPublishService;
 use DateInterval;
 use DateTime;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
@@ -110,11 +110,11 @@ use utils\PagingInfo;
  * @package services\model
  */
 final class SummitService
-    extends AbstractService implements ISummitService
+    extends AbstractPublishService implements ISummitService
 {
 
     /**
-     * @var ISummitEventRepository
+     * @var ISummitEventPublishRepository
      */
     private $event_repository;
 
@@ -221,7 +221,7 @@ final class SummitService
     /**
      * SummitService constructor.
      * @param ISummitRepository $summit_repository
-     * @param ISummitEventRepository $event_repository
+     * @param ISummitEventPublishRepository $event_repository
      * @param ISpeakerRepository $speaker_repository
      * @param ISummitEntityEventRepository $entity_events_repository
      * @param ISummitAttendeeTicketRepository $ticket_repository
@@ -269,7 +269,7 @@ final class SummitService
         ITransactionService                        $tx_service
     )
     {
-        parent::__construct($tx_service);
+        parent::__construct($event_repository, $tx_service);
         $this->summit_repository = $summit_repository;
         $this->event_repository = $event_repository;
         $this->speaker_repository = $speaker_repository;
@@ -573,111 +573,6 @@ final class SummitService
     public function updateEvent(Summit $summit, $event_id, array $data)
     {
         return $this->saveOrUpdateEvent($summit, $data, $event_id);
-    }
-
-    /**
-     * @param array $data
-     * @param Summit $summit
-     * @param SummitEvent $event
-     * @return SummitEvent
-     * @throws ValidationException
-     */
-    private function updateEventDates(array $data, Summit $summit, SummitEvent $event)
-    {
-        Log::debug
-        (
-            sprintf(
-                "SummitService:updateEventDates summit %s event %s payload %s",
-                $summit->getId(),
-                $event->getId(),
-                json_encode($data)
-            )
-        );
-
-        $formerDuration = $event->getDuration();
-
-        Log::debug
-        (
-            sprintf(
-                "SummitService:updateEventDates summit %s event %s former duration %s",
-                $summit->getId(),
-                $event->getId(),
-                $formerDuration
-            )
-        );
-
-        if (isset($data['start_date']) && isset($data['end_date'])) {
-            // we are setting dates
-
-            if (!$event->hasType()) {
-                throw new ValidationException("To be able to set schedule dates event type must be set First.");
-            }
-
-            $type = $event->getType();
-            if (!$type->isAllowsPublishingDates())
-                throw new ValidationException("Event Type does not allow schedule dates.");
-
-            $event->setSummit($summit);
-
-            $start_datetime = intval($data['start_date']);
-            $start_datetime = new \DateTime("@$start_datetime");
-            $start_datetime->setTimezone($summit->getTimeZone());
-
-            $end_datetime = intval($data['end_date']);
-            $end_datetime = new \DateTime("@$end_datetime");
-            $end_datetime->setTimezone($summit->getTimeZone());
-
-            $interval_seconds = $end_datetime->getTimestamp() - $start_datetime->getTimestamp();
-            $minutes = $interval_seconds / 60;
-
-            if ($minutes < SummitEvent::MIN_EVENT_MINUTES)
-                throw new ValidationException
-                (
-                    sprintf
-                    (
-                        "event should last at least %s minutes  - current duration %s",
-                        SummitEvent::MIN_EVENT_MINUTES,
-                        $minutes
-                    )
-                );
-
-            Log::debug
-            (
-                sprintf(
-                    "SummitService:updateEventDates summit %s event %s new duration %s",
-                    $summit->getId(),
-                    $event->getId(),
-                    $minutes
-                )
-            );
-
-            // set local time from UTC
-            $event->setStartDate($start_datetime);
-            $event->setEndDate($end_datetime);
-        } else {
-            $event->unPublish();
-            $event->clearPublishingDates();
-        }
-
-        return $this->updateDuration($data, $summit, $event);
-    }
-
-    /**
-     * @param array $data
-     * @param Summit $summit
-     * @param SummitEvent $event
-     * @return SummitEvent
-     * @throws ValidationException
-     */
-    public function updateDuration(array $data, Summit $summit, SummitEvent $event): SummitEvent
-    {
-        return $this->tx_service->transaction(function () use ($data, $summit, $event) {
-            Log::debug(sprintf("SummitService::updateDuration data %s summit %s event %s", json_encode($data), $summit->getId(), $event->getId()));
-            if (isset($data['duration'])) {
-                $event->setDuration(intval($data['duration']));
-            }
-            return $event;
-        });
     }
 
     /**
@@ -1086,77 +981,10 @@ final class SummitService
     }
 
     /**
-     * @param SummitEvent $event
-     * @throws ValidationException
-     */
-    private function validateBlackOutTimesAndTimes(SummitEvent $event)
-    {
-        $current_event_location = $event->getLocation();
-        $eventType = $event->getType();
-        if (!$eventType->isAllowsPublishingDates()) return;
-        // validate blackout times
-        $conflict_events = $this->event_repository->getPublishedOnSameTimeFrame($event);
-        if (!is_null($conflict_events)) {
-            foreach ($conflict_events as $c_event) {
-                // if the published event is BlackoutTime or if there is a BlackoutTime event in this timeframe
-                if ((!is_null($current_event_location) && !$current_event_location->isOverrideBlackouts()) &&
-                    ($eventType->isBlackoutTimes() || $c_event->getType()->isBlackoutTimes()) && $event->getId() != $c_event->getId()) {
-                    throw new ValidationException
-                    (
-                        sprintf
-                        (
-                            "You can't publish on this time frame, it conflicts with event id %s.",
-                            $c_event->getId()
-                        )
-                    );
-                }
-                if (!$eventType->isAllowsLocationTimeframeCollision()) {
-                    // if trying to publish an event on a slot occupied by another event
-                    // event collision ( same timeframe , same location)
-
-
-                    if (!is_null($current_event_location) && !is_null($c_event->getLocation()) && $current_event_location->getId() == $c_event->getLocation()->getId() && $event->getId() != $c_event->getId()) {
-                        throw new ValidationException
-                        (
-                            sprintf
-                            (
-                                "You can't publish on this time frame, it conflicts with event id %s.",
-                                $c_event->getId()
-                            )
-                        );
-                    }
-                }
-
-                // check speakers collisions
-                if ($event instanceof Presentation && $c_event instanceof Presentation && $event->getId() != $c_event->getId()) {
-                    if (!$eventType->isAllowsSpeakerEventCollision()) {
-                        foreach ($event->getSpeakers() as $current_speaker) {
-                            foreach ($c_event->getSpeakers() as $c_speaker) {
-                                if (intval($c_speaker->getId()) === intval($current_speaker->getId())) {
-                                    throw new ValidationException
-                                    (
-                                        sprintf
-                                        (
-                                            "You can't publish Event %s (%s) on this timeframe, speaker %s its present in room %s at this time.",
-                                            $event->getTitle(),
-                                            $event->getId(),
-                                            $current_speaker->getFullName(),
-                                            $c_event->getLocationName()
-                                        )
-                                    );
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * @param Summit $summit
      * @param int $event_id
      * @return mixed
+     * @throws Exception
      */
     public function unPublishEvent(Summit $summit, $event_id)
     {

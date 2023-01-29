@@ -27,10 +27,6 @@ class SummitProposedSchedule extends SilverstripeBaseModel
 {
     use SummitOwned;
 
-    const Final = 'Final';
-    const Proposed = 'Proposed';
-    const AllowedTypes = [self::Final, self::Proposed];
-
     const General = 'General';
     const TrackChairs = 'TrackChairs';
     const AllowedSources = [self::General, self::TrackChairs];
@@ -40,12 +36,6 @@ class SummitProposedSchedule extends SilverstripeBaseModel
      * @var string
      */
     private $name;
-
-    /**
-     * @ORM\Column(name="Type", type="string")
-     * @var string
-     */
-    private $type;
 
     /**
      * @ORM\Column(name="Source", type="string")
@@ -86,25 +76,6 @@ class SummitProposedSchedule extends SilverstripeBaseModel
     public function setName(string $name): void
     {
         $this->name = $name;
-    }
-
-    /**
-     * @return string
-     */
-    public function getType(): string
-    {
-        return $this->type;
-    }
-
-    /**
-     * @param string $type
-     * @throws ValidationException
-     */
-    public function setType(string $type): void
-    {
-        if(!in_array($type, self::AllowedTypes))
-            throw new ValidationException(sprintf("Type %s is not valid.", $type));
-        $this->type = $type;
     }
 
     /**
@@ -172,6 +143,47 @@ class SummitProposedSchedule extends SilverstripeBaseModel
     public function clearScheduledSummitEvents():void
     {
         $this->scheduled_summit_events->clear();
+    }
+
+    /**
+     * @param int $scheduled_event_id
+     * @return SummitProposedScheduleSummitEvent|null
+     */
+    public function getScheduledSummitEventById(int $scheduled_event_id):?SummitProposedScheduleSummitEvent {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $scheduled_event_id));
+        $res = $this->scheduled_summit_events->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    /**
+     * @param int $event_id
+     * @return SummitProposedScheduleSummitEvent|null
+     */
+    public function getScheduledSummitEventByEvent(SummitEvent $event):?SummitProposedScheduleSummitEvent {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('summit_event', $event));
+        $res = $this->scheduled_summit_events->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    /**
+     * @param \DateTime|null $start_date
+     * @param \DateTime|null $end_date
+     * @param SummitAbstractLocation|null $location
+     * @return SummitProposedScheduleSummitEvent[]
+     */
+    public function getScheduledSummitEventsByLocationAndDateRange(
+        ?\DateTime $start_date = null, ?\DateTime $end_date = null, ?SummitAbstractLocation $location = null):array {
+
+        $criteria = Criteria::create();
+        if ($start_date != null)
+            $criteria->andWhere(Criteria::expr()->gt('end_date', $start_date));
+        if ($end_date != null)
+            $criteria->andWhere(Criteria::expr()->lt('start_date', $end_date));
+        if ($location != null)
+            $criteria->andWhere(Criteria::expr()->eq('location', $location));
+        return $this->scheduled_summit_events->matching($criteria)->toArray();
     }
 
     /**

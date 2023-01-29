@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Summit\IPublishableEvent;
 use DateTime;
 use Doctrine\ORM\Mapping AS ORM;
 use models\exceptions\ValidationException;
@@ -22,7 +24,7 @@ use models\utils\SilverstripeBaseModel;
  * @ORM\Table(name="SummitProposedScheduleSummitEvent")
  * @package models\summit
  */
-class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel
+class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel implements IPublishableEvent
 {
     /**
      *  minimum number of minutes that an event must last
@@ -252,6 +254,12 @@ class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel
         $this->location = $location;
     }
 
+    public function clearLocation()
+    {
+        $this->location = null;
+        return $this;
+    }
+
     /**
      * @return Member|null
      */
@@ -340,5 +348,42 @@ class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel
 
     public function clearSchedule(){
         $this->summit_proposed_schedule = null;
+    }
+
+    /**
+     * @return SummitEventType|null
+     */
+    public function getType(): ?SummitEventType
+    {
+        return $this->summit_event->getType();
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasType(): bool
+    {
+        if (is_null($this->summit_event)) return false;
+        return $this->summit_event->hasType();
+    }
+
+    public function getSummit(): Summit
+    {
+        return $this->summit_proposed_schedule->getSummit();
+    }
+
+    public function getTitle(): string
+    {
+        return $this->summit_event->getTitle();
+    }
+
+    public function getSpeakers()
+    {
+        return $this->summit_event->getSpeakers();
+    }
+
+    public function getLocationName(): string
+    {
+        return $this->summit_event->getLocationName();
     }
 }

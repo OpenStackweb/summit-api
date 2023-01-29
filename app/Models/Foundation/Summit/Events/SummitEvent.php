@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
+use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\ScheduleEntity;
 use App\Models\Utils\Traits\HasImageTrait;
 use Cocur\Slugify\Slugify;
@@ -351,7 +352,7 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getTitle()
+    public function getTitle(): string
     {
         return $this->title;
     }
@@ -596,7 +597,7 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return SummitEventType|null
      */
-    public function getType()
+    public function getType(): ?SummitEventType
     {
         return $this->type;
     }
@@ -944,7 +945,7 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getLocationName()
+    public function getLocationName(): string
     {
         return $this->hasLocation() ? $this->location->getName() : 'TBD';
     }

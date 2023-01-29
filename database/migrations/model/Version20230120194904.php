@@ -39,7 +39,6 @@ final class Version20230120194904 extends AbstractMigration
 
                 // Fields
                 $table->string("Name")->setNotnull(false)->setDefault('NULL');
-                $table->string("Type")->setNotnull(true)->setDefault("Proposed");
                 $table->string("Source")->setNotnull(true)->setDefault("TrackChairs");
 
                 // FK

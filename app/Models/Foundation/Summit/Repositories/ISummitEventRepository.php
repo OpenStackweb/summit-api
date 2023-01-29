@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use models\utils\IBaseRepository;
+use App\Models\Foundation\Summit\IPublishableEvent;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
@@ -22,13 +22,13 @@ use utils\PagingResponse;
  * Interface ISummitEventRepository
  * @package models\summit
  */
-interface ISummitEventRepository extends IBaseRepository
+interface ISummitEventRepository extends ISummitEventPublishRepository
 {
     /**
-     * @param SummitEvent $event
-     * @return SummitEvent[]
+     * @param IPublishableEvent $event
+     * @return IPublishableEvent[]
      */
-    public function getPublishedOnSameTimeFrame(SummitEvent $event);
+    public function getPublishedOnSameTimeFrame(IPublishableEvent $event): array;
 
     /**
      * @param PagingInfo $paging_info

@@ -47,7 +47,6 @@ class SummitProposedScheduleModelTest extends BrowserKitTestCase
     {
         $proposed_schedule = new SummitProposedSchedule();
         $proposed_schedule->setName("TEST_PROPOSED_SCHEDULE");
-        $proposed_schedule->setType(SummitProposedSchedule::Proposed);
         $proposed_schedule->setSource(SummitProposedSchedule::General);
         $proposed_schedule->setSummit(self::$summit);
         $proposed_schedule->setCreatedBy(self::$member);
@@ -72,48 +71,10 @@ class SummitProposedScheduleModelTest extends BrowserKitTestCase
         $this->assertTrue($proposed_schedule->getScheduledSummitEvents()->count() > 0);
     }
 
-    public function testCreateProposedScheduleWithOverlappingEvents()
-    {
-        $proposed_schedule = new SummitProposedSchedule();
-        $proposed_schedule->setName("TEST_PROPOSED_SCHEDULE");
-        $proposed_schedule->setType(SummitProposedSchedule::Proposed);
-        $proposed_schedule->setSource(SummitProposedSchedule::General);
-        $proposed_schedule->setSummit(self::$summit);
-        $proposed_schedule->setCreatedBy(self::$member);
-
-        $proposed_scheduled_event = new SummitProposedScheduleSummitEvent();
-
-        $start_date = new \DateTime("now", new \DateTimeZone("UTC"));
-        $end_date = (clone $start_date)->add(new \DateInterval("P10D"));
-
-        $proposed_scheduled_event->setStartDate($start_date);
-        $proposed_scheduled_event->setEndDate($end_date);
-        $proposed_scheduled_event->setCreatedBy(self::$member);
-        $proposed_scheduled_event->setUpdatedBy(self::$member);
-        $proposed_scheduled_event->setLocation(self::$summit->getLocations()[0]);
-        $proposed_scheduled_event->setSummitEvent(self::$summit->getEvents()[0]);
-
-        $proposed_schedule->addScheduledSummitEvent($proposed_scheduled_event);
-
-        $proposed_scheduled_event = new SummitProposedScheduleSummitEvent();
-        $proposed_scheduled_event->setStartDate($start_date);
-        $proposed_scheduled_event->setEndDate($end_date);
-        $proposed_scheduled_event->setCreatedBy(self::$member);
-        $proposed_scheduled_event->setUpdatedBy(self::$member);
-        $proposed_scheduled_event->setLocation(self::$summit->getLocations()[0]);
-        $proposed_scheduled_event->setSummitEvent(self::$summit->getEvents()[1]);
-
-        $proposed_schedule->addScheduledSummitEvent($proposed_scheduled_event);
-
-        self::$em->persist($proposed_schedule);
-        self::$em->flush();
-    }
-
     public function testRepository()
     {
         $proposed_schedule = new SummitProposedSchedule();
         $proposed_schedule->setName("TEST_PROPOSED_SCHEDULE");
-        $proposed_schedule->setType(SummitProposedSchedule::Proposed);
         $proposed_schedule->setSource(SummitProposedSchedule::General);
         $proposed_schedule->setSummit(self::$summit);
         $proposed_schedule->setCreatedBy(self::$member);

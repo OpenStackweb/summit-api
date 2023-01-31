@@ -123,7 +123,7 @@ abstract class AbstractPublishService extends AbstractService
                 (
                     sprintf
                     (
-                        "event should last at least %s minutes - current duration %s",
+                        "Event should last at least %s minutes - current duration %s",
                         SummitEvent::MIN_EVENT_MINUTES,
                         $minutes
                     )

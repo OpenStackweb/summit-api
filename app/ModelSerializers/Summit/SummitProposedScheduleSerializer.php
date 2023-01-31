@@ -23,9 +23,9 @@ final class SummitProposedScheduleSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
         'Name' => 'name:json_string',
-        'Type' => 'type:json_string',
         'Source' => 'source:json_string',
         'CreatedById' => 'created_by_id:json_int',
+        'SummitId' => 'summit_id:json_int',
     ];
 
     protected static $allowed_relations = [

@@ -13,15 +13,9 @@
  **/
 
 /**
- * Interface ISummitProposedScheduleRepository
+ * Interface ISummitProposedScheduleEventRepository
  * @package models\summit
  */
-interface ISummitProposedScheduleRepository extends ISummitEventPublishRepository
+interface ISummitProposedScheduleEventRepository
 {
-    /**
-     * @param string $source
-     * @param int $summit_id
-     * @return SummitProposedSchedule[]
-     */
-    public function getBySourceAndSummitId(string $source, int $summit_id): array;
 }

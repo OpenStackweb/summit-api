@@ -27,10 +27,6 @@ class SummitProposedSchedule extends SilverstripeBaseModel
 {
     use SummitOwned;
 
-    const General = 'General';
-    const TrackChairs = 'TrackChairs';
-    const AllowedSources = [self::General, self::TrackChairs];
-
     /**
      * @ORM\Column(name="Name", type="string")
      * @var string
@@ -88,12 +84,9 @@ class SummitProposedSchedule extends SilverstripeBaseModel
 
     /**
      * @param string $source
-     * @throws ValidationException
      */
     public function setSource(string $source): void
     {
-        if(!in_array($source, self::AllowedSources))
-            throw new ValidationException(sprintf("Source %s is not valid.", $source));
         $this->source = $source;
     }
 
@@ -130,6 +123,18 @@ class SummitProposedSchedule extends SilverstripeBaseModel
     public function setCreatedBy(Member $created_by): void
     {
         $this->created_by = $created_by;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSummitId(){
+        try{
+            return is_null($this->summit) ? 0 : $this->summit->getId();
+        }
+        catch (\Exception $ex){
+            return 0;
+        }
     }
 
     /**

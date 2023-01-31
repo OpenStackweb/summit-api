@@ -13,12 +13,19 @@
  **/
 
 use App\Facades\ResourceServerContext;
+use App\Models\Exceptions\AuthzException;
+use App\Models\Foundation\Main\IGroup;
+use App\Models\Foundation\Summit\SelectionPlan;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\Member;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitProposedScheduleRepository;
+use models\summit\Presentation;
+use models\summit\PresentationCategory;
+use models\summit\Summit;
 use models\summit\SummitEvent;
 use models\summit\SummitProposedSchedule;
 use models\summit\SummitProposedScheduleSummitEvent;
@@ -55,6 +62,12 @@ extends AbstractPublishService implements IScheduleService
         $this->event_repository = $event_repository;
     }
 
+    private function isAuthorizedUser(Member $member, Summit $summit, PresentationCategory $category): bool {
+        if ($member->isAdmin()) return true;
+        if ($member->isSummitAdmin()) return true;
+        return $summit->isTrackChair($member, $category);
+    }
+
     /**
      *@inheritDoc
      */
@@ -62,14 +75,23 @@ extends AbstractPublishService implements IScheduleService
         string $source, int $presentation_id, array $payload):SummitProposedScheduleSummitEvent {
 
         $schedule = $this->tx_service->transaction(function () use ($source, $presentation_id, $payload) {
+
+            $event = $this->event_repository->getById($presentation_id);
+            if (!$event instanceof Presentation)
+                throw new EntityNotFoundException("event id {$presentation_id} does not exists!");
+
             $schedule = null;
-            $schedules = $this->schedule_repository->getBySource($source);
+            $schedules = $this->schedule_repository->getBySourceAndSummitId($source, $event->getSummitId());
+
+            $selection_plan = $event->getSelectionPlan();
+            if (!$selection_plan instanceof SelectionPlan)
+                throw new EntityNotFoundException("event id {$presentation_id} does not have a selection plan");
+
+            if (!$selection_plan->isAllowProposedSchedules())
+                throw new ValidationException("selection plan id {$selection_plan->getId()} does not allow proposed schedules");
 
             if (count($schedules) == 0) {
-                $event = $this->event_repository->getById($presentation_id);
-                if (!$event instanceof SummitEvent)
-                    throw new EntityNotFoundException(sprintf("event id %s does not exists!", $presentation_id));
-
+                $member = ResourceServerContext::getCurrentUser(false);
                 $schedule = new SummitProposedSchedule();
                 $schedule->setSource($source);
                 $schedule->setSummit($event->getSummit());
@@ -78,7 +100,7 @@ extends AbstractPublishService implements IScheduleService
                 } else {
                     $schedule->setName("{$source} Proposed Schedule");
                 }
-                $schedule->setCreatedBy(ResourceServerContext::getCurrentUser(false));
+                $schedule->setCreatedBy($member);
                 $this->schedule_repository->add($schedule);
             } else {
                 $schedule = $schedules[0];
@@ -109,15 +131,20 @@ extends AbstractPublishService implements IScheduleService
 
             $member = ResourceServerContext::getCurrentUser(false);
             $summit = $schedule->getSummit();
+
+            if (!$this->isAuthorizedUser( $member, $summit, $event->getCategory()))
+                throw new AuthzException("User is not authorized to perform this action");
+
             $schedule_event = $schedule->getScheduledSummitEventByEvent($event);
 
             if (is_null($schedule_event)) {
+                $default_date = new \DateTime("now", new \DateTimeZone("UTC"));
                 $schedule_event = new SummitProposedScheduleSummitEvent();
                 $schedule_event->setSummitEvent($event);
                 $schedule_event->setCreatedBy($member);
                 $schedule_event->setSchedule($schedule);
-                $schedule_event->setStartDate($event->getStartDate());
-                $schedule_event->setEndDate($event->getEndDate());
+                $schedule_event->setStartDate($event->getStartDate() ?? $default_date);
+                $schedule_event->setEndDate($event->getEndDate() ?? $default_date);
             }
             $schedule_event = $this->updateLocation($payload, $summit, $schedule_event);
             $schedule_event = $this->updateEventDates($payload, $summit, $schedule_event);
@@ -131,18 +158,32 @@ extends AbstractPublishService implements IScheduleService
     /**
      *@inheritDoc
      */
-    public function unPublishProposedActivity(int $schedule_id, int $presentation_id):SummitProposedScheduleSummitEvent {
-        return $this->tx_service->transaction(function () use ($schedule_id, $presentation_id) {
-
-            $schedule = $this->schedule_repository->getById($schedule_id);
-
-            if (is_null($schedule))
-                throw new EntityNotFoundException(sprintf("schedule id %s does not exists!", $schedule_id));
+    public function unPublishProposedActivity(string $source, int $presentation_id):SummitProposedScheduleSummitEvent {
+        return $this->tx_service->transaction(function () use ($source, $presentation_id) {
 
             $event = $this->event_repository->getById($presentation_id);
 
             if (!$event instanceof SummitEvent)
                 throw new EntityNotFoundException(sprintf("event id %s does not exists!", $presentation_id));
+
+            $selection_plan = $event->getSelectionPlan();
+            if (!$selection_plan instanceof SelectionPlan)
+                throw new EntityNotFoundException("event id {$presentation_id} does not have a selection plan");
+
+            if (!$selection_plan->isAllowProposedSchedules())
+                throw new ValidationException("selection plan id {$selection_plan->getId()} does not allow proposed schedules");
+
+            $member = ResourceServerContext::getCurrentUser(false);
+
+            if (!$this->isAuthorizedUser( $member, $event->getSummit(), $event->getCategory()))
+                throw new AuthzException("User is not authorized to perform this action");
+
+            $schedules = $this->schedule_repository->getBySourceAndSummitId($source, $event->getSummitId());
+
+            if (count($schedules) == 0)
+                throw new EntityNotFoundException("schedule with source {$source} does not exists!");
+
+            $schedule = $schedules[0];
 
             $schedule_event = $schedule->getScheduledSummitEventByEvent($event);
 
@@ -158,20 +199,23 @@ extends AbstractPublishService implements IScheduleService
     /**
      *@inheritDoc
      */
-    public function publishAll(int $schedule_id, array $payload)
+    public function publishAll(string $source, int $summit_id, array $payload):SummitProposedSchedule
     {
-        return $this->tx_service->transaction(function () use ($schedule_id, $payload) {
+        return $this->tx_service->transaction(function () use ($source, $summit_id, $payload) {
 
-            $schedule = $this->schedule_repository->getById($schedule_id);
+            $schedules = $this->schedule_repository->getBySourceAndSummitId($source, $summit_id);
 
-            if (!$schedule instanceof SummitProposedSchedule)
-                throw new EntityNotFoundException(sprintf("schedule id %s does not exists!", $schedule_id));
+            if (count($schedules) == 0) {
+                throw new EntityNotFoundException("schedule with source {$source} does not exists!");
+            }
+
+            $schedule = $schedules[0];
 
             $filtered_schedule_events = [];
 
-            if (isset($payload['event_ids'])) {
+            if (isset($payload['presentation_ids'])) {
                 //filter criteria to promote schedule events by event_ids
-                $event_ids = $payload['event_ids'];
+                $event_ids = $payload['presentation_ids'];
                 foreach ($event_ids as $event_id) {
                     $event = $this->event_repository->getById(intval($event_id));
                     if (!$event instanceof SummitEvent) continue;
@@ -186,14 +230,10 @@ extends AbstractPublishService implements IScheduleService
                 $end_date = null;
                 $location = null;
                 if (isset($payload['start_date'])) {
-                    $start_date = intval($payload['start_date']);
-                    $start_date = new \DateTime("@$start_date");
-                    $start_date->setTimezone($summit->getTimeZone());
+                    $start_date = $summit->parseDateTime(intval($payload['start_date']));
                 }
                 if (isset($payload['end_date'])) {
-                    $end_date = intval($payload['end_date']);
-                    $end_date = new \DateTime("@$end_date");
-                    $end_date->setTimezone($summit->getTimeZone());
+                    $end_date = $summit->parseDateTime(intval($payload['end_date']));
                 }
                 if (isset($payload['location_id'])) {
                     $location = $summit->getLocation(intval($payload['location_id']));
@@ -216,7 +256,7 @@ extends AbstractPublishService implements IScheduleService
                 }
             }
 
-            return $filtered_schedule_events;
+            return $schedule;
         });
     }
 }

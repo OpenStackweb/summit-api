@@ -19,7 +19,7 @@ use models\exceptions\ValidationException;
 use models\main\Member;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitProposedScheduleEventRepository")
  * Class SummitProposedScheduleSummitEvent
  * @ORM\Table(name="SummitProposedScheduleSummitEvent")
  * @package models\summit
@@ -336,6 +336,25 @@ class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel implements
     public function getSchedule(): SummitProposedSchedule
     {
         return $this->summit_proposed_schedule;
+    }
+
+    /**
+     * @return int
+     */
+    public function getScheduleId(){
+        try{
+            return is_null($this->summit_proposed_schedule) ? 0 : $this->summit_proposed_schedule->getId();
+        }
+        catch (\Exception $ex){
+            return 0;
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasSchedule(){
+        return $this->getScheduleId() > 0;
     }
 
     /**

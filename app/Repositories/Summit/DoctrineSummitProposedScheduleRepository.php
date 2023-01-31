@@ -39,13 +39,15 @@ final class DoctrineSummitProposedScheduleRepository
     /**
      *@inheritDoc
      */
-    public function getBySource(string $source): array
+    public function getBySourceAndSummitId(string $source, int $summit_id): array
     {
         $query = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")
             ->where('e.source = :source')
-            ->setParameter('source', $source);
+            ->andWhere('e.summit = :summit_id')
+            ->setParameter('source', $source)
+            ->setParameter('summit_id', $summit_id);
 
         return $query->getQuery()->getResult();
     }

@@ -102,6 +102,7 @@ use models\main\SummitAdministratorPermissionGroup;
 use models\main\SupportingCompany;
 use models\summit\ISponsorUserInfoGrantRepository;
 use models\summit\ISummitBadgeViewTypeRepository;
+use models\summit\ISummitProposedScheduleEventRepository;
 use models\summit\ISummitProposedScheduleRepository;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitTicketTypeRepository;
@@ -140,6 +141,7 @@ use models\summit\SummitOrder;
 use models\summit\SummitOrderExtraQuestionType;
 use models\summit\SummitPresentationComment;
 use models\summit\SummitProposedSchedule;
+use models\summit\SummitProposedScheduleSummitEvent;
 use models\summit\SummitRefundPolicyType;
 use models\summit\SummitRegistrationInvitation;
 use models\summit\SummitRegistrationPromoCode;
@@ -806,6 +808,13 @@ final class RepositoriesProvider extends ServiceProvider
             function(){
                 return EntityManager::getRepository(SummitProposedSchedule::class);
             }
+        );
+
+        App::singleton(
+             ISummitProposedScheduleEventRepository::class,
+             function(){
+                 return EntityManager::getRepository(SummitProposedScheduleSummitEvent::class);
+             }
         );
     }
 }

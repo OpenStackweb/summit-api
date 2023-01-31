@@ -47,7 +47,7 @@ class SummitProposedScheduleModelTest extends BrowserKitTestCase
     {
         $proposed_schedule = new SummitProposedSchedule();
         $proposed_schedule->setName("TEST_PROPOSED_SCHEDULE");
-        $proposed_schedule->setSource(SummitProposedSchedule::General);
+        $proposed_schedule->setSource("track-chairs");
         $proposed_schedule->setSummit(self::$summit);
         $proposed_schedule->setCreatedBy(self::$member);
 
@@ -75,7 +75,7 @@ class SummitProposedScheduleModelTest extends BrowserKitTestCase
     {
         $proposed_schedule = new SummitProposedSchedule();
         $proposed_schedule->setName("TEST_PROPOSED_SCHEDULE");
-        $proposed_schedule->setSource(SummitProposedSchedule::General);
+        $proposed_schedule->setSource("track-chairs");
         $proposed_schedule->setSummit(self::$summit);
         $proposed_schedule->setCreatedBy(self::$member);
 

@@ -14,6 +14,7 @@
 
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\summit\SummitProposedSchedule;
 use models\summit\SummitProposedScheduleSummitEvent;
 
 /**
@@ -41,19 +42,20 @@ interface IScheduleService
         int $schedule_id, int $presentation_id, array $payload):SummitProposedScheduleSummitEvent;
 
     /**
-     * @param int $schedule_id
+     * @param string $source
      * @param int $presentation_id
      * @return SummitProposedScheduleSummitEvent
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function unPublishProposedActivity(int $schedule_id, int $presentation_id):SummitProposedScheduleSummitEvent;
+    public function unPublishProposedActivity(string $source, int $presentation_id):SummitProposedScheduleSummitEvent;
 
     /**
-     * @param int $schedule_id
+     * @param string $source
+     * @param int $summit_id
      * @param array $payload
-     * @return void
+     * @return SummitProposedSchedule
      * @throws EntityNotFoundException
      */
-    public function publishAll(int $schedule_id, array $payload);
+    public function publishAll(string $source, int $summit_id, array $payload):SummitProposedSchedule;
 }

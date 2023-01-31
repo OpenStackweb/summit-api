@@ -25,12 +25,16 @@ use models\summit\SummitProposedSchedule;
  */
 class SummitProposedScheduleServiceTest extends TestCase
 {
+    use InsertSummitTestData;
+
     use InsertMemberTestData;
 
     protected function setUp(): void
     {
         parent::setUp();
-        self::insertMemberTestData(IGroup::Administrators);
+        self::insertMemberTestData(IGroup::TrackChairs);
+        self::insertSummitTestData();
+
         $ctx = App::make(IResourceServerContext::class);
         if(!$ctx instanceof IResourceServerContext)
             throw new \Exception();
@@ -49,67 +53,68 @@ class SummitProposedScheduleServiceTest extends TestCase
 
     protected function tearDown(): void
     {
+        self::clearSummitTestData();
         self::clearMemberTestData();
         parent::tearDown();
     }
 
-    public function testPublishProposedActivity(int $presentation_id = 107226, int $location_id = 7455)
+    public function testPublishProposedActivity()
     {
         $service = App::make(IScheduleService::class);
 
         $start_date = new \DateTime("now", new \DateTimeZone("UTC"));
         $end_date = (clone $start_date)->add(new \DateInterval("P10D"));
+        $presentation = self::$presentations[23];
 
         $published_schedule_event = $service->publishProposedActivityToSource(
-            SummitProposedSchedule::TrackChairs,
-            $presentation_id,
+            "track-chairs",
+            $presentation->getId(),
             [
-                "location_id" => $location_id,
+                "location_id" => $presentation->getLocation()->getId(),
                 "start_date" => $start_date->getTimestamp(),
                 "end_date" => $end_date->getTimestamp(),
             ]
         );
 
         $this->assertNotNull($published_schedule_event->getSchedule());
-        $this->assertEquals($published_schedule_event->getLocationId(), $location_id);
+        $this->assertEquals($published_schedule_event->getLocationId(), $presentation->getLocation()->getId());
 
         return $published_schedule_event;
     }
 
-    public function testPublishOverlappingProposedActivities(
-        int $first_presentation_id = 107226, int $second_presentation_id = 107227, int $location_id = 7455
-    )
+    public function testPublishOverlappingProposedActivities()
     {
-        $first_published_schedule_event = $this->testPublishProposedActivity($first_presentation_id, $location_id);
+        $first_published_schedule_event = $this->testPublishProposedActivity();
 
         $service = App::make(IScheduleService::class);
 
         $start_date = $first_published_schedule_event->getStartDate()->getTimestamp();
         $end_date = $first_published_schedule_event->getEndDate()->getTimestamp();
+        $presentation = self::$presentations[1];
 
         $this->expectException(ValidationException::class);
 
-        $second_published_schedule_event = $service->publishProposedActivityToSource(
-            SummitProposedSchedule::TrackChairs,
-            $second_presentation_id,
+        $service->publishProposedActivityToSource(
+            "track-chairs",
+            $presentation->getId(),
             [
-                "location_id" => $location_id,
+                "location_id" => $presentation->getLocation()->getId(),
                 "start_date" => $start_date,
                 "end_date" => $end_date,
             ]
         );
     }
 
-    public function testUnPublishProposedActivity($presentation_id = 107227, int $location_id = 7455)
+    public function testUnPublishProposedActivity()
     {
-        $published_schedule_event = $this->testPublishProposedActivity($presentation_id, $location_id);
+        $published_schedule_event = $this->testPublishProposedActivity();
 
         $service = App::make(IScheduleService::class);
 
         $schedule = $published_schedule_event->getSchedule();
 
         $schedule_event_to_unpublish = $service->unPublishProposedActivity(
-            $published_schedule_event->getSchedule()->getId(),
+            "track-chairs",
             $published_schedule_event->getSummitEventId()
         );
 
@@ -118,17 +123,19 @@ class SummitProposedScheduleServiceTest extends TestCase
         $this->assertNull($unpublished_schedule_event);
     }
 
-    public function testPublishAllProposedActivityByLocationAndDateRange(int $schedule_id = 7, int $location_id = 7455)
+    public function testPublishAllProposedActivitiesByLocationAndDateRange()
     {
         $service = App::make(IScheduleService::class);
 
         $start_date = new \DateTime("now", new \DateTimeZone("UTC"));
         $end_date = (clone $start_date)->add(new \DateInterval("P10D"));
+        $presentation = self::$summit->getPresentations()[0];
 
         $published_schedule_events = $service->publishAll(
-            $schedule_id,
+            "track-chairs",
+            self::$summit->getId(),
             [
-                "location_id" => $location_id,
+                "location_id" => $presentation->getLocation()->getId(),
                 "start_date" => $start_date->getTimestamp(),
                 "end_date" => $end_date->getTimestamp(),
             ]
@@ -136,17 +143,34 @@ class SummitProposedScheduleServiceTest extends TestCase
         $this->assertNotEmpty($published_schedule_events);
     }
 
-    public function testPublishAllProposedActivityByEventIds(int $schedule_id = 7, array $candidate_event_ids = [107226, 107227])
+    public function testPublishAllProposedActivitiesByPresentationIds()
     {
         $service = App::make(IScheduleService::class);
 
+        $candidate_event_ids = [];
+        foreach (self::$presentations as $presentation) {
+            $candidate_event_ids[] = $presentation->getId();
+        }
+
         $published_schedule_events = $service->publishAll(
-            $schedule_id,
+            "track-chairs",
+            self::$summit->getId(),
             [
-                "event_ids" => $candidate_event_ids
+                "presentation_ids" => $candidate_event_ids
             ]
         );
         $this->assertNotEmpty($published_schedule_events);
         $this->assertTrue(count($published_schedule_events) <= count($candidate_event_ids));
+    }
+
+    public function testPublishAllProposedActivities()
+    {
+        $service = App::make(IScheduleService::class);
+
+        $published_schedule_events =
+            $service->publishAll("track-chairs", self::$summit->getId(), []);
+
+        $this->assertNotEmpty($published_schedule_events);
+        $this->assertTrue(count($published_schedule_events) == count(self::$summit->getPresentations()));
     }
 }

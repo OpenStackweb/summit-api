@@ -55,12 +55,12 @@ class MemberSummitRegistrationDiscountCode
 
     public function getOwnerFullname(): string
     {
-        return  $this->owner->getFullName();
+        return  $this->getFullName();
     }
 
     public function getOwnerEmail(): string
     {
-        return $this->owner->getEmail();
+        return $this->getEmail();
     }
 
     public function getOwnerType(): string

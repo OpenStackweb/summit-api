@@ -339,7 +339,7 @@ final class SummitPromoCodeService
             $name = null;
             $email = null;
 
-            if ($promo_code instanceof IOwnablePromoCode && $promo_code->hasOwner()) {
+            if ($promo_code instanceof IOwnablePromoCode) {
                 $name = $promo_code->getOwnerFullname();
                 $email = $promo_code->getOwnerEmail();
             }

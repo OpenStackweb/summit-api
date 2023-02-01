@@ -94,6 +94,7 @@ final class ProcessScheduleEntityLifeCycleEventService
 
             if(is_null($this->rabbit_service)){
                 Log::debug("ProcessScheduleEntityLifeCycleEventService::process rabbit service is disabled.");
+                return;
             }
 
             $cache_key = sprintf("%s:%s:%s:%s", $summit_id, $entity_id, $entity_type, $entity_operator);

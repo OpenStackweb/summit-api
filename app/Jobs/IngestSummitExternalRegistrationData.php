@@ -121,7 +121,7 @@ class IngestSummitExternalRegistrationData implements ShouldQueue
         }
     }
 
-    public function failed(Exception $exception)
+    public function failed(\Throwable $exception)
     {
         Log::error(sprintf( "IngestSummitExternalRegistrationData::failed %s", $exception->getMessage()));
     }

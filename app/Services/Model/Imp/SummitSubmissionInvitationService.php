@@ -396,7 +396,7 @@ final class SummitSubmissionInvitationService
 
                     Log::debug(sprintf("SummitSubmissionInvitationService::send processing invitation id  %s", $invitation_id));
 
-                    $invitation = $this->invitation_repository->getByIdExclusiveLock(intval($invitation_id));
+                    $invitation = $this->invitation_repository->getById(intval($invitation_id));
                     if (is_null($invitation) || !$invitation instanceof SummitSubmissionInvitation) return null;
 
                     if(empty($invitation->getOtp())) {

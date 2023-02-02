@@ -667,14 +667,9 @@ final class PresentationService
             }
 
             $title = $presentation->getTitle();
-            $abstract = $presentation->getAbstract();
 
             if (empty($title)) {
                 throw new ValidationException('Title is Mandatory.');
-            }
-
-            if (empty($abstract)) {
-                throw new ValidationException('Abstract is mandatory.');
             }
 
             $presentation->setProgress(Presentation::PHASE_COMPLETE);

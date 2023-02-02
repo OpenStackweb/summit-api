@@ -188,7 +188,7 @@ SQL;
      */
     public function isUseSpeakers():bool
     {
-        return $this->isAreSpeakersMandatory() || $this->max_speakers > 0;
+        return $this->use_speakers;
     }
 
     /**
@@ -196,7 +196,7 @@ SQL;
      */
     public function isUseModerator():bool
     {
-        return $this->isModeratorMandatory() || $this->max_moderators > 0;
+        return $this->use_moderator;
     }
 
     /**
@@ -216,9 +216,9 @@ SQL;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getModeratorLabel():string
+    public function getModeratorLabel():?string
     {
         return $this->moderator_label;
     }
@@ -286,9 +286,7 @@ SQL;
         $this->min_moderators = $min_moderators;
     }
 
-
     /**
-     * @deprecated
      * @param bool $use_speakers
      */
     public function setUseSpeakers(bool $use_speakers):void

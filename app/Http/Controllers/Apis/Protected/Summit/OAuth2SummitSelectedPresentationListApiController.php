@@ -12,19 +12,16 @@
  * limitations under the License.
  **/
 
-use App\Models\Exceptions\AuthzException;
+use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitSelectedPresentationListService;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
-use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
 use models\main\IMemberRepository;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\SummitSelectedPresentation;
 use ModelSerializers\SerializerRegistry;
-use Exception;
+
 /**
  * Class OAuth2SummitSelectedPresentationListApiController
  * @package App\Http\Controllers
@@ -32,6 +29,7 @@ use Exception;
 class OAuth2SummitSelectedPresentationListApiController
     extends OAuth2ProtectedController
 {
+    use RequestProcessor;
     /**
      * @var ISummitRepository
      */
@@ -75,32 +73,25 @@ class OAuth2SummitSelectedPresentationListApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function getTeamSelectionList($summit_id, $selection_plan_id, $track_id){
-        try {
+        return $this->processRequest(function () use($summit_id, $selection_plan_id, $track_id){
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $selection_list = $this->service->getTeamSelectionList($summit,intval($selection_plan_id), intval($track_id));
+            $selection_list = $this->service->getTeamSelectionList
+            (
+                $summit,
+                intval($selection_plan_id),
+                intval($track_id)
+            );
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize(Request::input('expand', '')));
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404($ex->getMessage());
-        }
-        catch (AuthzException $ex){
-            Log::warning($ex);
-            return $this->error403($ex->getMessage());
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -110,32 +101,20 @@ class OAuth2SummitSelectedPresentationListApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function createTeamSelectionList($summit_id, $selection_plan_id, $track_id){
-        try {
+        return $this->processRequest(function () use($summit_id, $selection_plan_id, $track_id){
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $selection_list = $this->service->createTeamSelectionList($summit, intval($selection_plan_id), intval($track_id));
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize(Request::input('expand', '')));
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404($ex->getMessage());
-        }
-        catch (AuthzException $ex){
-            Log::warning($ex);
-            return $this->error403($ex->getMessage());
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -146,32 +125,20 @@ class OAuth2SummitSelectedPresentationListApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function getIndividualSelectionList($summit_id, $selection_plan_id, $track_id, $owner_id){
-        try {
+        return $this->processRequest(function () use($summit_id, $selection_plan_id, $track_id, $owner_id){
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $selection_list = $this->service->getIndividualSelectionList($summit, intval($selection_plan_id), intval($track_id), intval($owner_id));
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize(Request::input('expand', '')));
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404($ex->getMessage());
-        }
-        catch (AuthzException $ex){
-            Log::warning($ex);
-            return $this->error403($ex->getMessage());
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -182,32 +149,19 @@ class OAuth2SummitSelectedPresentationListApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function createIndividualSelectionList($summit_id, $selection_plan_id, $track_id){
-        try {
+        return $this->processRequest(function () use($summit_id, $selection_plan_id, $track_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $selection_list = $this->service->createIndividualSelectionList($summit, intval($selection_plan_id), intval($track_id), $this->resource_server_context->getCurrentUserId());
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize(Request::input('expand', '')));
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404($ex->getMessage());
-        }
-        catch(AuthzException $ex){
-            Log::warning($ex);
-            return $this->error403($ex->getMessage());
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -218,7 +172,7 @@ class OAuth2SummitSelectedPresentationListApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function reorderSelectionList($summit_id, $selection_plan_id, $track_id, $list_id){
-        try {
+        return $this->processRequest(function () use($summit_id, $selection_plan_id, $track_id, $list_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -242,25 +196,13 @@ class OAuth2SummitSelectedPresentationListApiController
 
             $selection_list = $this->service->reorderList($summit, intval($selection_plan_id), intval($track_id), intval($list_id), $payload);
 
-            return $this->updated(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize(Request::input('expand', '')));
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404($ex->getMessage());
-        }
-        catch (AuthzException $ex){
-            Log::warning($ex);
-            return $this->error403($ex->getMessage());
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -272,32 +214,20 @@ class OAuth2SummitSelectedPresentationListApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function assignPresentationToMyIndividualList($summit_id, $selection_plan_id, $track_id, $collection, $presentation_id){
-        try {
+        return $this->processRequest(function () use($summit_id, $selection_plan_id, $track_id, $collection,$presentation_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $selection_list = $this->service->assignPresentationToMyIndividualList($summit, intval($selection_plan_id), intval($track_id), trim($collection), intval($presentation_id));
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize(Request::input('expand', '')));
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404($ex->getMessage());
-        }
-        catch(AuthzException $ex){
-            Log::warning($ex);
-            return $this->error403($ex->getMessage());
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 
     /**
@@ -309,31 +239,19 @@ class OAuth2SummitSelectedPresentationListApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function removePresentationFromMyIndividualList($summit_id, $selection_plan_id, $track_id, $collection, $presentation_id){
-        try {
+        return $this->processRequest(function () use($summit_id, $selection_plan_id, $track_id, $collection,$presentation_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $selection_list = $this->service->removePresentationFromMyIndividualList($summit, intval($selection_plan_id), intval($track_id), intval($presentation_id));
 
-            return $this->created(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize(Request::input('expand', '')));
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412($ex->getMessages());
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404($ex->getMessage());
-        }
-        catch (AuthzException $ex){
-            Log::warning($ex);
-            return $this->error403($ex->getMessage());
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->created(SerializerRegistry::getInstance()->getSerializer($selection_list)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
     }
 }

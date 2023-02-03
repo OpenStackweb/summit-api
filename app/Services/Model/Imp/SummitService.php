@@ -31,6 +31,7 @@ use App\Models\Foundation\Summit\Factories\PresentationFactory;
 use App\Models\Foundation\Summit\Factories\SummitEventFeedbackFactory;
 use App\Models\Foundation\Summit\Factories\SummitFactory;
 use App\Models\Foundation\Summit\Factories\SummitRSVPFactory;
+use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\Repositories\IDefaultSummitEventTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationMediaUploadRepository;
 use App\Models\Foundation\Summit\Speakers\FeaturedSpeaker;
@@ -114,7 +115,7 @@ final class SummitService
 {
 
     /**
-     * @var ISummitEventPublishRepository
+     * @var ISummitEventRepository
      */
     private $event_repository;
 
@@ -127,11 +128,6 @@ final class SummitService
      * @var ISpeakerRepository
      */
     private $speaker_repository;
-
-    /**
-     * @var ISummitEntityEventRepository
-     */
-    private $entity_events_repository;
 
     /**
      * @var ISummitAttendeeTicketRepository
@@ -221,7 +217,7 @@ final class SummitService
     /**
      * SummitService constructor.
      * @param ISummitRepository $summit_repository
-     * @param ISummitEventPublishRepository $event_repository
+     * @param ISummitEventRepository $event_repository
      * @param ISpeakerRepository $speaker_repository
      * @param ISummitEntityEventRepository $entity_events_repository
      * @param ISummitAttendeeTicketRepository $ticket_repository
@@ -933,7 +929,7 @@ final class SummitService
 
             $event = $this->event_repository->getById($event_id);
 
-            if (is_null($event) || !$event instanceof SummitEvent)
+            if (is_null($event) || !$event instanceof IPublishableEvent)
                 throw new EntityNotFoundException(sprintf("Event id %s does not exists!", $event_id));
 
             if (!$event->hasType())

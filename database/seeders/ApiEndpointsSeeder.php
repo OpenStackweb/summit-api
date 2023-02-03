@@ -7625,7 +7625,9 @@ class ApiEndpointsSeeder extends Seeder
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
-                    IGroup::Administrators
+                    IGroup::Administrators,
+                    IGroup::TrackChairsAdmins,
+                    IGroup::SummitAdministrators
                 ]
             ]
         ]);

@@ -68,6 +68,41 @@ extends AbstractPublishService implements IScheduleService
         return $summit->isTrackChair($member, $category);
     }
 
+    private function filterScheduleEvents(SummitProposedSchedule $schedule, array $payload): array {
+        $filtered_schedule_events = [];
+
+        if (isset($payload['presentation_ids'])) {
+            //filter criteria to promote schedule events by event_ids
+            $event_ids = $payload['presentation_ids'];
+            foreach ($event_ids as $event_id) {
+                $event = $this->event_repository->getById(intval($event_id));
+                if (!$event instanceof SummitEvent) continue;
+                $schedule_event = $schedule->getScheduledSummitEventByEvent($event);
+                if (is_null($schedule_event)) continue;
+                $filtered_schedule_events[] = $schedule_event;
+            }
+        } else {
+            //filter criteria to promote schedule events by start_date, end_date and location_id
+            $summit = $schedule->getSummit();
+            $start_date = null;
+            $end_date = null;
+            $location = null;
+            if (isset($payload['start_date'])) {
+                $start_date = $summit->parseDateTime(intval($payload['start_date']));
+            }
+            if (isset($payload['end_date'])) {
+                $end_date = $summit->parseDateTime(intval($payload['end_date']));
+            }
+            if (isset($payload['location_id'])) {
+                $location = $summit->getLocation(intval($payload['location_id']));
+            }
+            $filtered_schedule_events =
+                $schedule->getScheduledSummitEventsByLocationAndDateRange($start_date, $end_date, $location);
+        }
+
+        return $filtered_schedule_events;
+    }
+
     /**
      *@inheritDoc
      */
@@ -77,33 +112,32 @@ extends AbstractPublishService implements IScheduleService
         $schedule = $this->tx_service->transaction(function () use ($source, $presentation_id, $payload) {
 
             $event = $this->event_repository->getById($presentation_id);
-            if (!$event instanceof Presentation)
+            if (!$event instanceof SummitEvent)
                 throw new EntityNotFoundException("event id {$presentation_id} does not exists!");
 
-            $schedule = null;
-            $schedules = $this->schedule_repository->getBySourceAndSummitId($source, $event->getSummitId());
+            $schedule = $this->schedule_repository->getBySourceAndSummitId($source, $event->getSummitId());
 
-            $selection_plan = $event->getSelectionPlan();
-            if (!$selection_plan instanceof SelectionPlan)
-                throw new EntityNotFoundException("event id {$presentation_id} does not have a selection plan");
+            if ($event instanceof Presentation) {
+                $selection_plan = $event->getSelectionPlan();
+                if (!$selection_plan instanceof SelectionPlan)
+                    throw new EntityNotFoundException("presentation id {$presentation_id} does not have a selection plan");
 
-            if (!$selection_plan->isAllowProposedSchedules())
-                throw new ValidationException("selection plan id {$selection_plan->getId()} does not allow proposed schedules");
+                if (!$selection_plan->isAllowProposedSchedules())
+                    throw new ValidationException("selection plan id {$selection_plan->getId()} does not allow proposed schedules");
+            }
 
-            if (count($schedules) == 0) {
+            if (is_null($schedule)) {
                 $member = ResourceServerContext::getCurrentUser(false);
                 $schedule = new SummitProposedSchedule();
                 $schedule->setSource($source);
                 $schedule->setSummit($event->getSummit());
-                if (isset($data['schedule_name'])) {
-                    $schedule->setName($data['schedule_name']);
+                if (isset($payload['schedule_name'])) {
+                    $schedule->setName($payload['schedule_name']);
                 } else {
                     $schedule->setName("{$source} Proposed Schedule");
                 }
                 $schedule->setCreatedBy($member);
                 $this->schedule_repository->add($schedule);
-            } else {
-                $schedule = $schedules[0];
             }
             return $schedule;
         });
@@ -158,32 +192,32 @@ extends AbstractPublishService implements IScheduleService
     /**
      *@inheritDoc
      */
-    public function unPublishProposedActivity(string $source, int $presentation_id):SummitProposedScheduleSummitEvent {
-        return $this->tx_service->transaction(function () use ($source, $presentation_id) {
+    public function unPublishProposedActivity(string $source, int $presentation_id): void {
+        $this->tx_service->transaction(function () use ($source, $presentation_id) {
 
             $event = $this->event_repository->getById($presentation_id);
 
             if (!$event instanceof SummitEvent)
                 throw new EntityNotFoundException(sprintf("event id %s does not exists!", $presentation_id));
 
-            $selection_plan = $event->getSelectionPlan();
-            if (!$selection_plan instanceof SelectionPlan)
-                throw new EntityNotFoundException("event id {$presentation_id} does not have a selection plan");
+            if ($event instanceof Presentation) {
+                $selection_plan = $event->getSelectionPlan();
+                if (!$selection_plan instanceof SelectionPlan)
+                    throw new EntityNotFoundException("presentation id {$presentation_id} does not have a selection plan");
 
-            if (!$selection_plan->isAllowProposedSchedules())
-                throw new ValidationException("selection plan id {$selection_plan->getId()} does not allow proposed schedules");
+                if (!$selection_plan->isAllowProposedSchedules())
+                    throw new ValidationException("selection plan id {$selection_plan->getId()} does not allow proposed schedules");
+            }
 
             $member = ResourceServerContext::getCurrentUser(false);
 
             if (!$this->isAuthorizedUser( $member, $event->getSummit(), $event->getCategory()))
                 throw new AuthzException("User is not authorized to perform this action");
 
-            $schedules = $this->schedule_repository->getBySourceAndSummitId($source, $event->getSummitId());
+            $schedule = $this->schedule_repository->getBySourceAndSummitId($source, $event->getSummitId());
 
-            if (count($schedules) == 0)
+            if (!$schedule instanceof SummitProposedSchedule)
                 throw new EntityNotFoundException("schedule with source {$source} does not exists!");
-
-            $schedule = $schedules[0];
 
             $schedule_event = $schedule->getScheduledSummitEventByEvent($event);
 
@@ -191,72 +225,30 @@ extends AbstractPublishService implements IScheduleService
                 throw new EntityNotFoundException(sprintf("schedule event for event id %s does not exists!", $presentation_id));
 
             $schedule->removeScheduledSummitEvent($schedule_event);
-
-            return $schedule_event;
         });
     }
 
     /**
-     *@inheritDoc
+     * @inheritDoc
      */
     public function publishAll(string $source, int $summit_id, array $payload):SummitProposedSchedule
     {
-        return $this->tx_service->transaction(function () use ($source, $summit_id, $payload) {
+        $schedule = $this->schedule_repository->getBySourceAndSummitId($source, $summit_id);
 
-            $schedules = $this->schedule_repository->getBySourceAndSummitId($source, $summit_id);
+        if (!$schedule instanceof SummitProposedSchedule)
+            throw new EntityNotFoundException("schedule with source {$source} does not exists!");
 
-            if (count($schedules) == 0) {
-                throw new EntityNotFoundException("schedule with source {$source} does not exists!");
+        $filtered_schedule_events = $this->filterScheduleEvents($schedule, $payload);
+
+        if (count($filtered_schedule_events) > 0) {
+            $summit = $schedule->getSummit();
+
+            foreach ($filtered_schedule_events as $filtered_schedule_event) {
+                $event = $filtered_schedule_event->getSummitEvent();
+                if ($event instanceof SummitEvent)
+                    $this->publishCurrentEvent($summit, $event, $payload, true);
             }
-
-            $schedule = $schedules[0];
-
-            $filtered_schedule_events = [];
-
-            if (isset($payload['presentation_ids'])) {
-                //filter criteria to promote schedule events by event_ids
-                $event_ids = $payload['presentation_ids'];
-                foreach ($event_ids as $event_id) {
-                    $event = $this->event_repository->getById(intval($event_id));
-                    if (!$event instanceof SummitEvent) continue;
-                    $schedule_event = $schedule->getScheduledSummitEventByEvent($event);
-                    if (is_null($schedule_event)) continue;
-                    $filtered_schedule_events[] = $schedule_event;
-                }
-            } else {
-                //filter criteria to promote schedule events by start_date, end_date and location_id
-                $summit = $schedule->getSummit();
-                $start_date = null;
-                $end_date = null;
-                $location = null;
-                if (isset($payload['start_date'])) {
-                    $start_date = $summit->parseDateTime(intval($payload['start_date']));
-                }
-                if (isset($payload['end_date'])) {
-                    $end_date = $summit->parseDateTime(intval($payload['end_date']));
-                }
-                if (isset($payload['location_id'])) {
-                    $location = $summit->getLocation(intval($payload['location_id']));
-                }
-                $filtered_schedule_events =
-                    $schedule->getScheduledSummitEventsByLocationAndDateRange($start_date, $end_date, $location);
-            }
-
-            if (count($filtered_schedule_events) > 0) {
-                $schedule->clearScheduledSummitEvents();
-
-                foreach ($filtered_schedule_events as $filtered_schedule_event) {
-                    $event = $filtered_schedule_event->getSummitEvent();
-                    if ($event instanceof SummitEvent) {
-                        $event->setStartDate($filtered_schedule_event->getStartDate());
-                        $event->setEndDate($filtered_schedule_event->getEndDate());
-                        $event->setLocation($filtered_schedule_event->getLocation());
-                    }
-                    $schedule->addScheduledSummitEvent($filtered_schedule_event);
-                }
-            }
-
-            return $schedule;
-        });
+        }
+        return $schedule;
     }
 }

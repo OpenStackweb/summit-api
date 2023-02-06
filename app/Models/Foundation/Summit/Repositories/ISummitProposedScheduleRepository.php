@@ -21,7 +21,7 @@ interface ISummitProposedScheduleRepository extends ISummitEventPublishRepositor
     /**
      * @param string $source
      * @param int $summit_id
-     * @return SummitProposedSchedule[]
+     * @return SummitProposedSchedule|null
      */
-    public function getBySourceAndSummitId(string $source, int $summit_id): array;
+    public function getBySourceAndSummitId(string $source, int $summit_id): ?SummitProposedSchedule;
 }

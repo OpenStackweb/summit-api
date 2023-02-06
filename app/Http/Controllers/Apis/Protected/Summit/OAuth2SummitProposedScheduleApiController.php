@@ -163,15 +163,9 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
             if (is_null($summit)) return $this->error404();
 
-            $schedule_event = $this->service->unPublishProposedActivity($source, intval($presentation_id));
+            $this->service->unPublishProposedActivity($source, intval($presentation_id));
 
-            return $this->deleted(SerializerRegistry::getInstance()->getSerializer($schedule_event)
-                ->serialize
-                (
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations()
-                ));
+            return $this->deleted();
         });
     }
 

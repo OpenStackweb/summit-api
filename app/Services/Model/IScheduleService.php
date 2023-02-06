@@ -44,11 +44,11 @@ interface IScheduleService
     /**
      * @param string $source
      * @param int $presentation_id
-     * @return SummitProposedScheduleSummitEvent
+     * @return void
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function unPublishProposedActivity(string $source, int $presentation_id):SummitProposedScheduleSummitEvent;
+    public function unPublishProposedActivity(string $source, int $presentation_id):void;
 
     /**
      * @param string $source
@@ -56,6 +56,7 @@ interface IScheduleService
      * @param array $payload
      * @return SummitProposedSchedule
      * @throws EntityNotFoundException
+     * @throws \Exception
      */
     public function publishAll(string $source, int $summit_id, array $payload):SummitProposedSchedule;
 }

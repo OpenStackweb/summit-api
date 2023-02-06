@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\Summit\IPublishableEvent;
+use App\Models\Foundation\Summit\TimeDurationRestrictedEvent;
 use DateTime;
 use Doctrine\ORM\Mapping AS ORM;
 use models\exceptions\ValidationException;
@@ -26,6 +27,8 @@ use models\utils\SilverstripeBaseModel;
  */
 class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel implements IPublishableEvent
 {
+    use TimeDurationRestrictedEvent;
+
     /**
      *  minimum number of minutes that an event must last
      */
@@ -108,18 +111,12 @@ class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel implements
      */
     public function setStartDate(DateTime $value)
     {
+        $summit = null;
         $summit_event = $this->summit_event;
-        if (!is_null($summit_event)) {
+        if (!is_null($summit_event))
             $summit = $summit_event->getSummit();
-            if (!is_null($summit)) {
-                $value = $summit->convertDateFromTimeZone2UTC($value);
-            }
-        }
 
-        $end_date = $this->getEndDate();
-        $newDuration = $end_date->getTimestamp() - $value->getTimestamp();
-        $this->duration = max($newDuration, 0);
-        $this->start_date = $value;
+        $this->_setStartDate($value, $summit);
     }
 
     /**
@@ -135,17 +132,12 @@ class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel implements
      */
     public function setEndDate(DateTime $value)
     {
+        $summit = null;
         $summit_event = $this->summit_event;
-        if (!is_null($summit_event)) {
+        if (!is_null($summit_event))
             $summit = $summit_event->getSummit();
-            if (!is_null($summit)) {
-                $value = $summit->convertDateFromTimeZone2UTC($value);
-            }
-        }
-        $start_date = $this->getStartDate();
-        $newDuration = $value->getTimestamp() - $start_date->getTimestamp();
-        $this->duration = $newDuration;
-        $this->end_date = $value;
+
+        $this->_setEndDate($value, $summit);
     }
 
     /**
@@ -167,21 +159,7 @@ class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel implements
      */
     public function setDuration(int $duration_in_seconds, bool $skipDatesSetting = false): void
     {
-        if ($duration_in_seconds < 0) {
-            throw new ValidationException('Duration should be greater or equal than zero.');
-        }
-
-        if ($duration_in_seconds > 0 && $duration_in_seconds < (self::MIN_EVENT_MINUTES * 60)) {
-            throw new ValidationException(sprintf('Duration should be greater than %s minutes.', self::MIN_EVENT_MINUTES));
-        }
-
-        $this->duration = $duration_in_seconds;
-
-        if (!$skipDatesSetting) {
-            $start_date = clone $this->getStartDate();
-            $value = $start_date->add(new \DateInterval('PT' . $duration_in_seconds . 'S'));
-            $this->setEndDate($value);
-        }
+        $this->_setDuration($this->getSummit(), $duration_in_seconds, $skipDatesSetting);
     }
 
     /**

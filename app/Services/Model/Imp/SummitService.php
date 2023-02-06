@@ -925,55 +925,12 @@ final class SummitService
      */
     public function publishEvent(Summit $summit, $event_id, array $data): SummitEvent
     {
-        return $this->tx_service->transaction(function () use ($summit, $data, $event_id) {
+        $event = $this->event_repository->getById($event_id);
 
-            $event = $this->event_repository->getById($event_id);
+        if (!$event instanceof SummitEvent)
+            throw new EntityNotFoundException(sprintf("event id %s does not exists!", $event_id));
 
-            if (is_null($event) || !$event instanceof IPublishableEvent)
-                throw new EntityNotFoundException(sprintf("Event id %s does not exists!", $event_id));
-
-            if (!$event->hasType())
-                throw new EntityNotFoundException(sprintf("Event type its not assigned to event id %s!", $event_id));
-
-            $type = $event->getType();
-
-            if (is_null($event->getSummit()))
-                throw new EntityNotFoundException(sprintf("Summit its not assigned to event id %s!", $event_id));
-
-            if ($event->getSummit()->getIdentifier() !== $summit->getIdentifier())
-                throw new ValidationException(sprintf("Event %s does not belongs to summit id %s", $event_id, $summit->getIdentifier()));
-
-            $this->updateEventDates($data, $summit, $event);
-
-            if ($type->isAllowsPublishingDates()) {
-                $start_datetime = $event->getStartDate();
-                $end_datetime = $event->getEndDate();
-
-                if (is_null($start_datetime))
-                    throw new ValidationException(sprintf("start_date its not assigned to event id %s!", $event_id));
-
-                if (is_null($end_datetime))
-                    throw new ValidationException(sprintf("end_date its not assigned to event id %s!", $event_id));
-            }
-
-            if (isset($data['location_id']) && $type->isAllowsLocation()) {
-                $location_id = intval($data['location_id']);
-                $event->clearLocation();
-                if ($location_id > 0) {
-                    $location = $summit->getLocation($location_id);
-                    if (is_null($location))
-                        throw new EntityNotFoundException(sprintf("location id %s does not exists!", $data['location_id']));
-                    $event->setLocation($location);
-                }
-            }
-
-            $this->validateBlackOutTimesAndTimes($event);
-            $event->unPublish();
-            $event->publish();
-            $event->setUpdatedBy(ResourceServerContext::getCurrentUser(false));
-            $this->event_repository->add($event);
-            return $event;
-        });
+        return $this->publishCurrentEvent($summit, $event, $data);
     }
 
     /**

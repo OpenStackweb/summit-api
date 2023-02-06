@@ -15,6 +15,7 @@
 use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\ScheduleEntity;
+use App\Models\Foundation\Summit\TimeDurationRestrictedEvent;
 use App\Models\Utils\Traits\HasImageTrait;
 use Cocur\Slugify\Slugify;
 use DateTime;
@@ -54,13 +55,14 @@ use models\utils\SilverstripeBaseModel;
  */
 class SummitEvent extends SilverstripeBaseModel
 {
-
     /**
      *  minimun number of minutes that an event must last
      */
     const MIN_EVENT_MINUTES = 1;
 
     use One2ManyPropertyTrait;
+
+    use TimeDurationRestrictedEvent;
 
     const ClassName = 'SummitEvent';
 
@@ -821,26 +823,13 @@ class SummitEvent extends SilverstripeBaseModel
      * @return $this
      * @throws ValidationException
      */
-    public function setStartDate(DateTime $value)
+    public function setStartDate(DateTime $value): SummitEvent
     {
         Log::debug(sprintf("SummitEvent::setStartDate id %s value %s", $this->id, $value->getTimestamp()));
         if (!$this->type->isAllowsPublishingDates()) {
             throw new ValidationException("Type does not allows Publishing Period.");
         }
-        $summit = $this->getSummit();
-        if (!is_null($summit)) {
-            $value = $summit->convertDateFromTimeZone2UTC($value);
-        }
-        $end_date = $this->getEndDate();
-
-        if (!is_null($end_date)) {
-            $newDuration = $end_date->getTimestamp() - $value->getTimestamp();
-            Log::debug(sprintf("SummitEvent::setStartDate id %s setting new duration %s", $this->id, $newDuration));;
-            $this->duration = $newDuration < 0 ? 0 : $newDuration;
-        }
-
-        $this->start_date = $value;
-        Log::debug(sprintf("SummitEvent::setStartDate id %s start_date %s", $this->id, $this->start_date->getTimestamp()));
+        $this->_setStartDate($value, $this->getSummit());
         return $this;
     }
 
@@ -875,28 +864,13 @@ class SummitEvent extends SilverstripeBaseModel
      * @return $this
      * @throws ValidationException
      */
-    public function setEndDate(DateTime $value)
+    public function setEndDate(DateTime $value): SummitEvent
     {
         Log::debug(sprintf("SummitEvent::setEndDate id %s value %s", $this->id, $value->getTimestamp()));
-
         if (!$this->type->isAllowsPublishingDates()) {
             throw new ValidationException("Type does not allows Publishing Period.");
         }
-
-        $summit = $this->getSummit();
-        if (!is_null($summit)) {
-            $value = $summit->convertDateFromTimeZone2UTC($value);
-        }
-
-        $start_date = $this->getStartDate();
-        if (!is_null($start_date)) {
-            $newDuration = $value->getTimestamp() - $start_date->getTimestamp();
-            Log::debug(sprintf("SummitEvent::setEndDate id %s newDuration %s", $this->id, $newDuration));
-            $this->duration = $newDuration;
-        }
-        $this->end_date = $value;
-
-        Log::debug(sprintf("SummitEvent::setEndDate id %s end_date %s", $this->id, $this->end_date->getTimestamp()));
+        $this->_setEndDate($value, $this->getSummit());
         return $this;
     }
 
@@ -1513,32 +1487,7 @@ class SummitEvent extends SilverstripeBaseModel
         if (!$this->type->isAllowsPublishingDates()) {
             throw new ValidationException("Type does not allows Publishing Period.");
         }
-
-        if ($duration_in_seconds < 0) {
-            throw new ValidationException('Duration should be greater or equal than zero.');
-        }
-
-        if ($duration_in_seconds > 0 && $duration_in_seconds < (self::MIN_EVENT_MINUTES * 60)) {
-            throw new ValidationException(sprintf('Duration should be greater than %s minutes.', self::MIN_EVENT_MINUTES));
-        }
-
-        $this->duration = $duration_in_seconds;
-
-        if (!$skipDatesSetting) {
-            $start_date = $this->getStartDate();
-            if (!is_null($start_date)) {
-
-                $start_date = clone $start_date;
-                $value = $start_date->add(new \DateInterval('PT' . $duration_in_seconds . 'S'));
-                $summit = $this->getSummit();
-
-                if (!is_null($summit)) {
-                    $value = $summit->convertDateFromUTC2TimeZone($value);
-                }
-
-                $this->setEndDate($value);
-            }
-        }
+        $this->_setDuration($this->getSummit(), $duration_in_seconds, $skipDatesSetting);
     }
 
     use ScheduleEntity;

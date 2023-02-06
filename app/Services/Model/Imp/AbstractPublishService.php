@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Facades\ResourceServerContext;
 use App\Models\Foundation\Summit\IPublishableEvent;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
@@ -238,5 +239,67 @@ abstract class AbstractPublishService extends AbstractService
                 }
             }
         }
+    }
+
+    /**
+     * @param Summit $summit
+     * @param SummitEvent $event
+     * @param array $data
+     * @param bool $from_scheduled_event
+     * @return SummitEvent
+     * @throws \Exception
+     */
+    protected function publishCurrentEvent(Summit $summit, SummitEvent $event, array $data, bool $from_scheduled_event = false): SummitEvent
+    {
+        return $this->tx_service->transaction(function () use ($summit, $event, $data, $from_scheduled_event) {
+
+            if (!$event->hasType())
+                throw new EntityNotFoundException("Event type its not assigned to event id {$event->getIdentifier()}!");
+
+            $type = $event->getType();
+
+            if (is_null($event->getSummit()))
+                throw new EntityNotFoundException("Summit its not assigned to event id {$event->getIdentifier()}!");
+
+            if ($event->getSummit()->getIdentifier() !== $summit->getIdentifier())
+                throw new ValidationException(
+                    "Event {$event->getIdentifier()} does not belongs to summit id {$summit->getIdentifier()}");
+
+            $this->updateEventDates($data, $summit, $event);
+
+            if ($type->isAllowsPublishingDates()) {
+                $start_datetime = $event->getStartDate();
+                $end_datetime = $event->getEndDate();
+
+                if (is_null($start_datetime))
+                    throw new ValidationException("start_date its not assigned to event id {$event->getIdentifier()}!");
+
+                if (is_null($end_datetime))
+                    throw new ValidationException("end_date its not assigned to event id {$event->getIdentifier()}!");
+            }
+
+            if (isset($data['location_id']) && $type->isAllowsLocation()) {
+                $location_id = intval($data['location_id']);
+                $event->clearLocation();
+                if ($location_id > 0) {
+                    $location = $summit->getLocation($location_id);
+                    if (is_null($location))
+                        throw new EntityNotFoundException("location id {$data['location_id']} does not exists!");
+                    $event->setLocation($location);
+                }
+            }
+
+            if (!$from_scheduled_event)
+                $this->validateBlackOutTimesAndTimes($event);
+
+            $event->unPublish();
+            $event->publish();
+            $event->setUpdatedBy(ResourceServerContext::getCurrentUser(false));
+
+            if (!$from_scheduled_event)
+                $this->publish_repository->add($event);
+
+            return $event;
+        });
     }
 }

@@ -13,6 +13,8 @@
  **/
 
 use App\Models\Foundation\Summit\IPublishableEvent;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\Query\Expr\Join;
 use Dotenv\Exception\ValidationException;
 use models\summit\ISummitProposedScheduleRepository;
@@ -39,7 +41,7 @@ final class DoctrineSummitProposedScheduleRepository
     /**
      *@inheritDoc
      */
-    public function getBySourceAndSummitId(string $source, int $summit_id): array
+    public function getBySourceAndSummitId(string $source, int $summit_id): ?SummitProposedSchedule
     {
         $query = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
@@ -49,7 +51,11 @@ final class DoctrineSummitProposedScheduleRepository
             ->setParameter('source', $source)
             ->setParameter('summit_id', $summit_id);
 
-        return $query->getQuery()->getResult();
+        try {
+            return $query->getQuery()->getSingleResult();
+        } catch (NoResultException|NonUniqueResultException $e) {
+            return null;
+        }
     }
 
     /**

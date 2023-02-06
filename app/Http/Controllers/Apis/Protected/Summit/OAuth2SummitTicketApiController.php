@@ -263,7 +263,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                 return [
                     'created' => new EpochCellFormatter(),
                     'last_edited' => new EpochCellFormatter(),
-                    'bought_date' => new EpochCellFormatter(),
+                    'purchase_date' => new EpochCellFormatter(),
                 ];
             },
             function () use ($summit) {

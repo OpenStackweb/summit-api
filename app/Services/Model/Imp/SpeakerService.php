@@ -193,7 +193,6 @@ final class SpeakerService
 
         return $this->tx_service->transaction(function () use ($data, $creator, $send_email) {
 
-
             $member_id = intval($data['member_id'] ?? 0);
             $email = trim($data['email'] ?? '');
 
@@ -1446,5 +1445,55 @@ final class SpeakerService
 
         Log::debug(sprintf("SpeakerService::send summit id %s flow_event %s filter %s had processed %s records",
             $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $count));
+    }
+
+    /**
+     * @param Member $member
+     * @return PresentationSpeaker|null
+     */
+    public function getSpeakerByMember(Member $member): ?PresentationSpeaker
+    {
+        return $this->tx_service->transaction(function() use($member){
+            Log::debug
+            (
+                sprintf
+                (
+                    "SpeakerService::getSpeakerByMember member %s (%s)",
+                    $member->getEmail(),
+                    $member->getId()
+                )
+            );
+
+            $speaker = $this->speaker_repository->getByMember($member);
+            if (is_null($speaker)){
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SpeakerService::getSpeakerByMember member %s (%s) speaker not found, trying to get reg request...",
+                        $member->getEmail(),
+                        $member->getId()
+                    )
+                );
+
+                $request = $this->speaker_registration_request_repository->getByEmail($member->getEmail());
+                if(!is_null($request)){
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SpeakerService::getSpeakerByMember member %s (%s) got former registration request.",
+                            $member->getEmail(),
+                            $member->getId()
+                        )
+                    );
+
+                    $speaker = $request->getSpeaker();
+                    $speaker->setMember($member);
+                    $request->confirm();
+                }
+            }
+            return $speaker;
+        });
     }
 }

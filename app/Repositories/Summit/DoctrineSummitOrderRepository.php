@@ -176,10 +176,7 @@ SQL
             ->andWhere("e.owner is null");
 
         $query->setParameter("owner_email", trim($email));
-        return $query->getQuery()
-            ->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE)
-            ->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)
-            ->getResult();
+        return $query->getQuery()->getResult();
     }
 
     /**

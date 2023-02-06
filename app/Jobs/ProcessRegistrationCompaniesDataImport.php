@@ -76,7 +76,7 @@ class ProcessRegistrationCompaniesDataImport implements ShouldQueue
     /**
      * @param Exception $exception
      */
-    public function failed(Exception $exception)
+    public function failed(\Throwable $exception)
     {
         Log::error(sprintf( "ProcessRegistrationCompaniesDataImport::failed %s", $exception->getMessage()));
     }

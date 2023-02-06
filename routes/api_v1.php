@@ -1421,7 +1421,7 @@ Route::group(array('prefix' => 'summits'), function () {
             });
         });
 
-        // invitations
+        // registration invitations
         Route::group(array('prefix' => 'registration-invitations'), function () {
 
             Route::get('me', ['uses' => 'OAuth2SummitRegistrationInvitationApiController@getMyInvitation']);
@@ -1442,6 +1442,28 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationInvitationApiController@update'])->where('invitation_id', '[0-9]+');
                 Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationInvitationApiController@get'])->where('invitation_id', '[0-9]+');
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitRegistrationInvitationApiController@delete'])->where('invitation_id', '[0-9]+');
+            });
+        });
+        // submission invitations
+        Route::group(array('prefix' => 'submission-invitations'), function () {
+
+
+            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSubmissionInvitationApiController@getAllBySummit']);
+            Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSubmissionInvitationApiController@add']);
+            Route::group(['prefix' => 'csv'], function () {
+                Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSubmissionInvitationApiController@ingestInvitations']);
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSubmissionInvitationApiController@getAllBySummitCSV']);
+            });
+
+            Route::group(['prefix' => 'all'], function () {
+                Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSubmissionInvitationApiController@deleteAll']);
+                Route::put('send', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSubmissionInvitationApiController@send']);
+            });
+
+            Route::group(['prefix' => '{invitation_id}'], function () {
+                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSubmissionInvitationApiController@update'])->where('invitation_id', '[0-9]+');
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSubmissionInvitationApiController@get'])->where('invitation_id', '[0-9]+');
+                Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSubmissionInvitationApiController@delete'])->where('invitation_id', '[0-9]+');
             });
         });
 

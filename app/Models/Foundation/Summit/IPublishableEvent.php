@@ -19,7 +19,6 @@ use models\summit\SummitAbstractLocation;
 use models\summit\SummitEventType;
 use models\utils\IEntity;
 
-
 /**
  * Interface
  * @package App\Models\Foundation\Summit
@@ -34,9 +33,9 @@ interface IPublishableEvent extends IEntity
     public function hasType(): bool;
 
     /**
-     * @return Summit
+     * @return Summit|null
      */
-    public function getSummit(): Summit;
+    public function getSummit(): ?Summit;
 
     /**
      * @param DateTime $value
@@ -69,8 +68,6 @@ interface IPublishableEvent extends IEntity
     public function clearLocation();
 
     public function getTitle(): string;
-
-    public function getSpeakers();
 
     public function getLocationName(): string;
 }

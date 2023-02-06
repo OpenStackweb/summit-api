@@ -15,6 +15,7 @@
 use App\Services\Model\AbstractService;
 use App\Services\Model\IProcessScheduleEntityLifeCycleEventService;
 use App\Services\Utils\RabbitPublisherService;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ICacheService;
 use libs\utils\ITransactionService;
@@ -61,7 +62,11 @@ final class ProcessScheduleEntityLifeCycleEventService
     {
         parent::__construct($tx_service);
         $this->cache_service = $cache_service;
-        $this->rabbit_service = new RabbitPublisherService('entities-updates-broker');
+        $this->rabbit_service = null;
+        if(Config::get("schedule.use_realtime_updates", 1) === 1) {
+            Log::debug("ProcessScheduleEntityLifeCycleEventService::__construct schedule.use_realtime_updates is enabled");
+            $this->rabbit_service = new RabbitPublisherService('entities-updates-broker');
+        }
         $this->summit_repository = $summit_repository;
     }
 
@@ -86,6 +91,11 @@ final class ProcessScheduleEntityLifeCycleEventService
                     $entity_operator
                 )
             );
+
+            if(is_null($this->rabbit_service)){
+                Log::debug("ProcessScheduleEntityLifeCycleEventService::process rabbit service is disabled.");
+                return;
+            }
 
             $cache_key = sprintf("%s:%s:%s:%s", $summit_id, $entity_id, $entity_type, $entity_operator);
 

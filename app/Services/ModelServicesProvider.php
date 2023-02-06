@@ -51,6 +51,7 @@ use App\Services\Model\Imp\SummitRegistrationInvitationService;
 use App\Services\Model\Imp\SummitScheduleSettingsService;
 use App\Services\Model\Imp\SummitSelectedPresentationListService;
 use App\Services\Model\Imp\SummitSponsorshipTypeService;
+use App\Services\Model\Imp\SummitSubmissionInvitationService;
 use App\Services\Model\Imp\TrackChairRankingService;
 use App\Services\Model\Imp\TrackChairService;
 use App\Services\Model\IOrganizationService;
@@ -87,6 +88,7 @@ use App\Services\Model\ISummitScheduleSettingsService;
 use App\Services\Model\ISummitSelectedPresentationListService;
 use App\Services\Model\ISummitSelectionPlanService;
 use App\Services\Model\ISummitSponsorshipTypeService;
+use App\Services\Model\ISummitSubmissionInvitationService;
 use App\Services\Model\ISummitTaxTypeService;
 use App\Services\Model\ISummitTicketTypeService;
 use App\Services\Model\ISummitTrackService;
@@ -445,6 +447,11 @@ final class ModelServicesProvider extends ServiceProvider
             IScheduleService::class,
             ScheduleService::class,
         );
+      
+        App::singleton(
+            ISummitSubmissionInvitationService::class,
+            SummitSubmissionInvitationService::class,
+        );
    }
 
     /**
@@ -509,6 +516,7 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitSponsorshipTypeService::class,
             IProcessScheduleEntityLifeCycleEventService::class,
             IScheduleService::class,
+            ISummitSubmissionInvitationService::class,
         ];
     }
 }

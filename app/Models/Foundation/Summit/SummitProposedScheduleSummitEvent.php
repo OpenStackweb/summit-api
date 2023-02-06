@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use App\Models\Foundation\Summit\IPublishableEvent;
+use App\Models\Foundation\Summit\IPublishableEventWithSpeakerConstraint;
 use App\Models\Foundation\Summit\TimeDurationRestrictedEvent;
 use DateTime;
 use Doctrine\ORM\Mapping AS ORM;
@@ -25,7 +25,7 @@ use models\utils\SilverstripeBaseModel;
  * @ORM\Table(name="SummitProposedScheduleSummitEvent")
  * @package models\summit
  */
-class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel implements IPublishableEvent
+class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel implements IPublishableEventWithSpeakerConstraint
 {
     use TimeDurationRestrictedEvent;
 

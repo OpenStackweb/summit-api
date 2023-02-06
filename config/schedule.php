@@ -28,4 +28,5 @@ return
     'android_custom_schema' => env('SCHEDULE_ANDROID_CUSTOM_SCHEMA', 'org.openstack.android.summit'),
     'twitter_app_name'      => env('SCHEDULE_TWITTER_APP_NAME', '@openstack'),
     'twitter_text'          => env('SCHEDULE_TWITTER_TEXT', 'Check out this %23OpenStack session I\'m attending at the %23OpenStackSummit!'),
+    'use_realtime_updates'  => env('SCHEDULE_USE_REALTIME_UPDATE', 1),
 ];

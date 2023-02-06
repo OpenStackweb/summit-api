@@ -77,6 +77,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitScheduleConfigRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSelectionPlanExtraQuestionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipTypeRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitSubmissionInvitationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitTaxTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackChairRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
@@ -84,6 +85,7 @@ use App\Models\Foundation\Summit\Repositories\ITrackQuestionTemplateRepository;
 use App\Models\Foundation\Summit\Repositories\ITrackTagGroupAllowedTagsRepository;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
+use models\summit\SummitSubmissionInvitation;
 use App\Models\Foundation\Summit\TrackTagGroupAllowedTag;
 use App\Models\ResourceServer\IApiRepository;
 use Illuminate\Support\Facades\App;
@@ -815,6 +817,13 @@ final class RepositoriesProvider extends ServiceProvider
              function(){
                  return EntityManager::getRepository(SummitProposedScheduleSummitEvent::class);
              }
+        );
+      
+        App::singleton(
+            ISummitSubmissionInvitationRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitSubmissionInvitation::class);
+            }
         );
     }
 }

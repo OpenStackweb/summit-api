@@ -13,8 +13,6 @@
  **/
 
 use App\Models\Foundation\Summit\IPublishableEvent;
-use Doctrine\ORM\NonUniqueResultException;
-use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\Query\Expr\Join;
 use Dotenv\Exception\ValidationException;
 use models\summit\ISummitProposedScheduleRepository;
@@ -51,11 +49,7 @@ final class DoctrineSummitProposedScheduleRepository
             ->setParameter('source', $source)
             ->setParameter('summit_id', $summit_id);
 
-        try {
-            return $query->getQuery()->getSingleResult();
-        } catch (NoResultException|NonUniqueResultException $e) {
-            return null;
-        }
+        return $query->getQuery()->getOneOrNullResult();
     }
 
     /**

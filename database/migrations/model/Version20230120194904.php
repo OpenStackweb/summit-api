@@ -39,7 +39,7 @@ final class Version20230120194904 extends AbstractMigration
 
                 // Fields
                 $table->string("Name")->setNotnull(false)->setDefault('NULL');
-                $table->string("Source")->setNotnull(true)->setDefault("TrackChairs");
+                $table->string("Source")->setNotnull(true)->setDefault("track-chairs");
 
                 // FK
 
@@ -51,6 +51,7 @@ final class Version20230120194904 extends AbstractMigration
                 $table->index("CreatedByID", "CreatedByID");
                 $table->foreign("Member", "CreatedByID", "ID", ["onDelete" => "CASCADE"], "FK_SummitProposedSchedule_CreatedBy");
 
+                $table->unique(["SummitID", "Source"], "SummitID_Source");
             });
         }
     }

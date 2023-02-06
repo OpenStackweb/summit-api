@@ -80,7 +80,7 @@ class ProcessEventDataImport implements ShouldQueue
         }
     }
 
-    public function failed(Exception $exception)
+    public function failed(\Throwable $exception)
     {
         Log::error(sprintf( "ProcessEventDataImport::failed %s", $exception->getMessage()));
     }

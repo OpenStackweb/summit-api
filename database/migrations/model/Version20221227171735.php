@@ -13,13 +13,15 @@ namespace Database\Migrations\Model;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
 use LaravelDoctrine\Migrations\Schema\Builder;
 use LaravelDoctrine\Migrations\Schema\Table;
-
-class Version20221227171735 extends AbstractMigration
+/**
+ * Class Version20221227171735
+ * @package Database\Migrations\Model
+ */
+final class Version20221227171735 extends AbstractMigration
 {
     /**
      * @param Schema $schema

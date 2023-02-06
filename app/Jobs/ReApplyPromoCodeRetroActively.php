@@ -54,7 +54,7 @@ final class ReApplyPromoCodeRetroActively implements ShouldQueue
         $service->reApplyPromoCode($this->promo_code_id);
     }
 
-    public function failed(Exception $exception)
+    public function failed(\Throwable $exception)
     {
         Log::error($exception);
     }

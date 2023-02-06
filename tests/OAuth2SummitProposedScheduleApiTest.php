@@ -24,26 +24,26 @@ final class OAuth2SummitProposedScheduleApiTest extends ProtectedApiTest
 
     use InsertMemberTestData;
 
-//    protected function setUp():void
-//    {
-//        $this->setCurrentGroup(IGroup::TrackChairs);
-//        parent::setUp();
-//        self::insertMemberTestData(IGroup::TrackChairs);
-//        self::$defaultMember = self::$member;
-//        self::$defaultMember2 = self::$member2;
-//        self::insertSummitTestData();
-//        self::$summit_permission_group->addMember(self::$member);
-//        self::$em->persist(self::$summit);
-//        self::$em->persist(self::$summit_permission_group);
-//        self::$em->flush();
-//    }
-//
-//    protected function tearDown():void
-//    {
-//        self::clearSummitTestData();
-//        self::clearMemberTestData();
-//        parent::tearDown();
-//    }
+    protected function setUp():void
+    {
+        $this->setCurrentGroup(IGroup::TrackChairs);
+        parent::setUp();
+        self::insertMemberTestData(IGroup::TrackChairs);
+        self::$defaultMember = self::$member;
+        self::$defaultMember2 = self::$member2;
+        self::insertSummitTestData();
+        self::$summit_permission_group->addMember(self::$member);
+        self::$em->persist(self::$summit);
+        self::$em->persist(self::$summit_permission_group);
+        self::$em->flush();
+    }
+
+    protected function tearDown():void
+    {
+        self::clearSummitTestData();
+        self::clearMemberTestData();
+        parent::tearDown();
+    }
 
     public function testGetProposedScheduleEvents(){
         $params = [
@@ -79,6 +79,7 @@ final class OAuth2SummitProposedScheduleApiTest extends ProtectedApiTest
 
     public function testPublishScheduleEvent(){
         $start_date = new \DateTime("now", new \DateTimeZone("UTC"));
+        $start_date->add(new \DateInterval("P10D"));
         $end_date = (clone $start_date)->add(new \DateInterval("P10D"));
 
         $presentation = self::$presentations[22];
@@ -150,7 +151,7 @@ final class OAuth2SummitProposedScheduleApiTest extends ProtectedApiTest
 
     public function testPublishAll(){
         $params = [
-            'id' => 3375, //self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'source' => 'track-chairs',
         ];
 

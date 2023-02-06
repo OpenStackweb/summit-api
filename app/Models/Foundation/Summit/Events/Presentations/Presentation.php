@@ -12,13 +12,14 @@
  * limitations under the License.
  **/
 
+use App\Jobs\ProcessClearStorage4MediaUploads;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use App\Models\Foundation\Main\ExtraQuestions\ExtraQuestionAnswerHolder;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use App\Models\Foundation\Main\OrderableChilds;
-use App\Models\Foundation\Summit\IPublishableEvent;
+use App\Models\Foundation\Summit\IPublishableEventWithSpeakerConstraint;
 use App\Models\Utils\IStorageTypesConstants;
 use App\Services\Filesystem\FileUploadStrategyFactory;
 use Behat\Transliterator\Transliterator;
@@ -32,7 +33,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Member;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
 
 /**
@@ -42,7 +43,7 @@ use models\utils\SilverstripeBaseModel;
  * @ORM\HasLifecycleCallbacks
  * @package models\summit
  */
-class Presentation extends SummitEvent implements IPublishableEvent
+class Presentation extends SummitEvent implements IPublishableEventWithSpeakerConstraint
 {
     use ExtraQuestionAnswerHolder;
 
@@ -52,28 +53,30 @@ class Presentation extends SummitEvent implements IPublishableEvent
     const FieldAttendeesExpectedToLearn = 'attendees_expected_learnt';
     const FieldAttendingMedia = 'attending_media';
     const FieldWillAllSpeakersAttend = 'will_all_speakers_attend';
-
+    const FieldLinks = 'links';
 
     const AllowedFields = [
         //self::FieldProblemAddressed,
         self::FieldAttendeesExpectedToLearn,
         self::FieldAttendingMedia,
-        //self::FieldWillAllSpeakersAttend,
+        self::FieldLinks,
     ];
 
     /**
      * @param string $type
      * @return bool
      */
-    public static function isAllowedPresentationQuestion(string $type):bool{
-        return in_array($type,Presentation::AllowedFields) ||
-            in_array($type,SummitEvent::AllowedFields);
+    public static function isAllowedPresentationQuestion(string $type): bool
+    {
+        return in_array($type, Presentation::AllowedFields) ||
+            in_array($type, SummitEvent::AllowedFields);
     }
 
     /**
      * @return array|string[]
      */
-    public static function getAllowedFields():array{
+    public static function getAllowedFields(): array
+    {
         return array_merge(Presentation::AllowedFields, SummitEvent::AllowedFields);
     }
 
@@ -364,7 +367,7 @@ class Presentation extends SummitEvent implements IPublishableEvent
     /**
      * @return string
      */
-    public function getClassName():string
+    public function getClassName(): string
     {
         return self::ClassNamePresentation;
     }
@@ -436,7 +439,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
         return $this;
     }
 
-    public function getVideosWithExternalUrls(){
+    public function getVideosWithExternalUrls()
+    {
         return $this->materials->filter(function ($element) {
             return $element instanceof PresentationVideo && !empty($element->getExternalUrl());
         });
@@ -686,7 +690,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
     /**
      * @return bool
      */
-    public function hasSelectionPlan():bool{
+    public function hasSelectionPlan(): bool
+    {
         return $this->getSelectionPlanId() > 0;
     }
 
@@ -927,7 +932,7 @@ class Presentation extends SummitEvent implements IPublishableEvent
     /**
      * @return SelectionPlan|null
      */
-    public function getSelectionPlan():?SelectionPlan
+    public function getSelectionPlan(): ?SelectionPlan
     {
         return $this->selection_plan;
     }
@@ -939,7 +944,7 @@ class Presentation extends SummitEvent implements IPublishableEvent
     {
         $oldSelectionPlan = $this->selection_plan;
         // if selection plan changes
-        if(!is_null($oldSelectionPlan) && $oldSelectionPlan->getId() != $selection_plan->getId()){
+        if (!is_null($oldSelectionPlan) && $oldSelectionPlan->getId() != $selection_plan->getId()) {
             // then clear all selections so far
             $this->selected_presentations->clear();
         }
@@ -952,8 +957,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
     }
 
     /**
-     * @deprecated
      * @return Member
+     * @deprecated
      */
     public function getCreator()
     {
@@ -961,8 +966,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
     }
 
     /**
-     * @deprecated moved to created by attribute
      * @param Member $creator
+     * @deprecated moved to created by attribute
      */
     public function setCreator(Member $creator)
     {
@@ -970,8 +975,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
     }
 
     /**
-     * @deprecated
      * @return TrackAnswer[]
+     * @deprecated
      */
     public function getAnswers()
     {
@@ -979,8 +984,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
     }
 
     /**
-     * @deprecated
      * @param TrackAnswer[] $answers
+     * @deprecated
      */
     public function setAnswers($answers)
     {
@@ -988,8 +993,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
     }
 
     /**
-     * @deprecated
      * @param TrackAnswer $answer
+     * @deprecated
      */
     public function addAnswer(TrackAnswer $answer)
     {
@@ -1023,9 +1028,9 @@ class Presentation extends SummitEvent implements IPublishableEvent
     }
 
     /**
-     * @deprecated
      * @param TrackQuestionTemplate $question
      * @return TrackAnswer|null
+     * @deprecated
      */
     public function getTrackExtraQuestionAnswer(TrackQuestionTemplate $question)
     {
@@ -1048,7 +1053,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
     /**
      * @return int
      */
-    public function getCommentsCount():int{
+    public function getCommentsCount(): int
+    {
         return $this->comments->count();
     }
 
@@ -1056,13 +1062,14 @@ class Presentation extends SummitEvent implements IPublishableEvent
     /**
      * @return ArrayCollection|SummitPresentationComment[]
      */
-    public function getComments(){
+    public function getComments()
+    {
         return $this->comments;
     }
 
     /**
-     * @deprecated
      * @return int
+     * @deprecated
      */
     public function getCreatorId()
     {
@@ -1078,7 +1085,7 @@ class Presentation extends SummitEvent implements IPublishableEvent
      * @param PresentationSpeaker $speaker
      * @return bool
      */
-    public function canEdit(PresentationSpeaker $speaker):bool
+    public function canEdit(PresentationSpeaker $speaker): bool
     {
         if ($this->getCreatedById() == $speaker->getMemberId()) return true;
         if ($this->getModeratorId() == $speaker->getId()) return true;
@@ -1090,9 +1097,10 @@ class Presentation extends SummitEvent implements IPublishableEvent
      * @param Member $member
      * @return bool
      */
-    public function memberCanEdit(Member $member):bool{
+    public function memberCanEdit(Member $member): bool
+    {
         if ($this->getCreatedById() == $member->getId()) return true;
-        if(!$member->hasSpeaker()) return false;
+        if (!$member->hasSpeaker()) return false;
         $speaker = $member->getSpeaker();
         if ($this->getModeratorId() == $speaker->getId()) return true;
         if ($this->isSpeaker($speaker)) return true;
@@ -1103,14 +1111,15 @@ class Presentation extends SummitEvent implements IPublishableEvent
     /**
      * @return bool
      */
-    public function fulfilMediaUploadsConditions():bool{
+    public function fulfilMediaUploadsConditions(): bool
+    {
 
         $type = $this->type;
         if (!$type instanceof PresentationType) return false;
 
         $summitMediaUploadCount = $type->getMandatoryAllowedMediaUploadTypesCount();
-        if($summitMediaUploadCount === 0) return true;
-        if($summitMediaUploadCount > $this->getMediaUploadsMandatoryCount()) return false;
+        if ($summitMediaUploadCount === 0) return true;
+        if ($summitMediaUploadCount > $this->getMediaUploadsMandatoryCount()) return false;
         return true;
     }
 
@@ -1197,6 +1206,7 @@ class Presentation extends SummitEvent implements IPublishableEvent
         $this->generateSlug();
         return $this;
     }
+
     /**
      * Gets a link to edit this presentation
      *
@@ -1204,7 +1214,7 @@ class Presentation extends SummitEvent implements IPublishableEvent
      */
     public function getEditLink(): string
     {
-        if(!$this->hasSelectionPlan()) return '#';
+        if (!$this->hasSelectionPlan()) return '#';
 
         return sprintf
         (
@@ -1229,7 +1239,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
     /**
      * @return array
      */
-    public function getMandatoryMediaUploadsCountByType(): array {
+    public function getMandatoryMediaUploadsCountByType(): array
+    {
         $res = array();
         foreach ($this->materials as $element) {
             if ($element instanceof PresentationMediaUpload && $element->isMandatory()) {
@@ -1248,7 +1259,7 @@ class Presentation extends SummitEvent implements IPublishableEvent
      */
     public function addTrackChairView(Member $viewer)
     {
-        if($this->viewedBy($viewer)) return;
+        if ($this->viewedBy($viewer)) return;
         $view = PresentationTrackChairView::build($viewer, $this);
         $this->track_chair_views->add($view);
     }
@@ -1276,7 +1287,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
     /**
      * @param SummitPresentationComment $comment
      */
-    public function addPresentationComment(SummitPresentationComment $comment):void{
+    public function addPresentationComment(SummitPresentationComment $comment): void
+    {
         $this->comments->add($comment);
         $comment->setPresentation($this);
     }
@@ -1315,7 +1327,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
     /**
      * @return array
      */
-    public function getMemberViewers(){
+    public function getMemberViewers()
+    {
         return array_map(function ($view) {
             return $view->getViewer();
         }, $this->track_chair_views->getValues());
@@ -1326,11 +1339,13 @@ class Presentation extends SummitEvent implements IPublishableEvent
         return $this->track_chair_views->count();
     }
 
-    public function clearViews():void{
+    public function clearViews(): void
+    {
         $this->track_chair_views->clear();
     }
 
-    public function viewedBy(Member $member):bool{
+    public function viewedBy(Member $member): bool
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('viewer', $member));
         return $this->track_chair_views->matching($criteria)->count() > 0;
@@ -1410,19 +1425,21 @@ class Presentation extends SummitEvent implements IPublishableEvent
      * @param string $collection_type
      * @return bool
      */
-    public function hasMemberSelectionFor(Member $member, string $collection_type):bool{
+    public function hasMemberSelectionFor(Member $member, string $collection_type): bool
+    {
         return $this->selected_presentations->filter(function ($selection) use ($collection_type, $member) {
-            $list = $selection->getList();
-            return $list->getListType() === SummitSelectedPresentationList::Individual
-                && $selection->getCollection() == $collection_type && $selection->getMemberId() == $member->getId();
-        })->count() > 0;
+                $list = $selection->getList();
+                return $list->getListType() === SummitSelectedPresentationList::Individual
+                    && $selection->getCollection() == $collection_type && $selection->getMemberId() == $member->getId();
+            })->count() > 0;
     }
 
     /**
      * @param string $collection_type
      * @return int
      */
-    public function getSelectionMembersCount(string $collection_type): int{
+    public function getSelectionMembersCount(string $collection_type): int
+    {
         return $this->selected_presentations->filter(function ($selection) use ($collection_type) {
             $list = $selection->getList();
             return $list->getListType() === SummitSelectedPresentationList::Individual
@@ -1441,11 +1458,13 @@ class Presentation extends SummitEvent implements IPublishableEvent
     /**
      * @return int
      */
-    public function getSelectorsCount():int{
+    public function getSelectorsCount(): int
+    {
         return $this->getSelectionMembersCount(SummitSelectedPresentation::CollectionSelected);
     }
 
-    public function isSelectedByAnyone():bool{
+    public function isSelectedByAnyone(): bool
+    {
         return $this->getSelectorsCount() > 0;
     }
 
@@ -1460,7 +1479,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
     /**
      * @return int
      */
-    public function getLikersCount():int{
+    public function getLikersCount(): int
+    {
         return $this->getSelectionMembersCount(SummitSelectedPresentation::CollectionMaybe);
     }
 
@@ -1475,7 +1495,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
     /**
      * @return int
      */
-    public function getPassersCount():int{
+    public function getPassersCount(): int
+    {
         return $this->getSelectionMembersCount(SummitSelectedPresentation::CollectionPass);
     }
 
@@ -1484,11 +1505,11 @@ class Presentation extends SummitEvent implements IPublishableEvent
      */
     public function getVotesTotalPoints(): int
     {
-        $res =  $this->createQuery("SELECT SUM(v.vote) from models\summit\PresentationVote v 
+        $res = $this->createQuery("SELECT SUM(v.vote) from models\summit\PresentationVote v 
             JOIN v.presentation p
             WHERE p.id = :presentation_id")
             ->setParameter('presentation_id', $this->id)->getSingleScalarResult();
-        return is_null($res) ? 0: intval($res);
+        return is_null($res) ? 0 : intval($res);
     }
 
     /**
@@ -1501,7 +1522,7 @@ class Presentation extends SummitEvent implements IPublishableEvent
             JOIN v.presentation p
             WHERE p.id = :presentation_id")
             ->setParameter('presentation_id', $this->id)->getSingleScalarResult();
-        return is_null($res) ? 0: intval($res);
+        return is_null($res) ? 0 : intval($res);
     }
 
     /**
@@ -1513,13 +1534,13 @@ class Presentation extends SummitEvent implements IPublishableEvent
             JOIN v.presentation p
             WHERE p.id = :presentation_id")
             ->setParameter('presentation_id', $this->id)->getSingleScalarResult();
-        return is_null($res) ? 0: floatval($res);
+        return is_null($res) ? 0 : floatval($res);
     }
 
     /**
      * @return float
      */
-    public function getPopularityScore():float
+    public function getPopularityScore(): float
     {
 
         $weight_select = floatval(Config::get("track_chairs.weight_select"));
@@ -1529,31 +1550,35 @@ class Presentation extends SummitEvent implements IPublishableEvent
         return (
             ($this->getSelectorsCount() * $weight_select) +
             ($this->getLikersCount() * $weight_maybe) +
-            ($this->getPassersCount()* $weight_pass)
+            ($this->getPassersCount() * $weight_pass)
         );
     }
 
-    public function clearCategoryChangeRequests():void{
+    public function clearCategoryChangeRequests(): void
+    {
         $this->category_changes_requests->clear();
     }
 
     /**
      * @return ArrayCollection|SummitCategoryChange[]
      */
-    public function getCategoryChangeRequests(){
-        return  $this->category_changes_requests;
+    public function getCategoryChangeRequests()
+    {
+        return $this->category_changes_requests;
     }
 
     /**
      * @return ArrayCollection|SummitCategoryChange[]
      */
-    public function getPendingCategoryChangeRequests(){
+    public function getPendingCategoryChangeRequests()
+    {
         $criteria = Criteria::create();
         $criteria->andWhere(Criteria::expr()->eq('status', ISummitCategoryChangeStatus::Pending));
         return $this->category_changes_requests->matching($criteria);
     }
 
-    public function getPendingCategoryChangeRequestsCount():int{
+    public function getPendingCategoryChangeRequestsCount(): int
+    {
         return $this->getPendingCategoryChangeRequests()->count();
     }
 
@@ -1565,18 +1590,18 @@ class Presentation extends SummitEvent implements IPublishableEvent
      */
     public function addCategoryChangeRequest
     (
-        Member $requester,
+        Member               $requester,
         PresentationCategory $newCategory
-    ):SummitCategoryChange
+    ): SummitCategoryChange
     {
         $criteria = Criteria::create();
         $criteria->andWhere(Criteria::expr()->eq('new_category', $newCategory));
         $criteria->andWhere(Criteria::expr()->eq('status', ISummitCategoryChangeStatus::Pending));
 
-        if($this->category_changes_requests->matching($criteria)->count() > 0)
+        if ($this->category_changes_requests->matching($criteria)->count() > 0)
             throw new ValidationException(sprintf("There is already a pending category change request for this category."));
 
-        if($this->category->getId() == $newCategory->getId())
+        if ($this->category->getId() == $newCategory->getId())
             throw new ValidationException("This presentation already belongs to %s.", $newCategory->getTitle());
 
         $request = SummitCategoryChange::create($this, $requester, $newCategory);
@@ -1590,7 +1615,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
      * @param int $id
      * @return SummitCategoryChange|null
      */
-    public function getCategoryChangeRequest(int $id):?SummitCategoryChange{
+    public function getCategoryChangeRequest(int $id): ?SummitCategoryChange
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $id));
         $res = $this->category_changes_requests->matching($criteria)->first();
@@ -1602,9 +1628,10 @@ class Presentation extends SummitEvent implements IPublishableEvent
      * @return int
      * @throws ValidationException
      */
-    public function getRemainingSelectionsForMember(Member $member):int{
+    public function getRemainingSelectionsForMember(Member $member): int
+    {
         $list = $this->category->getSelectionListByTypeAndOwner(SummitSelectedPresentationList::Individual, $member);
-        if(is_null($list) || !$list instanceof SummitSelectedPresentationList) return $this->category->getTrackChairAvailableSlots();
+        if (is_null($list) || !$list instanceof SummitSelectedPresentationList) return $this->category->getTrackChairAvailableSlots();
         return $list->getAvailableSlots();
     }
 
@@ -1612,7 +1639,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
      * @param PresentationActionType $type
      * @return bool
      */
-    public function hasActionByType(PresentationActionType $type):bool{
+    public function hasActionByType(PresentationActionType $type): bool
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('type', $type));
         return $this->actions->matching($criteria)->count() > 0;
@@ -1622,7 +1650,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
      * @param PresentationActionType $type
      * @return PresentationAction|null
      */
-    public function getActionByType(PresentationActionType $type):?PresentationAction {
+    public function getActionByType(PresentationActionType $type): ?PresentationAction
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('type', $type));
         $res = $this->actions->matching($criteria)->first();
@@ -1633,7 +1662,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
      * @param int $id
      * @return PresentationAction|null
      */
-    public function getActionById(int $id):?PresentationAction {
+    public function getActionById(int $id): ?PresentationAction
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $id));
         $res = $this->actions->matching($criteria)->first();
@@ -1645,11 +1675,12 @@ class Presentation extends SummitEvent implements IPublishableEvent
      * @param PresentationActionType $type
      * @return PresentationAction|null
      */
-    public function setCompletionByType(bool $complete, PresentationActionType $type):?PresentationAction{
+    public function setCompletionByType(bool $complete, PresentationActionType $type): ?PresentationAction
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('type', $type));
         $res = $this->actions->matching($criteria)->first();
-        if($res === false) return null;
+        if ($res === false) return null;
         $res->setIsCompleted($complete);
         return $res;
     }
@@ -1661,7 +1692,7 @@ class Presentation extends SummitEvent implements IPublishableEvent
     public function setActionByType(PresentationActionType $presentation_action_type): PresentationAction
     {
         $action = $this->getActionByType($presentation_action_type);
-        if(is_null($action)){
+        if (is_null($action)) {
             Log::debug("Presentation::setActionByType creating new presentation action for type {$presentation_action_type->getLabel()}");
             $action = new PresentationAction();
             $action->setType($presentation_action_type);
@@ -1676,12 +1707,13 @@ class Presentation extends SummitEvent implements IPublishableEvent
      * @param $b
      * @return int
      */
-    private function actionSort($a,$b) {
-        if(!$a instanceof PresentationAction) return 0;
-        if(!$b instanceof PresentationAction) return 0;
+    private function actionSort($a, $b)
+    {
+        if (!$a instanceof PresentationAction) return 0;
+        if (!$b instanceof PresentationAction) return 0;
         $presentation = $a->getPresentation();
         $selection_plan = $presentation->getSelectionPlan();
-        if(is_null($selection_plan)) return 0;
+        if (is_null($selection_plan)) return 0;
         $o1 = $selection_plan->getPresentationActionTypeOrder($a->getType());
         $o2 = $selection_plan->getPresentationActionTypeOrder($b->getType());
         if ($o1 == $o2) {
@@ -1693,17 +1725,18 @@ class Presentation extends SummitEvent implements IPublishableEvent
     /**
      * @return array|PresentationAction[]
      */
-    public function getPresentationActions(){
+    public function getPresentationActions()
+    {
 
         $selection_plan = $this->selection_plan;
-        if(is_null($selection_plan)) return [];
+        if (is_null($selection_plan)) return [];
         // need to filter by selection plan
-        $res = $this->actions->filter(function($e) use($selection_plan){
-           if(!$e instanceof PresentationAction) return false;
-           return $selection_plan->isAllowedPresentationActionType($e->getType());
+        $res = $this->actions->filter(function ($e) use ($selection_plan) {
+            if (!$e instanceof PresentationAction) return false;
+            return $selection_plan->isAllowedPresentationActionType($e->getType());
         })->toArray();
 
-        usort($res, [ $this , 'actionSort' ]);
+        usort($res, [$this, 'actionSort']);
         return $res;
     }
 
@@ -1729,17 +1762,18 @@ class Presentation extends SummitEvent implements IPublishableEvent
     public function getExtraQuestionAnswers()
     {
         $selection_plan = $this->selection_plan;
-        if(is_null($selection_plan)) return [];
+        if (is_null($selection_plan)) return [];
         $res = [];
-        foreach ($this->extra_question_answers as $answer){
-            if($selection_plan->isExtraQuestionAssigned($answer->getQuestion())){
+        foreach ($this->extra_question_answers as $answer) {
+            if ($selection_plan->isExtraQuestionAssigned($answer->getQuestion())) {
                 $res[] = $answer;
             }
         }
         return $res;
     }
 
-    public function getAllExtraQuestionAnswers(){
+    public function getAllExtraQuestionAnswers()
+    {
         return $this->extra_question_answers;
     }
 
@@ -1747,7 +1781,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
      * @param SummitSelectionPlanExtraQuestionType $question
      * @return PresentationExtraQuestionAnswer|null
      */
-    public function getExtraQuestionAnswerByQuestion(SummitSelectionPlanExtraQuestionType $question):?PresentationExtraQuestionAnswer{
+    public function getExtraQuestionAnswerByQuestion(SummitSelectionPlanExtraQuestionType $question): ?PresentationExtraQuestionAnswer
+    {
         $answer = $this->extra_question_answers->matching(
             Criteria::create()
                 ->where(Criteria::expr()->eq("question", $question))
@@ -1756,19 +1791,19 @@ class Presentation extends SummitEvent implements IPublishableEvent
     }
 
 
-    public function clearExtraQuestionAnswers():void
+    public function clearExtraQuestionAnswers(): void
     {
         $selection_plan = $this->selection_plan;
-        if(is_null($selection_plan)) return;
+        if (is_null($selection_plan)) return;
         // only clear the ones assigned to selection plan
         $to_remove = [];
-        foreach ($this->extra_question_answers as $answer){
-            if($selection_plan->isExtraQuestionAssigned($answer->getQuestion())){
+        foreach ($this->extra_question_answers as $answer) {
+            if ($selection_plan->isExtraQuestionAssigned($answer->getQuestion())) {
                 $to_remove[] = $answer;
             }
         }
         // clear answers
-        foreach($to_remove as $a){
+        foreach ($to_remove as $a) {
             $this->extra_question_answers->removeElement($a);
         }
 
@@ -1777,9 +1812,10 @@ class Presentation extends SummitEvent implements IPublishableEvent
     /**
      * @param ExtraQuestionAnswer $answer
      */
-    public function addExtraQuestionAnswer(ExtraQuestionAnswer $answer){
-        if(!$answer instanceof PresentationExtraQuestionAnswer) return;
-        if($this->extra_question_answers->contains($answer)) return;
+    public function addExtraQuestionAnswer(ExtraQuestionAnswer $answer)
+    {
+        if (!$answer instanceof PresentationExtraQuestionAnswer) return;
+        if ($this->extra_question_answers->contains($answer)) return;
         $this->extra_question_answers->add($answer);
         $answer->setPresentation($this);
     }
@@ -1787,9 +1823,10 @@ class Presentation extends SummitEvent implements IPublishableEvent
     /**
      * @param ExtraQuestionAnswer $answer
      */
-    public function removeExtraQuestionAnswer(ExtraQuestionAnswer $answer){
-        if(!$answer instanceof PresentationExtraQuestionAnswer) return;
-        if(!$this->extra_question_answers->contains($answer)) return;
+    public function removeExtraQuestionAnswer(ExtraQuestionAnswer $answer)
+    {
+        if (!$answer instanceof PresentationExtraQuestionAnswer) return;
+        if (!$this->extra_question_answers->contains($answer)) return;
         $this->extra_question_answers->removeElement($answer);
         $answer->clearPresentation();
     }
@@ -1805,7 +1842,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
     /**
      * @return bool
      */
-    public function isDisclaimerAccepted():bool{
+    public function isDisclaimerAccepted(): bool
+    {
         return !is_null($this->disclaimer_accepted_date);
     }
 
@@ -1818,47 +1856,74 @@ class Presentation extends SummitEvent implements IPublishableEvent
     }
 
 
-    public function clearMediaUploads():void{
+    public function clearMediaUploads(): void
+    {
         $mediaUploads = $this->getMediaUploads();
+        $payload = [];
 
         if ($mediaUploads->count()) {
             Log::debug("Presentation::clearMediaUploads processing media uploads");
-            $private_paths = [];
-            $public_paths = [];
 
             foreach ($mediaUploads as $mediaUpload) {
 
                 $mediaUploadType = $mediaUpload->getMediaUploadType();
-                $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
+                $privateStorageType = $mediaUploadType->getPrivateStorageType();
+                $publicStorageType = $mediaUploadType->getPublicStorageType();
 
-                if (!is_null($strategy)) {
-                    $privatePath  = $mediaUpload->getPath(IStorageTypesConstants::PrivateType);
-                    if(!isset($private_paths[$privatePath]))
-                        $private_paths[$privatePath] = $strategy;
-                    Log::debug(sprintf("Presentation::clearMediaUploads marking as deleted %s/%s ", $privatePath, $mediaUpload->getFilename()));
-                    $strategy->markAsDeleted($privatePath, $mediaUpload->getFilename());
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "Presentation::clearMediaUploads processing presentation %s media upload %s private storage %s public storage %s",
+                        $this->id,
+                        $mediaUpload->getId(),
+                        $privateStorageType,
+                        $publicStorageType
+                    )
+                );
+
+                if (!isset($payload[$privateStorageType])) {
+                    $payload[$privateStorageType] = [
+                        'files' => [],
+                        'paths' => [],
+                    ];
                 }
 
-                $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
-
-                if (!is_null($strategy)) {
-                    $publicPath  = $mediaUpload->getPath(IStorageTypesConstants::PublicType);
-                    if(!isset($public_paths[$publicPath]))
-                        $public_paths[$publicPath] = $strategy;
-                    Log::debug(sprintf("Presentation::clearMediaUploads marking as deleted %s/%s ", $publicPath, $mediaUpload->getFilename()));
-                    $strategy->markAsDeleted($publicPath, $mediaUpload->getFilename());
+                if (!isset($payload[$publicStorageType])) {
+                    $payload[$publicStorageType] = [
+                        'files' => [],
+                        'paths' => [],
+                    ];
                 }
+
+                // private ones
+                $privatePath = $mediaUpload->getPath(IStorageTypesConstants::PrivateType);
+                if (!in_array($privatePath, $payload[$privateStorageType]['paths']))
+                    $payload[$privateStorageType]['paths'][] = $privatePath;
+
+                Log::debug(sprintf("Presentation::clearMediaUploads marking as to be deleted %s/%s ", $privatePath, $mediaUpload->getFilename()));
+
+                $file = sprintf("%s|%s", $privatePath, $mediaUpload->getFilename());
+                if (!in_array($file, $payload[$privateStorageType]['files']))
+                    $payload[$privateStorageType]['files'][] = $file;
+
+                // public ones
+                $publicPath = $mediaUpload->getPath(IStorageTypesConstants::PublicType);
+
+                if (!in_array($publicPath, $payload[$publicStorageType]['paths']))
+                    $payload[$publicStorageType]['paths'][] = $publicPath;
+
+                Log::debug(sprintf("Presentation::clearMediaUploads marking as to be deleted %s/%s ", $publicPath, $mediaUpload->getFilename()));
+
+                $file = sprintf("%s|%s", $publicPath, $mediaUpload->getFilename());
+                if (!in_array($file, $payload[$publicStorageType]['files']))
+                    $payload[$publicStorageType]['files'][] = $file;
+
             }
 
-            foreach($private_paths as $path => $strategy){
-                Log::debug(sprintf("Presentation::clearMediaUploads marking as deleted path ( private) %s.", $path));
-                $strategy->markAsDeleted($path);
-            }
+            Log::debug(sprintf("Presentation::clearMediaUploads got payload %s, triggering background job ...", json_encode($payload)));
 
-            foreach($public_paths as $path => $strategy){
-                Log::debug(sprintf("Presentation::clearMediaUploads as deleted path ( public ) %s.", $path));
-                $strategy->markAsDeleted($path);
-            }
+            ProcessClearStorage4MediaUploads::dispatch($payload);
         }
     }
 
@@ -1883,7 +1948,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
      * @param int|null $end_voting_date
      * @return ArrayCollection|\Doctrine\Common\Collections\Collection|PresentationAttendeeVote[]
      */
-    private function getVotesRange(?int $begin_voting_date = null, ?int $end_voting_date = null) {
+    private function getVotesRange(?int $begin_voting_date = null, ?int $end_voting_date = null)
+    {
         $criteria = null;
 
         if ($begin_voting_date != null) {
@@ -1907,7 +1973,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
     /**
      * @return ArrayCollection|SummitAttendee[]
      */
-    public function getVoters($begin_voting_date = null, $end_voting_date = null): ArrayCollection {
+    public function getVoters($begin_voting_date = null, $end_voting_date = null): ArrayCollection
+    {
         return $this->getVotesRange($begin_voting_date, $end_voting_date)->map(function ($attendeeVote) {
             return $attendeeVote->getVoter();
         });
@@ -1916,7 +1983,8 @@ class Presentation extends SummitEvent implements IPublishableEvent
     /**
      * @return int
      */
-    public function getAttendeeVotesCount($begin_voting_date = null, $end_voting_date = null): int {
+    public function getAttendeeVotesCount($begin_voting_date = null, $end_voting_date = null): int
+    {
         return $this->getVotesRange($begin_voting_date, $end_voting_date)->count();
     }
 
@@ -1925,12 +1993,13 @@ class Presentation extends SummitEvent implements IPublishableEvent
      * @return PresentationAttendeeVote
      * @throws ValidationException
      */
-    public function castAttendeeVote(SummitAttendee $attendee):PresentationAttendeeVote{
+    public function castAttendeeVote(SummitAttendee $attendee): PresentationAttendeeVote
+    {
 
         Log::debug(sprintf("Presentation::castAttendeeVote attendee %s presentation %s", $attendee->getId(), $this->getId()));
         // check that member did not vote yet...
-        if($this->attendees_votes->matching(Criteria::create()
-            ->where(Criteria::expr()->eq("voter", $attendee)))->count() > 0)
+        if ($this->attendees_votes->matching(Criteria::create()
+                ->where(Criteria::expr()->eq("voter", $attendee)))->count() > 0)
             throw new ValidationException(sprintf("Attendee %s already vote on presentation %s", $attendee->getEmail(), $this->id));
 
         Log::debug("Presentation::castAttendeeVote creating vote");
@@ -1945,12 +2014,13 @@ class Presentation extends SummitEvent implements IPublishableEvent
      * @param SummitAttendee $attendee
      * @throws ValidationException
      */
-    public function unCastAttendeeVote(SummitAttendee $attendee):void{
+    public function unCastAttendeeVote(SummitAttendee $attendee): void
+    {
 
         $vote = $this->attendees_votes->matching(Criteria::create()
             ->where(Criteria::expr()->eq("voter", $attendee)))->first();
 
-        if(!$vote)
+        if (!$vote)
             throw new ValidationException(sprintf("Vote not found."));
 
         $this->attendees_votes->removeElement($vote);
@@ -1967,27 +2037,30 @@ class Presentation extends SummitEvent implements IPublishableEvent
     {
         // check if we change the category
         $oldCategory = $this->category;
-        if(!is_null($oldCategory) && $oldCategory->getId() != $category->getId()){
+        if (!is_null($oldCategory) && $oldCategory->getId() != $category->getId()) {
             // then we need to clear up all selections ( individual / team)
             $this->selected_presentations->clear();
         }
         return parent::setCategory($category);
     }
 
-    public function addTrackChairScore(PresentationTrackChairScore $score):void{
-        if($this->track_chairs_scores->contains($score)) return;
+    public function addTrackChairScore(PresentationTrackChairScore $score): void
+    {
+        if ($this->track_chairs_scores->contains($score)) return;
         $this->track_chairs_scores->add($score);
         $score->setPresentation($this);
     }
 
-    public function removeTrackChairScore(PresentationTrackChairScore $score):void{
-        if(!$this->track_chairs_scores->contains($score)) return;
+    public function removeTrackChairScore(PresentationTrackChairScore $score): void
+    {
+        if (!$this->track_chairs_scores->contains($score)) return;
         $this->track_chairs_scores->removeElement($score);
         $score->clearPresentation();
     }
 
 
-    public function getTrackChairAvgScoresPerRakingType():array{
+    public function getTrackChairAvgScoresPerRakingType(): array
+    {
 
         Log::debug(sprintf("Presentation::getTrackChairAvgScoresPerRakingType presentation %s", $this->getId()));
 
@@ -2002,7 +2075,7 @@ WHERE PresentationTrackChairScore.PresentationID = :presentation_id
 GROUP BY PresentationTrackChairRatingType.ID
 SQL;
 
-        try{
+        try {
             $stmt = $this->prepareRawSQL($query);
             $stmt->execute(
                 [
@@ -2012,16 +2085,17 @@ SQL;
             $res = $stmt->fetchAll();
             $res = count($res) > 0 ? $res : [];
             return $res;
-        }
-        catch (\Exception $ex){
+        } catch (\Exception $ex) {
             Log::error($ex);
         }
         return [];
     }
+
     /**
      * @return float
      */
-    public function getTrackChairAvgScore():float{
+    public function getTrackChairAvgScore(): float
+    {
 
         Log::debug(sprintf("Presentation::getTrackChairAvgScore presentation %s", $this->getId()));
 
@@ -2035,7 +2109,7 @@ inner join PresentationTrackChairRatingType on PresentationTrackChairRatingType.
 WHERE PresentationID = :presentation_id
 GROUP BY TrackChairID,PresentationID ) AS Presentation_Scores
 SQL;
-        try{
+        try {
             $stmt = $this->prepareRawSQL($query);
             $stmt->execute(
                 [
@@ -2045,8 +2119,7 @@ SQL;
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
             $score = count($res) > 0 ? $res[0] : 0;
             return floatval($score);
-        }
-        catch (\Exception $ex){
+        } catch (\Exception $ex) {
             Log::error($ex);
         }
         return 0.0;
@@ -2056,15 +2129,16 @@ SQL;
      * @param SummitTrackChair $trackChair
      * @return float
      */
-    public function getTrackChairScoreFor(SummitTrackChair $trackChair):float{
+    public function getTrackChairScoreFor(SummitTrackChair $trackChair): float
+    {
 
         Log::debug
         (
             sprintf
             (
                 "Presentation::getTrackChairScoreFor presentation %s track chair %s",
-                        $this->getId(),
-                        $trackChair->getId()
+                $this->getId(),
+                $trackChair->getId()
             )
         );
 
@@ -2078,7 +2152,7 @@ WHERE PresentationID = :presentation_id and TrackChairID = :track_chair_id
 GROUP BY TrackChairID,PresentationID
 
 SQL;
-        try{
+        try {
             $stmt = $this->prepareRawSQL($query);
             $stmt->execute(
                 [
@@ -2089,8 +2163,7 @@ SQL;
             $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
             $score = count($res) > 0 ? $res[0] : 0;
             return floatval($score);
-        }
-        catch (\Exception $ex){
+        } catch (\Exception $ex) {
             Log::error($ex);
         }
         return 0.0;
@@ -2100,7 +2173,8 @@ SQL;
      * @param SummitTrackChair $trackChair
      * @return PresentationTrackChairScore[]
      */
-    public function getTrackChairScoresBy(SummitTrackChair $trackChair){
+    public function getTrackChairScoresBy(SummitTrackChair $trackChair)
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('reviewer', $trackChair));
         return $this->track_chairs_scores->matching($criteria);
@@ -2111,8 +2185,10 @@ SQL;
      */
     public function getExtraQuestions()
     {
-        if(!$this->hasSelectionPlan()) return [];
-        return $this->selection_plan->getExtraQuestions()->map(function ($a){ return $a->getQuestionType();});
+        if (!$this->hasSelectionPlan()) return [];
+        return $this->selection_plan->getExtraQuestions()->map(function ($a) {
+            return $a->getQuestionType();
+        });
     }
 
     /**
@@ -2121,7 +2197,7 @@ SQL;
      */
     public function getQuestionById(int $questionId): ?ExtraQuestionType
     {
-        if(!$this->hasSelectionPlan()) return null;
+        if (!$this->hasSelectionPlan()) return null;
         return $this->selection_plan->getExtraQuestionById($questionId);
     }
 
@@ -2142,19 +2218,21 @@ SQL;
      * @param int $comment_id
      * @return SummitPresentationComment|null
      */
-    public function getComment(int $comment_id):?SummitPresentationComment{
+    public function getComment(int $comment_id): ?SummitPresentationComment
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $comment_id));
         $res = $this->comments->matching($criteria)->first();
-        if($res === false) return null;
+        if ($res === false) return null;
         return $res;
     }
 
     /**
      * @param SummitPresentationComment $comment
      */
-    public function removeComment(SummitPresentationComment $comment):void{
-        if(!$this->comments->contains($comment)) return;
+    public function removeComment(SummitPresentationComment $comment): void
+    {
+        if (!$this->comments->contains($comment)) return;
         $this->comments->removeElement($comment);
     }
 }

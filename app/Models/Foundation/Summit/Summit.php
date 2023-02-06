@@ -711,6 +711,12 @@ class Summit extends SilverstripeBaseModel
     private $registration_invitations;
 
     /**
+     * @ORM\OneToMany(targetEntity="models\summit\SummitSubmissionInvitation", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var SummitSubmissionInvitation[]
+     */
+    private $submission_invitations;
+
+    /**
      * @ORM\ManyToMany(targetEntity="models\main\SummitAdministratorPermissionGroup",  mappedBy="summits"))
      * @var SummitAdministratorPermissionGroup[]
      */
@@ -1099,6 +1105,7 @@ class Summit extends SilverstripeBaseModel
         $this->registration_allowed_refund_request_till_date = null;
         $this->sponsorship_types = new ArrayCollection();
         $this->selection_plan_extra_questions = new ArrayCollection();
+        $this->submission_invitations = new ArrayCollection();
     }
 
     /**
@@ -1310,7 +1317,6 @@ class Summit extends SilverstripeBaseModel
     {
         if (!$this->events->contains($event)) return;
         $this->events->removeElement($event);
-        $event->clearSummit();
     }
 
     /**
@@ -5186,6 +5192,63 @@ SQL;
     public function clearRegistrationInvitations(): void
     {
         $this->registration_invitations->clear();
+    }
+
+    /**
+     * @param SummitSubmissionInvitation $invitation
+     */
+    public function addSubmissionInvitation(SummitSubmissionInvitation $invitation)
+    {
+        if ($this->submission_invitations->contains($invitation)) return;
+        $this->submission_invitations->add($invitation);
+        $invitation->setSummit($this);
+    }
+
+    /**
+     * @param SummitSubmissionInvitation $invitation
+     */
+    public function removeSubmissionInvitation(SummitSubmissionInvitation $invitation)
+    {
+        if (!$this->submission_invitations->contains($invitation)) return;
+        $this->submission_invitations->removeElement($invitation);
+        $invitation->clearSummit();
+    }
+
+    /**
+     * @return ArrayCollection|SummitSubmissionInvitation[]
+     */
+    public function SubmissionInvitation()
+    {
+        return $this->submission_invitations;
+    }
+
+    public function clearSubmissionInvitations(): void
+    {
+        $this->submission_invitations->clear();
+    }
+
+    /**
+     * @param string $email
+     * @return SummitRegistrationInvitation|null
+     */
+    public function getSubmissionInvitationByEmail(string $email): ?SummitSubmissionInvitation
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('email', strtolower(trim($email))));
+        $invitation = $this->submission_invitations->matching($criteria)->first();
+        return $invitation === false ? null : $invitation;
+    }
+
+    /**
+     * @param int $invitation_id
+     * @return SummitSubmissionInvitation|null
+     */
+    public function getSubmissionInvitationById(int $invitation_id): ?SummitSubmissionInvitation
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', intval($invitation_id)));
+        $invitation = $this->submission_invitations->matching($criteria)->first();
+        return $invitation === false ? null : $invitation;
     }
 
     /**

@@ -78,13 +78,14 @@ final class SummitSelectedPresentationListService
     public function getTeamSelectionList(Summit $summit, int $selection_plan_id, int $track_id): SummitSelectedPresentationList
     {
         return $this->tx_service->transaction(function () use ($summit, $selection_plan_id, $track_id) {
+
             $category = $summit->getPresentationCategory($track_id);
             if (is_null($category)) throw new EntityNotFoundException("Track not found.");
 
             $selectionPlan = $summit->getSelectionPlanById($selection_plan_id);
             if (is_null($selectionPlan)) throw new EntityNotFoundException("Selection Plan not found.");
 
-            $current_member = $this->resource_server_ctx->getCurrentUser();
+            $current_member = $this->resource_server_ctx->getCurrentUser(false);
 
             if(is_null($current_member))
                 throw new AuthzException("Current Member not found.");
@@ -95,11 +96,17 @@ final class SummitSelectedPresentationListService
                 throw new AuthzException("Current user is not allowed to perform this operation.");
             }
 
-            $selection_list = $selectionPlan->getSelectionListByTrackAndTypeAndOwner($category, SummitSelectedPresentationList::Group);
+            $selection_list = $selectionPlan->getSelectionListByTrackAndTypeAndOwner
+            (
+                $category, SummitSelectedPresentationList::Group
+            );
+
             if (is_null($selection_list))
             {
                 return $this->createTeamSelectionList($summit, $selection_plan_id, $track_id);
             }
+
+            $selection_list->reorder();
 
             return $selection_list;
         });
@@ -165,6 +172,8 @@ final class SummitSelectedPresentationListService
                 // create it
                 return $this->createIndividualSelectionList($summit, $selection_plan_id, $track_id, $owner_id);
             }
+
+            $selection_list->reorder();
 
             return $selection_list;
         });

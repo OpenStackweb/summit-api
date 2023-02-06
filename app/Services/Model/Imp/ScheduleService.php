@@ -29,6 +29,7 @@ use models\summit\Summit;
 use models\summit\SummitEvent;
 use models\summit\SummitProposedSchedule;
 use models\summit\SummitProposedScheduleSummitEvent;
+use services\model\ISummitService;
 
 /**
  * Class ScheduleService
@@ -48,18 +49,26 @@ extends AbstractPublishService implements IScheduleService
     private $event_repository;
 
     /**
+     * @var ISummitService
+     */
+    private $summit_service;
+
+    /**
      * ScheduleService constructor.
      * @param ISummitProposedScheduleRepository $schedule_repository
      * @param ISummitEventRepository $event_repository
+     * @param ISummitService $summit_service
      * @param ITransactionService $tx_service
      */
     public function __construct(ISummitProposedScheduleRepository $schedule_repository,
                                 ISummitEventRepository $event_repository,
+                                ISummitService $summit_service,
                                 ITransactionService $tx_service)
     {
         parent::__construct($schedule_repository, $tx_service);
         $this->schedule_repository = $schedule_repository;
         $this->event_repository = $event_repository;
+        $this->summit_service = $summit_service;
     }
 
     private function isAuthorizedUser(Member $member, Summit $summit, PresentationCategory $category): bool {
@@ -172,13 +181,10 @@ extends AbstractPublishService implements IScheduleService
             $schedule_event = $schedule->getScheduledSummitEventByEvent($event);
 
             if (is_null($schedule_event)) {
-                $default_date = new \DateTime("now", new \DateTimeZone("UTC"));
                 $schedule_event = new SummitProposedScheduleSummitEvent();
                 $schedule_event->setSummitEvent($event);
                 $schedule_event->setCreatedBy($member);
                 $schedule_event->setSchedule($schedule);
-                $schedule_event->setStartDate($event->getStartDate() ?? $default_date);
-                $schedule_event->setEndDate($event->getEndDate() ?? $default_date);
             }
             $schedule_event = $this->updateLocation($payload, $summit, $schedule_event);
             $schedule_event = $this->updateEventDates($payload, $summit, $schedule_event);
@@ -246,7 +252,7 @@ extends AbstractPublishService implements IScheduleService
             foreach ($filtered_schedule_events as $filtered_schedule_event) {
                 $event = $filtered_schedule_event->getSummitEvent();
                 if ($event instanceof SummitEvent)
-                    $this->publishCurrentEvent($summit, $event, $payload, true);
+                    $this->summit_service->publishEvent($summit, $event->getId(), $payload);
             }
         }
         return $schedule;

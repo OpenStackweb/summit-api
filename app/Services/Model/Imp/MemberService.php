@@ -616,24 +616,41 @@ final class MemberService
         });
     }
 
+    /**
+     * @param int $member_id
+     * @throws \Exception
+     */
     public function assocSummitOrders(int $member_id):void{
 
-        $this->tx_service->transaction(function() use($member_id){
+        $member = $this->tx_service->transaction(function() use($member_id){
             Log::debug(sprintf("MemberService::assocSummitOrders trying to get member id %s", $member_id));
             $member = $this->member_repository->getById($member_id);
-            if(is_null($member) || !$member instanceof Member) return;
+            if(is_null($member) || !$member instanceof Member) return null;
+            return $member;
+        });
 
+        if(is_null($member))
+        {
+            Log::warning(sprintf("MemberService::assocSummitOrders member %s not found", $member_id));
+            return;
+        }
+
+        $this->tx_service->transaction(function() use($member_id) {
             // associate orders
+            $member = $this->member_repository->getById($member_id);
             $orders = $this->order_repository->getAllByOwnerEmailAndOwnerNotSet($member->getEmail());
-            if(!is_null($orders)) {
+            if (!is_null($orders)) {
                 foreach ($orders as $order) {
                     if (!$order instanceof SummitOrder) continue;
                     Log::debug(sprintf("MemberService::assocSummitOrders got order %s for member %s", $order->getNumber(), $member_id));
                     $member->addSummitRegistrationOrder($order);
                 }
             }
+        });
 
+        $this->tx_service->transaction(function() use($member_id){
             // associate attendees/tickets
+            $member = $this->member_repository->getById($member_id);
             $attendees = $this->attendee_repository->getByEmailAndMemberNotSet($member->getEmail());
             if(!is_null($attendees)) {
                 foreach ($attendees as $attendee) {
@@ -642,7 +659,6 @@ final class MemberService
                     $attendee->setMember($member);
                 }
             }
-
         });
     }
 

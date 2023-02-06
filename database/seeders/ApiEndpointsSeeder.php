@@ -723,7 +723,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitRegistrationAdmins
                 ]
             ],
-            // invitations
+            // registration invitations
             [
                 'name' => 'ingest-registration-invitations',
                 'route' => '/api/v1/summits/{id}/registration-invitations/csv',
@@ -881,6 +881,143 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitRegistrationAdmins
                 ]
             ],
+            // submission invitations
+            [
+                'name' => 'ingest-submission-invitations',
+                'route' => '/api/v1/summits/{id}/submission-invitations/csv',
+                'http_method' => 'POST',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteSubmissionInvitations, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name' => 'add-submission-invitation',
+                'route' => '/api/v1/summits/{id}/submission-invitations',
+                'http_method' => 'POST',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteSubmissionInvitations, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name' => 'send-submission-invitations',
+                'route' => '/api/v1/summits/{id}/submission-invitations/all/send',
+                'http_method' => 'PUT',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteSubmissionInvitations, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name' => 'get-submission-invitations-csv',
+                'route' => '/api/v1/summits/{id}/submission-invitations/csv',
+                'http_method' => 'GET',
+                'scopes'      => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadSubmissionInvitations, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name' => 'get-submission-invitations',
+                'route' => '/api/v1/summits/{id}/submission-invitations',
+                'http_method' => 'GET',
+                'scopes'      => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadSubmissionInvitations, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name' => 'get-submission-invitation-by-id',
+                'route' => '/api/v1/summits/{id}/submission-invitations/{invitation_id}',
+                'http_method' => 'GET',
+                'scopes'      => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadSubmissionInvitations, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name' => 'delete-submission-invitation-by-id',
+                'route' => '/api/v1/summits/{id}/submission-invitations/{invitation_id}',
+                'http_method' => 'DELETE',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteSubmissionInvitations, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name' => 'update-submission-invitation',
+                'route' => '/api/v1/summits/{id}/submission-invitations/{invitation_id}',
+                'http_method' => 'PUT',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteSubmissionInvitations, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name' => 'delete-submission-invitations-all',
+                'route' => '/api/v1/summits/{id}/submission-invitations/all',
+                'http_method' => 'DELETE',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteSubmissionInvitations, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
+
         ]);
     }
 
@@ -7547,7 +7684,9 @@ class ApiEndpointsSeeder extends Seeder
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
-                    IGroup::Administrators
+                    IGroup::Administrators,
+                    IGroup::TrackChairsAdmins,
+                    IGroup::SummitAdministrators
                 ]
             ]
         ]);

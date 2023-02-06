@@ -161,7 +161,6 @@ CSV;
         $this->assertTrue(!empty($content));
     }
 
-
     public function testIngestInvitationsAndResend(){
         $csv_content = <<<CSV
 email,first_name,last_name

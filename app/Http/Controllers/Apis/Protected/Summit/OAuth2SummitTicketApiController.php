@@ -147,7 +147,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'promo_code_tag' => 'sometimes|string',
                     'final_amount' => 'sometimes|numeric',
                 ];
-            },'sometimes|string',
+            },
             function () {
                 return [
                     'id',

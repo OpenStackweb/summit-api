@@ -405,4 +405,22 @@ class SummitSelectedPresentationList extends SilverstripeBaseModel
         $this->selection_plan = null;
     }
 
+    public function reorder():void{
+        $order = 1;
+        foreach ($this->getSelectedPresentationsByCollection(SummitSelectedPresentation::CollectionSelected) as $p) {
+            $p->setOrder($order);
+            ++$order;
+        }
+        $order = 1;
+        foreach ($this->getSelectedPresentationsByCollection(SummitSelectedPresentation::CollectionMaybe) as $p) {
+            $p->setOrder($order);
+            ++$order;
+        }
+        $order = 1;
+        foreach ($this->getSelectedPresentationsByCollection(SummitSelectedPresentation::CollectionPass) as $p) {
+            $p->setOrder($order);
+            ++$order;
+        }
+    }
+
 }

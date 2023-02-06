@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Permissions\IPermissionsManager;
 use App\Permissions\PermissionsManager;
 use App\Services\Apis\ExternalUserApi;
@@ -18,7 +19,9 @@ use App\Services\Apis\GoogleGeoCodingAPI;
 use App\Services\Apis\IExternalUserApi;
 use App\Services\Apis\IGeoCodingAPI;
 use App\Services\Apis\IMailApi;
+use App\Services\Apis\IPasswordlessAPI;
 use App\Services\Apis\MailApi;
+use App\Services\Apis\PasswordlessAPI;
 use App\Services\Model\FolderService;
 use App\Services\Model\IFolderService;
 use App\Services\Utils\Email\SpeakersAnnouncementEmailConfigDTO;
@@ -47,6 +50,7 @@ use services\apis\IPushNotificationApi;
 use services\utils\DoctrineTransactionService;
 use services\utils\EncryptionService;
 use services\utils\RedisCacheService;
+
 /***
  * Class BaseServicesProvider
  * @package services
@@ -67,11 +71,11 @@ final class BaseServicesProvider extends ServiceProvider
 
         App::singleton(IPermissionsManager::class, PermissionsManager::class);
 
-        App::singleton(ITransactionService::class, function(){
+        App::singleton(ITransactionService::class, function () {
             return new DoctrineTransactionService(SilverstripeBaseModel::EntityManager);
         });
 
-        App::singleton(IEncryptionService::class, function(){
+        App::singleton(IEncryptionService::class, function () {
             return new EncryptionService(
                 Config::get("server.ss_encrypt_key", ''),
                 Config::get("server.ss_encrypt_cypher", '')
@@ -101,18 +105,18 @@ final class BaseServicesProvider extends ServiceProvider
 
         App::singleton(ISerializerTypeSelector::class, BaseSerializerTypeSelector::class);
 
-        App::singleton(IEventbriteAPI::class,   function(){
+        App::singleton(IEventbriteAPI::class, function () {
             $api = new EventbriteAPI();
             $api->setCredentials(array('token' => Config::get("server.eventbrite_oauth2_personal_token", null)));
             return $api;
         });
 
-        App::singleton(IPushNotificationApi::class,   function(){
+        App::singleton(IPushNotificationApi::class, function () {
             $api = new FireBaseGCMApi(Config::get("server.firebase_gcm_server_key", null));
             return $api;
         });
 
-        App::singleton(IGeoCodingAPI::class,   function(){
+        App::singleton(IGeoCodingAPI::class, function () {
             return new GoogleGeoCodingAPI
             (
                 Config::get("server.google_geocoding_api_key", null)
@@ -140,6 +144,10 @@ final class BaseServicesProvider extends ServiceProvider
             LockManagerService::class
         );
 
+        App::singleton(
+            IPasswordlessAPI::class,
+            PasswordlessAPI::class
+        );
     }
 
     /**
@@ -162,6 +170,7 @@ final class BaseServicesProvider extends ServiceProvider
             IExternalUserApi::class,
             IFolderService::class,
             ILockManagerService::class,
+            IPasswordlessAPI::class,
         ];
     }
 }

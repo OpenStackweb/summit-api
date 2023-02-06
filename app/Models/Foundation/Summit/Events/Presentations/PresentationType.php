@@ -14,6 +14,8 @@
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
+use models\exceptions\ValidationException;
+
 /**
  * Class PresentationType
  * @ORM\Entity
@@ -144,7 +146,7 @@ SQL;
     /**
      * @return int
      */
-    public function getMaxSpeakers()
+    public function getMaxSpeakers():int
     {
         return $this->max_speakers;
     }
@@ -152,7 +154,7 @@ SQL;
     /**
      * @return int
      */
-    public function getMinSpeakers()
+    public function getMinSpeakers():int
     {
         return $this->min_speakers;
     }
@@ -160,7 +162,7 @@ SQL;
     /**
      * @return int
      */
-    public function getMaxModerators()
+    public function getMaxModerators():int
     {
         return $this->max_moderators;
     }
@@ -168,7 +170,7 @@ SQL;
     /**
      * @return int
      */
-    public function getMinModerators()
+    public function getMinModerators():int
     {
         return $this->min_moderators;
     }
@@ -176,7 +178,15 @@ SQL;
     /**
      * @return bool
      */
-    public function isUseSpeakers()
+    public function isAreSpeakersMandatory():bool
+    {
+        return $this->min_speakers > 0;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isUseSpeakers():bool
     {
         return $this->use_speakers;
     }
@@ -184,15 +194,7 @@ SQL;
     /**
      * @return bool
      */
-    public function isAreSpeakersMandatory()
-    {
-        return $this->are_speakers_mandatory;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isUseModerator()
+    public function isUseModerator():bool
     {
         return $this->use_moderator;
     }
@@ -200,23 +202,23 @@ SQL;
     /**
      * @return bool
      */
-    public function isModeratorMandatory()
+    public function isModeratorMandatory():bool
     {
-        return $this->is_moderator_mandatory;
+        return $this->min_moderators > 0;
     }
 
     /**
      * @return bool
      */
-    public function isShouldBeAvailableOnCfp()
+    public function isShouldBeAvailableOnCfp():bool
     {
         return $this->should_be_available_on_cfp;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getModeratorLabel()
+    public function getModeratorLabel():?string
     {
         return $this->moderator_label;
     }
@@ -230,64 +232,91 @@ SQL;
 
     /**
      * @param int $max_speakers
+     * @throws ValidationException
      */
-    public function setMaxSpeakers($max_speakers)
+    public function setMaxSpeakers(int $max_speakers):void
     {
+        if($max_speakers < 0)
+            throw new ValidationException("Max. Speakers should be greater than zero.");
+
+        if($this->min_speakers > $max_speakers)
+            throw new ValidationException(sprintf("Max. Speakers (%s) can not be lower than Min. Speakers (%s).", $max_speakers, $this->min_speakers ));
+
         $this->max_speakers = $max_speakers;
     }
 
     /**
      * @param int $min_speakers
+     * @throws ValidationException
      */
-    public function setMinSpeakers($min_speakers)
+    public function setMinSpeakers(int $min_speakers):void
     {
+        if($min_speakers < 0)
+            throw new ValidationException("Min. Speakers should be greater than zero.");
+
         $this->min_speakers = $min_speakers;
     }
 
+
     /**
      * @param int $max_moderators
+     * @throws ValidationException
      */
-    public function setMaxModerators($max_moderators)
+    public function setMaxModerators(int $max_moderators):void
     {
+        if($max_moderators < 0)
+            throw new ValidationException("Max. Moderators should be greater than zero.");
+
+        if($this->min_moderators > $max_moderators)
+            throw new ValidationException(sprintf("Max. Moderators (%s) can not be lower than Min. Moderators (%s)", $max_moderators, $this->min_moderators));
+
         $this->max_moderators = $max_moderators;
     }
 
+
     /**
      * @param int $min_moderators
+     * @throws ValidationException
      */
-    public function setMinModerators($min_moderators)
+    public function setMinModerators(int $min_moderators):void
     {
+        if($min_moderators < 0)
+            throw new ValidationException("Min. Moderators should be greater than zero.");
+
         $this->min_moderators = $min_moderators;
     }
 
     /**
      * @param bool $use_speakers
      */
-    public function setUseSpeakers($use_speakers)
+    public function setUseSpeakers(bool $use_speakers):void
     {
         $this->use_speakers = $use_speakers;
     }
 
     /**
+     * @deprecated
      * @param bool $are_speakers_mandatory
      */
-    public function setAreSpeakersMandatory($are_speakers_mandatory)
+    public function setAreSpeakersMandatory(bool $are_speakers_mandatory):void
     {
         $this->are_speakers_mandatory = $are_speakers_mandatory;
     }
 
     /**
+     * @deprecated
      * @param bool $use_moderator
      */
-    public function setUseModerator($use_moderator)
+    public function setUseModerator(bool $use_moderator):void
     {
         $this->use_moderator = $use_moderator;
     }
 
     /**
+     * @deprecated
      * @param bool $is_moderator_mandatory
      */
-    public function setIsModeratorMandatory($is_moderator_mandatory)
+    public function setIsModeratorMandatory(bool $is_moderator_mandatory):void
     {
         $this->is_moderator_mandatory = $is_moderator_mandatory;
     }
@@ -295,7 +324,7 @@ SQL;
     /**
      * @param bool $should_be_available_on_cfp
      */
-    public function setShouldBeAvailableOnCfp($should_be_available_on_cfp)
+    public function setShouldBeAvailableOnCfp(bool $should_be_available_on_cfp):void
     {
         $this->should_be_available_on_cfp = $should_be_available_on_cfp;
     }
@@ -303,7 +332,7 @@ SQL;
     /**
      * @param string $moderator_label
      */
-    public function setModeratorLabel($moderator_label)
+    public function setModeratorLabel(string $moderator_label):void
     {
         $this->moderator_label = $moderator_label;
     }

@@ -53,7 +53,7 @@ use models\utils\SilverstripeBaseModel;
  * Class SummitEvent
  * @package models\summit
  */
-class SummitEvent extends SilverstripeBaseModel
+class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
 {
     /**
      *  minimun number of minutes that an event must last
@@ -83,7 +83,7 @@ class SummitEvent extends SilverstripeBaseModel
 
     const AllowedFields = [
         // self::FieldTitle,
-        // self::FieldAbstract,
+        self::FieldAbstract,
         self::FieldSocialDescription,
         self::FieldLevel,
     ];

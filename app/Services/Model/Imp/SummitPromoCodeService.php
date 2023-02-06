@@ -508,6 +508,14 @@ final class SummitPromoCodeService
 
         foreach ($reader as $idx => $row) {
             try {
+                if(isset($row['badge_features'])){
+                    $row['badge_features'] = explode('|', $row['badge_features']);
+                }
+
+                if(isset($row['allowed_ticket_types'])){
+                    $row['allowed_ticket_types'] = explode('|', $row['allowed_ticket_types']);
+                }
+
                 Log::debug(sprintf("SummitPromoCodeService::importPromoCodes processing row %s", json_encode($row)));
                 $this->addPromoCode($summit, $row, $current_user);
             } catch (\Exception $ex) {

@@ -517,7 +517,12 @@ final class SummitPromoCodeService
                 }
 
                 Log::debug(sprintf("SummitPromoCodeService::importPromoCodes processing row %s", json_encode($row)));
-                $this->addPromoCode($summit, $row, $current_user);
+                $code = trim($row['code']);
+                $promo_code = $summit->getPromoCodeByCode($code);
+                if(is_null($promo_code))
+                    $this->addPromoCode($summit, $row, $current_user);
+                else
+                    $this->updatePromoCode($summit, $promo_code->getId(),$row, $current_user);
             } catch (\Exception $ex) {
                 Log::warning($ex);
                 $summit = $this->summit_repository->getById($summit->getId());

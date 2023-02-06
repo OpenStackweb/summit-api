@@ -280,7 +280,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'attendee_company',
                     'external_order_id',
                     'external_attendee_id',
-                    'bought_date',
+                    'purchase_date',
                     'ticket_type_id',
                     'ticket_type_name',
                     'order_id',

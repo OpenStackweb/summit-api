@@ -63,10 +63,14 @@ final class ProcessScheduleEntityLifeCycleEventService
         parent::__construct($tx_service);
         $this->cache_service = $cache_service;
         $this->rabbit_service = null;
-        if(Config::get("schedule.use_realtime_updates", 1) === 1) {
+        $use_realtime_updates = intval(Config::get("schedule.use_realtime_updates", 1));
+        Log::debug(sprintf( "ProcessScheduleEntityLifeCycleEventService::__construct schedule.use_realtime_updates %s", $use_realtime_updates));
+
+        if($use_realtime_updates) {
             Log::debug("ProcessScheduleEntityLifeCycleEventService::__construct schedule.use_realtime_updates is enabled");
             $this->rabbit_service = new RabbitPublisherService('entities-updates-broker');
         }
+
         $this->summit_repository = $summit_repository;
     }
 

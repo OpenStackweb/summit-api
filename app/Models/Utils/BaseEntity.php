@@ -13,6 +13,8 @@
  **/
 use models\utils\IEntity;
 use Doctrine\ORM\Mapping AS ORM;
+use ReflectionClass;
+
 /***
  * @ORM\MappedSuperclass
  * Class BaseEntity
@@ -48,5 +50,14 @@ class BaseEntity implements IEntity
     public function getId()
     {
         return $this->getIdentifier();
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        $class_name = (new ReflectionClass($this))->getShortName();
+        return "{$class_name}@{$this->getIdentifier()}";
     }
 }

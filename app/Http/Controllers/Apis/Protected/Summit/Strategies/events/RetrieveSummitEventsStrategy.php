@@ -181,6 +181,7 @@ abstract class RetrieveSummitEventsStrategy
             'votes_count' => ['>', '<', '<=', '>=', '=='],
             'duration' => ['>', '<', '<=', '>=', '=='],
             'speakers_count' => ['>', '<', '<=', '>=', '=='],
+            'streaming_type' => ['=='],
         ];
     }
 
@@ -227,6 +228,7 @@ abstract class RetrieveSummitEventsStrategy
             'meeting_url' => 'sometimes|string',
             'streaming_url' => 'sometimes|string',
             'etherpad_link' => 'sometimes|string',
+            'streaming_type' => 'sometimes|string|in:VOD,LIVE',
         ];
     }
 }

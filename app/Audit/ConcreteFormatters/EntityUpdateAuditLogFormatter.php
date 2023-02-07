@@ -43,6 +43,7 @@ class EntityUpdateAuditLogFormatter implements IAuditLogFormatter
             'last_created',
             'last_updated',
             'last_edited',
+            'created_by',
             'updated_by'
         ];
     }

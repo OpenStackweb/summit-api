@@ -57,7 +57,7 @@ class PresentationSpeakerSelectionProcessAcceptedAlternateEmail extends Presenta
             $this->payload['speaker_confirmation_link'] = sprintf("%s?t=%s", $this->payload['speaker_confirmation_link'], base64_encode($confirmation_token));
         }
 
-        Log::debug(sprintf("PresentationSpeakerSelectionProcessAcceptedAlternateEmail::__construct payload %s", json_encode($payload)));
+        Log::debug(sprintf("PresentationSpeakerSelectionProcessAcceptedAlternateEmail::__construct payload %s", json_encode($this->payload)));
 
     }
 }

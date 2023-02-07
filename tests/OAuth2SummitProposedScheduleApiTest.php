@@ -79,7 +79,6 @@ final class OAuth2SummitProposedScheduleApiTest extends ProtectedApiTest
 
     public function testPublishScheduleEvent(){
         $start_date = new \DateTime("now", new \DateTimeZone("UTC"));
-        $start_date->add(new \DateInterval("P10D"));
         $end_date = (clone $start_date)->add(new \DateInterval("P10D"));
 
         $presentation = self::$presentations[22];
@@ -150,8 +149,11 @@ final class OAuth2SummitProposedScheduleApiTest extends ProtectedApiTest
     }
 
     public function testPublishAll(){
+
+        $scheduled_event = $this->testPublishScheduleEvent();
+
         $params = [
-            'id' => self::$summit->getId(),
+            'id' => $scheduled_event->schedule->summit_id,
             'source' => 'track-chairs',
         ];
 

@@ -102,4 +102,34 @@ trait TimeDurationRestrictedEvent
             }
         }
     }
+
+    /**
+     * @return DateTime|null
+     */
+    private function _getLocalStartDate(?Summit $summit)
+    {
+        if (!empty($this->start_date)) {
+            $value = clone $this->start_date;
+            if (!is_null($summit)) {
+                $res = $summit->convertDateFromUTC2TimeZone($value);
+            }
+            return $res;
+        }
+        return null;
+    }
+
+    /**
+     * @return DateTime|null
+     */
+    public function _getLocalEndDate(?Summit $summit)
+    {
+        if (!empty($this->end_date)) {
+            $value = clone $this->end_date;
+            if (!is_null($summit)) {
+                $res = $summit->convertDateFromUTC2TimeZone($value);
+            }
+            return $res;
+        }
+        return null;
+    }
 }

@@ -107,6 +107,19 @@ class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel implements
     }
 
     /**
+     * @return DateTime|null
+     */
+    public function getLocalStartDate(): ?DateTime
+    {
+        $summit = null;
+        $summit_event = $this->summit_event;
+        if (!is_null($summit_event))
+            $summit = $summit_event->getSummit();
+
+        return $this->_getLocalStartDate($summit);
+    }
+
+    /**
      * @param DateTime $value
      */
     public function setStartDate(DateTime $value)
@@ -125,6 +138,19 @@ class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel implements
     public function getEndDate(): DateTime
     {
         return $this->end_date;
+    }
+
+    /**
+     * @return DateTime|null
+     */
+    public function getLocalEndDate()
+    {
+        $summit = null;
+        $summit_event = $this->summit_event;
+        if (!is_null($summit_event))
+            $summit = $summit_event->getSummit();
+
+        return $this->_getLocalEndDate($summit);
     }
 
     /**

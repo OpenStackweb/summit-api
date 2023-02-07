@@ -1147,15 +1147,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     public function getLocalStartDate()
     {
-        if (!empty($this->start_date)) {
-            $value = clone $this->start_date;
-            $summit = $this->getSummit();
-            if (!is_null($summit)) {
-                $res = $summit->convertDateFromUTC2TimeZone($value);
-            }
-            return $res;
-        }
-        return null;
+        $summit = $this->getSummit();
+        return $this->_getLocalStartDate($summit);
     }
 
     /**
@@ -1173,15 +1166,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
      */
     public function getLocalEndDate()
     {
-        if (!empty($this->end_date)) {
-            $value = clone $this->end_date;
-            $summit = $this->getSummit();
-            if (!is_null($summit)) {
-                $res = $summit->convertDateFromUTC2TimeZone($value);
-            }
-            return $res;
-        }
-        return null;
+        $summit = $this->getSummit();
+        return $this->_getLocalEndDate($summit);
     }
 
     /**

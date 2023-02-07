@@ -252,7 +252,12 @@ extends AbstractPublishService implements IScheduleService
             foreach ($filtered_schedule_events as $filtered_schedule_event) {
                 $event = $filtered_schedule_event->getSummitEvent();
                 if ($event instanceof SummitEvent)
-                    $this->summit_service->publishEvent($summit, $event->getId(), $payload);
+                    $this->summit_service->publishEvent($summit, $event->getId(), [
+                        'location_id' => $filtered_schedule_event->getLocationId(),
+                        'start_date' => $filtered_schedule_event->getLocalStartDate()->getTimestamp(),
+                        'end_date' => $filtered_schedule_event->getLocalEndDate()->getTimestamp(),
+                        'duration' => $filtered_schedule_event->getDuration()
+                    ]);
             }
         }
         return $schedule;

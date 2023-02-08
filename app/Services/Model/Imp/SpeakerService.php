@@ -1319,12 +1319,16 @@ final class SpeakerService
         (
             sprintf
             (
-                "SpeakerService::send summit %s payload %s filter %s",
+                "SpeakerService::send summit %s payload %s filter %s INIT",
                 $summit_id,
                 json_encode($payload),
                 is_null($filter) ? "" : $filter->__toString()
             )
         );
+
+        EmailTest::clearEmailAddress();
+        EmailExcerpt::clearReport();
+        SpeakersAnnouncementEmailConfig::reset();
 
         $flow_event = trim($payload['email_flow_event'] ?? '');
 
@@ -1346,7 +1350,6 @@ final class SpeakerService
         $page = 1;
         $count = 0;
         $maxPageSize = 100;
-        EmailExcerpt::clearReport();
 
         Log::debug(sprintf("SpeakerService::send summit id %s flow_event %s filter %s",
             $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString()));

@@ -38,6 +38,12 @@ final class SpeakersAnnouncementEmailConfigDTO
         $this->should_send_copy_2_submitter = false;
     }
 
+    public function reset():void{
+        Log::debug("SpeakersAnnouncementEmailConfigDTO::reset");
+        $this->should_resend = true;
+        $this->should_send_copy_2_submitter = false;
+    }
+
     /**
      * @return bool
      */

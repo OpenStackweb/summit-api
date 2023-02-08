@@ -671,9 +671,10 @@ final class MemberService
                                                      ?string $company_name, ?string $country):void {
         Log::debug(sprintf("MemberService::updatePendingRegistrationRequest - sending new profile info to user api for member %s", $email));
         $res = $this->external_user_api->getUserRegistrationRequest($email);
-        if (!is_null($res)) {
+        if (!is_null($res) && isset($res['total']) && $res['total'] > 0 ) {
             Log::debug(sprintf("MemberService::updatePendingRegistrationRequest res %s", json_encode($res)));
-            $this->external_user_api->updateUserRegistrationRequest($res['id'], $first_name, $last_name, $company_name, $country);
+            $entry = $res['data'][0];
+            $this->external_user_api->updateUserRegistrationRequest($entry['id'], $first_name, $last_name, $company_name, $country);
         }
     }
 

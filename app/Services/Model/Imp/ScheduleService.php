@@ -14,7 +14,6 @@
 
 use App\Facades\ResourceServerContext;
 use App\Models\Exceptions\AuthzException;
-use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\SelectionPlan;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
@@ -22,6 +21,7 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\ISummitEventRepository;
+use models\summit\ISummitProposedScheduleEventRepository;
 use models\summit\ISummitProposedScheduleRepository;
 use models\summit\Presentation;
 use models\summit\PresentationCategory;
@@ -30,19 +30,26 @@ use models\summit\SummitEvent;
 use models\summit\SummitProposedSchedule;
 use models\summit\SummitProposedScheduleSummitEvent;
 use services\model\ISummitService;
+use utils\Filter;
+use utils\FilterElement;
+use utils\PagingInfo;
 
 /**
  * Class ScheduleService
  * @package App\Services\Model
  */
 final class ScheduleService
-extends AbstractPublishService implements IScheduleService
+    extends AbstractPublishService implements IScheduleService
 {
     /**
      * @var ISummitProposedScheduleRepository
      */
     private $schedule_repository;
 
+    /**
+     * @var ISummitProposedScheduleEventRepository
+     */
+    private $proposed_events_repository;
     /**
      * @var ISummitEventRepository
      */
@@ -57,66 +64,44 @@ extends AbstractPublishService implements IScheduleService
      * ScheduleService constructor.
      * @param ISummitProposedScheduleRepository $schedule_repository
      * @param ISummitEventRepository $event_repository
+     * @param ISummitProposedScheduleEventRepository $proposed_events_repository
      * @param ISummitService $summit_service
      * @param ITransactionService $tx_service
      */
-    public function __construct(ISummitProposedScheduleRepository $schedule_repository,
-                                ISummitEventRepository $event_repository,
-                                ISummitService $summit_service,
-                                ITransactionService $tx_service)
+    public function __construct(ISummitProposedScheduleRepository      $schedule_repository,
+                                ISummitEventRepository                 $event_repository,
+                                ISummitProposedScheduleEventRepository $proposed_events_repository,
+                                ISummitService                         $summit_service,
+                                ITransactionService                    $tx_service)
     {
         parent::__construct($schedule_repository, $tx_service);
         $this->schedule_repository = $schedule_repository;
         $this->event_repository = $event_repository;
+        $this->proposed_events_repository = $proposed_events_repository;
         $this->summit_service = $summit_service;
     }
 
-    private function isAuthorizedUser(Member $member, Summit $summit, PresentationCategory $category): bool {
+    /**
+     * @param Member $member
+     * @param Summit $summit
+     * @param PresentationCategory|null $category
+     * @return bool
+     */
+    private function isAuthorizedUser(Member $member, Summit $summit, ?PresentationCategory $category = null): bool
+    {
         if ($member->isAdmin()) return true;
-        if ($member->isSummitAdmin()) return true;
-        return $summit->isTrackChair($member, $category);
-    }
-
-    private function filterScheduleEvents(SummitProposedSchedule $schedule, array $payload): array {
-        $filtered_schedule_events = [];
-
-        if (isset($payload['presentation_ids'])) {
-            //filter criteria to promote schedule events by event_ids
-            $event_ids = $payload['presentation_ids'];
-            foreach ($event_ids as $event_id) {
-                $event = $this->event_repository->getById(intval($event_id));
-                if (!$event instanceof SummitEvent) continue;
-                $schedule_event = $schedule->getScheduledSummitEventByEvent($event);
-                if (is_null($schedule_event)) continue;
-                $filtered_schedule_events[] = $schedule_event;
-            }
-        } else {
-            //filter criteria to promote schedule events by start_date, end_date and location_id
-            $summit = $schedule->getSummit();
-            $start_date = null;
-            $end_date = null;
-            $location = null;
-            if (isset($payload['start_date'])) {
-                $start_date = $summit->parseDateTime(intval($payload['start_date']));
-            }
-            if (isset($payload['end_date'])) {
-                $end_date = $summit->parseDateTime(intval($payload['end_date']));
-            }
-            if (isset($payload['location_id'])) {
-                $location = $summit->getLocation(intval($payload['location_id']));
-            }
-            $filtered_schedule_events =
-                $schedule->getScheduledSummitEventsByLocationAndDateRange($start_date, $end_date, $location);
-        }
-
-        return $filtered_schedule_events;
+        if ($summit->isSummitAdmin($member)) return true;
+        if (!is_null($category))
+            return $summit->isTrackChair($member, $category);
+        return false;
     }
 
     /**
-     *@inheritDoc
+     * @inheritDoc
      */
     public function publishProposedActivityToSource(
-        string $source, int $presentation_id, array $payload):SummitProposedScheduleSummitEvent {
+        string $source, int $presentation_id, array $payload): SummitProposedScheduleSummitEvent
+    {
 
         $schedule = $this->tx_service->transaction(function () use ($source, $presentation_id, $payload) {
 
@@ -155,10 +140,11 @@ extends AbstractPublishService implements IScheduleService
     }
 
     /**
-     *@inheritDoc
+     * @inheritDoc
      */
     public function publishProposedActivity(
-        int $schedule_id, int $presentation_id, array $payload):SummitProposedScheduleSummitEvent {
+        int $schedule_id, int $presentation_id, array $payload): SummitProposedScheduleSummitEvent
+    {
 
         return $this->tx_service->transaction(function () use ($schedule_id, $presentation_id, $payload) {
 
@@ -175,8 +161,8 @@ extends AbstractPublishService implements IScheduleService
             $member = ResourceServerContext::getCurrentUser(false);
             $summit = $schedule->getSummit();
 
-            if (!$this->isAuthorizedUser( $member, $summit, $event->getCategory()))
-                throw new AuthzException("User is not authorized to perform this action");
+            if (!$this->isAuthorizedUser($member, $summit, $event->getCategory()))
+                throw new AuthzException("User is not authorized to perform this action.");
 
             $schedule_event = $schedule->getScheduledSummitEventByEvent($event);
 
@@ -196,9 +182,10 @@ extends AbstractPublishService implements IScheduleService
     }
 
     /**
-     *@inheritDoc
+     * @inheritDoc
      */
-    public function unPublishProposedActivity(string $source, int $presentation_id): void {
+    public function unPublishProposedActivity(string $source, int $presentation_id): void
+    {
         $this->tx_service->transaction(function () use ($source, $presentation_id) {
 
             $event = $this->event_repository->getById($presentation_id);
@@ -217,7 +204,7 @@ extends AbstractPublishService implements IScheduleService
 
             $member = ResourceServerContext::getCurrentUser(false);
 
-            if (!$this->isAuthorizedUser( $member, $event->getSummit(), $event->getCategory()))
+            if (!$this->isAuthorizedUser($member, $event->getSummit(), $event->getCategory()))
                 throw new AuthzException("User is not authorized to perform this action");
 
             $schedule = $this->schedule_repository->getBySourceAndSummitId($source, $event->getSummitId());
@@ -237,28 +224,104 @@ extends AbstractPublishService implements IScheduleService
     /**
      * @inheritDoc
      */
-    public function publishAll(string $source, int $summit_id, array $payload):SummitProposedSchedule
+    public function publishAll(string $source, int $summit_id, array $payload, ?Filter $filter = null): SummitProposedSchedule
     {
+        $member = ResourceServerContext::getCurrentUser(false);
+
         $schedule = $this->schedule_repository->getBySourceAndSummitId($source, $summit_id);
 
         if (!$schedule instanceof SummitProposedSchedule)
             throw new EntityNotFoundException("schedule with source {$source} does not exists!");
 
-        $filtered_schedule_events = $this->filterScheduleEvents($schedule, $payload);
+        if (!$this->isAuthorizedUser($member, $schedule->getSummit()))
+            throw new AuthzException("User is not authorized to perform this action");
 
-        if (count($filtered_schedule_events) > 0) {
-            $summit = $schedule->getSummit();
+        $done = isset($payload['event_ids']); // we have provided only ids and not a criteria
+        $page = 1;
+        $count = 0;
+        $maxPageSize = 100;
+        $validation_errors = [];
 
-            foreach ($filtered_schedule_events as $filtered_schedule_event) {
-                $event = $filtered_schedule_event->getSummitEvent();
-                if ($event instanceof SummitEvent)
-                    $this->summit_service->publishEvent($summit, $event->getId(), [
-                        'location_id' => $filtered_schedule_event->getLocationId(),
-                        'start_date' => $filtered_schedule_event->getLocalStartDate()->getTimestamp(),
-                        'end_date' => $filtered_schedule_event->getLocalEndDate()->getTimestamp(),
-                        'duration' => $filtered_schedule_event->getDuration()
-                    ]);
+        do {
+
+            Log::debug(sprintf("ScheduleService::publishAll summit id %s filter %s processing page %s", $summit_id, is_null($filter) ? '' : $filter->__toString(), $page));
+
+            $ids = $this->tx_service->transaction(function () use ($summit_id, $source, $payload, $filter, $page, $maxPageSize) {
+                if (isset($payload['event_ids'])) {
+                    Log::debug(sprintf("ScheduleService::publishAll summit id %s event_ids %s", $summit_id, json_encode($payload['event_ids'])));
+                    $res = [];
+                    foreach ($payload["event_ids"] as $event_id) {
+                        $proposed = $this->proposed_events_repository->getBySummitSourceAndEventId($summit_id, $source, $event_id);
+                        if (!is_null($proposed)) $res[] = $proposed->getId();
+                    }
+                    return $res;
+                }
+
+                Log::debug(sprintf("ScheduleService::publishAll summit id %s getting by filter", $summit_id));
+                if (is_null($filter)) {
+                    $filter = new Filter();
+                }
+                if (!$filter->hasFilter("summit_id"))
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
+                if (!$filter->hasFilter("source"))
+                    $filter->addFilterCondition(FilterElement::makeEqual('source', trim($source)));
+
+                Log::debug(sprintf("ScheduleService::publishAll page %s", $page));
+                return $this->proposed_events_repository->getAllIdsByPage(new PagingInfo($page, $maxPageSize), $filter);
+            });
+
+            Log::debug(sprintf("ScheduleService::publishAll summit id %s filter %s page %s got %s records", $summit_id, is_null($filter) ? '' : $filter->__toString(), $page, count($ids)));
+            if (!count($ids)) {
+                // if we are processing a page , then break it
+                Log::debug(sprintf("ScheduleService::publishAll summit id %s page is empty, ending processing.", $summit_id));
+                break;
             }
+            foreach ($ids as $proposed_id) {
+
+                $res = $this->tx_service->transaction(function () use ($source, $summit_id, $proposed_id, $payload) {
+                    try {
+                        Log::debug(sprintf("ScheduleService::publishAll processing proposed id  %s", $proposed_id));
+                        $proposed = $this->proposed_events_repository->getById($proposed_id);
+                        if (!$proposed instanceof SummitProposedScheduleSummitEvent) {
+                            Log::debug(sprintf("ScheduleService::publishAll skippoing processing of proposed_id %s", $proposed_id));
+                            return null;
+                        }
+
+                        $event = $proposed->getSummitEvent();
+                        if ($event instanceof SummitEvent)
+                            $this->summit_service->publishEvent($proposed->getSummit(), $event->getId(), [
+                                'location_id' => $proposed->getLocationId(),
+                                'start_date' => $proposed->getLocalStartDate()->getTimestamp(),
+                                'end_date' => $proposed->getLocalEndDate()->getTimestamp(),
+                                'duration' => $proposed->getDuration()
+                            ]);
+
+                        return $event;
+                    } catch (ValidationException $ex) {
+                        Log::warning($ex);
+                        return $ex;
+                    } catch (\Exception $ex) {
+                        Log::error($ex);
+                        return $ex;
+                    }
+                });
+                if ($res instanceof ValidationException) {
+                    $validation_errors[] = $res;
+                }
+                $count++;
+            }
+
+            $page++;
+
+        } while (!$done);
+
+        // error consolidation
+        if (count($validation_errors) > 0) {
+            $msg = '';
+            foreach ($validation_errors as $error) {
+                $msg .= $error->getMessage() . PHP_EOL;
+            }
+            throw new ValidationException($msg);
         }
         return $schedule;
     }

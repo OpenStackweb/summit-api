@@ -52,10 +52,10 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      */
     public function __construct
     (
-        ISummitRepository $summit_repository,
+        ISummitRepository                      $summit_repository,
         ISummitProposedScheduleEventRepository $repository,
-        IScheduleService $service,
-        IResourceServerContext $resource_server_context
+        IScheduleService                       $service,
+        IResourceServerContext                 $resource_server_context
     )
     {
         parent::__construct($resource_server_context);
@@ -76,7 +76,8 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function getProposedScheduleEvents($summit_id, $source) {
+    public function getProposedScheduleEvents($summit_id, $source)
+    {
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
         if (is_null($summit)) return $this->error404();
@@ -87,7 +88,7 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
                     'start_date' => ['==', '<', '>', '>=', '<='],
                     'end_date' => ['==', '<', '>', '>=', '<='],
                     'duration' => ['==', '<', '>', '>=', '<='],
-                    'presentation_title' => ['@@','=@'],
+                    'presentation_title' => ['@@', '=@'],
                     'presentation_id' => ['=='],
                     'location_id' => ['=='],
                     'track_id' => ['=='],
@@ -96,7 +97,7 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
             function () {
                 return [
                     'start_date' => 'sometimes|date_format:U',
-                    'end_date' => 'sometimes|date_format:U',
+                    'end_date' => 'sometimes|required_with:start_date|date_format:U|after:start_date',
                     'duration' => 'sometimes|integer',
                     'presentation_title' => 'sometimes|string',
                     'presentation_id' => 'sometimes|integer',
@@ -113,8 +114,8 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
                     'track_id'
                 ];
             },
-            function ($filter) use($summit_id, $source) {
-                if($filter instanceof Filter){
+            function ($filter) use ($summit_id, $source) {
+                if ($filter instanceof Filter) {
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', intval($summit_id)));
                     $filter->addFilterCondition(FilterElement::makeEqual('source', $source));
                 }
@@ -131,7 +132,8 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      * @param $presentation_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function publish($summit_id, $source, $presentation_id) {
+    public function publish($summit_id, $source, $presentation_id)
+    {
 
         return $this->processRequest(function () use ($summit_id, $source, $presentation_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
@@ -157,11 +159,14 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      * @param $presentation_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function unpublish($summit_id, $source, $presentation_id) {
+    public function unpublish($summit_id, $source, $presentation_id)
+    {
 
         return $this->processRequest(function () use ($summit_id, $source, $presentation_id) {
+
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $this->service->unPublishProposedActivity($source, intval($presentation_id));
 
@@ -169,11 +174,14 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
         });
     }
 
+    use ParseAndGetFilter;
+
     /**
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function publishAll($summit_id, $source) {
+    public function publishAll($summit_id, $source)
+    {
 
         return $this->processRequest(function () use ($summit_id, $source) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
@@ -181,7 +189,23 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
 
             $payload = $this->getJsonPayload(ProposedScheduleValidationRulesFactory::buildForUpdate());
 
-            $schedule = $this->service->publishAll($source, $summit->getId(), $payload);
+            $filter = self::getFilter(function () {
+                return [
+                    'start_date' => ['==', '<', '>', '>=', '<='],
+                    'end_date' => ['==', '<', '>', '>=', '<='],
+                    'location_id' => ['=='],
+                    'track_id' => ['=='],
+                ];
+            }, function () {
+                return [
+                    'start_date' => 'sometimes|date_format:U',
+                    'end_date' => 'sometimes|required_with:start_date|date_format:U|after:start_date',
+                    'location_id' => 'sometimes|integer',
+                    'track_id' => 'sometimes|integer',
+                ];
+            });
+
+            $schedule = $this->service->publishAll($source, $summit->getId(), $payload, $filter);
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($schedule)
                 ->serialize

@@ -1788,16 +1788,21 @@ Route::group(array('prefix' => 'summits'), function () {
 
         // proposed schedule
 
-        Route::group(['prefix' => 'proposed-schedule'], function () {
+        Route::group(['prefix' => 'proposed-schedules'], function () {
             Route::group(['prefix' => '{source}', 'where' => ['source' => '[a-z0-9\-]+']], function () {
                 Route::group(['prefix' => 'presentations'], function () {
+
                     Route::get('', ['uses' => 'OAuth2SummitProposedScheduleApiController@getProposedScheduleEvents']);
+
                     Route::group(['prefix' => 'all'], function () {
                         Route::put('publish', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitProposedScheduleApiController@publishAll']);
                     });
+
                     Route::group(['prefix' => '{presentation_id}'], function () {
-                        Route::put('publish', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitProposedScheduleApiController@publish']);
-                        Route::delete('publish', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitProposedScheduleApiController@unpublish']);
+                        Route::group(['prefix'=> 'propose'], function (){
+                            Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitProposedScheduleApiController@publish']);
+                            Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitProposedScheduleApiController@unpublish']);
+                        });
                     });
                 });
             });

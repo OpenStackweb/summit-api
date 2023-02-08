@@ -11,11 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use models\utils\IBaseRepository;
 /**
  * Interface ISummitProposedScheduleEventRepository
  * @package models\summit
  */
-interface ISummitProposedScheduleEventRepository
+interface ISummitProposedScheduleEventRepository extends IBaseRepository
 {
+    /**
+     * @param int $summit_id
+     * @param string $source
+     * @param int $event_id
+     * @return SummitProposedScheduleSummitEvent|null
+     */
+    public function getBySummitSourceAndEventId(int $summit_id, string $source, int $event_id):?SummitProposedScheduleSummitEvent;
 }

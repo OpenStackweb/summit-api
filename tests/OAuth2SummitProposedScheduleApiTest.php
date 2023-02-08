@@ -155,6 +155,9 @@ final class OAuth2SummitProposedScheduleApiTest extends ProtectedApiTest
         $params = [
             'id' => $scheduled_event->schedule->summit_id,
             'source' => 'track-chairs',
+            'filter' => [
+                'track_id=='.self::$defaultTrack->getId()
+            ]
         ];
 
         $headers = [

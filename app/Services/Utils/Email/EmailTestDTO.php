@@ -44,4 +44,9 @@ final class EmailTestDTO
         Log::debug(sprintf("EmailTestDTO::setEmailAddress email_address %s", $email_address));
         $this->email_address = $email_address;
     }
+
+    public function clearEmailAddress():void{
+        Log::debug("EmailTestDTO::clearEmailAddress");
+        $this->email_address = null;
+    }
 }

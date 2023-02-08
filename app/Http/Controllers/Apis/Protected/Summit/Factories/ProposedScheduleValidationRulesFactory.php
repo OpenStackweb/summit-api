@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
 /**
  * Class ProposedScheduleValidationRulesFactory
@@ -41,11 +40,7 @@ final class ProposedScheduleValidationRulesFactory extends AbstractValidationRul
     public static function buildForUpdate(array $payload = []): array
     {
         return [
-            'start_date'        => 'sometimes|date_format:U',
-            'end_date'          => 'sometimes|required_with:start_date|date_format:U|after:start_date',
-            'duration'          => 'sometimes|integer',
-            'location_id'       => 'sometimes|integer',
-            'presentation_ids'  => 'sometimes|int_array',
+            'event_ids'  => 'sometimes|int_array',
         ];
     }
 }

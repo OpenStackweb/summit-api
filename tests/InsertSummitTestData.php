@@ -303,6 +303,8 @@ trait InsertSummitTestData
         self::$defaultPresentationType->setAreSpeakersMandatory(false);
         self::$defaultPresentationType->setUseModerator(false);
         self::$defaultPresentationType->setIsModeratorMandatory(false);
+        self::$defaultPresentationType->setAllowsLocationTimeframeCollision(true);
+        self::$defaultPresentationType->setAllowsSpeakerEventCollision(true);
 
         self::$summit->addEventType(self::$defaultPresentationType);
 

@@ -74,4 +74,28 @@ final class DoctrineSummitProposedScheduleEventRepository
             'track_id'              => 'cat.id',
         ];
     }
+
+    /**
+     * @param int $summit_id
+     * @param string $source
+     * @param int $event_id
+     * @return SummitProposedScheduleSummitEvent|null
+     */
+    public function getBySummitSourceAndEventId(int $summit_id, string $source, int $event_id): ?SummitProposedScheduleSummitEvent
+    {
+        $query = $this->getEntityManager()->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->join("e.summit_event","ev")
+            ->join("e.summit_proposed_schedule","ps")
+            ->join("ps.summit","s")
+            ->where('ps.source = :source')
+            ->andWhere('s.id = :summit_id')
+            ->andWhere('ev.id = :event_id')
+            ->setParameter('source', $source)
+            ->setParameter('summit_id', $summit_id)
+            ->setParameter('event_id', $event_id);
+
+        return $query->getQuery()->getOneOrNullResult();
+    }
 }

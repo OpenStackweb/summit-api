@@ -16,6 +16,7 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\summit\SummitProposedSchedule;
 use models\summit\SummitProposedScheduleSummitEvent;
+use utils\Filter;
 
 /**
  * Interface IScheduleService
@@ -54,9 +55,10 @@ interface IScheduleService
      * @param string $source
      * @param int $summit_id
      * @param array $payload
+     * @param Filter|null $filter;
      * @return SummitProposedSchedule
      * @throws EntityNotFoundException
      * @throws \Exception
      */
-    public function publishAll(string $source, int $summit_id, array $payload):SummitProposedSchedule;
+    public function publishAll(string $source, int $summit_id, array $payload, ?Filter $filter = null):SummitProposedSchedule;
 }

@@ -7615,7 +7615,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/presentations',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData), $current_realm,
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
                     sprintf(SummitScopes::ReadSummitData, $current_realm)
                 ],
                 'authz_groups' => [

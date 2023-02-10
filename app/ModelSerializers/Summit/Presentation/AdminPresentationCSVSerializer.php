@@ -167,6 +167,13 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
                 $values['presentation_flags'] = $values['presentation_flags'] . '|';
             $values['presentation_flags'] =  $values['presentation_flags'] . str_replace(",", "", (string)$action);
         }
+
+        if($presentation->hasCreatedBy()){
+            unset($values['created_by_id']);
+            $created_by = $presentation->getCreatedBy();
+            $values['created_by'] = sprintf("%s (%s)", $created_by->getFullName(), $created_by->getEmail());
+        }
+
         return $values;
     }
 }

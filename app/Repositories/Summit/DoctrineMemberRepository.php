@@ -17,6 +17,7 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 use models\main\IMemberRepository;
 use models\main\Member;
 use App\Repositories\SilverStripeDoctrineRepository;
+use models\utils\SilverstripeBaseModel;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineJoinFilterMapping;
 use utils\Filter;
@@ -76,8 +77,8 @@ final class DoctrineMemberRepository
 
             $filter->apply2Query($query, [
                 'irc'               => 'm.irc_handle:json_string',
-                'created'           => 'm.created:datetime_epoch',
-                'last_edited'       => 'm.last_edited:datetime_epoch',
+                'created'           => sprintf('m.created:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
+                'last_edited'       => sprintf('m.last_edited:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
                 'twitter'           => 'm.twitter_handle:json_string',
                 'first_name'        => 'm.first_name:json_string',
                 'last_name'         => 'm.last_name:json_string',

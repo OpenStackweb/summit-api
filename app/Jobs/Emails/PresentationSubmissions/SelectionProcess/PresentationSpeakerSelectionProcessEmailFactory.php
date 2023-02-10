@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Services\Utils\Email\SpeakersAnnouncementEmailConfigDTO;
 use App\Services\Utils\Facades\EmailExcerpt;
 use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
@@ -52,6 +53,8 @@ final class PresentationSpeakerSelectionProcessEmailFactory
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
      * @param string $type
+     * @param string $test_email_recipient
+     * @param SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config
      * @param Filter|null $filter
      * @param SummitRegistrationPromoCode|null $promo_code
      * @param PresentationSpeakerSummitAssistanceConfirmationRequest|null $speaker_assistance
@@ -61,6 +64,8 @@ final class PresentationSpeakerSelectionProcessEmailFactory
         Summit $summit,
         PresentationSpeaker $speaker,
         string $type,
+        string $test_email_recipient,
+        SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config,
         ?Filter $filter = null,
         ?SummitRegistrationPromoCode $promo_code = null,
         ?PresentationSpeakerSummitAssistanceConfirmationRequest $speaker_assistance = null
@@ -75,6 +80,8 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
+                    $test_email_recipient,
+                    $speaker_announcement_email_config,
                     is_null($speaker_assistance) ? null: $speaker_assistance->getToken(),
                     $filter
                 );
@@ -85,6 +92,8 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
+                    $test_email_recipient,
+                    $speaker_announcement_email_config,
                     is_null($speaker_assistance) ? null: $speaker_assistance->getToken(),
                     $filter,
                 );
@@ -94,6 +103,8 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                 (
                     $summit,
                     $speaker,
+                    $test_email_recipient,
+                    $speaker_announcement_email_config,
                     $filter
                 );
             break;
@@ -103,6 +114,8 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
+                    $test_email_recipient,
+                    $speaker_announcement_email_config,
                     is_null($speaker_assistance) ? null: $speaker_assistance->getToken(),
                     $filter
                 );
@@ -113,6 +126,8 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
+                    $test_email_recipient,
+                    $speaker_announcement_email_config,
                     is_null($speaker_assistance) ? null: $speaker_assistance->getToken(),
                     $filter
                 );
@@ -123,6 +138,8 @@ final class PresentationSpeakerSelectionProcessEmailFactory
                     $summit,
                     $promo_code,
                     $speaker,
+                    $test_email_recipient,
+                    $speaker_announcement_email_config,
                     is_null($speaker_assistance) ? null: $speaker_assistance->getToken(),
                     $filter
                 );

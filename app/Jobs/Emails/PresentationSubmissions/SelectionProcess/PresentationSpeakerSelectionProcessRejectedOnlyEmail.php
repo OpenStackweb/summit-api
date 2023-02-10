@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Services\Utils\Email\SpeakersAnnouncementEmailConfigDTO;
 use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
@@ -36,16 +37,20 @@ class PresentationSpeakerSelectionProcessRejectedOnlyEmail extends PresentationS
     /**
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
+     * @param string $test_email_recipient
+     * @param SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config
      * @param Filter|null $filter
      */
     public function __construct
     (
-        Summit              $summit,
-        PresentationSpeaker $speaker,
-        ?Filter             $filter = null
+        Summit                              $summit,
+        PresentationSpeaker                 $speaker,
+        string                              $test_email_recipient,
+        SpeakersAnnouncementEmailConfigDTO  $speaker_announcement_email_config,
+        ?Filter                             $filter = null
     )
     {
-        parent::__construct($summit, $speaker, null, $filter);
+        parent::__construct($summit, $speaker, $test_email_recipient, $speaker_announcement_email_config, null, $filter);
         Log::debug(sprintf("PresentationSpeakerSelectionProcessRejectedEmail::__construct payload %s", json_encode($this->payload)));
     }
 }

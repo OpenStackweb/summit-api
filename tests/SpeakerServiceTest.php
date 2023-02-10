@@ -46,7 +46,7 @@ final class SpeakerServiceTest extends TestCase
         parent::tearDown();
     }
 
-    public function testSendSpeakerEmailsPerSelectionPlanAndOnlyAccepted($summit_id = 40) {
+    public function testSendSpeakerEmailsPerSelectionPlanAndOnlyAccepted($summit_id = 3397) {
 
         $service = App::make(ISpeakerService::class);
 
@@ -54,7 +54,7 @@ final class SpeakerServiceTest extends TestCase
         $summit = $summit_repo->getById($summit_id);
 
         $filterParam = [
-          'presentations_selection_plan_id==23',
+          'presentations_selection_plan_id==2193',
           'has_rejected_presentations==false',
           'has_accepted_presentations==true',
           'has_alternate_presentations==false'
@@ -81,7 +81,7 @@ final class SpeakerServiceTest extends TestCase
         );
 
         $payload = [
-            "email_flow_event"          => 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ACCEPTED_REJECTED',
+            "email_flow_event"          => 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ALTERNATE_REJECTED',
             "test_email_recipient"      => "smarcet@gmail.com",
             "should_send_copy_2_submitter" => false,
             "outcome_email_recipient"   => "smarcet@gmail.com"

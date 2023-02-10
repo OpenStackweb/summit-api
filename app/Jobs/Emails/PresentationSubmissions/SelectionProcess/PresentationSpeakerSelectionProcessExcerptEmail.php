@@ -13,7 +13,6 @@
  **/
 
 use App\Jobs\Emails\AbstractEmailJob;
-use App\Services\Utils\Facades\EmailExcerpt;
 use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
 use models\summit\Summit;
@@ -36,17 +35,17 @@ class PresentationSpeakerSelectionProcessExcerptEmail extends AbstractEmailJob
     /**
      * PresentationSpeakerSelectionProcessExcerptEmail constructor.
      * @param Summit $summit
+     * @param string $outcome_email_recipient
+     * @param array $report
      */
     public function __construct
     (
         Summit $summit,
-        string $outcome_email_recipient
+        string $outcome_email_recipient,
+        array $report
     ){
         $payload = [];
-
-        $report = EmailExcerpt::getReport();
         $report_lines = [];
-        $itemsCount = count($report);
 
         foreach ($report as $reportItem) {
             $type = $reportItem['type']  ?? null;

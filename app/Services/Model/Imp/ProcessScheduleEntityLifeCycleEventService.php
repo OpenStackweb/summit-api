@@ -17,6 +17,7 @@ use App\Services\Model\IProcessScheduleEntityLifeCycleEventService;
 use App\Services\Utils\RabbitPublisherService;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use libs\utils\CacheRegions;
 use libs\utils\ICacheService;
 use libs\utils\ITransactionService;
 use models\summit\ISummitRepository;
@@ -64,9 +65,9 @@ final class ProcessScheduleEntityLifeCycleEventService
         $this->cache_service = $cache_service;
         $this->rabbit_service = null;
         $use_realtime_updates = intval(Config::get("schedule.use_realtime_updates", 1));
-        Log::debug(sprintf( "ProcessScheduleEntityLifeCycleEventService::__construct schedule.use_realtime_updates %s", $use_realtime_updates));
+        Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::__construct schedule.use_realtime_updates %s", $use_realtime_updates));
 
-        if($use_realtime_updates) {
+        if ($use_realtime_updates) {
             Log::debug("ProcessScheduleEntityLifeCycleEventService::__construct schedule.use_realtime_updates is enabled");
             $this->rabbit_service = new RabbitPublisherService('entities-updates-broker');
         }
@@ -96,7 +97,24 @@ final class ProcessScheduleEntityLifeCycleEventService
                 )
             );
 
-            if(is_null($this->rabbit_service)){
+            // clear cache region
+            $cache_region_key = null;
+            if ($entity_type === 'Presentation' || $entity_type === 'SummitEvent') {
+                $cache_region_key = CacheRegions::getCacheRegionFor(CacheRegions::CacheRegionEvents, $entity_id);
+            }
+
+            if (!empty($cache_region_key) && $this->cache_service->exists($cache_region_key)) {
+                Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process will clear cache region %s", $cache_region_key));
+                $region = json_decode($this->cache_service->getSingleValue($cache_region_key), true);
+                foreach ($region as $key => $val) {
+                    Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process clearing cache key %s", $key));
+                    $this->cache_service->delete($key);
+                    $this->cache_service->delete($key . 'generated');
+                }
+                $this->cache_service->delete($cache_region_key);
+            }
+
+            if (is_null($this->rabbit_service)) {
                 Log::debug("ProcessScheduleEntityLifeCycleEventService::process rabbit service is disabled.");
                 return;
             }
@@ -118,7 +136,7 @@ final class ProcessScheduleEntityLifeCycleEventService
             }
 
             $res = $this->cache_service->addSingleValue($cache_key, $cache_key, self::CacheTTL);
-            if(!$res){
+            if (!$res) {
                 Log::warning
                 (
                     sprintf
@@ -138,7 +156,7 @@ final class ProcessScheduleEntityLifeCycleEventService
                     if ($summit->getSpeaker($entity_id)) {
 
                         Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process publishing speaker %s to summit %s",
-                        $entity_id, $summit->getId()));
+                            $entity_id, $summit->getId()));
                         // speaker is present on this summit
                         $this->rabbit_service->publish(
                             [

@@ -81,7 +81,7 @@ interface ICacheService
 	/**
 	* @param $key
 	* @param $value
-	* @param int $ttl
+	* @param int $ttl in seconds
 	* @return mixed
 	*/
 	public function setSingleValue($key, $value, $ttl = 0);

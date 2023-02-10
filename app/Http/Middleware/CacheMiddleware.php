@@ -15,6 +15,7 @@
 use Closure;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Http\JsonResponse;
+use libs\utils\CacheRegions;
 use libs\utils\ICacheService;
 use Illuminate\Support\Facades\Log;
 use models\oauth2\IResourceServerContext;
@@ -46,9 +47,11 @@ final class CacheMiddleware
      * @param $request
      * @param Closure $next
      * @param $cache_lifetime
-     * @return JsonResponse
+     * @param null $cache_region
+     * @param null $param_id
+     * @return JsonResponse|mixed
      */
-    public function handle($request, Closure $next, $cache_lifetime)
+    public function handle($request, Closure $next, $cache_lifetime, $cache_region = null, $param_id = null)
     {
         Log::debug('CacheMiddleware::handle');
         $cache_lifetime = intval($cache_lifetime);
@@ -88,7 +91,14 @@ final class CacheMiddleware
 
         $data = $this->cache_service->getSingleValue($key);
         $time = $this->cache_service->getSingleValue($key . ".generated");
-
+        $region = [];
+        $cache_region_key = null;
+        if(!empty($cache_region) && !empty($param_id)){
+            $id = $request->route($param_id);
+            $cache_region_key = CacheRegions::getCacheRegionFor($cache_region, $id);
+            if(!empty($cache_region_key) && $this->cache_service->exists($cache_region_key))
+                $region = json_decode($this->cache_service->getSingleValue($cache_region_key), true);
+        }
         if (empty($data) || empty($time) || $evict_cache) {
             $time = $current_time;
             Log::debug(sprintf("CacheMiddleware::handle cache value not found for key %s , getting from api...", $key));
@@ -99,6 +109,10 @@ final class CacheMiddleware
                 $data = $response->getData(true);
                 $this->cache_service->setSingleValue($key, gzdeflate(json_encode($data), 9), $cache_lifetime);
                 $this->cache_service->setSingleValue($key . ".generated", $time, $cache_lifetime);
+                if(!empty($cache_region_key)){
+                    $region[$key] = $key;
+                    $this->cache_service->setSingleValue($cache_region_key, json_encode($region));
+                }
             }
         } else {
             $ttl = $this->cache_service->ttl($key);
@@ -109,10 +123,6 @@ final class CacheMiddleware
                 ]
             );
         }
-
-        $response->headers->set('xcontent-timestamp', $time);
-        $response->headers->set('Cache-Control', sprintf('private, max-age=%s', $cache_lifetime));
-        $response->headers->set('Expires', gmdate('D, d M Y H:i:s \G\M\T', $time + $cache_lifetime));
 
         return $response;
     }

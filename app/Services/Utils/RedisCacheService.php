@@ -151,16 +151,19 @@ class RedisCacheService implements ICacheService
 		return $this->redis->get($key);
 	}
 
+    /**
+     * @param $key
+     * @param $value
+     * @param int $ttl in seconds
+     * @return mixed
+     */
 	public function setSingleValue($key, $value, $ttl = 0)
 	{
 		if ($ttl>0)
 		{
 			return $this->redis->setex($key, $ttl, $value);
 		}
-		else
-		{
-			return $this->redis->set($key, $value);
-		}
+		return $this->redis->set($key, $value);
 	}
 
 	public function addSingleValue($key, $value, $ttl = 0)

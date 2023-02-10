@@ -51,7 +51,6 @@ final class DoctrineSummitEventRepository
     implements ISummitEventRepository
 {
 
-
     private static $forbidden_classes = [
         SummitGroupEvent::ClassName,
     ];
@@ -372,6 +371,8 @@ CASE WHEN e.start_date is NULL OR e.end_date IS NULL THEN e.duration
 ELSE TIMESTAMPDIFF(SECOND, e.start_date, e.end_date) END
 SQL,
             'speakers_count' => 'COUNT(DISTINCT(sp.id))',
+            'created_by_fullname' => "concat(cb.first_name, ' ', cb.last_name)",
+            'created_by_email' => 'cb.email',
         ];
     }
 

@@ -39,6 +39,13 @@ class AdminSummitEventCSVSerializer extends SummitEventSerializer
         if($summit_event->hasCategory()){
             $values['track'] = $summit_event->getCategory()->getTitle();
         }
+
+        if($summit_event->hasCreatedBy()){
+            unset($values['created_by_id']);
+            $created_by = $summit_event->getCreatedBy();
+            $values['created_by'] = sprintf("%s (%s)", $created_by->getFullName(), $created_by->getEmail());
+        }
+
         return $values;
     }
 }

@@ -96,8 +96,15 @@ final class CacheMiddleware
         if(!empty($cache_region) && !empty($param_id)){
             $id = $request->route($param_id);
             $cache_region_key = CacheRegions::getCacheRegionFor($cache_region, $id);
-            if(!empty($cache_region_key) && $this->cache_service->exists($cache_region_key))
-                $region = json_decode($this->cache_service->getSingleValue($cache_region_key), true);
+            if(!empty($cache_region_key) && $this->cache_service->exists($cache_region_key)) {
+                //
+                Log::debug(sprintf("CacheMiddleware::handle trying to get region %s data ...", $cache_region_key));
+                $region_data = $this->cache_service->getSingleValue($cache_region_key);
+                if(!empty($region_data)){
+                    $region = json_decode(gzinflate($region_data), true);
+                    Log::debug(sprintf("CacheMiddleware::handle got payload %s for region %s", json_encode($region), $cache_region_key));
+                }
+            }
         }
         if (empty($data) || empty($time) || $evict_cache) {
             $time = $current_time;
@@ -105,13 +112,15 @@ final class CacheMiddleware
             // normal flow ...
             $response = $next($request);
             if ($response instanceof JsonResponse && $response->getStatusCode() === 200) {
-                // and if its json, store it on cache ...
+                // and if its json, store it on cache ..).
                 $data = $response->getData(true);
+                Log::debug(sprintf("CacheMiddleware::handle storing data for key %s", $key));
                 $this->cache_service->setSingleValue($key, gzdeflate(json_encode($data), 9), $cache_lifetime);
                 $this->cache_service->setSingleValue($key . ".generated", $time, $cache_lifetime);
                 if(!empty($cache_region_key)){
                     $region[$key] = $key;
-                    $this->cache_service->setSingleValue($cache_region_key, json_encode($region));
+                    Log::debug(sprintf("CacheMiddleware::handle storing data for region %s", $cache_region_key));
+                    $this->cache_service->setSingleValue($cache_region_key, gzdeflate(json_encode($region), 9));
                 }
             }
         } else {

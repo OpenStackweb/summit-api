@@ -103,15 +103,20 @@ final class ProcessScheduleEntityLifeCycleEventService
                 $cache_region_key = CacheRegions::getCacheRegionFor(CacheRegions::CacheRegionEvents, $entity_id);
             }
 
+
             if (!empty($cache_region_key) && $this->cache_service->exists($cache_region_key)) {
                 Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process will clear cache region %s", $cache_region_key));
-                $region = json_decode($this->cache_service->getSingleValue($cache_region_key), true);
-                foreach ($region as $key => $val) {
-                    Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process clearing cache key %s", $key));
-                    $this->cache_service->delete($key);
-                    $this->cache_service->delete($key . 'generated');
+                $region_data = $this->cache_service->getSingleValue($cache_region_key);
+                if(!empty($region_data)) {
+                    $region = json_decode(gzinflate($region_data), true);
+                    Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process got payload %s region %s", json_encode($region), $cache_region_key));
+                    foreach ($region as $key => $val) {
+                        Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process clearing cache key %s", $key));
+                        $this->cache_service->delete($key);
+                        $this->cache_service->delete($key . 'generated');
+                    }
+                    $this->cache_service->delete($cache_region_key);
                 }
-                $this->cache_service->delete($cache_region_key);
             }
 
             if (is_null($this->rabbit_service)) {

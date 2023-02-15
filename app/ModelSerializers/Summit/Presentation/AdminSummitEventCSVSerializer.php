@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Illuminate\Support\Facades\Log;
 use models\summit\SummitEvent;
 /**
  * Class AdminSummitEventCSVSerializer
@@ -44,6 +46,7 @@ class AdminSummitEventCSVSerializer extends SummitEventSerializer
             unset($values['created_by_id']);
             $created_by = $summit_event->getCreatedBy();
             $values['created_by'] = sprintf("%s (%s)", $created_by->getFullName(), $created_by->getEmail());
+            Log::debug(sprintf("AdminPresentationCSVSerializer::serialize setting created_by %s", json_encode($values)));
         }
 
         return $values;

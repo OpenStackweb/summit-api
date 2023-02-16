@@ -242,18 +242,15 @@ class PresentationSerializer extends SummitEventSerializer
                         }
                     }
                     break;
-                    case 'creator':{
-                        if($presentation->getCreatorId() > 0) {
-                            $member = $this->resource_server_context->getCurrentUser();
-                            $type = SerializerRegistry::SerializerType_Public;
-                            if(!is_null($member) && $member->isAdmin()){
-                                $type = SerializerRegistry::SerializerType_Admin;
+                    // deprecated
+                    case 'creator':
+                        {
+                            if($presentation->getCreatorId() > 0) {
+                                unset($values['creator_id']);
+                                $values['creator'] = SerializerRegistry::getInstance()->getSerializer($presentation->getCreator(), $this->getSerializerType($relation))->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
-                            unset($values['creator_id']);
-                            $values['creator'] = SerializerRegistry::getInstance()->getSerializer($presentation->getCreator(), $type)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
-                    }
-                    break;
+                        break;
                     case 'selection_plan':{
                         if($presentation->getSelectionPlanId() > 0) {
                             unset($values['selection_plan_id']);

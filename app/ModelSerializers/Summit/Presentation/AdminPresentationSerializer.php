@@ -30,7 +30,9 @@ class AdminPresentationSerializer extends PresentationSerializer
             return SerializerRegistry::SerializerType_Admin;
         if($relation == 'speakers')
             return SerializerRegistry::SerializerType_Admin;
-
+        // deprecated
+        if($relation == 'creator')
+            return SerializerRegistry::SerializerType_Admin;
         return SerializerRegistry::SerializerType_Private;
     }
 
@@ -103,7 +105,6 @@ class AdminPresentationSerializer extends PresentationSerializer
             $values['etherpad_link'] = $presentation->getEtherpadLink();
 
         $values['track_chair_scores_avg'] = $presentation->getTrackChairAvgScoresPerRakingType();
-
 
         return $values;
     }

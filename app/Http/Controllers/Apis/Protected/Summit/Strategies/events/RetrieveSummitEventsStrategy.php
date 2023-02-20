@@ -124,6 +124,9 @@ abstract class RetrieveSummitEventsStrategy
                 'speakers_count',
                 'created_by_fullname',
                 'created_by_email',
+                'sponsor',
+                'created_by_company',
+                'speaker_company',
             ]);
         }
         return $order;

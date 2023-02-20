@@ -372,6 +372,9 @@ SQL,
             'speakers_count' => 'COUNT(DISTINCT(sp.id))',
             'created_by_fullname' => "concat(cb.first_name, ' ', cb.last_name)",
             'created_by_email' => 'cb.email',
+            'sponsor' => 'sprs.name',
+            'created_by_company' => 'cb.company',
+            'speaker_company' => "sp.company"
         ];
     }
 

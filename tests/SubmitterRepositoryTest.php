@@ -1,8 +1,9 @@
 <?php namespace Tests;
+use App\ModelSerializers\IMemberSerializerTypes;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\main\Member;
-use models\main\SummitAuditLog;
 use models\summit\Summit;
+use ModelSerializers\SerializerRegistry;
 use utils\FilterParser;
 use utils\Order;
 use utils\OrderElement;
@@ -33,17 +34,26 @@ class SubmitterRepositoryTest extends ProtectedApiTest
         $summit = $summit_repository->find(3363);
 
         $filter = FilterParser::parse(
-            ["filter" => "last_name==Palenque"],
-            ["last_name" => ['==']]
+            ["filter" => "is_speaker==true"],
+            ["is_speaker" => ['==']]
         );
 
         $order = new Order([
             OrderElement::buildDescFor("id"),
         ]);
 
-        $submitters = $submitter_repository->getSubmittersBySummit($summit, new PagingInfo(1, 5), $filter, $order);
+        $page = $submitter_repository->getSubmittersBySummit($summit, new PagingInfo(1, 5), $filter, $order);
 
-        self::assertNotEmpty($submitters);
+        $params = [
+            "summit" => $summit
+        ];
+
+        foreach ($page->getItems() as $submitter) {
+            $sm = SerializerRegistry::getInstance()->getSerializer($submitter, IMemberSerializerTypes::Submitter)
+                ->serialize(null, [], ['accepted_presentations', 'alternate_presentations', 'rejected_presentations'], $params);
+        }
+
+        self::assertNotNull($page);
     }
 
     public function testGetSubmittersIdsBySummit(){
@@ -53,8 +63,8 @@ class SubmitterRepositoryTest extends ProtectedApiTest
         $summit = $summit_repository->find(3363);
 
         $filter = FilterParser::parse(
-            ["filter" => "has_alternate_presentations==true"],
-            ["has_alternate_presentations" => ['==']]
+            ["filter" => "has_rejected_presentations==false"],
+            ["has_rejected_presentations" => ['==']]
         );
 
         $order = new Order([

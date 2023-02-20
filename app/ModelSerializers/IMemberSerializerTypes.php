@@ -1,6 +1,6 @@
-<?php namespace ModelSerializers;
+<?php namespace App\ModelSerializers;
 /**
- * Copyright 2020 OpenStack Foundation
+ * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,13 +13,11 @@
  **/
 
 /**
- * Class AdminMemberSerializer
- * @package ModelSerializers
+ * Interface IMemberSerializerTypes
+ * @package App\ModelSerializers
  */
-class AdminMemberSerializer extends AbstractMemberSerializer
+interface IMemberSerializerTypes
 {
-    protected static $array_mappings = [
-        'Email' => 'email:json_string',
-        'UserExternalId' => 'user_external_id:json_int'
-    ];
+    const Submitter    = 'SUBMITTER';
+    const SubmitterCSV = 'SUBMITTER_CSV';
 }

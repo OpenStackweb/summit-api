@@ -555,6 +555,13 @@ Route::group(array('prefix' => 'summits'), function () {
             });
         });
 
+        // submitters
+        Route::group(['prefix' => 'submitters'], function () {
+
+            Route::get('', 'OAuth2SummitSubmittersApiController@getAllBySummit');
+            Route::get('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSubmittersApiController@getAllBySummitCSV']);
+        });
+
         // speakers
         Route::group(['prefix' => 'speakers'], function () {
 

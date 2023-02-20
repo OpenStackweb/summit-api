@@ -19,6 +19,7 @@ use App\ModelSerializers\Elections\CandidateSerializer;
 use App\ModelSerializers\Elections\ElectionSerializer;
 use App\ModelSerializers\Elections\NominationSerializer;
 use App\ModelSerializers\FileSerializer;
+use App\ModelSerializers\IMemberSerializerTypes;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
 use App\ModelSerializers\ISummitOrderSerializerTypes;
 use App\ModelSerializers\LanguageSerializer;
@@ -469,7 +470,8 @@ final class SerializerRegistry
         $this->registry['Member'] = [
             self::SerializerType_Public => PublicMemberSerializer::class,
             self::SerializerType_Private => OwnMemberSerializer::class,
-            self::SerializerType_Admin => AdminMemberSerializer::class
+            self::SerializerType_Admin => AdminMemberSerializer::class,
+            IMemberSerializerTypes::Submitter => SubmitterMemberSerializer::class,
         ];
 
         $this->registry['LegalAgreement'] = LegalAgreementSerializer::class;

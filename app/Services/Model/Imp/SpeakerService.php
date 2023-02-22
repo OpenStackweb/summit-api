@@ -33,9 +33,8 @@ use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IFolderService;
 use App\Services\Model\Strategies\EmailActions\SpeakerActionsEmailStrategy;
+use App\Services\Utils\Email\SpeakersAnnouncementEmailConfigDTO;
 use App\Services\Utils\Facades\EmailExcerpt;
-use App\Services\Utils\Facades\EmailTest;
-use App\Services\Utils\Facades\SpeakersAnnouncementEmailConfig;
 use App\Services\utils\IEmailExcerptService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -1318,12 +1317,16 @@ final class SpeakerService
         (
             sprintf
             (
-                "SpeakerService::send summit %s payload %s filter %s",
+                "SpeakerService::send summit %s payload %s filter %s INIT",
                 $summit_id,
                 json_encode($payload),
                 is_null($filter) ? "" : $filter->__toString()
             )
         );
+
+        EmailExcerpt::clearReport();
+
+        $speaker_announcement_email_config = new SpeakersAnnouncementEmailConfigDTO();
 
         $flow_event = trim($payload['email_flow_event'] ?? '');
 
@@ -1332,20 +1335,21 @@ final class SpeakerService
 
         $done = isset($payload['speaker_ids']); // we have provided only ids and not a criteria
         $outcome_email_recipient = $payload['outcome_email_recipient'] ?? null;
+
+        $test_email_recipient = null;
         if(isset($payload['test_email_recipient']))
-            EmailTest::setEmailAddress($payload['test_email_recipient']);
+            $test_email_recipient = $payload['test_email_recipient'];
 
         if(isset($payload['should_resend'])){
-            SpeakersAnnouncementEmailConfig::setShouldResend(boolval($payload['should_resend']));
+            $speaker_announcement_email_config->setShouldResend(boolval($payload['should_resend']));
         }
         if(isset($payload['should_send_copy_2_submitter'])){
-            SpeakersAnnouncementEmailConfig::setShouldSendCopy2Submitter(boolval($payload['should_send_copy_2_submitter']));
+            $speaker_announcement_email_config->setShouldSendCopy2Submitter(boolval($payload['should_send_copy_2_submitter']));
         }
 
         $page = 1;
         $count = 0;
         $maxPageSize = 100;
-        EmailExcerpt::clearReport();
 
         Log::debug(sprintf("SpeakerService::send summit id %s flow_event %s filter %s",
             $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString()));
@@ -1402,7 +1406,9 @@ final class SpeakerService
                         $summit,
                         $speaker_id,
                         $email_strategy,
-                        $filter
+                        $filter,
+                        $test_email_recipient,
+                        $speaker_announcement_email_config
                     ) {
 
                         Log::debug(sprintf("SpeakerService::send processing speaker id %s", $speaker_id));
@@ -1422,6 +1428,8 @@ final class SpeakerService
                         $email_strategy->process
                         (
                             $speaker,
+                            $test_email_recipient,
+                            $speaker_announcement_email_config,
                             $filter,
                             $promo_code,
                             $assistance
@@ -1440,8 +1448,10 @@ final class SpeakerService
         EmailExcerpt::addInfoMessage(sprintf("TOTAL of %s speaker(s) processed.", $count));
         EmailExcerpt::generateEmailCountLine();
 
-        if (!empty($outcome_email_recipient))
-            PresentationSpeakerSelectionProcessExcerptEmail::dispatch($summit, $outcome_email_recipient);
+        if (!empty($outcome_email_recipient)) {
+            PresentationSpeakerSelectionProcessExcerptEmail::dispatch(
+                $summit, $outcome_email_recipient, EmailExcerpt::getReport());
+        }
 
         Log::debug(sprintf("SpeakerService::send summit id %s flow_event %s filter %s had processed %s records",
             $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $count));

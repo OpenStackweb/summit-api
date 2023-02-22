@@ -19,8 +19,8 @@ use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeaker
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessEmailFactory;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedOnlyEmail;
+use App\Services\Utils\Email\SpeakersAnnouncementEmailConfigDTO;
 use App\Services\Utils\Facades\EmailExcerpt;
-use App\Services\Utils\Facades\SpeakersAnnouncementEmailConfig;
 use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
@@ -59,11 +59,15 @@ final class SpeakerActionsEmailStrategy
 
     /**
      * @param PresentationSpeaker $speaker
+     * @param string|null $test_email_recipient
+     * @param SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config
      * @param Filter|null $filter
      * @param SummitRegistrationPromoCode|null $promo_code
      * @param PresentationSpeakerSummitAssistanceConfirmationRequest|null $assistance
      */
     public function process(PresentationSpeaker                                     $speaker,
+                            ?string                                                 $test_email_recipient,
+                            SpeakersAnnouncementEmailConfigDTO                      $speaker_announcement_email_config,
                             ?Filter                                                 $filter = null,
                             ?SummitRegistrationPromoCode                            $promo_code = null,
                             ?PresentationSpeakerSummitAssistanceConfirmationRequest $assistance = null): void
@@ -171,7 +175,7 @@ final class SpeakerActionsEmailStrategy
             if (!is_null($type)) {
 
                 if ($speaker->hasAnnouncementEmailTypeSent($this->summit, $type) &&
-                    !SpeakersAnnouncementEmailConfig::shouldResend()) {
+                    !$speaker_announcement_email_config->shouldResend()) {
 
                     EmailExcerpt::addInfoMessage(
                         sprintf
@@ -202,6 +206,8 @@ final class SpeakerActionsEmailStrategy
                     $this->summit,
                     $speaker,
                     $type,
+                    $test_email_recipient,
+                    $speaker_announcement_email_config,
                     $filter,
                     $promo_code,
                     $assistance

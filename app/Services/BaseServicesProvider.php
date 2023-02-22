@@ -24,12 +24,8 @@ use App\Services\Apis\MailApi;
 use App\Services\Apis\PasswordlessAPI;
 use App\Services\Model\FolderService;
 use App\Services\Model\IFolderService;
-use App\Services\Utils\Email\SpeakersAnnouncementEmailConfigDTO;
 use App\Services\utils\EmailExcerptService;
-use App\Services\utils\EmailTestDTO;
 use App\Services\Utils\Facades\EmailExcerpt;
-use App\Services\Utils\Facades\EmailTest;
-use App\Services\Utils\Facades\SpeakersAnnouncementEmailConfig;
 use App\Services\Utils\ILockManagerService;
 use App\Services\Utils\LockManagerService;
 use GuzzleHttp\Client;
@@ -91,16 +87,8 @@ final class BaseServicesProvider extends ServiceProvider
             );
         });
 
-        App::singleton(EmailExcerpt::class, function ($app) {
+        App::scoped(EmailExcerpt::class, function ($app) {
             return new EmailExcerptService();
-        });
-
-        App::singleton(EmailTest::class, function ($app) {
-            return new EmailTestDTO();
-        });
-
-        App::singleton(SpeakersAnnouncementEmailConfig::class, function ($app) {
-            return new SpeakersAnnouncementEmailConfigDTO();
         });
 
         App::singleton(ISerializerTypeSelector::class, BaseSerializerTypeSelector::class);

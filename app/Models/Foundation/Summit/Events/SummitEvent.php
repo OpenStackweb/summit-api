@@ -77,9 +77,18 @@ class SummitEvent extends SilverstripeBaseModel
     const FieldAbstract = 'description';
     const FieldSocialDescription = 'social_description';
     const FieldLevel = 'level';
+    const FieldTrack = 'track_id';
+    const FieldType = 'type_id';
+
+    const AllowedEditableFields = [
+        self::FieldTitle,
+        self::FieldAbstract,
+        self::FieldSocialDescription,
+        self::FieldLevel,
+        self::FieldTrack,
+    ];
 
     const AllowedFields = [
-        // self::FieldTitle,
         self::FieldAbstract,
         self::FieldSocialDescription,
         self::FieldLevel,
@@ -1538,6 +1547,49 @@ class SummitEvent extends SilverstripeBaseModel
                 $this->setEndDate($value);
             }
         }
+    }
+
+    /**
+     * @return array|string[]
+     */
+    public static function getAllowedFields(): array{
+        return SummitEvent::AllowedFields;
+    }
+
+    public static function getAllowedEditableFields(): array{
+        return SummitEvent::AllowedEditableFields;
+    }
+
+    /**
+     * @param string $type
+     * @return bool
+     */
+    public static function isAllowedEditableField(string $type): bool
+    {
+        return in_array($type, SummitEvent::AllowedEditableFields);
+    }
+
+    /**
+     * @param string $type
+     * @return bool
+     */
+    public static function isAllowedField(string $type): bool
+    {
+      return in_array($type, SummitEvent::AllowedFields);
+    }
+
+    /**
+     * @return array
+     */
+    public function getSnapshot():array{
+        return [
+            self::FieldTitle => $this->title,
+            self::FieldLevel => $this->level,
+            self::FieldAbstract => $this->abstract,
+            self::FieldSocialDescription => $this->social_summary,
+            self::FieldTrack => $this->getCategoryId(),
+            self::FieldType => $this->getTypeId(),
+        ];
     }
 
     use ScheduleEntity;

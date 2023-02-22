@@ -214,6 +214,12 @@ class SelectionPlan extends SilverstripeBaseModel
     private $allowed_presentation_questions;
 
     /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\SelectionPlanAllowedEditablePresentationQuestion", mappedBy="selection_plan", cascade={"persist","remove"}, orphanRemoval=true)
+     * @var SelectionPlanAllowedEditablePresentationQuestion[]
+     */
+    private $allowed_editable_presentation_questions;
+
+    /**
      * @return string
      */
     public function getTimeZoneId()
@@ -414,7 +420,9 @@ class SelectionPlan extends SilverstripeBaseModel
         $this->allowed_presentation_action_types = new ArrayCollection();
         $this->allowed_members = new ArrayCollection();
         $this->allowed_presentation_questions = new ArrayCollection();
+        $this->allowed_editable_presentation_questions = new ArrayCollection();
         $this->seedAllowedPresentationQuestions();
+        $this->seedAllowedEditablePresentationQuestions();
     }
 
     /**
@@ -433,22 +441,37 @@ class SelectionPlan extends SilverstripeBaseModel
         return $this->allowed_presentation_questions;
     }
 
-    public function clearAllAllowedPresentationQuestions(){
+    public function clearAllAllowedPresentationQuestions()
+    {
         $this->allowed_presentation_questions->clear();
+    }
+
+    /**
+     * @return SelectionPlanAllowedPresentationQuestion[]
+     */
+    public function getAllowedEditablePresentationQuestions()
+    {
+        return $this->allowed_editable_presentation_questions;
+    }
+
+    public function clearAllAllowedEditablePresentationQuestions()
+    {
+        $this->allowed_editable_presentation_questions->clear();
     }
 
     /**
      * @param string $type
      * @throws ValidationException
      */
-    public function addPresentationAllowedQuestion(string $type){
+    public function addPresentationAllowedQuestion(string $type)
+    {
 
-        if(!Presentation::isAllowedPresentationQuestion(trim($type)))
+        if (!Presentation::isAllowedField(trim($type)))
             throw new ValidationException(sprintf("Presentation question %s is not allowed.", $type));
 
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('type', trim($type)));
-        if($this->allowed_presentation_questions->matching($criteria)->count() > 0)
+        if ($this->allowed_presentation_questions->matching($criteria)->count() > 0)
             throw new ValidationException(sprintf("Presentation Question %s is already allowed.", $type));
 
         $question = new SelectionPlanAllowedPresentationQuestion($this, $type);
@@ -461,15 +484,53 @@ class SelectionPlan extends SilverstripeBaseModel
      * @return bool
      * @throws ValidationException
      */
-    public function isAllowedPresentationQuestion(string $type):bool{
+    public function isAllowedPresentationQuestion(string $type): bool
+    {
 
-        if(!Presentation::isAllowedPresentationQuestion(trim($type)))
+        if (!Presentation::isAllowedField(trim($type)))
             throw new ValidationException(sprintf("Presentation question %s is not allowed.", $type));
 
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('type', trim($type)));
         return $this->allowed_presentation_questions->matching($criteria)->count() > 0;
     }
+
+    /**
+     * @param string $type
+     * @throws ValidationException
+     */
+    public function addPresentationAllowedEditableQuestion(string $type)
+    {
+
+        if (!Presentation::isAllowedEditableField(trim($type)))
+            throw new ValidationException(sprintf("Presentation question %s is not edit allowed.", $type));
+
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type', trim($type)));
+        if ($this->allowed_editable_presentation_questions->matching($criteria)->count() > 0)
+            throw new ValidationException(sprintf("Presentation Question %s is already allowed to edit.", $type));
+
+        $question = new SelectionPlanAllowedEditablePresentationQuestion($this, $type);
+
+        $this->allowed_editable_presentation_questions->add($question);
+    }
+
+    /**
+     * @param string $type
+     * @return bool
+     * @throws ValidationException
+     */
+    public function isAllowedEditablePresentationQuestion(string $type): bool
+    {
+
+        if (!Presentation::isAllowedEditableField(trim($type)))
+            throw new ValidationException(sprintf("Presentation question %s is not edit allowed.", $type));
+
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('type', trim($type)));
+        return $this->allowed_editable_presentation_questions->matching($criteria)->count() > 0;
+    }
+
 
     /**
      * @return PresentationCategoryGroup[]
@@ -490,7 +551,8 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @return ArrayCollection|SelectionPlanAllowedMember[]
      */
-    public function getAllowedMembers(){
+    public function getAllowedMembers()
+    {
         return $this->allowed_members;
     }
 
@@ -671,8 +733,7 @@ class SelectionPlan extends SilverstripeBaseModel
                 ->setParameter('question_id', $question_id)
                 ->getSingleResult();
             return $res->getQuestionType();
-        }
-        catch (NoResultException $ex){
+        } catch (NoResultException $ex) {
 
         }
         return null;
@@ -697,8 +758,7 @@ class SelectionPlan extends SilverstripeBaseModel
                 ->setParameter('question_name', trim($name))
                 ->getSingleResult();
             return $res->getQuestionType();
-        }
-        catch (NoResultException $ex){
+        } catch (NoResultException $ex) {
 
         }
         return null;
@@ -723,8 +783,7 @@ class SelectionPlan extends SilverstripeBaseModel
                 ->setParameter('question_label', trim($label))
                 ->getSingleResult();
             return $res->getQuestionType();
-        }
-        catch (NoResultException $ex){
+        } catch (NoResultException $ex) {
 
         }
         return null;
@@ -745,7 +804,7 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param SummitSelectionPlanExtraQuestionType $question
      * @return AssignedSelectionPlanExtraQuestionType|null
      */
-    public function addExtraQuestion(SummitSelectionPlanExtraQuestionType $question):?AssignedSelectionPlanExtraQuestionType
+    public function addExtraQuestion(SummitSelectionPlanExtraQuestionType $question): ?AssignedSelectionPlanExtraQuestionType
     {
 
         $criteria = Criteria::create();
@@ -1133,7 +1192,8 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param SummitSelectionPlanExtraQuestionType $question
      * @return bool
      */
-    public function isExtraQuestionAssigned(SummitSelectionPlanExtraQuestionType $question): bool {
+    public function isExtraQuestionAssigned(SummitSelectionPlanExtraQuestionType $question): bool
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('question_type', $question));
         return $this->extra_questions->matching($criteria)->count() > 0;
@@ -1143,7 +1203,8 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param SummitSelectionPlanExtraQuestionType $question
      * @return AssignedSelectionPlanExtraQuestionType|null
      */
-    public function getAssignedExtraQuestion(SummitSelectionPlanExtraQuestionType $question):?AssignedSelectionPlanExtraQuestionType{
+    public function getAssignedExtraQuestion(SummitSelectionPlanExtraQuestionType $question): ?AssignedSelectionPlanExtraQuestionType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('question_type', $question));
         $res = $this->extra_questions->matching($criteria)->first();
@@ -1153,7 +1214,8 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @return ArrayCollection
      */
-    public function getPresentationActionTypes(): ArrayCollection {
+    public function getPresentationActionTypes(): ArrayCollection
+    {
         return $this->allowed_presentation_action_types->map(function ($entity) {
             return $entity->getType();
         });
@@ -1163,7 +1225,8 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param PresentationActionType $type
      * @return PresentationActionType|null
      */
-    public function getPresentationActionType(PresentationActionType $type): ?PresentationActionType {
+    public function getPresentationActionType(PresentationActionType $type): ?PresentationActionType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('type', $type));
         $presentation_action_type_assignment = $this->allowed_presentation_action_types->matching($criteria)->first();
@@ -1176,7 +1239,8 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param int $type_id
      * @return PresentationActionType|null
      */
-    public function getPresentationActionTypeById(int $type_id): ?PresentationActionType {
+    public function getPresentationActionTypeById(int $type_id): ?PresentationActionType
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('type_id', $type_id));
         $presentation_action_type_assignment = $this->allowed_presentation_action_types->matching($criteria)->first();
@@ -1200,7 +1264,8 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @return int|null
      */
-    public function getPresentationActionTypesMaxOrder(): int {
+    public function getPresentationActionTypesMaxOrder(): int
+    {
         $criteria = Criteria::create();
         $criteria->orderBy(['order' => 'DESC']);
         $res = $this->allowed_presentation_action_types->matching($criteria)->first();
@@ -1210,7 +1275,8 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @param PresentationActionType $presentation_action_type
      */
-    public function addPresentationActionType(PresentationActionType $presentation_action_type) {
+    public function addPresentationActionType(PresentationActionType $presentation_action_type)
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('type', $presentation_action_type));
         if ($this->allowed_presentation_action_types->matching($criteria)->count() > 0) return;
@@ -1222,7 +1288,8 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @param PresentationActionType $presentation_action_type
      */
-    public function removePresentationActionType(PresentationActionType $presentation_action_type) {
+    public function removePresentationActionType(PresentationActionType $presentation_action_type)
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('type', $presentation_action_type));
         $presentation_action_type_assignment = $this->allowed_presentation_action_types->matching($criteria)->first();
@@ -1236,7 +1303,8 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param int $new_order
      * @throws ValidationException
      */
-    public function recalculatePresentationActionTypeOrder(PresentationActionType $presentation_action_type, int $new_order) {
+    public function recalculatePresentationActionTypeOrder(PresentationActionType $presentation_action_type, int $new_order)
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('type', $presentation_action_type));
         $selection_plan_assignment = $this->allowed_presentation_action_types->matching($criteria)->first();
@@ -1245,7 +1313,8 @@ class SelectionPlan extends SilverstripeBaseModel
             $this->allowed_presentation_action_types, $selection_plan_assignment, $new_order, AllowedPresentationActionType::class);
     }
 
-    public function clearPresentationActionTypes() {
+    public function clearPresentationActionTypes()
+    {
         $this->allowed_presentation_action_types->clear();
     }
 
@@ -1265,11 +1334,12 @@ class SelectionPlan extends SilverstripeBaseModel
      * @return SelectionPlanAllowedMember|null
      * @throws ValidationException
      */
-    public function addAllowedMember(string $email):?SelectionPlanAllowedMember{
-        if(empty($email)) return null;
+    public function addAllowedMember(string $email): ?SelectionPlanAllowedMember
+    {
+        if (empty($email)) return null;
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('email', trim($email)));
-        if($this->allowed_members->matching($criteria)->count() > 0)
+        if ($this->allowed_members->matching($criteria)->count() > 0)
             throw new ValidationException
             (
                 sprintf
@@ -1288,11 +1358,12 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @param string $email
      */
-    public function removeAllowedMemberByEmail(string $email):void{
+    public function removeAllowedMemberByEmail(string $email): void
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('email', trim($email)));
         $res = $this->allowed_members->matching($criteria)->first();
-        if(!$res) return;
+        if (!$res) return;
         $this->allowed_members->removeElement($res);
     }
 
@@ -1300,18 +1371,20 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param int $id
      * @return SelectionPlanAllowedMember|null
      */
-    public function getAllowedMemberById(int $id):?SelectionPlanAllowedMember{
+    public function getAllowedMemberById(int $id): ?SelectionPlanAllowedMember
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $id));
         $res = $this->allowed_members->matching($criteria)->first();
-        return !$res ? null: $res;
+        return !$res ? null : $res;
     }
 
     /**
      * @param SelectionPlanAllowedMember $allowedMember
      */
-    public function removeAllowedMember(SelectionPlanAllowedMember $allowedMember):void{
-        if(!$this->allowed_members->contains($allowedMember)) return;
+    public function removeAllowedMember(SelectionPlanAllowedMember $allowedMember): void
+    {
+        if (!$this->allowed_members->contains($allowedMember)) return;
         $this->allowed_members->removeElement($allowedMember);
     }
 
@@ -1319,8 +1392,9 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param string $email
      * @return bool
      */
-    public function isAllowedMember(string $email):bool{
-        if($this->getType() === self::PublicType) return true;
+    public function isAllowedMember(string $email): bool
+    {
+        if ($this->getType() === self::PublicType) return true;
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('email', trim($email)));
         return $this->allowed_members->matching($criteria)->count() > 0;
@@ -1330,7 +1404,8 @@ class SelectionPlan extends SilverstripeBaseModel
      * @param string $email
      * @return bool
      */
-    public function containsMember(string $email):bool{
+    public function containsMember(string $email): bool
+    {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('email', trim($email)));
         return $this->allowed_members->matching($criteria)->count() > 0;
@@ -1342,21 +1417,64 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getType():string{
-        return $this->allowed_members->count() > 0 ? self::PrivateType: self::PublicType;
+    public function getType(): string
+    {
+        return $this->allowed_members->count() > 0 ? self::PrivateType : self::PublicType;
     }
 
     /**
      * @param array $payload
      * @throws ValidationException
      */
-    public function checkPresentationAllowedQuestions(array $payload):void{
+    public function checkPresentationAllowedQuestions(array $payload): void
+    {
         $allowed_fields = Presentation::getAllowedFields();
-        foreach ($allowed_fields as $field){
+        foreach ($allowed_fields as $field) {
             Log::debug(sprintf("Selection Plan %s checking Presentation Field %s", $this->id, $field));
 
-            if(isset($payload[$field]) && !$this->isAllowedPresentationQuestion($field)){
+            if (isset($payload[$field]) && !$this->isAllowedPresentationQuestion($field)) {
                 throw new ValidationException(sprintf("Field %s is not allowed on Selection Plan %s", $field, $this->name));
+            }
+        }
+    }
+
+    /**
+     * @param $field1
+     * @param $field2
+     * @return bool
+     */
+    private static function areFieldsEqual($field1, $field2): bool
+    {
+        if (is_array($field1) && is_array($field2)) {
+            if (count($field1) != count($field2)) return false;
+            return array_diff($field1, $field2) === array_diff($field2, $field1);
+        }
+        return $field1 == $field2;
+    }
+
+    /**
+     * @param array $payload
+     * @param array $former_data
+     * @throws ValidationException
+     */
+    public function checkPresentationAllowedEdtiableQuestions(array $payload, array $former_data): void
+    {
+        $allowed_fields = Presentation::getAllowedEditableFields();
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SelectionPlan::checkPresentationAllowedEdtiableQuestions payload %s former_data %s",
+                json_encode($payload),
+                json_encode($former_data)
+            )
+        );
+
+        foreach ($allowed_fields as $field) {
+            Log::debug(sprintf("SelectionPlan::checkPresentationAllowedEdtiableQuestions Selection Plan %s checking Presentation Field %s if its editable...", $this->id, $field));
+            if (isset($payload[$field]) && isset($former_data[$field]) && self::areFieldsEqual($payload[$field], $former_data[$field]) && !$this->isAllowedEditablePresentationQuestion($field)) {
+                throw new ValidationException(sprintf("Field %s is not allowed for edition on Selection Plan %s", $field, $this->name));
             }
         }
     }
@@ -1364,9 +1482,20 @@ class SelectionPlan extends SilverstripeBaseModel
     /**
      * @throws ValidationException
      */
-    public function seedAllowedPresentationQuestions():void{
-        foreach(Presentation::getAllowedFields() as $allowedField){
+    public function seedAllowedPresentationQuestions(): void
+    {
+        foreach (Presentation::getAllowedFields() as $allowedField) {
             $this->addPresentationAllowedQuestion($allowedField);
+        }
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    public function seedAllowedEditablePresentationQuestions(): void
+    {
+        foreach (Presentation::getAllowedEditableFields() as $allowedField) {
+            $this->addPresentationAllowedEditableQuestion($allowedField);
         }
     }
 }

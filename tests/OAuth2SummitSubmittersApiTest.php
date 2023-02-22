@@ -112,7 +112,6 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTest
             'filter'    => [
                 'has_accepted_presentations==true',
             ],
-            'expand' => 'presentations,accepted_presentations',
             'order'     => '+id'
         ];
 
@@ -167,5 +166,42 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTest
         $csv = $response->getContent();
         $this->assertResponseStatus(200);
         $this->assertNotEmpty($csv);
+    }
+
+    public function testSendSpeakersBulkEmail($summit_id = 3399) {
+        $params = [
+            'id' => $summit_id,
+            'filter'    => [
+                'first_name=@b||a,last_name=@b,email=@b',
+            ],
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $data = [
+            'email_flow_event'  => 'SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ACCEPTED_ALTERNATE',
+            'speaker_ids'       => [
+                9161
+            ],
+            'test_email_recipient'      => 'test_recip@nomail.com',
+            'outcome_email_recipient'   => 'outcome_recip@nomail.com',
+        ];
+
+        $response = $this->action
+        (
+            "PUT",
+            "OAuth2SummitSubmittersApiController@send",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(200);
     }
 }

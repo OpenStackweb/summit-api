@@ -23,6 +23,12 @@ use models\summit\PresentationSpeaker;
  */
 final class SubmitterMemberSerializer extends AdminMemberSerializer
 {
+    protected static $allowed_relations = [
+        'accepted_presentations',
+        'alternate_presentations',
+        'rejected_presentations',
+    ];
+
     /**
      * @param null $expand
      * @param array $fields

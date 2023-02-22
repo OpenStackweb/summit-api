@@ -13,11 +13,14 @@
  **/
 
 use App\ModelSerializers\IMemberSerializerTypes;
+use Illuminate\Support\Facades\Request;
 use models\main\IMemberRepository;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
+use services\model\ISubmitterService;
 use utils\Filter;
 use utils\FilterElement;
+use utils\FilterParser;
 use utils\PagingInfo;
 
 /**
@@ -30,6 +33,11 @@ final class OAuth2SummitSubmittersApiController
     use ParametrizedGetAll;
 
     /**
+     * @var ISubmitterService
+     */
+    private $service;
+
+    /**
      * @var ISummitRepository
      */
     private $summit_repository;
@@ -38,18 +46,21 @@ final class OAuth2SummitSubmittersApiController
      * OAuth2SummitSubmittersApiController constructor.
      * @param IMemberRepository $repository
      * @param ISummitRepository $summit_repository
+     * @param ISubmitterService $service
      * @param IResourceServerContext $resource_server_context
      */
     public function __construct
     (
         IMemberRepository          $repository,
         ISummitRepository          $summit_repository,
+        ISubmitterService          $service,
         IResourceServerContext     $resource_server_context
     )
     {
         parent::__construct($resource_server_context);
         $this->repository = $repository;
         $this->summit_repository = $summit_repository;
+        $this->service = $service;
     }
 
     /**
@@ -233,5 +244,75 @@ final class OAuth2SummitSubmittersApiController
                 );
             }
         );
+    }
+
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function send($summit_id)
+    {
+        return $this->processRequest(function () use ($summit_id) {
+
+            if (!Request::isJson()) return $this->error400();
+
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonPayload(SummitSubmittersEmailsValidationRulesFactory::buildForAdd());
+
+            $filter = null;
+
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
+                    'first_name' => ['=@', '@@', '=='],
+                    'last_name' => ['=@', '@@', '=='],
+                    'email' => ['=@', '@@', '=='],
+                    'id' => ['=='],
+                    'full_name' => ['=@', '@@', '=='],
+                    'member_id' => ['=='],
+                    'member_user_external_id' => ['=='],
+                    'has_accepted_presentations' => ['=='],
+                    'has_alternate_presentations' => ['=='],
+                    'has_rejected_presentations' => ['=='],
+                    'presentations_track_id' => ['=='],
+                    'presentations_selection_plan_id' => ['=='],
+                    'presentations_type_id' => ['=='],
+                    'presentations_title' => ['=@', '@@', '=='],
+                    'presentations_abstract' => ['=@', '@@', '=='],
+                    'presentations_submitter_full_name' => ['=@', '@@', '=='],
+                    'presentations_submitter_email' => ['=@', '@@', '=='],
+                    'is_speaker' => ['=='],
+                ]);
+            }
+
+            if (is_null($filter))
+                $filter = new Filter();
+
+            $filter->validate([
+                'first_name' => 'sometimes|string',
+                'last_name' => 'sometimes|string',
+                'email' => 'sometimes|string',
+                'id' => 'sometimes|integer',
+                'full_name' => 'sometimes|string',
+                'member_id' => 'sometimes|integer',
+                'member_user_external_id' => 'sometimes|integer',
+                'has_accepted_presentations' => 'sometimes|string|in:true,false',
+                'has_alternate_presentations' => 'sometimes|string|in:true,false',
+                'has_rejected_presentations' => 'sometimes|string|in:true,false',
+                'presentations_track_id' => 'sometimes|integer',
+                'presentations_selection_plan_id' => 'sometimes|integer',
+                'presentations_type_id' => 'sometimes|integer',
+                'presentations_title' => 'sometimes|string',
+                'presentations_abstract' => 'sometimes|string',
+                'presentations_submitter_full_name' => 'sometimes|string',
+                'presentations_submitter_email' => 'sometimes|string',
+                'is_speaker' => 'sometimes|string|in:true,false'
+            ]);
+
+            $this->service->triggerSendEmails($summit, $payload, Request::input('filter'));
+
+            return $this->ok();
+        });
     }
 }

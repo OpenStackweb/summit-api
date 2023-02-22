@@ -2979,6 +2979,21 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
+            [
+                'name' => 'send bulk submitters emails',
+                'route' => '/api/v1/summits/{id}/submitters/all/send',
+                'http_method' => 'PUT',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
             // speakers
            [
                 'name' => 'get-speakers',

@@ -33,7 +33,7 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
     /**
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
-     * @param string $test_email_recipient
+     * @param string|null $test_email_recipient
      * @param SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config
      * @param SummitRegistrationPromoCode|null $promo_code
      * @param Filter|null $filter
@@ -42,7 +42,7 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
     (
         Summit $summit,
         PresentationSpeaker $speaker,
-        string $test_email_recipient,
+        ?string $test_email_recipient,
         SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config,
         ?SummitRegistrationPromoCode $promo_code = null,
         ?Filter $filter = null

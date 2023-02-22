@@ -39,7 +39,7 @@ class PresentationSpeakerSelectionProcessAlternateRejectedEmail extends Presenta
      * @param Summit $summit
      * @param SummitRegistrationPromoCode|null $promo_code
      * @param PresentationSpeaker $speaker
-     * @param string $test_email_recipient
+     * @param string|null $test_email_recipient
      * @param SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config
      * @param string|null $confirmation_token
      * @param Filter|null $filter
@@ -49,7 +49,7 @@ class PresentationSpeakerSelectionProcessAlternateRejectedEmail extends Presenta
         Summit                              $summit,
         ?SummitRegistrationPromoCode        $promo_code,
         PresentationSpeaker                 $speaker,
-        string                              $test_email_recipient,
+        ?string                             $test_email_recipient,
         SpeakersAnnouncementEmailConfigDTO  $speaker_announcement_email_config,
         ?string                             $confirmation_token = null,
         ?Filter                             $filter = null

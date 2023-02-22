@@ -37,7 +37,7 @@ class PresentationSpeakerSelectionProcessRejectedOnlyEmail extends PresentationS
     /**
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
-     * @param string $test_email_recipient
+     * @param string|null $test_email_recipient
      * @param SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config
      * @param Filter|null $filter
      */
@@ -45,7 +45,7 @@ class PresentationSpeakerSelectionProcessRejectedOnlyEmail extends PresentationS
     (
         Summit                              $summit,
         PresentationSpeaker                 $speaker,
-        string                              $test_email_recipient,
+        ?string                             $test_email_recipient,
         SpeakersAnnouncementEmailConfigDTO  $speaker_announcement_email_config,
         ?Filter                             $filter = null
     )

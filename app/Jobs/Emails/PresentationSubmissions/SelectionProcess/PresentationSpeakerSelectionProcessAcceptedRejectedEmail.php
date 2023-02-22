@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Services\Utils\Email\SpeakersAnnouncementEmailConfigDTO;
 use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
@@ -38,19 +39,23 @@ class PresentationSpeakerSelectionProcessAcceptedRejectedEmail extends Presentat
      * @param Summit $summit
      * @param SummitRegistrationPromoCode|null $promo_code
      * @param PresentationSpeaker $speaker
+     * @param string|null $test_email_recipient
+     * @param SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config
      * @param string|null $confirmation_token
      * @param Filter|null $filter
      */
     public function __construct
     (
-        Summit                       $summit,
-        ?SummitRegistrationPromoCode $promo_code,
-        PresentationSpeaker          $speaker,
-        ?string                      $confirmation_token = null,
-        ?Filter                      $filter = null
+        Summit                              $summit,
+        ?SummitRegistrationPromoCode        $promo_code,
+        PresentationSpeaker                 $speaker,
+        ?string                             $test_email_recipient,
+        SpeakersAnnouncementEmailConfigDTO  $speaker_announcement_email_config,
+        ?string                             $confirmation_token = null,
+        ?Filter                             $filter = null
     )
     {
-        parent::__construct($summit, $speaker, $promo_code, $filter);
+        parent::__construct($summit, $speaker, $test_email_recipient, $speaker_announcement_email_config, $promo_code, $filter);
 
         if (!empty($confirmation_token)) {
             $this->payload['speaker_confirmation_link'] = sprintf("%s?t=%s", $this->payload['speaker_confirmation_link'], base64_encode($confirmation_token));

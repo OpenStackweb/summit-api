@@ -12,8 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
-use App\Services\Utils\Facades\EmailTest;
-use App\Services\Utils\Facades\SpeakersAnnouncementEmailConfig;
+use App\Services\Utils\Email\SpeakersAnnouncementEmailConfigDTO;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use models\summit\PresentationSpeaker;
@@ -34,6 +33,8 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
     /**
      * @param Summit $summit
      * @param PresentationSpeaker $speaker
+     * @param string|null $test_email_recipient
+     * @param SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config
      * @param SummitRegistrationPromoCode|null $promo_code
      * @param Filter|null $filter
      */
@@ -41,6 +42,8 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
     (
         Summit $summit,
         PresentationSpeaker $speaker,
+        ?string $test_email_recipient,
+        SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config,
         ?SummitRegistrationPromoCode $promo_code = null,
         ?Filter $filter = null
     ){
@@ -49,7 +52,7 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
             $this->filter = $filter->getOriginalExp();
         $payload  = [];
         $cc_email = [];
-        $shouldSendCopy2Submitter = SpeakersAnnouncementEmailConfig::shouldSendCopy2Submitter();
+        $shouldSendCopy2Submitter = $speaker_announcement_email_config->shouldSendCopy2Submitter();
 
         // accepted ones
         $payload['accepted_presentations'] = [];
@@ -118,8 +121,6 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractEmailJob
         $payload['summit_site_url'] = $summit->getLink();
         $payload['speaker_full_name'] = $speaker->getFullName();
         $payload['speaker_email'] = $speaker->getEmail();
-
-        $test_email_recipient = EmailTest::getEmailAddress();
 
         if (!empty($test_email_recipient)) {
             Log::debug

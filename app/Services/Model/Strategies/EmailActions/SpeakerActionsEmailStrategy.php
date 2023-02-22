@@ -59,14 +59,14 @@ final class SpeakerActionsEmailStrategy
 
     /**
      * @param PresentationSpeaker $speaker
-     * @param string $test_email_recipient
+     * @param string|null $test_email_recipient
      * @param SpeakersAnnouncementEmailConfigDTO $speaker_announcement_email_config
      * @param Filter|null $filter
      * @param SummitRegistrationPromoCode|null $promo_code
      * @param PresentationSpeakerSummitAssistanceConfirmationRequest|null $assistance
      */
     public function process(PresentationSpeaker                                     $speaker,
-                            string                                                  $test_email_recipient,
+                            ?string                                                 $test_email_recipient,
                             SpeakersAnnouncementEmailConfigDTO                      $speaker_announcement_email_config,
                             ?Filter                                                 $filter = null,
                             ?SummitRegistrationPromoCode                            $promo_code = null,

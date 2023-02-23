@@ -51,6 +51,7 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
         'track_chair_rating_types',
         'allowed_presentation_action_types',
         'allowed_presentation_questions',
+        'allowed_presentation_editable_questions',
     ];
 
     /**
@@ -117,6 +118,14 @@ final class SelectionPlanSerializer extends SilverStripeSerializer
                 $allowed_presentation_questions[] = $question->getType();
             }
             $values['allowed_presentation_questions'] = $allowed_presentation_questions;
+        }
+
+        if(in_array('allowed_presentation_editable_questions', $relations)){
+            $allowed_presentation_editable_questions = [];
+            foreach ($selection_plan->getAllowedEditablePresentationQuestions() as $question){
+                $allowed_presentation_editable_questions[] = $question->getType();
+            }
+            $values['allowed_presentation_editable_questions'] = $allowed_presentation_editable_questions;
         }
 
         return $values;

@@ -430,6 +430,7 @@ final class PresentationService
             }
 
             $current_selection_plan->checkPresentationAllowedQuestions($data);
+            $current_selection_plan->checkPresentationAllowedEdtiableQuestions($data, $presentation->getSnapshot());
 
             $presentation->setUpdatedBy(ResourceServerContext::getCurrentUser(false));
 

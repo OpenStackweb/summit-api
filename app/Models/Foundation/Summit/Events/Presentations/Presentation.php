@@ -54,9 +54,17 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     const FieldAttendingMedia = 'attending_media';
     const FieldWillAllSpeakersAttend = 'will_all_speakers_attend';
     const FieldLinks = 'links';
+    const FieldDisclaimerAccepted = 'disclaimer_accepted';
+
+
+    const AllowedEditableFields  = [
+        self::FieldDisclaimerAccepted,
+        self::FieldAttendeesExpectedToLearn,
+        self::FieldAttendingMedia,
+        self::FieldLinks,
+    ];
 
     const AllowedFields = [
-        //self::FieldProblemAddressed,
         self::FieldAttendeesExpectedToLearn,
         self::FieldAttendingMedia,
         self::FieldLinks,
@@ -66,18 +74,31 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      * @param string $type
      * @return bool
      */
-    public static function isAllowedPresentationQuestion(string $type): bool
+    public static function isAllowedField(string $type): bool
     {
         return in_array($type, Presentation::AllowedFields) ||
-            in_array($type, SummitEvent::AllowedFields);
+            SummitEvent::isAllowedField($type);
     }
 
+    /**
+     * @param string $type
+     * @return bool
+     */
+    public static function isAllowedEditableField(string $type): bool
+    {
+        return in_array($type, Presentation::AllowedEditableFields) ||
+            SummitEvent::isAllowedEditableField($type);
+    }
     /**
      * @return array|string[]
      */
     public static function getAllowedFields(): array
     {
-        return array_merge(Presentation::AllowedFields, SummitEvent::AllowedFields);
+        return array_merge(Presentation::AllowedFields, SummitEvent::getAllowedFields());
+    }
+
+    public static function getAllowedEditableFields(): array{
+        return array_merge(Presentation::AllowedEditableFields, SummitEvent::getAllowedEditableFields());
     }
 
     /**
@@ -2234,5 +2255,23 @@ SQL;
     {
         if (!$this->comments->contains($comment)) return;
         $this->comments->removeElement($comment);
+    }
+
+    /**
+     * @return array
+     */
+    public function getSnapshot():array{
+        $snapshot = [
+            self::FieldDisclaimerAccepted => $this->isDisclaimerAccepted(),
+            self::FieldAttendeesExpectedToLearn => $this->attendees_expected_learnt,
+            self::FieldAttendingMedia => $this->attending_media,
+            self::FieldLinks => []
+        ];
+
+        foreach ($this->getLinks() as $link){
+            $snapshot[self::FieldLinks][] = $link->getLink();
+        }
+
+        return array_merge( $snapshot, parent::getSnapshot());
     }
 }

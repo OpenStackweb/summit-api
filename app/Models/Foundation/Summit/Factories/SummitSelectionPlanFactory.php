@@ -143,6 +143,13 @@ final class SummitSelectionPlanFactory
             foreach($data['allowed_presentation_questions'] as $type)
                 $selection_plan->addPresentationAllowedQuestion($type);
         }
+
+        if(isset($data['allowed_presentation_editable_questions'])){
+            $selection_plan->clearAllAllowedEditablePresentationQuestions();
+            foreach($data['allowed_presentation_editable_questions'] as $type)
+                $selection_plan->addPresentationAllowedEditableQuestion($type);
+        }
+
         return $selection_plan;
     }
 }

@@ -34,6 +34,13 @@ use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeaker
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessExcerptEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedOnlyEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAcceptedAlternateEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAcceptedOnlyEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAcceptedRejectedEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAlternateOnlyEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAlternateRejectedEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessExcerptEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessRejectedOnlyEmail;
 use App\Jobs\Emails\RegisteredMemberOrderPaidMail;
 use App\Jobs\Emails\Registration\Attendees\GenericSummitAttendeeEmail;
 use App\Jobs\Emails\Registration\Invitations\InviteSummitRegistrationEmail;
@@ -337,6 +344,41 @@ final class SummitEmailFlowTypeSeeder extends Seeder
                 'name' => InviteSubmissionEmail::EVENT_NAME,
                 'slug' => InviteSubmissionEmail::EVENT_SLUG,
                 'default_email_template' => InviteSubmissionEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => PresentationSubmitterSelectionProcessAcceptedAlternateEmail::EVENT_NAME,
+                'slug' => PresentationSubmitterSelectionProcessAcceptedAlternateEmail::EVENT_SLUG,
+                'default_email_template' => PresentationSubmitterSelectionProcessAcceptedAlternateEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => PresentationSubmitterSelectionProcessAcceptedOnlyEmail::EVENT_NAME,
+                'slug' => PresentationSubmitterSelectionProcessAcceptedOnlyEmail::EVENT_SLUG,
+                'default_email_template' => PresentationSubmitterSelectionProcessAcceptedOnlyEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => PresentationSubmitterSelectionProcessAcceptedRejectedEmail::EVENT_NAME,
+                'slug' => PresentationSubmitterSelectionProcessAcceptedRejectedEmail::EVENT_SLUG,
+                'default_email_template' => PresentationSubmitterSelectionProcessAcceptedRejectedEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => PresentationSubmitterSelectionProcessAlternateOnlyEmail::EVENT_NAME,
+                'slug' => PresentationSubmitterSelectionProcessAlternateOnlyEmail::EVENT_SLUG,
+                'default_email_template' => PresentationSubmitterSelectionProcessAlternateOnlyEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => PresentationSubmitterSelectionProcessAlternateRejectedEmail::EVENT_NAME,
+                'slug' => PresentationSubmitterSelectionProcessAlternateRejectedEmail::EVENT_SLUG,
+                'default_email_template' => PresentationSubmitterSelectionProcessAlternateRejectedEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => PresentationSubmitterSelectionProcessRejectedOnlyEmail::EVENT_NAME,
+                'slug' => PresentationSubmitterSelectionProcessRejectedOnlyEmail::EVENT_SLUG,
+                'default_email_template' => PresentationSubmitterSelectionProcessRejectedOnlyEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => PresentationSubmitterSelectionProcessExcerptEmail::EVENT_NAME,
+                'slug' => PresentationSubmitterSelectionProcessExcerptEmail::EVENT_SLUG,
+                'default_email_template' => PresentationSubmitterSelectionProcessExcerptEmail::DEFAULT_TEMPLATE
             ],
 
         ], $flow);

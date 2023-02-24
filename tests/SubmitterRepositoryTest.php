@@ -28,13 +28,14 @@ use utils\PagingInfo;
 class SubmitterRepositoryTest extends ProtectedApiTest
 {
     public function testGetSubmittersBySummit(){
+
         $submitter_repository = EntityManager::getRepository(Member::class);
         $summit_repository = EntityManager::getRepository(Summit::class);
 
-        $summit = $summit_repository->find(3363);
+        $summit = $summit_repository->find(3401);
 
         $filter = FilterParser::parse(
-            ["filter" => "is_speaker==true"],
+            ["filter" => "is_speaker==false"],
             ["is_speaker" => ['==']]
         );
 
@@ -50,7 +51,7 @@ class SubmitterRepositoryTest extends ProtectedApiTest
 
         foreach ($page->getItems() as $submitter) {
             $sm = SerializerRegistry::getInstance()->getSerializer($submitter, IMemberSerializerTypes::Submitter)
-                ->serialize(null, [], ['accepted_presentations', 'alternate_presentations', 'rejected_presentations'], $params);
+                ->serialize('accepted_presentations,alternate_presentations,rejected_presentations', [], [], $params);
         }
 
         self::assertNotNull($page);

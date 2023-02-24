@@ -15,7 +15,6 @@
 
 use Libs\ModelSerializers\AbstractSerializer;
 use models\main\Member;
-use models\summit\PresentationSpeaker;
 
 /**
  * Class SubmitterMemberSerializer
@@ -45,27 +44,18 @@ final class SubmitterMemberSerializer extends AdminMemberSerializer
 
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if (!$submitter->hasSpeaker()) return $values;
-
-        $speaker = $submitter->getSpeaker();
-        $summit  = isset($params['summit'])? $params['summit']:null;
+        $summit  = $params['summit'] ?? null;
 
         if (in_array('accepted_presentations', $relations) && !is_null($summit)) {
-            $accepted_presentation_ids = $speaker->getAcceptedPresentationIds($summit, PresentationSpeaker::RoleSpeaker, false, [], $params['filter'] ?? null);
-            $moderated_accepted_presentation_ids = $speaker->getAcceptedPresentationIds($summit, PresentationSpeaker::RoleModerator, false, [], $params['filter'] ?? null);
-            $values['accepted_presentations'] = array_merge($accepted_presentation_ids, $moderated_accepted_presentation_ids);
+            $values['accepted_presentations'] = $submitter->getAcceptedPresentationIds($summit, $params['filter'] ?? null);
         }
 
         if (in_array('alternate_presentations', $relations) && !is_null($summit)) {
-            $alternate_presentation_ids = $speaker->getAlternatePresentationIds($summit, PresentationSpeaker::RoleSpeaker, false, [], false, $params['filter'] ?? null);
-            $moderated_alternate_presentation_ids = $speaker->getAlternatePresentationIds($summit, PresentationSpeaker::RoleModerator,false, [], false, $params['filter'] ?? null);
-            $values['alternate_presentations'] = array_merge($alternate_presentation_ids, $moderated_alternate_presentation_ids);
+            $values['alternate_presentations'] = $submitter->getAlternatePresentationIds($summit,$params['filter'] ?? null);
         }
 
         if (in_array('rejected_presentations', $relations) && !is_null($summit)) {
-            $rejected_presentation_ids = $speaker->getRejectedPresentationIds($summit, PresentationSpeaker::RoleSpeaker, false, [], $params['filter'] ?? null);
-            $moderated_rejected_presentation_ids = $speaker->getRejectedPresentationIds($summit, PresentationSpeaker::RoleModerator, false, [], $params['filter'] ?? null);
-            $values['rejected_presentations'] = array_merge($rejected_presentation_ids, $moderated_rejected_presentation_ids);
+            $values['rejected_presentations'] = $submitter->getRejectedPresentationIds($summit, $params['filter'] ?? null);
         }
 
         if (!empty($expand)) {
@@ -74,36 +64,24 @@ final class SubmitterMemberSerializer extends AdminMemberSerializer
                 switch ($relation) {
                     case 'accepted_presentations':
                         $accepted_presentations = [];
-                        foreach ($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleSpeaker, true, [], $params['filter'] ?? null) as $p) {
+                        foreach ($submitter->getAcceptedPresentations($summit,$params['filter'] ?? null) as $p) {
                             $accepted_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
-                        $moderated_accepted_presentations = [];
-                        foreach ($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleModerator, true, [], $params['filter'] ?? null) as $p) {
-                            $moderated_accepted_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                        }
-                        $values['accepted_presentations'] = array_merge($accepted_presentations, $moderated_accepted_presentations);
+                        $values['accepted_presentations'] = $accepted_presentations;
                         break;
                     case 'alternate_presentations':
                         $alternate_presentations = [];
-                        foreach ($speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleSpeaker, false, [], false, $params['filter'] ?? null) as $p) {
+                        foreach ($submitter->getAlternatePresentations($summit,$params['filter'] ?? null) as $p) {
                             $alternate_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
-                        $moderated_alternate_presentations = [];
-                        foreach ($speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleModerator, false, [], false, $params['filter'] ?? null) as $p) {
-                            $moderated_alternate_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                        }
-                        $values['alternate_presentations'] = array_merge($alternate_presentations, $moderated_alternate_presentations);
+                        $values['alternate_presentations'] = $alternate_presentations;
                         break;
                     case 'rejected_presentations':
                         $rejected_presentations = [];
-                        foreach ($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleSpeaker, false, [], $params['filter'] ?? null) as $p) {
+                        foreach ($submitter->getRejectedPresentations($summit,$params['filter'] ?? null) as $p) {
                             $rejected_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
-                        $moderated_rejected_presentations = [];
-                        foreach ($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleModerator, false, [], $params['filter'] ?? null) as $p) {
-                            $moderated_rejected_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
-                        }
-                        $values['rejected_presentations'] = array_merge($rejected_presentations, $moderated_rejected_presentations);
+                        $values['rejected_presentations'] = $rejected_presentations;
                         break;
                 }
             }

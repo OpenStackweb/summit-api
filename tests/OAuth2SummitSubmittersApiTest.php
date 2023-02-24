@@ -15,29 +15,29 @@ use App\Models\Foundation\Main\IGroup;
  **/
 final class OAuth2SummitSubmittersApiTest extends ProtectedApiTest
 {
-//    use InsertSummitTestData;
-//
-//    use InsertMemberTestData;
-//
-//    protected function setUp(): void
-//    {
-//        parent::setUp();
-//        self::insertMemberTestData(IGroup::TrackChairs);
-//        self::$defaultMember = self::$member;
-//        self::$defaultMember2 = self::$member2;
-//        self::insertSummitTestData();
-//    }
-//
-//    protected function tearDown(): void
-//    {
-//        self::clearSummitTestData();
-//        parent::tearDown();
-//    }
+    use InsertSummitTestData;
 
-    public function testGetCurrentSummitSubmittersOrderByID($summit_id = 3399)
+    use InsertMemberTestData;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        self::insertMemberTestData(IGroup::TrackChairs);
+        self::$defaultMember = self::$member;
+        self::$defaultMember2 = self::$member2;
+        self::insertSummitTestData();
+    }
+
+    protected function tearDown(): void
+    {
+        self::clearSummitTestData();
+        parent::tearDown();
+    }
+
+    public function testGetCurrentSummitSubmittersOrderByID()
     {
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             'page' => 1,
             'per_page' => 10,
             'order' => '+id',
@@ -67,13 +67,10 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTest
         $this->assertNotEmpty($submitters);
     }
 
-    /**
-     * @param int $summit_id
-     */
-    public function testGetCurrentSummitSubmittersByName($summit_id = 3399)
+    public function testGetCurrentSummitSubmittersByName()
     {
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             'page' => 1,
             'per_page' => 10,
             'filter' => [
@@ -103,10 +100,10 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($submitters));
     }
 
-    public function testGetCurrentSummitSubmittersWithAcceptedPresentations($summit_id = 3399)
+    public function testGetCurrentSummitSubmittersWithAcceptedPresentations()
     {
         $params = [
-            'id'        => $summit_id,
+            'id'        => self::$summit->getId(),
             'page'      => 1,
             'per_page'  => 10,
             'filter'    => [
@@ -136,16 +133,16 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($submitters));
     }
 
-    public function testExportCurrentSummitSubmittersWhoAreSpeakers($summit_id = 3399)
+    public function testExportCurrentSummitSubmittersWhoAreSpeakers()
     {
         $params = [
-            'id' => $summit_id,
-            'page' => 1,
-            'per_page' => 10,
-            'filter' => [
-                'is_speaker==true'
+            'id'        => self::$summit->getId(),
+            'page'      => 1,
+            'per_page'  => 10,
+            'filter'    => [
+                'is_speaker==false'
             ],
-            'order' => '+id'
+            'order'     => '+id'
         ];
 
         $headers = [
@@ -168,9 +165,9 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTest
         $this->assertNotEmpty($csv);
     }
 
-    public function testSendSpeakersBulkEmail($summit_id = 3399) {
+    public function testSendSpeakersBulkEmail() {
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             'filter'    => [
                 'first_name=@b||a,last_name=@b,email=@b',
             ],
@@ -183,9 +180,9 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTest
 
         $data = [
             'email_flow_event'  => 'SUMMIT_SUBMISSIONS_PRESENTATION_SUBMITTER_ACCEPTED_ALTERNATE',
-            'speaker_ids'       => [
-                9161
-            ],
+//            'submitter_ids'       => [
+//                9161
+//            ],
             'test_email_recipient'      => 'test_recip@nomail.com',
             'outcome_email_recipient'   => 'outcome_recip@nomail.com',
         ];

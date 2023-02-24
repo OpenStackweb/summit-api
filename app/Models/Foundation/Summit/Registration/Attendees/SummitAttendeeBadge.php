@@ -222,6 +222,18 @@ class SummitAttendeeBadge extends SilverstripeBaseModel implements IQREntity
         return $this->features->contains($feature);
     }
 
+    /**
+     * @param SummitBadgeFeatureType $feature
+     * @return bool
+     */
+    public function isInheritedFeature(SummitBadgeFeatureType $feature):bool{
+        $inherited_feature = $this->type->getBadgeFeatureById($feature->getId());
+        if(!is_null($inherited_feature) && !$this->features->contains($inherited_feature)){
+            return true;
+        }
+        return false;
+    }
+
     public function addFeature(SummitBadgeFeatureType $feature){
         if($this->features->contains($feature)) return;
         $this->features->add($feature);

@@ -169,11 +169,10 @@ final class SpeakerActionsEmailStrategy
                             'email_type' => SpeakerAnnouncementSummitEmail::TypeNone
                         ]
                     );
-                    return;
+                    break;
             }
 
             if (!is_null($type)) {
-
                 if ($speaker->hasAnnouncementEmailTypeSent($this->summit, $type) &&
                     !$speaker_announcement_email_config->shouldResend()) {
 

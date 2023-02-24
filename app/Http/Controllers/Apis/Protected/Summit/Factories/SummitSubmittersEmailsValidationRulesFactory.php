@@ -13,12 +13,12 @@
  **/
 
 use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedAlternateEmail;
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedOnlyEmail;
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedRejectedEmail;
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateOnlyEmail;
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAlternateRejectedEmail;
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessRejectedOnlyEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAcceptedAlternateEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAcceptedOnlyEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAcceptedRejectedEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAlternateOnlyEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessAlternateRejectedEmail;
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessRejectedOnlyEmail;
 
 /**
  * Class SummitSubmittersEmailsValidationRulesFactory
@@ -34,14 +34,14 @@ final class SummitSubmittersEmailsValidationRulesFactory extends AbstractValidat
     {
         return [
             'email_flow_event' => 'required|string|in:' . join(',', [
-                    PresentationSpeakerSelectionProcessAcceptedAlternateEmail::EVENT_SLUG,
-                    PresentationSpeakerSelectionProcessAcceptedOnlyEmail::EVENT_SLUG,
-                    PresentationSpeakerSelectionProcessAcceptedRejectedEmail::EVENT_SLUG,
-                    PresentationSpeakerSelectionProcessAlternateOnlyEmail::EVENT_SLUG,
-                    PresentationSpeakerSelectionProcessAlternateRejectedEmail::EVENT_SLUG,
-                    PresentationSpeakerSelectionProcessRejectedOnlyEmail::EVENT_SLUG
+                    PresentationSubmitterSelectionProcessAcceptedAlternateEmail::EVENT_SLUG,
+                    PresentationSubmitterSelectionProcessAcceptedOnlyEmail::EVENT_SLUG,
+                    PresentationSubmitterSelectionProcessAcceptedRejectedEmail::EVENT_SLUG,
+                    PresentationSubmitterSelectionProcessAlternateOnlyEmail::EVENT_SLUG,
+                    PresentationSubmitterSelectionProcessAlternateRejectedEmail::EVENT_SLUG,
+                    PresentationSubmitterSelectionProcessRejectedOnlyEmail::EVENT_SLUG
                 ]),
-            'submitters_ids'            => 'sometimes|int_array',
+            'submitter_ids'             => 'sometimes|int_array',
             'test_email_recipient'      => 'sometimes|email',
             'outcome_email_recipient'   => 'sometimes|email',
             'should_resend' => 'sometimes|boolean',

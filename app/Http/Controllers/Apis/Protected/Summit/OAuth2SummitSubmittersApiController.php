@@ -32,6 +32,10 @@ final class OAuth2SummitSubmittersApiController
 {
     use ParametrizedGetAll;
 
+    use GetAndValidateJsonPayload;
+
+    use RequestProcessor;
+
     /**
      * @var ISubmitterService
      */
@@ -224,7 +228,7 @@ final class OAuth2SummitSubmittersApiController
                 return $filter;
             },
             function () {
-                return IMemberSerializerTypes::Submitter;
+                return IMemberSerializerTypes::SubmitterCSV;
             },
             function () {
                 return [];
@@ -256,7 +260,7 @@ final class OAuth2SummitSubmittersApiController
 
             if (!Request::isJson()) return $this->error400();
 
-            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
             if (is_null($summit)) return $this->error404();
 
             $payload = $this->getJsonPayload(SummitSubmittersEmailsValidationRulesFactory::buildForAdd());

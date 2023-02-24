@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use models\exceptions\ValidationException;
 use models\summit\Summit;
 use utils\Filter;
 
@@ -31,6 +33,7 @@ interface ISubmitterService
      * @param int $summit_id
      * @param array $payload
      * @param Filter|null $filter
+     * @throws ValidationException
      */
     public function sendEmails(int $summit_id, array $payload, Filter $filter = null):void;
 }

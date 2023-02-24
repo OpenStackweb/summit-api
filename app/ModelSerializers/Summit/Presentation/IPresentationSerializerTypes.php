@@ -21,4 +21,5 @@ interface IPresentationSerializerTypes
     const TrackChairs = "TRACK_CHAIRS";
     const TrackChairs_CSV = "TRACK_CHAIRS_CSV";
     const SpeakerEmails = "SPEAKER_EMAILS";
+    const SubmitterEmails = "SUBMITTER_EMAILS";
 }

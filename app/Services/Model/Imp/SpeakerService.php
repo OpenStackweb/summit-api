@@ -12,9 +12,6 @@
  * limitations under the License.
  **/
 
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessEmailFactory;
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessExcerptEmail;
-use App\Jobs\Emails\PresentationSubmissions\SpeakerCreationEmail;
 use App\Jobs\Emails\ProcessSpeakersEmailRequestJob;
 use App\Jobs\Emails\Registration\PromoCodeEmailFactory;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionApprovedEmail;
@@ -32,10 +29,9 @@ use App\Models\Foundation\Summit\Repositories\ISpeakerOrganizationalRoleReposito
 use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IFolderService;
+use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\Strategies\EmailActions\SpeakerActionsEmailStrategy;
-use App\Services\Utils\Email\SpeakersAnnouncementEmailConfigDTO;
 use App\Services\Utils\Facades\EmailExcerpt;
-use App\Services\utils\IEmailExcerptService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
@@ -44,7 +40,6 @@ use models\exceptions\ValidationException;
 use models\main\File;
 use models\main\IMemberRepository;
 use models\main\Member;
-use models\summit\factories\SpeakerSelectionAnnouncementEmailTypeFactory;
 use models\summit\ISpeakerRegistrationRequestRepository;
 use models\summit\ISpeakerRepository;
 use models\summit\ISpeakerSummitRegistrationPromoCodeRepository;
@@ -61,8 +56,6 @@ use models\summit\Summit;
 use App\Http\Utils\IFileUploader;
 use models\summit\SummitRegistrationPromoCode;
 use utils\Filter;
-use utils\FilterElement;
-use utils\PagingInfo;
 
 /**
  * Class SpeakerService
@@ -72,6 +65,8 @@ final class SpeakerService
     extends AbstractService
     implements ISpeakerService
 {
+    use ParametrizedSendEmails;
+
     /**
      * @var ISpeakerRepository
      */
@@ -1313,116 +1308,38 @@ final class SpeakerService
      */
     public function sendEmails(int $summit_id, array $payload, Filter $filter = null): void
     {
-        Log::debug
-        (
-            sprintf
-            (
-                "SpeakerService::send summit %s payload %s filter %s INIT",
-                $summit_id,
-                json_encode($payload),
-                is_null($filter) ? "" : $filter->__toString()
-            )
-        );
-
-        EmailExcerpt::clearReport();
-
-        $speaker_announcement_email_config = new SpeakersAnnouncementEmailConfigDTO();
-
-        $flow_event = trim($payload['email_flow_event'] ?? '');
-
-        if(empty($flow_event))
-            throw new ValidationException("email_flow_event is required.");
-
-        $done = isset($payload['speaker_ids']); // we have provided only ids and not a criteria
-        $outcome_email_recipient = $payload['outcome_email_recipient'] ?? null;
-
-        $test_email_recipient = null;
-        if(isset($payload['test_email_recipient']))
-            $test_email_recipient = $payload['test_email_recipient'];
-
-        if(isset($payload['should_resend'])){
-            $speaker_announcement_email_config->setShouldResend(boolval($payload['should_resend']));
-        }
-        if(isset($payload['should_send_copy_2_submitter'])){
-            $speaker_announcement_email_config->setShouldSendCopy2Submitter(boolval($payload['should_send_copy_2_submitter']));
-        }
-
-        $page = 1;
-        $count = 0;
-        $maxPageSize = 100;
-
-        Log::debug(sprintf("SpeakerService::send summit id %s flow_event %s filter %s",
-            $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString()));
-
-        EmailExcerpt::addInfoMessage(
-            sprintf("Processing EMAIL %s for summit %s", $flow_event, $summit_id)
-        );
-
-        $summit = $this->tx_service->transaction(function () use($summit_id){
-            $summit = $this->summit_repository->getById($summit_id);
-            if (is_null($summit) || !$summit instanceof Summit) return null;
-            return $summit;
-        });
-
-        if(is_null($summit)){
-            Log::debug("SpeakerService::send summit is null");
-            return;
-        }
-
-        do {
-
-            $ids = $this->tx_service->transaction(function () use ($summit, $payload, $filter, $page, $maxPageSize) {
-                if (isset($payload['speaker_ids'])) {
-                    Log::debug(sprintf("SpeakerService::send summit id %s speakers_ids %s", $summit->getId(),
-                        json_encode($payload['speaker_ids'])));
-                    return $payload['speaker_ids'];
-                }
-                Log::debug(sprintf("SpeakerService::send summit id %s getting by filter", $summit->getId()));
-                if (is_null($filter)) {
-                    $filter = new Filter();
-                }
-
-                Log::debug(sprintf("SpeakerService::send page %s", $page));
-                return $this->speaker_repository->getSpeakersIdsBySummit($summit, new PagingInfo($page, $maxPageSize), $filter);
-            });
-
-            Log::debug(sprintf("SpeakerService::send summit id %s flow_event %s filter %s page %s got %s records",
-                $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $page, count($ids)));
-
-            if (!count($ids)) {
-                // if we are processing a page, then break it
-                Log::debug(sprintf("SpeakerService::send summit id %s page is empty, ending processing.", $summit_id));
-                break;
-            }
-
-            $email_strategy = new SpeakerActionsEmailStrategy($summit, $flow_event);
-
-            foreach ($ids as $speaker_id) {
-
+        $this->_sendEmails(
+            $summit_id,
+            $payload,
+            "speaker",
+            function($summit, $paging_info, $filter) {
+                return $this->speaker_repository->getSpeakersIdsBySummit($summit, $paging_info, $filter);
+            },
+            function($summit, $flow_event, $speaker_id, $test_email_recipient, $speaker_announcement_email_config, $filter) {
                 try {
                     $this->tx_service->transaction(function () use
                     (
-                        $flow_event,
                         $summit,
+                        $flow_event,
                         $speaker_id,
-                        $email_strategy,
-                        $filter,
                         $test_email_recipient,
-                        $speaker_announcement_email_config
+                        $speaker_announcement_email_config,
+                        $filter
                     ) {
+                        $email_strategy = new SpeakerActionsEmailStrategy($summit, $flow_event);
 
                         Log::debug(sprintf("SpeakerService::send processing speaker id %s", $speaker_id));
 
                         $speaker = $this->speaker_repository->getByIdExclusiveLock(intval($speaker_id));
 
-                        if (is_null($speaker) || !$speaker instanceof PresentationSpeaker) {
+                        if (!$speaker instanceof PresentationSpeaker) {
                             throw new EntityNotFoundException('speaker not found!');
                         }
 
                         // try to get a promo code
                         $promo_code = $this->getPromoCode($summit, $speaker, $filter);
 
-                        // try to get an speaker assistance
+                        // try to get a speaker assistance
                         $assistance = $this->generateSpeakerAssistance($summit, $speaker, $filter);
 
                         $email_strategy->process
@@ -1439,22 +1356,8 @@ final class SpeakerService
                     Log::warning($ex);
                     EmailExcerpt::addErrorMessage($ex->getMessage());
                 }
-                $count++;
-            }
-            $page++;
-        } while (!$done);
-
-
-        EmailExcerpt::addInfoMessage(sprintf("TOTAL of %s speaker(s) processed.", $count));
-        EmailExcerpt::generateEmailCountLine();
-
-        if (!empty($outcome_email_recipient)) {
-            PresentationSpeakerSelectionProcessExcerptEmail::dispatch(
-                $summit, $outcome_email_recipient, EmailExcerpt::getReport());
-        }
-
-        Log::debug(sprintf("SpeakerService::send summit id %s flow_event %s filter %s had processed %s records",
-            $summit_id, $flow_event, is_null($filter) ? '' : $filter->__toString(), $count));
+            },
+            $filter);
     }
 
     /**

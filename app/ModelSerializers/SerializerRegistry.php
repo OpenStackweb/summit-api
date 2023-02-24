@@ -266,7 +266,8 @@ final class SerializerRegistry
                 self::SerializerType_Admin_Voteable_CSV => AdminVoteablePresentationCSVSerializer::class,
                 IPresentationSerializerTypes::TrackChairs => TrackChairPresentationSerializer::class,
                 IPresentationSerializerTypes::TrackChairs_CSV => TrackChairPresentationCSVSerializer::class,
-                IPresentationSerializerTypes::SpeakerEmails => SpeakerPresentationEmailSerializer::class
+                IPresentationSerializerTypes::SpeakerEmails => SpeakerPresentationEmailSerializer::class,
+                IPresentationSerializerTypes::SubmitterEmails => SpeakerPresentationEmailSerializer::class
             ];
 
         $this->registry['PresentationAttendeeVote'] = PresentationAttendeeVoteSerializer::class;
@@ -472,6 +473,7 @@ final class SerializerRegistry
             self::SerializerType_Private => OwnMemberSerializer::class,
             self::SerializerType_Admin => AdminMemberSerializer::class,
             IMemberSerializerTypes::Submitter => SubmitterMemberSerializer::class,
+            IMemberSerializerTypes::SubmitterCSV => SubmitterMemberCSVSerializer::class,
         ];
 
         $this->registry['LegalAgreement'] = LegalAgreementSerializer::class;

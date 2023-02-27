@@ -47,7 +47,6 @@ class AdminSummitEventCSVSerializer extends SummitEventSerializer
             unset($values['created_by_id']);
             $created_by = $summit_event->getCreatedBy();
             $values['created_by'] = sprintf("%s (%s)", $created_by->getFullName(), $created_by->getEmail());
-            Log::debug(sprintf("AdminPresentationCSVSerializer::serialize setting created_by %s", json_encode($values)));
         }
 
         return $values;

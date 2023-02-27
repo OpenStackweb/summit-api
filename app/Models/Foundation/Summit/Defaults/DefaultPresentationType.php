@@ -263,7 +263,8 @@ class DefaultPresentationType extends DefaultSummitEventType
         $new_type->setUseModerator($this->use_moderator);
         $new_type->setIsModeratorMandatory($this->is_moderator_mandatory);
         $new_type->setShouldBeAvailableOnCfp($this->should_be_available_on_cfp);
-        $new_type->setModeratorLabel($this->moderator_label);
+        if(!empty($this->moderator_label))
+            $new_type->setModeratorLabel($this->moderator_label);
         return $new_type;
     }
 
@@ -275,5 +276,6 @@ class DefaultPresentationType extends DefaultSummitEventType
         $this->use_moderator = false;
         $this->is_moderator_mandatory = false;
         $this->should_be_available_on_cfp = false;
+        $this->moderator_label = '';
     }
 }

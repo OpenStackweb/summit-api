@@ -1528,5 +1528,48 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         ];
     }
 
+    /**
+     * @return array|string[]
+     */
+    public static function getAllowedFields(): array{
+        return SummitEvent::AllowedFields;
+    }
+
+    public static function getAllowedEditableFields(): array{
+        return SummitEvent::AllowedEditableFields;
+    }
+
+    /**
+     * @param string $type
+     * @return bool
+     */
+    public static function isAllowedEditableField(string $type): bool
+    {
+        return in_array($type, SummitEvent::AllowedEditableFields);
+    }
+
+    /**
+     * @param string $type
+     * @return bool
+     */
+    public static function isAllowedField(string $type): bool
+    {
+      return in_array($type, SummitEvent::AllowedFields);
+    }
+
+    /**
+     * @return array
+     */
+    public function getSnapshot():array{
+        return [
+            self::FieldTitle => $this->title,
+            self::FieldLevel => $this->level,
+            self::FieldAbstract => $this->abstract,
+            self::FieldSocialDescription => $this->social_summary,
+            self::FieldTrack => $this->getCategoryId(),
+            self::FieldType => $this->getTypeId(),
+        ];
+    }
+
     use ScheduleEntity;
 }

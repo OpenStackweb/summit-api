@@ -2567,8 +2567,23 @@ final class SummitOrderService
 
             $badge = $ticket->getBadge();
 
-            if(!$badge->hasFeature($feature_type))
+            if(!$badge->hasFeature($feature_type)){
+                // check if its an inherited feature
+                if($badge->isInheritedFeature($feature_type)){
+                    $badgeType = $badge->getType();
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "Feature %s can not be removed from Badge because it is inherited from its Badge Type %s (%s).",
+                            $feature_type->getName(),
+                            $badgeType->getName(),
+                            $badgeType->getId()
+                        )
+                    );
+                }
                 throw new ValidationException(sprintf("Badge does not have feature %s.", $feature_type->getName()));
+            }
 
             $badge->removeFeature($feature_type);
 

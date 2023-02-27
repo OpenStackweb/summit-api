@@ -224,9 +224,9 @@ class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel implements
     }
 
     /**
-     * @return SummitAbstractLocation
+     * @return SummitAbstractLocation|null
      */
-    public function getLocation(): SummitAbstractLocation
+    public function getLocation(): ?SummitAbstractLocation
     {
         return $this->location;
     }

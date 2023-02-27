@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Services\Apis\IMailApi;
+use App\Services\Apis\IPasswordlessAPI;
 use App\Services\Model\IMemberService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
@@ -28,7 +29,9 @@ abstract class AbstractSummitAttendeeTicketEmail extends AbstractEmailJob
         IMailApi $api
     )
     {
+        // IOC bc we cant change the signature
         $memberService = App::make(IMemberService::class);
+        $passwordlessApi = App::make(IPasswordlessAPI::class);
 
         if(isset($this->payload['summit_virtual_site_url'])){
             $this->payload['raw_summit_virtual_site_url'] = $this->payload['summit_virtual_site_url'];
@@ -89,6 +92,46 @@ abstract class AbstractSummitAttendeeTicketEmail extends AbstractEmailJob
                 }
             }
         }
+
+        if($passwordlessApi instanceof IPasswordlessAPI &&
+            isset($this->payload['raw_summit_marketing_site_url']) &&
+            isset($this->payload['summit_marketing_site_oauth2_client_id']) &&
+            isset($this->payload['summit_marketing_site_oauth2_scopes'])){
+            $otp = null;
+            Log::debug(sprintf("AbstractSummitAttendeeTicketEmail::handle trying to get OTP for email %s", $this->to_email));
+
+            try {
+                // generate inline OTP
+                $otp = $passwordlessApi->generateInlineOTP
+                (
+                    $this->to_email,
+                    $this->payload['summit_marketing_site_oauth2_client_id'],
+                    $this->payload['summit_marketing_site_oauth2_scopes']
+                );
+            } catch (\Exception $ex) {
+                Log::error($ex);
+                $otp = null;
+            }
+
+            if (!is_null($otp)) {
+                Log::debug(sprintf("AbstractSummitAttendeeTicketEmail::handle got for email %s otp %s", $this->to_email, json_encode($otp)));
+                $url_parts  = parse_url($this->payload['raw_summit_marketing_site_url']);
+                if($url_parts && isset($url_parts['scheme']) && isset($url_parts['host']))
+                $domain = sprintf("%s://%s", $url_parts["scheme"], $url_parts["host"]);
+                // must be registered as valid redirect url under the oauth2 client
+                $back_url = sprintf("%s/a/extra-questions", $domain);
+                $this->payload['summit_marketing_site_url_magic_link'] = sprintf
+                (
+                    "%s/auth/login?login_hint=%s&otp_login_hint=%s&backUrl=%s"
+                    , $domain
+                    , urlencode($this->to_email)
+                    , urlencode($otp['value'])
+                    , urlencode($back_url)
+                );
+                Log::debug(sprintf("AbstractSummitAttendeeTicketEmail::handle got summit_marketing_site_url_magic_link %s", $this->payload['summit_marketing_site_url_magic_link']));
+            }
+        }
+
         return parent::handle($api);
     }
 

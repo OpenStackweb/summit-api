@@ -61,6 +61,8 @@ class SummitAttendeeAllTicketsEditionEmail extends AbstractSummitAttendeeTicketE
         $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
         $payload['raw_summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
         $payload['raw_summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
+        $payload['summit_marketing_site_oauth2_client_id'] = $summit->getMarketingSiteOAuth2ClientId();
+        $payload['summit_marketing_site_oauth2_scopes'] = $summit->getMarketingSiteOauth2ClientScopes();
 
         $base_url = Config::get("registration.dashboard_base_url", null);
         if (empty($base_url))

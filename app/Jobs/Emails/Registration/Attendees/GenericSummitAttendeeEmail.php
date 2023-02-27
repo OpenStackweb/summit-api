@@ -60,8 +60,11 @@ final class GenericSummitAttendeeEmail extends AbstractSummitAttendeeTicketEmail
         $payload['summit_logo'] = $summit->getLogoUrl();
         $payload['summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
         $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
+        $payload['summit_marketing_site_oauth2_client_id'] = $summit->getMarketingSiteOAuth2ClientId();
+        $payload['summit_marketing_site_oauth2_scopes'] = $summit->getMarketingSiteOauth2ClientScopes();
         $payload['raw_summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
         $payload['raw_summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
+        $payload['summit_virtual_site_oauth2_client_id'] = $summit->getVirtualSiteOAuth2ClientId();
 
         $base_url = Config::get("registration.dashboard_base_url", null);
         if (empty($base_url))
@@ -71,7 +74,7 @@ final class GenericSummitAttendeeEmail extends AbstractSummitAttendeeTicketEmail
         if (empty($back_url))
             throw new \InvalidArgumentException("missing dashboard_back_url value");
 
-        $payload['manage_orders_url'] = sprintf($back_url, $base_url);
+        $payload['manage_orders_AbstractSummitAttendeeTicketEmailurl'] = sprintf($back_url, $base_url);
 
         $support_email = $summit->getSupportEmail();
         $payload['support_email'] = !empty($support_email) ? $support_email: Config::get("registration.support_email", null);

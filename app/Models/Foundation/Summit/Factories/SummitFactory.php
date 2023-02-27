@@ -464,6 +464,10 @@ final class SummitFactory
             $summit->setMarketingSiteOAuth2ClientId(trim($data['marketing_site_oauth2_client_id']));
         }
 
+        if(isset($data['marketing_site_oauth2_client_scopes']) ){
+            $summit->setMarketingSiteOauth2ClientScopes(trim($data['marketing_site_oauth2_client_scopes']));
+        }
+
         if(isset($data['support_email']) ){
             $summit->setSupportEmail(trim($data['support_email']));
         }

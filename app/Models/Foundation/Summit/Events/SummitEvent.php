@@ -13,7 +13,9 @@
  **/
 
 use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
+use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\ScheduleEntity;
+use App\Models\Foundation\Summit\TimeDurationRestrictedEvent;
 use App\Models\Utils\Traits\HasImageTrait;
 use Cocur\Slugify\Slugify;
 use DateTime;
@@ -51,15 +53,16 @@ use models\utils\SilverstripeBaseModel;
  * Class SummitEvent
  * @package models\summit
  */
-class SummitEvent extends SilverstripeBaseModel
+class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
 {
-
     /**
      *  minimun number of minutes that an event must last
      */
     const MIN_EVENT_MINUTES = 1;
 
     use One2ManyPropertyTrait;
+
+    use TimeDurationRestrictedEvent;
 
     const ClassName = 'SummitEvent';
 
@@ -360,7 +363,7 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getTitle()
+    public function getTitle(): string
     {
         return $this->title;
     }
@@ -605,7 +608,7 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return SummitEventType|null
      */
-    public function getType()
+    public function getType(): ?SummitEventType
     {
         return $this->type;
     }
@@ -829,26 +832,13 @@ class SummitEvent extends SilverstripeBaseModel
      * @return $this
      * @throws ValidationException
      */
-    public function setStartDate(DateTime $value)
+    public function setStartDate(DateTime $value): SummitEvent
     {
         Log::debug(sprintf("SummitEvent::setStartDate id %s value %s", $this->id, $value->getTimestamp()));
         if (!$this->type->isAllowsPublishingDates()) {
             throw new ValidationException("Type does not allows Publishing Period.");
         }
-        $summit = $this->getSummit();
-        if (!is_null($summit)) {
-            $value = $summit->convertDateFromTimeZone2UTC($value);
-        }
-        $end_date = $this->getEndDate();
-
-        if (!is_null($end_date)) {
-            $newDuration = $end_date->getTimestamp() - $value->getTimestamp();
-            Log::debug(sprintf("SummitEvent::setStartDate id %s setting new duration %s", $this->id, $newDuration));;
-            $this->duration = $newDuration < 0 ? 0 : $newDuration;
-        }
-
-        $this->start_date = $value;
-        Log::debug(sprintf("SummitEvent::setStartDate id %s start_date %s", $this->id, $this->start_date->getTimestamp()));
+        $this->_setStartDate($value, $this->getSummit());
         return $this;
     }
 
@@ -883,28 +873,13 @@ class SummitEvent extends SilverstripeBaseModel
      * @return $this
      * @throws ValidationException
      */
-    public function setEndDate(DateTime $value)
+    public function setEndDate(DateTime $value): SummitEvent
     {
         Log::debug(sprintf("SummitEvent::setEndDate id %s value %s", $this->id, $value->getTimestamp()));
-
         if (!$this->type->isAllowsPublishingDates()) {
             throw new ValidationException("Type does not allows Publishing Period.");
         }
-
-        $summit = $this->getSummit();
-        if (!is_null($summit)) {
-            $value = $summit->convertDateFromTimeZone2UTC($value);
-        }
-
-        $start_date = $this->getStartDate();
-        if (!is_null($start_date)) {
-            $newDuration = $value->getTimestamp() - $start_date->getTimestamp();
-            Log::debug(sprintf("SummitEvent::setEndDate id %s newDuration %s", $this->id, $newDuration));
-            $this->duration = $newDuration;
-        }
-        $this->end_date = $value;
-
-        Log::debug(sprintf("SummitEvent::setEndDate id %s end_date %s", $this->id, $this->end_date->getTimestamp()));
+        $this->_setEndDate($value, $this->getSummit());
         return $this;
     }
 
@@ -953,7 +928,7 @@ class SummitEvent extends SilverstripeBaseModel
     /**
      * @return string
      */
-    public function getLocationName()
+    public function getLocationName(): string
     {
         return $this->hasLocation() ? $this->location->getName() : 'TBD';
     }
@@ -1181,15 +1156,8 @@ class SummitEvent extends SilverstripeBaseModel
      */
     public function getLocalStartDate()
     {
-        if (!empty($this->start_date)) {
-            $value = clone $this->start_date;
-            $summit = $this->getSummit();
-            if (!is_null($summit)) {
-                $res = $summit->convertDateFromUTC2TimeZone($value);
-            }
-            return $res;
-        }
-        return null;
+        $summit = $this->getSummit();
+        return $this->_getLocalStartDate($summit);
     }
 
     /**
@@ -1207,15 +1175,8 @@ class SummitEvent extends SilverstripeBaseModel
      */
     public function getLocalEndDate()
     {
-        if (!empty($this->end_date)) {
-            $value = clone $this->end_date;
-            $summit = $this->getSummit();
-            if (!is_null($summit)) {
-                $res = $summit->convertDateFromUTC2TimeZone($value);
-            }
-            return $res;
-        }
-        return null;
+        $summit = $this->getSummit();
+        return $this->_getLocalEndDate($summit);
     }
 
     /**
@@ -1521,32 +1482,50 @@ class SummitEvent extends SilverstripeBaseModel
         if (!$this->type->isAllowsPublishingDates()) {
             throw new ValidationException("Type does not allows Publishing Period.");
         }
+        $this->_setDuration($this->getSummit(), $duration_in_seconds, $skipDatesSetting);
+    }
 
-        if ($duration_in_seconds < 0) {
-            throw new ValidationException('Duration should be greater or equal than zero.');
-        }
+    /**
+     * @return array|string[]
+     */
+    public static function getAllowedFields(): array{
+        return SummitEvent::AllowedFields;
+    }
 
-        if ($duration_in_seconds > 0 && $duration_in_seconds < (self::MIN_EVENT_MINUTES * 60)) {
-            throw new ValidationException(sprintf('Duration should be greater than %s minutes.', self::MIN_EVENT_MINUTES));
-        }
+    public static function getAllowedEditableFields(): array{
+        return SummitEvent::AllowedEditableFields;
+    }
 
-        $this->duration = $duration_in_seconds;
+    /**
+     * @param string $type
+     * @return bool
+     */
+    public static function isAllowedEditableField(string $type): bool
+    {
+        return in_array($type, SummitEvent::AllowedEditableFields);
+    }
 
-        if (!$skipDatesSetting) {
-            $start_date = $this->getStartDate();
-            if (!is_null($start_date)) {
+    /**
+     * @param string $type
+     * @return bool
+     */
+    public static function isAllowedField(string $type): bool
+    {
+      return in_array($type, SummitEvent::AllowedFields);
+    }
 
-                $start_date = clone $start_date;
-                $value = $start_date->add(new \DateInterval('PT' . $duration_in_seconds . 'S'));
-                $summit = $this->getSummit();
-
-                if (!is_null($summit)) {
-                    $value = $summit->convertDateFromUTC2TimeZone($value);
-                }
-
-                $this->setEndDate($value);
-            }
-        }
+    /**
+     * @return array
+     */
+    public function getSnapshot():array{
+        return [
+            self::FieldTitle => $this->title,
+            self::FieldLevel => $this->level,
+            self::FieldAbstract => $this->abstract,
+            self::FieldSocialDescription => $this->social_summary,
+            self::FieldTrack => $this->getCategoryId(),
+            self::FieldType => $this->getTypeId(),
+        ];
     }
 
     /**

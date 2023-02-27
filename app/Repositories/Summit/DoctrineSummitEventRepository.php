@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\Main\IGroup;
+use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
@@ -55,10 +56,10 @@ final class DoctrineSummitEventRepository
     ];
 
     /**
-     * @param SummitEvent $event
-     * @return SummitEvent[]
+     * @param IPublishableEvent $event
+     * @return IPublishableEvent[]
      */
-    public function getPublishedOnSameTimeFrame(SummitEvent $event)
+    public function getPublishedOnSameTimeFrame(IPublishableEvent $event): array
     {
         $summit = $event->getSummit();
         $end_date = $event->getEndDate();

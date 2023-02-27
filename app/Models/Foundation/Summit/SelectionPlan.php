@@ -86,6 +86,12 @@ class SelectionPlan extends SilverstripeBaseModel
     private $allow_new_presentations;
 
     /**
+     * @ORM\Column(name="AllowProposedSchedules", type="boolean")
+     * @var bool
+     */
+    private $allow_proposed_schedules;
+
+    /**
      * @ORM\Column(name="SubmissionBeginDate", type="datetime")
      * @var \DateTime
      */
@@ -408,6 +414,7 @@ class SelectionPlan extends SilverstripeBaseModel
         parent::__construct();
         $this->is_enabled = false;
         $this->allow_new_presentations = true;
+        $this->allow_proposed_schedules = true;
         $this->category_groups = new ArrayCollection;
         $this->presentations = new ArrayCollection;
         $this->extra_questions = new ArrayCollection;
@@ -696,6 +703,22 @@ class SelectionPlan extends SilverstripeBaseModel
     public function setAllowNewPresentations(bool $allow_new_presentations): void
     {
         $this->allow_new_presentations = $allow_new_presentations;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAllowProposedSchedules(): bool
+    {
+        return $this->allow_proposed_schedules;
+    }
+
+    /**
+     * @param bool $allow_proposed_schedules
+     */
+    public function setAllowProposedSchedules(bool $allow_proposed_schedules): void
+    {
+        $this->allow_proposed_schedules = $allow_proposed_schedules;
     }
 
     /**
@@ -1473,7 +1496,7 @@ class SelectionPlan extends SilverstripeBaseModel
 
         foreach ($allowed_fields as $field) {
             Log::debug(sprintf("SelectionPlan::checkPresentationAllowedEdtiableQuestions Selection Plan %s checking Presentation Field %s if its editable...", $this->id, $field));
-            if (isset($payload[$field]) && isset($former_data[$field]) && self::areFieldsEqual($payload[$field], $former_data[$field]) && !$this->isAllowedEditablePresentationQuestion($field)) {
+            if (isset($payload[$field]) && isset($former_data[$field]) && !self::areFieldsEqual($payload[$field], $former_data[$field]) && !$this->isAllowedEditablePresentationQuestion($field)) {
                 throw new ValidationException(sprintf("Field %s is not allowed for edition on Selection Plan %s", $field, $this->name));
             }
         }

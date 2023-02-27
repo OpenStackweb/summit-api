@@ -7608,6 +7608,70 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::TrackChairsAdmins,
                 ]
             ],
+
+            // proposed schedule
+            [
+                'name' => 'get-proposed-schedule',
+                'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/presentations',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
+                'name' => 'propose-proposed-schedule-event',
+                'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/presentations/{presentation_id}/propose',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
+                'name' => 'unpropose-proposed-schedule-event',
+                'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/presentations/{presentation_id}/propose',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
+                'name' => 'publish-all-proposed-schedule-events',
+                'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/presentations/all/publish',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::SummitAdministrators,
+                    IGroup::Administrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+
         ]);
 
     }

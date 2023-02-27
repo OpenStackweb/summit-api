@@ -19,6 +19,7 @@ use App\Models\Foundation\Main\ExtraQuestions\ExtraQuestionAnswerHolder;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use App\Models\Foundation\Main\OrderableChilds;
+use App\Models\Foundation\Summit\IPublishableEventWithSpeakerConstraint;
 use App\Models\Utils\IStorageTypesConstants;
 use App\Services\Filesystem\FileUploadStrategyFactory;
 use Behat\Transliterator\Transliterator;
@@ -42,7 +43,7 @@ use models\utils\SilverstripeBaseModel;
  * @ORM\HasLifecycleCallbacks
  * @package models\summit
  */
-class Presentation extends SummitEvent
+class Presentation extends SummitEvent implements IPublishableEventWithSpeakerConstraint
 {
     use ExtraQuestionAnswerHolder;
 

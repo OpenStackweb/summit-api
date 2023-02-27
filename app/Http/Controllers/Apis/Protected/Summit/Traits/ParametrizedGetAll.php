@@ -33,6 +33,8 @@ trait ParametrizedGetAll
 
     use RequestProcessor;
 
+    use ParseAndGetFilter;
+
     /**
      * @param int $page
      * @param int $per_page
@@ -113,18 +115,7 @@ trait ParametrizedGetAll
                 $per_page = intval(Request::get('per_page'));
             }
 
-            $filter = null;
-
-            if (Request::has('filter')) {
-                $filter = FilterParser::parse(Request::get('filter'), call_user_func($getFilterRules));
-            }
-
-            if (is_null($filter)) $filter = new Filter();
-
-            $filter_validator_rules = call_user_func($getFilterValidatorRules);
-            if (count($filter_validator_rules)) {
-                $filter->validate($filter_validator_rules);
-            }
+            $filter = self::getFilter($getFilterRules, $getFilterValidatorRules);
 
             $order = null;
 
@@ -234,18 +225,7 @@ trait ParametrizedGetAll
                 $per_page = intval(Request::get('per_page'));
             }
 
-            $filter = null;
-
-            if (Request::has('filter')) {
-                $filter = FilterParser::parse(Request::get('filter'), call_user_func($getFilterRules));
-            }
-
-            if (is_null($filter)) $filter = new Filter();
-
-            $filter_validator_rules = call_user_func($getFilterValidatorRules);
-            if (count($filter_validator_rules)) {
-                $filter->validate($filter_validator_rules);
-            }
+            $filter = self::getFilter($getFilterRules, $getFilterValidatorRules);
 
             $order = null;
 

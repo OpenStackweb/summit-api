@@ -524,6 +524,10 @@ final class SerializerRegistry
         $this->registry['Team'] = TeamSerializer::class;
 
         $this->registry['File'] = FileSerializer::class;
+
+        // proposed schedule
+        $this->registry['SummitProposedSchedule'] = SummitProposedScheduleSerializer::class;
+        $this->registry['SummitProposedScheduleSummitEvent'] = SummitProposedScheduleSummitEventSerializer::class;
     }
 
     /**

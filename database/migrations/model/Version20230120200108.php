@@ -55,7 +55,7 @@ final class Version20230120200108 extends AbstractMigration
                 $table->foreign("SummitEvent", "SummitEventID", "ID", ["onDelete" => "CASCADE"], "FK_SummitProposedScheduleSummitEvent_Event");
                 $table->unique(['ScheduleID','SummitEventID'],'IDX_SummitProposedScheduleSummitEvent_Event_Unique');
 
-                $table->integer("LocationID", false, false)->setNotnull(true);
+                $table->integer("LocationID", false, false)->setNotnull(false)->setDefault("NULL");
                 $table->index("LocationID", "LocationID");
                 $table->foreign("SummitAbstractLocation", "LocationID", "ID", ["onDelete" => "CASCADE"], "FK_SummitProposedScheduleSummitEvent_Location");
 

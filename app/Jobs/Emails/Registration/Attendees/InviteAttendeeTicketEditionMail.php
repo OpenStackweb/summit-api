@@ -118,6 +118,10 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
         if (empty($payload['support_email']))
             throw new \InvalidArgumentException("missing support_email value");
 
+        // default value
+        if(!isset($payload['message']))
+            $payload['message'] = '';
+
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
         Log::debug(sprintf("InviteAttendeeTicketEditionMail::__construct payload %s template %s", json_encode($payload), $template_identifier));

@@ -141,6 +141,10 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         if(count($attachments) > 0)
             $payload['attachments'] = $attachments;
 
+        // default value
+        if(!isset($payload['message']))
+            $payload['message'] = '';
+
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
         Log::debug(sprintf("SummitAttendeeTicketEmail::__construct payload %s template %s", json_encode($payload), $template_identifier));
         parent::__construct($payload, $template_identifier, $owner_email);

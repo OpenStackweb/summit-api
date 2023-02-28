@@ -28,6 +28,15 @@ abstract class AbstractSummitAttendeeTicketEmail extends AbstractEmailJob
         IMailApi $api
     )
     {
+
+        // default values
+        if(!isset($this->payload['summit_marketing_site_url_magic_link']))
+            $this->payload['summit_marketing_site_url_magic_link'] = '';
+        if(!isset($this->payload['raw_summit_virtual_site_url']))
+            $this->payload['raw_summit_virtual_site_url'] = '';
+        if(!isset($this->payload['raw_summit_marketing_site_url']))
+            $this->payload['raw_summit_marketing_site_url'] = '';
+
         $memberService = App::make(IMemberService::class);
 
         if(isset($this->payload['summit_virtual_site_url'])){

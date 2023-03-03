@@ -12,11 +12,9 @@
  * limitations under the License.
  **/
 
-use App\Audit\AuditEventListener;
 use Closure;
 use Doctrine\DBAL\Exception\RetryableException;
 use Doctrine\DBAL\TransactionIsolationLevel;
-use Doctrine\ORM\Events;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use LaravelDoctrine\ORM\Facades\Registry;

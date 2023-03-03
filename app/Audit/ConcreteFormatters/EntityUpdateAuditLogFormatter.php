@@ -4,8 +4,15 @@ namespace App\Audit\ConcreteFormatters;
 
 use App\Audit\ConcreteFormatters\ChildEntityFormatters\IChildEntityAuditLogFormatter;
 use App\Audit\IAuditLogFormatter;
+use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Utils\BaseEntity;
 use DateTime;
+use models\main\File;
+use models\main\Member;
+use models\summit\PresentationCategory;
+use models\summit\PresentationSpeaker;
+use models\summit\SummitAbstractLocation;
+use models\summit\SummitEventType;
 use phpDocumentor\Reflection\Types\Boolean;
 use ReflectionClass;
 
@@ -74,6 +81,125 @@ class EntityUpdateAuditLogFormatter implements IAuditLogFormatter
 
             if ($old_value instanceof BaseEntity || $new_value instanceof BaseEntity) {
                 $res[] = "Property \"{$prop_name}\" of entity \"{$class_name}\" has changed";
+                if($old_value instanceof SummitAbstractLocation || $new_value instanceof SummitAbstractLocation){
+                    $msg = "Property \"{$prop_name}\" of entity \"{$class_name}\" has changed from ";
+                    if(is_null($old_value)){
+                        $msg .= " TBD ";
+                    }
+                    else{
+                        $msg .= " \"{$old_value->getName()} ({$old_value->getId()})\" ";
+                    }
+                    $msg .= " to ";
+                    if(is_null($new_value)){
+                        $msg .= " TBD ";
+                    }
+                    else{
+                        $msg .= " \"{$new_value->getName()} ({$new_value->getId()})\" ";
+                    }
+                    $res[] = $msg;
+                }
+                else if($old_value instanceof PresentationCategory || $new_value instanceof PresentationCategory){
+                    $msg = "Property \"{$prop_name}\" of entity \"{$class_name}\" has changed from ";
+                    if(is_null($old_value)){
+                        $msg .= " TBD ";
+                    }
+                    else{
+                        $msg .= " \"{$old_value->getTitle()} ({$old_value->getId()})\" ";
+                    }
+                    $msg .= " to ";
+                    if(is_null($new_value)){
+                        $msg .= " TBD ";
+                    }
+                    else{
+                        $msg .= " \"{$new_value->getTitle()} ({$new_value->getId()})\" ";
+                    }
+                    $res[] = $msg;
+                }
+                else if($old_value instanceof SelectionPlan || $new_value instanceof SelectionPlan){
+                    $msg = "Property \"{$prop_name}\" of entity \"{$class_name}\" has changed from ";
+                    if(is_null($old_value)){
+                        $msg .= " TBD ";
+                    }
+                    else{
+                        $msg .= " \"{$old_value->getName()} ({$old_value->getId()})\" ";
+                    }
+                    $msg .= " to ";
+                    if(is_null($new_value)){
+                        $msg .= " TBD ";
+                    }
+                    else{
+                        $msg .= " \"{$new_value->getName()} ({$new_value->getId()})\" ";
+                    }
+                    $res[] = $msg;
+                }
+                else if($old_value instanceof SummitEventType || $new_value instanceof SummitEventType){
+                    $msg = "Property \"{$prop_name}\" of entity \"{$class_name}\" has changed from ";
+                    if(is_null($old_value)){
+                        $msg .= " TBD ";
+                    }
+                    else{
+                        $msg .= " \"{$old_value->getType()} ({$old_value->getId()})\" ";
+                    }
+                    $msg .= " to ";
+                    if(is_null($new_value)){
+                        $msg .= " TBD ";
+                    }
+                    else{
+                        $msg .= " \"{$new_value->getType()} ({$new_value->getId()})\" ";
+                    }
+                    $res[] = $msg;
+                }
+                else if($old_value instanceof Member || $new_value instanceof Member){
+                    $msg = "Property \"{$prop_name}\" of entity \"{$class_name}\" has changed from ";
+                    if(is_null($old_value)){
+                        $msg .= " TBD ";
+                    }
+                    else{
+                        $msg .= " \"{$old_value->getFullName()} ({$old_value->getEmail()})\" ";
+                    }
+                    $msg .= " to ";
+                    if(is_null($new_value)){
+                        $msg .= " TBD ";
+                    }
+                    else{
+                        $msg .= " \"{$new_value->getFullName()} ({$new_value->getEmail()})\" ";
+                    }
+                    $res[] = $msg;
+                }
+                else if($old_value instanceof PresentationSpeaker || $new_value instanceof PresentationSpeaker){
+                    $msg = "Property \"{$prop_name}\" of entity \"{$class_name}\" has changed from ";
+                    if(is_null($old_value)){
+                        $msg .= " TBD ";
+                    }
+                    else{
+                        $msg .= " \"{$old_value->getFullName()} ({$old_value->getEmail()})\" ";
+                    }
+                    $msg .= " to ";
+                    if(is_null($new_value)){
+                        $msg .= " TBD ";
+                    }
+                    else{
+                        $msg .= " \"{$new_value->getFullName()} ({$new_value->getEmail()})\" ";
+                    }
+                    $res[] = $msg;
+                }
+                else if($old_value instanceof File || $new_value instanceof File){
+                    $msg = "Property \"{$prop_name}\" of entity \"{$class_name}\" has changed from ";
+                    if(is_null($old_value)){
+                        $msg .= " TBD ";
+                    }
+                    else{
+                        $msg .= " \"{$old_value->getFilename()} ({$old_value->getId()})\" ";
+                    }
+                    $msg .= " to ";
+                    if(is_null($new_value)){
+                        $msg .= " TBD ";
+                    }
+                    else{
+                        $msg .= " \"{$new_value->getFilename()} ({$new_value->getId()})\" ";
+                    }
+                    $res[] = $msg;
+                }
                 continue;
             }
 

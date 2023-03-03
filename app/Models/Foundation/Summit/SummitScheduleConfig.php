@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Main\OrderableChilds;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -31,6 +33,7 @@ use models\utils\SilverstripeBaseModel;
 class SummitScheduleConfig extends SilverstripeBaseModel
 {
     use SummitOwned;
+    use OrderableChilds;
 
     const ColorSource_EventType = 'EVENT_TYPES';
     const ColorSource_Track = 'TRACK';
@@ -203,14 +206,18 @@ class SummitScheduleConfig extends SilverstripeBaseModel
         $criteria->where(Criteria::expr()->eq('type', trim($filter->getType())));
         if($this->filters->matching($criteria)->count() > 0)
             throw new ValidationException(sprintf("Type %s already exists", $filter->getType()));
-
+        $filter->setOrder($this->getFilterMaxOrder() + 1);
         $this->filters->add($filter);
         $filter->setConfig($this);
     }
 
+    /**
+     * @param SummitScheduleFilterElementConfig $filter
+     */
     public function removeFilter(SummitScheduleFilterElementConfig $filter){
         if(!$this->filters->contains($filter)) return;
         $this->filters->removeElement($filter);
+        self::resetOrderForSelectable($this->filters);
         $filter->clearConfig();
     }
 
@@ -265,4 +272,24 @@ class SummitScheduleConfig extends SilverstripeBaseModel
     }
 
 
+    /**
+     * @return int
+     */
+    private function getFilterMaxOrder(): int
+    {
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'DESC']);
+        $filter = $this->filters->matching($criteria)->first();
+        return $filter === false ? 0 : $filter->getOrder();
+    }
+
+    /**
+     * @param SummitScheduleFilterElementConfig $filter
+     * @param int $new_order
+     * @throws ValidationException
+     */
+    public function recalculateFilterOrder(SummitScheduleFilterElementConfig $filter, int $new_order)
+    {
+        self::recalculateOrderForSelectable($this->filters, $filter, $new_order);
+    }
 }

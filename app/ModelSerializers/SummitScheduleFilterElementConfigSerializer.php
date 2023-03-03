@@ -23,6 +23,7 @@ final class SummitScheduleFilterElementConfigSerializer extends SilverStripeSeri
     protected static $array_mappings = [
         'Label' => 'label:json_string',
         'Enabled' => 'is_enabled:json_boolean',
+        "Order" => 'order:json_int'
     ];
 
     /**
@@ -32,7 +33,7 @@ final class SummitScheduleFilterElementConfigSerializer extends SilverStripeSeri
      * @param array $params
      * @return array
      */
-    public function serialize($expand = null, array $fields = array(), array $relations = array(), array $params = array())
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
         $filter = $this->object;
         if (!$filter instanceof SummitScheduleFilterElementConfig) return [];

@@ -188,7 +188,9 @@ class SummitScheduleConfig extends SilverstripeBaseModel
      */
     public function getFilters()
     {
-        return $this->filters;
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'ASC']);
+        return $this->filters->matching($criteria);
     }
 
     public function clearFilters():void{

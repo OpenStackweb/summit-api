@@ -27,14 +27,15 @@ final class MultipartFormDataCleaner
         if(!isset($data[$field])) return $data;
         $value = $data[$field];
         if(is_null($value)) return $data;
-        if(empty($value)) return $data;
+        if(trim($value) == '') return $data;
         if(is_bool($value)) return $data;
-        if(is_int($value)){
+        if(is_int($value) || is_numeric($value)){
+            $value = intval($value);
             if($value == 1){
                 $data[$field] = true;
             }
             if($value == 0){
-                $data[$field] = true;
+                $data[$field] = false;
             }
         }
         if(is_string($value)) {

@@ -28,7 +28,7 @@ final class Version20230303192447 extends AbstractMigration
     {
         $builder = new Builder($schema);
 
-        if(!$schema->hasTable("SummitScheduleFilterElementConfig")) {
+        if($schema->hasTable("SummitScheduleFilterElementConfig") && !$builder->hasColumn("SummitScheduleFilterElementConfig", "CustomOrder")) {
             $builder->table('SummitScheduleFilterElementConfig', function (Table $table) {
                 $table->integer('CustomOrder')->setNotnull(true)->setDefault(0);
             });

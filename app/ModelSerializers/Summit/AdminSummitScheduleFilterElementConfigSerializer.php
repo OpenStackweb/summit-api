@@ -22,7 +22,8 @@ final class AdminSummitScheduleFilterElementConfigSerializer extends SilverStrip
         'Type' => 'type:json_string',
         'Label' => 'label:json_string',
         'Enabled' => 'is_enabled:json_boolean',
-        'ConfigId' => 'config_id:json_int'
+        'ConfigId' => 'config_id:json_int',
+        "Order" => 'order:json_int'
     ];
 
 }

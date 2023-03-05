@@ -113,6 +113,7 @@ class SummitSerializer extends SilverStripeSerializer
         'TimeZoneLabel' => 'time_zone_label:json_string',
         'RegistrationAllowedRefundRequestTillDate' => 'registration_allowed_refund_request_till_date:datetime_epoch',
         'RegistrationSlugPrefix' => 'registration_slug_prefix:json_string',
+        'MarketingSiteOauth2ClientScopes' => 'marketing_site_oauth2_client_scopes:json_string',
     ];
 
     protected static $allowed_relations = [

@@ -78,6 +78,7 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         $payload['raw_summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
         $payload['summit_virtual_site_oauth2_client_id'] = $summit->getVirtualSiteOAuth2ClientId();
         $payload['summit_marketing_site_oauth2_client_id'] = $summit->getMarketingSiteOAuth2ClientId();
+        $payload['summit_marketing_site_oauth2_scopes'] = $summit->getMarketingSiteOauth2ClientScopes();
 
         $payload['ticket_number'] = $ticket->getNumber();
         $payload['ticket_type_name'] = $ticket->getTicketType()->getName();
@@ -140,6 +141,10 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
 
         if(count($attachments) > 0)
             $payload['attachments'] = $attachments;
+
+        // default value
+        if(!isset($payload['message']))
+            $payload['message'] = '';
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
         Log::debug(sprintf("SummitAttendeeTicketEmail::__construct payload %s template %s", json_encode($payload), $template_identifier));

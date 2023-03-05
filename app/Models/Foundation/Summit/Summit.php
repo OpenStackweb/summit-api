@@ -434,6 +434,28 @@ class Summit extends SilverstripeBaseModel
     private $marketing_site_oauth2_client_id;
 
     /**
+     * @ORM\Column(name="MarketingSiteOAuth2ClientScopes", type="string")
+     * @var string
+     */
+    private $marketing_site_oauth2_client_scopes;
+
+    /**
+     * @return string
+     */
+    public function getMarketingSiteOauth2ClientScopes(): ?string
+    {
+        return $this->marketing_site_oauth2_client_scopes;
+    }
+
+    /**
+     * @param string $marketing_site_oauth2_client_scopes
+     */
+    public function setMarketingSiteOauth2ClientScopes(string $marketing_site_oauth2_client_scopes): void
+    {
+        $this->marketing_site_oauth2_client_scopes = $marketing_site_oauth2_client_scopes;
+    }
+
+    /**
      * @ORM\Column(name="SupportEmail", type="string")
      * @var string
      */

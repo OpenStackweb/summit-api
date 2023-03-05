@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Models\Foundation\Main\IOrderable;
 use Doctrine\ORM\Mapping AS ORM;
 use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
@@ -21,7 +22,9 @@ use models\utils\SilverstripeBaseModel;
  * @ORM\Table(name="SummitScheduleFilterElementConfig")
  * @package models\summit
  */
-class SummitScheduleFilterElementConfig extends SilverstripeBaseModel
+class SummitScheduleFilterElementConfig
+    extends SilverstripeBaseModel
+    implements IOrderable
 {
     const Type_Date = 'DATE';
     const Type_Track = 'TRACK';
@@ -93,6 +96,12 @@ class SummitScheduleFilterElementConfig extends SilverstripeBaseModel
     private $type;
 
     /**
+     * @ORM\Column(name="CustomOrder", type="integer")
+     * @var int
+     */
+    private $order;
+
+    /**
      * @ORM\Column(name="Label", type="string")
      * @var string
      */
@@ -110,6 +119,28 @@ class SummitScheduleFilterElementConfig extends SilverstripeBaseModel
      * @var SummitScheduleConfig
      */
     protected $config;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->order = 1;
+    }
+
+    /**
+     * @return int
+     */
+    public function getOrder(): int
+    {
+        return $this->order;
+    }
+
+    /**
+     * @param int $order
+     */
+    public function setOrder($order)
+    {
+        $this->order = $order;
+    }
 
     /**
      * @return string

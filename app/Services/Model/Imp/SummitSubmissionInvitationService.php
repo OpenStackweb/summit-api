@@ -15,8 +15,6 @@
 use App\Jobs\Emails\PresentationSubmissions\Invitations\InviteSubmissionEmail;
 use App\Jobs\Emails\PresentationSubmissions\Invitations\ReInviteSubmissionEmail;
 use App\Jobs\Emails\PresentationSubmissions\ProcessSubmissionsInvitationsJob;
-use App\Jobs\Emails\Registration\Invitations\InviteSummitRegistrationEmail;
-use App\Jobs\Emails\Registration\Invitations\ReInviteSummitRegistrationEmail;
 use App\Models\Foundation\Summit\Factories\SummitSubmissionInvitationFactory;
 use App\Models\Foundation\Summit\Repositories\ISummitSubmissionInvitationRepository;
 use App\Services\Apis\IPasswordlessAPI;
@@ -36,7 +34,6 @@ use models\summit\ISpeakerRepository;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
 use models\summit\SummitSubmissionInvitation;
-use PHPUnit\Exception;
 use services\model\ISpeakerService;
 use utils\Filter;
 use utils\FilterElement;

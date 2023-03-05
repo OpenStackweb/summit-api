@@ -80,6 +80,7 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
         $payload['raw_summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
         $payload['summit_virtual_site_oauth2_client_id'] = $summit->getVirtualSiteOAuth2ClientId();
         $payload['summit_marketing_site_oauth2_client_id'] = $summit->getMarketingSiteOAuth2ClientId();
+        $payload['summit_marketing_site_oauth2_scopes'] = $summit->getMarketingSiteOauth2ClientScopes();
 
         $base_url = Config::get('registration.dashboard_base_url', null);
         $edit_ticket_link = Config::get('registration.dashboard_attendee_edit_form_url', null);
@@ -116,6 +117,10 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
 
         if (empty($payload['support_email']))
             throw new \InvalidArgumentException("missing support_email value");
+
+        // default value
+        if(!isset($payload['message']))
+            $payload['message'] = '';
 
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 

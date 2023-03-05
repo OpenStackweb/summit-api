@@ -1,14 +1,4 @@
-<?php
-
-namespace App\Audit\ConcreteFormatters;
-
-use App\Audit\ConcreteFormatters\ChildEntityFormatters\IChildEntityAuditLogFormatter;
-use App\Audit\IAuditLogFormatter;
-use App\Models\Utils\BaseEntity;
-use DateTime;
-use phpDocumentor\Reflection\Types\Boolean;
-use ReflectionClass;
-
+<?php namespace App\Audit\ConcreteFormatters;
 /**
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +11,21 @@ use ReflectionClass;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Audit\ConcreteFormatters\ChildEntityFormatters\IChildEntityAuditLogFormatter;
+use App\Audit\IAuditLogFormatter;
+use App\Models\Foundation\Summit\SelectionPlan;
+use App\Models\Utils\BaseEntity;
+use DateTime;
+use Doctrine\ORM\Mapping\Entity;
+use models\main\File;
+use models\main\Member;
+use models\summit\PresentationCategory;
+use models\summit\PresentationSpeaker;
+use models\summit\SummitAbstractLocation;
+use models\summit\SummitEventType;
+use models\utils\IEntity;
+use ReflectionClass;
 
 /**
  * Class EntityUpdateAuditLogFormatter
@@ -38,7 +43,8 @@ class EntityUpdateAuditLogFormatter implements IAuditLogFormatter
         $this->child_entity_formatter = $child_entity_formatter;
     }
 
-    protected function getIgnoredFields() {
+    protected function getIgnoredFields()
+    {
         return [
             'last_created',
             'last_updated',
@@ -49,9 +55,37 @@ class EntityUpdateAuditLogFormatter implements IAuditLogFormatter
     }
 
     /**
+     * @param string $parent_class
+     * @param string $prop_name
+     * @param IEntity|null $old_value
+     * @param Entity|null $new_value
+     * @param $class
+     * @param callable $formatter
+     * @return string|null
+     */
+    private static function formatEntity(string $parent_class, string $prop_name, ?IEntity $old_value, ?Entity $new_value, callable $formatter): ?string
+    {
+        $msg = "Property \"{$prop_name}\" of entity \"{$parent_class}\" has changed from ";
+
+        if (is_null($old_value)) {
+            $msg .= " TBD ";
+        } else {
+            $msg .= " \"{$formatter($old_value)})\" ";
+        }
+        $msg .= " to ";
+        if (is_null($new_value)) {
+            $msg .= " TBD ";
+        } else {
+            $msg .= " \"{$formatter($new_value)})\" ";
+        }
+        return $msg;
+    }
+
+    /**
      * @inheritDoc
      */
-    public function format($subject, $change_set): ?string {
+    public function format($subject, $change_set): ?string
+    {
         $res = [];
         $class_name = (new ReflectionClass($subject))->getShortName();
         $ignored_fields = $this->getIgnoredFields();
@@ -74,13 +108,42 @@ class EntityUpdateAuditLogFormatter implements IAuditLogFormatter
 
             if ($old_value instanceof BaseEntity || $new_value instanceof BaseEntity) {
                 $res[] = "Property \"{$prop_name}\" of entity \"{$class_name}\" has changed";
+                if ($old_value instanceof SummitAbstractLocation || $new_value instanceof SummitAbstractLocation) {
+                    $res[] = self::formatEntity($class_name, $prop_name, $old_value, $new_value, function ($value) {
+                        return " \"{$value->getName()} ({$value->getId()})\" ";
+                    });
+                } else if ($old_value instanceof PresentationCategory || $new_value instanceof PresentationCategory) {
+                    $res[] = self::formatEntity($class_name, $prop_name, $old_value, $new_value, function ($value) {
+                        return " \"{$value->getTitle()} ({$value->getId()})\" ";
+                    });
+                } else if ($old_value instanceof SelectionPlan || $new_value instanceof SelectionPlan) {
+                    $res[] = self::formatEntity($class_name, $prop_name, $old_value, $new_value, function ($value) {
+                        return " \"{$value->getName()} ({$value->getId()})\" ";
+                    });
+                } else if ($old_value instanceof SummitEventType || $new_value instanceof SummitEventType) {
+                    $res[] = self::formatEntity($class_name, $prop_name, $old_value, $new_value, function ($value) {
+                        return " \"{$value->getType()} ({$value->getId()})\" ";
+                    });
+                } else if ($old_value instanceof Member || $new_value instanceof Member) {
+                    $res[] = self::formatEntity($class_name, $prop_name, $old_value, $new_value, function ($value) {
+                        return " \"{$value->getFullName()} ({$value->getEmail()})\" ";
+                    });
+                } else if ($old_value instanceof PresentationSpeaker || $new_value instanceof PresentationSpeaker) {
+                    $res[] = self::formatEntity($class_name, $prop_name, $old_value, $new_value, function ($value) {
+                        return " \"{$value->getFullName()} ({$value->getEmail()})\" ";
+                    });
+                } else if ($old_value instanceof File || $new_value instanceof File) {
+                    $res[] = self::formatEntity($class_name, $prop_name, $old_value, $new_value, function ($value) {
+                        return " \"{$value->getFilename()} ({$value->getId()})\" ";
+                    });
+                }
                 continue;
             }
 
             if ($old_value instanceof DateTime || $new_value instanceof DateTime) {
                 $old_value = $old_value != null ? $old_value->format('Y-m-d H:i:s') : "";
                 $new_value = $new_value != null ? $new_value->format('Y-m-d H:i:s') : "";
-            } else if (is_bool($old_value ) || is_bool($new_value)) {
+            } else if (is_bool($old_value) || is_bool($new_value)) {
                 $old_value = $old_value ? 'true' : 'false';
                 $new_value = $new_value ? 'true' : 'false';
             } else {
@@ -95,6 +158,6 @@ class EntityUpdateAuditLogFormatter implements IAuditLogFormatter
 
         if (count($res) == 0) return null;
 
-        return join("|",$res);
+        return join("|", $res);
     }
 }

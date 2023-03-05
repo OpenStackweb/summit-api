@@ -181,12 +181,12 @@ final class DoctrineMemberRepository
                               JOIN __p51_:i.type __type51_:i 
                               WHERE 
                               __p51_:i.summit = :summit AND
-                              __sel_plan51_:i.id :operator :value'.(!empty($extraSelectionPlanFilter) ? sprintf($extraSelectionPlanFilter, '51'):''). ')"
+                              __sel_plan51_:i.id :operator :value".(!empty($extraSelectionPlanFilter) ? sprintf($extraSelectionPlanFilter, '51'):''). ")"
             ),
             'presentations_type_id' =>  new DoctrineFilterMapping(
                 "EXISTS ( 
                               SELECT __p61_:i.id FROM models\summit\Presentation __p61_:i 
-                              JOIN __p61.created_by __c61 WITH __c61 = e.id
+                              JOIN __p61_:i.created_by __c61 WITH __c61 = e.id
                               JOIN __p61_:i.type __type61_:i 
                               WHERE 
                               __p61_:i.summit = :summit AND
@@ -212,19 +212,17 @@ final class DoctrineMemberRepository
                 "EXISTS ( 
                               SELECT __p91.id FROM models\summit\Presentation __p91
                               JOIN __p91.created_by __c91 WITH __c91 = e.id
-                              JOIN __p91.created_by __cb91
                               WHERE 
                               __p91.summit = :summit AND
-                              concat(LOWER(__cb91.first_name), ' ', LOWER(__cb91.last_name)) :operator LOWER(:value) )"
+                              concat(LOWER(__c91.first_name), ' ', LOWER(__c91.last_name)) :operator LOWER(:value) )"
             ),
             'presentations_submitter_email' => new DoctrineFilterMapping(
                 "EXISTS ( 
                               SELECT __p10_1.id FROM models\summit\Presentation __p10_1
-                              JOIN __p10.created_by __c10 WITH __c10 = e.id
-                              JOIN __p10_1.created_by __cb10_1
+                              JOIN __p10_1.created_by __c10 WITH __c10 = e.id
                               WHERE 
                               __p10_1.summit = :summit AND
-                              LOWER(__cb10_1.email) :operator LOWER(:value) )"
+                              LOWER(__c10.email) :operator LOWER(:value) )"
             ),
             'has_accepted_presentations' =>
                 new DoctrineSwitchFilterMapping([

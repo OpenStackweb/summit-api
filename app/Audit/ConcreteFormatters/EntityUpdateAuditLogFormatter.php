@@ -17,7 +17,6 @@ use App\Audit\IAuditLogFormatter;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Utils\BaseEntity;
 use DateTime;
-use Doctrine\ORM\Mapping\Entity;
 use models\main\File;
 use models\main\Member;
 use models\summit\PresentationCategory;
@@ -58,12 +57,12 @@ class EntityUpdateAuditLogFormatter implements IAuditLogFormatter
      * @param string $parent_class
      * @param string $prop_name
      * @param IEntity|null $old_value
-     * @param Entity|null $new_value
+     * @param IEntity|null $new_value
      * @param $class
      * @param callable $formatter
      * @return string|null
      */
-    private static function formatEntity(string $parent_class, string $prop_name, ?IEntity $old_value, ?Entity $new_value, callable $formatter): ?string
+    private static function formatEntity(string $parent_class, string $prop_name, ?IEntity $old_value, ?IEntity $new_value, callable $formatter): ?string
     {
         $msg = "Property \"{$prop_name}\" of entity \"{$parent_class}\" has changed from ";
 

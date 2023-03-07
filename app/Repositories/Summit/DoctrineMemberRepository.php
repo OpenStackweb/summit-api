@@ -53,7 +53,7 @@ final class DoctrineMemberRepository
      */
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null): QueryBuilder
     {
-        if($filter->hasFilter("summit_id") || $filter->hasFilter("schedule_event_id")){
+        if($filter->hasFilter("summit_id") && $filter->hasFilter("schedule_event_id")){
             $query
                 ->leftJoin("e.schedule","sch")
                 ->leftJoin("sch.event", "evt")
@@ -234,7 +234,7 @@ final class DoctrineMemberRepository
                                         JOIN __p12.created_by __c12 WITH __c12 = e.id 
                                         JOIN __p12.category __cat12
                                         JOIN __p12.type __t12
-                                        JOIN __p12.selection_plan __sel_plan12 
+                                        LEFT JOIN __p12.selection_plan __sel_plan12 
                                         LEFT JOIN __p12.selected_presentations __sp12 
                                         LEFT JOIN __sp12.list __spl12 
                                         WHERE 
@@ -255,7 +255,7 @@ final class DoctrineMemberRepository
                                         JOIN __p12.created_by __c12 WITH __c12 = e.id 
                                         JOIN __p12.category __cat12
                                         JOIN __p12.type __t12
-                                        JOIN __p12.selection_plan __sel_plan12 
+                                        LEFT JOIN __p12.selection_plan __sel_plan12 
                                         LEFT JOIN __p12.selected_presentations __sp12 
                                         LEFT JOIN __sp12.list __spl12
                                         WHERE 
@@ -280,7 +280,7 @@ final class DoctrineMemberRepository
                                         JOIN __p21.created_by __c21 WITH __c21 = e.id 
                                         JOIN __p21.category __cat21
                                         JOIN __p21.type __t21
-                                        JOIN __p21.selection_plan __sel_plan21 
+                                        LEFT JOIN __p21.selection_plan __sel_plan21 
                                         JOIN __p21.selected_presentations __sp21 WITH __sp21.collection = \'%1$s\'
                                         JOIN __sp21.list __spl21 WITH __spl21.list_type = \'%2$s\' AND __spl21.list_class = \'%3$s\'
                                         WHERE 
@@ -300,7 +300,7 @@ final class DoctrineMemberRepository
                                         JOIN __p21.created_by __c21 WITH __c21 = e.id 
                                         JOIN __p21.category __cat21
                                         JOIN __p21.type __t21
-                                        JOIN __p21.selection_plan __sel_plan21 
+                                        LEFT JOIN __p21.selection_plan __sel_plan21 
                                         JOIN __p21.selected_presentations __sp21 WITH __sp21.collection = \'%1$s\'
                                         JOIN __sp21.list __spl21 WITH __spl21.list_type = \'%2$s\' AND __spl21.list_class = \'%3$s\'
                                         WHERE 
@@ -324,7 +324,7 @@ final class DoctrineMemberRepository
                                         JOIN __p31.created_by __c31 WITH __c31 = e.id 
                                         JOIN __p31.category __cat31
                                         JOIN __p31.type __t31
-                                        JOIN __p31.selection_plan __sel_plan31 
+                                        LEFT JOIN __p31.selection_plan __sel_plan31 
                                         WHERE 
                                         __p31.summit = :summit 
                                         AND __p31.published = 0'.
@@ -349,7 +349,7 @@ final class DoctrineMemberRepository
                                         JOIN __p31.created_by __c31 WITH __c31 = e.id 
                                         JOIN __p31.category __cat31
                                         JOIN __p31.type __t31
-                                        JOIN __p31.selection_plan __sel_plan31 
+                                        LEFT JOIN __p31.selection_plan __sel_plan31 
                                         WHERE 
                                         __p31.summit = :summit  
                                         AND __p31.published = 0'
@@ -372,33 +372,37 @@ final class DoctrineMemberRepository
                 new DoctrineSwitchFilterMapping([
                         'true' => new DoctrineCaseFilterMapping(
                             'true',
-                            '
+                            '(
                                  EXISTS (
-                                    SELECT __p12.id FROM models\summit\Presentation __p12 
-                                    JOIN __p12.speakers __spk12 WITH __spk12.member = e.id 
-                                    WHERE __p12.summit = :summit
+                                    SELECT __p61.id FROM models\summit\Presentation __p61 
+                                    JOIN __p61.created_by __c61 WITH __c61 = e.id 
+                                    JOIN __p61.speakers __spk61 WITH __spk61.member = e.id 
+                                    WHERE __p61.summit = :summit
                                  ) 
                                  OR 
                                  EXISTS (
-                                    SELECT __p14.id FROM models\summit\Presentation __p14 
-                                    JOIN __p14.moderator __md14 WITH __md14.member = e.id 
-                                    WHERE __p14.summit = :summit
-                                 )'
+                                    SELECT __p62.id FROM models\summit\Presentation __p62 
+                                    JOIN __p62.created_by __c62 WITH __c62 = e.id 
+                                    JOIN __p62.moderator __md62 WITH __md62.member = e.id 
+                                    WHERE __p62.summit = :summit
+                                 ))'
                         ),
                         'false' => new DoctrineCaseFilterMapping(
                             'false',
-                            '
+                            '(
                                 NOT EXISTS (
-                                    SELECT __p12.id FROM models\summit\Presentation __p12 
-                                    JOIN __p12.speakers __spk12 WITH __spk12.member = e.id 
-                                    WHERE __p12.summit = :summit
+                                    SELECT __p61.id FROM models\summit\Presentation __p61 
+                                    JOIN __p61.created_by __c61 WITH __c61 = e.id 
+                                    JOIN __p61.speakers __spk61 WITH __spk61.member = e.id 
+                                    WHERE __p61.summit = :summit
                                 ) 
                                 AND  
                                 NOT EXISTS (
-                                    SELECT __p14.id FROM models\summit\Presentation __p14 
-                                    JOIN __p14.moderator __md14 WITH __md14.member = e.id 
-                                    WHERE __p14.summit = :summit
-                                )'
+                                    SELECT __p62.id FROM models\summit\Presentation __p62 
+                                    JOIN __p62.created_by __c62 WITH __c62 = e.id 
+                                    JOIN __p62.moderator __md62 WITH __md62.member = e.id 
+                                    WHERE __p62.summit = :summit
+                                ))'
                         ),
                     ]
                 ),

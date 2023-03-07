@@ -133,9 +133,6 @@ final class OAuth2SummitSubmittersApiController
                 ];
             },
             function ($filter) use ($summit) {
-                if ($filter instanceof Filter) {
-                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
-                }
                 return $filter;
             },
             function () {
@@ -222,9 +219,6 @@ final class OAuth2SummitSubmittersApiController
                 ];
             },
             function ($filter) use ($summit) {
-                if ($filter instanceof Filter) {
-                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
-                }
                 return $filter;
             },
             function () {

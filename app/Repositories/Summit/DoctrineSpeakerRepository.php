@@ -244,7 +244,7 @@ final class DoctrineSpeakerRepository
                                         JOIN __p12.speakers __spk12 WITH __spk12.id = e.id 
                                         JOIN __p12.category __cat12
                                         JOIN __p12.type __t12
-                                        JOIN __p12.selection_plan __sel_plan12 
+                                        LEFT JOIN __p12.selection_plan __sel_plan12 
                                         LEFT JOIN __p12.selected_presentations __sp12 
                                         LEFT JOIN __sp12.list __spl12 
                                         WHERE 
@@ -262,7 +262,7 @@ final class DoctrineSpeakerRepository
                                         JOIN __p14.moderator __md14 WITH __md14.id = e.id 
                                         JOIN __p14.category __cat14
                                         JOIN __p14.type __t14
-                                        JOIN __p14.selection_plan __sel_plan14
+                                        LEFT JOIN __p14.selection_plan __sel_plan14
                                         LEFT JOIN __p14.selected_presentations __sp14
                                         LEFT JOIN __sp14.list __spl14 
                                         WHERE 
@@ -284,7 +284,7 @@ final class DoctrineSpeakerRepository
                                         JOIN __p12.speakers __spk12 WITH __spk12.id = e.id 
                                         JOIN __p12.category __cat12
                                         JOIN __p12.type __t12
-                                        JOIN __p12.selection_plan __sel_plan12 
+                                        LEFT JOIN __p12.selection_plan __sel_plan12 
                                         LEFT JOIN __p12.selected_presentations __sp12 
                                         LEFT JOIN __sp12.list __spl12
                                         WHERE 
@@ -303,7 +303,7 @@ final class DoctrineSpeakerRepository
                                         JOIN __p14.moderator __md14 WITH __md14.id = e.id 
                                         JOIN __p14.category __cat14
                                         JOIN __p14.type __t14
-                                        JOIN __p14.selection_plan __sel_plan14
+                                        LEFT JOIN __p14.selection_plan __sel_plan14
                                         LEFT JOIN __p14.selected_presentations __sp14 
                                         LEFT JOIN __sp14.list __spl14
                                         WHERE 
@@ -328,7 +328,7 @@ final class DoctrineSpeakerRepository
                                         JOIN __p21.speakers __spk21 WITH __spk21.id = e.id 
                                         JOIN __p21.category __cat21
                                         JOIN __p21.type __t21
-                                        JOIN __p21.selection_plan __sel_plan21 
+                                        LEFT JOIN __p21.selection_plan __sel_plan21 
                                         JOIN __p21.selected_presentations __sp21 WITH __sp21.collection = \'%1$s\'
                                         JOIN __sp21.list __spl21 WITH __spl21.list_type = \'%2$s\' AND __spl21.list_class = \'%3$s\'
                                         WHERE 
@@ -346,7 +346,7 @@ final class DoctrineSpeakerRepository
                                         JOIN __p22.moderator __md22 WITH __md22.id = e.id 
                                         JOIN __p22.category __cat22
                                         JOIN __p22.type __t22
-                                        JOIN __p22.selection_plan __sel_plan22 
+                                        LEFT JOIN __p22.selection_plan __sel_plan22 
                                         JOIN __p22.selected_presentations __sp22 WITH __sp22.collection = \'%1$s\'
                                         JOIN __sp22.list __spl22 WITH __spl22.list_type = \'%2$s\' AND __spl22.list_class = \'%3$s\'
                                         WHERE 
@@ -365,7 +365,7 @@ final class DoctrineSpeakerRepository
                                         JOIN __p21.speakers __spk21 WITH __spk21.id = e.id 
                                         JOIN __p21.category __cat21
                                         JOIN __p21.type __t21
-                                        JOIN __p21.selection_plan __sel_plan21 
+                                        LEFT JOIN __p21.selection_plan __sel_plan21 
                                         JOIN __p21.selected_presentations __sp21 WITH __sp21.collection = \'%1$s\'
                                         JOIN __sp21.list __spl21 WITH __spl21.list_type = \'%2$s\' AND __spl21.list_class = \'%3$s\'
                                         WHERE 
@@ -383,7 +383,7 @@ final class DoctrineSpeakerRepository
                                         JOIN __p22.moderator __md22 WITH __md22.id = e.id 
                                         JOIN __p22.category __cat22
                                         JOIN __p22.type __t22
-                                        JOIN __p22.selection_plan __sel_plan22 
+                                        LEFT JOIN __p22.selection_plan __sel_plan22 
                                         JOIN __p22.selected_presentations __sp22 WITH __sp22.collection = \'%1$s\'
                                         JOIN __sp22.list __spl22 WITH __spl22.list_type = \'%2$s\' AND __spl22.list_class = \'%3$s\'
                                         WHERE 
@@ -406,7 +406,7 @@ final class DoctrineSpeakerRepository
                                         JOIN __p31.speakers __spk31 WITH __spk31.id = e.id 
                                         JOIN __p31.category __cat31
                                         JOIN __p31.type __t31
-                                        JOIN __p31.selection_plan __sel_plan31 
+                                        LEFT JOIN __p31.selection_plan __sel_plan31 
                                         WHERE 
                                         __p31.summit = :summit 
                                         AND __p31.published = 0'.
@@ -428,7 +428,7 @@ final class DoctrineSpeakerRepository
                                         JOIN __p32.moderator __md32 WITH __md32.id = e.id 
                                         JOIN __p32.category __cat32
                                         JOIN __p32.type __t32
-                                        JOIN __p32.selection_plan __sel_plan32 
+                                        LEFT JOIN __p32.selection_plan __sel_plan32 
                                         WHERE 
                                         __p32.summit = :summit 
                                         AND __p32.published = 0'.
@@ -452,7 +452,7 @@ final class DoctrineSpeakerRepository
                                         JOIN __p31.speakers __spk31 WITH __spk31.id = e.id 
                                         JOIN __p31.category __cat31
                                         JOIN __p31.type __t31
-                                        JOIN __p31.selection_plan __sel_plan31 
+                                        LEFT JOIN __p31.selection_plan __sel_plan31 
                                         WHERE 
                                         __p31.summit = :summit  
                                         AND __p31.published = 0'
@@ -474,7 +474,7 @@ final class DoctrineSpeakerRepository
                                         JOIN __p32.moderator __md32 WITH __md32.id = e.id
                                         JOIN __p32.category __cat32
                                         JOIN __p32.type __t32
-                                        JOIN __p32.selection_plan __sel_plan32 
+                                        LEFT JOIN __p32.selection_plan __sel_plan32 
                                         WHERE 
                                         __p32.summit = :summit 
                                         AND __p32.published = 0'.

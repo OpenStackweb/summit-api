@@ -765,7 +765,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             $query = $this->createQuery(sprintf("SELECT p from models\summit\Presentation p 
             JOIN p.summit s
             JOIN p.speakers sp
-            JOIN p.selection_plan sel_p
+            LEFT JOIN p.selection_plan sel_p
             JOIN p.type t
             JOIN p.category cat
             LEFT JOIN p.selected_presentations ssp 
@@ -791,7 +791,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             $query = $this->createQuery(sprintf(
                 "SELECT p from models\summit\Presentation p 
             JOIN p.summit s
-            JOIN p.selection_plan sel_p 
+            LEFT JOIN p.selection_plan sel_p 
             JOIN p.type t
             JOIN p.category cat
             JOIN p.moderator m
@@ -957,7 +957,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             $query = $this->createQuery("SELECT p from models\summit\Presentation p 
             JOIN p.summit s
             JOIN p.speakers sp 
-            JOIN p.selection_plan sel_p
+            LEFT JOIN p.selection_plan sel_p
             JOIN p.type t
             JOIN p.category cat
             WHERE s.id = :summit_id 
@@ -966,7 +966,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
         } else {
             $query = $this->createQuery("SELECT p from models\summit\Presentation p 
             JOIN p.summit s
-            JOIN p.selection_plan sel_p
+            LEFT JOIN p.selection_plan sel_p
             JOIN p.type t
             JOIN p.category cat
             JOIN p.moderator m 
@@ -1203,7 +1203,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
         if ($role == PresentationSpeaker::RoleSpeaker) {
             $query = $this->createQuery("SELECT p from models\summit\Presentation p 
             JOIN p.summit s
-            JOIN p.selection_plan sel_p
+            LEFT JOIN p.selection_plan sel_p
             JOIN p.type t
             JOIN p.category cat
             JOIN p.speakers sp 
@@ -1213,7 +1213,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
         } else {
             $query = $this->createQuery("SELECT p from models\summit\Presentation p 
             JOIN p.summit s
-            JOIN p.selection_plan sel_p
+            LEFT JOIN p.selection_plan sel_p
             JOIN p.type t
             JOIN p.category cat
             JOIN p.moderator m 

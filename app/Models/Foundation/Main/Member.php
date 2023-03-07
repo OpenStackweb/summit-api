@@ -2524,7 +2524,7 @@ SQL;
         $query = $this->createQuery(sprintf("SELECT p from models\summit\Presentation p 
             JOIN p.summit s
             JOIN p.created_by cb
-            JOIN p.selection_plan sel_p
+            LEFT JOIN p.selection_plan sel_p
             JOIN p.type t
             JOIN p.category cat
             LEFT JOIN p.selected_presentations ssp 
@@ -2668,7 +2668,7 @@ SQL;
         $query = $this->createQuery("SELECT p from models\summit\Presentation p 
             JOIN p.summit s
             JOIN p.created_by cb
-            JOIN p.selection_plan sel_p
+            LEFT JOIN p.selection_plan sel_p
             JOIN p.type t
             JOIN p.category cat
             WHERE s.id = :summit_id 
@@ -2789,7 +2789,7 @@ SQL;
 
         $query = $this->createQuery("SELECT p from models\summit\Presentation p 
             JOIN p.summit s
-            JOIN p.selection_plan sel_p
+            LEFT JOIN p.selection_plan sel_p
             JOIN p.type t
             JOIN p.category cat
             JOIN p.created_by cb 

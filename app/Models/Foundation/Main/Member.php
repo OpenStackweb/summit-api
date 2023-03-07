@@ -19,6 +19,7 @@ use App\Models\Foundation\Elections\Nomination;
 use App\Models\Foundation\Main\IGroup;
 use Illuminate\Support\Facades\Config;
 use LaravelDoctrine\ORM\Facades\EntityManager;
+use models\summit\Presentation;
 use models\summit\SummitMetric;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
@@ -41,9 +42,13 @@ use models\summit\SummitEvent;
 use models\summit\SummitEventFeedback;
 use models\summit\SummitOrder;
 use models\summit\SummitRoomReservation;
+use models\summit\SummitSelectedPresentation;
+use models\summit\SummitSelectedPresentationList;
 use models\summit\SummitTrackChair;
 use models\utils\SilverstripeBaseModel;
 use Doctrine\ORM\Mapping AS ORM;
+use utils\Filter;
+
 /**
  * @ORM\Table(name="`Member`")
  * @ORM\HasLifecycleCallbacks
@@ -377,6 +382,12 @@ class Member extends SilverstripeBaseModel
     private $company;
 
     /**
+     * @ORM\OneToMany(targetEntity="models\summit\Presentation", mappedBy="created_by", cascade={"persist"})
+     * @var Presentation[]
+     */
+    private $created_presentations;
+
+    /**
      * Member constructor.
      */
     public function __construct()
@@ -409,6 +420,7 @@ class Member extends SilverstripeBaseModel
         $this->candidate_profiles = new  ArrayCollection();
         $this->subscribed_to_newsletter = false;
         $this->display_on_site = false;
+        $this->created_presentations = new ArrayCollection();
     }
 
     /**
@@ -2484,4 +2496,377 @@ SQL;
         $this->gender = $gender;
     }
 
+    /**
+     * @param Summit $summit
+     * @param bool $exclude_privates_tracks
+     * @param array $excluded_tracks
+     * @param Filter|null $filter
+     * @return int|mixed|string
+     */
+    public function getAcceptedPresentations
+    (
+        Summit  $summit,
+        ?Filter $filter = null
+    )
+    {
+        $extraWhere = '';
+        if (!is_null($filter)) {
+            if ($filter->hasFilter("presentations_selection_plan_id")) {
+                $extraWhere .= " AND sel_p.id IN (:selection_plan_id)";
+            }
+            if ($filter->hasFilter("presentations_track_id")) {
+                $extraWhere .= " AND cat.id IN (:track_id)";
+            }
+            if ($filter->hasFilter("presentations_type_id")) {
+                $extraWhere .= " AND cat.id IN (:type_id)";
+            }
+        }
+        $query = $this->createQuery(sprintf("SELECT p from models\summit\Presentation p 
+            JOIN p.summit s
+            JOIN p.created_by cb
+            JOIN p.selection_plan sel_p
+            JOIN p.type t
+            JOIN p.category cat
+            LEFT JOIN p.selected_presentations ssp 
+            LEFT JOIN ssp.list sspl 
+            WHERE s.id = :summit_id 
+            AND cb = :submitter_id
+            AND 
+            (
+                ( 
+                    ssp.order is not null AND
+                    ssp.order <= cat.session_count AND
+                    ssp.collection = '%s' AND
+                    sspl.list_type = '%s' AND sspl.list_class = '%s'
+                )
+                OR p.published = 1 
+            )
+            " . $extraWhere,
+            SummitSelectedPresentation::CollectionSelected,
+            SummitSelectedPresentationList::Group,
+            SummitSelectedPresentationList::Session
+        ));
+
+        $query = $query
+            ->setParameter('summit_id', $summit->getId())
+            ->setParameter('submitter_id', $this->id);
+
+        if (!is_null($filter)) {
+            if ($filter->hasFilter("presentations_selection_plan_id")) {
+                $v = [];
+                foreach ($filter->getFilter("presentations_selection_plan_id") as $f) {
+                    if (is_array($f->getValue())) {
+                        foreach ($f->getValue() as $iv) {
+                            $v[] = $iv;
+                        }
+                    } else
+                        $v[] = $f->getValue();
+                }
+                $query = $query->setParameter("selection_plan_id", $v);
+            }
+            if ($filter->hasFilter("presentations_track_id")) {
+                $v = [];
+                foreach ($filter->getFilter("presentations_track_id") as $f) {
+                    if (is_array($f->getValue())) {
+                        foreach ($f->getValue() as $iv) {
+                            $v[] = $iv;
+                        }
+                    } else
+                        $v[] = $f->getValue();
+                }
+                $query = $query->setParameter("track_id", $v);
+            }
+            if ($filter->hasFilter("presentations_type_id")) {
+                $v = [];
+                foreach ($filter->getFilter("presentations_type_id") as $f) {
+                    if (is_array($f->getValue())) {
+                        foreach ($f->getValue() as $iv) {
+                            $v[] = $iv;
+                        }
+                    } else
+                        $v[] = $f->getValue();
+                }
+                $query = $query->setParameter("type_id", $v);
+            }
+        }
+        return $query->getResult();
+    }
+
+    /**
+     * @param Summit $summit
+     * @param Filter|null $filter
+     * @return array
+     */
+    public function getAcceptedPresentationIds
+    (
+        Summit  $summit,
+        ?Filter $filter = null
+    )
+    {
+        $ids = [];
+        $acceptedPresentations = $this->getAcceptedPresentations($summit, $filter);
+        foreach ($acceptedPresentations as $p) {
+            $ids[] = intval($p->getId());
+        }
+        return $ids;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param Filter|null $filter
+     * @return bool
+     */
+    public function hasAcceptedPresentations
+    (
+        Summit  $summit,
+        ?Filter $filter = null
+    )
+    {
+        return count($this->getAcceptedPresentations($summit, $filter)) > 0;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param Filter|null $filter
+     * @return bool
+     */
+    public function hasAlternatePresentations
+    (
+        Summit  $summit,
+        ?Filter $filter = null
+    )
+    {
+        return count($this->getAlternatePresentations($summit, $filter)) > 0;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param Filter|null $filter
+     * @return array
+     */
+    public function getAlternatePresentations
+    (
+        Summit $summit,
+        ?Filter $filter = null
+    )
+    {
+        $alternate_presentations = [];
+
+        $extraWhere = '';
+        if (!is_null($filter)) {
+            if ($filter->hasFilter("presentations_selection_plan_id")) {
+                $extraWhere .= " AND sel_p.id IN (:selection_plan_id)";
+            }
+            if ($filter->hasFilter("presentations_track_id")) {
+                $extraWhere .= " AND cat.id IN (:track_id)";
+            }
+            if ($filter->hasFilter("presentations_type_id")) {
+                $extraWhere .= " AND cat.id IN (:type_id)";
+            }
+        }
+
+        $query = $this->createQuery("SELECT p from models\summit\Presentation p 
+            JOIN p.summit s
+            JOIN p.created_by cb
+            JOIN p.selection_plan sel_p
+            JOIN p.type t
+            JOIN p.category cat
+            WHERE s.id = :summit_id 
+            AND cb.id = :submitter_id" . $extraWhere);
+
+        $query
+            ->setParameter('summit_id', $summit->getId())
+            ->setParameter('submitter_id', $this->id);
+
+        if (!is_null($filter)) {
+            if ($filter->hasFilter("presentations_selection_plan_id")) {
+                $v = [];
+                foreach ($filter->getFilter("presentations_selection_plan_id") as $f) {
+                    if (is_array($f->getValue())) {
+                        foreach ($f->getValue() as $iv) {
+                            $v[] = $iv;
+                        }
+                    } else
+                        $v[] = $f->getValue();
+                }
+                $query = $query->setParameter("selection_plan_id", $v);
+            }
+            if ($filter->hasFilter("presentations_track_id")) {
+                $v = [];
+                foreach ($filter->getFilter("presentations_track_id") as $f) {
+                    if (is_array($f->getValue())) {
+                        foreach ($f->getValue() as $iv) {
+                            $v[] = $iv;
+                        }
+                    } else
+                        $v[] = $f->getValue();
+                }
+                $query = $query->setParameter("track_id", $v);
+            }
+            if ($filter->hasFilter("presentations_type_id")) {
+                $v = [];
+                foreach ($filter->getFilter("presentations_type_id") as $f) {
+                    if (is_array($f->getValue())) {
+                        foreach ($f->getValue() as $iv) {
+                            $v[] = $iv;
+                        }
+                    } else
+                        $v[] = $f->getValue();
+                }
+                $query = $query->setParameter("type_id", $v);
+            }
+        }
+
+        $presentations = $query->getResult();
+
+        foreach ($presentations as $p) {
+            if ($p->getSelectionStatus() == Presentation::SelectionStatus_Alternate) {
+                $alternate_presentations[] = $p;
+            }
+        }
+
+        return $alternate_presentations;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param Filter|null $filter
+     * @return array
+     */
+    public function getAlternatePresentationIds
+    (
+        Summit  $summit,
+        ?Filter $filter = null
+    )
+    {
+        $ids = [];
+        $alternatePresentations = $this->getAlternatePresentations($summit, $filter);
+        foreach ($alternatePresentations as $p) {
+            $ids[] = intval($p->getId());
+        }
+        return $ids;
+    }
+
+    /**
+     * @param Summit $summit ,
+     * @param Filter|null $filter
+     * @return bool
+     */
+    public function hasRejectedPresentations
+    (
+        Summit  $summit,
+        ?Filter $filter = null
+    )
+    {
+        return count($this->getRejectedPresentations($summit, $filter)) > 0;
+    }
+
+    /**
+     * @param Summit $summit ,
+     * @param Filter|null $filter
+     * @return array
+     */
+    public function getRejectedPresentations
+    (
+        Summit $summit,
+        ?Filter $filter = null
+    )
+    {
+        $rejected_presentations = [];
+
+        $extraWhere = '';
+        if (!is_null($filter)) {
+            if ($filter->hasFilter("presentations_selection_plan_id")) {
+                $extraWhere .= " AND sel_p.id IN (:selection_plan_id)";
+            }
+            if ($filter->hasFilter("presentations_track_id")) {
+                $extraWhere .= " AND cat.id IN (:track_id)";
+            }
+            if ($filter->hasFilter("presentations_type_id")) {
+                $extraWhere .= " AND cat.id IN (:type_id)";
+            }
+        }
+
+        $query = $this->createQuery("SELECT p from models\summit\Presentation p 
+            JOIN p.summit s
+            JOIN p.selection_plan sel_p
+            JOIN p.type t
+            JOIN p.category cat
+            JOIN p.created_by cb 
+            WHERE s.id = :summit_id 
+            AND p.published = 0
+            AND cb.id = :submitter_id" . $extraWhere);
+
+        $query
+            ->setParameter('summit_id', $summit->getId())
+            ->setParameter('submitter_id', $this->id);
+
+        if (!is_null($filter)) {
+            if ($filter->hasFilter("presentations_selection_plan_id")) {
+                $v = [];
+                foreach ($filter->getFilter("presentations_selection_plan_id") as $f) {
+                    if (is_array($f->getValue())) {
+                        foreach ($f->getValue() as $iv) {
+                            $v[] = $iv;
+                        }
+                    } else
+                        $v[] = $f->getValue();
+                }
+                $query = $query->setParameter("selection_plan_id", $v);
+            }
+            if ($filter->hasFilter("presentations_track_id")) {
+                $v = [];
+                foreach ($filter->getFilter("presentations_track_id") as $f) {
+                    if (is_array($f->getValue())) {
+                        foreach ($f->getValue() as $iv) {
+                            $v[] = $iv;
+                        }
+                    } else
+                        $v[] = $f->getValue();
+                }
+                $query = $query->setParameter("track_id", $v);
+            }
+            if ($filter->hasFilter("presentations_type_id")) {
+                $v = [];
+                foreach ($filter->getFilter("presentations_type_id") as $f) {
+                    if (is_array($f->getValue())) {
+                        foreach ($f->getValue() as $iv) {
+                            $v[] = $iv;
+                        }
+                    } else
+                        $v[] = $f->getValue();
+                }
+                $query = $query->setParameter("type_id", $v);
+            }
+        }
+
+        $presentations = $query->getResult();
+
+        foreach ($presentations as $p) {
+            if ($p->getSelectionStatus() == Presentation::SelectionStatus_Unaccepted) {
+                $rejected_presentations[] = $p;
+            }
+        }
+
+        return $rejected_presentations;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param Filter|null $filter
+     * @return array
+     */
+    public function getRejectedPresentationIds
+    (
+        Summit  $summit,
+        ?Filter $filter = null
+    )
+    {
+        $ids = [];
+        $rejected_presentations = $this->getRejectedPresentations($summit, $filter);
+        foreach ($rejected_presentations as $p) {
+            $ids[] = intval($p->getId());
+        }
+        return $ids;
+    }
 }

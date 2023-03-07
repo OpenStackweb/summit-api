@@ -40,7 +40,7 @@ final class Version20230223155412 extends AbstractMigration
                 // FK
                 $table->integer("SelectionPlanID", false, false)->setNotnull(false)->setDefault('NULL');
                 $table->index("SelectionPlanID", "SelectionPlanID");
-                $table->foreign("SelectionPlan", "SelectionPlanID", "ID", ["onDelete" => "CASCADE"], 'FK_SelectionPlan_SelectionPlanAllowedEditablePresentationQuestion');
+                $table->foreign("SelectionPlan", "SelectionPlanID", "ID", ["onDelete" => "CASCADE"], 'FK_SelectionPlan_SelPlanAllowedEditablePresentationQuestion');
 
             });
         }

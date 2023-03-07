@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use models\summit\Summit;
 use models\utils\IBaseRepository;
 use utils\Filter;
 use utils\Order;
@@ -60,4 +62,23 @@ interface IMemberRepository extends IBaseRepository
      * @return Member|null
      */
     public function getByExternalIdExclusiveLock(int $external_id): ?Member;
+
+    /**
+     * @param Summit $summit
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getSubmittersBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+
+    /**
+     * @param Summit $summit
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function getSubmittersIdsBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null);
 }

@@ -19,6 +19,7 @@ use App\ModelSerializers\Elections\CandidateSerializer;
 use App\ModelSerializers\Elections\ElectionSerializer;
 use App\ModelSerializers\Elections\NominationSerializer;
 use App\ModelSerializers\FileSerializer;
+use App\ModelSerializers\IMemberSerializerTypes;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
 use App\ModelSerializers\ISummitOrderSerializerTypes;
 use App\ModelSerializers\LanguageSerializer;
@@ -265,7 +266,8 @@ final class SerializerRegistry
                 self::SerializerType_Admin_Voteable_CSV => AdminVoteablePresentationCSVSerializer::class,
                 IPresentationSerializerTypes::TrackChairs => TrackChairPresentationSerializer::class,
                 IPresentationSerializerTypes::TrackChairs_CSV => TrackChairPresentationCSVSerializer::class,
-                IPresentationSerializerTypes::SpeakerEmails => SpeakerPresentationEmailSerializer::class
+                IPresentationSerializerTypes::SpeakerEmails => SpeakerPresentationEmailSerializer::class,
+                IPresentationSerializerTypes::SubmitterEmails => SpeakerPresentationEmailSerializer::class
             ];
 
         $this->registry['PresentationAttendeeVote'] = PresentationAttendeeVoteSerializer::class;
@@ -469,7 +471,9 @@ final class SerializerRegistry
         $this->registry['Member'] = [
             self::SerializerType_Public => PublicMemberSerializer::class,
             self::SerializerType_Private => OwnMemberSerializer::class,
-            self::SerializerType_Admin => AdminMemberSerializer::class
+            self::SerializerType_Admin => AdminMemberSerializer::class,
+            IMemberSerializerTypes::Submitter => SubmitterMemberSerializer::class,
+            IMemberSerializerTypes::SubmitterCSV => SubmitterMemberCSVSerializer::class,
         ];
 
         $this->registry['LegalAgreement'] = LegalAgreementSerializer::class;

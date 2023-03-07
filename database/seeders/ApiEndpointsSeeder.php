@@ -2955,6 +2955,45 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitRegistrationAdmins,
                 ]
             ],
+            // submitters
+            [
+                'name' => 'get-submitters',
+                'route' => '/api/v1/summits/{id}/submitters',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'get-submitters-csv',
+                'route' => '/api/v1/summits/{id}/submitters/csv',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'send bulk submitters emails',
+                'route' => '/api/v1/summits/{id}/submitters/all/send',
+                'http_method' => 'PUT',
+                'scopes'      => [
+                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins
+                ]
+            ],
             // speakers
            [
                 'name' => 'get-speakers',

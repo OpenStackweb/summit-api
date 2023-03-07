@@ -1,6 +1,6 @@
-<?php namespace ModelSerializers;
+<?php namespace App\ModelSerializers;
 /**
- * Copyright 2021 OpenStack Foundation
+ * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,13 +13,11 @@
  **/
 
 /**
- * Interface IPresentationSerializerTypes
- * @package ModelSerializers
+ * Interface IMemberSerializerTypes
+ * @package App\ModelSerializers
  */
-interface IPresentationSerializerTypes
+interface IMemberSerializerTypes
 {
-    const TrackChairs = "TRACK_CHAIRS";
-    const TrackChairs_CSV = "TRACK_CHAIRS_CSV";
-    const SpeakerEmails = "SPEAKER_EMAILS";
-    const SubmitterEmails = "SUBMITTER_EMAILS";
+    const Submitter    = 'SUBMITTER';
+    const SubmitterCSV = 'SUBMITTER_CSV';
 }

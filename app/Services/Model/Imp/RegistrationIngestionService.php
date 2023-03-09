@@ -21,10 +21,13 @@ use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedFactory;
 use App\Services\Model\AbstractService;
 use App\Services\Model\dto\ExternalUserDTO;
+use App\Services\Model\ICompanyService;
 use App\Services\Model\IMemberService;
+use App\Services\Model\Imp\Traits\AttendeeCompany;
 use App\Services\Model\IRegistrationIngestionService;
 use libs\utils\ITransactionService;
 use models\exceptions\ValidationException;
+use models\main\ICompanyRepository;
 use models\main\IMemberRepository;
 use models\summit\factories\SummitAttendeeFactory;
 use models\summit\ISummitAttendeeTicketRepository;
@@ -47,6 +50,7 @@ use services\apis\IEventbriteAPI;
 final class RegistrationIngestionService
     extends AbstractService implements IRegistrationIngestionService
 {
+    use AttendeeCompany;
 
     /**
      * @var IMemberService
@@ -83,7 +87,16 @@ final class RegistrationIngestionService
     private $attendee_repository;
 
     /**
-     * RegistrationIngestionService constructor.
+     * @var ICompanyService
+     */
+    private $company_service;
+
+    /**
+     * @var ICompanyRepository
+     */
+    private $company_repository;
+
+    /**
      * @param IMemberService $member_service
      * @param ISummitRepository $summit_repository
      * @param IExternalRegistrationFeedFactory $feed_factory
@@ -91,18 +104,22 @@ final class RegistrationIngestionService
      * @param ISummitAttendeeTicketRepository $ticket_repository
      * @param IMemberRepository $member_repository
      * @param ISummitAttendeeRepository $attendee_repository
+     * @param ICompanyRepository $company_repository
+     * @param ICompanyService $company_service
      * @param ITransactionService $tx_service
      */
     public function __construct
     (
-        IMemberService $member_service,
-        ISummitRepository $summit_repository,
+        IMemberService                   $member_service,
+        ISummitRepository                $summit_repository,
         IExternalRegistrationFeedFactory $feed_factory,
-        ISummitOrderRepository $order_repository,
-        ISummitAttendeeTicketRepository $ticket_repository,
-        IMemberRepository $member_repository,
-        ISummitAttendeeRepository $attendee_repository,
-        ITransactionService $tx_service
+        ISummitOrderRepository           $order_repository,
+        ISummitAttendeeTicketRepository  $ticket_repository,
+        IMemberRepository                $member_repository,
+        ISummitAttendeeRepository        $attendee_repository,
+        ICompanyRepository               $company_repository,
+        ICompanyService                  $company_service,
+        ITransactionService              $tx_service
     )
     {
         parent::__construct($tx_service);
@@ -113,6 +130,8 @@ final class RegistrationIngestionService
         $this->ticket_repository = $ticket_repository;
         $this->member_repository = $member_repository;
         $this->attendee_repository = $attendee_repository;
+        $this->company_repository = $company_repository;
+        $this->company_service = $company_service;
     }
 
     public function ingestAllSummits(): void
@@ -151,16 +170,15 @@ final class RegistrationIngestionService
                 Log::debug(sprintf("RegistrationIngestionService::ingestSummit getting external attendees page %s", $page));
                 $response = $feed->getAttendees($page, $summit->getExternalRegistrationFeedLastIngestDate());
 
-                if ($response->hasData()){
+                if ($response->hasData()) {
                     $shouldMarkProcess = true;
-                }
-                else{
+                } else {
                     log::debug
                     (
                         sprintf
                         (
                             "RegistrationIngestionService::ingestSummit page does not contains data for summit %s"
-                            ,$summit_id
+                            , $summit_id
                         )
                     );
                     break;
@@ -234,21 +252,21 @@ final class RegistrationIngestionService
 
                                 $owner = $this->member_repository->getByEmail($owner_order_email);
 
-                                if(is_null($owner)){
+                                if (is_null($owner)) {
                                     // check if we have an external one
-                                    try{
+                                    try {
                                         Log::debug
                                         (
                                             sprintf
                                             (
                                                 "RegistrationIngestionService::ingestSummit order owner does not exist for email %s, trying to get it externally"
-                                                ,$owner_order_email
+                                                , $owner_order_email
                                             )
                                         );
 
                                         $user = $this->member_service->checkExternalUser($owner_order_email);
 
-                                        if(!is_null($user)) {
+                                        if (!is_null($user)) {
                                             // we have an user on idp
                                             $external_id = $user['id'];
                                             Log::debug
@@ -256,7 +274,7 @@ final class RegistrationIngestionService
                                                 sprintf
                                                 (
                                                     "RegistrationIngestionService::ingestSummit got external user %s for email %s",
-                                                    $external_id , $owner_order_email
+                                                    $external_id, $owner_order_email
                                                 )
                                             );
 
@@ -280,8 +298,7 @@ final class RegistrationIngestionService
                                                 $owner = $this->member_repository->getByExternalIdExclusiveLock(intval($external_id));
                                             }
                                         }
-                                    }
-                                    catch (Exception $ex){
+                                    } catch (Exception $ex) {
                                         Log::warning($ex);
                                     }
                                 }
@@ -387,21 +404,21 @@ final class RegistrationIngestionService
                             $company = isset($external_attendee_profile['company']) ? trim($external_attendee_profile['company']) : '';
                             $attendee_owner = $this->member_repository->getByEmail($attendee_email);
 
-                            if(is_null($attendee_owner)){
+                            if (is_null($attendee_owner)) {
                                 // check if we have an external one
-                                try{
+                                try {
                                     Log::debug
                                     (
                                         sprintf
                                         (
                                             "RegistrationIngestionService::ingestSummit attendee owner does not exist for email %s, trying to get it externally"
-                                            ,$attendee_email
+                                            , $attendee_email
                                         )
                                     );
 
                                     $user = $this->member_service->checkExternalUser($attendee_email);
 
-                                    if(!is_null($user)) {
+                                    if (!is_null($user)) {
                                         // we have an user on idp
                                         $external_id = $user['id'];
                                         Log::debug
@@ -409,7 +426,7 @@ final class RegistrationIngestionService
                                             sprintf
                                             (
                                                 "RegistrationIngestionService::ingestSummit got external user %s for email %s",
-                                                $external_id , $attendee_email
+                                                $external_id, $attendee_email
                                             )
                                         );
 
@@ -433,8 +450,7 @@ final class RegistrationIngestionService
                                             $attendee_owner = $this->member_repository->getByExternalIdExclusiveLock(intval($external_id));
                                         }
                                     }
-                                }
-                                catch (Exception $ex){
+                                } catch (Exception $ex) {
                                     Log::warning($ex);
                                 }
                             }
@@ -452,10 +468,12 @@ final class RegistrationIngestionService
 
                             $attendee = $this->attendee_repository->getBySummitAndExternalId($summit, $external_attendee['id']);
 
-                            if(is_null($attendee)){
+                            if (is_null($attendee)) {
                                 // try to get it only by email
                                 $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $attendee_email);
                             }
+
+                            $this->registerCompanyFor($summit, $company);
 
                             if (is_null($attendee)) {
                                 Log::debug(sprintf("RegistrationIngestionService::ingestSummit attendee %s does not exists", $attendee_email));
@@ -479,12 +497,12 @@ final class RegistrationIngestionService
                             $attendee->clearExtraQuestionAnswers();
                             $answers = $external_attendee['answers'] ?? [];
 
-                            foreach($answers as $answerDTO){
+                            foreach ($answers as $answerDTO) {
                                 $external_question_id = $answerDTO['question_id'];
                                 $value = $answerDTO['answer'] ?? null;
-                                if(empty($value)) continue;
+                                if (empty($value)) continue;
                                 $question = $summit->getExtraQuestionTypeByExternalId($external_question_id);
-                                if(is_null($question)){
+                                if (is_null($question)) {
                                     Log::debug(sprintf("RegistrationIngestionService::ingestSummit question not found ( external id %s )", $external_question_id));
                                     continue;
                                 }
@@ -492,9 +510,9 @@ final class RegistrationIngestionService
                                 if ($question->allowsValues()) {
                                     $values = explode(IEventbriteAPI::QuestionChoicesCharSeparator, $value);
                                     $res = [];
-                                    foreach ($values as $val){
+                                    foreach ($values as $val) {
                                         $v = $question->getValueByName(trim($val));
-                                        if(!is_null($v))
+                                        if (!is_null($v))
                                             $res[] = $v->getId();
                                     }
                                     $value = implode(ExtraQuestionType::QuestionChoicesCharSeparator, $res);
@@ -502,9 +520,9 @@ final class RegistrationIngestionService
 
                                 $answer = new SummitOrderExtraQuestionAnswer();
                                 $answer->setQuestion($question);
-                                if($question->getType() === ExtraQuestionTypeConstants::CheckBoxQuestionType){
+                                if ($question->getType() === ExtraQuestionTypeConstants::CheckBoxQuestionType) {
                                     // special case for waiver type
-                                    $value = $value === 'accepted' ? 'true':'false';
+                                    $value = $value === 'accepted' ? 'true' : 'false';
                                 }
                                 $answer->setValue($value);
                                 $attendee->addExtraQuestionAnswer($answer);
@@ -531,13 +549,12 @@ final class RegistrationIngestionService
                                             false
                                         );
                                     }
-                                }
-                                catch (Exception $ex){
+                                } catch (Exception $ex) {
                                     Log::warning($ex);
                                 }
                             }
                             // force the disclaimer
-                            if($summit->isRegistrationDisclaimerMandatory() && !$attendee->isDisclaimerAccepted())
+                            if ($summit->isRegistrationDisclaimerMandatory() && !$attendee->isDisclaimerAccepted())
                                 $attendee->setDisclaimerAcceptedDate(new \DateTime('now', new \DateTimeZone('UTC')));
 
                             $attendee->updateStatus();
@@ -545,10 +562,9 @@ final class RegistrationIngestionService
                             $ticket->generateQRCode();
                             $ticket->generateHash();
 
-                            Log::debug(sprintf( "RegistrationIngestionService::ingestSummit processed attendee %s", $external_attendee['id']));
+                            Log::debug(sprintf("RegistrationIngestionService::ingestSummit processed attendee %s", $external_attendee['id']));
                         });
-                    }
-                    catch (Exception $ex){
+                    } catch (Exception $ex) {
                         Log::warning($ex);
                     }
                 }
@@ -556,14 +572,14 @@ final class RegistrationIngestionService
                 ++$page;
             } while ($has_more_items);
 
-            $this->tx_service->transaction(function() use($summit_id, $shouldMarkProcess){
-                if($shouldMarkProcess) {
+            $this->tx_service->transaction(function () use ($summit_id, $shouldMarkProcess) {
+                if ($shouldMarkProcess) {
                     log::debug
                     (
                         sprintf
                         (
                             "RegistrationIngestionService::ingestSummit marking last ingest date for summit %s"
-                            ,$summit_id
+                            , $summit_id
                         )
                     );
                     $summit = $this->summit_repository->getById($summit_id);
@@ -578,8 +594,8 @@ final class RegistrationIngestionService
                 sprintf
                 (
                     "RegistrationIngestionService::ingestSummit execution call %s seconds - summit %s"
-                    ,$delta
-                    ,$summit_id
+                    , $delta
+                    , $summit_id
                 )
             );
         } catch (Exception $ex) {

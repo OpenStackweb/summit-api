@@ -53,7 +53,7 @@ final class DoctrineMemberRepository
      */
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null): QueryBuilder
     {
-        if($filter->hasFilter("summit_id") && $filter->hasFilter("schedule_event_id")){
+        if($filter->hasFilter("summit_id") || $filter->hasFilter("schedule_event_id")){
             $query
                 ->leftJoin("e.schedule","sch")
                 ->leftJoin("sch.event", "evt")

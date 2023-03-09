@@ -126,7 +126,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         return $this->_getAll(
             function () {
                 return [
-                    'name' => ['=@', '=='],
+                    'name' => ['=@', '==', '@@'],
                     'start_date' => ['==', '<', '>', '<=', '>='],
                     'end_date' => ['==', '<', '>', '<=', '>='],
                     'registration_begin_date' => ['==', '<', '>', '<=', '>='],
@@ -207,7 +207,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         return $this->_getAll(
             function () {
                 return [
-                    'name' => ['=@', '=='],
+                    'name' => ['=@', '==', '@@'],
                     'start_date' => ['==', '<', '>', '<=', '>='],
                     'end_date' => ['==', '<', '>', '<=', '>='],
                     'registration_begin_date' => ['==', '<', '>', '<=', '>='],

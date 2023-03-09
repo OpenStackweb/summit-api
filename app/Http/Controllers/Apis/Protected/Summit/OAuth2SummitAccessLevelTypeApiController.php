@@ -53,7 +53,7 @@ final class OAuth2SummitAccessLevelTypeApiController
     protected function getFilterRules():array
     {
         return [
-            'name'        => ['=@', '=='],
+            'name'        => ['=@', '==', '@@'],
             'is_default'  => [ '=='],
         ];
     }

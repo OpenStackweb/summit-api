@@ -11,16 +11,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Services\Model\ICompanyService;
-use Illuminate\Support\Facades\Log;
-use models\exceptions\EntityNotFoundException;
+use Illuminate\Http\Request as LaravelRequest;
+use models\exceptions\ValidationException;
 use models\main\ICompanyRepository;
 use models\oauth2\IResourceServerContext;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
-use models\exceptions\ValidationException;
-use Illuminate\Http\Request as LaravelRequest;
-use Exception;
+
 /**
  * Class OAuth2CompaniesApiController
  * @package App\Http\Controllers
@@ -51,9 +50,9 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
      */
     public function __construct
     (
-        ICompanyRepository $company_repository,
+        ICompanyRepository     $company_repository,
         IResourceServerContext $resource_server_context,
-        ICompanyService $service
+        ICompanyService        $service
     )
     {
         parent::__construct($resource_server_context);
@@ -64,30 +63,29 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
     /**
      * @return mixed
      */
-    public function getAllCompanies(){
-
+    public function getAllCompanies()
+    {
         return $this->_getAll(
-            function(){
+            function () {
                 return [
-                    'name' => ['=@', '=='],
+                    'name' => ['=@', '==', '@@'],
                 ];
             },
-            function(){
+            function () {
                 return [
                     'name' => 'sometimes|string',
                 ];
             },
-            function()
-            {
+            function () {
                 return [
                     'name',
                     'id',
                 ];
             },
-            function($filter){
+            function ($filter) {
                 return $filter;
             },
-            function(){
+            function () {
                 return SerializerRegistry::SerializerType_Public;
             }
         );
@@ -144,6 +142,8 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
         return $this->service->updateCompany($id, $payload);
     }
 
+    use RequestProcessor;
+
     // Logos
 
     /**
@@ -153,56 +153,32 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
      */
     public function addCompanyLogo(LaravelRequest $request, $company_id)
     {
-        try {
+        return $this->processRequest(function () use ($request, $company_id) {
 
             $file = $request->file('file');
             if (is_null($file)) {
                 return $this->error412(array('file param not set!'));
             }
 
-            $logo = $this->service->addCompanyLogo($company_id, $file);
+            $logo = $this->service->addCompanyLogo(intval($company_id), $file);
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($logo)->serialize());
-
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
      * @param $company_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function deleteCompanyLogo($company_id){
-        try {
+    public function deleteCompanyLogo($company_id)
+    {
+        return $this->processRequest(function () use ($company_id) {
 
-            $this->service->deleteCompanyLogo($company_id);
+            $this->service->deleteCompanyLogo(intval($company_id));
 
             return $this->deleted();
 
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -212,55 +188,27 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
      */
     public function addCompanyBigLogo(LaravelRequest $request, $company_id)
     {
-        try {
-
+        return $this->processRequest(function () use ($request, $company_id) {
             $file = $request->file('file');
             if (is_null($file)) {
                 return $this->error412(array('file param not set!'));
             }
 
-            $logo = $this->service->addCompanyBigLogo($company_id, $file);
+            $logo = $this->service->addCompanyBigLogo(intval($company_id), $file);
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($logo)->serialize());
-
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
      * @param $company_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function deleteCompanyBigLogo($company_id){
-        try {
-
-            $this->service->deleteCompanyBigLogo($company_id);
-
+    public function deleteCompanyBigLogo($company_id)
+    {
+        return $this->processRequest(function () use ($company_id) {
+            $this->service->deleteCompanyBigLogo(intval($company_id));
             return $this->deleted();
-
-        } catch (EntityNotFoundException $ex1) {
-            Log::warning($ex1);
-            return $this->error404();
-        } catch (ValidationException $ex2) {
-            Log::warning($ex2);
-            return $this->error412(array($ex2->getMessage()));
-        } catch (\HTTP401UnauthorizedException $ex3) {
-            Log::warning($ex3);
-            return $this->error401();
-        } catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 }

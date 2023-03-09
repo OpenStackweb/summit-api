@@ -100,13 +100,13 @@ final class OAuth2PresentationCategoryGroupController
 
             if (Request::has('filter')) {
                 $filter = FilterParser::parse(Request::input('filter'), [
-                    'name'           => ['=@', '=='],
-                    'description'    => ['=@', '=='],
-                    'slug'           => ['=@', '=='],
-                    'track_title'    => ['=@', '=='],
-                    'track_code'     => ['=@', '=='],
-                    'group_title'    => ['=@', '=='],
-                    'group_code'     => ['=@', '=='],
+                    'name'           => ['=@', '==','@@'],
+                    'description'    => ['=@', '==','@@'],
+                    'slug'           => ['=@', '==','@@'],
+                    'track_title'    => ['=@', '==','@@'],
+                    'track_code'     => ['=@', '==','@@'],
+                    'group_title'    => ['=@', '==','@@'],
+                    'group_code'     => ['=@', '==','@@'],
                     'voting_visible' => ['=='],
                     'chair_visible'  => ['=='],
                     'class_name'     => ['==']
@@ -203,13 +203,13 @@ final class OAuth2PresentationCategoryGroupController
 
             if (Request::has('filter')) {
                 $filter = FilterParser::parse(Request::input('filter'), [
-                    'name'           => ['=@', '=='],
-                    'description'    => ['=@', '=='],
-                    'slug'           => ['=@', '=='],
-                    'track_title'    => ['=@', '=='],
-                    'track_code'     => ['=@', '=='],
-                    'group_title'    => ['=@', '=='],
-                    'group_code'     => ['=@', '=='],
+                    'name'           => ['=@', '==','@@'],
+                    'description'    => ['=@', '==','@@'],
+                    'slug'           => ['=@', '==','@@'],
+                    'track_title'    => ['=@', '==','@@'],
+                    'track_code'     => ['=@', '==','@@'],
+                    'group_title'    => ['=@', '==','@@'],
+                    'group_code'     => ['=@', '==','@@'],
                     'voting_visible' => ['=='],
                     'chair_visible'  => ['=='],
                     'class_name'     => ['==']

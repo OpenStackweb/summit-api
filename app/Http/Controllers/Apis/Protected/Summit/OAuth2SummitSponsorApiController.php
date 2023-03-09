@@ -98,9 +98,9 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
     protected function getFilterRules(): array
     {
         return [
-            'company_name' => ['==', '=@'],
-            'sponsorship_name' => ['==', '=@'],
-            'sponsorship_size' => ['==', '=@'],
+            'company_name' => ['==', '=@', '@@'],
+            'sponsorship_name' => ['==', '=@', '@@'],
+            'sponsorship_size' => ['==', '=@', '@@'],
             'badge_scans_count' => ['==', '<', '>', '<=', '>=', '<>'],
             'is_published' => ['=='],
         ];

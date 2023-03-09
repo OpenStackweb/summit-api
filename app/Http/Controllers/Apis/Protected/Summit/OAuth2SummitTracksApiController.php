@@ -11,25 +11,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
 use App\Services\Model\ISummitTrackService;
+use Exception;
 use Illuminate\Http\Request as LaravelRequest;
-use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
-use libs\utils\PaginationValidationRules;
+use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
-use models\exceptions\EntityNotFoundException;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterParser;
 use utils\OrderParser;
 use utils\PagingInfo;
-use Exception;
 use utils\PagingResponse;
 
 /**
@@ -58,125 +58,85 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
     public function __construct
     (
         ISummitTrackRepository $repository,
-        ISummitRepository $summit_repository,
-        ISummitTrackService $track_service,
+        ISummitRepository      $summit_repository,
+        ISummitTrackService    $track_service,
         IResourceServerContext $resource_server_context
     )
     {
         parent::__construct($resource_server_context);
-        $this->repository         = $repository;
-        $this->summit_repository  = $summit_repository;
-        $this->track_service      = $track_service;
+        $this->repository = $repository;
+        $this->summit_repository = $summit_repository;
+        $this->track_service = $track_service;
     }
+
+    use ParametrizedGetAll;
 
     /**
      * @param $summit_id
      * @return mixed
      */
-    public function getAllBySummit($summit_id){
-        $values = Request::all();
-        $rules  = PaginationValidationRules::get();
+    public function getAllBySummit($summit_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
 
-        try {
-
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-
-            $validation = Validator::make($values, $rules);
-
-            if ($validation->fails()) {
-                $ex = new ValidationException();
-                throw $ex->setMessages($validation->messages()->toArray());
-            }
-
-            // default values
-            $page     = 1;
-            $per_page = PaginationValidationRules::PerPageMin;
-
-            if (Request::has('page')) {
-                $page     = intval(Request::input('page'));
-                $per_page = intval(Request::input('per_page'));
-            }
-
-            $filter = null;
-
-            if (Request::has('filter')) {
-                $filter = FilterParser::parse(Request::input('filter'), [
-                    'name'        => ['=@', '=='],
-                    'description' => ['=@', '=='],
-                    'code'        => ['=@', '=='],
-                    'group_name'  => ['=@', '=='],
+        return $this->_getAll(
+            function () {
+                return [
+                    'name' => ['=@', '==', '@@'],
+                    'description' => ['=@', '==', '@@'],
+                    'code' => ['=@', '==', '@@'],
+                    'group_name' => ['=@', '==', '@@'],
                     'voting_visible' => ['=='],
                     'chair_visible' => ['=='],
-                ]);
-            }
-
-
-            if(is_null($filter)) $filter = new Filter();
-
-            $filter->validate([
-                'name'         => 'sometimes|string',
-                'description'  => 'sometimes|string',
-                'code'         => 'sometimes|string',
-                'group_name'   => 'sometimes|string',
-                'voting_visible' => 'sometimes|boolean',
-                'chair_visible' => 'sometimes|boolean',
-            ]);
-
-            $order = null;
-
-            if (Request::has('order'))
-            {
-                $order = OrderParser::parse(Request::input('order'), [
-
+                ];
+            },
+            function () {
+                return [
+                    'name' => 'sometimes|string',
+                    'description' => 'sometimes|string',
+                    'code' => 'sometimes|string',
+                    'group_name' => 'sometimes|string',
+                    'voting_visible' => 'sometimes|boolean',
+                    'chair_visible' => 'sometimes|boolean',
+                ];
+            },
+            function () {
+                return [
                     'id',
                     'code',
                     'name',
                     'order',
-                ]);
-            }
-
-            $data = $this->repository->getBySummit($summit, new PagingInfo($page, $per_page), $filter, $order);
-
-            return $this->ok
-            (
-                $data->toArray
+                ];
+            },
+            function ($filter) {
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
+                return $this->repository->getBySummit
                 (
-                    Request::input('expand', ''),
-                    [],
-                    [],
-                    []
-                )
-            );
-        }
-        catch (ValidationException $ex1)
-        {
-            Log::warning($ex1);
-            return $this->error412(array( $ex1->getMessage()));
-        }
-        catch (EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message' => $ex2->getMessage()));
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
-            Log::warning($ex3);
-            return $this->error401();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+                    $summit,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
     }
 
     /**
      * @param $summit_id
      * @return mixed
      */
-    public function getAllBySummitCSV($summit_id){
+    public function getAllBySummitCSV($summit_id)
+    {
         $values = Request::all();
-        $rules  = [];
+        $rules = [];
 
         try {
 
@@ -191,11 +151,11 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
             }
 
             // default values
-            $page     = 1;
+            $page = 1;
             $per_page = PHP_INT_MAX;
 
             if (Request::has('page')) {
-                $page     = intval(Request::input('page'));
+                $page = intval(Request::input('page'));
                 $per_page = intval(Request::input('per_page'));
             }
 
@@ -203,30 +163,29 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
 
             if (Request::has('filter')) {
                 $filter = FilterParser::parse(Request::input('filter'), [
-                    'title'       => ['=@', '=='],
-                    'description' => ['=@', '=='],
-                    'code'        => ['=@', '=='],
-                    'group_name'  => ['=@', '=='],
+                    'title' => ['=@', '==', '@@'],
+                    'description' => ['=@', '==', '@@'],
+                    'code' => ['=@', '==', '@@'],
+                    'group_name' => ['=@', '==', '@@'],
                     'voting_visible' => ['=='],
                     'chair_visible' => ['=='],
                 ]);
             }
 
-            if(is_null($filter)) $filter = new Filter();
+            if (is_null($filter)) $filter = new Filter();
 
             $filter->validate([
-                'name'         => 'sometimes|string',
-                'description'  => 'sometimes|string',
-                'code'         => 'sometimes|string',
-                'group_name'   => 'sometimes|string',
+                'name' => 'sometimes|string',
+                'description' => 'sometimes|string',
+                'code' => 'sometimes|string',
+                'group_name' => 'sometimes|string',
                 'voting_visible' => 'sometimes|boolean',
                 'chair_visible' => 'sometimes|boolean',
             ]);
 
             $order = null;
 
-            if (Request::has('order'))
-            {
+            if (Request::has('order')) {
                 $order = OrderParser::parse(Request::input('order'), [
 
                     'id',
@@ -239,44 +198,37 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
             $data = $this->repository->getBySummit($summit, new PagingInfo($page, $per_page), $filter, $order);
 
             $filename = "tracks-" . date('Ymd');
-            $list     =  $data->toArray();
+            $list = $data->toArray();
             return $this->export
             (
                 'csv',
                 $filename,
                 $list['data'],
                 [
-                    'created'                    => new EpochCellFormatter,
-                    'last_edited'                => new EpochCellFormatter,
-                    'is_default'                 => new BooleanCellFormatter,
-                    'black_out_times'            => new BooleanCellFormatter,
-                    'use_sponsors'               => new BooleanCellFormatter,
-                    'are_sponsors_mandatory'     => new BooleanCellFormatter,
-                    'allows_attachment'          => new BooleanCellFormatter,
-                    'use_speakers'               => new BooleanCellFormatter,
-                    'are_speakers_mandatory'     => new BooleanCellFormatter,
-                    'use_moderator'              => new BooleanCellFormatter,
-                    'is_moderator_mandatory'     => new BooleanCellFormatter,
+                    'created' => new EpochCellFormatter,
+                    'last_edited' => new EpochCellFormatter,
+                    'is_default' => new BooleanCellFormatter,
+                    'black_out_times' => new BooleanCellFormatter,
+                    'use_sponsors' => new BooleanCellFormatter,
+                    'are_sponsors_mandatory' => new BooleanCellFormatter,
+                    'allows_attachment' => new BooleanCellFormatter,
+                    'use_speakers' => new BooleanCellFormatter,
+                    'are_speakers_mandatory' => new BooleanCellFormatter,
+                    'use_moderator' => new BooleanCellFormatter,
+                    'is_moderator_mandatory' => new BooleanCellFormatter,
                     'should_be_available_on_cfp' => new BooleanCellFormatter,
                 ]
             );
-        }
-        catch (ValidationException $ex1)
-        {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
-            return $this->error412(array( $ex1->getMessage()));
-        }
-        catch (EntityNotFoundException $ex2)
-        {
+            return $this->error412(array($ex1->getMessage()));
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
             return $this->error404(array('message' => $ex2->getMessage()));
-        }
-        catch(\HTTP401UnauthorizedException $ex3)
-        {
+        } catch (\HTTP401UnauthorizedException $ex3) {
             Log::warning($ex3);
             return $this->error401();
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -287,12 +239,13 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @param $track_id
      * @return mixed
      */
-    public function getTrackBySummit($summit_id, $track_id){
+    public function getTrackBySummit($summit_id, $track_id)
+    {
         try {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $track = $summit->getPresentationCategory($track_id);
-            if(is_null($track))
+            if (is_null($track))
                 return $this->error404();
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($track)->serialize(Request::input('expand', '')));
         } catch (ValidationException $ex1) {
@@ -312,12 +265,13 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @param $track_id
      * @return mixed
      */
-    public function getTrackExtraQuestionsBySummit($summit_id, $track_id){
+    public function getTrackExtraQuestionsBySummit($summit_id, $track_id)
+    {
         try {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $track = $summit->getPresentationCategory($track_id);
-            if(is_null($track))
+            if (is_null($track))
                 return $this->error404();
             $extra_questions = $track->getExtraQuestions()->toArray();
             $response = new PagingResponse(
@@ -348,7 +302,8 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @param $question_id
      * @return mixed
      */
-    public function addTrackExtraQuestion($summit_id, $track_id, $question_id){
+    public function addTrackExtraQuestion($summit_id, $track_id, $question_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -376,7 +331,8 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @param $question_id
      * @return mixed
      */
-    public function removeTrackExtraQuestion($summit_id, $track_id, $question_id){
+    public function removeTrackExtraQuestion($summit_id, $track_id, $question_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -398,12 +354,13 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
         }
     }
 
-    public function getTrackAllowedTagsBySummit($summit_id, $track_id){
+    public function getTrackAllowedTagsBySummit($summit_id, $track_id)
+    {
         try {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $track = $summit->getPresentationCategory($track_id);
-            if(is_null($track))
+            if (is_null($track))
                 return $this->error404();
             $allowed_tags = $track->getAllowedTags()->toArray();
 
@@ -416,10 +373,10 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
             );
             $res = $response->toArray();
             $i = 0;
-            foreach($res["data"] as $allowed_tag){
+            foreach ($res["data"] as $allowed_tag) {
                 $track_tag_group = $summit->getTrackTagGroupForTagId($allowed_tag['id']);
-                if(is_null($track_tag_group)) continue;
-                $res["data"][$i]['track_tag_group']= SerializerRegistry::getInstance()->getSerializer($track_tag_group)->serialize(null, [], ['none']);
+                if (is_null($track_tag_group)) continue;
+                $res["data"][$i]['track_tag_group'] = SerializerRegistry::getInstance()->getSerializer($track_tag_group)->serialize(null, [], ['none']);
                 $i++;
             }
             return $this->ok($res);
@@ -440,28 +397,29 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
-    public function addTrackBySummit($summit_id){
+    public function addTrackBySummit($summit_id)
+    {
         try {
-            if(!Request::isJson()) return $this->error400();
+            if (!Request::isJson()) return $this->error400();
             $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $rules = [
-                'name'                      => 'required|string|max:100',
-                'description'               => 'required|string|max:1500',
-                'code'                      => 'sometimes|string|max:5',
-                'color'                     => 'sometimes|hex_color|max:50',
-                'session_count'             => 'sometimes|integer',
-                'alternate_count'           => 'sometimes|integer',
-                'lightning_count'           => 'sometimes|integer',
+                'name' => 'required|string|max:100',
+                'description' => 'required|string|max:1500',
+                'code' => 'sometimes|string|max:5',
+                'color' => 'sometimes|hex_color|max:50',
+                'session_count' => 'sometimes|integer',
+                'alternate_count' => 'sometimes|integer',
+                'lightning_count' => 'sometimes|integer',
                 'lightning_alternate_count' => 'sometimes|integer',
-                'voting_visible'            => 'sometimes|boolean',
-                'chair_visible'             => 'sometimes|boolean',
-                'allowed_tags'              => 'sometimes|string_array',
-                'allowed_access_levels'     => 'sometimes|int_array',
-                'order'                     => 'sometimes|integer|min:1',
+                'voting_visible' => 'sometimes|boolean',
+                'chair_visible' => 'sometimes|boolean',
+                'allowed_tags' => 'sometimes|string_array',
+                'allowed_access_levels' => 'sometimes|int_array',
+                'order' => 'sometimes|integer|min:1',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -479,17 +437,13 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
             $track = $this->track_service->addTrack($summit, $data->all());
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($track)->serialize());
-        }
-        catch (ValidationException $ex1) {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
+            return $this->error404(array('message' => $ex2->getMessage()));
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -500,7 +454,8 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @param $to_summit_id
      * @return mixed
      */
-    public function copyTracksToSummit($summit_id, $to_summit_id){
+    public function copyTracksToSummit($summit_id, $to_summit_id)
+    {
         try {
 
             $from_summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -521,17 +476,13 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
             );
 
             return $this->created($response->toArray());
-        }
-        catch (ValidationException $ex1) {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
+            return $this->error404(array('message' => $ex2->getMessage()));
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -542,28 +493,29 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @param $track_id
      * @return mixed
      */
-    public function updateTrackBySummit($summit_id, $track_id){
+    public function updateTrackBySummit($summit_id, $track_id)
+    {
         try {
-            if(!Request::isJson()) return $this->error400();
+            if (!Request::isJson()) return $this->error400();
             $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $rules = [
-                'name'                      => 'sometimes|string|max:100',
-                'description'               => 'sometimes|string|max:1500',
-                'color'                     => 'sometimes|hex_color|max:50',
-                'code'                      => 'sometimes|string|max:5',
-                'session_count'             => 'sometimes|integer',
-                'alternate_count'           => 'sometimes|integer',
-                'lightning_count'           => 'sometimes|integer',
+                'name' => 'sometimes|string|max:100',
+                'description' => 'sometimes|string|max:1500',
+                'color' => 'sometimes|hex_color|max:50',
+                'code' => 'sometimes|string|max:5',
+                'session_count' => 'sometimes|integer',
+                'alternate_count' => 'sometimes|integer',
+                'lightning_count' => 'sometimes|integer',
                 'lightning_alternate_count' => 'sometimes|integer',
-                'voting_visible'            => 'sometimes|boolean',
-                'chair_visible'             => 'sometimes|boolean',
-                'allowed_tags'              => 'sometimes|string_array',
-                'allowed_access_levels'     => 'sometimes|int_array',
-                'order'                     => 'sometimes|integer|min:1',
+                'voting_visible' => 'sometimes|boolean',
+                'chair_visible' => 'sometimes|boolean',
+                'allowed_tags' => 'sometimes|string_array',
+                'allowed_access_levels' => 'sometimes|int_array',
+                'order' => 'sometimes|integer|min:1',
             ];
 
             // Creates a Validator instance and validates the data.
@@ -581,17 +533,13 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
             $track = $this->track_service->updateTrack($summit, $track_id, $data->all());
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($track)->serialize());
-        }
-        catch (ValidationException $ex1) {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
+            return $this->error404(array('message' => $ex2->getMessage()));
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -602,7 +550,8 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @param $track_id
      * @return mixed
      */
-    public function deleteTrackBySummit($summit_id, $track_id){
+    public function deleteTrackBySummit($summit_id, $track_id)
+    {
         try {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -610,23 +559,20 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
             $this->track_service->deleteTrack($summit, $track_id);
 
             return $this->deleted();
-        }
-        catch (ValidationException $ex1) {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
+            return $this->error404(array('message' => $ex2->getMessage()));
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
     }
 
-    public function addTrackIcon(LaravelRequest $request, $summit_id, $track_id){
+    public function addTrackIcon(LaravelRequest $request, $summit_id, $track_id)
+    {
         try {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -640,41 +586,32 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($image)->serialize());
 
-        }
-        catch (ValidationException $ex1)
-        {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
+            return $this->error404(array('message' => $ex2->getMessage()));
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
     }
 
-    public function deleteTrackIcon($summit_id, $track_id) {
+    public function deleteTrackIcon($summit_id, $track_id)
+    {
         try {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
             $this->track_service->removeTrackIcon($summit, $track_id);
             return $this->deleted();
-        }
-        catch (ValidationException $ex1)
-        {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
+            return $this->error404(array('message' => $ex2->getMessage()));
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }

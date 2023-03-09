@@ -145,7 +145,7 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
             if (Request::has('filter')) {
                 $filter = FilterParser::parse(Request::input('filter'),  array
                 (
-                    'tag' => ['=@', '=='],
+                    'tag' => ['=@', '==', '@@'],
                 ));
             }
 

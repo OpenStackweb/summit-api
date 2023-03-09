@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\Validator;
 use libs\utils\PaginationValidationRules;
 use models\exceptions\ValidationException;
 use utils\Filter;
-use utils\FilterParser;
 use utils\Order;
 use utils\OrderParser;
 use utils\PagingInfo;

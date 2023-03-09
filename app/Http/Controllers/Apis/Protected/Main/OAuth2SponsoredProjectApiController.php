@@ -151,8 +151,8 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         return $this->_getAll(
             function () {
                 return [
-                    'name' => ['=@', '=='],
-                    'slug' => ['=@', '=='],
+                    'name' => ['=@', '==','@@'],
+                    'slug' => ['=@', '==','@@'],
                     'is_active' => ['==']
                 ];
             },
@@ -188,8 +188,8 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         return $this->_getAll(
             function () {
                 return [
-                    'name' => ['=@', '=='],
-                    'slug' => ['=@', '=='],
+                    'name' => ['=@', '==','@@'],
+                    'slug' => ['=@', '==','@@'],
                     'is_active' => ['==']
                 ];
             },
@@ -303,7 +303,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         return $this->_getAll(
             function () {
                 return [
-                    'name' => ['=@', '=='],
+                    'name' => ['=@', '==','@@'],
                 ];
             },
             function () {
@@ -467,8 +467,8 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         return $this->_getAll(
             function () {
                 return [
-                    'name' => ['=@', '=='],
-                    'slug' => ['=@', '=='],
+                    'name' => ['=@', '==','@@'],
+                    'slug' => ['=@', '==','@@'],
                     'is_active' => ['==']
                 ];
             },

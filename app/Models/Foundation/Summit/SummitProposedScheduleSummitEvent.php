@@ -25,7 +25,9 @@ use models\utils\SilverstripeBaseModel;
  * @ORM\Table(name="SummitProposedScheduleSummitEvent")
  * @package models\summit
  */
-class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel implements IPublishableEventWithSpeakerConstraint
+class SummitProposedScheduleSummitEvent
+    extends SilverstripeBaseModel
+    implements IPublishableEventWithSpeakerConstraint
 {
     use TimeDurationRestrictedEvent;
 
@@ -99,9 +101,9 @@ class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel implements
     }
 
     /**
-     * @return DateTime
+     * @return DateTime|null
      */
-    public function getStartDate(): DateTime
+    public function getStartDate(): ?DateTime
     {
         return $this->start_date;
     }
@@ -133,9 +135,9 @@ class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel implements
     }
 
     /**
-     * @return DateTime
+     * @return DateTime|null
      */
-    public function getEndDate(): DateTime
+    public function getEndDate(): ?DateTime
     {
         return $this->end_date;
     }
@@ -143,7 +145,7 @@ class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel implements
     /**
      * @return DateTime|null
      */
-    public function getLocalEndDate()
+    public function getLocalEndDate():?DateTime
     {
         $summit = null;
         $summit_event = $this->summit_event;
@@ -408,5 +410,22 @@ class SummitProposedScheduleSummitEvent extends SilverstripeBaseModel implements
     public function getLocationName(): string
     {
         return $this->summit_event->getLocationName();
+    }
+
+    /**
+     * @return string
+     */
+    public function getEndDateNice(): string
+    {
+        $end_date = $this->getLocalEndDate();
+        if (empty($end_date)) return 'TBD';
+        return $end_date->format("Y-m-d H:i:s");
+    }
+
+    public function getStartDateNice(): string
+    {
+        $start_date = $this->getLocalStartDate();
+        if (empty($start_date)) return 'TBD';
+        return $start_date->format("Y-m-d H:i:s");
     }
 }

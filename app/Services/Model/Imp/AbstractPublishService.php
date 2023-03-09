@@ -192,8 +192,13 @@ abstract class AbstractPublishService extends AbstractService
                     (
                         sprintf
                         (
-                            "You can't publish on this time frame, it conflicts with event id %s.",
-                            $c_event->getId()
+                            "You can't publish event %s on this time frame (%s - %s), it conflicts with event %s (%s - %s) [BLACKOUT TIMEFRAME COLLISION].",
+                            $publishable_event->getId(),
+                            $publishable_event->getStartDateNice(),
+                            $publishable_event->getEndDateNice(),
+                            $c_event->getId(),
+                            $c_event->getStartDateNice(),
+                            $c_event->getEndDateNice()
                         )
                     );
                 }
@@ -208,8 +213,13 @@ abstract class AbstractPublishService extends AbstractService
                         (
                             sprintf
                             (
-                                "You can't publish on this time frame, it conflicts with event id %s.",
-                                $c_event->getId()
+                                "You can't publish event %s on this time frame (%s - %s), it conflicts with event %s (%s - %s) [LOCATION TIMEFRAME COLLISION].",
+                                $publishable_event->getId(),
+                                $publishable_event->getStartDateNice(),
+                                $publishable_event->getEndDateNice(),
+                                $c_event->getId(),
+                                $c_event->getStartDateNice(),
+                                $c_event->getEndDateNice()
                             )
                         );
                     }
@@ -227,11 +237,16 @@ abstract class AbstractPublishService extends AbstractService
                                     (
                                         sprintf
                                         (
-                                            "You can't publish Event %s (%s) on this timeframe, speaker %s its present in room %s at this time.",
-                                            $publishable_event->getTitle(),
+                                            "You can't publish event %s (%s - %s) on this timeframe, speaker %s (%s) its present in room %s at this time for event %s (%s - %s).",
                                             $publishable_event->getId(),
+                                            $publishable_event->getStartDateNice(),
+                                            $publishable_event->getEndDateNice(),
                                             $current_speaker->getFullName(),
-                                            $c_event->getLocationName()
+                                            $current_speaker->getId(),
+                                            $c_event->getLocationName(),
+                                            $c_event->getId(),
+                                            $c_event->getStartDateNice(),
+                                            $c_event->getEndDateNice()
                                         )
                                     );
                                 }

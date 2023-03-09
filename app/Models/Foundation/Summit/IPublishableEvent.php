@@ -32,6 +32,27 @@ interface IPublishableEvent extends IEntity
 
     public function hasType(): bool;
 
+    public function getStartDate():?DateTime;
+
+    public function getEndDate():?DateTime;
+
+    /**
+     * @return string
+     */
+    public function getEndDateNice(): string;
+
+    /**
+     * @return DateTime|null
+     */
+    public function getLocalEndDate():?DateTime;
+
+    /**
+     * @return DateTime|null
+     */
+    public function getLocalStartDate():?DateTime;
+
+    public function getStartDateNice(): string;
+
     /**
      * @return Summit|null
      */

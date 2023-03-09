@@ -1154,7 +1154,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     /**
      * @return DateTime|null
      */
-    public function getLocalStartDate()
+    public function getLocalStartDate():?DateTime
     {
         $summit = $this->getSummit();
         return $this->_getLocalStartDate($summit);
@@ -1173,7 +1173,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     /**
      * @return DateTime|null
      */
-    public function getLocalEndDate()
+    public function getLocalEndDate():?DateTime
     {
         $summit = $this->getSummit();
         return $this->_getLocalEndDate($summit);

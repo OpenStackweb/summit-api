@@ -13,7 +13,9 @@
  * limitations under the License.
  **/
 
+use Doctrine\ORM\Query\Expr\Join;
 use models\summit\Presentation;
+use utils\DoctrineFilterMapping;
 use utils\Filter;
 use utils\FilterParser;
 use Doctrine\ORM\QueryBuilder;
@@ -163,6 +165,46 @@ final class FilterParserTest extends TestCase
         ]);
 
         $dql = $query->getDQL();
+        $this->assertTrue(!empty($dql));
+    }
+
+    public function testORMultivalue(){
+        $filters_input = [
+            'speaker_company==ca||Tipit+\,+LLC||cahul,created_by_company==ca||Tipit+\,+LLC||cahul,sponsor==ca||Tipit+\,+LLC||cahul',
+        ];
+
+        $filter = FilterParser::parse($filters_input, [
+            'speaker_company' => ['=='],
+            'created_by_company' => ['=='],
+            'sponsor' => ['==']
+        ]);
+
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $query = new QueryBuilder($em);
+        $query->select("e")
+            ->from(\models\summit\SummitEvent::class, "e")
+            ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')
+            ->leftJoin("e.sponsors", "sprs", Join::LEFT_JOIN)
+            ->leftJoin("p.speakers", "sp", Join::LEFT_JOIN)
+            ->leftJoin('p.moderator', "spm", Join::LEFT_JOIN)
+            ->leftJoin("e.created_by", 'cb', Join::LEFT_JOIN);
+
+        $filter->apply2Query($query, [
+            'speaker_company' => new DoctrineFilterMapping
+            (
+                "(sp.company :operator :value OR spm.company :operator :value)"
+            ),
+            'sponsor' => new DoctrineFilterMapping
+            (
+                "(sprs.name :operator :value)"
+            ),
+            'created_by_company' => 'cb.company',
+        ]);
+
+        $dql = $query->getDQL();
+
+        $res = $query->getQuery()->getResult();
+
         $this->assertTrue(!empty($dql));
     }
 }

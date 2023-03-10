@@ -130,7 +130,7 @@ class DoctrineFilterMapping extends FilterMapping implements IQueryApplyable
                     $where = str_replace(":operator", $filter->getOperator(), $where);
 
                 if ($has_param) {
-                    $query->setParameter(":value_" . $param_count, $value);
+                    $query->setParameter(":value_" . $param_count, $val);
                 }
 
                 $inner_where .= $where . " " . $filter->getSameFieldOp() . " ";

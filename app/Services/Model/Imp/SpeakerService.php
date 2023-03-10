@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessExcerptEmail;
 use App\Jobs\Emails\ProcessSpeakersEmailRequestJob;
 use App\Jobs\Emails\Registration\PromoCodeEmailFactory;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionApprovedEmail;
@@ -1357,7 +1358,11 @@ final class SpeakerService
                     EmailExcerpt::addErrorMessage($ex->getMessage());
                 }
             },
-            $filter);
+            function($summit, $outcome_email_recipient, $report){
+                PresentationSpeakerSelectionProcessExcerptEmail::dispatch($summit,$outcome_email_recipient, $report );
+            },
+            $filter
+        );
     }
 
     /**

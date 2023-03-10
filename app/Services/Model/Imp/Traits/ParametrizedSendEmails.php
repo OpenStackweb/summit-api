@@ -29,6 +29,7 @@ trait ParametrizedSendEmails
      * @param string $subject
      * @param callable $getIdsBySummit
      * @param callable $processCurrentId
+     * @param callable|null $sendEmailExcerpt
      * @param Filter|null $filter
      * @throws ValidationException
      */
@@ -38,7 +39,9 @@ trait ParametrizedSendEmails
         string $subject,
         callable $getIdsBySummit,
         callable $processCurrentId,
-        Filter $filter = null): void
+        callable $sendEmailExcerpt = null,
+        Filter $filter = null
+    ): void
     {
         $caller = (new ReflectionClass($this))->getShortName();
         $subject_ids_key = $subject . '_ids';   //We assume that the payload key for the ids array starts with the prefix that contains $subject
@@ -139,9 +142,8 @@ trait ParametrizedSendEmails
         EmailExcerpt::addInfoMessage(sprintf("TOTAL of %s %s(s) processed.", $count, $subject));
         EmailExcerpt::generateEmailCountLine();
 
-        if (!empty($outcome_email_recipient)) {
-            PresentationSpeakerSelectionProcessExcerptEmail::dispatch(
-                $summit, $outcome_email_recipient, EmailExcerpt::getReport());
+        if (!empty($outcome_email_recipient) && !is_null($sendEmailExcerpt)) {
+            $sendEmailExcerpt($summit, $outcome_email_recipient, EmailExcerpt::getReport());
         }
 
         Log::debug(sprintf("%s::send summit id %s flow_event %s filter %s had processed %s records",

@@ -44,7 +44,6 @@ final class SummitSubmittersEmailsValidationRulesFactory extends AbstractValidat
             'submitter_ids'             => 'sometimes|int_array',
             'test_email_recipient'      => 'sometimes|email',
             'outcome_email_recipient'   => 'sometimes|email',
-            'should_resend' => 'sometimes|boolean',
         ];
     }
 

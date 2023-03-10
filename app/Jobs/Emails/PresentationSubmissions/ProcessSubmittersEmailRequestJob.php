@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -19,6 +20,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use services\model\ISubmitterService;
 use utils\FilterParser;
+
 /**
  * Class ProcessSubmittersEmailRequestJob
  * @package App\Jobs\Emails
@@ -66,7 +68,8 @@ final class ProcessSubmittersEmailRequestJob implements ShouldQueue
     public function handle
     (
         ISubmitterService $service
-    ){
+    )
+    {
         Log::debug
         (
             sprintf
@@ -96,7 +99,6 @@ final class ProcessSubmittersEmailRequestJob implements ShouldQueue
             'presentations_submitter_full_name' => ['=@', '@@', '=='],
             'presentations_submitter_email' => ['=@', '@@', '=='],
             'is_speaker' => ['=='],
-
         ]) : null;
 
         $service->sendEmails($this->summit_id, $this->payload, $filter);

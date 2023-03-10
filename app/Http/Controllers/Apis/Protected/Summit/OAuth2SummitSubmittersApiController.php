@@ -19,7 +19,6 @@ use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use services\model\ISubmitterService;
 use utils\Filter;
-use utils\FilterElement;
 use utils\FilterParser;
 use utils\PagingInfo;
 
@@ -55,10 +54,10 @@ final class OAuth2SummitSubmittersApiController
      */
     public function __construct
     (
-        IMemberRepository          $repository,
-        ISummitRepository          $summit_repository,
-        ISubmitterService          $service,
-        IResourceServerContext     $resource_server_context
+        IMemberRepository      $repository,
+        ISummitRepository      $summit_repository,
+        ISubmitterService      $service,
+        IResourceServerContext $resource_server_context
     )
     {
         parent::__construct($resource_server_context);
@@ -308,7 +307,7 @@ final class OAuth2SummitSubmittersApiController
                 'is_speaker' => 'sometimes|string|in:true,false'
             ]);
 
-            $this->service->triggerSendEmails($summit, $payload, Request::input('filter'));
+            $this->service->triggerSendEmails($summit, $payload, Request::input('filter', null));
 
             return $this->ok();
         });

@@ -79,14 +79,13 @@ abstract class PresentationSubmitterSelectionProcessEmail extends AbstractEmailJ
             (
                 sprintf
                 (
-                    "PresentationSubmitterSelectionProcessEmail::__construct replacing original email %s by %s and clearing cc field",
+                    "PresentationSubmitterSelectionProcessEmail::__construct replacing original email %s by %s",
                     $payload['submitter_email'],
                     $test_email_recipient
                 )
             );
 
             $payload['submitter_email'] = $test_email_recipient;
-            $payload['cc_email'] = '';
         }
 
         $submitter_management_base_url = Config::get('cfp.base_url');

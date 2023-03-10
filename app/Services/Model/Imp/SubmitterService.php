@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSubmitterSelectionProcessExcerptEmail;
 use App\Jobs\Emails\ProcessSubmittersEmailRequestJob;
 use App\Services\Model\AbstractService;
 use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
@@ -70,8 +71,7 @@ final class SubmitterService
      */
     public function triggerSendEmails(Summit $summit, array $payload, $filter = null): void
     {
-        //ProcessSubmittersEmailRequestJob::dispatch($summit->getId(), $payload, $filter);
-        $this->sendEmails($summit->getId(), $payload, $filter = null);
+        ProcessSubmittersEmailRequestJob::dispatch($summit->getId(), $payload, $filter);
     }
 
     /**
@@ -83,13 +83,12 @@ final class SubmitterService
             $summit_id,
             $payload,
             "submitter",
-            function($summit, $paging_info, $filter) {
+            function ($summit, $paging_info, $filter) {
                 return $this->member_repository->getSubmittersIdsBySummit($summit, $paging_info, $filter);
             },
-            function($summit, $flow_event, $submitter_id, $test_email_recipient, $email_config, $filter) {
+            function ($summit, $flow_event, $submitter_id, $test_email_recipient, $email_config, $filter) {
                 try {
-                    $this->tx_service->transaction(function () use
-                    (
+                    $this->tx_service->transaction(function () use (
                         $flow_event,
                         $summit,
                         $submitter_id,
@@ -117,6 +116,9 @@ final class SubmitterService
                     EmailExcerpt::addErrorMessage($ex->getMessage());
                 }
             },
+            function ($summit, $outcome_email_recipient, $report) {
+                PresentationSubmitterSelectionProcessExcerptEmail::dispatch($summit, $outcome_email_recipient, $report);
+            },
             $filter);
-     }
+    }
 }

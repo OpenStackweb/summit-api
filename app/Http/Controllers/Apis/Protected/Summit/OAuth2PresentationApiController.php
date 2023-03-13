@@ -1223,7 +1223,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         return $this->processRequest(function () use ($summit_id, $presentation_id, $speaker_id) {
 
             $summit = SummitFinderStrategyFactory::build(
-                $this->summit_repository, $this->resource_server_context)->find($summit_id);
+                $this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
             if (is_null($summit)) return $this->error404();
 
             $current_member = $this->resource_server_context->getCurrentUser();
@@ -1254,7 +1254,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         return $this->processRequest(function () use ($summit_id, $presentation_id, $speaker_id) {
 
             $summit = SummitFinderStrategyFactory::build(
-                $this->summit_repository, $this->resource_server_context)->find($summit_id);
+                $this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
             if (is_null($summit)) return $this->error404();
 
             $current_member = $this->resource_server_context->getCurrentUser();
@@ -1285,7 +1285,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         return $this->processRequest(function () use ($summit_id, $presentation_id, $speaker_id) {
 
             $summit = SummitFinderStrategyFactory::build(
-                $this->summit_repository, $this->resource_server_context)->find($summit_id);
+                $this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
             if (is_null($summit)) return $this->error404();
 
             $current_member = $this->resource_server_context->getCurrentUser();

@@ -59,6 +59,14 @@ final class DoctrineCompanyRepository
      */
     public function getByName(string $name): ?Company
     {
-        return $this->findOneBy(['name' => trim($name)]);
+        return $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->where("upper(e.name) = upper(:name)")
+            ->setParameter("name", trim($name))
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 }

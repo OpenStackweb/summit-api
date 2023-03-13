@@ -69,7 +69,7 @@ final class CompanyService
            $company_name = trim($payload['name']);
            $former_company = $this->repository->getByName($company_name);
            if(!is_null($former_company)){
-               throw new ValidationException(sprintf("company %s already exists", $company_name));
+               throw new ValidationException(sprintf("Company %s already exists.", $company_name));
            }
            $company = CompanyFactory::build($payload);
            $this->repository->add($company);

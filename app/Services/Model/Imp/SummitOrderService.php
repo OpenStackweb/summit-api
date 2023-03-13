@@ -30,14 +30,17 @@ use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\dto\ExternalUserDTO;
+use App\Services\Model\Imp\Traits\AttendeeCompany;
 use App\Services\Utils\CSVReader;
 use App\Services\Utils\ILockManagerService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use libs\utils\ITransactionService;
+use libs\utils\TextUtils;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\ICompanyRepository;
 use models\main\IMemberRepository;
 use models\main\Member;
 use models\oauth2\IResourceServerContext;
@@ -161,7 +164,7 @@ final class TaskUtils
  */
 final class ReserveOrderTask extends AbstractTask
 {
-
+    use AttendeeCompany;
     /**
      * @var ITransactionService
      */
@@ -208,7 +211,15 @@ final class ReserveOrderTask extends AbstractTask
     private $default_payment_gateway_strategy;
 
     /**
-     * ReserveOrderTask constructor.
+     * @var ICompanyService
+     */
+    private $company_service;
+
+    /**
+     * @var ICompanyRepository
+     */
+    private $company_repository;
+    /**
      * @param Member|null $owner
      * @param Summit $summit
      * @param array $payload
@@ -216,7 +227,8 @@ final class ReserveOrderTask extends AbstractTask
      * @param IMemberRepository $member_repository
      * @param ISummitAttendeeRepository $attendee_repository
      * @param ISummitAttendeeTicketRepository $ticket_repository
-     * @param ITransactionService $tx_service
+     * @param ICompanyRepository $company_repository
+     * @param ICompanyService $company_service
      */
     public function __construct
     (
@@ -227,7 +239,10 @@ final class ReserveOrderTask extends AbstractTask
         IMemberRepository $member_repository,
         ISummitAttendeeRepository $attendee_repository,
         ISummitAttendeeTicketRepository $ticket_repository,
-        ITransactionService $tx_service)
+        ICompanyRepository $company_repository,
+        ICompanyService $company_service,
+        ITransactionService $tx_service
+    )
     {
 
         $this->tx_service = $tx_service;
@@ -238,6 +253,8 @@ final class ReserveOrderTask extends AbstractTask
         $this->ticket_repository = $ticket_repository;
         $this->default_payment_gateway_strategy = $default_payment_gateway_strategy;
         $this->owner = $owner;
+        $this->company_service = $company_service;
+        $this->company_repository = $company_repository;
     }
 
     public function run(array $formerState): array
@@ -340,6 +357,8 @@ final class ReserveOrderTask extends AbstractTask
                     if (empty($attendee_last_name))
                         $attendee_last_name = $owner_last_name;
                 }
+
+                $this->registerCompanyFor($this->summit, $attendee_company);
 
                 $ticket_type = $this->summit->getTicketTypeById($type_id);
                 if (is_null($ticket_type)) {
@@ -925,6 +944,7 @@ final class PreOrderValidationTask extends AbstractTask
 final class SummitOrderService
     extends AbstractService implements ISummitOrderService
 {
+    use AttendeeCompany;
     /**
      * @var IMemberRepository
      */
@@ -1001,6 +1021,16 @@ final class SummitOrderService
     private $resource_ctx_service;
 
     /**
+     * @var ICompanyService
+     */
+    private $company_service;
+
+    /**
+     * @var ICompanyRepository
+     */
+    private $company_repository;
+
+    /**
      * @param ISummitTicketTypeRepository $ticket_type_repository
      * @param IMemberRepository $member_repository
      * @param ISummitRegistrationPromoCodeRepository $promo_code_repository
@@ -1014,6 +1044,8 @@ final class SummitOrderService
      * @param IBuildDefaultPaymentGatewayProfileStrategy $default_payment_gateway_strategy
      * @param IFileUploadStrategy $upload_strategy
      * @param IFileDownloadStrategy $download_strategy
+     * @param ICompanyRepository $company_repository
+     * @param ICompanyService $company_service
      * @param ITransactionService $tx_service
      * @param ILockManagerService $lock_service
      */
@@ -1032,6 +1064,8 @@ final class SummitOrderService
         IBuildDefaultPaymentGatewayProfileStrategy $default_payment_gateway_strategy,
         IFileUploadStrategy                        $upload_strategy,
         IFileDownloadStrategy                      $download_strategy,
+        ICompanyRepository $company_repository,
+        ICompanyService $company_service,
         ITransactionService $tx_service,
         ILockManagerService  $lock_service
     )
@@ -1051,6 +1085,8 @@ final class SummitOrderService
         $this->upload_strategy = $upload_strategy;
         $this->download_strategy = $download_strategy;
         $this->lock_service = $lock_service;
+        $this->company_repository = $company_repository;
+        $this->company_service = $company_service;
     }
 
     /**
@@ -1125,6 +1161,8 @@ final class SummitOrderService
                         $this->member_repository,
                         $this->attendee_repository,
                         $this->ticket_repository,
+                        $this->company_repository,
+                        $this->company_service,
                         $this->tx_service
                     )
                 )
@@ -1410,6 +1448,8 @@ final class SummitOrderService
 
             if (!is_null($company))
                 $normalize_payload['company'] = trim($company);
+
+            $this->registerCompanyFor($summit, $normalize_payload['company'] ?? null);
 
             // update attendee data with custom payload
             $attendee = SummitAttendeeFactory::populate
@@ -2959,6 +2999,9 @@ final class SummitOrderService
                         $attendee->getId()
                     )
                 );
+
+                $this->registerCompanyFor($summit, $payload['company'] ?? null);
+
                 SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
                 $attendee->addTicket($ticket);
                 $attendee->updateStatus();
@@ -3060,6 +3103,8 @@ final class SummitOrderService
 
                 if(isset($payload['extra_questions']))
                     $attendee_payload['extra_questions'] = $payload['extra_questions'];
+
+                $this->registerCompanyFor($summit, $attendee_payload['company'] ?? null);
 
                 SummitAttendeeFactory::populate($summit, $new_owner, $attendee_payload, $new_owner->getMember());
             }
@@ -3165,6 +3210,8 @@ final class SummitOrderService
             if (!is_null($disclaimer_accepted)) {
                 $reduced_payload['disclaimer_accepted'] = boolval($disclaimer_accepted);
             }
+
+            $this->registerCompanyFor($summit, $reduced_payload['company'] ?? null);
 
             // update it
             SummitAttendeeFactory::populate($summit, $attendee, $reduced_payload);
@@ -3276,6 +3323,8 @@ final class SummitOrderService
                 }
 
                 if (!is_null($attendee)) {
+                    $this->registerCompanyFor($summit, $payload['company'] ?? null);
+
                     // update it
                     SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
                     // we store it on memory just in case that we have the case of multiple tickets for the same attendee

@@ -342,7 +342,10 @@ final class DoctrineSummitEventRepository
             ),
             'presentation_attendee_vote_date' => 'av.created:datetime_epoch|'.SilverstripeBaseModel::DefaultTimeZone,
             'votes_count' => new DoctrineHavingFilterMapping("", "av.presentation", "count(av.id) :operator :value"),
-            'duration' => 'e.duration:json_int',
+            'duration' => new DoctrineFilterMapping
+            (
+                "( ( (e.start_date IS NULL OR e.end_date IS NULL ) AND e.duration :operator :value ) OR TIMESTAMPDIFF(SECOND, e.start_date, e.end_date) :operator :value)"
+            ),
             'speakers_count' => "SIZE(p.speakers) :operator :value"
         ];
     }
@@ -366,7 +369,10 @@ final class DoctrineSummitEventRepository
             'random' => 'RAND()',
             'custom_order' => 'p.custom_order',
             'votes_count' => 'COUNT(av.id)',
-            'duration' => "e.duration",
+            'duration' => <<<SQL
+CASE WHEN e.start_date is NULL OR e.end_date IS NULL THEN e.duration
+ELSE TIMESTAMPDIFF(SECOND, e.start_date, e.end_date) END
+SQL,
             'speakers_count' => 'COUNT(DISTINCT(sp.id))',
             'created_by_fullname' => "concat(cb.first_name, ' ', cb.last_name)",
             'created_by_email' => 'cb.email',

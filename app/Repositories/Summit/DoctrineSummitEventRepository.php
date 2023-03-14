@@ -94,7 +94,8 @@ final class DoctrineSummitEventRepository
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
     {
         $query = $query->innerJoin("e.type", "et", Join::ON);
-        $query = $query->innerJoin("e.category", "c", Join::ON);
+        // if we delete the track, its set to null
+        $query = $query->leftJoin("e.category", "c", Join::ON);
         $query = $query->leftJoin(PresentationType::class, 'et2', 'WITH', 'et.id = et2.id');
         $query = $query->leftJoin("p.attendees_votes", 'av', Join::ON);
 

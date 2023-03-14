@@ -515,7 +515,8 @@ class PresentationSpeaker extends SilverstripeBaseModel
     {
 
         if ($role == self::ROLE_SPEAKER) {
-            $res = $this->presentations->filter(function (Presentation $presentation) use ($selectionPlan) {
+            $res = $this->presentations->filter(function (PresentationSpeakerAssignment $ps_assignment) use ($selectionPlan) {
+                $presentation = $ps_assignment->getPresentation();
                 if ($presentation->getSelectionPlanId() != $selectionPlan->getId()) return false;
                 if ($presentation->getSummit()->getId() != $selectionPlan->getSummitId()) return false;
                 if ($presentation->getModeratorId() == $this->getId()) return false;
@@ -545,7 +546,8 @@ class PresentationSpeaker extends SilverstripeBaseModel
     {
 
         if ($role == self::ROLE_SPEAKER) {
-            $res = $this->presentations->filter(function (Presentation $presentation) use ($summit) {
+            $res = $this->presentations->filter(function (PresentationSpeakerAssignment $ps_assignment) use ($summit) {
+                $presentation = $ps_assignment->getPresentation();
                 if ($presentation->getSummit()->getId() != $summit->getId()) return false;
                 if ($presentation->getModeratorId() == $this->getId()) return false;
                 if ($presentation->getCreatorId() == $this->getMemberId()) return false;
@@ -1412,9 +1414,11 @@ class PresentationSpeaker extends SilverstripeBaseModel
      * @param int $presentation_id
      * @return Presentation
      */
-    public function getPresentation($presentation_id)
+    public function getPresentation($presentation_id): Presentation
     {
-        return $this->presentations->get($presentation_id);
+        return $this->presentations->filter(function ($p) use ($presentation_id) {
+            return $p->getPresentation()->getId() == $presentation_id;
+        })->first()->getPresentation();
     }
 
     /**

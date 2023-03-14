@@ -41,14 +41,14 @@ class PresentationSpeakerAssignment extends BaseEntity implements IOrderable
 
     /**
      * @ORM\ManyToOne(targetEntity="models\summit\PresentationSpeaker", inversedBy="presentations_assignment", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="PresentationSpeakerID", referencedColumnName="ID", onDelete="SET NULL")
+     * @ORM\JoinColumn(name="PresentationSpeakerID", referencedColumnName="ID", onDelete="CASCADE")
      * @var PresentationSpeaker
      */
     private $speaker;
 
     /**
      * @ORM\ManyToOne(targetEntity="models\summit\Presentation", inversedBy="speakers_assignment", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="SET NULL")
+     * @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="CASCADE")
      * @var Presentation
      */
     private $presentation;

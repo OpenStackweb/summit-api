@@ -495,8 +495,9 @@ class PresentationSpeaker extends SilverstripeBaseModel
     {
         return $this->presentations
             ->filter(function ($p) use ($published_ones, $summit_id) {
-                $res = $published_ones ? $p->isPublished() : true;
-                $res &= is_null($summit_id) ? true : $p->getSummit()->getId() == $summit_id;
+                $current_presentation = $p->getPresentation();
+                $res = $published_ones ? $current_presentation->isPublished() : true;
+                $res &= is_null($summit_id) || $current_presentation->getSummit()->getId() == $summit_id;
                 return $res;
             });
     }
@@ -780,7 +781,8 @@ class PresentationSpeaker extends SilverstripeBaseModel
         if($role == PresentationSpeaker::RoleSpeaker) {
             $query = $this->createQuery(sprintf("SELECT p from models\summit\Presentation p 
             JOIN p.summit s
-            JOIN p.speakers sp
+            JOIN p.speakers sp_presentation 
+            JOIN sp_presentation.speaker sp
             LEFT JOIN p.selection_plan sel_p
             JOIN p.type t
             JOIN p.category cat
@@ -977,7 +979,8 @@ class PresentationSpeaker extends SilverstripeBaseModel
         if ($role == PresentationSpeaker::RoleSpeaker) {
             $query = $this->createQuery("SELECT p from models\summit\Presentation p 
             JOIN p.summit s
-            JOIN p.speakers sp 
+            JOIN p.speakers sp_presentation 
+            JOIN sp_presentation.speaker sp
             LEFT JOIN p.selection_plan sel_p
             JOIN p.type t
             JOIN p.category cat
@@ -1227,10 +1230,11 @@ class PresentationSpeaker extends SilverstripeBaseModel
         if ($role == PresentationSpeaker::RoleSpeaker) {
             $query = $this->createQuery("SELECT p from models\summit\Presentation p 
             JOIN p.summit s
+            JOIN p.speakers sp_presentation 
+            JOIN sp_presentation.speaker sp
             LEFT JOIN p.selection_plan sel_p
             JOIN p.type t
             JOIN p.category cat
-            JOIN p.speakers sp 
             WHERE s.id = :summit_id 
             AND p.published = 0
             AND sp.id = :speaker_id" . $exclude_category_dql . $extraWhere);
@@ -1361,7 +1365,8 @@ class PresentationSpeaker extends SilverstripeBaseModel
         if ($role == PresentationSpeaker::RoleSpeaker) {
             $query = $this->createQuery("SELECT p from models\summit\Presentation p 
             JOIN p.summit s
-            JOIN p.speakers sp 
+            JOIN p.speakers sp_presentation 
+            JOIN sp_presentation.speaker sp
             WHERE s.id = :summit_id 
             and sp.id = :speaker_id
             and p.published = 1 and p.type IN (:types)" . $exclude_category_dql);

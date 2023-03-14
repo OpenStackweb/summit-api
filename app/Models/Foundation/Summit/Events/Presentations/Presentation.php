@@ -393,7 +393,10 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      */
     public function getSpeakers()
     {
-        return $this->speakers->map(function ($entity) {
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'ASC']);
+        $res = $this->speakers->matching($criteria);
+        return $res->map(function ($entity) {
             return $entity->getSpeaker();
         });
     }

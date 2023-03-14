@@ -1899,7 +1899,8 @@ class Summit extends SilverstripeBaseModel
         $query = $this->createQueryBuilder()
             ->select('distinct ps')
             ->from('models\summit\PresentationSpeaker', 'ps')
-            ->join('ps.presentations', 'p')
+            ->join('ps.presentations', 'ps_p')
+            ->join('ps_p.presentation', 'p')
             ->join('p.summit', 's')
             ->where("s.id = :summit_id");
 

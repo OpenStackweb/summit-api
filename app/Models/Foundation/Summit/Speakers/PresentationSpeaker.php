@@ -494,12 +494,12 @@ class PresentationSpeaker extends SilverstripeBaseModel
     public function presentations($summit_id, $published_ones = true)
     {
         return $this->presentations
-            ->filter(function ($p) use ($published_ones, $summit_id) {
-                $current_presentation = $p->getPresentation();
+            ->filter(function (PresentationSpeakerAssignment $ps_assignment) use ($published_ones, $summit_id) {
+                $current_presentation = $ps_assignment->getPresentation();
                 $res = $published_ones ? $current_presentation->isPublished() : true;
                 $res &= is_null($summit_id) || $current_presentation->getSummit()->getId() == $summit_id;
                 return $res;
-            });
+            })->map(function (PresentationSpeakerAssignment $ps_assignment){return $ps_assignment->getPresentation();});
     }
 
     const ROLE_SPEAKER = 'ROLE_SPEAKER';
@@ -555,6 +555,8 @@ class PresentationSpeaker extends SilverstripeBaseModel
                 if ($presentation->getModeratorId() == $this->getId()) return false;
                 if ($presentation->getCreatorId() == $this->getMemberId()) return false;
                 return true;
+            })->map(function(PresentationSpeakerAssignment $ps_assignment){
+                return $ps_assignment->getPresentation();
             });
             return $res->toArray();
         }
@@ -1415,13 +1417,14 @@ class PresentationSpeaker extends SilverstripeBaseModel
 
     /**
      * @param int $presentation_id
-     * @return Presentation
+     * @return Presentation|null
      */
-    public function getPresentation($presentation_id): Presentation
+    public function getPresentation($presentation_id): ?Presentation
     {
-        return $this->presentations->filter(function ($p) use ($presentation_id) {
+        $res = $this->presentations->filter(function ($p) use ($presentation_id) {
             return $p->getPresentation()->getId() == $presentation_id;
-        })->first()->getPresentation();
+        })->first();
+        return !is_null($res) ? $res->getPresentation(): null;
     }
 
     /**

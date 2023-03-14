@@ -523,6 +523,8 @@ class PresentationSpeaker extends SilverstripeBaseModel
                 if ($presentation->getModeratorId() == $this->getId()) return false;
                 if ($presentation->getCreatorId() == $this->getMemberId()) return false;
                 return true;
+            })->map(function(PresentationSpeakerAssignment $ps_assignment){
+                return $ps_assignment->getPresentation();
             });
             return $res->toArray();
         }

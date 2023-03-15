@@ -366,6 +366,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
              * attendee_company (optional)
              * ticket_type_name ( mandatory if id and number are missing)
              * ticket_type_id ( mandatory if id and number are missing)
+             * ticket_promo_code (optional)
              * badge_type_id (optional)
              * badge_type_name (optional)
              * badge_features (optional)
@@ -383,6 +384,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                 'attendee_company' => '',
                 'ticket_type_name' => '',
                 'ticket_type_id' => '',
+                'ticket_promo_code' => '',
                 'badge_type_id' => '',
                 'badge_type_name' => '',
             ];

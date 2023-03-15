@@ -17,11 +17,12 @@ use libs\utils\TextUtils;
 use models\exceptions\ValidationException;
 use models\main\Company;
 use models\summit\Summit;
+
 /**
  * Trait AttendeeCompany
  * @package App\Services\Model\Imp\Traits
  */
-trait AttendeeCompany
+trait SummitRegistrationCompany
 {
     /**
      * @param Summit $summit
@@ -32,14 +33,14 @@ trait AttendeeCompany
     public function registerCompanyFor(Summit $summit, ?string $company_name):?Company{
         $company = null;
         if(!empty($company_name)){
-            Log::debug(sprintf("AttendeeCompany::registerCompanyFor summit %s company %s", $summit->getId(), $company_name));
+            Log::debug(sprintf("SummitRegistrationCompany::registerCompanyFor summit %s company %s", $summit->getId(), $company_name));
             $company_name = TextUtils::trim($company_name);
             // check if company exists ...
             $company = $this->company_repository->getByName($company_name);
 
             if(is_null($company)){
                 // create it
-                Log::debug(sprintf("AttendeeCompany::registerCompanyFor summit %s creating company %s", $summit->getId(), $company_name));
+                Log::debug(sprintf("SummitRegistrationCompany::registerCompanyFor summit %s creating company %s", $summit->getId(), $company_name));
                 $company = $this->company_service->addCompany
                 (
                     [
@@ -48,7 +49,7 @@ trait AttendeeCompany
                 );
             }
             // register on the summit
-            Log::debug(sprintf("AttendeeCompany::registerCompanyFor summit %s registering company %s", $summit->getId(), $company_name));
+            Log::debug(sprintf("SummitRegistrationCompany::registerCompanyFor summit %s registering company %s", $summit->getId(), $company_name));
             $summit->addRegistrationCompany($company);
         }
         return $company;

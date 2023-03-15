@@ -30,7 +30,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\dto\ExternalUserDTO;
-use App\Services\Model\Imp\Traits\AttendeeCompany;
+use App\Services\Model\Imp\Traits\SummitRegistrationCompany;
 use App\Services\Utils\CSVReader;
 use App\Services\Utils\ILockManagerService;
 use Illuminate\Http\UploadedFile;
@@ -164,7 +164,7 @@ final class TaskUtils
  */
 final class ReserveOrderTask extends AbstractTask
 {
-    use AttendeeCompany;
+    use SummitRegistrationCompany;
     /**
      * @var ITransactionService
      */
@@ -307,6 +307,8 @@ final class ReserveOrderTask extends AbstractTask
                     $should_auto_assign_first_ticket
                 )
             );
+
+            $this->registerCompanyFor($this->summit, $this->payload['owner_company'] ?? null);
 
             $order = SummitOrderFactory::build($this->summit, $this->payload);
 
@@ -944,7 +946,7 @@ final class PreOrderValidationTask extends AbstractTask
 final class SummitOrderService
     extends AbstractService implements ISummitOrderService
 {
-    use AttendeeCompany;
+    use SummitRegistrationCompany;
     /**
      * @var IMemberRepository
      */
@@ -1205,6 +1207,8 @@ final class SummitOrderService
             if($order->isVoid())
                 throw new ValidationException("order is canceled, please retry it.");
 
+            $this->registerCompanyFor($summit, $payload['owner_company'] ?? null);
+
             SummitOrderFactory::populate($summit, $order, $payload);
 
             if ($order->isFree()) {
@@ -1251,21 +1255,25 @@ final class SummitOrderService
         return $this->tx_service->transaction(function () use ($current_user, $order_id, $payload) {
             $order = $this->order_repository->getByIdExclusiveLock($order_id);
             if (is_null($order) || !$order instanceof SummitOrder)
-                throw new EntityNotFoundException("order not found");
+                throw new EntityNotFoundException("Order not found.");
 
             if (!$order->hasOwner() && $order->getOwnerEmail() == $current_user->getEmail()) {
                 $current_user->addSummitRegistrationOrder($order);
             }
 
             if (!$order->hasOwner()) {
-                throw new EntityNotFoundException("order not found");
+                throw new EntityNotFoundException("Order not found.");
             }
 
             if ($order->getOwner()->getId() != $current_user->getId()) {
-                throw new EntityNotFoundException("order not found");
+                throw new EntityNotFoundException("Order not found.");
             }
 
-            SummitOrderFactory::populate($order->getSummit(), $order, $payload);
+            $summit = $order->getSummit();
+
+            $this->registerCompanyFor($summit, $payload['owner_company'] ?? null);
+
+            SummitOrderFactory::populate($summit, $order, $payload);
 
             return $order;
         });
@@ -2222,6 +2230,8 @@ final class SummitOrderService
                     throw new ValidationException("you must provide an owner_email or a valid owner_id");
                 }
 
+                $this->registerCompanyFor($summit, $company);
+
                 $attendee = SummitAttendeeFactory::build($summit, [
                     'first_name' => $first_name,
                     'last_name' => $surname,
@@ -2233,8 +2243,10 @@ final class SummitOrderService
             }
 
             // create order
+            $this->registerCompanyFor($summit, $payload['owner_company'] ?? null);
 
             $order = SummitOrderFactory::build($summit, $payload);
+
             $order->generateNumber();
             do {
                 if (!$summit->existOrderNumber($order->getNumber()))
@@ -2376,6 +2388,8 @@ final class SummitOrderService
 
                 $payload['owner'] = $this->member_repository->getByEmail($owner_email);
             }
+
+            $this->registerCompanyFor($summit, $payload['owner_company'] ?? null);
 
             SummitOrderFactory::populate($summit, $order, $payload);
 

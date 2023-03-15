@@ -74,6 +74,7 @@ final class SummitAttendeeFactory
         if (isset($payload['last_name']))
             $attendee->setSurname(trim($payload['last_name']));
 
+        // company
         if (isset($payload['company']) && !empty($payload['company'])) {
             $attendee->setCompanyName(trim($payload['company']));
             $company = $summit->getRegistrationCompanyByName(trim($payload['company']));
@@ -81,8 +82,7 @@ final class SummitAttendeeFactory
                 $attendee->setCompany($company);
             }
         }
-
-        if (isset($payload['company_id']) && !is_null($payload['company_id'])) {
+        else if (isset($payload['company_id']) && !is_null($payload['company_id'])) {
             $companyId = intval($payload['company_id']);
             if($companyId > 0) {
                 $company = $summit->getRegistrationCompanyById($companyId);

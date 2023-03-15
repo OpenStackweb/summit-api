@@ -23,7 +23,7 @@ use App\Services\Model\AbstractService;
 use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Model\ICompanyService;
 use App\Services\Model\IMemberService;
-use App\Services\Model\Imp\Traits\AttendeeCompany;
+use App\Services\Model\Imp\Traits\SummitRegistrationCompany;
 use App\Services\Model\IRegistrationIngestionService;
 use libs\utils\ITransactionService;
 use models\exceptions\ValidationException;
@@ -50,7 +50,7 @@ use services\apis\IEventbriteAPI;
 final class RegistrationIngestionService
     extends AbstractService implements IRegistrationIngestionService
 {
-    use AttendeeCompany;
+    use SummitRegistrationCompany;
 
     /**
      * @var IMemberService

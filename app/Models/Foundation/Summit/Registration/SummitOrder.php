@@ -489,7 +489,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
      */
     public function setOwnerCompanyName(string $owner_company_name): void
     {
-        $this->owner_company_name = $owner_company_name;
+        $this->owner_company_name = TextUtils::trim($owner_company_name);
     }
 
     /**

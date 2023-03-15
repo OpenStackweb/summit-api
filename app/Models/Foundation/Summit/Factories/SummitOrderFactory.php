@@ -97,6 +97,7 @@ final class SummitOrderFactory
         if (isset($payload['owner_last_name']) && !is_null($payload['owner_last_name']))
             $order->setOwnerSurname(trim($payload['owner_last_name']));
 
+        // company
         if (isset($payload['owner_company']) && !is_null($payload['owner_company'])) {
             $order->setOwnerCompanyName(trim($payload['owner_company']));
             $company = $summit->getRegistrationCompanyByName(trim($payload['owner_company']));
@@ -104,8 +105,7 @@ final class SummitOrderFactory
                 $order->setOwnerCompany($company);
             }
         }
-
-        if (isset($payload['owner_company_id']) && !is_null($payload['owner_company_id'])) {
+        else if (isset($payload['owner_company_id']) && !is_null($payload['owner_company_id'])) {
             $ownerCompanyId = intval($payload['owner_company_id']);
             if($ownerCompanyId > 0) {
                 $company = $summit->getRegistrationCompanyById($ownerCompanyId);

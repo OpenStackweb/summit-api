@@ -14,7 +14,7 @@
 
 use App\Jobs\Emails\ProcessAttendeesEmailRequestJob;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
-use App\Services\Model\Imp\Traits\AttendeeCompany;
+use App\Services\Model\Imp\Traits\SummitRegistrationCompany;
 use App\Services\Model\Strategies\EmailActions\EmailActionsStrategyFactory;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
@@ -44,7 +44,7 @@ use libs\utils\TextUtils;
  */
 final class AttendeeService extends AbstractService implements IAttendeeService
 {
-    use AttendeeCompany;
+    use SummitRegistrationCompany;
     /**
      * @var ISummitAttendeeRepository
      */

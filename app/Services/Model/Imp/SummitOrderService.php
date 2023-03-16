@@ -3540,13 +3540,13 @@ final class SummitOrderService
                         $promo_code = null;
 
                         if ($reader->hasColumn('ticket_type_name')) {
-                            Log::debug(sprintf("SummitOrderService::importTicketData trying to get ticket type by name %s", $row['ticket_type_name']));
+                            Log::debug(sprintf("SummitOrderService::processTicketData trying to get ticket type by name %s", $row['ticket_type_name']));
                             $ticket_type = $this->ticket_type_repository->getByType($summit, $row['ticket_type_name']);
                         }
 
                         if ($reader->hasColumn('ticket_promo_code')) {
-                            Log::debug(sprintf("SummitOrderService::importTicketData trying to get promo code by code %s", $row['ticket_promo_code']));
-                            $promo_code = $this->promo_code_repository->getByCode($summit, $row['ticket_promo_code']);
+                            Log::debug(sprintf("SummitOrderService::processTicketData trying to get promo code by code %s", $row['ticket_promo_code']));
+                            $promo_code = $this->promo_code_repository->getByCode($row['ticket_promo_code']);
                         }
 
                         if (is_null($ticket_type) && $reader->hasColumn('ticket_type_id')) {
@@ -3569,6 +3569,7 @@ final class SummitOrderService
                         ];
 
                         if(!is_null($promo_code)){
+                            Log::debug(sprintf("SummitOrderService::processTicketData adding promo code by code %s to offline order", $promo_code->getId()));
                             $order_payload['promo_code'] = $promo_code->getCode();
                         }
 

@@ -73,4 +73,9 @@ class ProcessTicketDataImport implements ShouldQueue
             Log::error($ex);
         }
     }
+
+    public function failed(\Throwable $exception)
+    {
+        Log::error(sprintf( "ProcessTicketDataImport::failed %s", $exception->getMessage()));
+    }
 }

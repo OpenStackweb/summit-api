@@ -79,8 +79,8 @@ class UploadController extends BaseController
         $fileName = $this->createFilename($file);
         // Group files by mime type
         $mime = str_replace('/', '-', $file->getMimeType());
-        // Group files by the date (week
-        $dateFolder = date("Y-m-W");
+        // Group files by the date
+        $dateFolder = date("Y-m-d");
 
         // Build the file path
         $filePath = "upload/{$mime}/{$dateFolder}/";

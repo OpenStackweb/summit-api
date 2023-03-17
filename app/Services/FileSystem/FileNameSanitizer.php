@@ -30,7 +30,7 @@ final class FileNameSanitizer
      * @param string $filename
      * @return string
      */
-    public static function  sanitize(string $filename):string {
+    public static function sanitize(string $filename):string {
         $filename = trim(Transliterator::utf8ToAscii($filename));
         foreach(self::$default_replacements as $regex => $replace) {
             $filename = preg_replace($regex, $replace, $filename);

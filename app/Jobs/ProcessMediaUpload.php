@@ -12,18 +12,13 @@
  * limitations under the License.
  **/
 
-use App\Services\Filesystem\FileUploadStrategyFactory;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
-use models\summit\ISummitRepository;
+use services\model\IPresentationService;
 
 /**
  * Class ProcessMediaUpload
@@ -31,8 +26,6 @@ use models\summit\ISummitRepository;
  */
 class ProcessMediaUpload implements ShouldQueue
 {
-    const LocalChunkSize = 1024; // bytes
-
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $tries = 2;
@@ -90,17 +83,7 @@ class ProcessMediaUpload implements ShouldQueue
         $this->path = $path;
     }
 
-    public static function getStorageDriver(): string
-    {
-        return Config::get("file_upload.storage_driver");
-    }
-
-    public static function isLocal(): bool
-    {
-        return self::getStorageDriver() == "local";
-    }
-
-    public function handle(ISummitRepository $summit_repository)
+    public function handle(IPresentationService $service)
     {
 
         try {
@@ -113,63 +96,15 @@ class ProcessMediaUpload implements ShouldQueue
                 $this->path
             ));
 
-            $summit = $summit_repository->getById($this->summit_id);
-            if (is_null($summit)) {
-                throw new EntityNotFoundException(sprintf("Summit %s not found.", $this->summit_id));
-            }
+            $service->processMediaUpload(
+                $this->summit_id,
+                $this->media_upload_type_id,
+                $this->public_path,
+                $this->private_path,
+                $this->file_name,
+                $this->path
+            );
 
-            $mediaUploadType = $summit->getMediaUploadTypeById($this->media_upload_type_id);
-            if (is_null($mediaUploadType)) {
-                throw new EntityNotFoundException(sprintf("Media Upload Type %s not found.", $this->media_upload_type_id));
-            }
-
-            $disk = Storage::disk(self::getStorageDriver());
-
-            if (!$disk->exists($this->path))
-                throw new ValidationException(sprintf("file provide on filepath %s does not exists on %s storage.", self::getStorageDriver(), $this->path));
-
-            $stream = $disk->readStream($this->path);
-
-            if (!is_resource($stream)) {
-                throw new ValidationException(sprintf("file provide on filepath %s does not exists on %s storage.", self::getStorageDriver(), $this->path));
-            }
-            // write to temp folder
-
-            $localPath = "/tmp/" . $this->file_name;
-            $out = fopen($localPath, 'w');
-            while ($chunk = fread($stream, self::LocalChunkSize)) {
-                fwrite($out, $chunk);
-            }
-            fclose($stream);
-            fclose($out);
-
-            $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
-            if (!is_null($strategy)) {
-                Log::debug(sprintf("ProcessMediaUpload::handle saving file %s to private storage", $this->file_name));
-                $strategy->saveFromPath(
-                    $localPath,
-                    $this->private_path,
-                    $this->file_name
-                );
-            }
-
-            $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
-            if (!is_null($strategy)) {
-                Log::debug(sprintf("ProcessMediaUpload::handle saving file %s to public storage", $this->file_name));
-                $options = $mediaUploadType->isUseTemporaryLinksOnPublicStorage() ? [] : 'public';
-                $strategy->saveFromPath
-                (
-                    $localPath,
-                    $this->public_path,
-                    $this->file_name,
-                    $options
-                );
-            }
-
-            Log::debug(sprintf("ProcessMediaUpload::handle deleting original file %s from storage %s", $this->file_name, self::getStorageDriver()));
-            $disk->delete($this->path);
-            Log::debug(sprintf("ProcessMediaUpload::handle deleting local file %s", $localPath));
-            unlink($localPath);
         } catch (\Exception $ex) {
             Log::error($ex);
             throw $ex;

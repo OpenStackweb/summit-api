@@ -103,7 +103,7 @@ final class FileUploadInfo
             $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
         }
 
-        if(is_null($file) && isset($payload['filepath'])){
+        if(is_null($file) && isset($payload['filepath']) && !empty($payload['filepath'])){
             Log::debug(sprintf("FileUploadInfo::build build file is present on as %s storage (%s)", self::getStorageDriver(), $payload['filepath']));
             $disk = Storage::disk(self::getStorageDriver());
 
@@ -115,15 +115,16 @@ final class FileUploadInfo
             Log::debug(sprintf("FileUploadInfo::build build file %s storage (%s) size %s", self::getStorageDriver(), $payload['filepath'], $size));
             if($size == 0)
                 throw new ValidationException("File size is zero.");
+
             $filePath = $payload['filepath'];
             $fileName = pathinfo($payload['filepath'],PATHINFO_BASENAME);
             $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
-            $file = new UploadedFile($disk->path($payload['filepath']), $fileName);
+            $file = self::isLocal() ? new UploadedFile($disk->path($payload['filepath']), $fileName): null;
         }
 
-        if(is_null($file)) return null;
+        $fileName = $fileName && !empty($fileName) ? FileNameSanitizer::sanitize($fileName) : $fileName;
 
-        $fileName = FileNameSanitizer::sanitize($fileName);
+        if(empty($filePath)) return null;
 
         return new self($file, $fileName, $fileExt, $filePath, $size);
     }

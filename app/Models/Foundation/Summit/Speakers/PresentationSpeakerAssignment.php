@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\Main\IOrderable;
+use App\Models\Foundation\Summit\ScheduleEntity;
 use Doctrine\ORM\Mapping AS ORM;
 use App\Models\Utils\BaseEntity;
 use models\summit\Presentation;
@@ -20,8 +21,9 @@ use models\summit\PresentationSpeaker;
 use models\utils\One2ManyPropertyTrait;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitPresentationSpeakerAssignmentRepository")
  * @ORM\Table(name="Presentation_Speakers")
+ * @ORM\HasLifecycleCallbacks
  * Class PresentationSpeakerAssignment
  * @package models\summit
  */
@@ -118,4 +120,14 @@ class PresentationSpeakerAssignment extends BaseEntity implements IOrderable
     {
         $this->presentation = $presentation;
     }
+
+    /**
+     * @return int
+     */
+    public function getSummitId(): int
+    {
+        return $this->presentation->getSummitId();
+    }
+
+    use ScheduleEntity;
 }

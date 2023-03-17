@@ -1535,17 +1535,17 @@ final class PresentationService
     }
 
     /**
+     * @param Summit $summit
      * @param int $presentation_id
      * @param int $speaker_id
      * @param array $data
      * @return Presentation
-     * @throws EntityNotFoundException
-     * @throws ValidationException
+     * @throws \Exception
      */
-    public function upsertPresentationSpeaker(int $presentation_id, int $speaker_id, array $data): Presentation {
-        return $this->tx_service->transaction(function () use ($presentation_id, $speaker_id, $data) {
+    public function upsertPresentationSpeaker(Summit $summit, int $presentation_id, int $speaker_id, array $data): Presentation {
+        return $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id, $data) {
 
-            $presentation = $this->presentation_repository->getById($presentation_id);
+            $presentation = $summit->getEvent($presentation_id);
             if (is_null($presentation) || !$presentation instanceof Presentation)
                 throw new EntityNotFoundException("presentation {$presentation_id} not found");
 
@@ -1568,16 +1568,17 @@ final class PresentationService
     }
 
     /**
+     * @param Summit $summit
      * @param int $presentation_id
      * @param int $speaker_id
      * @return Presentation
      * @throws \Exception
      */
-    public function removeSpeakerFromPresentation(int $presentation_id, int $speaker_id): Presentation
+    public function removeSpeakerFromPresentation(Summit $summit, int $presentation_id, int $speaker_id): Presentation
     {
-        return $this->tx_service->transaction(function () use ($presentation_id, $speaker_id) {
+        return $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id) {
 
-            $presentation = $this->presentation_repository->getById($presentation_id);
+            $presentation = $summit->getPresentation($presentation_id);
             if (is_null($presentation) || !$presentation instanceof Presentation)
                 throw new EntityNotFoundException("presentation {$presentation_id} not found");
 

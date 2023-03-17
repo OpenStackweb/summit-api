@@ -1232,7 +1232,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $payload = $this->getJsonPayload(['order' => 'sometimes|integer|min:1']);
 
             $presentation = $this->presentation_service->upsertPresentationSpeaker(
-                intval($presentation_id), intval($speaker_id), $payload);
+                $summit, intval($presentation_id), intval($speaker_id), $payload);
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize
             (
@@ -1291,7 +1291,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
-            $this->presentation_service->removeSpeakerFromPresentation(intval($presentation_id), intval($speaker_id));
+            $this->presentation_service->removeSpeakerFromPresentation(
+                $summit, intval($presentation_id), intval($speaker_id));
 
             return $this->deleted();
         });

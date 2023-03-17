@@ -14,4 +14,5 @@
 
 return [
     'max_file_upload_size' => env('FILE_UPLOAD_MAX_SIZE', 10485760),
+    'storage_driver' => env('FILE_UPLOAD_STORAGE_DRIVER', 'local')
 ];

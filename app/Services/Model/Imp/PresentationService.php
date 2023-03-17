@@ -17,6 +17,7 @@ use App\Http\Utils\FileSizeUtil;
 use App\Http\Utils\FileUploadInfo;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
+use App\Jobs\ProcessMediaUpload;
 use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
@@ -1066,6 +1067,7 @@ final class PresentationService
                 ]
             ));
 
+            /*
             $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
             if (!is_null($strategy)) {
                 $strategy->save($fileInfo->getFile(), $mediaUpload->getPath(IStorageTypesConstants::PrivateType), $fileInfo->getFileName());
@@ -1082,6 +1084,17 @@ final class PresentationService
                     $options
                 );
             }
+            */
+
+            ProcessMediaUpload::dispatch
+            (
+                $summit->getId(),
+                $mediaUploadType->getId(),
+                $mediaUploadType->getPublicStorageType(),
+                $mediaUploadType->getPrivateStorageType(),
+                $fileInfo->getFileName(),
+                $fileInfo->getFilePath()
+            );
 
             $mediaUpload->setFilename($fileInfo->getFileName());
             $presentation->addMediaUpload($mediaUpload);
@@ -1118,8 +1131,6 @@ final class PresentationService
                     }
                 }
             }
-            Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s  deleting original file %s", $presentation_id, $fileInfo->getFileName()));
-            $fileInfo->delete();
 
             return $mediaUpload;
         });
@@ -1184,6 +1195,7 @@ final class PresentationService
                     throw new ValidationException(sprintf("File Extension %s is not valid (%s).", $fileInfo->getFileExt(), $mediaUploadType->getValidExtensions()));
                 }
 
+                /*
                 $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
 
                 if (!is_null($strategy)) {
@@ -1201,10 +1213,20 @@ final class PresentationService
                         $options
                     );
                 }
+                */
+
+                ProcessMediaUpload::dispatch
+                (
+                    $summit->getId(),
+                    $mediaUploadType->getId(),
+                    $mediaUploadType->getPublicStorageType(),
+                    $mediaUploadType->getPrivateStorageType(),
+                    $fileInfo->getFileName(),
+                    $fileInfo->getFilePath()
+                );
 
                 $payload['file_name'] = $fileInfo->getFileName();
 
-                $fileInfo->delete();
             }
 
             return PresentationMediaUploadFactory::populate($mediaUpload, $payload);

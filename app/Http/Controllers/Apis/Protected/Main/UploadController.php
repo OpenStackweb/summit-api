@@ -13,6 +13,7 @@
  **/
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Config;
 use Pion\Laravel\ChunkUpload\Exceptions\UploadFailedException;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
@@ -84,7 +85,7 @@ class UploadController extends BaseController
         // Build the file path
         $filePath = "upload/{$mime}/{$dateFolder}/";
 
-        $disk = Storage::disk('local');
+        $disk = Storage::disk(Config::get("file_upload.storage_driver"));
 
         $disk->putFileAs($filePath, $file, $fileName);
 

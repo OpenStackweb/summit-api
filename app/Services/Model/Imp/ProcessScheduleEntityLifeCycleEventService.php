@@ -187,7 +187,7 @@ final class ProcessScheduleEntityLifeCycleEventService
                 if (!$ps_assignment instanceof PresentationSpeakerAssignment) return;
                 $presentation = $ps_assignment->getPresentation();
 
-                if (!$presentation instanceof Presentation) {
+                if ($presentation instanceof Presentation) {
                     Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process presentation %s from summit %s",
                         $entity_id, $summit->getId()));
 

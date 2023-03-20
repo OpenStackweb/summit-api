@@ -1619,12 +1619,12 @@ final class PresentationService
         return $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id, $data) {
 
             $presentation = $summit->getEvent($presentation_id);
-            if (is_null($presentation) || !$presentation instanceof Presentation)
-                throw new EntityNotFoundException("presentation {$presentation_id} not found");
+            if (!$presentation instanceof Presentation)
+                throw new EntityNotFoundException("Presentation {$presentation_id} not found.");
 
-            $speaker = $this->speaker_repository->getById(intval($speaker_id));
+            $speaker = $this->speaker_repository->getById($speaker_id);
             if (is_null($speaker) || !($speaker instanceof PresentationSpeaker))
-                throw new EntityNotFoundException("speaker {$speaker_id} not found");
+                throw new EntityNotFoundException("Speaker {$speaker_id} not found.");
 
             if (!$presentation->isSpeaker($speaker)) {
                 $presentation->addSpeaker($speaker);
@@ -1647,21 +1647,20 @@ final class PresentationService
      * @return Presentation
      * @throws \Exception
      */
-    public function removeSpeakerFromPresentation(Summit $summit, int $presentation_id, int $speaker_id): Presentation
+    public function removeSpeakerFromPresentation(Summit $summit, int $presentation_id, int $speaker_id): void
     {
-        return $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id) {
+         $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id) {
 
-            $presentation = $summit->getPresentation($presentation_id);
-            if (is_null($presentation) || !$presentation instanceof Presentation)
-                throw new EntityNotFoundException("presentation {$presentation_id} not found");
+            $presentation = $summit->getEvent($presentation_id);
+            if (!$presentation instanceof Presentation)
+                throw new EntityNotFoundException("Presentation {$presentation_id} not found.");
 
             $speaker = $this->speaker_repository->getById(intval($speaker_id));
             if (is_null($speaker) || !($speaker instanceof PresentationSpeaker))
-                throw new EntityNotFoundException("speaker {$speaker_id} not found");
+                throw new EntityNotFoundException("Speaker {$speaker_id} not found.");
 
             $presentation->removeSpeaker($speaker);
 
-            return $presentation;
         });
     }
 }

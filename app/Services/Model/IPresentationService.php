@@ -317,9 +317,8 @@ interface IPresentationService
      * @param int $presentation_id
      * @param int $speaker_id
      * @return Presentation
-     * @throws EntityNotFoundException
-     * @throws ValidationException
+     * @throws \Exception
      */
-    public function removeSpeakerFromPresentation(int $presentation_id, int $speaker_id): Presentation;
+    public function removeSpeakerFromPresentation(Summit $summit, int $presentation_id, int $speaker_id): void;
 
 }

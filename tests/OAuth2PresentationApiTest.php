@@ -437,11 +437,11 @@ final class OAuth2PresentationApiTest extends ProtectedApiTest
 
      public function testRemoveSpeakerFromPresentation() {
 
-        $params = [
-            'id'              => self::$summit->getId(),
-            'presentation_id' => self::$default_selection_plan->getPresentations()[0]->getId(),
-            'speaker_id'      => self::$speaker->getId(),
-        ];
+         $params = [
+             'id'              => self::$summit->getId(),
+             'presentation_id' => self::$default_selection_plan->getPresentations()[0]->getId(),
+             'speaker_id'      => self::$speaker->getId(),
+         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,

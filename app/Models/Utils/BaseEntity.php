@@ -19,6 +19,7 @@ use ReflectionClass;
 
 /***
  * @ORM\MappedSuperclass
+ * @ORM\HasLifecycleCallbacks
  * Class BaseEntity
  * @package App\Models\Utils
  */

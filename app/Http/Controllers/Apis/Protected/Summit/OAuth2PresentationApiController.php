@@ -90,12 +90,12 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      */
     public function __construct
     (
-        IPresentationService   $presentation_service,
-        ISummitRepository      $summit_repository,
-        ISummitEventRepository $presentation_repository,
-        IMemberRepository      $member_repository,
+        IPresentationService                 $presentation_service,
+        ISummitRepository                    $summit_repository,
+        ISummitEventRepository               $presentation_repository,
+        IMemberRepository                    $member_repository,
         ISummitPresentationCommentRepository $presentation_comments_repository,
-        IResourceServerContext $resource_server_context
+        IResourceServerContext               $resource_server_context
     )
     {
         parent::__construct($resource_server_context);
@@ -216,7 +216,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $payload = $this->getJsonPayload(PresentationVideoValidationRulesFactory::build($this->getJsonData(), true), true);
 
-            $video = $this->presentation_service->updateVideo(intval($presentation_id), intval($video_id), HTMLCleaner::cleanData($payload,[
+            $video = $this->presentation_service->updateVideo(intval($presentation_id), intval($video_id), HTMLCleaner::cleanData($payload, [
                 'name',
                 'description',
             ]));
@@ -1216,9 +1216,10 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @param $presentation_id
      * @param $speaker_id
-     * @return \Illuminate\Http\JsonResponse|mixed
+     * @return JsonResponse|mixed
      */
-    public function addSpeaker2Presentation($summit_id, $presentation_id, $speaker_id) {
+    public function addSpeaker2Presentation($summit_id, $presentation_id, $speaker_id)
+    {
 
         return $this->processRequest(function () use ($summit_id, $presentation_id, $speaker_id) {
 
@@ -1247,9 +1248,10 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @param $presentation_id
      * @param $speaker_id
-     * @return \Illuminate\Http\JsonResponse|mixed
+     * @return JsonResponse|mixed
      */
-    public function updateSpeakerInPresentation($summit_id, $presentation_id, $speaker_id) {
+    public function updateSpeakerInPresentation($summit_id, $presentation_id, $speaker_id)
+    {
 
         return $this->processRequest(function () use ($summit_id, $presentation_id, $speaker_id) {
 
@@ -1262,8 +1264,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
             $payload = $this->getJsonPayload(['order' => 'required|integer|min:1']);
 
-            $presentation = $this->presentation_service->upsertPresentationSpeaker(
-                intval($presentation_id), intval($speaker_id), $payload);
+            $presentation = $this->presentation_service->upsertPresentationSpeaker
+            (
+                $summit,
+                intval($presentation_id), intval($speaker_id), $payload
+            );
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($presentation)->serialize
             (
@@ -1278,9 +1283,10 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @param $presentation_id
      * @param $speaker_id
-     * @return \Illuminate\Http\JsonResponse|mixed
+     * @return JsonResponse|mixed
      */
-    public function removeSpeakerFromPresentation($summit_id, $presentation_id, $speaker_id) {
+    public function removeSpeakerFromPresentation($summit_id, $presentation_id, $speaker_id)
+    {
 
         return $this->processRequest(function () use ($summit_id, $presentation_id, $speaker_id) {
 
@@ -1305,7 +1311,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $presentation_id
      * @return JsonResponse
      */
-    public function getComments($summit_id, $presentation_id){
+    public function getComments($summit_id, $presentation_id)
+    {
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
         if (is_null($summit)) return $this->error404();
@@ -1316,7 +1323,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                     'is_activity' => ['=='],
                     'is_public' => ['=='],
                     'creator_id' => ['=='],
-                    'body' => ['==','@@', '=@'],
+                    'body' => ['==', '@@', '=@'],
                 ];
             },
             function () {
@@ -1355,16 +1362,17 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         );
     }
 
-    public function getComment($summit_id, $presentation_id, $comment_id){
-        return $this->processRequest(function() use($summit_id, $presentation_id, $comment_id){
+    public function getComment($summit_id, $presentation_id, $comment_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $presentation_id, $comment_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $presentation = $summit->getEvent(intval($presentation_id));
-            if(!$presentation instanceof Presentation)
+            if (!$presentation instanceof Presentation)
                 return $this->error404();
             $comment = $presentation->getComment(intval($comment_id));
-            if(!$comment instanceof SummitPresentationComment)
+            if (!$comment instanceof SummitPresentationComment)
                 return $this->error404();
 
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($comment)->serialize
@@ -1375,14 +1383,16 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             ));
         });
     }
+
     /**
      * @param $summit_id
      * @param $presentation_id
      * @param $comment_id
      * @return mixed
      */
-    public function deleteComment($summit_id, $presentation_id, $comment_id){
-        return $this->processRequest(function() use($summit_id, $presentation_id, $comment_id){
+    public function deleteComment($summit_id, $presentation_id, $comment_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $presentation_id, $comment_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -1398,8 +1408,9 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $presentation_id
      * @return mixed
      */
-    public function addComment($summit_id, $presentation_id){
-        return $this->processRequest(function() use($summit_id, $presentation_id){
+    public function addComment($summit_id, $presentation_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $presentation_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -1423,8 +1434,9 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $comment_id
      * @return mixed
      */
-    public function updateComment($summit_id, $presentation_id, $comment_id){
-        return $this->processRequest(function() use($summit_id, $presentation_id, $comment_id){
+    public function updateComment($summit_id, $presentation_id, $comment_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $presentation_id, $comment_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -1447,15 +1459,16 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param $presentation_id
      * @return mixed
      */
-    public function getPresentationsExtraQuestions($summit_id, $presentation_id){
-        return $this->processRequest(function() use($summit_id, $presentation_id){
+    public function getPresentationsExtraQuestions($summit_id, $presentation_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $presentation_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $presentation = $summit->getEvent(intval($presentation_id));
 
-            if(!$presentation instanceof Presentation) return $this->error404();
+            if (!$presentation instanceof Presentation) return $this->error404();
 
             $filter = null;
 
@@ -1472,7 +1485,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             ]);
 
             $selection_plan_id = 'all';
-            if($filter->hasFilter('selection_plan_id')){
+            if ($filter->hasFilter('selection_plan_id')) {
                 $element = $filter->getUniqueFilter('selection_plan_id');
                 $selection_plan_id = intval($element->getRawValue());
             }
@@ -1480,9 +1493,9 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             $selection_plan = $selection_plan_id === 'all' ? null : $summit->getSelectionPlanById(intval($selection_plan_id));
             $res = [];
 
-            foreach ($presentation->getAllExtraQuestionAnswers() as $answer){
-                if($selection_plan instanceof SelectionPlan){
-                    if($selection_plan->isExtraQuestionAssigned($answer->getQuestion())){
+            foreach ($presentation->getAllExtraQuestionAnswers() as $answer) {
+                if ($selection_plan instanceof SelectionPlan) {
+                    if ($selection_plan->isExtraQuestionAssigned($answer->getQuestion())) {
                         $res[] = $answer;
                     }
                     continue;
@@ -1490,7 +1503,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 $res[] = $answer;
             }
 
-            $response    = new PagingResponse
+            $response = new PagingResponse
             (
                 count($res),
                 count($res),

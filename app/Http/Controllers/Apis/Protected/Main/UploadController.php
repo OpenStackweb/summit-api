@@ -13,6 +13,7 @@
  **/
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Config;
 use Pion\Laravel\ChunkUpload\Exceptions\UploadFailedException;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
@@ -78,13 +79,13 @@ class UploadController extends BaseController
         $fileName = $this->createFilename($file);
         // Group files by mime type
         $mime = str_replace('/', '-', $file->getMimeType());
-        // Group files by the date (week
-        $dateFolder = date("Y-m-W");
+        // Group files by the date
+        $dateFolder = date("Y-m-d");
 
         // Build the file path
         $filePath = "upload/{$mime}/{$dateFolder}/";
 
-        $disk = Storage::disk('local');
+        $disk = Storage::disk(Config::get("file_upload.storage_driver"));
 
         $disk->putFileAs($filePath, $file, $fileName);
 

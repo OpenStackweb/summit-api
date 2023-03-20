@@ -46,5 +46,14 @@ interface IFileUploadStrategy
      * @param mixed $options
      * @return bool
      */
-    public function saveFromStream($fp,  string $path, $options = []):bool;
+    public function saveFromStream($fp, string $path, $options = []):bool;
+
+    /**
+     * @param string $file
+     * @param string $path
+     * @param string $filename
+     * @param mixed $options
+     * @return false|string
+     */
+    public function saveFromPath(string $file, string $path, string $filename, $options = []):bool;
 }

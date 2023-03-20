@@ -17,6 +17,7 @@ use App\Http\Utils\FileSizeUtil;
 use App\Http\Utils\FileUploadInfo;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
+use App\Jobs\ProcessMediaUpload;
 use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
@@ -34,6 +35,7 @@ use App\Services\Model\AbstractService;
 use App\Services\Model\IFolderService;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -42,6 +44,7 @@ use models\main\ITagRepository;
 use models\main\Member;
 use models\summit\ISpeakerRepository;
 use models\summit\ISummitEventRepository;
+use models\summit\ISummitRepository;
 use models\summit\Presentation;
 use models\summit\PresentationAttendeeVote;
 use models\summit\PresentationLink;
@@ -61,40 +64,40 @@ final class PresentationService
     extends AbstractService
     implements IPresentationService
 {
+    const LocalChunkSize = 1024;
     /**
      * @var ISummitEventRepository
      */
     private $presentation_repository;
-
     /**
      * @var ISpeakerRepository
      */
     private $speaker_repository;
-
     /**
      * @var ITagRepository
      */
     private $tag_repository;
-
     /**
      * @var IFolderService
      */
     private $folder_service;
-
     /**
      * @var IFileUploader
      */
     private $file_uploader;
-
     /**
      * @var IFolderRepository
      */
     private $folder_repository;
-
     /**
      * @var IPresentationTrackChairScoreTypeRepository
      */
     private $presentation_track_chair_score_type_repository;
+
+    /**
+     * @var ISummitRepository
+     */
+    private $summit_repository;
 
     /**
      * PresentationService constructor.
@@ -115,6 +118,7 @@ final class PresentationService
         IFolderService                             $folder_service,
         IFileUploader                              $file_uploader,
         IFolderRepository                          $folder_repository,
+        ISummitRepository                          $summit_repository,
         IPresentationTrackChairScoreTypeRepository $presentation_track_chair_score_type_repository,
         ITransactionService                        $tx_service
     )
@@ -127,6 +131,7 @@ final class PresentationService
         $this->file_uploader = $file_uploader;
         $this->folder_repository = $folder_repository;
         $this->presentation_track_chair_score_type_repository = $presentation_track_chair_score_type_repository;
+        $this->summit_repository = $summit_repository;
     }
 
     /**
@@ -232,7 +237,6 @@ final class PresentationService
 
     }
 
-
     /**
      * @param Summit $summit
      * @param array $data
@@ -271,7 +275,7 @@ final class PresentationService
                 throw new ValidationException(sprintf("Selection Plan %s does not allow new submissions", $current_selection_plan->getId()));
             }
 
-            if(!$current_selection_plan->isAllowedMember($member->getEmail())){
+            if (!$current_selection_plan->isAllowedMember($member->getEmail())) {
                 throw new AuthzException(sprintf("Member is not Authorized on Selection Plan."));
             }
 
@@ -368,81 +372,6 @@ final class PresentationService
             return $presentation;
         });
 
-    }
-
-    /**
-     * @param Summit $summit
-     * @param int $presentation_id
-     * @param array $data
-     * @return Presentation
-     * @throws ValidationException
-     * @throws EntityNotFoundException
-     */
-    public function updatePresentationSubmission(Summit $summit, $presentation_id, array $data)
-    {
-        return $this->tx_service->transaction(function () use ($summit, $presentation_id, $data) {
-
-            $member = ResourceServerContext::getCurrentUser(false);
-            $current_speaker = $this->speaker_repository->getByMember($member);
-
-            if (is_null($current_speaker))
-                throw new ValidationException(trans(
-                    'validation_errors.PresentationService.updatePresentationSubmission.NotValidSpeaker'
-                ));
-
-            $presentation = $summit->getEvent($presentation_id);
-
-            if (is_null($presentation))
-                throw new EntityNotFoundException(trans(
-                    'not_found_errors.PresentationService.updatePresentationSubmission.PresentationNotFound',
-                    ['presentation_id' => $presentation_id]
-                ));
-
-            if (!$presentation instanceof Presentation)
-                throw new EntityNotFoundException(trans(
-                    'not_found_errors.PresentationService.updatePresentationSubmission.PresentationNotFound',
-                    ['presentation_id' => $presentation_id]
-                ));
-
-            if (!$presentation->canEdit($current_speaker))
-                throw new ValidationException(trans(
-                    'validation_errors.PresentationService.updatePresentationSubmission.CurrentSpeakerCanNotEditPresentation',
-                    ['presentation_id' => $presentation_id]
-                ));
-
-            $current_selection_plan = $presentation->getSelectionPlan();
-
-            if (is_null($current_selection_plan))
-                throw new ValidationException(trans(
-                    'validation_errors.PresentationService.updatePresentationSubmission.NotValidSelectionPlan'
-                ));
-
-            if (!$current_selection_plan->IsEnabled()) {
-                throw new ValidationException(sprintf("Submission Period is Closed."));
-            }
-
-            if (!$current_selection_plan->isSubmissionOpen()) {
-                throw new ValidationException(sprintf("Submission Period is Closed."));
-            }
-
-            if(!$current_selection_plan->isAllowedMember($member->getEmail())){
-                throw new AuthzException(sprintf("Member is not Authorized on Selection Plan."));
-            }
-
-            $current_selection_plan->checkPresentationAllowedQuestions($data);
-            $current_selection_plan->checkPresentationAllowedEdtiableQuestions($data, $presentation->getSnapshot());
-
-            $presentation->setUpdatedBy(ResourceServerContext::getCurrentUser(false));
-
-            return $this->saveOrUpdatePresentation
-            (
-                $summit,
-                $current_selection_plan,
-                $presentation,
-                $current_speaker,
-                $data
-            );
-        });
     }
 
     /**
@@ -552,6 +481,81 @@ final class PresentationService
     /**
      * @param Summit $summit
      * @param int $presentation_id
+     * @param array $data
+     * @return Presentation
+     * @throws ValidationException
+     * @throws EntityNotFoundException
+     */
+    public function updatePresentationSubmission(Summit $summit, $presentation_id, array $data)
+    {
+        return $this->tx_service->transaction(function () use ($summit, $presentation_id, $data) {
+
+            $member = ResourceServerContext::getCurrentUser(false);
+            $current_speaker = $this->speaker_repository->getByMember($member);
+
+            if (is_null($current_speaker))
+                throw new ValidationException(trans(
+                    'validation_errors.PresentationService.updatePresentationSubmission.NotValidSpeaker'
+                ));
+
+            $presentation = $summit->getEvent($presentation_id);
+
+            if (is_null($presentation))
+                throw new EntityNotFoundException(trans(
+                    'not_found_errors.PresentationService.updatePresentationSubmission.PresentationNotFound',
+                    ['presentation_id' => $presentation_id]
+                ));
+
+            if (!$presentation instanceof Presentation)
+                throw new EntityNotFoundException(trans(
+                    'not_found_errors.PresentationService.updatePresentationSubmission.PresentationNotFound',
+                    ['presentation_id' => $presentation_id]
+                ));
+
+            if (!$presentation->canEdit($current_speaker))
+                throw new ValidationException(trans(
+                    'validation_errors.PresentationService.updatePresentationSubmission.CurrentSpeakerCanNotEditPresentation',
+                    ['presentation_id' => $presentation_id]
+                ));
+
+            $current_selection_plan = $presentation->getSelectionPlan();
+
+            if (is_null($current_selection_plan))
+                throw new ValidationException(trans(
+                    'validation_errors.PresentationService.updatePresentationSubmission.NotValidSelectionPlan'
+                ));
+
+            if (!$current_selection_plan->IsEnabled()) {
+                throw new ValidationException(sprintf("Submission Period is Closed."));
+            }
+
+            if (!$current_selection_plan->isSubmissionOpen()) {
+                throw new ValidationException(sprintf("Submission Period is Closed."));
+            }
+
+            if (!$current_selection_plan->isAllowedMember($member->getEmail())) {
+                throw new AuthzException(sprintf("Member is not Authorized on Selection Plan."));
+            }
+
+            $current_selection_plan->checkPresentationAllowedQuestions($data);
+            $current_selection_plan->checkPresentationAllowedEdtiableQuestions($data, $presentation->getSnapshot());
+
+            $presentation->setUpdatedBy(ResourceServerContext::getCurrentUser(false));
+
+            return $this->saveOrUpdatePresentation
+            (
+                $summit,
+                $current_selection_plan,
+                $presentation,
+                $current_speaker,
+                $data
+            );
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $presentation_id
      * @return void
      * @throws EntityNotFoundException
      * @throws ValidationException
@@ -575,7 +579,7 @@ final class PresentationService
 
             $current_selection_plan = $presentation->getSelectionPlan();
 
-            if(is_null($current_selection_plan))
+            if (is_null($current_selection_plan))
                 throw new ValidationException("Presentation is not assigned to any selection plan.");
 
             if (!$presentation->canEdit($current_speaker))
@@ -584,7 +588,7 @@ final class PresentationService
                     $presentation_id
                 ));
 
-            if(!$current_selection_plan->isAllowedMember($member->getEmail())){
+            if (!$current_selection_plan->isAllowedMember($member->getEmail())) {
                 throw new AuthzException(sprintf("Member is not Authorized on Selection Plan."));
             }
 
@@ -642,7 +646,7 @@ final class PresentationService
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
 
-            if(!$current_selection_plan->isAllowedMember($member->getEmail())){
+            if (!$current_selection_plan->isAllowedMember($member->getEmail())) {
                 throw new AuthzException(sprintf("Member is not Authorized on Selection Plan."));
             }
 
@@ -958,6 +962,8 @@ final class PresentationService
         return $link;
     }
 
+    // media uploads
+
     /**
      * @param int $presentation_id
      * @param int $link_id
@@ -987,8 +993,6 @@ final class PresentationService
 
         });
     }
-
-    // media uploads
 
     /**
      * @param LaravelRequest $request
@@ -1066,22 +1070,15 @@ final class PresentationService
                 ]
             ));
 
-            $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
-            if (!is_null($strategy)) {
-                $strategy->save($fileInfo->getFile(), $mediaUpload->getPath(IStorageTypesConstants::PrivateType), $fileInfo->getFileName());
-            }
-
-            $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
-            if (!is_null($strategy)) {
-                $options = $mediaUploadType->isUseTemporaryLinksOnPublicStorage() ? [] : 'public';
-                $strategy->save
-                (
-                    $fileInfo->getFile(),
-                    $mediaUpload->getPath(IStorageTypesConstants::PublicType),
-                    $fileInfo->getFileName(),
-                    $options
-                );
-            }
+            ProcessMediaUpload::dispatch
+            (
+                $summit->getId(),
+                $mediaUploadType->getId(),
+                $mediaUpload->getPath(IStorageTypesConstants::PublicType),
+                $mediaUpload->getPath(IStorageTypesConstants::PrivateType),
+                $fileInfo->getFileName(),
+                $fileInfo->getFilePath()
+            );
 
             $mediaUpload->setFilename($fileInfo->getFileName());
             $presentation->addMediaUpload($mediaUpload);
@@ -1118,8 +1115,6 @@ final class PresentationService
                     }
                 }
             }
-            Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s  deleting original file %s", $presentation_id, $fileInfo->getFileName()));
-            $fileInfo->delete();
 
             return $mediaUpload;
         });
@@ -1184,33 +1179,23 @@ final class PresentationService
                     throw new ValidationException(sprintf("File Extension %s is not valid (%s).", $fileInfo->getFileExt(), $mediaUploadType->getValidExtensions()));
                 }
 
-                $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
-
-                if (!is_null($strategy)) {
-                    $strategy->save($fileInfo->getFile(), $mediaUpload->getPath(IStorageTypesConstants::PrivateType), $fileInfo->getFileName());
-                }
-
-                $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
-                if (!is_null($strategy)) {
-                    $options = $mediaUploadType->isUseTemporaryLinksOnPublicStorage() ? [] : 'public';
-                    $strategy->save
-                    (
-                        $fileInfo->getFile(),
-                        $mediaUpload->getPath(IStorageTypesConstants::PublicType),
-                        $fileInfo->getFileName(),
-                        $options
-                    );
-                }
+                ProcessMediaUpload::dispatch
+                (
+                    $summit->getId(),
+                    $mediaUploadType->getId(),
+                    $mediaUpload->getPath(IStorageTypesConstants::PublicType),
+                    $mediaUpload->getPath(IStorageTypesConstants::PrivateType),
+                    $fileInfo->getFileName(),
+                    $fileInfo->getFilePath()
+                );
 
                 $payload['file_name'] = $fileInfo->getFileName();
 
-                $fileInfo->delete();
             }
 
             return PresentationMediaUploadFactory::populate($mediaUpload, $payload);
         });
     }
-
 
     /**
      * @inheritDoc
@@ -1476,13 +1461,13 @@ final class PresentationService
      */
     public function deletePresentationComment(Summit $summit, int $presentation_id, int $comment_id): void
     {
-        $this->tx_service->transaction(function() use($summit, $presentation_id, $comment_id){
+        $this->tx_service->transaction(function () use ($summit, $presentation_id, $comment_id) {
             $presentation = $summit->getEvent($presentation_id);
-            if(!$presentation instanceof Presentation)
+            if (!$presentation instanceof Presentation)
                 throw new EntityNotFoundException("Presentation not found.");
 
             $comment = $presentation->getComment($comment_id);
-            if(!$comment instanceof SummitPresentationComment)
+            if (!$comment instanceof SummitPresentationComment)
                 throw new EntityNotFoundException("Presentation Comment not found.");
 
             $presentation->removeComment($comment);
@@ -1499,13 +1484,13 @@ final class PresentationService
      */
     public function updatePresentationComment(Summit $summit, int $presentation_id, int $comment_id, array $payload): SummitPresentationComment
     {
-        return $this->tx_service->transaction(function() use($summit, $presentation_id, $comment_id, $payload){
+        return $this->tx_service->transaction(function () use ($summit, $presentation_id, $comment_id, $payload) {
             $presentation = $summit->getEvent($presentation_id);
-            if(!$presentation instanceof Presentation)
+            if (!$presentation instanceof Presentation)
                 throw new EntityNotFoundException("Presentation not found.");
 
             $comment = $presentation->getComment($comment_id);
-            if(!$comment instanceof SummitPresentationComment)
+            if (!$comment instanceof SummitPresentationComment)
                 throw new EntityNotFoundException("Presentation Comment not found.");
 
             return SummitPresentationCommentFactory::populate($comment, $payload);
@@ -1523,14 +1508,102 @@ final class PresentationService
      */
     public function createPresentationComment(Summit $summit, int $presentation_id, Member $current_user, array $payload): SummitPresentationComment
     {
-        return $this->tx_service->transaction(function() use($summit, $presentation_id, $current_user, $payload){
+        return $this->tx_service->transaction(function () use ($summit, $presentation_id, $current_user, $payload) {
             $presentation = $summit->getEvent($presentation_id);
-            if(!$presentation instanceof Presentation)
+            if (!$presentation instanceof Presentation)
                 throw new EntityNotFoundException("Presentation not found.");
 
             $comment = SummitPresentationCommentFactory::build($current_user, $payload);
             $presentation->addPresentationComment($comment);
             return $comment;
+        });
+    } // bytes
+
+    /**
+     * @param int $summit_id
+     * @param int $media_upload_type_id
+     * @param string|null $public_path
+     * @param string|null $private_path
+     * @param string $file_name
+     * @param string $path
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function processMediaUpload(int $summit_id, int $media_upload_type_id, ?string $public_path, ?string $private_path, string $file_name, string $path): void
+    {
+        $this->tx_service->transaction(function () use (
+            $summit_id,
+            $media_upload_type_id,
+            $public_path,
+            $private_path,
+            $file_name,
+            $path
+        ) {
+            Log::debug(sprintf("PresentationService::processMediaUpload summit id %s media upload type id %s public path %s private path %s file name %s path %s",
+                $summit_id,
+                $media_upload_type_id,
+                $public_path,
+                $private_path,
+                $file_name,
+                $path
+            ));
+
+            $summit = $this->summit_repository->getById($summit_id);
+            if (is_null($summit)) {
+                throw new EntityNotFoundException(sprintf("Summit %s not found.", $summit_id));
+            }
+
+            $mediaUploadType = $summit->getMediaUploadTypeById($media_upload_type_id);
+            if (is_null($mediaUploadType)) {
+                throw new EntityNotFoundException(sprintf("Media Upload Type %s not found.", $media_upload_type_id));
+            }
+
+            $disk = Storage::disk(FileUploadInfo::getStorageDriver());
+
+            if (!$disk->exists($path))
+                throw new ValidationException(sprintf("file provide on filepath %s does not exists on %s storage.", FileUploadInfo::getStorageDriver(), $path));
+
+            $stream = $disk->readStream($path);
+
+            if (!is_resource($stream)) {
+                throw new ValidationException(sprintf("file provide on filepath %s does not exists on %s storage.", FileUploadInfo::getStorageDriver(), $path));
+            }
+            //process file per chunks and copy to local
+            $localPath = "/tmp/" . $file_name;
+            $out = fopen($localPath, 'w');
+            while ($chunk = fread($stream, self::LocalChunkSize)) {
+                fwrite($out, $chunk);
+            }
+            fclose($stream);
+            fclose($out);
+
+            $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
+            if (!is_null($strategy)) {
+                Log::debug(sprintf("PresentationService::processMediaUpload saving file %s to private storage", $file_name));
+                $strategy->saveFromPath(
+                    $localPath,
+                    $private_path,
+                    $file_name
+                );
+            }
+
+            $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
+            if (!is_null($strategy)) {
+                Log::debug(sprintf("PresentationService::processMediaUpload saving file %s to public storage", $file_name));
+                $options = $mediaUploadType->isUseTemporaryLinksOnPublicStorage() ? [] : 'public';
+                $strategy->saveFromPath
+                (
+                    $localPath,
+                    $public_path,
+                    $file_name,
+                    $options
+                );
+            }
+
+            Log::debug(sprintf("PresentationService::processMediaUpload deleting original file %s from storage %s", $file_name, FileUploadInfo::getStorageDriver()));
+            $disk->delete($path);
+            Log::debug(sprintf("PresentationService::processMediaUpload deleting local file %s", $localPath));
+            unlink($localPath);
         });
     }
 }

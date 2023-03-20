@@ -100,12 +100,32 @@ final class ProcessScheduleEntityLifeCycleEventService
                 )
             );
 
+            if ($entity_type === 'PresentationSpeakerAssignment') {
+                $summit = $this->summit_repository->getById($summit_id);
+                if (!$summit instanceof Summit) return;
+
+                $repository = EntityManager::getRepository(PresentationSpeakerAssignment::class);
+                $ps_assignment = $repository->find($entity_id);
+                if (!$ps_assignment instanceof PresentationSpeakerAssignment) return;
+                $presentation = $ps_assignment->getPresentation();
+
+                if ($presentation instanceof Presentation) {
+                    Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process presentation %s from summit %s",
+                        $entity_id, $summit->getId()));
+
+                    $entity_id = $presentation->getId();
+                    $entity_type = 'Presentation';
+                    $entity_operator = 'UPDATE';
+                }
+
+            }
+
+
             // clear cache region
             $cache_region_key = null;
             if ($entity_type === 'Presentation' || $entity_type === 'SummitEvent') {
                 $cache_region_key = CacheRegions::getCacheRegionFor(CacheRegions::CacheRegionEvents, $entity_id);
             }
-
 
             if (!empty($cache_region_key) && $this->cache_service->exists($cache_region_key)) {
                 Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process will clear cache region %s", $cache_region_key));
@@ -174,30 +194,6 @@ final class ProcessScheduleEntityLifeCycleEventService
                                 'entity_operator' => $entity_operator
                             ]);
                     }
-                }
-                return;
-            }
-
-            if ($entity_type === 'PresentationSpeakerAssignment') {
-                $summit = $this->summit_repository->getById($summit_id);
-                if (!$summit instanceof Summit) return;
-
-                $repository = EntityManager::getRepository(PresentationSpeakerAssignment::class);
-                $ps_assignment = $repository->find($entity_id);
-                if (!$ps_assignment instanceof PresentationSpeakerAssignment) return;
-                $presentation = $ps_assignment->getPresentation();
-
-                if ($presentation instanceof Presentation) {
-                    Log::debug(sprintf("ProcessScheduleEntityLifeCycleEventService::process presentation %s from summit %s",
-                        $entity_id, $summit->getId()));
-
-                    $this->rabbit_service->publish(
-                        [
-                            'summit_id' => $summit->getId(),
-                            'entity_id' => $presentation->getId(),
-                            'entity_type' => 'Presentation',
-                            'entity_operator' => 'UPDATE'
-                        ]);
                 }
                 return;
             }

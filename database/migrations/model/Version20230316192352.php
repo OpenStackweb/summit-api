@@ -13,16 +13,16 @@
  **/
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
-use LaravelDoctrine\Migrations\Schema\Builder;
 
-class Version20230316192352 extends AbstractMigration
+/**
+ * Class Version20230316192352
+ * @package Database\Migrations\Model
+ */
+final class Version20230316192352 extends AbstractMigration
 {
     public function up(Schema $schema):void
     {
-        $builder = new Builder($schema);
-        if(!$builder->hasTable("Presentation_Speakers")) {
-            $this->addSql("ALTER TABLE `Presentation_Speakers` ADD UNIQUE `Presentation_Speaker_Unique_IDX` (`PresentationID`, `PresentationSpeakerID`) USING BTREE;");
-        }
+        $this->addSql("ALTER TABLE `Presentation_Speakers` ADD UNIQUE `Presentation_Speaker_Unique_IDX` (`PresentationID`, `PresentationSpeakerID`) USING BTREE;");
     }
 
     /**

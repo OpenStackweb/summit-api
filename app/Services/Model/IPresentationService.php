@@ -13,6 +13,8 @@
  **/
 
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore;
+use Exception;
+use Illuminate\Http\Request as LaravelRequest;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Member;
@@ -23,7 +25,6 @@ use models\summit\PresentationMediaUpload;
 use models\summit\PresentationSlide;
 use models\summit\PresentationVideo;
 use models\summit\Summit;
-use Illuminate\Http\Request as LaravelRequest;
 use models\summit\SummitPresentationComment;
 
 /**
@@ -100,7 +101,7 @@ interface IPresentationService
      * @param array $allowed_extensions
      * @param int $max_file_size
      * @return mixed|PresentationSlide
-     * @throws \Exception
+     * @throws Exception
      */
     public function addSlideTo
     (
@@ -119,7 +120,7 @@ interface IPresentationService
      * @param array $allowed_extensions
      * @param int $max_file_size
      * @return mixed|PresentationSlide
-     * @throws \Exception
+     * @throws Exception
      */
     public function updateSlide
     (
@@ -172,9 +173,9 @@ interface IPresentationService
     public function addMediaUploadTo
     (
         LaravelRequest $request,
-        Summit $summit,
-        int $presentation_id,
-        array $payload
+        Summit         $summit,
+        int            $presentation_id,
+        array          $payload
     ): PresentationMediaUpload;
 
     /**
@@ -184,15 +185,15 @@ interface IPresentationService
      * @param int $media_upload_id
      * @param array $payload
      * @return PresentationMediaUpload
-     * @throws \Exception
+     * @throws Exception
      */
     public function updateMediaUploadFrom
     (
         LaravelRequest $request,
-        Summit $summit,
-        int $presentation_id,
-        int $media_upload_id,
-        array $payload
+        Summit         $summit,
+        int            $presentation_id,
+        int            $media_upload_id,
+        array          $payload
     ): PresentationMediaUpload;
 
     /**
@@ -210,7 +211,7 @@ interface IPresentationService
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function castAttendeeVote(Summit $summit, Member $member, int $presentation_id):PresentationAttendeeVote;
+    public function castAttendeeVote(Summit $summit, Member $member, int $presentation_id): PresentationAttendeeVote;
 
     /**
      * @param Summit $summit
@@ -219,7 +220,7 @@ interface IPresentationService
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function unCastAttendeeVote(Summit $summit, Member $member, int $presentation_id):void;
+    public function unCastAttendeeVote(Summit $summit, Member $member, int $presentation_id): void;
 
     /**
      * @param Summit $summit
@@ -231,7 +232,7 @@ interface IPresentationService
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function addTrackChairScore(Summit $summit, Member $member, int $selection_plan_id , int $presentation_id, int $score_type_id):PresentationTrackChairScore;
+    public function addTrackChairScore(Summit $summit, Member $member, int $selection_plan_id, int $presentation_id, int $score_type_id): PresentationTrackChairScore;
 
     /**
      * @param Summit $summit
@@ -247,10 +248,10 @@ interface IPresentationService
     (
         Summit $summit,
         Member $member,
-        int $selection_plan_id,
-        int $presentation_id,
-        int $score_type_id
-    ):void;
+        int    $selection_plan_id,
+        int    $presentation_id,
+        int    $score_type_id
+    ): void;
 
     /**
      * @param Summit $summit
@@ -259,7 +260,7 @@ interface IPresentationService
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function deletePresentationComment(Summit $summit, int $presentation_id, int $comment_id):void;
+    public function deletePresentationComment(Summit $summit, int $presentation_id, int $comment_id): void;
 
     /**
      * @param Summit $summit
@@ -270,7 +271,7 @@ interface IPresentationService
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function createPresentationComment(Summit $summit, int $presentation_id, Member $current_user, array $payload):SummitPresentationComment;
+    public function createPresentationComment(Summit $summit, int $presentation_id, Member $current_user, array $payload): SummitPresentationComment;
 
     /**
      * @param Summit $summit
@@ -281,7 +282,24 @@ interface IPresentationService
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function updatePresentationComment(Summit $summit, int $presentation_id, int $comment_id, array $payload):SummitPresentationComment;
+    public function updatePresentationComment(Summit $summit, int $presentation_id, int $comment_id, array $payload): SummitPresentationComment;
+
+    /**
+     * @param int $summit_id
+     * @param int $media_upload_type_id
+     * @param string|null $public_path
+     * @param string|null $private_path
+     * @param string $file_name
+     * @param string $path
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function processMediaUpload(int     $summit_id,
+                                       int     $media_upload_type_id,
+                                       ?string $public_path,
+                                       ?string $private_path,
+                                       string  $file_name,
+                                       string  $path): void;
 
     /**
      * @param Summit $summit
@@ -299,8 +317,8 @@ interface IPresentationService
      * @param int $presentation_id
      * @param int $speaker_id
      * @return Presentation
-     * @throws EntityNotFoundException
-     * @throws ValidationException
+     * @throws \Exception
      */
-    public function removeSpeakerFromPresentation(Summit $summit, int $presentation_id, int $speaker_id): Presentation;
+    public function removeSpeakerFromPresentation(Summit $summit, int $presentation_id, int $speaker_id): void;
+
 }

@@ -19,27 +19,30 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTest
 
     use InsertMemberTestData;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-        self::insertMemberTestData(IGroup::TrackChairs);
-        self::$defaultMember = self::$member;
-        self::$defaultMember2 = self::$member2;
-        self::insertSummitTestData();
-    }
-
-    protected function tearDown(): void
-    {
-        self::clearSummitTestData();
-        parent::tearDown();
-    }
+//    protected function setUp(): void
+//    {
+//        parent::setUp();
+//        self::insertMemberTestData(IGroup::TrackChairs);
+//        self::$defaultMember = self::$member;
+//        self::$defaultMember2 = self::$member2;
+//        self::insertSummitTestData();
+//    }
+//
+//    protected function tearDown(): void
+//    {
+//        self::clearSummitTestData();
+//        parent::tearDown();
+//    }
 
     public function testGetCurrentSummitSubmittersOrderByID()
     {
         $params = [
-            'id' => self::$summit->getId(),
+            'id' => 3410, //self::$summit->getId(),
             'page' => 1,
             'per_page' => 10,
+            'filter'    => [
+                'is_speaker==true'
+            ],
             'order' => '+id',
             'expand' => 'accepted_presentations,alternate_presentations,rejected_presentations',
         ];

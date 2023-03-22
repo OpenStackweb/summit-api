@@ -376,7 +376,8 @@ final class DoctrineMemberRepository
                                  EXISTS (
                                     SELECT __p61.id FROM models\summit\Presentation __p61 
                                     JOIN __p61.created_by __c61 WITH __c61 = e.id 
-                                    JOIN __p61.speakers __spk61 WITH __spk61.member = e.id 
+                                    JOIN __p61.speakers __pspk61 
+                                    JOIN __pspk61.speaker __spk61 WITH __spk61.member = e.id 
                                     WHERE __p61.summit = :summit
                                  ) 
                                  OR 
@@ -393,7 +394,8 @@ final class DoctrineMemberRepository
                                 NOT EXISTS (
                                     SELECT __p61.id FROM models\summit\Presentation __p61 
                                     JOIN __p61.created_by __c61 WITH __c61 = e.id 
-                                    JOIN __p61.speakers __spk61 WITH __spk61.member = e.id 
+                                    JOIN __p61.speakers __pspk61
+                                    JOIN __pspk61.speaker __spk61 WITH __spk61.member = e.id 
                                     WHERE __p61.summit = :summit
                                 ) 
                                 AND  

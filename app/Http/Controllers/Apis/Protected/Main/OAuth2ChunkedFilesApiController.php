@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Pion\Laravel\ChunkUpload\Exceptions\UploadMissingFileException;
 use Pion\Laravel\ChunkUpload\Handler\AbstractHandler;
 use Pion\Laravel\ChunkUpload\Receiver\FileReceiver;
@@ -54,4 +56,5 @@ class OAuth2ChunkedFilesApiController extends UploadController
             "done" => $done
         ]);
     }
+
 }

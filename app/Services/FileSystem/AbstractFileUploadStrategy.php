@@ -34,12 +34,25 @@ abstract class AbstractFileUploadStrategy implements IFileUploadStrategy
     }
 
     /**
+     * @param string $file
+     * @param string $path
+     * @param string $filename
+     * @param mixed $options
+     * @return false|string
+     */
+    public function saveFromPath(string $file, string $path, string $filename, $options = []):bool
+    {
+        Log::debug(sprintf("AbstractFileUploadStrategy::saveFromPath path %s filename %s options %s", $path, $filename, json_encode($options)));
+        return Storage::disk($this->getDriver())->putFileAs($path, $file, $filename, $options);
+    }
+
+    /**
      * @param resource $fp
      * @param string $path
      * @param mixed $options
      * @return bool
      */
-    public function saveFromStream($fp,  string $path, $options = []):bool{
+    public function saveFromStream($fp, string $path, $options = []):bool{
         return Storage::disk($this->getDriver())->put($path, $fp,  $options );
     }
 

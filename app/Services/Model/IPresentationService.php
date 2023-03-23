@@ -106,10 +106,10 @@ interface IPresentationService
     public function addSlideTo
     (
         LaravelRequest $request,
-                       $presentation_id,
-        array          $slide_data,
-        array          $allowed_extensions = [],
-                       $max_file_size = 1048576 // bytes
+        $presentation_id,
+        array $slide_data,
+        array $allowed_extensions = [],
+        $max_file_size = 1048576 // bytes
     );
 
     /**
@@ -125,11 +125,11 @@ interface IPresentationService
     public function updateSlide
     (
         LaravelRequest $request,
-                       $presentation_id,
-                       $slide_id,
-        array          $slide_data,
-        array          $allowed_extensions = [],
-                       $max_file_size = 62914560
+        $presentation_id,
+        $slide_id,
+        array $slide_data,
+        array $allowed_extensions = [],
+        $max_file_size = 62914560
     );
 
     /**
@@ -300,4 +300,25 @@ interface IPresentationService
                                        ?string $private_path,
                                        string  $file_name,
                                        string  $path): void;
+
+    /**
+     * @param Summit $summit
+     * @param int $presentation_id
+     * @param int $speaker_id
+     * @param array $data
+     * @return Presentation
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function upsertPresentationSpeaker(Summit $summit, int $presentation_id, int $speaker_id, array $data): Presentation;
+
+    /**
+     * @param Summit $summit
+     * @param int $presentation_id
+     * @param int $speaker_id
+     * @return Presentation
+     * @throws \Exception
+     */
+    public function removeSpeakerFromPresentation(Summit $summit, int $presentation_id, int $speaker_id): void;
+
 }

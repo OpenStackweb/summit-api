@@ -1546,7 +1546,6 @@ class Summit extends SilverstripeBaseModel
         return $query->setParameter('summit_id', $this->getIdentifier())->getResult();
     }
 
-
     public function getPublishedPresentations()
     {
         $query = $this->createQuery("SELECT p from models\summit\Presentation p JOIN p.summit s WHERE s.id = :summit_id and p.published = 1");
@@ -1899,7 +1898,8 @@ class Summit extends SilverstripeBaseModel
         $query = $this->createQueryBuilder()
             ->select('distinct ps')
             ->from('models\summit\PresentationSpeaker', 'ps')
-            ->join('ps.presentations', 'p')
+            ->join('ps.presentations', 'ps_p')
+            ->join('ps_p.presentation', 'p')
             ->join('p.summit', 's')
             ->where("s.id = :summit_id");
 

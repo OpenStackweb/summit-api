@@ -399,4 +399,65 @@ final class OAuth2PresentationApiTest extends ProtectedApiTest
         $this->assertResponseStatus(204);
 
     }
+
+    public function testAddSpeaker2Presentation() {
+
+        $params = [
+            'id'              => self::$summit->getId(),
+            'presentation_id' => self::$default_selection_plan->getPresentations()[0]->getId(),
+            'speaker_id'      => self::$speaker->getId(),
+        ];
+
+        $payload = [
+            'order' => 1,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationApiController@addSpeaker2Presentation",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($payload)
+        );
+
+        $this->assertResponseStatus(201);
+        $content = $response->getContent();
+        $presentation = json_decode($content);
+        $this->assertTrue(!is_null($presentation));
+        $this->assertTrue(count($presentation->speakers) > 1);
+    }
+
+     public function testRemoveSpeakerFromPresentation() {
+
+         $params = [
+             'id'              => self::$summit->getId(),
+             'presentation_id' => self::$default_selection_plan->getPresentations()[0]->getId(),
+             'speaker_id'      => self::$speaker->getId(),
+         ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2PresentationApiController@removeSpeakerFromPresentation",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
+    }
 }

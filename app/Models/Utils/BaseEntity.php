@@ -11,12 +11,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Doctrine\ORM\Event\PreUpdateEventArgs;
 use models\utils\IEntity;
 use Doctrine\ORM\Mapping AS ORM;
 use ReflectionClass;
 
 /***
  * @ORM\MappedSuperclass
+ * @ORM\HasLifecycleCallbacks
  * Class BaseEntity
  * @package App\Models\Utils
  */
@@ -59,5 +62,12 @@ class BaseEntity implements IEntity
     {
         $class_name = (new ReflectionClass($this))->getShortName();
         return "{$class_name}@{$this->getIdentifier()}";
+    }
+
+    /**
+     * @ORM\PreUpdate:
+     */
+    public function updating(PreUpdateEventArgs $args)
+    {
     }
 }

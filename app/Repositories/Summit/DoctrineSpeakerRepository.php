@@ -126,7 +126,7 @@ final class DoctrineSpeakerRepository
             'presentations_track_id' => new DoctrineFilterMapping(
                 'EXISTS ( 
                               SELECT __p41_:i.id FROM models\summit\Presentation __p41_:i 
-                              JOIN __p41_:i.speakers __spk41_:i WITH __spk41_:i.id = e.id 
+                              JOIN __p41_:i.speakers __spk41_:i WITH __spk41_:i.speaker = e.id 
                               JOIN __p41_:i.category __tr41_:i 
                               WHERE 
                               __p41_:i.summit = :summit AND
@@ -142,7 +142,7 @@ final class DoctrineSpeakerRepository
             'presentations_selection_plan_id' => new DoctrineFilterMapping(
                 'EXISTS ( 
                               SELECT __p51_:i.id FROM models\summit\Presentation __p51_:i 
-                              JOIN __p51_:i.speakers __spk51_:i WITH __spk51_:i.id = e.id 
+                              JOIN __p51_:i.speakers __spk51_:i WITH __spk51_:i.speaker = e.id 
                               JOIN __p51_:i.selection_plan __sel_plan51_:i 
                               JOIN __p51_:i.category __tr51_:i 
                               JOIN __p51_:i.type __type51_:i 
@@ -162,7 +162,7 @@ final class DoctrineSpeakerRepository
             'presentations_type_id' =>  new DoctrineFilterMapping(
                 'EXISTS ( 
                               SELECT __p61_:i.id FROM models\summit\Presentation __p61_:i 
-                              JOIN __p61_:i.speakers __spk61_:i WITH __spk61_:i.id = e.id 
+                              JOIN __p61_:i.speakers __spk61_:i WITH __spk61_:i.speaker = e.id 
                               JOIN __p61_:i.type __type61_:i 
                               WHERE 
                               __p61_:i.summit = :summit AND
@@ -178,7 +178,7 @@ final class DoctrineSpeakerRepository
             'presentations_title' =>  new DoctrineFilterMapping(
                 'EXISTS ( 
                               SELECT __p71.id FROM models\summit\Presentation __p71
-                              JOIN __p71.speakers __spk71 WITH __spk71.id = e.id 
+                              JOIN __p71.speakers __spk71 WITH __spk71.speaker = e.id 
                               WHERE 
                               __p71.summit = :summit AND
                               LOWER(__p71.title) :operator LOWER(:value) )'.
@@ -193,7 +193,7 @@ final class DoctrineSpeakerRepository
             'presentations_abstract' =>  new DoctrineFilterMapping(
                 'EXISTS ( 
                               SELECT __p81.id FROM models\summit\Presentation __p81
-                              JOIN __p81.speakers __spk81 WITH __spk81.id = e.id 
+                              JOIN __p81.speakers __spk81 WITH __spk81.speaker = e.id 
                               WHERE 
                               __p81.summit = :summit AND
                               LOWER(__p81.abstract) :operator LOWER(:value) )'.
@@ -207,7 +207,7 @@ final class DoctrineSpeakerRepository
             'presentations_submitter_full_name' => new DoctrineFilterMapping(
                 "EXISTS ( 
                               SELECT __p91.id FROM models\summit\Presentation __p91
-                              JOIN __p91.speakers __spk91 WITH __spk91.id = e.id 
+                              JOIN __p91.speakers __spk91 WITH __spk91.speaker = e.id 
                               JOIN __p91.created_by __cb91
                               WHERE 
                               __p91.summit = :summit AND
@@ -222,7 +222,7 @@ final class DoctrineSpeakerRepository
             ),
             'presentations_submitter_email' => new DoctrineFilterMapping("EXISTS ( 
                               SELECT __p10_1.id FROM models\summit\Presentation __p10_1
-                              JOIN __p10_1.speakers __spk10_1 WITH __spk10_1.id = e.id 
+                              JOIN __p10_1.speakers __spk10_1 WITH __spk10_1.speaker = e.id 
                               JOIN __p10_1.created_by __cb10_1
                               WHERE 
                               __p10_1.summit = :summit AND
@@ -241,7 +241,7 @@ final class DoctrineSpeakerRepository
                             sprintf('
                                      EXISTS (
                                         SELECT __p12.id FROM models\summit\Presentation __p12 
-                                        JOIN __p12.speakers __spk12 WITH __spk12.id = e.id 
+                                        JOIN __p12.speakers __spk12 WITH __spk12.speaker = e.id 
                                         JOIN __p12.category __cat12
                                         JOIN __p12.type __t12
                                         LEFT JOIN __p12.selection_plan __sel_plan12 
@@ -281,7 +281,7 @@ final class DoctrineSpeakerRepository
                             sprintf('
                                      NOT EXISTS (
                                         SELECT __p12.id FROM models\summit\Presentation __p12 
-                                        JOIN __p12.speakers __spk12 WITH __spk12.id = e.id 
+                                        JOIN __p12.speakers __spk12 WITH __spk12.speaker = e.id 
                                         JOIN __p12.category __cat12
                                         JOIN __p12.type __t12
                                         LEFT JOIN __p12.selection_plan __sel_plan12 
@@ -325,7 +325,7 @@ final class DoctrineSpeakerRepository
                             'true',
                             sprintf('EXISTS (
                                         SELECT __p21.id FROM models\summit\Presentation __p21 
-                                        JOIN __p21.speakers __spk21 WITH __spk21.id = e.id 
+                                        JOIN __p21.speakers __spk21 WITH __spk21.speaker = e.id 
                                         JOIN __p21.category __cat21
                                         JOIN __p21.type __t21
                                         LEFT JOIN __p21.selection_plan __sel_plan21 
@@ -362,7 +362,7 @@ final class DoctrineSpeakerRepository
                             'false',
                             sprintf('NOT EXISTS (
                                         SELECT __p21.id FROM models\summit\Presentation __p21 
-                                        JOIN __p21.speakers __spk21 WITH __spk21.id = e.id 
+                                        JOIN __p21.speakers __spk21 WITH __spk21.speaker = e.id 
                                         JOIN __p21.category __cat21
                                         JOIN __p21.type __t21
                                         LEFT JOIN __p21.selection_plan __sel_plan21 
@@ -403,7 +403,7 @@ final class DoctrineSpeakerRepository
                             'true',
                             sprintf('EXISTS (
                                         SELECT __p31.id FROM models\summit\Presentation __p31 
-                                        JOIN __p31.speakers __spk31 WITH __spk31.id = e.id 
+                                        JOIN __p31.speakers __spk31 WITH __spk31.speaker = e.id 
                                         JOIN __p31.category __cat31
                                         JOIN __p31.type __t31
                                         LEFT JOIN __p31.selection_plan __sel_plan31 
@@ -449,7 +449,7 @@ final class DoctrineSpeakerRepository
                             sprintf('
                                      NOT EXISTS (
                                         SELECT __p31.id FROM models\summit\Presentation __p31 
-                                        JOIN __p31.speakers __spk31 WITH __spk31.id = e.id 
+                                        JOIN __p31.speakers __spk31 WITH __spk31.speaker = e.id 
                                         JOIN __p31.category __cat31
                                         JOIN __p31.type __t31
                                         LEFT JOIN __p31.selection_plan __sel_plan31 
@@ -539,7 +539,7 @@ SQL,
                 // we need to have SIZE(e.presentations) > 0 OR SIZE(e.moderated_presentations) > 0 for a particular summit
                 ->where(" 
                          EXISTS (
-                            SELECT __p.id FROM models\summit\Presentation __p JOIN __p.speakers __spk WITH __spk.id = e.id 
+                            SELECT __p.id FROM models\summit\Presentation __p JOIN __p.speakers __spk WITH __spk.speaker = e.id 
                             WHERE __p.summit = :summit
                          ) OR
                          EXISTS (
@@ -578,7 +578,7 @@ SQL,
                 // we need to have SIZE(e.presentations) > 0 OR SIZE(e.moderated_presentations) > 0 for a particular summit
                 ->where(" 
                          EXISTS (
-                            SELECT __p.id FROM models\summit\Presentation __p JOIN __p.speakers __spk WITH __spk.id = e.id 
+                            SELECT __p.id FROM models\summit\Presentation __p JOIN __p.speakers __spk WITH __spk.speaker = e.id 
                             WHERE __p.summit = :summit
                          ) OR
                          EXISTS (

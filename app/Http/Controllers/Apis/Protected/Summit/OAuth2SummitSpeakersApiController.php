@@ -44,6 +44,10 @@ use utils\PagingResponse;
  */
 final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
 {
+    use RequestProcessor;
+
+    use GetAndValidateJsonPayload;
+
     /**
      * @var ISpeakerService
      */
@@ -83,8 +87,6 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @var ISummitService
      */
     private $summit_service;
-
-    use RequestProcessor;
 
     /**
      * OAuth2SummitSpeakersApiController constructor.
@@ -412,11 +414,11 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         return $this->_getAll(
             function () {
                 return [
-                    'first_name' => ['=@', '=='],
-                    'last_name' => ['=@', '=='],
-                    'email' => ['=@', '=='],
+                    'first_name' => ['=@', '==','@@'],
+                    'last_name' => ['=@', '==','@@'],
+                    'email' => ['=@', '==','@@'],
                     'id' => ['=='],
-                    'full_name' => ['=@', '=='],
+                    'full_name' => ['=@', '==','@@'],
                     'member_id' => ['=='],
                     'member_user_external_id' => ['=='],
                 ];

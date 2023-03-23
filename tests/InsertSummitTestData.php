@@ -408,6 +408,8 @@ trait InsertSummitTestData
 
         self::$mainVenue->addFloor($floor);
 
+        self::$em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+
         self::$venue_rooms = [];
         for($i = 0 ; $i < 20; $i++){
             $room = new SummitVenueRoom();
@@ -552,6 +554,10 @@ trait InsertSummitTestData
 
         self::$summit->addSelectionPlan(self::$default_selection_plan);
         self::$summit->addSelectionPlan(self::$default_selection_plan2);
+
+        if (!self::$em ->isOpen()) {
+            self::$em  = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+        }
 
         self::$presentations = [];
 

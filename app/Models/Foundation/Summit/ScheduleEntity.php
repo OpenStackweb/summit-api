@@ -45,7 +45,12 @@ trait ScheduleEntity
     {
         try {
             $rc = new ReflectionClass($this);
-            if (!$rc->hasProperty("summit")) return 0;
+
+            if (!$rc->hasProperty("summit")){
+                if ($rc->hasMethod("getSummitId"))
+                    return $this->getSummitId();
+                return 0;
+            }
             if (is_null($this->summit)){
                 if($rc->hasProperty("former_summit_id"))
                     return $this->former_summit_id;

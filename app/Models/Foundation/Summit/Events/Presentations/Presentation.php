@@ -20,6 +20,7 @@ use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTr
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use App\Models\Foundation\Main\OrderableChilds;
 use App\Models\Foundation\Summit\IPublishableEventWithSpeakerConstraint;
+use App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment;
 use App\Models\Utils\IStorageTypesConstants;
 use App\Services\Filesystem\FileUploadStrategyFactory;
 use Behat\Transliterator\Transliterator;
@@ -46,6 +47,8 @@ use models\utils\SilverstripeBaseModel;
 class Presentation extends SummitEvent implements IPublishableEventWithSpeakerConstraint
 {
     use ExtraQuestionAnswerHolder;
+
+    use OrderableChilds;
 
     const ClassName = 'Presentation';
 
@@ -236,16 +239,8 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     protected $comments;
 
     /**
-     * @ORM\ManyToMany(targetEntity="models\summit\PresentationSpeaker", inversedBy="presentations" , fetch="EXTRA_LAZY", cascade={"persist"})
-     * @ORM\JoinTable(name="Presentation_Speakers",
-     *  joinColumns={
-     *     @ORM\JoinColumn(name="PresentationID", referencedColumnName="ID", onDelete="CASCADE")
-     * },
-     * inverseJoinColumns={
-     *      @ORM\JoinColumn(name="PresentationSpeakerID", referencedColumnName="ID",  onDelete="CASCADE")
-     *
-     * }
-     * )
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment", mappedBy="presentation", cascade={"persist", "remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var PresentationSpeakerAssignment[]
      */
     protected $speakers;
 
@@ -398,7 +393,36 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      */
     public function getSpeakers()
     {
-        return $this->speakers;
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'ASC']);
+        $res = $this->speakers->matching($criteria);
+        return $res->map(function ($entity) {
+            return $entity->getSpeaker();
+        });
+    }
+
+    /**
+     * @param PresentationSpeaker $speaker
+     * @return int
+     * @throws ValidationException
+     */
+    public function getSpeakerOrder(PresentationSpeaker $speaker): int
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('speaker', $speaker));
+        $res = $this->speakers->matching($criteria)->first();
+        return $res === false ? 0 : $res->getOrder();
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getSpeakerAssignmentsMaxOrder(): int
+    {
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'DESC']);
+        $res = $this->speakers->matching($criteria)->first();
+        return $res === false ? 0 : $res->getOrder();
     }
 
     /**
@@ -406,9 +430,13 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      */
     public function addSpeaker(PresentationSpeaker $speaker)
     {
-        if ($this->speakers->contains($speaker)) return;
-        $this->speakers->add($speaker);
-        $speaker->addPresentation($this);
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('speaker', $speaker));
+        $speaker_assignment = $this->speakers->matching($criteria)->first();
+        if ($speaker_assignment !== false) return;
+        $order = $this->getSpeakerAssignmentsMaxOrder();
+        $speaker_assignment = new PresentationSpeakerAssignment($this, $speaker, $order + 1);
+        $this->speakers->add($speaker_assignment);
     }
 
     public function clearSpeakers()
@@ -417,12 +445,50 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     }
 
     /**
+     * @param PresentationSpeaker $speaker
+     */
+    public function removeSpeaker(PresentationSpeaker $speaker)
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('speaker', $speaker));
+        $speaker_assignment = $this->speakers->matching($criteria)->first();
+        if ($speaker_assignment === false) return;
+        $this->speakers->removeElement($speaker_assignment);
+        self::resetOrderForSelectable($this->speakers, PresentationSpeakerAssignment::class);
+    }
+
+    /**
+     * @param PresentationSpeaker $speaker
+     * @param int $order
+     * @throws ValidationException
+     */
+    public function updateSpeakerOrder(PresentationSpeaker $speaker, int $order)
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('speaker', $speaker));
+        $speaker_assignment = $this->speakers->matching($criteria)->first();
+        if ($speaker_assignment === false) return;
+        self::recalculateOrderForSelectable($this->speakers, $speaker_assignment, $order, PresentationSpeakerAssignment::class);
+    }
+
+    /**
+     * @param PresentationSpeaker $speaker
+     * @return bool
+     */
+    public function isSpeaker(PresentationSpeaker $speaker)
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('speaker', $speaker));
+        return $this->speakers->matching($criteria)->count() > 0;
+    }
+
+    /**
      * @return int[]
      */
     public function getSpeakerIds()
     {
         return $this->speakers->map(function ($entity) {
-            return $entity->getId();
+            return $entity->getSpeaker()->getId();
         })->toArray();
     }
 
@@ -566,24 +632,6 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     {
         $this->materials->removeElement($mediaUpload);
         $mediaUpload->unsetPresentation();
-    }
-
-    /**
-     * @param PresentationSpeaker $speaker
-     */
-    public function removeSpeaker(PresentationSpeaker $speaker)
-    {
-        if (!$this->speakers->contains($speaker)) return;
-        $this->speakers->removeElement($speaker);
-    }
-
-    /**
-     * @param PresentationSpeaker $speaker
-     * @return bool
-     */
-    public function isSpeaker(PresentationSpeaker $speaker)
-    {
-        return $this->speakers->contains($speaker);
     }
 
     /**

@@ -67,7 +67,7 @@ final class DoctrineSummitEventRepository
 
         $query = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
-            ->from(\models\summit\SummitEvent::class, "e")
+            ->from($this->getBaseEntity(), "e")
             ->join('e.summit', 's', Join::WITH, " s.id = :summit_id")
             ->where('e.published = 1')
             ->andWhere('e.start_date < :end_date')
@@ -94,9 +94,9 @@ final class DoctrineSummitEventRepository
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null)
     {
         $query = $query->innerJoin("e.type", "et", Join::ON);
+        $query = $query->leftJoin(PresentationType::class, 'et2', 'WITH', 'et.id = et2.id');
         // if we delete the track, its set to null
         $query = $query->leftJoin("e.category", "c", Join::ON);
-        $query = $query->leftJoin(PresentationType::class, 'et2', 'WITH', 'et.id = et2.id');
         $query = $query->leftJoin("p.attendees_votes", 'av', Join::ON);
 
         return $query;
@@ -120,18 +120,8 @@ final class DoctrineSummitEventRepository
             'level' => 'e.level:json_string',
             'status' => 'p.status:json_string',
             'progress' => 'p.progress:json_int',
-            'is_chair_visible' => new DoctrineJoinFilterMapping
-            (
-                'e.category',
-                'c',
-                "c.chair_visible :operator :value"
-            ),
-            'is_voting_visible' => new DoctrineJoinFilterMapping
-            (
-                'e.category',
-                'c',
-                "c.voting_visible :operator :value"
-            ),
+            'is_chair_visible' => "c.chair_visible :operator :value",
+            'is_voting_visible' => "c.voting_visible :operator :value",
             'social_summary' => 'e.social_summary:json_string',
             'published' => 'e.published',
             'type_allows_publishing_dates' => 'et.allows_publishing_dates',
@@ -155,12 +145,7 @@ final class DoctrineSummitEventRepository
                 "s.id  :operator :value"
             ),
             'event_type_id' => "et.id :operator :value",
-            'track_id' => new DoctrineJoinFilterMapping
-            (
-                'e.category',
-                'c',
-                "c.id :operator :value"
-            ),
+            'track_id' => "c.id :operator :value",
             'track_group_id' => new DoctrineJoinFilterMapping
             (
                 'c.groups',
@@ -220,7 +205,7 @@ final class DoctrineSummitEventRepository
                     ),
                     'accepted' => new DoctrineCaseFilterMapping(
                         'accepted',
-                        "(ssp.order is not null and ssp.order <= cc.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category) OR e.published = 1"
+                        "(ssp.order is not null and ssp.order <= c.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category) OR e.published = 1"
                     ),
                     'rejected' => new DoctrineCaseFilterMapping(
                         'rejected',
@@ -239,15 +224,15 @@ final class DoctrineSummitEventRepository
                     ),
                     'alternate' => new DoctrineCaseFilterMapping(
                         'alternate',
-                        "ssp.order is not null and ssp.order > cc.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category"
+                        "ssp.order is not null and ssp.order > c.session_count and sspl.list_type = 'Group' and sspl.list_class = 'Session' and sspl.category = e.category"
                     ),
                     'lightning-accepted' => new DoctrineCaseFilterMapping(
                         'lightning-accepted',
-                        "ssp.order is not null and ssp.order <= cc.lightning_count and sspl.list_type = 'Group' and sspl.list_class = 'Lightning' and sspl.category = e.category"
+                        "ssp.order is not null and ssp.order <= c.lightning_count and sspl.list_type = 'Group' and sspl.list_class = 'Lightning' and sspl.category = e.category"
                     ),
                     'lightning-alternate' => new DoctrineCaseFilterMapping(
                         'lightning-alternate',
-                        "ssp.order is not null and ssp.order > cc.lightning_count and sspl.list_type = 'Group' and sspl.list_class = 'Lightning' and sspl.category = e.category"
+                        "ssp.order is not null and ssp.order > c.lightning_count and sspl.list_type = 'Group' and sspl.list_class = 'Lightning' and sspl.category = e.category"
                     ),
                 ]
             ),
@@ -362,7 +347,7 @@ final class DoctrineSummitEventRepository
             'start_date' => 'e.start_date',
             'end_date' => 'e.end_date',
             'created' => 'e.created',
-            'track' => 'cc.title',
+            'track' => 'c.title',
             'location' => 'l.name',
             'trackchairsel' => 'ssp.order',
             'last_edited' => 'e.last_edited',
@@ -418,9 +403,9 @@ SQL,
                 $query = $query
                     ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
                     ->leftJoin("e.created_by", 'cb', Join::LEFT_JOIN)
-                    ->leftJoin("e.category", 'cc', Join::LEFT_JOIN)
                     ->leftJoin("e.sponsors", "sprs", Join::LEFT_JOIN)
-                    ->leftJoin("p.speakers", "sp", Join::LEFT_JOIN)
+                    ->leftJoin("p.speakers", "sp_presentation", Join::LEFT_JOIN)
+                    ->leftJoin("sp_presentation.speaker", "sp", Join::LEFT_JOIN)
                     ->leftJoin('p.selected_presentations', "ssp", Join::LEFT_JOIN)
                     ->leftJoin('ssp.member', "ssp_member", Join::LEFT_JOIN)
                     ->leftJoin('p.selection_plan', "selp", Join::LEFT_JOIN)
@@ -541,8 +526,8 @@ SQL,
             ->from($this->getBaseEntity(), "e")
             ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')
             ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
-            ->leftJoin("e.category", 'cc', Join::LEFT_JOIN)
-            ->leftJoin("p.speakers", "sp", Join::LEFT_JOIN)
+            ->leftJoin("p.speakers", "sp_presentation", Join::LEFT_JOIN)
+            ->leftJoin("sp_presentation.speaker", "sp", Join::LEFT_JOIN)
             ->leftJoin('p.selection_plan', "selp", Join::LEFT_JOIN)
             ->leftJoin('p.moderator', "spm", Join::LEFT_JOIN)
             ->leftJoin('sp.member', "spmm", Join::LEFT_JOIN)

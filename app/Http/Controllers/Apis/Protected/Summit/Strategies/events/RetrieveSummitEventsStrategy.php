@@ -127,6 +127,19 @@ abstract class RetrieveSummitEventsStrategy
                 'sponsor',
                 'created_by_company',
                 'speaker_company',
+                'level',
+                'etherpad_link',
+                'streaming_url',
+                'streaming_type',
+                'meeting_url',
+                'location',
+                'tags',
+                'type',
+                'event_type_capacity',
+                'is_published',
+                'speakers',
+                'selection_status',
+                'published_date',
             ]);
         }
         return $order;

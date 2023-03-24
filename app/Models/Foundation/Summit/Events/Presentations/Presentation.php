@@ -22,7 +22,6 @@ use App\Models\Foundation\Main\OrderableChilds;
 use App\Models\Foundation\Summit\IPublishableEventWithSpeakerConstraint;
 use App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment;
 use App\Models\Utils\IStorageTypesConstants;
-use App\Services\Filesystem\FileUploadStrategyFactory;
 use Behat\Transliterator\Transliterator;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackAnswer;
 use App\Models\Foundation\Summit\SelectionPlan;

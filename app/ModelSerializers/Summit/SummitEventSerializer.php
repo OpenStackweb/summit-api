@@ -230,8 +230,6 @@ class SummitEventSerializer extends SilverStripeSerializer
                             unset($values['track_id']);
                             $values['track'] = SerializerRegistry::getInstance()->getSerializer($event->getCategory(), $this->getSerializerType($relation))->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                         }
-                        unset($values['track_id']);
-                        $values['track'] = SerializerRegistry::getInstance()->getSerializer($event->getCategory(), $this->getSerializerType($relation))->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                     }
                     case 'type':
                         {

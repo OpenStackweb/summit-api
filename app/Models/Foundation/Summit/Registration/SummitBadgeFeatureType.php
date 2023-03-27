@@ -59,6 +59,12 @@ class SummitBadgeFeatureType extends SilverstripeBaseModel
     private $image;
 
     /**
+     * @ORM\ManyToMany(targetEntity="models\summit\SummitOrderExtraQuestionType", mappedBy="allowed_badge_features_types")
+     * @var SummitOrderExtraQuestionType[]
+     */
+    private $extra_question_types;
+
+    /**
      * @return string
      */
     public function getName(): string

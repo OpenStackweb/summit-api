@@ -746,7 +746,6 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $data = Request::json();
 
             $rules = [
-
                 'location_id' => 'sometimes|required|integer',
                 'start_date' => 'sometimes|required|date_format:U',
                 'duration' => 'sometimes|integer|min:0',

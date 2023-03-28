@@ -66,7 +66,7 @@ final class SummitEventValidationRulesFactory
                 'created_by_id' => 'sometimes|integer',
                 'show_sponsors' => 'sometimes|boolean',
                 'custom_order' => 'sometimes|integer',
-                'duration' => 'sometimes|integer',
+                'duration' => 'sometimes|integer|min:0',
             ];
         }
 
@@ -107,7 +107,7 @@ final class SummitEventValidationRulesFactory
             'disclaimer_accepted' => 'sometimes|boolean',
             'created_by_id' => 'sometimes|integer',
             'show_sponsors' => 'sometimes|boolean',
-            'duration' => 'sometimes|integer',
+            'duration' => 'sometimes|integer|min:0',
         ];
     }
 
@@ -117,7 +117,7 @@ final class SummitEventValidationRulesFactory
      * @return string[]
      */
     public static function buildForTrackChair(array $data,  bool $update = false){
-        return [ 'duration' => 'sometimes|integer'];
+        return [ 'duration' => 'sometimes|integer|min:0'];
     }
 
     /**
@@ -143,7 +143,7 @@ final class SummitEventValidationRulesFactory
                 'extra_questions' => 'sometimes|extra_question_dto_array',
                 'disclaimer_accepted' => 'sometimes|boolean',
                 'selection_plan_id' => 'required|integer',
-                'duration' => 'sometimes|integer',
+                'duration' => 'sometimes|integer|min:0',
                 'level' => 'sometimes|string',
             ];
         }
@@ -161,7 +161,7 @@ final class SummitEventValidationRulesFactory
             'tags' => 'sometimes|string_array',
             'extra_questions' => 'sometimes|extra_question_dto_array',
             'disclaimer_accepted' => 'sometimes|boolean',
-            'duration' => 'sometimes|integer',
+            'duration' => 'sometimes|integer|min:0',
             'level' => 'sometimes|string',
         ];
     }

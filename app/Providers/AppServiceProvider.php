@@ -119,14 +119,16 @@ class AppServiceProvider extends ServiceProvider
         'id',
         'start_date',
         'end_date',
+        'duration',
         'location_id',
     ];
 
     static $event_dto_publish_validation_rules = [
         'id' => 'required|integer',
-        'location_id' => 'required|integer',
-        'start_date' => 'required|date_format:U',
-        'end_date' => 'required_with:start_date|date_format:U|after:start_date',
+        'location_id' => 'sometimes|required|integer',
+        'start_date' => 'sometimes|required|date_format:U',
+        'duration' => 'sometimes|integer|min:0',
+        'end_date' => 'sometimes|required_with:start_date|date_format:U|after:start_date',
     ];
 
     static $event_dto_validation_rules = [
@@ -138,8 +140,8 @@ class AppServiceProvider extends ServiceProvider
         'head_count' => 'sometimes|integer',
         'social_description' => 'sometimes|string|max:100',
         'location_id' => 'sometimes|integer',
-        'start_date' => 'sometimes|nullable|date_format:U',
-        'end_date' => 'sometimes|nullable|required_with:start_date|date_format:U|after:start_date',
+        'start_date' => 'sometimes|date_format:U',
+        'end_date' => 'sometimes|required_with:start_date|date_format:U|after:start_date',
         'allow_feedback' => 'sometimes|boolean',
         'type_id' => 'sometimes|required|integer',
         'track_id' => 'sometimes|required|integer',
@@ -154,7 +156,7 @@ class AppServiceProvider extends ServiceProvider
         // group event
         'groups' => 'sometimes|int_array',
         'selection_plan_id' => 'sometimes|integer',
-        'duration' => 'sometimes|integer',
+        'duration' => 'sometimes|integer|min:0',
         'streaming_url' => 'nullable|sometimes|url',
         'streaming_type' => 'required_with:streaming_url|string|in:VOD,LIVE',
         'etherpad_link' => 'nullable|sometimes|url',

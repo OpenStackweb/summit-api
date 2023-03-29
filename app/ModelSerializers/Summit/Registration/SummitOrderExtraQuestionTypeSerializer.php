@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Libs\ModelSerializers\Many2OneExpandSerializer;
 use models\summit\SummitOrderExtraQuestionType;
 /**
  * Class SummitOrderExtraQuestionTypeSerializer
@@ -22,6 +24,11 @@ final class SummitOrderExtraQuestionTypeSerializer extends ExtraQuestionTypeSeri
         'Usage'       => 'usage:json_string',
         'Printable'   => 'printable:json_boolean',
         'SummitId'    => 'summit_id:json_int',
+    ];
+
+    protected static $allowed_relations = [
+        'allowed_ticket_types',
+        'allowed_badge_features_types',
     ];
 
     /**
@@ -37,6 +44,24 @@ final class SummitOrderExtraQuestionTypeSerializer extends ExtraQuestionTypeSeri
         if (!$question instanceof SummitOrderExtraQuestionType) return [];
         if(!count($relations)) $relations = $this->getAllowedRelations();
         $values = parent::serialize($expand, $fields, $relations, $params);
+
+        if(in_array('allowed_ticket_types', $relations) && !isset($values['allowed_ticket_types']))
+            $values['allowed_ticket_types'] = $question->getAllowedTicketTypeIds();
+
+        if(in_array('allowed_badge_features_types', $relations) && !isset($values['allowed_badge_features_types']))
+            $values['allowed_badge_feature_types'] = $question->getAllowedBadgeFeatureTypeIds();
+
         return $values;
     }
+
+    protected static $expand_mappings = [
+        'allowed_ticket_types' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getAllowedTicketTypes',
+        ],
+        'allowed_badge_features_types' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getAllowedBadgeFeatureTypes',
+        ]
+    ];
 }

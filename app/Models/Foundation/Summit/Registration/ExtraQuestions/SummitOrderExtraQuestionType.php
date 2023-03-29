@@ -141,6 +141,18 @@ class SummitOrderExtraQuestionType extends ExtraQuestionType
     }
 
     /**
+     * @return int[]
+     */
+    public function getAllowedTicketTypeIds()
+    {
+        $ids = [];
+        foreach ($this->getAllowedTicketTypes() as $t){
+            $ids[] = intval($t->getId());
+        }
+        return $ids;
+    }
+
+    /**
      * @param SummitTicketType $ticket_type
      */
     public function addAllowedTicketType(SummitTicketType $ticket_type): void
@@ -155,6 +167,18 @@ class SummitOrderExtraQuestionType extends ExtraQuestionType
     public function getAllowedBadgeFeatureTypes()
     {
         return $this->allowed_badge_features_types;
+    }
+
+    /**
+     * @return int[]
+     */
+    public function getAllowedBadgeFeatureTypeIds()
+    {
+        $ids = [];
+        foreach ($this->getAllowedBadgeFeatureTypes() as $b){
+            $ids[] = intval($b->getId());
+        }
+        return $ids;
     }
 
     /**

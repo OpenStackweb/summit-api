@@ -14,7 +14,6 @@
 
 use App\Jobs\Emails\ProcessAttendeesEmailRequestJob;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
-use App\Services\Model\Imp\Traits\SummitRegistrationCompany;
 use App\Services\Model\Strategies\EmailActions\EmailActionsStrategyFactory;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
@@ -37,14 +36,13 @@ use services\apis\IEventbriteAPI;
 use utils\Filter;
 use utils\FilterElement;
 use utils\PagingInfo;
-use libs\utils\TextUtils;
+
 /**
  * Class AttendeeService
  * @package App\Services\Model
  */
 final class AttendeeService extends AbstractService implements IAttendeeService
 {
-    use SummitRegistrationCompany;
     /**
      * @var ISummitAttendeeRepository
      */
@@ -86,11 +84,6 @@ final class AttendeeService extends AbstractService implements IAttendeeService
     private $badge_repository;
 
     /**
-     * @var ICompanyService
-     */
-    private $company_service;
-
-    /**
      * @var ICompanyRepository
      */
     private $company_repository;
@@ -105,7 +98,6 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      * @param ISummitAttendeeBadgeRepository $badge_repository
      * @param IEventbriteAPI $eventbrite_api
      * @param ICompanyRepository $company_repository
-     * @param ICompanyService $company_service
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -119,7 +111,6 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         ISummitAttendeeBadgeRepository $badge_repository,
         IEventbriteAPI $eventbrite_api,
         ICompanyRepository $company_repository,
-        ICompanyService $company_service,
         ITransactionService $tx_service
     )
     {
@@ -132,8 +123,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         $this->eventbrite_api         = $eventbrite_api;
         $this->summit_repository      = $summit_repository;
         $this->badge_repository       = $badge_repository;
-        $this->company_repository = $company_repository;
-        $this->company_service = $company_service;
+        $this->company_repository     = $company_repository;
     }
 
     /**
@@ -238,8 +228,6 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 if(!is_null($old_attendee) && $old_attendee->getId() != $attendee->getId())
                     throw new ValidationException(sprintf("Attendee already exist for summit id %s and email %s.", $summit->getId(), trim($data['email'])));
             }
-
-            $this->registerCompanyFor($summit, $data['company'] ?? null);
 
             // check if attendee already exist for this summit
 
@@ -414,8 +402,6 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
             if(isset($payload['extra_questions']))
                 $attendee_payload['extra_questions'] = $payload['extra_questions'];
-
-            $this->registerCompanyFor($summit, $attendee_payload['company'] ?? null);
 
             SummitAttendeeFactory::populate($summit, $new_owner, $attendee_payload, $new_owner->getMember());
 
@@ -658,16 +644,21 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     // try to register the company for the summit and get it
                     $summit = $attendee->getSummit();
                     if (!$summit instanceof Summit) continue;
-                    $company = $this->registerCompanyFor($summit, $company_name);
+                    $company = $this->company_repository->getByName($company_name);
 
                     $attendee->setFirstName($fname);
                     $attendee->setSurname($lname);
                     $attendee->setEmail($email);
                     // company logic
-                    if(is_null($company))
-                        $attendee->setCompanyName($company_name);
-                    else
+                    $company = $this->company_repository->getByName($company_name);
+                    if(!is_null($company)) {
                         $attendee->setCompany($company);
+                        $company_name = $company->getName();
+                    }
+
+                    if(!empty($company_name))
+                        $attendee->setCompanyName($company_name);
+
                 }
             }
 
@@ -680,18 +671,21 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     // try to register the company for the summit and get it
                     $summit = $attendee->getSummit();
                     if (!$summit instanceof Summit) continue;
-                    $company = $this->registerCompanyFor($summit, $company_name);
+
                     // set the member
                     $attendee->setMember($member);
                     $attendee->setFirstName($fname);
                     $attendee->setSurname($lname);
                     $attendee->setEmail($email);
-
                     // company logic
-                    if(is_null($company))
-                        $attendee->setCompanyName($company_name);
-                    else
+                    $company = $this->company_repository->getByName($company_name);
+                    if(!is_null($company)) {
                         $attendee->setCompany($company);
+                        $company_name = $company->getName();
+                    }
+
+                    if(!empty($company_name))
+                        $attendee->setCompanyName($company_name);
                 }
             }
         });

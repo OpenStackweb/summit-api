@@ -47,6 +47,9 @@ final class SummitSelectionPlanFactory
         if(isset($data['is_enabled']))
             $selection_plan->setIsEnabled(boolval($data['is_enabled']));
 
+        if(isset($data['allow_new_presentations']))
+            $selection_plan->setAllowNewPresentations(boolval($data['allow_new_presentations']));
+
         if(isset($data['allow_proposed_schedules']))
             $selection_plan->setAllowProposedSchedules(boolval($data['allow_proposed_schedules']));
 

@@ -11,11 +11,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use Illuminate\Support\Facades\Log;
+use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\exceptions\ValidationException;
+use models\main\Company;
 use models\main\Member;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
+
 /**
  * Class SummitAttendeeFactory
  * @package models\summit\factories
@@ -44,48 +48,48 @@ final class SummitAttendeeFactory
      */
     public static function populate
     (
-        Summit $summit,
+        Summit         $summit,
         SummitAttendee $attendee,
-        array $payload,
-        ?Member $member = null
+        array          $payload,
+        ?Member        $member = null
     )
     {
+        $company_repository = EntityManager::getRepository(Company::class);
 
         if (!is_null($member)) {
             Log::debug(sprintf("SummitAttendeeFactory::populate setting member %s to attendee %s", $member->getId(), $member->getEmail()));
             $attendee->setEmail($member->getEmail());
             $attendee->setMember($member);
-        }
-        else{
+        } else {
             $attendee->clearMember();
         }
 
-        if(isset($payload['email']) && !empty($payload['email']))
+        if (isset($payload['email']) && !empty($payload['email']))
             $attendee->setEmail(trim($payload['email']));
 
         $summit->addAttendee($attendee);
 
-        if(isset($payload['external_id']))
+        if (isset($payload['external_id']))
             $attendee->setExternalId(trim($payload['external_id']));
 
-        if(isset($payload['first_name']))
+        if (isset($payload['first_name']))
             $attendee->setFirstName(trim($payload['first_name']));
 
         if (isset($payload['last_name']))
             $attendee->setSurname(trim($payload['last_name']));
 
-        // company
+        // company by name
         if (isset($payload['company']) && !empty($payload['company'])) {
             $attendee->setCompanyName(trim($payload['company']));
-            $company = $summit->getRegistrationCompanyByName(trim($payload['company']));
-            if(!is_null($company)){
+            $attendee->clearCompany();
+            $company = $company_repository->getByName(trim($payload['company']));
+            if (!is_null($company)) {
                 $attendee->setCompany($company);
             }
-        }
-        else if (isset($payload['company_id']) && !is_null($payload['company_id'])) {
+        } else if (isset($payload['company_id']) && !is_null($payload['company_id'])) {
             $companyId = intval($payload['company_id']);
-            if($companyId > 0) {
-                $company = $summit->getRegistrationCompanyById($companyId);
+            if ($companyId > 0) {
+                $company = $company_repository->getById($companyId);
                 if (is_null($company)) {
                     throw new ValidationException(sprintf('company with id %d not found as a registered company for summit %d',
                         $companyId, $summit->getId()));
@@ -113,7 +117,7 @@ final class SummitAttendeeFactory
                     new \DateTime('now', new \DateTimeZone('UTC'))
                 );
             }
-            if(!$disclaimer_accepted){
+            if (!$disclaimer_accepted) {
                 $attendee->clearDisclaimerAcceptedDate();
             }
         }

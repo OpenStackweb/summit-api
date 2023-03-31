@@ -30,7 +30,6 @@ use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\dto\ExternalUserDTO;
-use App\Services\Model\Imp\Traits\SummitRegistrationCompany;
 use App\Services\Utils\CSVReader;
 use App\Services\Utils\ILockManagerService;
 use Illuminate\Http\UploadedFile;
@@ -164,8 +163,6 @@ final class TaskUtils
  */
 final class ReserveOrderTask extends AbstractTask
 {
-    use SummitRegistrationCompany;
-
     /**
      * @var ITransactionService
      */
@@ -310,8 +307,6 @@ final class ReserveOrderTask extends AbstractTask
                 )
             );
 
-            $this->registerCompanyFor($this->summit, $this->payload['owner_company'] ?? null);
-
             $order = SummitOrderFactory::build($this->summit, $this->payload);
 
             $order->generateNumber();
@@ -360,8 +355,6 @@ final class ReserveOrderTask extends AbstractTask
                     if (empty($attendee_last_name))
                         $attendee_last_name = $owner_last_name;
                 }
-
-                $this->registerCompanyFor($this->summit, $attendee_company);
 
                 $ticket_type = $this->summit->getTicketTypeById($type_id);
                 if (is_null($ticket_type)) {
@@ -947,8 +940,6 @@ final class PreOrderValidationTask extends AbstractTask
 final class SummitOrderService
     extends AbstractService implements ISummitOrderService
 {
-    use SummitRegistrationCompany;
-
     /**
      * @var IMemberRepository
      */
@@ -1207,8 +1198,6 @@ final class SummitOrderService
             if ($order->isVoid())
                 throw new ValidationException("order is canceled, please retry it.");
 
-            $this->registerCompanyFor($summit, $payload['owner_company'] ?? null);
-
             SummitOrderFactory::populate($summit, $order, $payload);
 
             if ($order->isFree()) {
@@ -1270,8 +1259,6 @@ final class SummitOrderService
             }
 
             $summit = $order->getSummit();
-
-            $this->registerCompanyFor($summit, $payload['owner_company'] ?? null);
 
             SummitOrderFactory::populate($summit, $order, $payload);
 
@@ -1456,8 +1443,6 @@ final class SummitOrderService
 
             if (!is_null($company))
                 $normalize_payload['company'] = trim($company);
-
-            $this->registerCompanyFor($summit, $normalize_payload['company'] ?? null);
 
             // update attendee data with custom payload
             $attendee = SummitAttendeeFactory::populate
@@ -2231,8 +2216,6 @@ final class SummitOrderService
                     throw new ValidationException("you must provide an owner_email or a valid owner_id");
                 }
 
-                $this->registerCompanyFor($summit, $company);
-
                 $attendee = SummitAttendeeFactory::build($summit, [
                     'first_name' => $first_name,
                     'last_name' => $surname,
@@ -2244,7 +2227,6 @@ final class SummitOrderService
             }
 
             // create order
-            $this->registerCompanyFor($summit, $payload['owner_company'] ?? null);
 
             $order = SummitOrderFactory::build($summit, $payload);
 
@@ -2390,8 +2372,6 @@ final class SummitOrderService
 
                 $payload['owner'] = $this->member_repository->getByEmail($owner_email);
             }
-
-            $this->registerCompanyFor($summit, $payload['owner_company'] ?? null);
 
             SummitOrderFactory::populate($summit, $order, $payload);
 
@@ -3018,8 +2998,6 @@ final class SummitOrderService
                     )
                 );
 
-                $this->registerCompanyFor($summit, $payload['company'] ?? null);
-
                 SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
                 $attendee->addTicket($ticket);
                 $attendee->updateStatus();
@@ -3121,8 +3099,6 @@ final class SummitOrderService
 
                 if (isset($payload['extra_questions']))
                     $attendee_payload['extra_questions'] = $payload['extra_questions'];
-
-                $this->registerCompanyFor($summit, $attendee_payload['company'] ?? null);
 
                 SummitAttendeeFactory::populate($summit, $new_owner, $attendee_payload, $new_owner->getMember());
             }
@@ -3228,8 +3204,6 @@ final class SummitOrderService
             if (!is_null($disclaimer_accepted)) {
                 $reduced_payload['disclaimer_accepted'] = boolval($disclaimer_accepted);
             }
-
-            $this->registerCompanyFor($summit, $reduced_payload['company'] ?? null);
 
             // update it
             SummitAttendeeFactory::populate($summit, $attendee, $reduced_payload);
@@ -3341,7 +3315,6 @@ final class SummitOrderService
                 }
 
                 if (!is_null($attendee)) {
-                    $this->registerCompanyFor($summit, $payload['company'] ?? null);
 
                     // update it
                     SummitAttendeeFactory::populate($summit, $attendee, $payload, !empty($email) ? $this->member_repository->getByEmail($email) : null);
@@ -3523,7 +3496,7 @@ final class SummitOrderService
                         }
 
                         Log::debug(sprintf("SummitOrderService::processTicketData creating attendee with payload %s", json_encode($payload)));
-                        $this->registerCompanyFor($summit, $payload['company'] ?? null);
+
                         $attendee = SummitAttendeeFactory::build($summit, $payload, $member);
 
                         $this->attendee_repository->add($attendee);

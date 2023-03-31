@@ -22,7 +22,11 @@ final class Version20230316192352 extends AbstractMigration
 {
     public function up(Schema $schema):void
     {
-        $this->addSql("ALTER TABLE `Presentation_Speakers` ADD UNIQUE `Presentation_Speaker_Unique_IDX` (`PresentationID`, `PresentationSpeakerID`) USING BTREE;");
+        // remove bc now Presentation_Speakers is an entity and not a table a join table
+        // and order of the operations on UOW is important ( inserts and then deletes)
+        // and if we do Presentation::clearSpeakers() and then re add the same speaker
+        // code breaks bc violetes this unique index ( inserts the duplicates first)
+        //$this->addSql("ALTER TABLE `Presentation_Speakers` ADD UNIQUE `Presentation_Speaker_Unique_IDX` (`PresentationID`, `PresentationSpeakerID`) USING BTREE;");
     }
 
     /**

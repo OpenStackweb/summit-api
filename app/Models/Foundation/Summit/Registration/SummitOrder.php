@@ -508,6 +508,10 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         $this->owner_company = $company;
     }
 
+    public function clearOwnerCompany():void{
+        $this->owner_company = null;
+    }
+
     /**
      * @return Member
      */

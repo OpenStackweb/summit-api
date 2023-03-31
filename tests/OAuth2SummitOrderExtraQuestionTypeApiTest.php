@@ -61,6 +61,8 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
             'usage' => SummitOrderExtraQuestionTypeConstants::BothQuestionUsage,
             'mandatory' => true,
             'printable' => true,
+            'allowed_ticket_types' => [self::$default_ticket_type->getId(), self::$default_ticket_type_2->getId()],
+            'allowed_badge_features_types' => [],
         ];
 
         $headers = [
@@ -71,6 +73,49 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
         $response = $this->action(
             "POST",
             "OAuth2SummitOrderExtraQuestionTypeApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $question = json_decode($content);
+        $this->assertTrue(!is_null($question));
+        return $question;
+    }
+
+    public function testUpdateExtraOrderQuestion(){
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'question_id' => self::$summit->getOrderExtraQuestions()->first()
+        ];
+
+        $name = str_random(16).'_question';
+
+        $data = [
+            'name' => $name,
+            'type' => SummitOrderExtraQuestionTypeConstants::ComboBoxQuestionType,
+            'label' => $name,
+            'usage' => SummitOrderExtraQuestionTypeConstants::BothQuestionUsage,
+            'mandatory' => true,
+            'printable' => true,
+            'allowed_ticket_types' => [self::$default_ticket_type->getId(), self::$default_ticket_type_2->getId()],
+            'allowed_badge_features_types' => [],
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitOrderExtraQuestionTypeApiController@update",
             $params,
             [],
             [],

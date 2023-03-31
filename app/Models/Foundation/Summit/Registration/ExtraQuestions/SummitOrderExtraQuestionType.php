@@ -161,6 +161,11 @@ class SummitOrderExtraQuestionType extends ExtraQuestionType
         $this->allowed_ticket_types->add($ticket_type);
     }
 
+    public function clearAllowedTicketTypes(): void
+    {
+        $this->allowed_ticket_types->clear();
+    }
+
     /**
      * @return SummitBadgeFeatureType[]
      */
@@ -188,6 +193,11 @@ class SummitOrderExtraQuestionType extends ExtraQuestionType
     {
         if ($this->allowed_badge_features_types->contains($feature_type)) return;
         $this->allowed_badge_features_types->add($feature_type);
+    }
+
+    public function clearAllowedBadgeFeatureTypes(): void
+    {
+        $this->allowed_badge_features_types->clear();
     }
 
     use ScheduleEntity;

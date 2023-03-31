@@ -105,7 +105,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             'type' => ['==', '=@'],
             'usage' => ['==', '=@'],
             'label' => ['==', '=@'],
-            'class' => ['==']
+            'class' => ['=='],
+            'has_ticket_types' => ['=='],
+            'has_badge_feature_types' => ['==']
         ];
     }
 
@@ -120,6 +122,8 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             'usage' => 'sometimes|required|string',
             'label' => 'sometimes|required|string',
             'class' => 'sometimes|required|string|in:' . implode(',', ExtraQuestionTypeConstants::AllowedQuestionClass),
+            'has_ticket_types' => 'sometimes|boolean',
+            'has_badge_feature_types' => 'sometimes|boolean',
         ];
     }
 

@@ -47,29 +47,50 @@ return [
     'connections' => [
 
         // config DB
-        'config' => [
-            'driver'    => 'mysql',
-            'host'      => env('DB_HOST'),
-            'database'  => env('DB_DATABASE'),
-            'username'  => env('DB_USERNAME'),
-            'password'  => env('DB_PASSWORD'),
-            'port'      => env('DB_PORT', 3306),
-            'charset'   => 'utf8',
-            'collation' => 'utf8_unicode_ci',
-            'prefix'    => '',
-        ],
+        'config' => array_merge(
+            [
+                'driver' => 'mysql',
+                'host' => env('DB_HOST'),
+                'database' => env('DB_DATABASE'),
+                'username' => env('DB_USERNAME'),
+                'password' => env('DB_PASSWORD'),
+                'port' => env('DB_PORT', 3306),
+                'charset' => env('DB_CHARSET', 'utf8'),
+                'collation' => env('DB_COLLATION', 'utf8_unicode_ci'),
+                'prefix' => env('DB_PREFIX', ''),
+            ],
+            !empty(env('DB_MYSQL_ATTR_SSL_CA', '')) ?
+                [
+                    'options' => [
+                        PDO::MYSQL_ATTR_SSL_CA => env('DB_MYSQL_ATTR_SSL_CA', ''),
+                    ],
+                    'driverOptions' => [
+                        PDO::MYSQL_ATTR_SSL_CA => env('DB_MYSQL_ATTR_SSL_CA', ''),
+                    ],
+                ] : []),
         // Model DB
-        'model' => [
-            'driver'    => 'mysql',
-            'host'      => env('SS_DB_HOST'),
-            'database'  => env('SS_DATABASE'),
-            'username'  => env('SS_DB_USERNAME'),
-            'password'  =>  env('SS_DB_PASSWORD'),
-            'port'      =>  env('SS_DB_PORT', 3306),
-            'charset'   => 'utf8',
-            'collation' => 'utf8_unicode_ci',
-            'prefix'    => '',
-        ],
+        'model' => array_merge(
+            [
+                    'driver' => 'mysql',
+                    'host' => env('SS_DB_HOST'),
+                    'database' => env('SS_DATABASE'),
+                    'username' => env('SS_DB_USERNAME'),
+                    'password' => env('SS_DB_PASSWORD'),
+                    'port' => env('SS_DB_PORT', 3306),
+                    'charset' => env('SS_DB_CHARSET', 'utf8'),
+                    'collation' => env('SS_DB_COLLATION', 'utf8_unicode_ci'),
+                    'prefix' => env('SS_DB_PREFIX', ''),
+            ],
+            !empty(env('DB_MYSQL_ATTR_SSL_CA', '')) ?
+            [
+                'options' => [
+                    PDO::MYSQL_ATTR_SSL_CA => env('SS_DB_MYSQL_ATTR_SSL_CA', null),
+                ],
+                'driverOptions' => [
+                    PDO::MYSQL_ATTR_SSL_CA => env('SS_DB_MYSQL_ATTR_SSL_CA', null),
+                ],
+            ]:[]
+        ),
 
     ],
 
@@ -106,38 +127,41 @@ return [
         'cluster' => false,
 
         'default' => [
-            'host'       => env('REDIS_HOST'),
-            'port'       => env('REDIS_PORT'),
-            'database'   => 0,
-            'password'   => env('REDIS_PASSWORD'),
-            'timeout'    => env('REDIS_TIMEOUT', 30.0)
+            'host' => env('REDIS_HOST'),
+            'port' => env('REDIS_PORT'),
+            'database' => env('REDIS_DEFAULT_DATABASE', 0),
+            'password' => env('REDIS_PASSWORD'),
+            'timeout' => env('REDIS_TIMEOUT', 30.0),
+            'scheme' => env('REDIS_SCHEME', 'tcp'),
         ],
 
         'cache' => [
-            'host'       => env('REDIS_HOST'),
-            'port'       => env('REDIS_PORT'),
-            'database'   => 0,
-            'password'   => env('REDIS_PASSWORD'),
-            'timeout'    => env('REDIS_TIMEOUT', 30.0)
+            'host' => env('REDIS_HOST'),
+            'port' => env('REDIS_PORT'),
+            'database' => env('REDIS_CACHE_DATABASE', 0),
+            'password' => env('REDIS_PASSWORD'),
+            'timeout' => env('REDIS_TIMEOUT', 30.0),
+            'scheme' => env('REDIS_SCHEME', 'tcp'),
         ],
 
         'session' => [
-            'host'       => env('REDIS_HOST'),
-            'port'       => env('REDIS_PORT'),
-            'database'   => 1,
-            'password'   => env('REDIS_PASSWORD'),
-            'timeout'    => env('REDIS_TIMEOUT', 30.0)
+            'host' => env('REDIS_HOST'),
+            'port' => env('REDIS_PORT'),
+            'database' => env('REDIS_SESSION_DATABASE', 1),
+            'password' => env('REDIS_PASSWORD'),
+            'timeout' => env('REDIS_TIMEOUT', 30.0),
+            'scheme' => env('REDIS_SCHEME', 'tcp'),
         ],
 
         'worker' => [
-            'host'       => env('REDIS_HOST'),
-            'port'       => env('REDIS_PORT'),
-            'database'   => 2,
-            'password'   => env('REDIS_PASSWORD'),
-            'timeout'    => env('REDIS_TIMEOUT', 30.0)
+            'host' => env('REDIS_HOST'),
+            'port' => env('REDIS_PORT'),
+            'database' => env('REDIS_WORKER_DATABASE', 2),
+            'password' => env('REDIS_PASSWORD'),
+            'timeout' => env('REDIS_TIMEOUT', 30.0),
+            'scheme' => env('REDIS_SCHEME', 'tcp'),
         ],
 
     ],
-
     'allow_disabled_pk' => env('DB_ALLOW_DISABLED_PK', false),
 ];

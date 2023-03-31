@@ -20,6 +20,7 @@ use models\summit\SummitOrder;
 use models\summit\SummitOrderExtraQuestionAnswer;
 use models\summit\SummitOrderExtraQuestionType;
 use models\summit\SummitOrderExtraQuestionTypeConstants;
+use LaravelDoctrine\ORM\Facades\EntityManager;
 /**
  * Class SummitOrderFactory
  * @package App\Models\Foundation\Summit\Factories
@@ -46,6 +47,8 @@ final class SummitOrderFactory
      */
     public static function populate(Summit $summit, SummitOrder $order, array $payload): SummitOrder
     {
+
+        $company_repository = EntityManager::getRepository(Company::class);
 
         $order->setSummit($summit);
 
@@ -100,7 +103,8 @@ final class SummitOrderFactory
         // company
         if (isset($payload['owner_company']) && !is_null($payload['owner_company'])) {
             $order->setOwnerCompanyName(trim($payload['owner_company']));
-            $company = $summit->getRegistrationCompanyByName(trim($payload['owner_company']));
+            $order->clearOwnerCompany();
+            $company = $company_repository->getByName(trim($payload['owner_company']));
             if(!is_null($company)){
                 $order->setOwnerCompany($company);
             }
@@ -108,7 +112,7 @@ final class SummitOrderFactory
         else if (isset($payload['owner_company_id']) && !is_null($payload['owner_company_id'])) {
             $ownerCompanyId = intval($payload['owner_company_id']);
             if($ownerCompanyId > 0) {
-                $company = $summit->getRegistrationCompanyById($ownerCompanyId);
+                $company = $company_repository->getById($ownerCompanyId);
                 if (is_null($company)) {
                     throw new ValidationException(sprintf('Owner company with id %d not found as a registered company for summit %d',
                         $ownerCompanyId, $summit->getId()));

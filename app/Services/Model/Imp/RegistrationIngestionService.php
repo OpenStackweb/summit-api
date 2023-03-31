@@ -23,7 +23,6 @@ use App\Services\Model\AbstractService;
 use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Model\ICompanyService;
 use App\Services\Model\IMemberService;
-use App\Services\Model\Imp\Traits\SummitRegistrationCompany;
 use App\Services\Model\IRegistrationIngestionService;
 use libs\utils\ITransactionService;
 use models\exceptions\ValidationException;
@@ -50,7 +49,6 @@ use services\apis\IEventbriteAPI;
 final class RegistrationIngestionService
     extends AbstractService implements IRegistrationIngestionService
 {
-    use SummitRegistrationCompany;
 
     /**
      * @var IMemberService
@@ -472,8 +470,6 @@ final class RegistrationIngestionService
                                 // try to get it only by email
                                 $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $attendee_email);
                             }
-
-                            $this->registerCompanyFor($summit, $company);
 
                             if (is_null($attendee)) {
                                 Log::debug(sprintf("RegistrationIngestionService::ingestSummit attendee %s does not exists", $attendee_email));

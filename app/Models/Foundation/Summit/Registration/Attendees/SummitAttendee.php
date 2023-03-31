@@ -737,6 +737,11 @@ SQL;
         $this->company = $company;
     }
 
+    public function clearCompany(): void
+    {
+        $this->company = null;
+    }
+
     /**
      * @return bool
      */

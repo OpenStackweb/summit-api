@@ -139,4 +139,5 @@ return [
 
     ],
 
+    'allow_disabled_pk' => env('DB_ALLOW_DISABLED_PK', false),
 ];

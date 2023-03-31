@@ -32,8 +32,11 @@ use App\Jobs\ProcessScheduleEntityLifeCycleEvent;
 use App\Jobs\ProcessSummitOrderPaymentConfirmation;
 use App\Jobs\UpdateAttendeeInfo;
 use App\Jobs\UpdateIDPMemberInfo;
+use Illuminate\Database\Events\MigrationsEnded;
+use Illuminate\Database\Events\MigrationsStarted;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use LaravelDoctrine\ORM\Facades\EntityManager;
@@ -221,6 +224,19 @@ final class EventServiceProvider extends ServiceProvider
                 $event->entity_id,
                 $event->entity_type
             );
+        });
+
+        // check this one here https://github.com/laravel/framework/issues/33238#issuecomment-897063577
+        Event::listen(MigrationsStarted::class, function (){
+            if (config('databases.allow_disabled_pk')) {
+                DB::statement('SET SESSION sql_require_primary_key=0');
+            }
+        });
+
+        Event::listen(MigrationsEnded::class, function (){
+            if (config('databases.allow_disabled_pk')) {
+                DB::statement('SET SESSION sql_require_primary_key=1');
+            }
         });
     }
 }

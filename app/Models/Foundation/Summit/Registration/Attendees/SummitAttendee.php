@@ -1056,9 +1056,10 @@ SQL;
     }
 
     /**
+     * @param ExtraQuestionType $q
      * @return bool
      */
-    public function canChangeAnswerValue(): bool
+    public function canChangeAnswerValue(ExtraQuestionType $q): bool
     {
         // caching it to avoid calculation costs
         $key = sprintf("SummitAttendee.canChangeAnswerValue.%s", $this->id);

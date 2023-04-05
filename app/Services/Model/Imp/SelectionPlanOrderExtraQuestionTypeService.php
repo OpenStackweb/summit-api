@@ -141,6 +141,10 @@ final class SelectionPlanOrderExtraQuestionTypeService
                 $selection_plan->recalculateQuestionOrder($question, intval($payload['order']));
             }
 
+            if(isset($payload['is_editable'])){
+                $assignment->setIsEditable(boolval($payload['is_editable']));
+            }
+
             return $assignment;
         });
     }
@@ -194,6 +198,10 @@ final class SelectionPlanOrderExtraQuestionTypeService
 
             if(is_null($assignment))
                 throw new ValidationException("Question is already assigned to selection plan.");
+
+            if(isset($payload['is_editable'])){
+                $assignment->setIsEditable(boolval($payload['is_editable']));
+            }
 
             return $assignment;
         });

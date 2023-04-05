@@ -2270,11 +2270,16 @@ SQL;
     }
 
     /**
+     * @param ExtraQuestionType $q
      * @return bool
      */
-    public function canChangeAnswerValue(): bool
+    public function canChangeAnswerValue(ExtraQuestionType $q): bool
     {
-        return true;
+        if(!$q instanceof SummitSelectionPlanExtraQuestionType) return false;
+        if(!$this->hasSelectionPlan()) return false;
+        $assignedQuestion = $this->selection_plan->getAssignedExtraQuestion($q);
+        if(is_null($assignedQuestion)) return false;
+        return $assignedQuestion->isEditable();
     }
 
     public function buildExtraQuestionAnswer(): ExtraQuestionAnswer

@@ -50,6 +50,12 @@ class AssignedSelectionPlanExtraQuestionType
     private $order;
 
     /**
+     * @ORM\Column(name="`IsEditable`", type="boolean")
+     * @var bool
+     */
+    private $is_editable;
+
+    /**
      * @return SelectionPlan
      */
     public function getSelectionPlan(): SelectionPlan
@@ -96,6 +102,7 @@ class AssignedSelectionPlanExtraQuestionType
     public function __construct()
     {
         $this->order = 1;
+        $this->is_editable = true;
     }
 
     /**
@@ -113,4 +120,21 @@ class AssignedSelectionPlanExtraQuestionType
     {
         $this->order = $order;
     }
+
+    /**
+     * @return bool
+     */
+    public function isEditable(): bool
+    {
+        return $this->is_editable;
+    }
+
+    /**
+     * @param bool $is_editable
+     */
+    public function setIsEditable(bool $is_editable): void
+    {
+        $this->is_editable = $is_editable;
+    }
+
 }

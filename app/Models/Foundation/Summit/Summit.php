@@ -3900,7 +3900,7 @@ SQL;
      */
     public function getSupportedCurrencies(): array
     {
-        return [AllowedCurrencies::USD, AllowedCurrencies::GBP, AllowedCurrencies::EUR];
+        return SummitTicketType::AllowedCurrencies;
     }
 
     /**

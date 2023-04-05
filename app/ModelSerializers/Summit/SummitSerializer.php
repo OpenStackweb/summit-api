@@ -11,17 +11,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Security\SummitScopes;
-use Google\Service\ServiceUsage\LogDescriptor;
+use DateTime;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
 use Libs\ModelSerializers\Many2OneExpandSerializer;
-use libs\utils\JsonUtils;
 use models\summit\IPaymentConstants;
 use models\summit\Summit;
-use DateTime;
+
 /**
  * Class SummitSerializer
  * @package ModelSerializers
@@ -152,7 +151,7 @@ class SummitSerializer extends SilverStripeSerializer
         if (!count($relations)) $relations = $this->getAllowedRelations();
 
         $values['dates_with_events'] = [];
-        foreach($summit->getSummitDaysWithEvents() as $day){
+        foreach ($summit->getSummitDaysWithEvents() as $day) {
             $values['dates_with_events'][] = $day->format('Y-m-d');
         }
 
@@ -168,7 +167,7 @@ class SummitSerializer extends SilverStripeSerializer
             // get all possible offsets ...
             $start_date = $summit->getBeginDate();
             $end_date = $summit->getEndDate();
-            if(!is_null($start_date) && !is_null($end_date)) {
+            if (!is_null($start_date) && !is_null($end_date)) {
                 $offsets = [];
                 $start_date_epoch = $start_date->getTimestamp();
                 $end_date_epoch = $end_date->getTimestamp();
@@ -377,7 +376,7 @@ class SummitSerializer extends SilverStripeSerializer
         if (in_array('featured_speakers', $relations)) {
             $featured_speakers = [];
             foreach ($summit->getOrderedFeaturedSpeakers() as $featuredSpeaker) {
-                if(!$featuredSpeaker->hasSpeaker()) continue;
+                if (!$featuredSpeaker->hasSpeaker()) continue;
                 $featured_speakers[] = $featuredSpeaker->getSpeaker()->getId();
             }
             $values['featured_speakers'] = $featured_speakers;
@@ -411,7 +410,7 @@ class SummitSerializer extends SilverStripeSerializer
                         {
                             $featured_speakers = [];
                             foreach ($summit->getOrderedFeaturedSpeakers() as $featuredSpeaker) {
-                                if(!$featuredSpeaker->hasSpeaker()) continue;
+                                if (!$featuredSpeaker->hasSpeaker()) continue;
                                 $featured_speakers[] = SerializerRegistry::getInstance()->getSerializer($featuredSpeaker->getSpeaker())->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
                             $values['featured_speakers'] = $featured_speakers;
@@ -538,10 +537,10 @@ class SummitSerializer extends SilverStripeSerializer
         $values['supported_currencies'] = $summit->getSupportedCurrencies();
         $values['timestamp'] = time();
 
-        if(in_array('schedule_settings', $relations) && !isset($values['schedule_settings'])){
+        if (in_array('schedule_settings', $relations) && !isset($values['schedule_settings'])) {
             $schedule_settings = [];
-            foreach ($summit->getScheduleSettings() as $config){
-                if(!$config->isEnabled()) continue;
+            foreach ($summit->getScheduleSettings() as $config) {
+                if (!$config->isEnabled()) continue;
                 $schedule_settings[] = $config->getId();
             }
             $values['schedule_settings'] = $schedule_settings;

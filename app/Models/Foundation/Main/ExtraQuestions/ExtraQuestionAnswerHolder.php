@@ -40,9 +40,10 @@ trait ExtraQuestionAnswerHolder
     public abstract function getQuestionById(int $questionId):?ExtraQuestionType;
 
     /**
+     * @param ExtraQuestionType $q
      * @return bool
      */
-    public abstract function canChangeAnswerValue():bool;
+    public abstract function canChangeAnswerValue(ExtraQuestionType $q):bool;
 
     public abstract function clearExtraQuestionAnswers():void;
 
@@ -87,7 +88,7 @@ trait ExtraQuestionAnswerHolder
         $formerAnswer = $formerAnswers->getAnswerFor($q);
         $currentAnswer = $answers->getAnswerFor($q);
         // check if we are allowed to change the answers that we already did ( bypass only if we are admin)
-        if(!$this->canChangeAnswerValue() && $this->answerChanged($formerAnswer, $currentAnswer)){
+        if(!$this->canChangeAnswerValue($q) && $this->answerChanged($formerAnswer, $currentAnswer)){
             throw new ValidationException
             (
                 sprintf

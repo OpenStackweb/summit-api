@@ -1104,7 +1104,9 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         if (is_null($selection_plan)) return $this->error404();
 
         return $this->_get($question_id, function ($id) use ($selection_plan) {
-            return $selection_plan->getExtraQuestionById(intval($id));
+            $q = $selection_plan->getExtraQuestionById(intval($id));
+            if(is_null($q)) return null;
+            return $selection_plan->getAssignedExtraQuestion($q);
         });
     }
 

@@ -74,9 +74,10 @@ class MockExtraQuestionAnswerHolder
     }
 
     /**
+     * @param ExtraQuestionType $q
      * @return bool
      */
-    public function canChangeAnswerValue(): bool
+    public function canChangeAnswerValue(ExtraQuestionType $q): bool
     {
         return true;
     }

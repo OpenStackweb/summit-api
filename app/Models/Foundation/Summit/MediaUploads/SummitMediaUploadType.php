@@ -102,6 +102,11 @@ class SummitMediaUploadType extends SilverstripeBaseModel
      */
     private $temporary_links_public_storage_ttl;
 
+    /**
+     * @ORM\Column(name="IsEditable", type="boolean")
+     * @var bool
+     */
+    private $is_editable;
 
     /**
      * @ORM\ManyToMany(targetEntity="models\summit\PresentationType", inversedBy="allowed_media_upload_types", cascade={"persist"})
@@ -133,6 +138,7 @@ class SummitMediaUploadType extends SilverstripeBaseModel
         $this->private_storage_type = IStorageTypesConstants::None;
         $this->use_temporary_links_on_public_storage = false;
         $this->temporary_links_public_storage_ttl = 10;
+        $this->is_editable = true;
     }
 
     public function setType(SummitMediaFileType $type){
@@ -429,6 +435,22 @@ class SummitMediaUploadType extends SilverstripeBaseModel
     public function setTemporaryLinksPublicStorageTtl(int $temporary_links_public_storage_ttl): void
     {
         $this->temporary_links_public_storage_ttl = $temporary_links_public_storage_ttl;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isEditable(): bool
+    {
+        return $this->is_editable;
+    }
+
+    /**
+     * @param bool $is_editable
+     */
+    public function setIsEditable(bool $is_editable): void
+    {
+        $this->is_editable = $is_editable;
     }
 
 }

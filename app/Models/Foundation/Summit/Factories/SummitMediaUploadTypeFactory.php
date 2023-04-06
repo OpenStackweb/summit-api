@@ -60,6 +60,9 @@ final class SummitMediaUploadTypeFactory
         if(isset($data['max_uploads_qty']))
             $type->setMaxUploadsQty(intval($data['max_uploads_qty']));
 
+        if(isset($data['is_editable']))
+            $type->setIsEditable(boolval($data['is_editable']));
+
         return $type;
     }
 }

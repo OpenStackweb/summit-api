@@ -1158,6 +1158,12 @@ final class PresentationService
             if (is_null($mediaUpload))
                 throw new EntityNotFoundException('Presentation Media Upload not found.');
 
+            $mediaUploadType = $mediaUpload->getMediaUploadType();
+
+            if(!$mediaUploadType->isEditable()){
+                throw new ValidationException(sprintf("Media Upload Type %s is not editable.", $mediaUploadType->getName()));
+            }
+
             $fileInfo = FileUploadInfo::build($request, $payload);
 
             if (!is_null($fileInfo)) {
@@ -1220,6 +1226,11 @@ final class PresentationService
             }
 
             $mediaUploadType = $mediaUpload->getMediaUploadType();
+
+            if(!$mediaUploadType->isEditable()){
+                throw new ValidationException(sprintf("Media Upload Type %s is not editable.", $mediaUploadType->getName()));
+            }
+
             $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
 
             if (!is_null($strategy)) {

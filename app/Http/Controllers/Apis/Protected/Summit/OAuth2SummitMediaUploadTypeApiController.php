@@ -40,6 +40,8 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
 
     use GetSummitChildElementById;
 
+    use RequestProcessor;
+
     /**
      * @var ISummitMediaUploadTypeService
      */
@@ -106,21 +108,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
      */
     function getAddValidationRules(array $payload): array
     {
-        return [
-            'name' => 'required|string|max:255',
-            'description' => 'sometimes|string|max:255',
-            'is_mandatory' => 'required|boolean',
-            'use_temporary_links_on_public_storage' => 'sometimes|boolean',
-            'temporary_links_public_storage_ttl' => 'sometimes|int|required_with:use_temporary_links_on_public_storage',
-            // in KB
-            'max_size' => 'required|int|megabyte_aligned',
-            'private_storage_type' => 'required|string|in:'.implode(",", IStorageTypesConstants::ValidPrivateTypes),
-            'public_storage_type' => 'required|string|in:'.implode(",", IStorageTypesConstants::ValidPublicTypes),
-            'type_id' => 'required|int',
-            'presentation_types' => 'sometimes|int_array',
-            'min_uploads_qty' => 'sometimes|integer|min:0',
-            'max_uploads_qty' => 'sometimes|integer|min:0',
-        ];
+        return SummitMediaUploadTypeValidationRulesFactory::buildForAdd($payload);
     }
 
     /**
@@ -152,21 +140,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
      */
     function getUpdateValidationRules(array $payload): array
     {
-        return [
-            'name' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string|max:255',
-            'is_mandatory' => 'sometimes|boolean',
-            'use_temporary_links_on_public_storage' => 'sometimes|boolean',
-            'temporary_links_public_storage_ttl' => 'sometimes|int|required_with:use_temporary_links_on_public_storage',
-            // KB
-            'max_size' => 'sometimes|int|megabyte_aligned',
-            'private_storage_type' => 'sometimes|string|in:'.implode(",", IStorageTypesConstants::ValidPrivateTypes),
-            'public_storage_type' => 'sometimes|string|in:'.implode(",", IStorageTypesConstants::ValidPublicTypes),
-            'type_id' => 'sometimes|int',
-            'presentation_types' => 'sometimes|int_array',
-            'min_uploads_qty' => 'sometimes|integer|min:0',
-            'max_uploads_qty' => 'sometimes|integer|min:0',
-        ];
+        return SummitMediaUploadTypeValidationRulesFactory::buildForUpdate($payload);
     }
 
     /**
@@ -184,37 +158,17 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function addToPresentationType($summit_id, $media_upload_type_id, $presentation_type_id){
-        try {
+       return $this->processRequest(function() use($summit_id, $media_upload_type_id, $presentation_type_id){
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             $presentation_type = $this->service->addToPresentationType($summit, intval($media_upload_type_id), intval($presentation_type_id));
+
             return $this->updated(SerializerRegistry::getInstance()->getSerializer
             (
                 $presentation_type
             )->serialize());
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412(array($ex->getMessage()));
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (\HTTP401UnauthorizedException $ex) {
-            Log::warning($ex);
-            return $this->error401();
-        }
-        catch (HTTP403ForbiddenException $ex) {
-            Log::warning($ex);
-            return $this->error403();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -224,7 +178,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function deleteFromPresentationType($summit_id, $media_upload_type_id, $presentation_type_id){
-        try {
+        return $this->processRequest(function() use($summit_id, $media_upload_type_id, $presentation_type_id){
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -233,28 +187,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
             (
                 $presentation_type
             )->serialize());
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412(array($ex->getMessage()));
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (\HTTP401UnauthorizedException $ex) {
-            Log::warning($ex);
-            return $this->error401();
-        }
-        catch (HTTP403ForbiddenException $ex) {
-            Log::warning($ex);
-            return $this->error403();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
 
     /**
@@ -263,7 +196,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function cloneMediaUploadTypes($summit_id, $to_summit_id){
-        try {
+        return $this->processRequest(function() use($summit_id, $to_summit_id){
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -278,29 +211,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
                     $to_summit
                 )->serialize()
             );
-        }
-        catch (ValidationException $ex) {
-            Log::warning($ex);
-            return $this->error412(array($ex->getMessage()));
-        }
-        catch(EntityNotFoundException $ex)
-        {
-            Log::warning($ex);
-            return $this->error404(array('message'=> $ex->getMessage()));
-        }
-        catch (\HTTP401UnauthorizedException $ex) {
-            Log::warning($ex);
-            return $this->error401();
-        }
-        catch (HTTP403ForbiddenException $ex) {
-            Log::warning($ex);
-            return $this->error403();
-        }
-        catch (Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+        });
     }
-
 
 }

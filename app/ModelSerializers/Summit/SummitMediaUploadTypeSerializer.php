@@ -33,6 +33,7 @@ final class SummitMediaUploadTypeSerializer extends SilverStripeSerializer
         'TemporaryLinksPublicStorageTtl' => 'temporary_links_public_storage_ttl:json_int',
         'MinUploadsQty' => 'min_uploads_qty:json_int',
         'MaxUploadsQty' => 'max_uploads_qty:json_int',
+        'Editable' => 'is_editable:json_boolean',
     ];
 
     /**

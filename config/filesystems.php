@@ -96,5 +96,6 @@ return [
             'container'             => env('CLOUD_STORAGE_MEDIA_UPLOADS_CONTAINER'),
         ]
     ],
-
+    'assets_disk' => env('FILESYSTEMS_ASSETS_DISK', 'assets'),
+    'static_images_disk' => env('FILESYSTEMS_STATIC_IMAGES_DISK', 'static_images')
 ];

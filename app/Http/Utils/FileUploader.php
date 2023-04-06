@@ -14,6 +14,7 @@
 use App\Services\FileSystem\FileNameSanitizer;
 use App\Services\Model\IFolderService;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use models\exceptions\ValidationException;
@@ -118,11 +119,12 @@ final class FileUploader implements IFileUploader
                 $attachment->setImage();
             Log::debug(sprintf("FileUploader::build uploading to bucket %s", $local_path));
             // store at cloud
-            Storage::disk('assets')->putFileAs
+            Storage::disk(Config::get('filesystems.assets_disk', 'assets'))->putFileAs
             (
                 $path,
                 $file,
-                $client_original_name
+                $client_original_name,
+                'public'
             );
             $attachment->setCloudMeta('LastPut', time());
             $attachment->setCloudStatus('Live');

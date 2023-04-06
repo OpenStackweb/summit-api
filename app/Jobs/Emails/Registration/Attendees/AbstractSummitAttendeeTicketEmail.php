@@ -102,9 +102,10 @@ abstract class AbstractSummitAttendeeTicketEmail extends AbstractEmailJob
         }
 
         if($passwordlessApi instanceof IPasswordlessAPI &&
-            isset($this->payload['raw_summit_marketing_site_url']) &&
-            isset($this->payload['summit_marketing_site_oauth2_client_id']) &&
-            isset($this->payload['summit_marketing_site_oauth2_scopes'])){
+            isset($this->payload['raw_summit_marketing_site_url']) && !empty($this->payload['raw_summit_marketing_site_url']) &&
+            isset($this->payload['summit_marketing_site_oauth2_client_id']) && !empty($this->payload['summit_marketing_site_oauth2_client_id'] &&
+            isset($this->payload['summit_marketing_site_oauth2_scopes']) && !empty($this->payload['summit_marketing_site_oauth2_scopes']))){
+
             $otp = null;
             Log::debug(sprintf("AbstractSummitAttendeeTicketEmail::handle trying to get OTP for email %s", $this->to_email));
 

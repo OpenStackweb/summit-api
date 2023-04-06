@@ -48,10 +48,6 @@ abstract class PromoCodeEmail extends AbstractEmailJob
             $payload['owner_fullname'] = $payload['owner_email'];
         }
 
-        $payload['registration_url'] = Config::get("registration.dashboard_base_url", null);
-        if(empty($payload['registration_url']))
-            throw new \InvalidArgumentException("missing dashboard_base_url value");
-
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
         parent::__construct($payload, $template_identifier, $payload['owner_email']);
     }

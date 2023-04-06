@@ -51,17 +51,6 @@ class InviteSummitRegistrationEmail extends AbstractEmailJob
         $payload['summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
         $payload['raw_summit_virtual_site_url'] = $summit->getVirtualSiteUrl();
         $payload['raw_summit_marketing_site_url'] = $summit->getMarketingSiteUrl();
-
-        $base_url = Config::get('registration.dashboard_base_url', null);
-        $invitation_form_url = Config::get('registration.dashboard_invitation_form_url', null);
-
-        if (empty($base_url))
-            throw new \InvalidArgumentException("missing dashboard_base_url value");
-        if (empty($invitation_form_url))
-            throw new \InvalidArgumentException("missing dashboard_invitation_form_url value");
-
-        $payload['invitation_token'] = $invitation->getToken();
-
         $ticket_types = [];
 
         foreach ($invitation->getRemainingAllowedTicketTypes() as $ticketType){

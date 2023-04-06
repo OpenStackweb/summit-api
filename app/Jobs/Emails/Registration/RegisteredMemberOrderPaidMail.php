@@ -65,16 +65,6 @@ class RegisteredMemberOrderPaidMail extends AbstractEmailJob
             $payload['summit_reassign_ticket_till_date'] = $summit_reassign_ticket_till_date->format("l j F Y h:i A T");
         }
 
-        $base_url = Config::get("registration.dashboard_base_url", null);
-        if (empty($base_url))
-            throw new \InvalidArgumentException("missing dashboard_base_url value");
-
-        $back_url = Config::get("registration.dashboard_back_url", null);
-        if (empty($back_url))
-            throw new \InvalidArgumentException("missing dashboard_back_url value");
-
-        $payload['manage_orders_url'] = sprintf($back_url, $base_url);
-
         $support_email = $summit->getSupportEmail();
         $payload['support_email'] = !empty($support_email) ? $support_email: Config::get("registration.support_email", null);
 

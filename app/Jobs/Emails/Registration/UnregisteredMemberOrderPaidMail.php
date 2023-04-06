@@ -40,22 +40,15 @@ class UnregisteredMemberOrderPaidMail extends RegisteredMemberOrderPaidMail
         Log::debug("UnregisteredMemberOrderPaidMail::__construct");
         parent::__construct($order);
         Log::debug(sprintf("UnregisteredMemberOrderPaidMail::__construct %s", $this->template_identifier));
-        // need to add the dashboard client id and return url
-        $base_url = Config::get("registration.dashboard_base_url", null);
-        if(empty($base_url))
-            throw new \InvalidArgumentException("missing dashboard_base_url value");
 
-        $back_url = Config::get("registration.dashboard_back_url", null);
-        if(empty($back_url))
-            throw new \InvalidArgumentException("missing dashboard_back_url value");
-
+        $summit = $order->getSummit();
         $this->payload['set_password_link'] = $set_password_link;
 
         $this->payload['set_password_link_to_registration'] = sprintf(
             "%s?client_id=%s&redirect_uri=%s",
             $set_password_link,
-            Config::get("registration.dashboard_client_id"),
-            urlencode(sprintf($back_url, $base_url))
+            $summit->getMarketingSiteOAuth2ClientId(),
+            urlencode($summit->getMarketingSiteUrl())
         );
     }
 }

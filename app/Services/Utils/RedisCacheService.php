@@ -12,6 +12,7 @@
 * limitations under the License.
 **/
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use libs\utils\ICacheService;
 
@@ -45,12 +46,17 @@ class RedisCacheService implements ICacheService
 	 */
 	public function delete($key)
 	{
-		$res = 0;
-		if ($this->redis->exists($key))
-		{
-			$res = $this->redis->del($key);
-		}
-		return $res;
+        try {
+            $res = 0;
+            if ($this->redis->exists($key)) {
+                $res = $this->redis->del($key);
+            }
+            return $res;
+        }
+        catch(\Exception $ex){
+            Log::error($ex);
+            return 0;
+        }
 	}
 
 	public function deleteArray(array $keys)
@@ -148,7 +154,13 @@ class RedisCacheService implements ICacheService
 
 	public function getSingleValue($key)
 	{
-		return $this->redis->get($key);
+        try{
+            return $this->redis->get($key);
+        }
+        catch(\Exception $ex){
+            Log::error($ex);
+            return null;
+        }
 	}
 
     /**
@@ -159,11 +171,16 @@ class RedisCacheService implements ICacheService
      */
 	public function setSingleValue($key, $value, $ttl = 0)
 	{
-		if ($ttl>0)
-		{
-			return $this->redis->setex($key, $ttl, $value);
-		}
-		return $this->redis->set($key, $value);
+        try {
+            if ($ttl > 0) {
+                return $this->redis->setex($key, $ttl, $value);
+            }
+            return $this->redis->set($key, $value);
+        }
+        catch (\Exception $ex){
+            Log::error($ex);
+            return null;
+        }
 	}
 
 	public function addSingleValue($key, $value, $ttl = 0)

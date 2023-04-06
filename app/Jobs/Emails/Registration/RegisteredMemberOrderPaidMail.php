@@ -112,7 +112,7 @@ class RegisteredMemberOrderPaidMail extends AbstractEmailJob
             $tickets[] = $ticket_dto;
         }
         $payload['tickets'] = $tickets;
-
+        $payload['manage_orders_url'] = sprintf("%s/a/my-tickets", $summit->getMarketingSiteUrl());
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
         Log::debug(sprintf("RegisteredMemberOrderPaidMail::__construct template_identifier %s", $template_identifier));
         parent::__construct($payload, $template_identifier, $owner_email);

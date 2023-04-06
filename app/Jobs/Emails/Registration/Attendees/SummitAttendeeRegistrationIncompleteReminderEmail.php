@@ -71,6 +71,8 @@ class SummitAttendeeRegistrationIncompleteReminderEmail extends AbstractSummitAt
         Log::debug(sprintf("SummitAttendeeRegistrationIncompleteReminderEmail::__construct payload %s template %s",
             json_encode($payload), $template_identifier));
 
+        $payload['manage_orders_url'] = sprintf("%s/a/my-tickets", $summit->getMarketingSiteUrl());
+
         parent::__construct($payload, $template_identifier, $payload['owner_email'] );
     }
 

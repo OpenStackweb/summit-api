@@ -50,5 +50,8 @@ class UnregisteredMemberOrderPaidMail extends RegisteredMemberOrderPaidMail
             $summit->getMarketingSiteOAuth2ClientId(),
             urlencode($summit->getMarketingSiteUrl())
         );
+
+        $this->payload['manage_orders_url'] = sprintf("%s/a/my-tickets", $summit->getMarketingSiteUrl());
+
     }
 }

@@ -108,7 +108,7 @@ class SummitOrderReminderEmail extends AbstractEmailJob
         }
 
         $payload['tickets'] = $tickets;
-
+        $payload['manage_orders_url'] = sprintf("%s/a/my-tickets", $summit->getMarketingSiteUrl());
         $template_identifier = $this->getEmailTemplateIdentifierFromEmailEvent($summit);
 
         parent::__construct($payload, $template_identifier, $owner_email);

@@ -131,8 +131,9 @@ return [
             'port' => env('REDIS_PORT'),
             'database' => env('REDIS_DEFAULT_DATABASE', 0),
             'password' => env('REDIS_PASSWORD'),
-            'timeout' => env('REDIS_TIMEOUT', 30.0),
             'scheme' => env('REDIS_SCHEME', 'tcp'),
+            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
+            'timeout' => env('REDIS_TIMEOUT', 30),
         ],
 
         'cache' => [
@@ -140,8 +141,9 @@ return [
             'port' => env('REDIS_PORT'),
             'database' => env('REDIS_CACHE_DATABASE', 0),
             'password' => env('REDIS_PASSWORD'),
-            'timeout' => env('REDIS_TIMEOUT', 30.0),
             'scheme' => env('REDIS_SCHEME', 'tcp'),
+            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
+            'timeout' => env('REDIS_TIMEOUT', 30),
         ],
 
         'session' => [
@@ -149,8 +151,9 @@ return [
             'port' => env('REDIS_PORT'),
             'database' => env('REDIS_SESSION_DATABASE', 1),
             'password' => env('REDIS_PASSWORD'),
-            'timeout' => env('REDIS_TIMEOUT', 30.0),
             'scheme' => env('REDIS_SCHEME', 'tcp'),
+            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
+            'timeout' => env('REDIS_TIMEOUT', 30),
         ],
 
         'worker' => [
@@ -158,8 +161,9 @@ return [
             'port' => env('REDIS_PORT'),
             'database' => env('REDIS_WORKER_DATABASE', 2),
             'password' => env('REDIS_PASSWORD'),
-            'timeout' => env('REDIS_TIMEOUT', 30.0),
             'scheme' => env('REDIS_SCHEME', 'tcp'),
+            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
+            'timeout' => env('REDIS_TIMEOUT', 30),
         ],
 
     ],

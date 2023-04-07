@@ -45,7 +45,7 @@
         "muxinc/mux-php": "0.9.0",
         "php-opencloud/openstack": "dev-feature/guzzle_7_x",
         "pion/laravel-chunk-upload": "^1.4",
-        "predis/predis": "v1.1.6",
+        "predis/predis": "v2.1.2",
         "ramsey/uuid": "^4.2",
         "s-ichikawa/laravel-sendgrid-driver": "~3.0",
         "simplesoftwareio/simple-qrcode": "^2.0",

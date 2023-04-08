@@ -36,6 +36,23 @@ abstract class AbstractSummitAttendeeTicketEmail extends AbstractEmailJob
             $this->payload['raw_summit_virtual_site_url'] = '';
         if(!isset($this->payload['raw_summit_marketing_site_url']))
             $this->payload['raw_summit_marketing_site_url'] = '';
+        // edit_ticket_link
+        // {{ summit_marketing_site_url }}#login=1&email={{owner_email}}&BackUrl=/a/my-tickets
+        if
+        (
+            isset($this->payload['raw_summit_marketing_site_url']) &&
+            !empty($this->payload['raw_summit_marketing_site_url']) &&
+            isset($this->payload['owner_email']) &&
+            !empty($this->payload['owner_email'])
+        ){
+            $this->payload['edit_ticket_link'] =
+                sprintf
+                (
+                    "%s/#login=1&email=%s&BackUrl=/a/my-tickets",
+                    $this->payload['raw_summit_marketing_site_url'],
+                    $this->payload['owner_email']
+                );
+        }
 
         // IOC bc we cant change the signature
         $memberService = App::make(IMemberService::class);

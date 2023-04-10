@@ -134,7 +134,7 @@ abstract class RetrieveSummitEventsStrategy
                 'meeting_url',
                 'location',
                 'tags',
-                'type',
+                'event_type',
                 'event_type_capacity',
                 'is_published',
                 'speakers',

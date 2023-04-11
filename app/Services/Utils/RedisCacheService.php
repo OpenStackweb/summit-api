@@ -51,6 +51,7 @@ class RedisCacheService implements ICacheService
             if (!is_null($this->redis)) {
                 Log::debug(sprintf("RedisCacheService::__destruct disconnecting from redis server"));
                 $this->redis->disconnect();
+                Redis::purge(self::Connection);
                 $this->redis = null;
             }
         } catch (ConnectionException $ex) {
@@ -75,13 +76,14 @@ class RedisCacheService implements ICacheService
             } catch (ConnectionException $ex) {
                 $resource = $ex->getConnection()->getResource();
                 $metadata = var_export(stream_get_meta_data($resource), true);
-                Log::error($ex);
-                Log::error(sprintf("RedisCacheService::retryOnConnectionError code %s msg %s metadata %s, trying to reconnect...", $ex->getCode(), $ex->getMessage(), $metadata));
+                Log::warning($ex);
+                Log::warning(sprintf("RedisCacheService::retryOnConnectionError code %s msg %s metadata %s, trying to reconnect...", $ex->getCode(), $ex->getMessage(), $metadata));
                 Redis::purge(self::Connection);
                 $this->redis = Redis::connection(self::Connection);
                 ++$times;
                 if ($times > $maxRetries) {
-                    Log::debug(sprintf("RedisCacheService::retryOnConnectionError max retries reached %s", $maxRetries));
+                    Log::error(sprintf("RedisCacheService::retryOnConnectionError max retries reached %s!.", $maxRetries));
+                    Log::error($ex);
                     break;
                 }
             }
@@ -92,7 +94,9 @@ class RedisCacheService implements ICacheService
     public function boot()
     {
         if (is_null($this->redis)) {
-            $this->redis = Redis::connection();
+            // try to re init the connection bc background process
+            Redis::purge(self::Connection);
+            $this->redis = Redis::connection(self::Connection);
         }
     }
 

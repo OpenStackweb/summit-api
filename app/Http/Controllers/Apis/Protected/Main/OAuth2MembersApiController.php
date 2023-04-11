@@ -61,6 +61,7 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
     {
 
         $current_member = $this->resource_server_context->getCurrentUser();
+        $application_type = $this->resource_server_context->getApplicationType();
 
         return $this->_getAll(
             function () {
@@ -109,10 +110,10 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             function ($filter) {
                 return $filter;
             },
-            function () use ($current_member) {
+            function () use ($current_member, $application_type) {
                 $serializer_type = SerializerRegistry::SerializerType_Public;
 
-                if (!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin() || $current_member->isTrackChairAdmin())) {
+                if ($application_type == "SERVICE" || (!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin() || $current_member->isTrackChairAdmin()))) {
                     $serializer_type = SerializerRegistry::SerializerType_Admin;
                 }
                 return $serializer_type;
@@ -195,9 +196,10 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                 throw new EntityNotFoundException();
 
             $current_member = $this->resource_server_context->getCurrentUser();
+            $application_type = $this->resource_server_context->getApplicationType();
             $serializer_type = SerializerRegistry::SerializerType_Public;
 
-            if (!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin() || $current_member->isTrackChairAdmin())) {
+            if ($application_type == "SERVICE" || (!is_null($current_member) && ($current_member->isAdmin() || $current_member->isSummitAdmin() || $current_member->isTrackChairAdmin()))) {
                 $serializer_type = SerializerRegistry::SerializerType_Admin;
             }
 

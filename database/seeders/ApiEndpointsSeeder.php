@@ -2800,6 +2800,24 @@ class ApiEndpointsSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'get-own-attendee-allowed-extra-questions',
+                'route' => '/api/v1/summits/{id}/attendees/me/allowed-extra-questions',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'get-own-attendee-allowed-extra-question-answers',
+                'route' => '/api/v1/summits/{id}/attendees/me/allowed-extra-questions/answers',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            [
                 'name' => 'get-attendee',
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}',
                 'http_method' => 'GET',
@@ -2880,7 +2898,25 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'PUT',
                 'scopes' => [sprintf(SummitScopes::WriteSummitData, $current_realm)],
             ),
-           [
+            [
+                'name' => 'get-attendee-allowed-extra-questions',
+                'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/allowed-extra-questions',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            [
+                'name' => 'get-attendee-allowed-extra-question-answers',
+                'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/allowed-extra-questions/answers',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+            ],
+            [
                 'name' => 'add-attendee',
                 'route' => '/api/v1/summits/{id}/attendees',
                 'http_method' => 'POST',

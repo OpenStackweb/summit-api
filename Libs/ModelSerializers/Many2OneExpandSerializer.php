@@ -36,6 +36,8 @@ class Many2OneExpandSerializer extends One2ManyExpandSerializer
         $values = $this->unsetOriginalAttribute($values);
         $res = [];
         foreach ($entity->{$this->getter}() as $item){
+            $shouldSkip = is_null($this->should_skip_rule) ? false : call_user_func($this->should_skip_rule, $entity, $params);
+            if ($shouldSkip == true) continue;
             $res[] = SerializerRegistry::getInstance()->getSerializer($item, $this->serializer_type)
                 ->serialize
                 (

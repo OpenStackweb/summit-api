@@ -1113,6 +1113,27 @@ SQL;
         return [];
     }
 
+    /**
+     * @return array
+     */
+    public function getAllowedTicketTypes(): array
+    {
+        try {
+            $sql = <<<SQL
+SELECT E.* FROM `SummitAttendeeTicket` E
+where OwnerID = :owner_id AND
+E.IsActive = 1 AND
+E.Status = 'Paid'
+SQL;
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['owner_id' => $this->id]);
+            $res = $stmt->fetchAll();
+            return count($res) > 0 ? $res : [];
+        } catch (\Exception $ex) {
+            return [];
+        }
+    }
+
     public function getAllowedAccessLevels(): array
     {
         $bindings = [
@@ -1175,5 +1196,26 @@ SQL;
     public function buildExtraQuestionAnswer(): ExtraQuestionAnswer
     {
        return new SummitOrderExtraQuestionAnswer();
+    }
+
+    public function isAllowedQuestion(SummitOrderExtraQuestionType $q): bool
+    {
+        $aattids = array_map(function ($e) {
+            return intval($e['TicketTypeID']);
+        }, $this->getAllowedTicketTypes());
+
+        $aabftids = array_map(function ($e) {
+            return intval($e['ID']);
+        }, $this->getAllowedBadgeFeatures());
+
+        if (count($aattids) == 0 && count($aabftids) == 0) return false;
+
+        foreach ($q->getAllowedTicketTypes() as $question_ticket_type) {
+            if (in_array($question_ticket_type->getId(), $aattids)) return true;
+        }
+        foreach ($q->getAllowedBadgeFeatureTypes() as $question_badge_feature_type) {
+            if (in_array($question_badge_feature_type->getId(), $aabftids)) return true;
+        }
+        return false;
     }
 }

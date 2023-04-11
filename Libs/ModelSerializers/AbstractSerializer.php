@@ -396,8 +396,9 @@ abstract class AbstractSerializer implements IModelSerializer
                 if(empty($getter)) continue;
                 $has = $serializerSpec['has'] ?? null;
                 $test_rule = $serializerSpec['test_rule'] ?? null;
+                $should_skip_rule = $serializerSpec['should_skip_rule'] ?? null;
                 $serializer_type = $serializerSpec['serializer_type'] ?? SerializerRegistry::SerializerType_Public;
-                $serializer = new $serializerClass($original_attribute, $attribute, $getter, $has, $serializer_type, $test_rule);
+                $serializer = new $serializerClass($original_attribute, $attribute, $getter, $has, $serializer_type, $test_rule, $should_skip_rule);
                 $values = $serializer->serialize($this->object, $values, $expand, $fields, $relations, $params);
             }
         }

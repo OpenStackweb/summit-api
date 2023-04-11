@@ -16,6 +16,7 @@ use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Main\ExtraQuestions\SubQuestionRule;
 use App\Models\Foundation\Main\IGroup;
+use models\summit\SummitAttendee;
 use models\summit\SummitOrderExtraQuestionType;
 use models\summit\SummitOrderExtraQuestionTypeConstants;
 /**
@@ -31,6 +32,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
     protected function setUp():void
     {
         parent::setUp();
+        self::$defaultMember = self::$member;
         self::insertSummitTestData();
         self::insertMemberTestData(IGroup::TrackChairs);
         self::$summit_permission_group->addMember(self::$member);
@@ -759,6 +761,93 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
         $content = $response->getContent();
         $mainQuestions = json_decode($content);
         $this->assertTrue(!is_null($mainQuestions));
+        $this->assertResponseStatus(200);
+    }
+
+    public function testGetAttendeeAllowedExtraQuestions(){
+        $attendee = self::$summit->getAttendees()->first();
+        if (!$attendee instanceof SummitAttendee) $this->fail('Not a valid attendee');
+
+        // Attendee type question
+
+        $question1 = new SummitOrderExtraQuestionType();
+        $question1->setUsage(SummitOrderExtraQuestionTypeConstants::BothQuestionUsage);
+        $question1->setLabel('Attendee Type');
+        $question1->setName('ATTENDEE_TYPE_QUESTION');
+        $question1->setType(ExtraQuestionTypeConstants::RadioButtonListQuestionType);
+        $question1->setMaxSelectedValues(1);
+        $question1->setPrintable(true);
+        $question1->setMandatory(true);
+
+        $attendee_ticket_type = self::$summit->getTicketTypeById(intval($attendee->getAllowedTicketTypes()[0]['TicketTypeID']));
+        $question1->addAllowedTicketType($attendee_ticket_type);
+
+        self::$questions[] = $question1;
+
+        $answers = ['Developer', 'Video Creator', 'Partner', 'Press', 'Speaker', 'Roblox Staff', 'Other'];
+        $order = 1;
+        foreach ($answers as $answer) {
+            $val = new ExtraQuestionTypeValue();
+            $val->setLabel($answer);
+            $val->setValue($answer);
+            $val->setOrder($order++);
+            $question1->addValue($val);
+            self::$values[] = $val;
+        }
+
+        $question2 = new SummitOrderExtraQuestionType();
+        $question2->setUsage(SummitOrderExtraQuestionTypeConstants::BothQuestionUsage);
+        $question2->setLabel('Company/Studio Name');
+        $question2->setName('COMPANY_STUDIO_QUESTION');
+        $question2->setType(ExtraQuestionTypeConstants::TextQuestionType);
+        $question2->setPrintable(true);
+        $question2->setMandatory(true);
+
+        self::$questions[] = $question2;
+
+        $rule1 = new SubQuestionRule();
+        $rule1->setAnswerValues([self::$values[0]->getId()]);
+        $rule1->setVisibility(ExtraQuestionTypeConstants::SubQuestionRuleVisibility_Visible);
+        $rule1->setVisibilityCondition(ExtraQuestionTypeConstants::SubQuestionRuleVisibilityCondition_Equal);
+        $rule1->setAnswerValuesOperator(ExtraQuestionTypeConstants::SubQuestionRuleAnswerValuesOperator_Or);
+
+        $question1->addSubQuestionRule($rule1);
+        $question2->addParentRule($rule1);
+
+        self::$summit->addOrderExtraQuestion($question1);
+        self::$summit->addOrderExtraQuestion($question2);
+
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+         $params = [
+            'id' => self::$summit->getId(),
+            'attendee_id' => $attendee->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'order'    => '+id',
+            // recursive expand
+            'expand' => '*sub_question_rules,*sub_question,values,values.question'
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitOrderExtraQuestionTypeApiController@getAttendeeExtraQuestions",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $questions = json_decode($content);
+        $this->assertTrue(!is_null($questions));
         $this->assertResponseStatus(200);
     }
 }

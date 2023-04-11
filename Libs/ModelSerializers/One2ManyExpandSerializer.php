@@ -49,6 +49,12 @@ class One2ManyExpandSerializer implements IExpandSerializer
      * @var string
      */
     protected $test_rule;
+
+    /**
+     * @var string
+     */
+    protected $should_skip_rule;
+
     /**
      * @param string $original_attribute
      * @param string $attribute
@@ -56,6 +62,7 @@ class One2ManyExpandSerializer implements IExpandSerializer
      * @param string|null $has
      * @param string|null $serializer_type
      * @param string|null $test_rule
+     * @param string|null $should_skip_rule
      */
     public function __construct
     (
@@ -64,7 +71,8 @@ class One2ManyExpandSerializer implements IExpandSerializer
         string $getter,
         ?string $has = null,
         ?string $serializer_type = SerializerRegistry::SerializerType_Public,
-        ?string $test_rule = null
+        ?string $test_rule = null,
+        ?string $should_skip_rule = null
     )
     {
         $this->original_attribute = $original_attribute;
@@ -73,6 +81,7 @@ class One2ManyExpandSerializer implements IExpandSerializer
         $this->has = $has;
         $this->serializer_type = $serializer_type;
         $this->test_rule = $test_rule;
+        $this->should_skip_rule = $should_skip_rule;
         Log::debug
         (
             sprintf

@@ -40,6 +40,8 @@ final class DoctrineSummitOrderExtraQuestionTypeRepository
             'printable' => 'e.printable:json_boolean',
             'usage'     => 'e.usage:json_string',
             'summit_id' => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value"),
+            'allowed_badge_feature_type_id' => new DoctrineLeftJoinFilterMapping("e.allowed_badge_features_types", "bft" ,"bft.id :operator :value"),
+            'allowed_ticket_type_id' => new DoctrineLeftJoinFilterMapping("e.allowed_ticket_types", "tt" ,"tt.id :operator :value"),
             'has_badge_feature_types' =>
                 new DoctrineSwitchFilterMapping([
                         'true' => new DoctrineCaseFilterMapping(
@@ -90,7 +92,7 @@ final class DoctrineSummitOrderExtraQuestionTypeRepository
      * @param Order|null $order
      * @return PagingResponse
      */
-    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
+    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse
     {
         return $this->getParametrizedAllByPage(function () {
             return $this->getEntityManager()->createQueryBuilder()

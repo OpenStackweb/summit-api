@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+use App\Models\Foundation\Main\ExtraQuestions\SubQuestionRule;
 use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\Many2OneExpandSerializer;
 
@@ -41,6 +42,16 @@ class ExtraQuestionTypeSerializer extends SilverStripeSerializer
 
     public static function testRule($e){
         return $e->allowsValues();
+    }
+
+    public static function shouldSkip($e, $params){
+        if (array_key_exists('attendee', $params)) {
+            $attendee = $params['attendee'];
+            $question = $e;
+            if ($e instanceof SubQuestionRule) $question = $e->getSubQuestion();
+            return !$attendee->isAllowedQuestion($question);
+        }
+        return false;
     }
 
     /**
@@ -89,16 +100,18 @@ class ExtraQuestionTypeSerializer extends SilverStripeSerializer
         'values' => [
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getValues',
-            'test_rule' => 'ModelSerializers\\ExtraQuestionTypeSerializer::testRule'
+            'test_rule' => 'ModelSerializers\\ExtraQuestionTypeSerializer::testRule',
         ],
         'sub_question_rules' => [
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getOrderedSubQuestionRules',
             'test_rule' => 'ModelSerializers\\ExtraQuestionTypeSerializer::testRule',
+            'should_skip_rule' => 'ModelSerializers\\ExtraQuestionTypeSerializer::shouldSkip',
         ],
         'parent_rules' => [
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getParentRules',
+            'should_skip_rule' => 'ModelSerializers\\ExtraQuestionTypeSerializer::shouldSkip',
         ]
     ];
 }

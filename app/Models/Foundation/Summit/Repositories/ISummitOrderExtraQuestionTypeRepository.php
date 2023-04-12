@@ -12,10 +12,25 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\ExtraQuestions\IExtraQuestionTypeRepository;
+use models\summit\SummitAttendee;
+use utils\Filter;
+use utils\Order;
+use utils\PagingInfo;
+use utils\PagingResponse;
+
 /**
  * Interface ISummitOrderExtraQuestionTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
 interface ISummitOrderExtraQuestionTypeRepository extends IExtraQuestionTypeRepository
 {
+    /**
+     * @param SummitAttendee $attendee
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getAllAllowedByPage(
+        SummitAttendee $attendee, PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse;
 }

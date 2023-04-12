@@ -24,10 +24,12 @@ use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
+use models\summit\SummitOrderExtraQuestionTypeConstants;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterElement;
+use utils\Order;
 use utils\PagingInfo;
 use utils\PagingResponse;
 use App\Http\Controllers\RequestProcessor;
@@ -476,15 +478,6 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
 
     /**
      * @param $summit_id
-     * @return mixed
-     */
-    public function getOwnAttendeeAllowedExtraQuestionAnswers($summit_id)
-    {
-        return $this->ok();
-    }
-
-    /**
-     * @param $summit_id
      * @param $attendee_id
      * @return mixed
      */
@@ -504,9 +497,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                     'label'     => ['=@', '=='],
                     'printable' => ['=='],
                     'usage'     => ['=@', '=='],
-                    'summit_id' => ['=='],
-                    'has_badge_feature_types' => ['=='],
-                    'has_ticket_types' => ['=='],
+                    'summit_id' => ['==']
                 ];
             },
             function () {
@@ -516,9 +507,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                     'label'     => 'sometimes|string',
                     'printable' => 'sometimes|string|in:true,false',
                     'usage'     => 'sometimes|string',
-                    'summit_id' => 'sometimes|integer',
-                    'has_badge_feature_types' => 'sometimes|string|in:true,false',
-                    'has_ticket_types' => 'sometimes|string|in:true,false',
+                    'summit_id' => 'sometimes|integer'
                 ];
             },
             function () {
@@ -529,21 +518,11 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                     'order',
                 ];
             },
-            function ($filter) use ($summit, $attendee) {
+            function ($filter) use ($summit) {
                 if ($filter instanceof Filter) {
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
-
-                    $conditions = [];
-                    foreach ($attendee->getAllowedTicketTypes() as $ticket_type) {
-                        $conditions[] = FilterElement::makeEqual('allowed_ticket_type_id', intval($ticket_type['TicketTypeID']));
-                    }
-                    if (count($conditions) > 0) $filter->addFilterCondition($conditions);
-
-                    $conditions = [];
-                    foreach ($attendee->getAllowedBadgeFeatures() as $badge_feature) {
-                        $conditions[] = FilterElement::makeEqual('allowed_badge_feature_type_id', intval($badge_feature['ID']));
-                    }
-                    if (count($conditions) > 0) $filter->addFilterCondition($conditions);
+                    $filter->addFilterCondition(FilterElement::makeEqual('class', ExtraQuestionTypeConstants::QuestionClassMain));
+                    $filter->addFilterCondition(FilterElement::makeEqual('usage', SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage));
                 }
                 return $filter;
             },
@@ -552,18 +531,16 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             },
             null,
             null,
-            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($attendee) {
+                return $this->repository->getAllAllowedByPage
+                (
+                    $attendee,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            },
             ['attendee' => $attendee]
         );
-    }
-
-    /**
-     * @param $summit_id
-     * @param $attendee_id
-     * @return mixed
-     */
-    public function getAttendeeExtraQuestionAnswers($summit_id, $attendee_id)
-    {
-        return $this->ok();
     }
 }

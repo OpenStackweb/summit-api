@@ -30,20 +30,13 @@ final class FilterParser
 
         $res                 = [];
         $matches             = [];
-        $filter_join_conditions = [];
 
         if (!is_array($filters))
             $filters = array($filters);
 
-        foreach ($filters as $filter) // parse elements filters
+        foreach ($filters as $filter) // parse AND filters
         {
-            $filter = trim($filter);
-            $filter_join_condition = 'AND';
-            if (empty($filter)) continue;
-            if(str_starts_with($filter, '||')){
-                $filter_join_condition = 'OR';
-                $filter = substr($filter, 2); // remove modificator
-            }
+
             $f = null;
             // parse OR filters
             $or_filters = preg_split("|(?<!\\\),|", $filter);
@@ -117,12 +110,10 @@ final class FilterParser
                 $f = self::buildFilter($field, $op, $value, $same_field_op);
             }
 
-            if (!is_null($f)) {
+            if (!is_null($f))
                 $res[] = $f;
-                $filter_join_conditions[] = $filter_join_condition;
-            }
         }
-        return new Filter($res, $filters, $filter_join_conditions);
+        return new Filter($res, $filters);
     }
 
     /**

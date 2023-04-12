@@ -44,12 +44,12 @@ class ExtraQuestionTypeSerializer extends SilverStripeSerializer
         return $e->allowsValues();
     }
 
-    public static function shouldSkip($e, $params){
+    public static function shouldSkip($e, $params): bool
+    {
         if (array_key_exists('attendee', $params)) {
             $attendee = $params['attendee'];
-            $question = $e;
-            if ($e instanceof SubQuestionRule) $question = $e->getSubQuestion();
-            return !$attendee->isAllowedQuestion($question);
+            if (!$e instanceof SubQuestionRule) return false;
+            return !$attendee->isAllowedQuestion($e->getSubQuestion());
         }
         return false;
     }
@@ -79,6 +79,7 @@ class ExtraQuestionTypeSerializer extends SilverStripeSerializer
         if(in_array('sub_question_rules', $relations) && !isset($values['sub_question_rules']) && $question->allowsValues()) {
             $sub_question_rules = [];
             foreach ($question->getOrderedSubQuestionRules() as $rule) {
+                if (self::shouldSkip($rule, $params)) continue;
                 $sub_question_rules[] = $rule->getId();
             }
             $values['sub_question_rules'] = $sub_question_rules;
@@ -87,6 +88,7 @@ class ExtraQuestionTypeSerializer extends SilverStripeSerializer
         if(in_array('parent_rules', $relations) && !isset($values['parent_rules'])) {
             $parent_rules = [];
             foreach ($question->getParentRules() as $rule) {
+                if (self::shouldSkip($rule, $params)) continue;
                 $parent_rules[] = $rule->getId();
             }
             $values['parent_rules'] = $parent_rules;

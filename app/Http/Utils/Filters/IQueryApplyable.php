@@ -24,10 +24,9 @@ interface IQueryApplyable
     /**
      * @param QueryBuilder $query
      * @param FilterElement $filter
-     * @param string $joinCondition
      * @return QueryBuilder
      */
-    public function apply(QueryBuilder $query, FilterElement $filter, string $joinCondition = 'AND'):QueryBuilder;
+    public function apply(QueryBuilder $query, FilterElement $filter):QueryBuilder;
 
     /**
      * @param QueryBuilder $query

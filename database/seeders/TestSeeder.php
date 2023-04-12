@@ -47,5 +47,6 @@ final class TestSeeder extends Seeder
         $this->call(SummitEmailFlowTypeSeeder::class);
         $this->call(SummitEmailFlowEventSeeder::class);
         $this->call(SummitMediaFileTypeSeeder::class);
+        $this->call(SummitTicketTypesSeeder::class);
     }
 }

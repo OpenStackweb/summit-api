@@ -52,7 +52,6 @@ final class Filter
      */
     private $filters = [];
 
-    private $filter_join_conditions = [];
     /**
      * @var array
      */
@@ -63,16 +62,10 @@ final class Filter
      */
     private $originalExp;
 
-    /**
-     * @param array $filters
-     * @param $originalExp
-     * @param array $filter_join_conditions
-     */
-    public function __construct(array $filters = [], $originalExp = null, array $filter_join_conditions = [])
+    public function __construct(array $filters = [], $originalExp = null)
     {
         $this->filters = $filters;
         $this->originalExp = $originalExp;
-        $this->filter_join_conditions = $filter_join_conditions;
     }
 
     /**
@@ -262,8 +255,7 @@ final class Filter
         $sql = '';
         $this->bindings = [];
 
-        foreach ($this->filters as $idx => $filter) {
-            $join_cond = $this->filter_join_conditions[$idx] ?? 'AND';
+        foreach ($this->filters as $filter) {
             if ($filter instanceof FilterElement && isset($mappings[$filter->getField()])) {
                 $condition = '';
                 $mapping = $mappings[$filter->getField()];
@@ -276,7 +268,7 @@ final class Filter
                     $condition = $this->applyCondition($filter, $mapping, $param_idx);
                 }
 
-                if (!empty($sql) && !empty($condition)) $sql .= " ${join_cond} ";
+                if (!empty($sql) && !empty($condition)) $sql .= ' AND ';
                 $sql .= $condition;
             } else if (is_array($filter)) {
                 // an array is a OR
@@ -298,11 +290,10 @@ final class Filter
                     }
                 }
 
-                if (!empty($sql)) $sql .= " ${join_cond} ";
+                if (!empty($sql)) $sql .= ' AND ';
                 $sql .= '( ' . $condition . ' )';
             }
         }
-
         return $sql;
     }
 
@@ -317,16 +308,13 @@ final class Filter
         $param_idx = 1;
         $this->bindings = [];
 
-        foreach ($this->filters as $idx => $filter) {
-
-            $join_cond = $this->filter_join_conditions[$idx] ?? 'AND';
-
+        foreach ($this->filters as $filter) {
             if ($filter instanceof FilterElement && isset($mappings[$filter->getField()])) {
                 // single filter element
 
                 $mapping = $mappings[$filter->getField()];
                 if ($mapping instanceof IQueryApplyable) {
-                    $query = $mapping->apply($query, $filter, $join_cond);
+                    $query = $mapping->apply($query, $filter);
                 } else if (is_array($mapping)) {
                     $condition = '';
                     // OR Criteria
@@ -334,20 +322,12 @@ final class Filter
                         if (!empty($condition)) $condition .= ' OR ';
                         $condition .= $this->applyCondition($filter, $mapping_or, $param_idx);
                     }
-                    if($join_cond === 'AND')
-                        $query->andWhere($condition);
-                    else
-                        $query->orWhere($condition);
 
+                    $query->andWhere($condition);
                 } else {
-
                     $condition = $this->applyCondition($filter, $mapping, $param_idx);
-                    if($join_cond === 'AND')
-                        $query->andWhere($condition);
-                    else
-                        $query->orWhere($condition);
+                    $query->andWhere($condition);
                 }
-
             } else if (is_array($filter)) {
                 // OR
                 $sub_or_query = '';
@@ -375,10 +355,7 @@ final class Filter
                         }
                     }
                 }
-                if($join_cond === 'AND')
-                    $query->andWhere($sub_or_query);
-                else
-                    $query->orWhere($sub_or_query);
+                $query->andWhere($sub_or_query);
             }
         }
 

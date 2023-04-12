@@ -13,10 +13,9 @@
  **/
 use App\Models\Foundation\Summit\Repositories\ISummitOrderExtraQuestionTypeRepository;
 use App\Repositories\Main\DoctrineExtraQuestionTypeRepository;
+use models\summit\SummitAttendee;
 use models\summit\SummitOrderExtraQuestionType;
-use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
-use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
@@ -41,31 +40,7 @@ final class DoctrineSummitOrderExtraQuestionTypeRepository
             'usage'     => 'e.usage:json_string',
             'summit_id' => new DoctrineLeftJoinFilterMapping("e.summit", "s" ,"s.id :operator :value"),
             'allowed_badge_feature_type_id' => new DoctrineLeftJoinFilterMapping("e.allowed_badge_features_types", "bft" ,"bft.id :operator :value"),
-            'allowed_ticket_type_id' => new DoctrineLeftJoinFilterMapping("e.allowed_ticket_types", "tt" ,"tt.id :operator :value"),
-            'has_badge_feature_types' =>
-                new DoctrineSwitchFilterMapping([
-                        'true' => new DoctrineCaseFilterMapping(
-                            'true',
-                            'SIZE(e.allowed_badge_features_types) > 0'
-                        ),
-                        'false' => new DoctrineCaseFilterMapping(
-                            'false',
-                            'SIZE(e.allowed_badge_features_types) = 0'
-                        ),
-                    ]
-                ),
-            'has_ticket_types' =>
-                new DoctrineSwitchFilterMapping([
-                        'true' => new DoctrineCaseFilterMapping(
-                            'true',
-                            'SIZE(e.allowed_ticket_types) > 0'
-                        ),
-                        'false' => new DoctrineCaseFilterMapping(
-                            'false',
-                            'SIZE(e.allowed_ticket_types) = 0'
-                        ),
-                    ]
-                ),
+            'allowed_ticket_type_id' => new DoctrineLeftJoinFilterMapping("e.allowed_ticket_types", "tt" ,"tt.id :operator :value")
         ]);
     }
 
@@ -98,6 +73,47 @@ final class DoctrineSummitOrderExtraQuestionTypeRepository
             return $this->getEntityManager()->createQueryBuilder()
                 ->select("e")
                 ->from($this->getBaseEntity(), "e");
+        },
+            $paging_info,
+            $filter,
+            $order,
+            function ($query) {
+                //default order
+                return $query;
+            });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getAllAllowedByPage(
+        SummitAttendee $attendee, PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse
+    {
+        $attendee_ticket_type_ids = [];
+        foreach ($attendee->getAllowedTicketTypes() as $ticket_type) {
+            $attendee_ticket_type_ids[] = intval($ticket_type['TicketTypeID']);
+        }
+
+        $attendee_badge_feature_type_ids = [];
+        foreach ($attendee->getAllowedBadgeFeatures() as $badge_feature) {
+            $attendee_badge_feature_type_ids[] = intval($badge_feature['ID']);
+        }
+
+        return $this->getParametrizedAllByPage(function () use ($attendee_badge_feature_type_ids, $attendee_ticket_type_ids) {
+            $qb = $this->getEntityManager()->createQueryBuilder()
+                ->select("e")
+                ->from($this->getBaseEntity(), "e")
+                ->leftJoin('e.allowed_ticket_types', 'att')
+                ->leftJoin('e.allowed_badge_features_types', 'aft')
+                ->where("(SIZE(e.allowed_badge_features_types) = 0 AND SIZE(e.allowed_ticket_types) = 0)");
+
+            if (count($attendee_ticket_type_ids) > 0) {
+                $qb->orWhere('att.id IN ('.implode(',', $attendee_ticket_type_ids).')');
+            }
+            if (count($attendee_badge_feature_type_ids) > 0) {
+                $qb->orWhere('aft.id IN ('.implode(',', $attendee_badge_feature_type_ids).')');
+            }
+            return $qb;
         },
             $paging_info,
             $filter,

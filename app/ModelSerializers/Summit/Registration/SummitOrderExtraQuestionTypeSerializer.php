@@ -45,8 +45,6 @@ final class SummitOrderExtraQuestionTypeSerializer extends ExtraQuestionTypeSeri
         $question = $this->object;
         if (!$question instanceof SummitOrderExtraQuestionType) return [];
 
-        if (ExtraQuestionTypeSerializer::shouldSkip($question, $params) == true) return [];
-
         if(!count($relations)) $relations = $this->getAllowedRelations();
         $values = parent::serialize($expand, $fields, $relations, $params);
 

@@ -112,7 +112,7 @@ class AppServiceProvider extends ServiceProvider
         'streaming_url',
         'streaming_type',
         'meeting_url',
-        'etherpad_url',
+        'etherpad_link',
     ];
 
     static $event_dto_fields_publish = [

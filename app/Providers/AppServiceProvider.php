@@ -228,16 +228,26 @@ class AppServiceProvider extends ServiceProvider
                     "%s should be an array of event data {id : int, location_id: int, start_date: int (epoch), end_date: int (epoch)}",
                     $attribute);
             });
-            if (!is_array($value)) return false;
+            if (!is_array($value)){
+                Log::debug(sprintf("event_dto_array::is not array %s", print_r($value, true)));
+                return false;
+            }
+
             foreach ($value as $element) {
                 foreach ($element as $key => $element_val) {
-                    if (!in_array($key, self::$event_dto_fields)) return false;
+                    if (!in_array($key, self::$event_dto_fields)) {
+                        Log::debug(sprintf("event_dto_array::invalid key %s", $key));
+                        return false;
+                    }
                 }
 
                 // Creates a Validator instance and validates the data.
                 $validation = Validator::make($element, self::$event_dto_validation_rules);
 
-                if ($validation->fails()) return false;
+                if ($validation->fails()) {
+                    Log::debug(sprintf("event_dto_array::validation fails %s", print_r($validation->errors(), true)));
+                    return false;
+                }
             }
             return true;
         });

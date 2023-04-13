@@ -51,9 +51,10 @@ class DoctrineJoinFilterMapping extends FilterMapping implements IQueryApplyable
     /**
      * @param QueryBuilder $query
      * @param FilterElement $filter
+     * @param string $joinCondition
      * @return QueryBuilder
      */
-    public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder
+    public function apply(QueryBuilder $query, FilterElement $filter, string $joinCondition = 'AND'): QueryBuilder
     {
         $value = $filter->getValue();
 
@@ -78,15 +79,17 @@ class DoctrineJoinFilterMapping extends FilterMapping implements IQueryApplyable
                 }
                 $inner_where .= $where . " " . $filter->getSameFieldOp() . " ";
             }
+
             $inner_where = substr($inner_where, 0, (strlen($filter->getSameFieldOp()) + 1) * -1);
             $inner_where .= ' )';
 
             if (!in_array($this->alias, $query->getAllAliases()))
                 $query->innerJoin($this->table, $this->alias, Join::WITH);
 
-            $query = $query->andWhere($inner_where);
+            $query = $joinCondition === 'AND' ? $query->andWhere($inner_where) : $query->orWhere($inner_where);
 
         } else {
+
             $param_count = $query->getParameters()->count() + 1;
             $where = $this->where;
             $has_param = false;
@@ -102,7 +105,7 @@ class DoctrineJoinFilterMapping extends FilterMapping implements IQueryApplyable
             if (!in_array($this->alias, $query->getAllAliases()))
                 $query->innerJoin($this->table, $this->alias, Join::WITH);
 
-            $query = $query->andWhere($where);
+            $query =  $joinCondition === 'AND' ? $query->andWhere($where) : $query->orWhere($where);
 
             if ($has_param) {
                 $query = $query->setParameter(":value_" . $param_count, $filter->getValue());

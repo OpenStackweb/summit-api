@@ -43,12 +43,14 @@ class DoctrineFilterMapping extends FilterMapping implements IQueryApplyable
     /**
      * @param QueryBuilder $query
      * @param FilterElement $filter
+     * @param string $joinCondition
      * @return QueryBuilder
      */
-    public function apply(QueryBuilder $query, FilterElement $filter):QueryBuilder
+    public function apply(QueryBuilder $query, FilterElement $filter, string $joinCondition = 'AND'):QueryBuilder
     {
         $value = $filter->getValue();
         if (is_array($value)) {
+
             $inner_where = '( ';
 
             foreach ($value as $val) {
@@ -76,7 +78,7 @@ class DoctrineFilterMapping extends FilterMapping implements IQueryApplyable
             $inner_where = substr($inner_where, 0, (strlen($filter->getSameFieldOp()) + 1) * -1);
             $inner_where .= ' )';
 
-            $query = $query->andWhere($inner_where);
+            $query = $joinCondition === 'AND' ? $query->andWhere($inner_where): $query->orWhere($inner_where);
         } else {
             $param_count = $query->getParameters()->count() + 1;
             $where = $this->where;
@@ -93,12 +95,13 @@ class DoctrineFilterMapping extends FilterMapping implements IQueryApplyable
             if (strstr($where, ":operator"))
                 $where = str_replace(":operator", $filter->getOperator(), $where);
 
-            $query = $query->andWhere($where);
+            $query =  $joinCondition === 'AND' ? $query->andWhere($where) : $query->orWhere($where);
 
             if ($has_param) {
                 $query = $query->setParameter(":value_" . $param_count, $filter->getValue());
             }
         }
+
         return $query;
     }
 

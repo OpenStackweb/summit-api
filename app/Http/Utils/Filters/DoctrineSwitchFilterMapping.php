@@ -45,22 +45,26 @@ class DoctrineSwitchFilterMapping extends FilterMapping implements IQueryApplyab
     /**
      * @param QueryBuilder $query
      * @param FilterElement $filter
+     * @param string $joinCondition
      * @return QueryBuilder
      */
-    public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder
+    public function apply(QueryBuilder $query, FilterElement $filter, string $joinCondition = 'AND'): QueryBuilder
     {
         $value = $filter->getValue();
         if(!is_array($value)) $value = [$value];
         $condition = '';
+
         foreach ($value as $v) {
             if (!isset($this->case_statements[$v])) continue;
             $case_statement = $this->case_statements[$v];
             if(!empty($condition)) $condition .= ' OR ';
             $condition .= ' ( '.$case_statement->getCondition().' ) ';
         }
+
         if(!empty($condition))
             $condition = ' ( '.$condition.' ) ';
-        return $query->andWhere($condition);
+
+        return $joinCondition === 'AND' ? $query->andWhere($condition): $query->orWhere($condition);
     }
 
     /**

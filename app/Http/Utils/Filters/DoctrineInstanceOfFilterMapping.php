@@ -50,12 +50,13 @@ final class DoctrineInstanceOfFilterMapping extends FilterMapping implements IQu
     /**
      * @param QueryBuilder $query
      * @param FilterElement $filter
+     * @param string $joinCondition
      * @return QueryBuilder
      */
-    public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder
+    public function apply(QueryBuilder $query, FilterElement $filter, string $joinCondition = 'AND'): QueryBuilder
     {
         $where = str_replace(":class_name", $this->translateClassName($filter->getValue()), $this->where);
-        return $query->andWhere($where);
+        return $joinCondition === 'AND' ? $query->andWhere($where) : $query->orWhere($where);
     }
 
     /**

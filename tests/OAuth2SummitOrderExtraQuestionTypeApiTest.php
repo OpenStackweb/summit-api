@@ -771,7 +771,6 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
     public function testGetAttendeeAllowedExtraQuestions(){
         $ticket_type_repository = EntityManager::getRepository(SummitTicketType::class);
         $attendee_ticket_type = $ticket_type_repository->findOneBy(['name' => 'Invited Attendee']);
-        self::$summit->addTicketType($attendee_ticket_type);
 
         $attendee = self::$summit->getAttendees()->first();
         if (!$attendee instanceof SummitAttendee) $this->fail('Not a valid attendee');
@@ -783,7 +782,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
         self::$em->persist(self::$summit);
         self::$em->flush();
 
-        // Main question with allowed ticket type
+        // Main question with allowed ticket type (Radio button list)
 
         $question1 = new SummitOrderExtraQuestionType();
         $question1->setUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
@@ -793,10 +792,11 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
         $question1->setMaxSelectedValues(1);
         $question1->setPrintable(true);
         $question1->setMandatory(true);
-
         $question1->addAllowedTicketType($attendee_ticket_type);
 
         self::$questions[] = $question1;
+
+        // main question values
 
         $answers = ['Developer', 'Video Creator', 'Partner', 'Press', 'Speaker', 'Roblox Staff', 'Other'];
         $order = 1;
@@ -811,9 +811,10 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
 
         self::$summit->addOrderExtraQuestion($question1);
 
-        // Subquestions with allowed ticket type
+        // Sub Questions with allowed ticket type ( parent: with allowed ticket type (Radio button list))
 
         $allowed_subquestion_labels = ['Company/Studio Name', 'Business Phone', 'City', 'State/Province'];
+
         foreach ($allowed_subquestion_labels as $subquestion_label) {
             $sq = new SummitOrderExtraQuestionType();
             $sq->setUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
@@ -838,7 +839,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
             $sq->addParentRule($rule1);
         }
 
-        // Subquestion without allowed ticket type
+        // SubQuestion without allowed ticket type ( this should be included no matter what)
 
         $no_ticket_type_sq = new SummitOrderExtraQuestionType();
         $no_ticket_type_sq->setUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
@@ -892,14 +893,14 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
         $questions = json_decode($content);
         $this->assertTrue(!is_null($questions));
         $this->assertEquals(1, $questions->total); //allowed main question
-        $this->assertSameSize($questions->data[0]->sub_question_rules, $allowed_subquestion_labels);
+        $this->assertCount(5, $questions->data[0]->sub_question_rules);
         $this->assertResponseStatus(200);
     }
 
     public function testGetAttendeeAllowedExtraQuestionsWith2SubquestionLevels(){
         $ticket_type_repository = EntityManager::getRepository(SummitTicketType::class);
         $attendee_ticket_type = $ticket_type_repository->findOneBy(['name' => 'Invited Attendee']);
-        self::$summit->addTicketType($attendee_ticket_type);
+        $attendee_ticket_type2 = $ticket_type_repository->findOneBy(['name' => 'Roblox Staff']);
 
         $attendee = self::$summit->getAttendees()->first();
         if (!$attendee instanceof SummitAttendee) $this->fail('Not a valid attendee');
@@ -971,10 +972,11 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
         $sq2 = new SummitOrderExtraQuestionType();
         $sq2->setUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
         $sq2->setLabel('Level 2 subquestion');
-        $sq2->setName('LEVEL_2_SUBQUESTION_WITHOUT_ALLOWED_TICKET_TYPE');
+        $sq2->setName('LEVEL_2_SUBQUESTION_WITH_ALLOWED_TICKET_TYPE2');
         $sq2->setType(ExtraQuestionTypeConstants::TextQuestionType);
         $sq2->setPrintable(true);
         $sq2->setMandatory(true);
+        $sq2->addAllowedTicketType($attendee_ticket_type2);
 
         self::$summit->addOrderExtraQuestion($sq2);
 

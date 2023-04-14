@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-
 /**
  * Class TestSeeder
  */
@@ -47,6 +46,5 @@ final class TestSeeder extends Seeder
         $this->call(SummitEmailFlowTypeSeeder::class);
         $this->call(SummitEmailFlowEventSeeder::class);
         $this->call(SummitMediaFileTypeSeeder::class);
-        $this->call(SummitTicketTypesSeeder::class);
     }
 }

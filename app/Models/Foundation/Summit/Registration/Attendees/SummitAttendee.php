@@ -1052,7 +1052,10 @@ SQL;
      */
     public function getQuestionById(int $questionId): ?ExtraQuestionType
     {
-        return $this->summit->getOrderExtraQuestionById($questionId);
+        $question = $this->summit->getOrderExtraQuestionById($questionId);
+        if(is_null($question)) return null;
+        if(!$this->isAllowedQuestion($question)) return null;
+        return $question;
     }
 
     /**
@@ -1198,24 +1201,34 @@ SQL;
        return new SummitOrderExtraQuestionAnswer();
     }
 
+    /**
+     * @param SummitOrderExtraQuestionType $q
+     * @return bool
+     */
     public function isAllowedQuestion(SummitOrderExtraQuestionType $q): bool
     {
-        $aattids = array_map(function ($e) {
+        $allowed_ticket_type_ids = array_map(function ($e) {
             return intval($e['TicketTypeID']);
         }, $this->getAllowedTicketTypes());
 
-        $aabftids = array_map(function ($e) {
+        $allowed_badge_feature_ids = array_map(function ($e) {
             return intval($e['ID']);
         }, $this->getAllowedBadgeFeatures());
 
-        if (count($aattids) == 0 && count($aabftids) == 0) return false;
+        // attendee does not has any ticket nor badge feature
+        if (count($allowed_ticket_type_ids) == 0 && count($allowed_badge_feature_ids) == 0) return false;
 
+        // not restricted question
+        if($q->getAllowedTicketTypes()->count() === 0 && $q->getAllowedBadgeFeatureTypes()->count() === 0) return true;
+
+        // restricted question
         foreach ($q->getAllowedTicketTypes() as $question_ticket_type) {
-            if (in_array($question_ticket_type->getId(), $aattids)) return true;
+            if (in_array($question_ticket_type->getId(), $allowed_ticket_type_ids)) return true;
         }
         foreach ($q->getAllowedBadgeFeatureTypes() as $question_badge_feature_type) {
-            if (in_array($question_badge_feature_type->getId(), $aabftids)) return true;
+            if (in_array($question_badge_feature_type->getId(), $allowed_badge_feature_ids)) return true;
         }
+
         return false;
     }
 }

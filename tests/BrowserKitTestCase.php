@@ -14,6 +14,7 @@
 
 use Database\Seeders\TestSeeder;
 use Illuminate\Support\Facades\Artisan;
+
 use Illuminate\Support\Facades\Redis;
 use Laravel\BrowserKitTesting\TestCase as BaseTestCase;
 use Illuminate\Database\Eloquent\Model;
@@ -55,7 +56,7 @@ abstract class BrowserKitTestCase extends BaseTestCase
         DB::setDefaultConnection("model");
         Artisan::call('doctrine:migrations:migrate', ["--connection" => 'config', '--force' => '']);
         Artisan::call('doctrine:migrations:migrate', ["--connection" => 'model', '--force' => '']);
-        Mail::pretend(true);
+        //Mail::pretend(true);
         $this->seed(TestSeeder::class);
     }
 }

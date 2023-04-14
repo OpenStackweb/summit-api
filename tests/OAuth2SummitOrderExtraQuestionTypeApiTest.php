@@ -1042,7 +1042,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
         $this->assertTrue(!is_null($questions));
         $this->assertEquals(1, $questions->total);              //allowed main question
         $this->assertCount(1, $questions->data[0]->sub_question_rules);
-        $this->assertCount(1, $questions->data[1]->sub_question_rules);     //1 allowed and 1 not allowed
+        $this->assertCount(1, $questions->data[0]->sub_question_rules[0]->sub_question->sub_question_rules);     //1 allowed and 1 not allowed
         $this->assertResponseStatus(200);
     }
 }

@@ -1039,11 +1039,16 @@ SQL;
     }
 
     /**
-     * @return SummitOrderExtraQuestionAnswer[] | ArrayCollection
+     * @return ExtraQuestionType[] | ArrayCollection
      */
-    public function getExtraQuestions()
+    public function getExtraQuestions(): array
     {
-        return $this->summit->getMainOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+        $res = [];
+        $eqts = $this->summit->getMainOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+        foreach ($eqts as $q) {
+            if ($this->isAllowedQuestion($q)) $res[] = $q;
+        }
+        return $res;
     }
 
     /**
@@ -1202,11 +1207,13 @@ SQL;
     }
 
     /**
-     * @param SummitOrderExtraQuestionType $q
+     * @param ExtraQuestionType $q
      * @return bool
      */
-    public function isAllowedQuestion(SummitOrderExtraQuestionType $q): bool
+    public function isAllowedQuestion(ExtraQuestionType $q): bool
     {
+        if (!$q instanceof SummitOrderExtraQuestionType) return false;
+
         $allowed_ticket_type_ids = array_map(function ($e) {
             return intval($e['TicketTypeID']);
         }, $this->getAllowedTicketTypes());

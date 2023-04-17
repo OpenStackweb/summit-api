@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionAnswer;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Main\ExtraQuestions\ExtraQuestionAnswerHolder;
@@ -59,7 +60,7 @@ class MockExtraQuestionAnswerHolder
     /**
      * @return ExtraQuestionType[] | ArrayCollection
      */
-    public function getExtraQuestions()
+    public function getExtraQuestions(): array
     {
         return $this->current_summit->getMainOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
     }
@@ -71,6 +72,16 @@ class MockExtraQuestionAnswerHolder
     public function getQuestionById(int $questionId): ?ExtraQuestionType
     {
         return $this->current_summit->getOrderExtraQuestionById($questionId);
+    }
+
+    /**
+     * @param ExtraQuestionType $q
+     * @return bool
+     */
+    public function isAllowedQuestion(ExtraQuestionType $q): bool
+    {
+        if (!$q instanceof SummitOrderExtraQuestionType) return false;
+        return true;
     }
 
     /**
@@ -93,6 +104,11 @@ class MockExtraQuestionAnswerHolder
     public function addExtraQuestionAnswer(SummitOrderExtraQuestionAnswer $answer): void
     {
         $this->answers[] = $answer;
+    }
+
+    public function buildExtraQuestionAnswer(): ExtraQuestionAnswer
+    {
+        return new SummitOrderExtraQuestionAnswer();
     }
 }
 

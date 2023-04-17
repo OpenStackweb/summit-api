@@ -1407,7 +1407,13 @@ Route::group(array('prefix' => 'summits'), function () {
 
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@getAttendeesBySummit']);
             Route::get('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@getAttendeesBySummitCSV']);
-            Route::get('me', 'OAuth2SummitAttendeesApiController@getOwnAttendee');
+            Route::group(['prefix' => 'me'], function () {
+                Route::get('', 'OAuth2SummitAttendeesApiController@getOwnAttendee');
+                Route::group(['prefix' => 'allowed-extra-questions'], function () {
+                    Route::get('', 'OAuth2SummitOrderExtraQuestionTypeApiController@getOwnAttendeeAllowedExtraQuestions');
+                });
+            });
+
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@addAttendee']);
 
             Route::group(array('prefix' => '{attendee_id}'), function () {
@@ -1437,6 +1443,11 @@ Route::group(array('prefix' => 'summits'), function () {
                             Route::put('{other_member_id}', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@reassignAttendeeTicketByMember']);
                         });
                     });
+                });
+
+                // allowed extra questions
+                Route::group(array('prefix' => 'allowed-extra-questions'), function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getAttendeeExtraQuestions']);
                 });
             });
         });

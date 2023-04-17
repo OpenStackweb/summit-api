@@ -16,14 +16,21 @@ use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderExtraQuestionTypeRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitOrderExtraQuestionTypeService;
+use Illuminate\Support\Facades\Log;
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
+use models\summit\SummitAttendee;
+use models\summit\SummitOrderExtraQuestionTypeConstants;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
+use utils\Filter;
+use utils\FilterElement;
+use utils\Order;
+use utils\PagingInfo;
 use utils\PagingResponse;
 use App\Http\Controllers\RequestProcessor;
 
@@ -80,6 +87,8 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
 
     use RequestProcessor;
 
+    use ParametrizedGetAll;
+
     /**
      * @param $summit_id
      * @return mixed
@@ -105,7 +114,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             'type' => ['==', '=@'],
             'usage' => ['==', '=@'],
             'label' => ['==', '=@'],
-            'class' => ['==']
+            'class' => ['=='],
+            'has_ticket_types' => ['=='],
+            'has_badge_feature_types' => ['==']
         ];
     }
 
@@ -120,6 +131,8 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             'usage' => 'sometimes|required|string',
             'label' => 'sometimes|required|string',
             'class' => 'sometimes|required|string|in:' . implode(',', ExtraQuestionTypeConstants::AllowedQuestionClass),
+            'has_ticket_types' => 'sometimes|string|in:true,false',
+            'has_badge_feature_types' => 'sometimes|string|in:true,false'
         ];
     }
 
@@ -443,5 +456,91 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             $this->service->deleteSubQuestionRule($summit, intval($question_id), intval($rule_id));
             return $this->deleted();
         });
+    }
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function getOwnAttendeeAllowedExtraQuestions($summit_id)
+    {
+        return $this->processRequest(function () use ($summit_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $type = CheckAttendeeStrategyFactory::Me;
+            $attendee = CheckAttendeeStrategyFactory::build($type, $this->resource_server_context)->check('me', $summit);
+            if (is_null($attendee)) return $this->error404();
+
+            return $this->getAttendeeExtraQuestions($summit_id, $attendee->getId());
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $attendee_id
+     * @return mixed
+     */
+    public function getAttendeeExtraQuestions($summit_id, $attendee_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        $attendee = $summit->getAttendeeById(intval($attendee_id));
+        if (is_null($attendee)) return $this->error404();
+
+        return $this->_getAll(
+            function () {
+                return [
+                    'name'      => ['=@', '=='],
+                    'type'      => ['=@', '=='],
+                    'label'     => ['=@', '=='],
+                    'printable' => ['=='],
+                    'usage'     => ['=@', '=='],
+                    'summit_id' => ['==']
+                ];
+            },
+            function () {
+                return [
+                    'name'      => 'sometimes|string',
+                    'type'      => 'sometimes|string',
+                    'label'     => 'sometimes|string',
+                    'printable' => 'sometimes|string|in:true,false',
+                    'usage'     => 'sometimes|string',
+                    'summit_id' => 'sometimes|integer'
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'name',
+                    'label',
+                    'order',
+                ];
+            },
+            function ($filter) use ($summit) {
+                if ($filter instanceof Filter) {
+                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+                    $filter->addFilterCondition(FilterElement::makeEqual('class', ExtraQuestionTypeConstants::QuestionClassMain));
+                    $filter->addFilterCondition(FilterElement::makeEqual('usage', SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage));
+                }
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($attendee) {
+                return $this->repository->getAllAllowedByPage
+                (
+                    $attendee,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            },
+            ['attendee' => $attendee]
+        );
     }
 }

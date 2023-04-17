@@ -16,8 +16,13 @@ use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Main\ExtraQuestions\SubQuestionRule;
 use App\Models\Foundation\Main\IGroup;
+use LaravelDoctrine\ORM\Facades\EntityManager;
+use models\summit\SummitAttendee;
+use models\summit\SummitAttendeeTicket;
 use models\summit\SummitOrderExtraQuestionType;
 use models\summit\SummitOrderExtraQuestionTypeConstants;
+use models\summit\SummitTicketType;
+
 /**
  * Class OAuth2SummitOrderExtraQuestionTypeApiTest
  */
@@ -31,6 +36,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
     protected function setUp():void
     {
         parent::setUp();
+        self::$defaultMember = self::$member;
         self::insertSummitTestData();
         self::insertMemberTestData(IGroup::TrackChairs);
         self::$summit_permission_group->addMember(self::$member);
@@ -61,6 +67,8 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
             'usage' => SummitOrderExtraQuestionTypeConstants::BothQuestionUsage,
             'mandatory' => true,
             'printable' => true,
+            'allowed_ticket_types' => [self::$default_ticket_type->getId(), self::$default_ticket_type_2->getId()],
+            'allowed_badge_features_types' => [],
         ];
 
         $headers = [
@@ -71,6 +79,49 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
         $response = $this->action(
             "POST",
             "OAuth2SummitOrderExtraQuestionTypeApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $question = json_decode($content);
+        $this->assertTrue(!is_null($question));
+        return $question;
+    }
+
+    public function testUpdateExtraOrderQuestion(){
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'question_id' => self::$summit->getOrderExtraQuestions()->first()
+        ];
+
+        $name = str_random(16).'_question';
+
+        $data = [
+            'name' => $name,
+            'type' => SummitOrderExtraQuestionTypeConstants::ComboBoxQuestionType,
+            'label' => $name,
+            'usage' => SummitOrderExtraQuestionTypeConstants::BothQuestionUsage,
+            'mandatory' => true,
+            'printable' => true,
+            'allowed_ticket_types' => [self::$default_ticket_type->getId(), self::$default_ticket_type_2->getId()],
+            'allowed_badge_features_types' => [],
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitOrderExtraQuestionTypeApiController@update",
             $params,
             [],
             [],
@@ -714,6 +765,286 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTest
         $content = $response->getContent();
         $mainQuestions = json_decode($content);
         $this->assertTrue(!is_null($mainQuestions));
+        $this->assertResponseStatus(200);
+    }
+
+    public function testGetAttendeeAllowedExtraQuestions(){
+        $ticket_type_repository = EntityManager::getRepository(SummitTicketType::class);
+        $attendee_ticket_type = $ticket_type_repository->findOneBy(['name' => 'Invited Attendee']);
+
+        $attendee = self::$summit->getAttendees()->first();
+        if (!$attendee instanceof SummitAttendee) $this->fail('Not a valid attendee');
+
+        $ticket = $attendee->getTickets()->first();
+        $ticket->setTicketType($attendee_ticket_type);
+
+        self::$em->persist($attendee);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        // Main question with allowed ticket type (Radio button list)
+
+        $question1 = new SummitOrderExtraQuestionType();
+        $question1->setUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+        $question1->setLabel('Attendee Type');
+        $question1->setName('ATTENDEE_TYPE_QUESTION');
+        $question1->setType(ExtraQuestionTypeConstants::RadioButtonListQuestionType);
+        $question1->setMaxSelectedValues(1);
+        $question1->setPrintable(true);
+        $question1->setMandatory(true);
+        $question1->addAllowedTicketType($attendee_ticket_type);
+
+        self::$questions[] = $question1;
+
+        // main question values
+
+        $answers = ['Developer', 'Video Creator', 'Partner', 'Press', 'Speaker', 'Roblox Staff', 'Other'];
+        $order = 1;
+        foreach ($answers as $answer) {
+            $val = new ExtraQuestionTypeValue();
+            $val->setLabel($answer);
+            $val->setValue($answer);
+            $val->setOrder($order++);
+            $question1->addValue($val);
+            self::$values[] = $val;
+        }
+
+        self::$summit->addOrderExtraQuestion($question1);
+
+        // Sub Questions with allowed ticket type ( parent: with allowed ticket type (Radio button list))
+
+        $allowed_subquestion_labels = ['Company/Studio Name', 'Business Phone', 'City', 'State/Province'];
+
+        foreach ($allowed_subquestion_labels as $subquestion_label) {
+            $sq = new SummitOrderExtraQuestionType();
+            $sq->setUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+            $sq->setLabel($subquestion_label);
+            $sq->setName($subquestion_label);
+            $sq->setType(ExtraQuestionTypeConstants::TextQuestionType);
+            $sq->setPrintable(true);
+            $sq->setMandatory(true);
+
+            $sq->addAllowedTicketType($attendee_ticket_type);
+
+            self::$questions[] = $sq;
+            self::$summit->addOrderExtraQuestion($sq);
+
+            $rule1 = new SubQuestionRule();
+            $rule1->setAnswerValues([self::$values[0]->getId()]);
+            $rule1->setVisibility(ExtraQuestionTypeConstants::SubQuestionRuleVisibility_Visible);
+            $rule1->setVisibilityCondition(ExtraQuestionTypeConstants::SubQuestionRuleVisibilityCondition_Equal);
+            $rule1->setAnswerValuesOperator(ExtraQuestionTypeConstants::SubQuestionRuleAnswerValuesOperator_Or);
+
+            $question1->addSubQuestionRule($rule1);
+            $sq->addParentRule($rule1);
+        }
+
+        // SubQuestion without allowed ticket type ( this should be included no matter what)
+
+        $no_ticket_type_sq = new SummitOrderExtraQuestionType();
+        $no_ticket_type_sq->setUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+        $no_ticket_type_sq->setLabel('Country');
+        $no_ticket_type_sq->setName('Country');
+        $no_ticket_type_sq->setType(ExtraQuestionTypeConstants::TextQuestionType);
+        $no_ticket_type_sq->setPrintable(true);
+        $no_ticket_type_sq->setMandatory(true);
+
+        self::$questions[] = $no_ticket_type_sq;
+        self::$summit->addOrderExtraQuestion($no_ticket_type_sq);
+
+        $rule1 = new SubQuestionRule();
+        $rule1->setAnswerValues([self::$values[0]->getId()]);
+        $rule1->setVisibility(ExtraQuestionTypeConstants::SubQuestionRuleVisibility_Visible);
+        $rule1->setVisibilityCondition(ExtraQuestionTypeConstants::SubQuestionRuleVisibilityCondition_Equal);
+        $rule1->setAnswerValuesOperator(ExtraQuestionTypeConstants::SubQuestionRuleAnswerValuesOperator_Or);
+
+        $question1->addSubQuestionRule($rule1);
+        $no_ticket_type_sq->addParentRule($rule1);
+
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+         $params = [
+            'id' => self::$summit->getId(),
+            'attendee_id' => $attendee->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'order'    => '+id',
+            // recursive expand
+            'expand' => '*sub_question_rules,*sub_question,values,values.question'
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitOrderExtraQuestionTypeApiController@getAttendeeExtraQuestions",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $questions = json_decode($content);
+        $this->assertTrue(!is_null($questions));
+        $this->assertEquals(1, $questions->total); //allowed main question
+        $this->assertCount(5, $questions->data[0]->sub_question_rules);
+        $this->assertResponseStatus(200);
+    }
+
+    public function testGetAttendeeAllowedExtraQuestionsWith2SubquestionLevels(){
+        $ticket_type_repository = EntityManager::getRepository(SummitTicketType::class);
+        $attendee_ticket_type = $ticket_type_repository->findOneBy(['name' => 'Invited Attendee']);
+        $attendee_ticket_type2 = $ticket_type_repository->findOneBy(['name' => 'Roblox Staff']);
+
+        $attendee = self::$summit->getAttendees()->first();
+        if (!$attendee instanceof SummitAttendee) $this->fail('Not a valid attendee');
+
+        $ticket = $attendee->getTickets()->first();
+        $ticket->setTicketType($attendee_ticket_type);
+
+        self::$em->persist($attendee);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        // Main question with allowed ticket type
+
+        $question1 = new SummitOrderExtraQuestionType();
+        $question1->setUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+        $question1->setLabel('Attendee Type');
+        $question1->setName('ATTENDEE_TYPE_QUESTION');
+        $question1->setType(ExtraQuestionTypeConstants::RadioButtonListQuestionType);
+        $question1->setMaxSelectedValues(1);
+        $question1->setPrintable(true);
+        $question1->setMandatory(true);
+
+        $question1->addAllowedTicketType($attendee_ticket_type);
+
+        $answers = ['Developer', 'Video Creator', 'Partner', 'Press', 'Speaker', 'Roblox Staff', 'Other'];
+        $order = 1;
+        foreach ($answers as $answer) {
+            $val = new ExtraQuestionTypeValue();
+            $val->setLabel($answer);
+            $val->setValue($answer);
+            $val->setOrder($order++);
+            $question1->addValue($val);
+            self::$values[] = $val;
+        }
+
+        self::$summit->addOrderExtraQuestion($question1);
+
+        // Level 1 subquestion with allowed ticket type
+
+        $sq1 = new SummitOrderExtraQuestionType();
+        $sq1->setUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+        $sq1->setLabel('Level 1 subquestion');
+        $sq1->setName('LEVEL_1_SUBQUESTION');
+        $sq1->setType(ExtraQuestionTypeConstants::RadioButtonListQuestionType);
+        $sq1->setMaxSelectedValues(1);
+        $sq1->setPrintable(true);
+        $sq1->setMandatory(true);
+
+        $val = new ExtraQuestionTypeValue();
+        $val->setLabel('Level 1 subquestion value');
+        $val->setValue('Level 1 subquestion value');
+        $val->setOrder(1);
+        $sq1->addValue($val);
+
+        $sq1->addAllowedTicketType($attendee_ticket_type);
+        self::$summit->addOrderExtraQuestion($sq1);
+
+        $rule1 = new SubQuestionRule();
+        $rule1->setAnswerValues([self::$values[0]->getId()]);
+        $rule1->setVisibility(ExtraQuestionTypeConstants::SubQuestionRuleVisibility_Visible);
+        $rule1->setVisibilityCondition(ExtraQuestionTypeConstants::SubQuestionRuleVisibilityCondition_Equal);
+        $rule1->setAnswerValuesOperator(ExtraQuestionTypeConstants::SubQuestionRuleAnswerValuesOperator_Or);
+
+        $question1->addSubQuestionRule($rule1);
+        $sq1->addParentRule($rule1);
+
+        // Level 2 subquestion without allowed ticket type
+
+        $sq2 = new SummitOrderExtraQuestionType();
+        $sq2->setUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+        $sq2->setLabel('Level 2 subquestion');
+        $sq2->setName('LEVEL_2_SUBQUESTION_WITH_ALLOWED_TICKET_TYPE2');
+        $sq2->setType(ExtraQuestionTypeConstants::TextQuestionType);
+        $sq2->setPrintable(true);
+        $sq2->setMandatory(true);
+        $sq2->addAllowedTicketType($attendee_ticket_type2);
+
+        self::$summit->addOrderExtraQuestion($sq2);
+
+        $rule2 = new SubQuestionRule();
+        $rule2->setAnswerValues([self::$values[1]->getId()]);
+        $rule2->setVisibility(ExtraQuestionTypeConstants::SubQuestionRuleVisibility_Visible);
+        $rule2->setVisibilityCondition(ExtraQuestionTypeConstants::SubQuestionRuleVisibilityCondition_Equal);
+        $rule2->setAnswerValuesOperator(ExtraQuestionTypeConstants::SubQuestionRuleAnswerValuesOperator_Or);
+
+        $sq1->addSubQuestionRule($rule2);
+        $sq2->addParentRule($rule2);
+
+        // Level 2 subquestion with allowed ticket type
+
+        $sq3 = new SummitOrderExtraQuestionType();
+        $sq3->setUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+        $sq3->setLabel('Level 2 subquestion with allowed ticket type');
+        $sq3->setName('LEVEL_2_SUBQUESTION_WITH_ALLOWED_TICKET_TYPE');
+        $sq3->setType(ExtraQuestionTypeConstants::TextQuestionType);
+        $sq3->setPrintable(true);
+        $sq3->setMandatory(true);
+
+        $sq3->addAllowedTicketType($attendee_ticket_type);
+        self::$summit->addOrderExtraQuestion($sq3);
+
+        $rule3 = new SubQuestionRule();
+        $rule3->setAnswerValues([self::$values[1]->getId()]);
+        $rule3->setVisibility(ExtraQuestionTypeConstants::SubQuestionRuleVisibility_Visible);
+        $rule3->setVisibilityCondition(ExtraQuestionTypeConstants::SubQuestionRuleVisibilityCondition_Equal);
+        $rule3->setAnswerValuesOperator(ExtraQuestionTypeConstants::SubQuestionRuleAnswerValuesOperator_Or);
+
+        $sq1->addSubQuestionRule($rule3);
+        $sq3->addParentRule($rule3);
+
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'attendee_id' => $attendee->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'order'    => '+id',
+            // recursive expand
+            'expand' => '*sub_question_rules,*sub_question,values,values.question'
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitOrderExtraQuestionTypeApiController@getAttendeeExtraQuestions",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $questions = json_decode($content);
+        $this->assertTrue(!is_null($questions));
+        $this->assertEquals(1, $questions->total);              //allowed main question
+        $this->assertCount(1, $questions->data[0]->sub_question_rules);
+        $this->assertCount(1, $questions->data[0]->sub_question_rules[0]->sub_question->sub_question_rules);     //1 allowed and 1 not allowed
         $this->assertResponseStatus(200);
     }
 }

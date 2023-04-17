@@ -17,6 +17,8 @@ use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
+use models\summit\SummitOrderExtraQuestionType;
+
 /***
  * Trait ExtraQuestionAnswerHolder
  * @package App\Models\Foundation\Main\ExtraQuestions
@@ -31,7 +33,7 @@ trait ExtraQuestionAnswerHolder
     /**
      * @return ExtraQuestionType[] | ArrayCollection
      */
-    public abstract function getExtraQuestions();
+    public abstract function getExtraQuestions(): array;
 
     /**
      * @param int $questionId
@@ -53,6 +55,12 @@ trait ExtraQuestionAnswerHolder
      * @param ExtraQuestionAnswer $answer
      */
     public abstract function addExtraQuestionAnswer(ExtraQuestionAnswer $answer):void;
+
+    /**
+     * @param ExtraQuestionType $q
+     * @return bool
+     */
+    public abstract function isAllowedQuestion(ExtraQuestionType $q): bool;
 
     /**
      * @return ExtraQuestionAnswerSet
@@ -99,9 +107,13 @@ trait ExtraQuestionAnswerHolder
             );
         }
         $res = $q->isAnswered($answers);
+
         // check sub-questions ...
         foreach ($q->getSubQuestionRules() as $rule){
-            $res &= $this->checkQuestion($rule->getSubQuestion(), $formerAnswers, $answers);
+            $sq = $rule->getSubQuestion();
+            if ($this->isAllowedQuestion($sq)) {
+                $res &= $this->checkQuestion($sq, $formerAnswers, $answers);
+            }
         }
         return $res;
     }

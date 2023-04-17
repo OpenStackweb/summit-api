@@ -207,4 +207,28 @@ final class FilterParserTest extends TestCase
 
         $this->assertTrue(!empty($dql));
     }
+
+    public function testFilterANDANDORPrimaryJoinCondition(){
+        $filters_input = [
+            'has_badge_feature_types==false',
+            'has_ticket_types==false',
+            '||allowed_ticket_type_id==1234||1234,allowed_badge_feature_type_id==4321||1333'
+        ];
+
+        $filter = FilterParser::parse($filters_input, [
+            'has_badge_feature_types' => ['=='],
+            'has_ticket_types' => ['=='],
+            'allowed_ticket_type_id' => ['=='],
+            'allowed_badge_feature_type_id' => ['==']
+        ]);
+
+        $where_conditions = $filter->toRawSQL([
+            'has_badge_feature_types' => 'has_badge_feature_types',
+            'has_ticket_types' => 'has_ticket_types',
+            'allowed_ticket_type_id' => 'allowed_ticket_type_id',
+            'allowed_badge_feature_type_id' => 'allowed_badge_feature_type_id'
+        ]);
+
+        $this->assertTrue($filter);
+    }
 }

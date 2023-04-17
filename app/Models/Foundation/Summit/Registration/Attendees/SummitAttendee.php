@@ -1040,11 +1040,16 @@ SQL;
     }
 
     /**
-     * @return SummitOrderExtraQuestionAnswer[] | ArrayCollection
+     * @return ExtraQuestionType[] | ArrayCollection
      */
-    public function getExtraQuestions()
+    public function getExtraQuestions(): array
     {
-        return $this->summit->getMainOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+        $res = [];
+        $eqts = $this->summit->getMainOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+        foreach ($eqts as $q) {
+            if ($this->isAllowedQuestion($q)) $res[] = $q;
+        }
+        return $res;
     }
 
     /**
@@ -1053,7 +1058,10 @@ SQL;
      */
     public function getQuestionById(int $questionId): ?ExtraQuestionType
     {
-        return $this->summit->getOrderExtraQuestionById($questionId);
+        $question = $this->summit->getOrderExtraQuestionById($questionId);
+        if(is_null($question)) return null;
+        if(!$this->isAllowedQuestion($question)) return null;
+        return $question;
     }
 
     /**
@@ -1112,6 +1120,33 @@ SQL;
 
         }
         return [];
+    }
+
+    /**
+     * @return array
+     */
+    public function getAllowedTicketTypes(): array
+    {
+        $bindings = [
+            'owner_id' => $this->id
+        ];
+
+        $query = <<<SQL
+SELECT E.* FROM `SummitAttendeeTicket` E
+where OwnerID = :owner_id AND
+E.IsActive = 1 AND
+E.Status = 'Paid'
+SQL;
+        $rsm = new ResultSetMappingBuilder($this->getEM());
+        $rsm->addRootEntityFromClassMetadata(SummitAttendeeTicket::class, 'E');
+
+        // build rsm here
+        $native_query = $this->getEM()->createNativeQuery($query, $rsm);
+
+        foreach ($bindings as $k => $v)
+            $native_query->setParameter($k, $v);
+
+        return $native_query->getResult();
     }
 
     public function getAllowedAccessLevels(): array
@@ -1176,5 +1211,38 @@ SQL;
     public function buildExtraQuestionAnswer(): ExtraQuestionAnswer
     {
        return new SummitOrderExtraQuestionAnswer();
+    }
+
+    /**
+     * @param ExtraQuestionType $q
+     * @return bool
+     */
+    public function isAllowedQuestion(ExtraQuestionType $q): bool
+    {
+        if (!$q instanceof SummitOrderExtraQuestionType) return false;
+
+        $allowed_ticket_type_ids = array_map(function ($e) {
+            return $e->getId();
+        }, $this->getAllowedTicketTypes());
+
+        $allowed_badge_feature_ids = array_map(function ($e) {
+            return $e->getId();
+        }, $this->getAllowedBadgeFeatures());
+
+        // attendee does not has any ticket nor badge feature
+        if (count($allowed_ticket_type_ids) == 0 && count($allowed_badge_feature_ids) == 0) return false;
+
+        // not restricted question
+        if($q->getAllowedTicketTypes()->count() === 0 && $q->getAllowedBadgeFeatureTypes()->count() === 0) return true;
+
+        // restricted question
+        foreach ($q->getAllowedTicketTypes() as $question_ticket_type) {
+            if (in_array($question_ticket_type->getId(), $allowed_ticket_type_ids)) return true;
+        }
+        foreach ($q->getAllowedBadgeFeatureTypes() as $question_badge_feature_type) {
+            if (in_array($question_badge_feature_type->getId(), $allowed_badge_feature_ids)) return true;
+        }
+
+        return false;
     }
 }

@@ -89,7 +89,7 @@ class ExtraQuestionTypeSerializer extends SilverStripeSerializer
         'values' => [
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getValues',
-            'test_rule' => 'ModelSerializers\\ExtraQuestionTypeSerializer::testRule'
+            'test_rule' => 'ModelSerializers\\ExtraQuestionTypeSerializer::testRule',
         ],
         'sub_question_rules' => [
             'type' => Many2OneExpandSerializer::class,

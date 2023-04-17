@@ -32,13 +32,16 @@ extends ExtraQuestionTypeValidationRulesFactory
             return array_merge([
                 'usage'       => 'sometimes|string|in:'.implode(",", SummitOrderExtraQuestionTypeConstants::ValidQuestionUsages),
                 'printable'   => 'sometimes|boolean',
+                'has_badge_feature_types' => 'sometimes|string|in:true,false',
+                'has_ticket_types'        => 'sometimes|string|in:true,false',
             ], $rules);
         }
 
         return array_merge([
             'usage'       => 'required|string|in:'.implode(",", SummitOrderExtraQuestionTypeConstants::ValidQuestionUsages),
             'printable'   => 'sometimes|boolean',
-
+            'has_badge_feature_types' => 'sometimes|string|in:true,false',
+            'has_ticket_types'        => 'sometimes|string|in:true,false',
         ], $rules);
     }
 }

@@ -2251,7 +2251,7 @@ SQL;
     /**
      * @return ExtraQuestionType[] | ArrayCollection
      */
-    public function getExtraQuestions()
+    public function getExtraQuestions(): array
     {
         if (!$this->hasSelectionPlan()) return [];
         return $this->selection_plan->getExtraQuestions()->map(function ($a) {
@@ -2267,6 +2267,15 @@ SQL;
     {
         if (!$this->hasSelectionPlan()) return null;
         return $this->selection_plan->getExtraQuestionById($questionId);
+    }
+
+    /**
+     * @param ExtraQuestionType $q
+     * @return bool
+     */
+    public function isAllowedQuestion(ExtraQuestionType $q): bool
+    {
+        return true;
     }
 
     /**

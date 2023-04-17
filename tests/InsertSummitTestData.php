@@ -230,19 +230,20 @@ trait InsertSummitTestData
      */
     static $default_summit_sponsor_type;
 
+    static $ticket_types = [];
+
     /**
      * @throws Exception
      */
     protected static function insertSummitTestData(){
 
         DB::setDefaultConnection("model");
-
+        DB::delete("DELETE FROM Summit");
         self::$em = Registry::getManager(SilverstripeBaseModel::EntityManager);
         if (!self::$em ->isOpen()) {
             self::$em  = Registry::resetManager(SilverstripeBaseModel::EntityManager);
         }
 
-        //DB::table("Summit")->delete();
         self::$summit_repository = EntityManager::getRepository(Summit::class);
         self::$company_repository = EntityManager::getRepository(Company::class);
         self::$summit_permission_group_repository = EntityManager::getRepository(SummitAdministratorPermissionGroup::class);
@@ -259,6 +260,7 @@ trait InsertSummitTestData
         self::$default_ticket_type->setQuantity2Sell(100);
         self::$default_ticket_type->setBadgeType(self::$default_badge_type);
         self::$default_ticket_type->setAudience(SummitTicketType::Audience_All);
+        self::$ticket_types[] = self::$default_ticket_type;
 
         self::$default_ticket_type_2 = new SummitTicketType();
         self::$default_ticket_type_2->setCost(100);
@@ -267,6 +269,22 @@ trait InsertSummitTestData
         self::$default_ticket_type_2->setQuantity2Sell(100);
         self::$default_ticket_type_2->setBadgeType(self::$default_badge_type);
         self::$default_ticket_type_2->setAudience(SummitTicketType::Audience_Without_Invitation);
+        self::$ticket_types[] = self::$default_ticket_type_2;
+
+        $ticket_type_names = [
+            'Invited Attendee', 'Chaperone', 'Press', 'Speaker', 'Roblox Core Staff', 'Roblox Volunteer Staff',
+            'General Attendee', 'Roblox Staff'
+        ];
+
+        foreach ($ticket_type_names as $ticket_type_name) {
+                $type = new SummitTicketType();
+                $type->setName($ticket_type_name);
+                $type->setCost(100);
+                $type->setCurrency("USD");
+                $type->setQuantity2Sell(100);
+                $type->setBadgeType(self::$default_badge_type);
+                self::$ticket_types[] = $type;
+        }
 
         self::$summit = new Summit();
         self::$summit->setActive(true);
@@ -284,8 +302,10 @@ trait InsertSummitTestData
         self::$summit->setRegistrationEndDate((clone $begin_date)->add(new DateInterval("P30D")));
         self::$summit->setName("TEST SUMMIT");
         self::$summit->addBadgeType(self::$default_badge_type);
-        self::$summit->addTicketType(self::$default_ticket_type);
-        self::$summit->addTicketType(self::$default_ticket_type_2);
+
+        foreach(self::$ticket_types as $ticket_type) {
+            self::$summit->addTicketType($ticket_type);
+        }
 
         $defaultBadge = new SummitBadgeType();
         $defaultBadge->setName("DEFAULT");

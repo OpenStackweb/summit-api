@@ -142,6 +142,12 @@ class SummitTicketType extends SilverstripeBaseModel
     private $audience;
 
     /**
+     * @ORM\ManyToMany(targetEntity="models\summit\SummitOrderExtraQuestionType", mappedBy="allowed_ticket_types")
+     * @var SummitOrderExtraQuestionType[]
+     */
+    private $extra_question_types;
+
+    /**
      * @return string
      */
     public function getName()

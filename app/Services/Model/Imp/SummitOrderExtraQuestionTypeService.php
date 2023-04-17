@@ -61,6 +61,44 @@ final class SummitOrderExtraQuestionTypeService
 
     /**
      * @param Summit $summit
+     * @param SummitOrderExtraQuestionType $question
+     * @param array $ticket_type_ids
+     * @return SummitOrderExtraQuestionType
+     * @throws ValidationException
+     */
+    private function associateTicketTypes(
+        Summit $summit, SummitOrderExtraQuestionType $question, array $ticket_type_ids): SummitOrderExtraQuestionType {
+        $question->clearAllowedTicketTypes();
+        foreach ($ticket_type_ids as $ticket_type_id) {
+            $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
+            if (is_null($ticket_type))
+                throw new ValidationException("Ticket type {$ticket_type_id} does not exist for summit {$summit->getId()}.");
+            $question->addAllowedTicketType($ticket_type);
+        }
+        return $question;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param SummitOrderExtraQuestionType $question
+     * @param array $badge_feature_type_ids
+     * @return SummitOrderExtraQuestionType
+     * @throws ValidationException
+     */
+    private function associateBadgeFeatureTypes(
+        Summit $summit, SummitOrderExtraQuestionType $question, array $badge_feature_type_ids): SummitOrderExtraQuestionType {
+        $question->clearAllowedBadgeFeatureTypes();
+        foreach ($badge_feature_type_ids as $badge_feature_type_id) {
+            $badge_feature_type = $summit->getFeatureTypeById(intval($badge_feature_type_id));
+            if (is_null($badge_feature_type))
+                throw new ValidationException("Badge feature type {$badge_feature_type} does not exist for summit {$summit->getId()}.");
+            $question->addAllowedBadgeFeatureType($badge_feature_type);
+        }
+        return $question;
+    }
+
+    /**
+     * @param Summit $summit
      * @param array $payload
      * @return SummitOrderExtraQuestionType
      * @throws ValidationException
@@ -80,6 +118,12 @@ final class SummitOrderExtraQuestionTypeService
                 throw new ValidationException("Question Label already exists for Summit.");
 
             $question = SummitOrderExtraQuestionTypeFactory::build($payload);
+
+            if(isset($payload['allowed_ticket_types']))
+                $question = $this->associateTicketTypes($summit, $question, $payload['allowed_ticket_types']);
+
+            if(isset($payload['allowed_badge_features_types']))
+                $question = $this->associateBadgeFeatureTypes($summit, $question, $payload['allowed_badge_features_types']);
 
             $summit->addOrderExtraQuestion($question);
 
@@ -116,6 +160,12 @@ final class SummitOrderExtraQuestionTypeService
                 if (!is_null($former_question) && $former_question->getId() != $question_id)
                     throw new ValidationException("Question Label already exists for Summit.");
             }
+
+            if(isset($payload['allowed_ticket_types']))
+                $question = $this->associateTicketTypes($summit, $question, $payload['allowed_ticket_types']);
+
+            if(isset($payload['allowed_badge_features_types']))
+                $question = $this->associateBadgeFeatureTypes($summit, $question, $payload['allowed_badge_features_types']);
 
             if (isset($payload['order']) && intval($payload['order']) != $question->getOrder()) {
                 // request to update order

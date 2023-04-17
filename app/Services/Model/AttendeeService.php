@@ -650,15 +650,17 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     $attendee->setSurname($lname);
                     $attendee->setEmail($email);
                     // company logic
-                    $company = $this->company_repository->getByName($company_name);
-                    if(!is_null($company)) {
-                        $attendee->setCompany($company);
-                        $company_name = $company->getName();
-                    }
-
-                    if(!empty($company_name))
+                    if(!empty($company_name)) {
+                        $company = $this->company_repository->getByName($company_name);
+                        if (!is_null($company)) {
+                            $attendee->setCompany($company);
+                            $company_name = $company->getName();
+                        }
                         $attendee->setCompanyName($company_name);
-
+                    }
+                    else{
+                        $attendee->clearCompany();
+                    }
                 }
             }
 
@@ -678,14 +680,19 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     $attendee->setSurname($lname);
                     $attendee->setEmail($email);
                     // company logic
-                    $company = $this->company_repository->getByName($company_name);
-                    if(!is_null($company)) {
-                        $attendee->setCompany($company);
-                        $company_name = $company->getName();
-                    }
+                    if(!empty($company_name)) {
+                        $company = $this->company_repository->getByName($company_name);
+                        if (!is_null($company)) {
+                            $attendee->setCompany($company);
+                            $company_name = $company->getName();
+                        }
 
-                    if(!empty($company_name))
-                        $attendee->setCompanyName($company_name);
+                        if (!empty($company_name))
+                            $attendee->setCompanyName($company_name);
+                    }
+                    else{
+                        $attendee->clearCompany();
+                    }
                 }
             }
         });

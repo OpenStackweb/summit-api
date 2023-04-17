@@ -79,12 +79,14 @@ final class SummitAttendeeFactory
             $attendee->setSurname(trim($payload['last_name']));
 
         // company by name
-        if (isset($payload['company']) && !empty($payload['company'])) {
-            $attendee->setCompanyName(trim($payload['company']));
+        if (isset($payload['company'])) {
             $attendee->clearCompany();
-            $company = $company_repository->getByName(trim($payload['company']));
-            if (!is_null($company)) {
-                $attendee->setCompany($company);
+            if( !empty($payload['company'])) {
+                $attendee->setCompanyName(trim($payload['company']));
+                $company = $company_repository->getByName(trim($payload['company']));
+                if (!is_null($company)) {
+                    $attendee->setCompany($company);
+                }
             }
         } else if (isset($payload['company_id']) && !is_null($payload['company_id'])) {
             $companyId = intval($payload['company_id']);

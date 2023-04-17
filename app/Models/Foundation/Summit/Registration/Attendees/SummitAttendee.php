@@ -740,6 +740,7 @@ SQL;
     public function clearCompany(): void
     {
         $this->company = null;
+        $this->company_name = null;
     }
 
     /**

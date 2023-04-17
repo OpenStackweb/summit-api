@@ -517,6 +517,7 @@ CASE
     ELSE 'pending'
     END 
 SQL,
+            'selection_plan' => 'selp.name',
             /*
             'event_type_capacity' => <<<SQL
 SQL,

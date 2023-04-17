@@ -140,6 +140,7 @@ abstract class RetrieveSummitEventsStrategy
                 'speakers',
                 'selection_status',
                 'published_date',
+                'selection_plan',
             ]);
         }
         return $order;

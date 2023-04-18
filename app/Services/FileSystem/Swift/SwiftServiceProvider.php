@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use League\Flysystem\Filesystem;
@@ -23,6 +25,35 @@ use OpenStack\OpenStack;
  */
 final class SwiftServiceProvider extends ServiceProvider
 {
+    const MAX_SKIPS = 4;
+
+    private function shouldBypass(): bool
+    {
+        $skip_until =  Cache::tags(SwiftServiceProvider::class)->get('skip_until', Carbon::now());
+        return Carbon::now() < $skip_until;
+    }
+
+    private function recalculateSkipDelay()
+    {
+        $cache = Cache::tags(SwiftServiceProvider::class);
+        $skip_count = intval($cache->get('skip_count', 0));
+        $skip_delay = intval($cache->get('skip_delay', 1));
+        $skip_count++;
+        $skip_delay = $skip_delay * pow(2, $skip_count - 1);
+        $skip_until = Carbon::now()->add($skip_delay, 'minutes');
+        $cache->put('skip_count', $skip_count);
+        $cache->put('skip_delay', $skip_delay);
+        $cache->put('skip_until', $skip_until);
+        if ($skip_count > self::MAX_SKIPS) {
+            $this->resetSkips();
+        }
+    }
+
+    private function resetSkips()
+    {
+        Cache::tags(SwiftServiceProvider::class)->flush();
+    }
+
     /**
      * Register bindings in the container.
      *
@@ -43,6 +74,8 @@ final class SwiftServiceProvider extends ServiceProvider
         Storage::extend('swift', function ($app, $config) {
 
             try {
+                if ($this->shouldBypass()) return null;
+
                 $configOptions = [
                     'authUrl' => $config["auth_url"],
                     'region' => $config["region"],
@@ -81,10 +114,13 @@ final class SwiftServiceProvider extends ServiceProvider
 
                 $container = $openstackClient->objectStoreV1()->getContainer($config["container"]);
 
+                $this->resetSkips();
+
                 return new Filesystem(new SwiftAdapter($container));
             }
             catch(\Exception $ex){
                 Log::error($ex);
+                $this->recalculateSkipDelay();
                 return null;
             }
         });

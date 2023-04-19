@@ -74,6 +74,8 @@ final class SwiftServiceProvider extends ServiceProvider
         Storage::extend('swift', function ($app, $config) {
 
             try {
+                if (empty($config["auth_url"]) || empty($config["region"]) || empty($config["container"])) return null;
+
                 if ($this->shouldBypass()) return null;
 
                 $configOptions = [

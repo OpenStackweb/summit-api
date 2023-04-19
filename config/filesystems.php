@@ -82,6 +82,26 @@ return [
             'container'             => env('CLOUD_STORAGE_IMAGES_CONTAINER'),
         ],
 
+        'assets_s3' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID_ASSETS'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY_ASSETS'),
+            'region' => env('AWS_DEFAULT_REGION_ASSETS'),
+            'bucket' => env('AWS_BUCKET_ASSETS'),
+            'url' => env('AWS_URL_ASSETS'),
+            'endpoint' => env('AWS_ENDPOINT_ASSETS'),
+        ],
+
+        'static_images_s3' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID_STATIC_IMAGES'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY_STATIC_IMAGES'),
+            'region' => env('AWS_DEFAULT_REGION_ASSETS_STATIC_IMAGES'),
+            'bucket' => env('AWS_BUCKET_ASSETS_STATIC_IMAGES'),
+            'url' => env('AWS_URL_ASSETS_STATIC_IMAGES'),
+            'endpoint' => env('AWS_ENDPOINT_ASSETS_STATIC_IMAGES'),
+        ],
+
         'dropbox' => [
             'driver' => 'dropbox',
             'authorization_token' => env('DROPBOX_ACCESS_TOKEN'),
@@ -95,6 +115,7 @@ return [
             'app_credential_secret' => env('CLOUD_STORAGE_APP_CREDENTIAL_SECRET'),
             'container'             => env('CLOUD_STORAGE_MEDIA_UPLOADS_CONTAINER'),
         ]
+
     ],
     'assets_disk' => env('FILESYSTEMS_ASSETS_DISK', 'assets'),
     'static_images_disk' => env('FILESYSTEMS_STATIC_IMAGES_DISK', 'static_images')

@@ -115,6 +115,13 @@ Route::group(['prefix' => 'summits'], function () {
 
     Route::group(['prefix' => '{id}'], function () {
 
+        Route::group(['prefix' => 'signs'], function () {
+            Route::get('', 'OAuth2SummitSignApiController@getAllBySummit');
+            Route::group(['prefix' => '{sign_id}}'], function () {
+                Route::get('', 'OAuth2SummitSignApiController@get');
+            });
+        });
+
         Route::group(['prefix' => 'payments'], function () {
             Route::group(['prefix' => '{application_name}'], function () {
                 Route::post('confirm', 'PaymentGatewayWebHookController@confirm');

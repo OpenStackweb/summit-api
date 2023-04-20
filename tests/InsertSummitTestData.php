@@ -248,10 +248,32 @@ trait InsertSummitTestData
         self::$company_repository = EntityManager::getRepository(Company::class);
         self::$summit_permission_group_repository = EntityManager::getRepository(SummitAdministratorPermissionGroup::class);
 
+        self::$summit = new Summit();
+        self::$summit->setActive(true);
+        // set feed type (sched)
+        self::$summit->setApiFeedUrl("");
+        self::$summit->setApiFeedKey("");
+        self::$summit->setTimeZoneId("America/Chicago");
+        $time_zone = new DateTimeZone("America/Chicago");
+        $begin_date = new DateTime("now", $time_zone);
+        $begin_date = $begin_date->add(new DateInterval("P1D"));
+
+        self::$summit->setBeginDate($begin_date);
+        self::$summit->setEndDate((clone $begin_date)->add(new DateInterval("P30D")));
+        self::$summit->setRegistrationBeginDate($begin_date);
+        self::$summit->setRegistrationEndDate((clone $begin_date)->add(new DateInterval("P30D")));
+        self::$summit->setName("TEST SUMMIT");
+
+
+
         self::$default_badge_type = new SummitBadgeType();
         self::$default_badge_type->setName("BADGE TYPE1");
         self::$default_badge_type->setIsDefault(true);
         self::$default_badge_type->setDescription("BADGE TYPE1 DESCRIPTION");
+        self::$summit->addBadgeType(self::$default_badge_type);
+
+        self::$em->persist(self::$summit);
+        self::$em->flush();
 
         self::$default_ticket_type = new SummitTicketType();
         self::$default_ticket_type->setCost(100);
@@ -277,39 +299,18 @@ trait InsertSummitTestData
         ];
 
         foreach ($ticket_type_names as $ticket_type_name) {
-                $type = new SummitTicketType();
-                $type->setName($ticket_type_name);
-                $type->setCost(100);
-                $type->setCurrency("USD");
-                $type->setQuantity2Sell(100);
-                $type->setBadgeType(self::$default_badge_type);
-                self::$ticket_types[] = $type;
+            $type = new SummitTicketType();
+            $type->setName($ticket_type_name);
+            $type->setCost(100);
+            $type->setCurrency("USD");
+            $type->setQuantity2Sell(100);
+            $type->setBadgeType(self::$default_badge_type);
+            self::$ticket_types[] = $type;
         }
-
-        self::$summit = new Summit();
-        self::$summit->setActive(true);
-        // set feed type (sched)
-        self::$summit->setApiFeedUrl("");
-        self::$summit->setApiFeedKey("");
-        self::$summit->setTimeZoneId("America/Chicago");
-        $time_zone = new DateTimeZone("America/Chicago");
-        $begin_date = new DateTime("now", $time_zone);
-        $begin_date = $begin_date->add(new DateInterval("P1D"));
-
-        self::$summit->setBeginDate($begin_date);
-        self::$summit->setEndDate((clone $begin_date)->add(new DateInterval("P30D")));
-        self::$summit->setRegistrationBeginDate($begin_date);
-        self::$summit->setRegistrationEndDate((clone $begin_date)->add(new DateInterval("P30D")));
-        self::$summit->setName("TEST SUMMIT");
-        self::$summit->addBadgeType(self::$default_badge_type);
 
         foreach(self::$ticket_types as $ticket_type) {
             self::$summit->addTicketType($ticket_type);
         }
-
-        $defaultBadge = new SummitBadgeType();
-        $defaultBadge->setName("DEFAULT");
-        $defaultBadge->setIsDefault(true);
 
         self::$defaultPresentationType = new PresentationType();
         self::$defaultPresentationType->setType('TEST PRESENTATION TYPE');
@@ -658,7 +659,6 @@ trait InsertSummitTestData
             $event->setType( self::$defaultEventType );
             self::$summit->addEvent($event);
             self::$presentations[] = $event;
-
         }
 
         self::$summit_permission_group = new SummitAdministratorPermissionGroup();

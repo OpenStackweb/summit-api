@@ -114,7 +114,7 @@ use ModelSerializers\Locations\SummitLocationImageSerializer;
 use ModelSerializers\Locations\SummitVenueFloorSerializer;
 use ModelSerializers\Locations\SummitVenueRoomSerializer;
 use ModelSerializers\Locations\SummitVenueSerializer;
-
+use App\ModelSerializers\Summit\SummitSignSerializer;
 /**
  * Class SerializerRegistry
  * @package ModelSerializers
@@ -249,6 +249,11 @@ final class SerializerRegistry
         $this->registry['TrackCheckBoxListQuestionTemplate'] = TrackMultiValueQuestionTemplateSerializer::class;
         $this->registry['TrackRadioButtonListQuestionTemplate'] = TrackMultiValueQuestionTemplateSerializer::class;
         $this->registry['TrackLiteralContentQuestionTemplate'] = TrackLiteralContentQuestionTemplateSerializer::class;
+
+        // signs
+
+        $this->registry['SummitSign'] = SummitSignSerializer::class;
+
         // events
 
         $this->registry['SummitEvent'] = [

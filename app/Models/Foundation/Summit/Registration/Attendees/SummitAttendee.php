@@ -1127,26 +1127,14 @@ SQL;
      */
     public function getAllowedTicketTypes(): array
     {
-        $bindings = [
-            'owner_id' => $this->id
-        ];
-
-        $query = <<<SQL
-SELECT E.* FROM `SummitAttendeeTicket` E
-where OwnerID = :owner_id AND
-E.IsActive = 1 AND
-E.Status = 'Paid'
-SQL;
-        $rsm = new ResultSetMappingBuilder($this->getEM());
-        $rsm->addRootEntityFromClassMetadata(SummitAttendeeTicket::class, 'E');
-
-        // build rsm here
-        $native_query = $this->getEM()->createNativeQuery($query, $rsm);
-
-        foreach ($bindings as $k => $v)
-            $native_query->setParameter($k, $v);
-
-        return $native_query->getResult();
+        $res = [];
+        foreach($this->tickets as $ticket){
+            $ticket_type = $ticket->getTicketType();
+            if($ticket->isActive() && $ticket->isPaid() && !isset($res[$ticket_type->getId()])) {
+                $res[$ticket_type->getId()] = $ticket_type;
+            }
+        }
+        return array_values($res);
     }
 
     public function getAllowedAccessLevels(): array

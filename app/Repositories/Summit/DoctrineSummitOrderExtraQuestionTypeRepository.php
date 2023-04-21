@@ -13,6 +13,7 @@
  **/
 use App\Models\Foundation\Summit\Repositories\ISummitOrderExtraQuestionTypeRepository;
 use App\Repositories\Main\DoctrineExtraQuestionTypeRepository;
+use Illuminate\Support\Facades\Log;
 use models\summit\SummitAttendee;
 use models\summit\SummitOrderExtraQuestionType;
 use utils\DoctrineLeftJoinFilterMapping;
@@ -89,6 +90,8 @@ final class DoctrineSummitOrderExtraQuestionTypeRepository
     public function getAllAllowedByPage(
         SummitAttendee $attendee, PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse
     {
+        Log::debug(sprintf("DoctrineSummitOrderExtraQuestionTypeRepository::getAllAllowedByPage attendee_id %s", $attendee->getId()));
+
         $attendee_ticket_type_ids = [];
         foreach ($attendee->getAllowedTicketTypes() as $ticket_type) {
             $attendee_ticket_type_ids[] = $ticket_type->getId();
@@ -98,6 +101,9 @@ final class DoctrineSummitOrderExtraQuestionTypeRepository
         foreach ($attendee->getAllowedBadgeFeatures() as $badge_feature) {
             $attendee_badge_feature_type_ids[] = $badge_feature->getId();
         }
+
+        Log::debug(sprintf("DoctrineSummitOrderExtraQuestionTypeRepository::getAllAllowedByPage attendee_ticket_type_ids %s", implode(',', $attendee_ticket_type_ids)));
+        Log::debug(sprintf("DoctrineSummitOrderExtraQuestionTypeRepository::getAllAllowedByPage attendee_badge_feature_type_ids %s", implode(',', $attendee_badge_feature_type_ids)));
 
         return $this->getParametrizedAllByPage(function () use ($attendee_badge_feature_type_ids, $attendee_ticket_type_ids) {
             $qb = $this->getEntityManager()->createQueryBuilder()

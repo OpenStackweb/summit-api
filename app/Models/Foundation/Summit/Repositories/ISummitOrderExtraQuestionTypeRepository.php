@@ -31,6 +31,8 @@ interface ISummitOrderExtraQuestionTypeRepository extends IExtraQuestionTypeRepo
      * @param Order|null $order
      * @return PagingResponse
      */
-    public function getAllAllowedByPage(
-        SummitAttendee $attendee, PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse;
+    public function getAllAllowedByPage
+    (
+        SummitAttendee $attendee, PagingInfo $paging_info, Filter $filter = null, Order $order = null
+    ): PagingResponse;
 }

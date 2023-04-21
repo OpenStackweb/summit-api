@@ -102,6 +102,11 @@ final class FilterParser
                 if (!isset($allowed_fields[$field])){
                     throw new FilterParserException(sprintf("filter by field %s is not allowed", $field));
                 }
+
+                if (!is_array($allowed_fields[$field])){
+                    throw new FilterParserException(sprintf("filter by field %s is not an array", $field));
+                }
+
                 if (!in_array($op, $allowed_fields[$field])){
                     throw new FilterParserException(sprintf("%s op is not allowed for filter by field %s",$op, $field));
 

@@ -9038,6 +9038,48 @@ class ApiEndpointsSeeder extends Seeder
                         IGroup::SummitAccessControl,
                     ]
                 ],
+                [
+                    'name' => 'get-summit-signs',
+                    'route' => '/api/v1/summits/{id}/signs',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    ]
+                ],
+                [
+                    'name' => 'add-summit-sign',
+                    'route' => '/api/v1/summits/{id}/signs',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
+                    'name' => 'update-summit-sign',
+                    'route' => '/api/v1/summits/{id}/signs/{sign_id}',
+                    'http_method' => 'PUT',
+                    'scopes' => [
+                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    ],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
+                    'name' => 'get-summit-sign',
+                    'route' => '/api/v1/summits/{id}/signs/{sign_id}',
+                    'http_method' => 'GET',
+                    'scopes' => [
+                        sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    ],
+                ],
             ]
         );
     }

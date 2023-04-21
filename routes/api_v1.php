@@ -236,6 +236,15 @@ Route::group(array('prefix' => 'summits'), function () {
 
     Route::group(['prefix' => '{id}'], function () {
 
+        Route::group(['prefix' => 'signs'], function () {
+            Route::get('', 'OAuth2SummitSignApiController@getAllBySummit');
+            Route::post('',  ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSignApiController@add']);
+            Route::group(['prefix' => '{sign_id}'], function () {
+                Route::get('', 'OAuth2SummitSignApiController@get');
+                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSignApiController@update']);
+            });
+        });
+
         Route::group(['prefix' => 'metrics'], function () {
             Route::put('enter', 'OAuth2SummitMetricsApiController@enter');
             Route::post('leave', 'OAuth2SummitMetricsApiController@leave');

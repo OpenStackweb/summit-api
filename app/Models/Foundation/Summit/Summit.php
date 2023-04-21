@@ -14,7 +14,6 @@
 
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Main\OrderableChilds;
-use App\Models\Foundation\Summit\AllowedCurrencies;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlowType;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
@@ -24,6 +23,7 @@ use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfile
 use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
 use App\Models\Foundation\Summit\ScheduleEntity;
 use App\Models\Foundation\Summit\SelectionPlan;
+use App\Models\Foundation\Summit\Signs\SummitSign;
 use App\Models\Foundation\Summit\Speakers\FeaturedSpeaker;
 use App\Models\Foundation\Summit\TrackTagGroup;
 use App\Models\Foundation\Summit\TrackTagGroupAllowedTag;
@@ -385,6 +385,11 @@ class Summit extends SilverstripeBaseModel
      * @ORM\OneToMany(targetEntity="SummitAbstractLocation", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
      */
     private $locations;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Signs\SummitSign", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
+     */
+    private $signs;
 
     /**
      * @ORM\OneToMany(targetEntity="SummitBookableVenueRoomAttributeType", mappedBy="summit", cascade={"persist","remove"}, orphanRemoval=true)
@@ -1128,6 +1133,7 @@ class Summit extends SilverstripeBaseModel
         $this->sponsorship_types = new ArrayCollection();
         $this->selection_plan_extra_questions = new ArrayCollection();
         $this->submission_invitations = new ArrayCollection();
+        $this->signs = new ArrayCollection();
     }
 
     /**
@@ -6340,5 +6346,47 @@ SQL;
         $datetime = new \DateTime("@$epoch");
         $datetime->setTimezone($this->getTimeZone());
         return $datetime;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getSigns(): ArrayCollection
+    {
+        return $this->signs;
+    }
+
+    /**
+     * @param int $sign_id
+     * @return SummitSign|null
+     */
+    public function getSignById(int $sign_id):?SummitSign{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $sign_id));
+        $sign = $this->signs->matching($criteria)->first();
+        return $sign === false ? null : $sign;
+    }
+
+    /**
+     * @param int $location_id
+     * @return SummitSign|null
+     */
+    public function getSignByLocationId(int $location_id):?SummitSign{
+        $location = $this->getLocation($location_id);
+        if(is_null($location)) return null;
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('location', $location));
+        $sign = $this->signs->matching($criteria)->first();
+        return $sign === false ? null : $sign;
+    }
+
+    /**
+     * @param SummitSign $sign
+     * @return void
+     */
+    public function addSign(SummitSign $sign):void{
+        if($this->signs->contains($sign)) return;
+        $this->signs->add($sign);
+        $sign->setSummit($this);
     }
 }

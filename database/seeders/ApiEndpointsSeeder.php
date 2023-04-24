@@ -2902,6 +2902,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::SummitRegistrationAdmins,
+                    IGroup::BadgePrinters,
                 ]
             ],
             [

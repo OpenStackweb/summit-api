@@ -57,6 +57,8 @@ final class DoctrineSummitLocationRepository
         return [
             'name'           => 'al.name:json_string',
             'description'    => 'al.description:json_string',
+            'opening_hour'   => 'al.opening_hour:json_int',
+            'closing_hour'   => 'al.closing_hour:json_int',
             'address_1'      => 'gll.address1:json_string',
             'address_2'      => 'gll.address2:json_string',
             'zip_code'       => 'gll.zip_code:json_string',

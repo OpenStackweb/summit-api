@@ -62,7 +62,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
     public function testGetCurrentSummitLocations()
     {
         $params = [
-            'id'       => self::$summit->getId(),
+            'id'       => 3589, //self::$summit->getId(),
             'page'     => 1,
             'per_page' => 5,
             'order'    => '-order'
@@ -432,7 +432,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
     public function testAddLocationVenue(){
 
         $params = [
-            'id' => self::$summit->getId(),
+            self::$summit->getId(),
         ];
 
         $name = str_random(16).'_location';
@@ -444,7 +444,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
             'state'       => 'Buenos Aires',
             'country'     => 'AR',
             'class_name'  => \models\summit\SummitVenue::ClassName,
-            'description' => 'test location',
+            'description' => 'test location'
         ];
 
         $response = $this->action(
@@ -538,6 +538,45 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
         $this->assertResponseStatus(412);
     }
 
+    public function testAddLocationWithTimeRange(){
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $name = str_random(16).'_location';
+
+        $data = [
+            'name'        => $name,
+            'address_1'    => 'Nazar 612',
+            'city'        => 'Lanus',
+            'state'       => 'Buenos Aires',
+            'country'     => 'AR',
+            'class_name'  => \models\summit\SummitVenue::ClassName,
+            'description' => 'test location',
+            'opening_hour' => 1300,
+            'closing_hour' => 1900
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitLocationsApiController@addLocation",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $location = json_decode($content);
+        $this->assertTrue(!is_null($location));
+        return $location;
+    }
+
     /**
      * @param int $summit_id
      * @return mixed
@@ -617,16 +656,18 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTest
      * @param int $summit_id
      * @return mixed
      */
-    public function testUpdateExistentLocation($summit_id = 23){
+    public function testUpdateExistingLocation(){
 
         $params = [
-            'id'          => $summit_id,
-            'location_id' => 292
+            'id'          => self::$summit->getId(),
+            'location_id' => self::$mainVenue->getId()
         ];
 
         $data = [
             'class_name'  => \models\summit\SummitVenue::ClassName,
-            'name' => 'Sydney Convention and Exhibition Centre Update!'
+            'name' => 'Sydney Convention and Exhibition Centre Update!',
+            'opening_hour' => 1200,
+            'closing_hour' => 2100
         ];
 
         $response = $this->action(

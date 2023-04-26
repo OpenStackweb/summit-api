@@ -181,6 +181,27 @@ abstract class AbstractPublishService extends AbstractService
 
         if (!$eventType->isAllowsPublishingDates()) return;
 
+        // validate current location timeframe restriction
+        $location_opening_hour = $current_event_location->getOpeningHour();
+
+        if ($location_opening_hour != null) {
+            $location_closing_hour = $current_event_location->getClosingHour() ?? 2359;
+            $event_opening_hour = intval($publishable_event->getStartDate()->format('Hi'));
+            $event_closing_hour = intval($publishable_event->getEndDate()->format('Hi'));
+            if ($event_closing_hour < $location_opening_hour || $event_opening_hour > $location_closing_hour) {
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "You can't publish event %s out of this time frame (%s - %s) due to event location time restrictions.",
+                        $publishable_event->getId(),
+                        $location_opening_hour,
+                        $location_closing_hour
+                    )
+                );
+            }
+        }
+
         // validate blackout times
         $conflict_events = $this->publish_repository->getPublishedOnSameTimeFrame($publishable_event);
         if (!is_null($conflict_events)) {

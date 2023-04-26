@@ -92,6 +92,18 @@ class SummitAbstractLocation extends SilverstripeBaseModel implements IOrderable
     protected $order;
 
     /**
+     * @ORM\Column(name="OpeningHour", type="integer")
+     * @var int
+     */
+    protected $opening_hour;
+
+    /**
+     * @ORM\Column(name="ClosingHour", type="integer")
+     * @var int
+     */
+    protected $closing_hour;
+
+    /**
      * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner", mappedBy="location", cascade={"persist"}, orphanRemoval=true)
      * @var SummitLocationBanner[]
      */
@@ -113,6 +125,8 @@ class SummitAbstractLocation extends SilverstripeBaseModel implements IOrderable
         'type'         => [ self::TypeExternal, self::TypeInternal],
         'banners'      => 'array',
         'order'        => 'integer',
+        'opening_hour' => 'integer',
+        'closing_hour' => 'integer',
     ];
 
     /**
@@ -200,6 +214,38 @@ class SummitAbstractLocation extends SilverstripeBaseModel implements IOrderable
     public function setName($name)
     {
         $this->name = $name;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getOpeningHour(): ?int
+    {
+        return $this->opening_hour;
+    }
+
+    /**
+     * @param int|null $opening_hour
+     */
+    public function setOpeningHour(?int $opening_hour)
+    {
+        $this->opening_hour = $opening_hour;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getClosingHour(): ?int
+    {
+        return $this->closing_hour;
+    }
+
+    /**
+     * @param int|null $closing_hour
+     */
+    public function setClosingHour(?int $closing_hour)
+    {
+        $this->closing_hour = $closing_hour;
     }
 
     use SummitOwned;

@@ -39,6 +39,9 @@ return [
     'email'                => 'The :attribute must be a valid email address.',
     'exists'               => 'The selected :attribute is invalid.',
     'filled'               => 'The :attribute field is required.',
+    'gt'                   => [
+        'numeric' => 'The :attribute must be greater than :value.',
+    ],
     'image'                => 'The :attribute must be an image.',
     'in'                   => 'The selected :attribute is invalid.',
     'in_array'             => 'The :attribute field does not exist in :other.',
@@ -46,6 +49,7 @@ return [
     'ip'                   => 'The :attribute must be a valid IP address.',
     'json'                 => 'The :attribute must be a valid JSON string.',
     'max'                  => [
+        'integer' => 'The :attribute may not be greater than :max.',
         'numeric' => 'The :attribute may not be greater than :max.',
         'file'    => 'The :attribute may not be greater than :max kilobytes.',
         'string'  => 'The :attribute may not be greater than :max characters.',
@@ -53,6 +57,7 @@ return [
     ],
     'mimes'                => 'The :attribute must be a file of type: :values.',
     'min'                  => [
+        'integer' => 'The :attribute must be at least :min.',
         'numeric' => 'The :attribute must be at least :min.',
         'file'    => 'The :attribute must be at least :min kilobytes.',
         'string'  => 'The :attribute must be at least :min characters.',

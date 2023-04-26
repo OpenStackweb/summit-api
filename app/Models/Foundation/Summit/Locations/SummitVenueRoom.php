@@ -238,4 +238,19 @@ class SummitVenueRoom extends SummitAbstractLocation implements IOrderable
         $this->floor = $floor;
     }
 
+    /**
+     * @return int|null
+     */
+    public function getOpeningHour(): ?int
+    {
+        return $this->opening_hour ?? $this->venue->getOpeningHour();
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getClosingHour(): ?int
+    {
+        return $this->closing_hour ?? $this->venue->getClosingHour();
+    }
 }

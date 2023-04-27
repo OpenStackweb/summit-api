@@ -84,7 +84,7 @@ final class SummitOrderExtraQuestionTypeSerializer extends ExtraQuestionTypeSeri
             $values['allowed_ticket_types'] = $question->getAllowedTicketTypeIds();
 
         if(in_array('allowed_badge_features_types', $relations) && !isset($values['allowed_badge_features_types']))
-            $values['allowed_badge_feature_types'] = $question->getAllowedBadgeFeatureTypeIds();
+            $values['allowed_badge_features_types'] = $question->getAllowedBadgeFeatureTypeIds();
 
         return $values;
     }

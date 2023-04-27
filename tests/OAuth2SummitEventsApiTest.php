@@ -518,6 +518,42 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTest
         return $event;
     }
 
+    public function testPublishEventOnTimeRestrictedLocation($start_date = 1677764037, $end_date = 1682861637)
+    {
+        $params = array
+        (
+            'id'         => 3589,
+            'event_id'   => 116320,
+            'start_date' => $start_date,
+            'end_date'   => $end_date,
+            'opening_hour' => 1300,
+            'closing_hour' => 1900
+        );
+
+        $headers = array
+        (
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        );
+
+        $response = $this->action
+        (
+            "PUT",
+            "OAuth2SummitEventsApiController@publishEvent",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(204);
+        $event = json_decode($content);
+        $this->assertTrue($event->id > 0);
+        return $event;
+    }
+
     public function testUpdateEventOccupancy(){
 
         $params = array

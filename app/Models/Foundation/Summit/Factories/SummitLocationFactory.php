@@ -78,6 +78,12 @@ final class SummitLocationFactory
         if(isset($data['description']))
             $location->setDescription(trim($data['description']));
 
+        if(isset($data['opening_hour']))
+            $location->setOpeningHour(intval($data['opening_hour']));
+
+        if(isset($data['closing_hour']))
+            $location->setClosingHour(intval($data['closing_hour']));
+
         return $location;
     }
 

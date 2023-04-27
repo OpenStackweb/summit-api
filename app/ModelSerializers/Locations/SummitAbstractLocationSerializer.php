@@ -28,6 +28,8 @@ class SummitAbstractLocationSerializer
         'Description'  => 'description:json_string',
         'LocationType' => 'location_type',
         'Order'        => 'order:json_int',
+        'OpeningHour'  => 'opening_hour:json_int',
+        'ClosingHour'  => 'closing_hour:json_int',
         'ClassName'    => 'class_name:json_string',
     ];
 

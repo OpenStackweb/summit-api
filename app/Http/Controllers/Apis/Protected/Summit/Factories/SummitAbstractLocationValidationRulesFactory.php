@@ -27,10 +27,12 @@ final class SummitAbstractLocationValidationRulesFactory
 
         if($update){
             return [
-                'name'        => 'sometimes|string|max:255',
-                'short_name'        => 'sometimes|string|max:255',
-                'description' => 'sometimes|string',
-                'order'       => 'sometimes|integer|min:1'
+                'name'         => 'sometimes|string|max:255',
+                'short_name'   => 'sometimes|string|max:255',
+                'description'  => 'sometimes|string',
+                'opening_hour' => 'sometimes|integer|min:0|max:2359',
+                'closing_hour' => 'required_with:opening_hour|integer|gt:opening_hour|min:0|max:2359',
+                'order'        => 'sometimes|integer|min:1'
             ];
         }
 
@@ -38,6 +40,8 @@ final class SummitAbstractLocationValidationRulesFactory
             'name'        => 'required|string|max:255',
             'short_name'  => 'sometimes|string|max:255',
             'description' => 'sometimes|string',
+            'opening_hour' => 'sometimes|integer|min:0|max:2359',
+            'closing_hour' => 'required_with:opening_hour|integer|gt:opening_hour|min:0|max:2359'
         ];
     }
 }

@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use Illuminate\Http\UploadedFile;
+use LaravelDoctrine\ORM\Facades\EntityManager;
+use models\summit\Summit;
 use models\summit\SummitTicketType;
 
 /**
@@ -398,5 +400,39 @@ CSV;
         $content = $response->getContent();
         $this->assertResponseStatus(200);
         $this->assertNotEmpty($content);
+    }
+
+    public function testAcceptInvitation(){
+        $params = [
+            'id'            => 3589, //self::$summit->getId(),
+            'invitation_id' => 18, //self::$summit->getRegistrationInvitations()->first()->getId()
+        ];
+
+        $data = [
+            'email'       => 'test@fntech.com',
+            'is_accepted' => true,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitRegistrationInvitationApiController@update",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(201);
+        $content = $response->getContent();
+        $invitation = json_decode($content);
+        $this->assertTrue($invitation->is_accepted);
+        $this->assertNotNull($invitation->accepted_date);
     }
 }

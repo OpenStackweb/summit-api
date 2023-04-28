@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use Illuminate\Http\UploadedFile;
+use LaravelDoctrine\ORM\Facades\EntityManager;
+use models\summit\Summit;
 use models\summit\SummitTicketType;
 
 /**
@@ -49,7 +51,7 @@ CSV;
         $file = new UploadedFile($path, "invitations.csv", 'text/csv', null, true);
 
         $params = [
-            'id' => 3589, //self::$summit->getId(),
+            'id' => self::$summit->getId(),
         ];
 
         $headers = [
@@ -400,16 +402,15 @@ CSV;
         $this->assertNotEmpty($content);
     }
 
-    public function testUpdateInvitation(){
+    public function testAcceptInvitation(){
         $params = [
-            'id'            => 3589,
-            'invitation_id' => 18
+            'id'            => 3589, //self::$summit->getId(),
+            'invitation_id' => 18, //self::$summit->getRegistrationInvitations()->first()->getId()
         ];
 
         $data = [
             'email'       => 'test@fntech.com',
             'is_accepted' => true,
-            //'allowed_ticket_types'  => [self::$default_ticket_type->getId()]
         ];
 
         $headers = [
@@ -428,8 +429,10 @@ CSV;
             json_encode($data)
         );
 
-        $this->assertResponseStatus(204);
+        $this->assertResponseStatus(201);
         $content = $response->getContent();
         $invitation = json_decode($content);
+        $this->assertTrue($invitation->is_accepted);
+        $this->assertNotNull($invitation->accepted_date);
     }
 }

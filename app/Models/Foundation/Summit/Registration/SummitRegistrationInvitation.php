@@ -198,6 +198,11 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         return $this->accepted_date;
     }
 
+    public function setAccepted(bool $accepted)
+    {
+        $this->accepted_date = $accepted ? new \DateTime('now', new \DateTimeZone('UTC')) : null;
+    }
+
     public function isAccepted(): bool
     {
 
@@ -464,15 +469,18 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         if ($this->ticket_types->contains($ticketType)) return;
         $this->ticket_types->add($ticketType);
         $this->accepted_date = null;
+        $this->markAsAccepted();
     }
 
     /**
      * @param SummitTicketType $ticketType
+     * @throws ValidationException
      */
     public function removeTicketType(SummitTicketType $ticketType)
     {
         if (!$this->ticket_types->contains($ticketType)) return;
         $this->ticket_types->removeElement($ticketType);
+        $this->markAsAccepted();
     }
 
     /**

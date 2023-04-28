@@ -49,7 +49,7 @@ CSV;
         $file = new UploadedFile($path, "invitations.csv", 'text/csv', null, true);
 
         $params = [
-            'id' => self::$summit->getId(),
+            'id' => 3589, //self::$summit->getId(),
         ];
 
         $headers = [
@@ -398,5 +398,38 @@ CSV;
         $content = $response->getContent();
         $this->assertResponseStatus(200);
         $this->assertNotEmpty($content);
+    }
+
+    public function testUpdateInvitation(){
+        $params = [
+            'id'            => 3589,
+            'invitation_id' => 18
+        ];
+
+        $data = [
+            'email'       => 'test@fntech.com',
+            'is_accepted' => true,
+            //'allowed_ticket_types'  => [self::$default_ticket_type->getId()]
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitRegistrationInvitationApiController@update",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(204);
+        $content = $response->getContent();
+        $invitation = json_decode($content);
     }
 }

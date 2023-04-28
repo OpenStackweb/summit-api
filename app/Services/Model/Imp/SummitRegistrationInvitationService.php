@@ -396,6 +396,10 @@ final class SummitRegistrationInvitationService
                 }
             }
 
+            if(isset($payload['is_accepted']) && boolval($payload['is_accepted']) == true){
+                $invitation->markAsAccepted();
+            }
+
             return $invitation;
         });
     }

@@ -353,8 +353,6 @@ final class SummitRegistrationInvitationService
                 }
             }
 
-            $invitation = SummitRegistrationInvitationFactory::populate($invitation, $payload);
-
             if (isset($payload['email'])) {
                 $email = trim($payload['email']);
                 try {
@@ -396,7 +394,7 @@ final class SummitRegistrationInvitationService
                 }
             }
 
-            return $invitation;
+            return SummitRegistrationInvitationFactory::populate($invitation, $payload);
         });
     }
 

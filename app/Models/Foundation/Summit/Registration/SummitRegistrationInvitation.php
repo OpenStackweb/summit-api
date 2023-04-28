@@ -203,40 +203,6 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         $this->accepted_date = $accepted ? new \DateTime('now', new \DateTimeZone('UTC')) : null;
     }
 
-    public function isAccepted(): bool
-    {
-
-        $bought_tickets = $this->getBoughtTicketTypesExcerpt();
-
-        Log::debug(sprintf("SummitRegistrationInvitation::isAccepted %s bought_tickets %s", $this->id, json_encode($bought_tickets)));
-        // check if we fullfill the invitation
-
-        $invitation_ticket_types = $this->ticket_types;
-        if($invitation_ticket_types->count() === 0 )
-            $invitation_ticket_types = $this->summit->getTicketTypesByAudience(SummitTicketType::Audience_With_Invitation);
-
-        if($invitation_ticket_types->count() === 0)
-            throw new ValidationException
-            (
-                sprintf
-                (
-                    "There are not Ticket Types with Audience %s for Summit %s.",
-                    SummitTicketType::Audience_With_Invitation,
-                    $this->summit->getId()
-                )
-            );
-
-        foreach ($invitation_ticket_types as $ticket_type){
-            if(!isset($bought_tickets[$ticket_type->getId()])){
-                Log::debug(sprintf("SummitRegistrationInvitation::isAccepted %s ticket type %s is not purchased yet ", $this->id, $ticket_type->getId()));
-                $this->accepted_date = null;
-                return false;
-            }
-        }
-
-        return !is_null($this->accepted_date);
-    }
-
     public function isSent(): bool
     {
         return !empty($this->hash);
@@ -432,12 +398,18 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
 
         foreach ($invitation_ticket_types as $ticket_type){
             if(!isset($bought_tickets[$ticket_type->getId()])){
-                Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s ticket type is not purchased yet ", $this->id, $ticket_type->getId()));
+                Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s ticket type %s is not purchased yet ", $this->id, $ticket_type->getId()));
+                $this->accepted_date = null;
                 return;
             }
         }
         // once i bought all meant ticket types ... the invitation is marked as accepted
         $this->accepted_date = new \DateTime('now', new \DateTimeZone('UTC'));
+    }
+
+    public function isAccepted(): bool
+    {
+        return !is_null($this->accepted_date);
     }
 
     public function addOrder(SummitOrder $order){
@@ -468,7 +440,6 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         }
         if ($this->ticket_types->contains($ticketType)) return;
         $this->ticket_types->add($ticketType);
-        $this->accepted_date = null;
         $this->markAsAccepted();
     }
 

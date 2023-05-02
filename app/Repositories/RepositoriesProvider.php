@@ -51,6 +51,8 @@ use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerActiveInvolvementRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerEditPermissionRequestRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerOrganizationalRoleRepository;
+use App\Models\Foundation\Summit\Repositories\ISpeakersRegistrationDiscountCodeRepository;
+use App\Models\Foundation\Summit\Repositories\ISpeakersSummitRegistrationPromoCodeRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorAdRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorMaterialRepository;
 use App\Models\Foundation\Summit\Repositories\ISponsorRepository;
@@ -126,6 +128,8 @@ use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
 use models\summit\SpeakerActiveInvolvement;
 use models\summit\SpeakerOrganizationalRole;
 use models\summit\SpeakerRegistrationRequest;
+use models\summit\SpeakersRegistrationDiscountCode;
+use models\summit\SpeakersSummitRegistrationPromoCode;
 use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\Sponsor;
 use models\summit\SponsorAd;
@@ -389,6 +393,20 @@ final class RepositoriesProvider extends ServiceProvider
             ISummitRegistrationPromoCodeRepository::class,
             function () {
                 return EntityManager::getRepository(SummitRegistrationPromoCode::class);
+            }
+        );
+
+        App::singleton(
+            ISpeakersSummitRegistrationPromoCodeRepository::class,
+            function () {
+                return EntityManager::getRepository(SpeakersSummitRegistrationPromoCode::class);
+            }
+        );
+
+        App::singleton(
+            ISpeakersRegistrationDiscountCodeRepository::class,
+            function () {
+                return EntityManager::getRepository(SpeakersRegistrationDiscountCode::class);
             }
         );
 

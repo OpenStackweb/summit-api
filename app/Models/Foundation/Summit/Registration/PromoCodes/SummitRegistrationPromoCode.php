@@ -33,7 +33,9 @@ use Doctrine\ORM\Mapping as ORM;
  *     "SummitRegistrationDiscountCode" = "SummitRegistrationDiscountCode",
  *     "MemberSummitRegistrationDiscountCode" = "MemberSummitRegistrationDiscountCode",
  *     "SpeakerSummitRegistrationDiscountCode" = "SpeakerSummitRegistrationDiscountCode",
- *     "SponsorSummitRegistrationDiscountCode" = "SponsorSummitRegistrationDiscountCode"
+ *     "SponsorSummitRegistrationDiscountCode" = "SponsorSummitRegistrationDiscountCode",
+ *     "SpeakersRegistrationDiscountCode" = "SpeakersRegistrationDiscountCode",
+ *     "SpeakersSummitRegistrationPromoCode" = "SpeakersSummitRegistrationPromoCode"
  * })
  * Class SummitRegistrationPromoCode
  * @package models\summit

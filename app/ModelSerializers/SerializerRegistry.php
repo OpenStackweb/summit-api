@@ -374,6 +374,9 @@ final class SerializerRegistry
         $this->registry['MemberSummitRegistrationDiscountCode'] = MemberSummitRegistrationDiscountCodeSerializer::class;
         $this->registry['SpeakerSummitRegistrationDiscountCode'] = SpeakerSummitRegistrationDiscountCodeSerializer::class;
         $this->registry['SponsorSummitRegistrationDiscountCode'] = SponsorSummitRegistrationDiscountCodeSerializer::class;
+        $this->registry['SpeakersSummitRegistrationPromoCode'] = SpeakersSummitRegistrationPromoCodeSerializer::class;
+        $this->registry['SpeakersRegistrationDiscountCode'] = SpeakersRegistrationDiscountCodeSerializer::class;
+        $this->registry['AssignedPromoCodeSpeaker'] = AssignedPromoCodeSpeakerSerializer::class;
 
         // submission invitations
         $this->registry['SummitSubmissionInvitation'] = [

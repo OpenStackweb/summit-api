@@ -357,28 +357,44 @@ final class SummitRegistrationInvitationService
                 $email = trim($payload['email']);
                 try {
                     $invitation = $this->setInvitationMember($invitation, $email);
-                }
-                catch (\Exception $ex){
+                } catch (\Exception $ex) {
                     Log::warning($ex);
                 }
             }
 
+            $is_formerly_accepted = $invitation->isAccepted();
             $allowed_ticket_types = $payload['allowed_ticket_types'] ?? [];
-            $invitation->clearTicketTypes();
-            foreach ($allowed_ticket_types as $ticket_type_id) {
-                $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
-                if (is_null($ticket_type)) {
-                    throw new ValidationException
-                    (
-                        sprintf
+            if (count($allowed_ticket_types) > 0) {
+                foreach ($allowed_ticket_types as $ticket_type_id) {
+                    $ticket_type = $summit->getTicketTypeById(intval($ticket_type_id));
+                    if (is_null($ticket_type)) {
+                        throw new ValidationException
                         (
-                            "SummitRegistrationInvitationService::add ticket type %s does not exists on summit %s.",
-                            $ticket_type_id,
-                            $summit->getId()
-                        )
-                    );
+                            sprintf
+                            (
+                                "SummitRegistrationInvitationService::add ticket type %s does not exists on summit %s.",
+                                $ticket_type_id,
+                                $summit->getId()
+                            )
+                        );
+                    }
+                    $invitation->addTicketType($ticket_type);
                 }
-                $invitation->addTicketType($ticket_type);
+                // remove missing ones
+                $to_remove = [];
+                foreach ($invitation->getTicketTypes() as $invitation_ticket_type){
+                    if(!in_array($invitation_ticket_type->getId(), $allowed_ticket_types)){
+                        $to_remove[] = $invitation_ticket_type;
+                    }
+                }
+                foreach ($to_remove as $ticket_type_to_remove){
+                    $invitation->removeTicketType($ticket_type_to_remove);
+                }
+            }
+
+            if($invitation->isAccepted() != $is_formerly_accepted){
+               // it changed its state bc the ticket types update
+                $payload['is_accepted'] = $invitation->isAccepted();
             }
 
             // tags

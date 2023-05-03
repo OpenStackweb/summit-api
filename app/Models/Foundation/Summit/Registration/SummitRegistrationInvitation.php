@@ -373,7 +373,7 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
 
     public function markAsAccepted(): void
     {
-        Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s ", $this->id));
+        Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s orders count %s", $this->id, $this->orders->count()));
         if($this->orders->count() === 0 ) return;
 
         $bought_tickets = $this->getBoughtTicketTypesExcerpt();
@@ -397,14 +397,18 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
             );
 
         foreach ($invitation_ticket_types as $ticket_type){
+            Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s checking if ticket type %s is purchased ... ", $this->id, $ticket_type->getId()));
             if(!isset($bought_tickets[$ticket_type->getId()])){
-                Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s ticket type %s is not purchased yet ", $this->id, $ticket_type->getId()));
+                Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s ticket type %s is not purchased yet, marking invitation as non accepted ... ", $this->id, $ticket_type->getId()));
                 $this->accepted_date = null;
                 return;
             }
         }
+
         // once i bought all meant ticket types ... the invitation is marked as accepted
         $this->accepted_date = new \DateTime('now', new \DateTimeZone('UTC'));
+
+        Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s marked as accepted", $this->id));
     }
 
     public function isAccepted(): bool
@@ -424,6 +428,10 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
 
     public function getOrders(){
         return $this->orders;
+    }
+
+    public function hasTicketType(SummitTicketType $ticketType):bool{
+        return $this->ticket_types->contains($ticketType);
     }
 
     /**

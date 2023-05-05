@@ -46,6 +46,8 @@ final class SummitSpeakerEmailsValidationRulesFactory extends AbstractValidation
             'outcome_email_recipient'   => 'sometimes|email',
             'should_send_copy_2_submitter' => 'sometimes|boolean',
             'should_resend' => 'sometimes|boolean',
+            'promo_code' => 'required_without:promo_code_spec|string',
+            'promo_code_spec' => 'required_without:promo_code|array',
         ];
     }
 

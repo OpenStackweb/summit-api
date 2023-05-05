@@ -16,6 +16,8 @@ use Doctrine\ORM\Query\Expr\Join;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\MemberSummitRegistrationDiscountCode;
 use models\summit\MemberSummitRegistrationPromoCode;
+use models\summit\SpeakersRegistrationDiscountCode;
+use models\summit\SpeakersSummitRegistrationPromoCode;
 use models\summit\SpeakerSummitRegistrationDiscountCode;
 use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\SponsorSummitRegistrationDiscountCode;
@@ -132,6 +134,8 @@ class DoctrineSummitRegistrationPromoCodeRepository
                    MemberSummitRegistrationDiscountCode::ClassName  => MemberSummitRegistrationDiscountCode::class,
                    SpeakerSummitRegistrationDiscountCode::ClassName => SpeakerSummitRegistrationDiscountCode::class,
                    SponsorSummitRegistrationDiscountCode::ClassName => SponsorSummitRegistrationDiscountCode::class,
+                   SpeakersSummitRegistrationPromoCode::ClassName   => SpeakersSummitRegistrationPromoCode::class,
+                   SpeakersRegistrationDiscountCode::ClassName      => SpeakersRegistrationDiscountCode::class
                ]
            )
         ];
@@ -237,6 +241,8 @@ class DoctrineSummitRegistrationPromoCodeRepository
            SponsorSummitRegistrationDiscountCode::getMetadata(),
            SpeakerSummitRegistrationDiscountCode::getMetadata(),
            MemberSummitRegistrationDiscountCode::getMetadata(),
+           SpeakersSummitRegistrationPromoCode::getMetadata(),
+           SpeakersRegistrationDiscountCode::getMetadata()
        ];
     }
 

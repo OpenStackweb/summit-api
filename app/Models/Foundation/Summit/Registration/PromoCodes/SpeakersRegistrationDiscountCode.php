@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 /**
@@ -24,12 +23,9 @@ use Doctrine\ORM\Mapping AS ORM;
 class SpeakersRegistrationDiscountCode
     extends SummitRegistrationDiscountCode
 {
-    const ClassName = 'SpeakersRegistrationDiscountCode';
+    use SpeakersPromoCodeTrait;
 
-    public function getClassName(): string
-    {
-        return self::ClassName;
-    }
+    const ClassName = 'SpeakersRegistrationDiscountCode';
 
     /**
      * @ORM\OneToMany(targetEntity="AssignedPromoCodeSpeaker", mappedBy="registration_discount_code", cascade={"persist"}, orphanRemoval=true)
@@ -37,30 +33,37 @@ class SpeakersRegistrationDiscountCode
      */
     private $owners;
 
+    public static $metadata = [
+        'class_name' => self::ClassName
+    ];
+
+    /**
+     * @return array
+     */
+    public static function getMetadata()
+    {
+        return array_merge(SummitRegistrationDiscountCode::getMetadata(), self::$metadata);
+    }
+
+    public function getClassName(): string
+    {
+        return self::ClassName;
+    }
+
     public function __construct()
     {
         parent::__construct();
         $this->owners = new ArrayCollection();
     }
 
-    public function hasOwners(): bool
-    {
-        return count($this->owners) > 0;
-    }
-
     /**
-     * @return AssignedPromoCodeSpeaker[]
+     * @param PresentationSpeaker $speaker
      */
-    public function getOwners(): array
+    public function assignSpeaker(PresentationSpeaker $speaker)
     {
-        return $this->owners->toArray();
-    }
-
-    /**
-     * @param AssignedPromoCodeSpeaker $owner
-     */
-    public function addOwner(AssignedPromoCodeSpeaker $owner): void
-    {
+        if ($this->isSpeakerAlreadyAssigned($speaker)) return;
+        $owner = new AssignedPromoCodeSpeaker();
+        $owner->setSpeaker($speaker);
         $owner->setRegistrationDiscountCode($this);
         $this->owners->add($owner);
     }

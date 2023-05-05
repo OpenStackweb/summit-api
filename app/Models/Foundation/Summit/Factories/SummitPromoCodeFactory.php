@@ -238,10 +238,11 @@ final class SummitPromoCodeFactory
                     $promo_code->setRate(floatval($data['rate']));
             }
             break;
-            case SpeakersRegistrationDiscountCode::ClassName:
-            case SpeakersSummitRegistrationPromoCode::ClassName:{
-                if(isset($data['owner']))
-                    $promo_code->addOwner($data['owner']);
+            case SpeakersRegistrationDiscountCode::ClassName: {
+                if(isset($data['amount']))
+                    $promo_code->setAmount(floatval($data['amount']));
+                if(isset($data['rate']))
+                    $promo_code->setRate(floatval($data['rate']));
             }
             break;
         }

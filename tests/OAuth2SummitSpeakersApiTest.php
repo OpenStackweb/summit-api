@@ -1,5 +1,7 @@
 <?php namespace Tests;
 use App\Models\Foundation\Main\IGroup;
+use Illuminate\Support\Facades\Date;
+use models\summit\SpeakersSummitRegistrationPromoCode;
 
 /**
  * Copyright 2017 OpenStack Foundation
@@ -747,6 +749,19 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
             "CONTENT_TYPE" => "application/json"
         ];
 
+        $promo_code_spec = [
+            "class_name"            => SpeakersSummitRegistrationPromoCode::ClassName,
+            "allowed_ticket_types"  => [2446,2447],
+            "badge_features"        => [],
+            "description"           => "Test multi speakers promo code",
+            "discount_rate"         => 0.0,
+            "amount"                => 10.0,
+            "quantity_available"    => 10,
+            "tags"                  => [],
+            "valid_since_date"      => Date::now()->getTimestamp(),
+            "valid_until_date"      => Date::now()->addDays(10)->getTimestamp(),
+        ];
+
         $data = [
             'email_flow_event'  => 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ACCEPTED_ALTERNATE',
             'speaker_ids'       => [
@@ -754,6 +769,8 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
             ],
             'test_email_recipient'      => 'test_recip@nomail.com',
             'outcome_email_recipient'   => 'outcome_recip@nomail.com',
+            'promo_code_spec'           => $promo_code_spec,
+            //'promo_code'                => 'TEST_SSRPC'
         ];
 
         $response = $this->action
@@ -768,6 +785,7 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTest
             json_encode($data)
         );
 
+        $content = $response->getContent();
         $this->assertResponseStatus(200);
     }
 

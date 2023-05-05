@@ -87,6 +87,14 @@ trait SpeakerPromoCodeTrait
     }
 
     /**
+     * @param PresentationSpeaker $speaker
+     */
+    public function assignSpeaker(PresentationSpeaker $speaker)
+    {
+        $this->speaker = $speaker;
+    }
+
+    /**
      * @param string $email
      * @param null|string $company
      * @return bool

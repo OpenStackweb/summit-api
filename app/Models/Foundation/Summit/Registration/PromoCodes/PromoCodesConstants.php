@@ -13,6 +13,8 @@
  **/
 use models\summit\MemberSummitRegistrationDiscountCode;
 use models\summit\MemberSummitRegistrationPromoCode;
+use models\summit\SpeakersRegistrationDiscountCode;
+use models\summit\SpeakersSummitRegistrationPromoCode;
 use models\summit\SpeakerSummitRegistrationDiscountCode;
 use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\SponsorSummitRegistrationDiscountCode;
@@ -34,6 +36,8 @@ final class PromoCodesConstants
         MemberSummitRegistrationDiscountCode::ClassName,
         SpeakerSummitRegistrationDiscountCode::ClassName,
         SponsorSummitRegistrationDiscountCode::ClassName,
+        SpeakersSummitRegistrationPromoCode::ClassName,
+        SpeakersRegistrationDiscountCode::ClassName
     ];
 
     const SpeakerSummitRegistrationPromoCodeTypeAccepted  = 'ACCEPTED';

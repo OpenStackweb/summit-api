@@ -12,7 +12,9 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSpeakersSummitRegistrationPromoCodeRepository")
@@ -35,7 +37,8 @@ class SpeakersSummitRegistrationPromoCode
     private $owners;
 
     public static $metadata = [
-        'class_name' => self::ClassName
+        'class_name' => self::ClassName,
+        'type'       => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypes,
     ];
 
     /**
@@ -67,5 +70,29 @@ class SpeakersSummitRegistrationPromoCode
         $owner->setSpeaker($speaker);
         $owner->setRegistrationPromoCode($this);
         $this->owners->add($owner);
+    }
+
+    /**
+     * @param PresentationSpeaker $speaker
+     */
+    public function unassignSpeaker(PresentationSpeaker $speaker)
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('speaker', $speaker));
+        $owner = $this->owners->matching($criteria)->first();
+        if ($owner instanceof AssignedPromoCodeSpeaker)
+            $this->owners->removeElement($owner);
+    }
+
+    /**
+     * @param PresentationSpeaker $speaker
+     * @return AssignedPromoCodeSpeaker|null
+     */
+    public function getSpeakerAssignment(PresentationSpeaker $speaker): ?AssignedPromoCodeSpeaker
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('speaker', $speaker));
+        $res = $this->owners->matching($criteria)->first();
+        return $res == false ? null : $res;
     }
 }

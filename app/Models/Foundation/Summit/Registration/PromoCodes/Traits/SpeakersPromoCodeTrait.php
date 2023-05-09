@@ -21,6 +21,28 @@ use models\exceptions\ValidationException;
  */
 trait SpeakersPromoCodeTrait
 {
+    /**
+     * @ORM\Column(name="Type", type="string")
+     * @var string
+     */
+    protected $type;
+
+    /**
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * @param string $type
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+    }
+
     public function hasOwners(): bool
     {
         return count($this->owners) > 0;

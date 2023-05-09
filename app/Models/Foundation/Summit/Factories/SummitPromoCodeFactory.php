@@ -171,8 +171,12 @@ final class SummitPromoCodeFactory
                     $promo_code->setSpeaker($params['speaker']);
             }
             break;
+            case SpeakersSummitRegistrationPromoCode::ClassName:{
+                if(isset($data['type']))
+                    $promo_code->setType($data['type']);
+            }
+            break;
             case SponsorSummitRegistrationPromoCode::ClassName:{
-
                 if(isset($params['owner']))
                     $promo_code->setOwner($params['owner']);
                 if(isset($data['type']))
@@ -203,7 +207,7 @@ final class SummitPromoCodeFactory
                 if(isset($data['rate']))
                     $promo_code->setRate(floatval($data['rate']));
             }
-                break;
+            break;
             case SpeakerSummitRegistrationDiscountCode::ClassName:{
                 if(isset($data['type']))
                     $promo_code->setType($data['type']);
@@ -214,7 +218,16 @@ final class SummitPromoCodeFactory
                 if(isset($data['rate']))
                     $promo_code->setRate(floatval($data['rate']));
             }
-                break;
+            break;
+            case SpeakersRegistrationDiscountCode::ClassName: {
+                if(isset($data['type']))
+                    $promo_code->setType($data['type']);
+                if(isset($data['amount']))
+                    $promo_code->setAmount(floatval($data['amount']));
+                if(isset($data['rate']))
+                    $promo_code->setRate(floatval($data['rate']));
+            }
+            break;
             case SponsorSummitRegistrationDiscountCode::ClassName:{
                 if(isset($params['owner']))
                     $promo_code->setOwner($params['owner']);
@@ -232,13 +245,6 @@ final class SummitPromoCodeFactory
                     $promo_code->setRate(floatval($data['rate']));
                 if(isset($params['sponsor']))
                     $promo_code->setSponsor($params['sponsor']);
-                if(isset($data['amount']))
-                    $promo_code->setAmount(floatval($data['amount']));
-                if(isset($data['rate']))
-                    $promo_code->setRate(floatval($data['rate']));
-            }
-            break;
-            case SpeakersRegistrationDiscountCode::ClassName: {
                 if(isset($data['amount']))
                     $promo_code->setAmount(floatval($data['amount']));
                 if(isset($data['rate']))

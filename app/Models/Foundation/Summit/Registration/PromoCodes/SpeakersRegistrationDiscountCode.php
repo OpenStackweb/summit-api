@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 /**
@@ -34,7 +36,8 @@ class SpeakersRegistrationDiscountCode
     private $owners;
 
     public static $metadata = [
-        'class_name' => self::ClassName
+        'class_name' => self::ClassName,
+        'type'       => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypes,
     ];
 
     /**

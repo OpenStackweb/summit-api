@@ -1713,6 +1713,32 @@ Route::group(array('prefix' => 'summits'), function () {
             });
         });
 
+        // speakers promo codes
+        Route::group(['prefix' => 'speakers-promo-codes'], function () {
+            Route::group(['prefix' => '{promo_code_id}'], function () {
+                Route::group(['prefix' => 'speakers'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@getPromoCodeSpeakers']);
+                    Route::group(['prefix' => '{speaker_id}'], function () {
+                        Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@addSpeaker']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@removeSpeaker']);
+                    });
+                });
+            });
+        });
+
+        // speakers discount codes
+        Route::group(['prefix' => 'speakers-discount-codes'], function () {
+            Route::group(['prefix' => '{discount_code_id}'], function () {
+                Route::group(['prefix' => 'speakers'], function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@getDiscountCodeSpeakers']);
+                    Route::group(['prefix' => '{speaker_id}'], function () {
+                        Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@addSpeaker']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@removeSpeaker']);
+                    });
+                });
+            });
+        });
+
         // track tag groups
         Route::group(['prefix' => 'track-tag-groups'], function () {
 

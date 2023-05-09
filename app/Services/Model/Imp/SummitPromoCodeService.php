@@ -32,6 +32,9 @@ use models\main\Tag;
 use models\summit\IOwnablePromoCode;
 use models\summit\ISpeakerRepository;
 use models\summit\ISummitRepository;
+use models\summit\PresentationSpeaker;
+use models\summit\SpeakersRegistrationDiscountCode;
+use models\summit\SpeakersSummitRegistrationPromoCode;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
@@ -594,5 +597,53 @@ final class SummitPromoCodeService
             }
             $page++;
         } while(1);
+    }
+
+    /**
+     * @param SummitRegistrationPromoCode $promo_code
+     * @param int $speaker_id
+     * @return SummitRegistrationPromoCode
+     * @throws \Exception
+     */
+    public function addPromoCodeSpeaker(SummitRegistrationPromoCode $promo_code, int $speaker_id): SummitRegistrationPromoCode
+    {
+        return $this->tx_service->transaction(function () use ($promo_code, $speaker_id) {
+            if (!$promo_code instanceof SpeakersSummitRegistrationPromoCode && !$promo_code instanceof SpeakersRegistrationDiscountCode)
+                throw new ValidationException("invalid promo code");
+
+            $speaker = $this->speaker_repository->getById($speaker_id);
+            if (!$speaker instanceof PresentationSpeaker)
+                throw new EntityNotFoundException("speaker not found");
+
+            $promo_code->assignSpeaker($speaker);
+
+            return $promo_code;
+        });
+    }
+
+    /**
+     * @param SummitRegistrationPromoCode $promo_code
+     * @param int $speaker_id
+     * @return SummitRegistrationPromoCode
+     * @throws \Exception
+     */
+    public function removePromoCodeSpeaker(SummitRegistrationPromoCode $promo_code, int $speaker_id): SummitRegistrationPromoCode
+    {
+        return $this->tx_service->transaction(function () use ($promo_code, $speaker_id) {
+            if (!$promo_code instanceof SpeakersSummitRegistrationPromoCode && !$promo_code instanceof SpeakersRegistrationDiscountCode)
+                throw new ValidationException("invalid promo code");
+
+            $speaker = $this->speaker_repository->getById($speaker_id);
+            if (!$speaker instanceof PresentationSpeaker)
+                throw new EntityNotFoundException("speaker not found");
+
+            //can't remove sent associations
+            $assignment = $promo_code->getSpeakerAssignment($speaker);
+            if (!is_null($assignment) && $assignment->isSent()) return $promo_code;
+
+            $promo_code->unassignSpeaker($speaker);
+
+            return $promo_code;
+        });
     }
 }

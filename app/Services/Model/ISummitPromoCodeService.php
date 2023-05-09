@@ -116,4 +116,20 @@ interface ISummitPromoCodeService
      * @throws EntityNotFoundException
      */
     public function reApplyPromoCode(int $promo_code_id):void;
+
+    /**
+     * @param SummitRegistrationPromoCode $promo_code
+     * @param int $speaker_id
+     * @return SummitRegistrationPromoCode
+     * @throws \Exception
+     */
+    public function addPromoCodeSpeaker(SummitRegistrationPromoCode $promo_code, int $speaker_id): SummitRegistrationPromoCode;
+
+    /**
+     * @param SummitRegistrationPromoCode $promo_code
+     * @param int $speaker_id
+     * @return SummitRegistrationPromoCode
+     * @throws \Exception
+     */
+    public function removePromoCodeSpeaker(SummitRegistrationPromoCode $promo_code, int $speaker_id): SummitRegistrationPromoCode;
 }

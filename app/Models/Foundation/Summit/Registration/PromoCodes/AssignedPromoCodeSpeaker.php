@@ -148,6 +148,14 @@ class AssignedPromoCodeSpeaker extends BaseEntity
     }
 
     /**
+     * @return bool
+     */
+    public function isSent(): bool
+    {
+        return $this->getSentAt() != null;
+    }
+
+    /**
      * @param \DateTime $sent
      */
     public function setSentAt(\DateTime $sent): void

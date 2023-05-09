@@ -11,12 +11,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use models\summit\SpeakersRegistrationDiscountCode;
 use models\utils\IBaseRepository;
+use utils\Filter;
+use utils\Order;
+use utils\PagingInfo;
+use utils\PagingResponse;
+
 /**
  * Interface ISpeakersRegistrationDiscountCodeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
 interface ISpeakersRegistrationDiscountCodeRepository extends IBaseRepository
 {
-
+    /**
+     * @param SpeakersRegistrationDiscountCode $discount_code
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getDiscountCodeSpeakers(
+        SpeakersRegistrationDiscountCode $discount_code,
+        PagingInfo $paging_info,
+        Filter $filter = null,
+        Order $order = null);
 }

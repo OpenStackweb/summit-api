@@ -14,7 +14,13 @@
 
 use App\Models\Foundation\Summit\Repositories\ISpeakersRegistrationDiscountCodeRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
+use models\summit\AssignedPromoCodeSpeaker;
 use models\summit\SpeakersRegistrationDiscountCode;
+use utils\DoctrineFilterMapping;
+use utils\Filter;
+use utils\Order;
+use utils\PagingInfo;
+
 /**
  * Class DoctrineSpeakersRegistrationDiscountCodeRepository
  * @package App\Repositories\Summit
@@ -29,5 +35,42 @@ class DoctrineSpeakersRegistrationDiscountCodeRepository
     protected function getBaseEntity()
     {
         return SpeakersRegistrationDiscountCode::class;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getFilterMappings(): array
+    {
+        return [
+            'email'     => new DoctrineFilterMapping("m.email :operator :value"),
+            'full_name' => new DoctrineFilterMapping("concat(m.first_name, ' ', m.last_name) :operator :value"),
+        ];
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getDiscountCodeSpeakers(
+        SpeakersRegistrationDiscountCode $discount_code, PagingInfo $paging_info, Filter $filter = null, Order $order = null)
+    {
+        return $this->getParametrizedAllByPage(function () use ($discount_code) {
+            return $this->getEntityManager()
+                ->createQueryBuilder()
+                ->select("o")
+                ->from(AssignedPromoCodeSpeaker::class, 'o')
+                ->join('o.registration_discount_code', 'd')
+                ->join('o.speaker', 's')
+                ->join('s.member', 'm')
+                ->where("d.id = :discount_code")
+                ->setParameter("discount_code", $discount_code);
+        },
+            $paging_info,
+            $filter,
+            $order,
+            function ($query) {
+                //default order
+                return $query->addOrderBy("s.id", 'ASC');
+            });
     }
 }

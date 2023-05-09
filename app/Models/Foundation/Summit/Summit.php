@@ -2746,7 +2746,7 @@ SQL;
     public function removeLocation(SummitAbstractLocation $location)
     {
         $this->locations->removeElement($location);
-        $location->setSummit(null);
+        $location->clearSummit();
         return $this;
     }
 

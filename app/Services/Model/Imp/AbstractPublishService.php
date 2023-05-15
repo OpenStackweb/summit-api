@@ -12,9 +12,9 @@
  * limitations under the License.
  **/
 
-use App\Facades\ResourceServerContext;
 use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\IPublishableEventWithSpeakerConstraint;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEvent;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -22,7 +22,6 @@ use models\exceptions\ValidationException;
 use models\summit\ISummitEventPublishRepository;
 use models\summit\Summit;
 use models\summit\SummitEvent;
-use models\summit\SummitProposedScheduleSummitEvent;
 
 /**
  * Class AbstractPublishService

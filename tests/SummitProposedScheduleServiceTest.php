@@ -17,7 +17,6 @@ use App\Services\Model\IScheduleService;
 use Illuminate\Support\Facades\App;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
-use models\summit\SummitProposedSchedule;
 
 /**
  * Class SummitProposedScheduleServiceTest

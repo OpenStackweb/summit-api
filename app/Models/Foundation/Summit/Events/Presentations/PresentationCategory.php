@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation;
 use App\Models\Foundation\Summit\ScheduleEntity;
 use Doctrine\ORM\Mapping AS ORM;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplate;
@@ -123,6 +124,11 @@ class PresentationCategory extends SilverstripeBaseModel
      * @var string
      */
     protected $color;
+
+    /**
+     * @ORM\OneToMany(targetEntity="SummitProposedScheduleAllowedLocation", mappedBy="track", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     */
+    protected $proposed_schedule_allowed_locations;
 
     /**
      * @return string
@@ -292,6 +298,7 @@ class PresentationCategory extends SilverstripeBaseModel
         $this->chair_visible             = false;
         $this->voting_visible            = false;
         $this->order = 0;
+        $this->proposed_schedule_allowed_locations = new ArrayCollection();
     }
 
     /**
@@ -762,4 +769,41 @@ SQL;
     }
 
     use ScheduleEntity;
+
+    /**
+     * @param SummitAbstractLocation $location
+     * @return void
+     * @throws ValidationException
+     */
+    public function addProposedScheduleAllowedLocation(SummitAbstractLocation $location):void{
+
+        // check by location if its exists
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('location', $location));
+
+        if($this->proposed_schedule_allowed_locations->matching($criteria)->count() > 0){
+            throw new ValidationException(sprintf("Location %s already exists on this category.", $location->getId()));
+        }
+
+        $proposed_location = new SummitProposedScheduleAllowedLocation($this, $location);
+        $this->proposed_schedule_allowed_locations->add($proposed_location);
+    }
+
+    /**
+     * @param SummitAbstractLocation $location
+     * @return void
+     * @throws ValidationException
+     */
+    public function removeProposedScheduleAllowedLocation(SummitAbstractLocation $location):void{
+
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('location', $location));
+
+        $proposed_location = $this->proposed_schedule_allowed_locations->matching($criteria)->first();
+
+        if(!$proposed_location){
+            throw new ValidationException(sprintf("Location %s does not exists on this category.", $location->getId()));
+        };
+        $this->proposed_schedule_allowed_locations->removeElement($proposed_location);
+    }
 }

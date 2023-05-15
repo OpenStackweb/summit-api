@@ -14,6 +14,8 @@
 
 use App\Facades\ResourceServerContext;
 use App\Models\Exceptions\AuthzException;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEvent;
 use App\Models\Foundation\Summit\SelectionPlan;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
@@ -27,8 +29,6 @@ use models\summit\Presentation;
 use models\summit\PresentationCategory;
 use models\summit\Summit;
 use models\summit\SummitEvent;
-use models\summit\SummitProposedSchedule;
-use models\summit\SummitProposedScheduleSummitEvent;
 use services\model\ISummitService;
 use utils\Filter;
 use utils\FilterElement;

@@ -1,4 +1,4 @@
-<?php namespace models\summit;
+<?php namespace App\Models\Foundation\Summit\ProposedSchedule;
 /*
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,15 +15,20 @@
 use App\Models\Foundation\Summit\IPublishableEventWithSpeakerConstraint;
 use App\Models\Foundation\Summit\TimeDurationRestrictedEvent;
 use DateTime;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\exceptions\ValidationException;
 use models\main\Member;
+use models\summit\Summit;
+use models\summit\SummitAbstractLocation;
+use models\summit\SummitEvent;
+use models\summit\SummitEventType;
 use models\utils\SilverstripeBaseModel;
+
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitProposedScheduleEventRepository")
  * Class SummitProposedScheduleSummitEvent
  * @ORM\Table(name="SummitProposedScheduleSummitEvent")
- * @package models\summit
+ * @package App\Models\Foundation\Summit\ProposedSchedule
  */
 class SummitProposedScheduleSummitEvent
     extends SilverstripeBaseModel

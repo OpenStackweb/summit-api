@@ -1,3 +1,9 @@
+use Doctrine\Migrations\AbstractMigration;
+use Doctrine\DBAL\Schema\Schema as Schema;
+use LaravelDoctrine\Migrations\Schema\Table;
+use LaravelDoctrine\Migrations\Schema\Builder;
+
+
 $builder = new Builder($schema);
 if (!$schema->hasTable("<TABLE_NAME>")) {
 $builder->create('<TABLE_NAME>', function (Table $table) {

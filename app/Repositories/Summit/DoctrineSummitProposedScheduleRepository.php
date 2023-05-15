@@ -13,12 +13,12 @@
  **/
 
 use App\Models\Foundation\Summit\IPublishableEvent;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEvent;
+use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Query\Expr\Join;
 use Dotenv\Exception\ValidationException;
 use models\summit\ISummitProposedScheduleRepository;
-use App\Repositories\SilverStripeDoctrineRepository;
-use models\summit\SummitProposedSchedule;
-use models\summit\SummitProposedScheduleSummitEvent;
 
 /**
  * Class DoctrineSummitProposedScheduleRepository
@@ -66,7 +66,7 @@ final class DoctrineSummitProposedScheduleRepository
 
         $query = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
-            ->from(\models\summit\SummitProposedScheduleSummitEvent::class, "e")
+            ->from(\App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEvent::class, "e")
             ->join('e.summit_proposed_schedule', 's', Join::WITH, " s.id = :schedule_id")
             ->where('e.start_date < :end_date')
             ->andWhere('e.end_date > :start_date')

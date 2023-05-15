@@ -1,4 +1,4 @@
-<?php namespace models\summit;
+<?php namespace App\Models\Foundation\Summit\ProposedSchedule;
 /*
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,17 +11,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\Mapping AS ORM;
+
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\Mapping as ORM;
 use models\exceptions\ValidationException;
 use models\main\Member;
+use models\summit\SummitAbstractLocation;
+use models\summit\SummitEvent;
+use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
+
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitProposedScheduleRepository")
  * @ORM\Table(name="SummitProposedSchedule")
  * Class SummitProposedSchedule
- * @package models\summit
+ * @package App\Models\Foundation\Summit\ProposedSchedule
  */
 class SummitProposedSchedule extends SilverstripeBaseModel
 {

@@ -29,12 +29,6 @@ class SpeakersRegistrationDiscountCode
 
     const ClassName = 'SpeakersRegistrationDiscountCode';
 
-    /**
-     * @ORM\OneToMany(targetEntity="AssignedPromoCodeSpeaker", mappedBy="registration_discount_code", cascade={"persist"}, orphanRemoval=true)
-     * @var AssignedPromoCodeSpeaker[]
-     */
-    private $owners;
-
     public static $metadata = [
         'class_name' => self::ClassName,
         'type'       => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypes,
@@ -57,17 +51,5 @@ class SpeakersRegistrationDiscountCode
     {
         parent::__construct();
         $this->owners = new ArrayCollection();
-    }
-
-    /**
-     * @param PresentationSpeaker $speaker
-     */
-    public function assignSpeaker(PresentationSpeaker $speaker)
-    {
-        if ($this->isSpeakerAlreadyAssigned($speaker)) return;
-        $owner = new AssignedPromoCodeSpeaker();
-        $owner->setSpeaker($speaker);
-        $owner->setRegistrationDiscountCode($this);
-        $this->owners->add($owner);
     }
 }

@@ -59,7 +59,7 @@ class DoctrineSpeakersRegistrationDiscountCodeRepository
                 ->createQueryBuilder()
                 ->select("o")
                 ->from(AssignedPromoCodeSpeaker::class, 'o')
-                ->join('o.registration_discount_code', 'd')
+                ->join('o.registration_promo_code', 'd')
                 ->join('o.speaker', 's')
                 ->join('s.member', 'm')
                 ->where("d.id = :discount_code")

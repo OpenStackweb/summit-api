@@ -12,9 +12,12 @@
  * limitations under the License.
  **/
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\Mapping AS ORM;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
+
 /**
  * Trait SpeakersPromoCodeTrait
  * @package models\summit
@@ -26,6 +29,17 @@ trait SpeakersPromoCodeTrait
      * @var string
      */
     protected $type;
+
+    /**
+     * @ORM\OneToMany(targetEntity="AssignedPromoCodeSpeaker", mappedBy="registration_promo_code", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     */
+    private $owners;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->owners = new ArrayCollection();
+    }
 
     /**
      * @return string
@@ -45,15 +59,12 @@ trait SpeakersPromoCodeTrait
 
     public function hasOwners(): bool
     {
-        return count($this->owners) > 0;
+        return !$this->owners->isEmpty();
     }
 
-    /**
-     * @return AssignedPromoCodeSpeaker[]
-     */
-    public function getOwners(): array
+    public function getOwners()
     {
-        return $this->owners->toArray();
+        return $this->owners;
     }
 
     /**
@@ -69,23 +80,57 @@ trait SpeakersPromoCodeTrait
     }
 
     /**
-     * @param int $usage
+     * @param PresentationSpeaker $speaker
+     */
+    public function assignSpeaker(PresentationSpeaker $speaker)
+    {
+        if ($this->isSpeakerAlreadyAssigned($speaker)) return;
+        $owner = new AssignedPromoCodeSpeaker();
+        $owner->setSpeaker($speaker);
+        $owner->setRegistrationPromoCode($this);
+        $this->owners->add($owner);
+    }
+
+    /**
+     * @param PresentationSpeaker $speaker
+     */
+    public function unassignSpeaker(PresentationSpeaker $speaker)
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('speaker', $speaker));
+        $owner = $this->owners->matching($criteria)->first();
+        if ($owner instanceof AssignedPromoCodeSpeaker)
+            $this->owners->removeElement($owner);
+    }
+
+    /**
+     * @param PresentationSpeaker $speaker
+     * @return AssignedPromoCodeSpeaker|null
+     */
+    public function getSpeakerAssignment(PresentationSpeaker $speaker): ?AssignedPromoCodeSpeaker
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('speaker', $speaker));
+        $res = $this->owners->matching($criteria)->first();
+        return $res == false ? null : $res;
+    }
+
+    /**
      * @param string $owner_email
+     * @param int $usage
      * @throws \Exception
      */
-    public function addUsage(int $usage, string $owner_email)
+    public function addUsage(string $owner_email, int $usage = 1)
     {
         try {
             $existing_owner = $this->owners->filter(function ($e) use($owner_email){
-                $member = $e->getSpeaker()->getMember();
-                if (is_null($member)) return false;
-                return $member->getEmail() == $owner_email;
+                return $e->getSpeaker()->getEmail() == $owner_email;
             })->first();
 
             if (!$existing_owner instanceof AssignedPromoCodeSpeaker)
                 throw new ValidationException("can't find an owner with the email {$owner_email} for the promo_code");
 
-            parent::addUsage($usage, $owner_email);
+            parent::addUsage($owner_email, $usage);
             $utc_now = new \DateTime('now', new \DateTimeZone('UTC'));
             $existing_owner->setRedeemedAt($utc_now);
         }

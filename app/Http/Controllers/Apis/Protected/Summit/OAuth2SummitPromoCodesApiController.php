@@ -572,7 +572,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
 
         $discount_code = $this->repository->getById($discount_code_id);
 
-        if (!$discount_code instanceof SpeakersRegistrationDiscountCode ) {
+        if (!$discount_code instanceof SpeakersRegistrationDiscountCode) {
             return $this->error404();
         }
 

@@ -198,7 +198,7 @@ final class SpeakerServiceTest extends TestCase
             //"promo_code"              => 'TEST_SSRPC'
         ];
 
-        $service->sendEmails($summit->getId(), $payload, $filter);
+        $service->sendEmails(3607/*$summit->getId()*/, $payload, $filter);
 
         $report = EmailExcerpt::getReport();
 

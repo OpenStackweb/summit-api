@@ -33,19 +33,12 @@ class Version20230428191955 extends AbstractMigration
                 $table->timestamp("RedeemedAt")->setNotnull(false);
                 $table->timestamp("SentAt")->setNotnull(false);
 
-                $table->integer("RegistrationPromoCodeID")->setNotnull(false)->setDefault('NULL');
-                $table->foreign("SpeakersSummitRegistrationPromoCode",
+                $table->integer("RegistrationPromoCodeID")->setNotnull(true);
+                $table->foreign("SummitRegistrationPromoCode",
                     "RegistrationPromoCodeID",
                     "ID",
                     ["onDelete" => "CASCADE"],
                     "FK_AssignedPromoCodeSpeaker_RegistrationPromoCode");
-
-                $table->integer("RegistrationDiscountCodeID")->setNotnull(false)->setDefault('NULL');
-                $table->foreign("SpeakersRegistrationDiscountCode",
-                    "RegistrationDiscountCodeID",
-                    "ID",
-                    ["onDelete" => "CASCADE"],
-                    "FK_AssignedPromoCodeSpeaker_RegistrationDiscountCode");
 
                 $table->integer("SpeakerID" );
                 $table->index("SpeakerID", "SpeakerID");

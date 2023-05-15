@@ -14,7 +14,6 @@
 
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSpeakersSummitRegistrationPromoCodeRepository")
@@ -29,12 +28,6 @@ class SpeakersSummitRegistrationPromoCode
     use SpeakersPromoCodeTrait;
 
     const ClassName = 'SpeakersSummitRegistrationPromoCode';
-
-    /**
-     * @ORM\OneToMany(targetEntity="AssignedPromoCodeSpeaker", mappedBy="registration_promo_code", cascade={"persist"}, orphanRemoval=true)
-     * @var AssignedPromoCodeSpeaker[]
-     */
-    private $owners;
 
     public static $metadata = [
         'class_name' => self::ClassName,
@@ -58,41 +51,5 @@ class SpeakersSummitRegistrationPromoCode
     {
         parent::__construct();
         $this->owners = new ArrayCollection();
-    }
-
-    /**
-     * @param PresentationSpeaker $speaker
-     */
-    public function assignSpeaker(PresentationSpeaker $speaker)
-    {
-        if ($this->isSpeakerAlreadyAssigned($speaker)) return;
-        $owner = new AssignedPromoCodeSpeaker();
-        $owner->setSpeaker($speaker);
-        $owner->setRegistrationPromoCode($this);
-        $this->owners->add($owner);
-    }
-
-    /**
-     * @param PresentationSpeaker $speaker
-     */
-    public function unassignSpeaker(PresentationSpeaker $speaker)
-    {
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('speaker', $speaker));
-        $owner = $this->owners->matching($criteria)->first();
-        if ($owner instanceof AssignedPromoCodeSpeaker)
-            $this->owners->removeElement($owner);
-    }
-
-    /**
-     * @param PresentationSpeaker $speaker
-     * @return AssignedPromoCodeSpeaker|null
-     */
-    public function getSpeakerAssignment(PresentationSpeaker $speaker): ?AssignedPromoCodeSpeaker
-    {
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('speaker', $speaker));
-        $res = $this->owners->matching($criteria)->first();
-        return $res == false ? null : $res;
     }
 }

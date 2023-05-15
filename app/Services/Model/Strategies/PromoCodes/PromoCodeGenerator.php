@@ -13,7 +13,10 @@
  * limitations under the License.
  **/
 
-use models\summit\SpeakersSummitRegistrationPromoCode;
+
+use libs\utils\ICacheService;
+use models\summit\Summit;
+use Zend\Math\Rand;
 
 /**
  * Class PromoCodeGenerator
@@ -21,14 +24,37 @@ use models\summit\SpeakersSummitRegistrationPromoCode;
  */
 final class PromoCodeGenerator implements IPromoCodeGenerator
 {
+    const VsChar = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
     /**
-     * @param string $promo_code_class_name
-     * @return string
+     * @var ICacheService
      */
-    public function generate(string $promo_code_class_name): string
+    private $cache_service;
+
+    /**
+     * @param ICacheService $cache_service
+     */
+    public function __construct(ICacheService $cache_service)
     {
-        $code_sufix = $promo_code_class_name == SpeakersSummitRegistrationPromoCode::ClassName
-            ? "_promo_code" : "_discount_code";
-        return str_random(16) . $code_sufix;
+        $this->cache_service = $cache_service;
+    }
+
+    private function generateValue(int $length): string
+    {
+        // calculate value
+        // entropy(SHANNON FANO Approx) len * log(count(VsChar))/log(2) = bits of entropy
+        return Rand::getString($length, self::VsChar);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function generate(Summit $summit, int $length): string
+    {
+        do {
+            $key = sprintf("%s_%s", $summit->getName(), $this->generateValue($length));
+        } while(!$this->cache_service->addSingleValue($key, $key));
+
+        return strtoupper($key);
     }
 }

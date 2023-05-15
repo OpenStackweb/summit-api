@@ -13,6 +13,8 @@
  **/
 use App\Models\Utils\BaseEntity;
 use Doctrine\ORM\Mapping AS ORM;
+use models\exceptions\ValidationException;
+
 /**
  * @ORM\Entity
  * @ORM\Table(name="AssignedPromoCodeSpeaker")
@@ -29,18 +31,11 @@ class AssignedPromoCodeSpeaker extends BaseEntity
     private $speaker;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SpeakersSummitRegistrationPromoCode")
+     * @ORM\ManyToOne(targetEntity="SummitRegistrationPromoCode")
      * @ORM\JoinColumn(name="RegistrationPromoCodeID", referencedColumnName="ID")
      * @var SpeakersSummitRegistrationPromoCode
      */
     protected $registration_promo_code;
-
-    /**
-     * @ORM\ManyToOne(targetEntity="SpeakersRegistrationDiscountCode")
-     * @ORM\JoinColumn(name="RegistrationDiscountCodeID", referencedColumnName="ID")
-     * @var SpeakersRegistrationDiscountCode
-     */
-    protected $registration_discount_code;
 
     /**
      * @ORM\Column(name="RedeemedAt", type="datetime")
@@ -92,35 +87,25 @@ class AssignedPromoCodeSpeaker extends BaseEntity
     }
 
     /**
-     * @return SpeakersSummitRegistrationPromoCode
+     * @return SummitRegistrationPromoCode
      */
-    public function getRegistrationPromoCode(): ?SpeakersSummitRegistrationPromoCode
+    public function getRegistrationPromoCode(): ?SummitRegistrationPromoCode
     {
         return $this->registration_promo_code;
     }
 
     /**
-     * @param SpeakersSummitRegistrationPromoCode $registration_promo_code
+     * @param SummitRegistrationPromoCode $registration_promo_code
+     * @throws ValidationException
      */
-    public function setRegistrationPromoCode(SpeakersSummitRegistrationPromoCode $registration_promo_code): void
+    public function setRegistrationPromoCode(SummitRegistrationPromoCode $registration_promo_code): void
     {
+        if (!$registration_promo_code instanceof SpeakersSummitRegistrationPromoCode &&
+            !$registration_promo_code instanceof SpeakersRegistrationDiscountCode) {
+            throw new ValidationException(
+                "Promo code {$registration_promo_code->getCode()} is neither an instance of SpeakersSummitRegistrationPromoCode nor SpeakersRegistrationDiscountCode");
+        }
         $this->registration_promo_code = $registration_promo_code;
-    }
-
-    /**
-     * @return SpeakersRegistrationDiscountCode
-     */
-    public function getRegistrationDiscountCode(): ?SpeakersRegistrationDiscountCode
-    {
-        return $this->registration_discount_code;
-    }
-
-    /**
-     * @param SpeakersRegistrationDiscountCode $registration_discount_code
-     */
-    public function setRegistrationDiscountCode(SpeakersRegistrationDiscountCode $registration_discount_code): void
-    {
-        $this->registration_discount_code = $registration_discount_code;
     }
 
     /**

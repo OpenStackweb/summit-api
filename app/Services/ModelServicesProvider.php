@@ -106,6 +106,8 @@ use App\Services\Model\RSVPTemplateService;
 use App\Services\Model\ScheduleIngestionService;
 use App\Services\Model\ScheduleService;
 use App\Services\Model\SponsorshipTypeService;
+use App\Services\Model\Strategies\PromoCodes\IPromoCodeStrategyFactory;
+use App\Services\Model\Strategies\PromoCodes\PromoCodeStrategyFactory;
 use App\Services\Model\SummitAccessLevelTypeService;
 use App\Services\Model\SummitBadgeFeatureTypeService;
 use App\Services\Model\SummitBadgeTypeService;
@@ -463,6 +465,11 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitSignService::class,
             SummitSignService::class,
         );
+
+        App::singleton(
+            IPromoCodeStrategyFactory::class,
+            PromoCodeStrategyFactory::class,
+        );
    }
 
     /**
@@ -529,6 +536,7 @@ final class ModelServicesProvider extends ServiceProvider
             IScheduleService::class,
             ISummitSubmissionInvitationService::class,
             ISummitSignService::class,
+            IPromoCodeStrategyFactory::class
         ];
     }
 }

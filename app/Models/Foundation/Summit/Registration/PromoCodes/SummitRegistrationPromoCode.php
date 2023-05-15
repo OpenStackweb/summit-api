@@ -317,11 +317,11 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     }
 
     /**
-     * @param int $usage
      * @param string|null $ownerEmail
+     * @param int $usage
      * @throws ValidationException
      */
-    public function addUsage(int $usage, string $ownerEmail)
+    public function addUsage(string $ownerEmail, int $usage = 1)
     {
 
         $quantity_used = $this->quantity_used;

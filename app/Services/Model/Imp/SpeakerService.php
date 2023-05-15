@@ -32,8 +32,7 @@ use App\Services\Model\AbstractService;
 use App\Services\Model\IFolderService;
 use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\Strategies\EmailActions\SpeakerActionsEmailStrategy;
-use App\Services\Model\Strategies\PromoCodes\IPromoCodeGenerator;
-use App\Services\Model\Strategies\PromoCodes\PromoCodeGenerator;
+use App\Services\Model\Strategies\PromoCodes\IPromoCodeStrategyFactory;
 use App\Services\Model\Strategies\PromoCodes\PromoCodeStrategyFactory;
 use App\Services\Utils\Facades\EmailExcerpt;
 use Illuminate\Http\UploadedFile;
@@ -130,9 +129,9 @@ final class SpeakerService
     private $summit_repository;
 
     /**
-     * @var IPromoCodeGenerator
+     * @var IPromoCodeStrategyFactory
      */
-    protected $code_generator;
+    protected $promo_code_strategy_factory;
 
     /**
      * SpeakerService constructor.
@@ -148,6 +147,7 @@ final class SpeakerService
      * @param IFileUploader $file_uploader
      * @param ISpeakerEditPermissionRequestRepository $speaker_edit_permisssion_repository
      * @param ISummitRepository $summit_repository
+     * @param IPromoCodeStrategyFactory $promo_code_strategy_factory
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -164,7 +164,7 @@ final class SpeakerService
         IFileUploader                                                     $file_uploader,
         ISpeakerEditPermissionRequestRepository                           $speaker_edit_permisssion_repository,
         ISummitRepository                                                 $summit_repository,
-        IPromoCodeGenerator                                               $code_generator,
+        IPromoCodeStrategyFactory                                         $promo_code_strategy_factory,
         ITransactionService                                               $tx_service
     )
     {
@@ -180,7 +180,7 @@ final class SpeakerService
         $this->speaker_involvement_repository = $speaker_involvement_repository;
         $this->file_uploader = $file_uploader;
         $this->summit_repository = $summit_repository;
-        $this->code_generator = $code_generator;
+        $this->promo_code_strategy_factory = $promo_code_strategy_factory;
         $this->speaker_edit_permisssion_repository = $speaker_edit_permisssion_repository;
     }
 
@@ -1251,7 +1251,6 @@ final class SpeakerService
                         $payload
                     ) {
                         $email_strategy = new SpeakerActionsEmailStrategy($summit, $flow_event);
-                        $promo_code_strategy_factory = new PromoCodeStrategyFactory($this->tx_service, $this->code_generator);
 
                         Log::debug(sprintf("SpeakerService::send processing speaker id %s", $speaker_id));
 
@@ -1262,7 +1261,7 @@ final class SpeakerService
                         }
 
                         // try to get or auto-build a promo code
-                        $promo_code = $promo_code_strategy_factory->createStrategy($summit, $payload)->getPromoCode($speaker);
+                        $promo_code = $this->promo_code_strategy_factory->createStrategy($summit, $payload)->getPromoCode($speaker);
 
                         // try to get a speaker assistance
                         $assistance = $this->generateSpeakerAssistance($summit, $speaker, $filter);

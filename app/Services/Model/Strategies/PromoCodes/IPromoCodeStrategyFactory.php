@@ -15,15 +15,15 @@ use models\summit\Summit;
  **/
 
 /**
- * Interface IPromoCodeGenerator
+ * Interface IPromoCodeStrategyFactory
  * @package App\Services\Model\Strategies\PromoCodes
  */
-interface IPromoCodeGenerator
+interface IPromoCodeStrategyFactory
 {
     /**
      * @param Summit $summit
-     * @param int $length
-     * @return string
+     * @param array $payload
+     * @return IPromoCodeStrategy
      */
-    public function generate(Summit $summit, int $length): string;
+    public function createStrategy(Summit $summit, array $payload): IPromoCodeStrategy;
 }

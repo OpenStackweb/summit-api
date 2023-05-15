@@ -595,7 +595,7 @@ final class ApplyPromoCodeTask extends AbstractTask
                 Log::debug(sprintf("adding %s usage to promo code %s", $qty, $promo_code->getId()));
 
                 $this->lock_service->lock('promocode.' . $promo_code->getId() . '.usage.lock', function () use ($promo_code, $qty, $owner_email) {
-                    $promo_code->addUsage($qty, $owner_email);
+                    $promo_code->addUsage($owner_email, $qty);
                 });
 
             });
@@ -2332,7 +2332,7 @@ final class SummitOrderService
                     }
                     Log::debug(sprintf("SummitOrderService::createTicketsForOrder applying promo code %s", $pc->getCode()));
                     $owner_email = !is_null($attendee) ? $attendee->getEmail() : $order->getOwnerEmail();
-                    $pc->addUsage(1, $owner_email);
+                    $pc->addUsage($owner_email);
                     $pc->applyTo($ticket);
                 }
 

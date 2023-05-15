@@ -16,6 +16,7 @@ use App\Models\Foundation\Summit\Factories\SummitPromoCodeFactory;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use models\summit\SummitRegistrationPromoCode;
@@ -41,6 +42,11 @@ final class AutomaticMultiSpeakerPromoCodeStrategy implements IPromoCodeStrategy
     private $summit;
 
     /**
+     * @var ISummitRegistrationPromoCodeRepository
+     */
+    private $repository;
+
+    /**
      * @var array
      */
     private $data;
@@ -48,16 +54,19 @@ final class AutomaticMultiSpeakerPromoCodeStrategy implements IPromoCodeStrategy
     /**
      * PromoCodeStrategy constructor.
      * @param Summit $summit
+     * @param ISummitRegistrationPromoCodeRepository $repository
      * @param ITransactionService $tx_service
      * @param IPromoCodeGenerator $code_generator
      * @param array $data
      */
     public function __construct(Summit $summit,
+                                ISummitRegistrationPromoCodeRepository $repository,
                                 ITransactionService $tx_service,
                                 IPromoCodeGenerator $code_generator,
                                 array $data)
     {
         $this->summit = $summit;
+        $this->repository = $repository;
         $this->tx_service = $tx_service;
         $this->code_generator = $code_generator;
         $this->data = $data;
@@ -72,8 +81,13 @@ final class AutomaticMultiSpeakerPromoCodeStrategy implements IPromoCodeStrategy
     public function getPromoCode(PresentationSpeaker $speaker): ?SummitRegistrationPromoCode {
 
         return $this->tx_service->transaction(function () use ($speaker) {
+            $code = null;
+            do {
+                $code = $this->code_generator->generate($this->summit, 6);
+            } while($this->repository->getByCode($code) != null);
+
+            $promo_code_spec["code"] = $code;
             $promo_code_spec = $this->data["promo_code_spec"];
-            $promo_code_spec["code"] = $this->code_generator->generate($promo_code_spec["class_name"]);
             $promo_code = SummitPromoCodeFactory::build($this->summit, $promo_code_spec);
             if (is_null($promo_code)) {
                 throw new ValidationException('cannot build a valid promo code with the given specification');

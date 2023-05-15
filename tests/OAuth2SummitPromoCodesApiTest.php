@@ -44,6 +44,7 @@ final class OAuth2SummitPromoCodesApiTest
         $params = [
             'id' => 3603,
             //'filter' => 'owner_email==smarcet+kbxkyjnkyx@gmail.com',
+            'expand' => 'owners'
         ];
 
         $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
@@ -73,7 +74,7 @@ final class OAuth2SummitPromoCodesApiTest
         $data = [
             'type'          => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAlternate,
             'class_name'    => SpeakersSummitRegistrationPromoCode::ClassName,
-            'code'          => 'TEST_PC_3',
+            'code'          => 'TEST_PC_4',
             'description'   => 'TEST PROMO CODE',
             'quantity_available'   => 10,
             'allowed_ticket_types' => [],
@@ -147,7 +148,7 @@ final class OAuth2SummitPromoCodesApiTest
         $data = [
             'type'          => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAlternate,
             'class_name'    => SpeakersRegistrationDiscountCode::ClassName,
-            'code'          => 'TEST_DC_2',
+            'code'          => 'TEST_DC_3',
             'description'   => 'TEST DISCOUNT CODE',
             'quantity_available'   => 10,
             'allowed_ticket_types' => [],
@@ -181,7 +182,7 @@ final class OAuth2SummitPromoCodesApiTest
     public function testGetPromoCodeSpeakers()
     {
         $params = [
-            'id' => 3601,
+            'id' => 3603,
             'promo_code_id' => 432,
             'filter' => 'email==smarcet+kbxkyjnkyx@gmail.com',
             'expand' => 'speaker'
@@ -208,9 +209,9 @@ final class OAuth2SummitPromoCodesApiTest
     public function testGetDiscountCodeSpeakers()
     {
         $params = [
-            'id' => 3601,
-            'discount_code_id' => 431,
-            'filter' => 'email==smarcet+kbxkyjnkyx@gmail.com',
+            'id' => 3603,
+            'discount_code_id' => 443,
+            'filter' => 'email==jpmaxman@tipit.net',
             'expand' => 'speaker'
         ];
 
@@ -236,10 +237,9 @@ final class OAuth2SummitPromoCodesApiTest
     {
         $params = [
             'id' => 3603,
-            'promo_code_id' => 432,
+            'promo_code_id' => 442,
             'speaker_id' => 27086,
         ];
-
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,

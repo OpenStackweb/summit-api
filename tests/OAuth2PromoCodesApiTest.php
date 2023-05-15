@@ -12,6 +12,9 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
+use models\summit\SpeakersRegistrationDiscountCode;
+use models\summit\SpeakersSummitRegistrationPromoCode;
+
 /**
  * Class OAuth2PromoCodesApiTest
  */
@@ -58,6 +61,36 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
             'page'     => 1,
             'per_page' => 10,
             'filter'   => 'class_name=='.\models\summit\SpeakerSummitRegistrationPromoCode::ClassName,
+            'order'    => '+code'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitPromoCodesApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $promo_codes = json_decode($content);
+        $this->assertTrue(!is_null($promo_codes));
+    }
+
+    public function testGetPromoCodesByClassNameSpeakersSummitRegistrationPromoCodeOrSpeakersRegistrationDiscountCode(){
+        $params = [
+            'id'       => 3607,
+            'page'     => 1,
+            'per_page' => 10,
+            'filter'   => 'class_name=='.SpeakersSummitRegistrationPromoCode::ClassName.'||'.SpeakersRegistrationDiscountCode::ClassName,
             'order'    => '+code'
         ];
 

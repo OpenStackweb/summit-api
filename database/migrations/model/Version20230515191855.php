@@ -31,10 +31,11 @@ final class Version20230515191855 extends AbstractMigration
     {
 
         $builder = new Builder($schema);
-        if (!$schema->hasTable("")) {
+        if (!$schema->hasTable(self::TableName)) {
             $builder->create(self::TableName, function (Table $table) {
                 $table->integer("ID", true,true);
                 $table->primary("ID");
+
                 $table->string('ClassName')->setDefault(self::TableName);
                 $table->index("ClassName", "ClassName");
                 $table->timestamp('Created');
@@ -42,15 +43,15 @@ final class Version20230515191855 extends AbstractMigration
 
                 // Fields
 
-                $table->string("`Day`", 8)->setNotnull(true);
-                $table->smallInteger("`From`",)->setNotnull(false)->setDefault('NULL');
-                $table->smallInteger("`To`", 8)->setNotnull(false)->setDefault('NULL');
+                $table->dateTime("`Day`")->setNotnull(true);
+                $table->smallInteger("`From`")->setNotnull(false)->setDefault('NULL');
+                $table->smallInteger("`To`")->setNotnull(false)->setDefault('NULL');
 
                 // FK
 
-                $table->integer("AllowedLocationID", false, false)->setNotnull(false)->setDefault('NULL');
+                $table->integer("AllowedLocationID", false, truefalse)->setNotnull(false)->setDefault('NULL');
                 $table->index("AllowedLocationID", "AllowedLocationID");
-                $table->foreign("ProposedScheduleAllowedLocation", "AllowedLocationID", "ID", ["onDelete" => "CASCADE"], "FK_SummitSign_Location");
+                $table->foreign("SummitProposedScheduleAllowedLocation", "AllowedLocationID", "ID", ["onDelete" => "CASCADE"], "FK_SummitProposedScheduleAllowedDay_AllowedLocation");
 
                 $table->unique(["Day", "AllowedLocationID"], "IDX_UNIQUE_ProposedScheduleAllowedDay_Day_Location");
 

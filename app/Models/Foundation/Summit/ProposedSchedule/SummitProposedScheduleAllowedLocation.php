@@ -42,7 +42,7 @@ class SummitProposedScheduleAllowedLocation extends SilverstripeBaseModel
         'hasTrack' => 'track',
     ];
     /**
-     * @ORM\ManyToOne(targetEntity="PresentationCategory", fetch="EXTRA_LAZY", cascade={"persist"}, inversedBy="proposed_schedule_allowed_locations"
+     * @ORM\ManyToOne(targetEntity="models\summit\PresentationCategory", fetch="EXTRA_LAZY", cascade={"persist"}, inversedBy="proposed_schedule_allowed_locations")
      * @ORM\JoinColumn(name="PresentationCategoryID", referencedColumnName="ID", onDelete="SET NULL")
      * @var PresentationCategory
      */
@@ -83,13 +83,13 @@ class SummitProposedScheduleAllowedLocation extends SilverstripeBaseModel
     /**
      * @return ArrayCollection
      */
-    public function getAllowedTimeframes(): ArrayCollection
+    public function getAllowedTimeframes()
     {
         return $this->allowed_timeframes;
     }
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitAbstractLocation", fetch="EXTRA_LAZY", cascade={"persist"})
+     * @ORM\ManyToOne(targetEntity="models\summit\SummitAbstractLocation", fetch="EXTRA_LAZY", cascade={"persist"})
      * @ORM\JoinColumn(name="LocationID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitAbstractLocation
      */
@@ -117,38 +117,56 @@ class SummitProposedScheduleAllowedLocation extends SilverstripeBaseModel
     }
 
     /**
-     * @param string $day
+     * @param \DateTime $day
      * @param int|null $from
      * @param int|null $to
-     * @return void
+     * @return SummitProposedScheduleAllowedDay|null
      * @throws ValidationException
      */
-    public function addAllowedTimeFrame(string $day, ?int $from=null, ?int $to=null):void{
+    public function addAllowedTimeFrame(\DateTime $day, ?int $from = null, ?int $to = null):?SummitProposedScheduleAllowedDay{
+        if(!$this->location->getSummit()->dayIsOnSummitPeriod($day))
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Day %s is not on summit period( %s - %s).",
+                    $day->format("Y-m-d"),
+                    $this->location->getSummit()->getLocalBeginDate()->format("Y-m-d"),
+                    $this->location->getSummit()->getLocalEndDate()->format("Y-m-d"),
+                )
+            );
+
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('day', $day));
 
         if($this->allowed_timeframes->matching($criteria)->count() > 0 ){
-            throw new ValidationException(sprintf("Day %s already exists for location %s.", $day, $this->location->getId()));
+            throw new ValidationException(sprintf("Day %s already exists for location %s.", $day->format("Y-m-d"), $this->location->getId()));
         }
 
-        $this->allowed_timeframes->add(new SummitProposedScheduleAllowedDay($this, $day, $from, $to));
+        $time_frame = new SummitProposedScheduleAllowedDay($this, $day, $from, $to);
+        $this->allowed_timeframes->add($time_frame);
+        return $time_frame;
     }
 
     /**
-     * @param string $day
+     * @param SummitProposedScheduleAllowedDay $time_frame
      * @return void
      * @throws ValidationException
      */
-    public function removeAllowedTimeFrame(string $day):void{
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('day', $day));
-
-        $time_frame = $this->allowed_timeframes->matching($criteria)->first();
-        if(!$time_frame){
-            throw new ValidationException(sprintf("Day %s does not exists for location %s.", $day, $this->location->getId()));
-        }
-
+    public function removeAllowedTimeFrame(SummitProposedScheduleAllowedDay $time_frame):void{
+        if(!$this->allowed_timeframes->contains($time_frame)) return;
         $this->allowed_timeframes->removeElement($time_frame);
+    }
+
+    /**
+     * @param int $time_frame_id
+     * @return SummitProposedScheduleAllowedDay|null
+     */
+    public function getAllowedTimeFrameById(int $time_frame_id):?SummitProposedScheduleAllowedDay{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $time_frame_id));
+        $res =  $this->allowed_timeframes->matching($criteria)->first();
+        return $res === false ? null : $res;
     }
 
 }

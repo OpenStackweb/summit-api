@@ -34,8 +34,8 @@ class SummitProposedScheduleAllowedDay extends SilverstripeBaseModel
     ];
 
     /**
-     * @ORM\Column(name="`Day`", type="string")
-     * @var string
+     * @ORM\Column(name="`Day`", type="datetime")
+     * @var \DateTime
      */
     private $day;
 
@@ -52,7 +52,7 @@ class SummitProposedScheduleAllowedDay extends SilverstripeBaseModel
     private $to;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitProposedScheduleAllowedLocation")
+     * @ORM\ManyToOne(targetEntity="SummitProposedScheduleAllowedLocation",inversedBy="allowed_timeframes")
      * @ORM\JoinColumn(name="AllowedLocationID", referencedColumnName="ID")
      * @var SummitProposedScheduleAllowedLocation
      */
@@ -66,7 +66,7 @@ class SummitProposedScheduleAllowedDay extends SilverstripeBaseModel
      */
     public function __construct(
         SummitProposedScheduleAllowedLocation $allowed_location,
-        string $day,
+        \DateTime $day,
         ?int $from=null,
         ?int $to=null
     )
@@ -79,9 +79,9 @@ class SummitProposedScheduleAllowedDay extends SilverstripeBaseModel
     }
 
     /**
-     * @return string
+     * @return \DateTime
      */
-    public function getDay(): string
+    public function getDay(): \DateTime
     {
         return $this->day;
     }
@@ -108,6 +108,30 @@ class SummitProposedScheduleAllowedDay extends SilverstripeBaseModel
     public function getAllowedLocation(): SummitProposedScheduleAllowedLocation
     {
         return $this->allowed_location;
+    }
+
+    /**
+     * @param \DateTime $day
+     */
+    public function setDay(\DateTime $day): void
+    {
+        $this->day = $day;
+    }
+
+    /**
+     * @param int|null $from
+     */
+    public function setFrom(?int $from): void
+    {
+        $this->from = $from;
+    }
+
+    /**
+     * @param int|null $to
+     */
+    public function setTo(?int $to): void
+    {
+        $this->to = $to;
     }
 
 

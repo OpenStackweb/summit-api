@@ -1609,6 +1609,54 @@ Route::group(array('prefix' => 'summits'), function () {
                         ]);
                     });
                 });
+
+                Route::group(['prefix' => 'proposed-schedule-allowed-locations'], function () {
+                    Route::get('', [
+                            'middleware' => 'auth.user',
+                            'uses' => 'OAuth2SummitProposedScheduleAllowedLocationApiController@getAllAllowedLocationByTrack']
+                    );
+                    Route::post('', [
+                            'middleware' => 'auth.user',
+                            'uses' => 'OAuth2SummitProposedScheduleAllowedLocationApiController@addAllowedLocationToTrack']
+                    );
+                    Route::group(['prefix' => '{location_id}'], function () {
+                        Route::get('', [
+                                'middleware' => 'auth.user',
+                                'uses' => 'OAuth2SummitProposedScheduleAllowedLocationApiController@getAllowedLocationFromTrack']
+                        );
+                        Route::delete('', [
+                                'middleware' => 'auth.user',
+                                'uses' => 'OAuth2SummitProposedScheduleAllowedLocationApiController@removeAllowedLocationFromTrack']
+                        );
+                        Route::group(['prefix'=> 'allowed-time-frames'], function(){
+                            Route::get('', [
+                                    'middleware' => 'auth.user',
+                                    'uses' => 'OAuth2SummitProposedScheduleAllowedLocationApiController@getAllTimeFrameFromAllowedLocation']
+                            );
+                            Route::post('', [
+                                    'middleware' => 'auth.user',
+                                    'uses' => 'OAuth2SummitProposedScheduleAllowedLocationApiController@addTimeFrame2AllowedLocation']
+                            );
+                            Route::group(['prefix'=> '{time_frame_id}'], function(){
+                                Route::get('', [
+                                        'middleware' => 'auth.user',
+                                        'uses' => 'OAuth2SummitProposedScheduleAllowedLocationApiController@getTimeFrameFromAllowedLocation']
+                                );
+
+                                Route::put('', [
+                                        'middleware' => 'auth.user',
+                                        'uses' => 'OAuth2SummitProposedScheduleAllowedLocationApiController@updateTimeFrameFromAllowedLocation']
+                                );
+
+                                Route::delete('', [
+                                        'middleware' => 'auth.user',
+                                        'uses' => 'OAuth2SummitProposedScheduleAllowedLocationApiController@deleteTimeFrameFromAllowedLocation']
+                                );
+
+                            });
+                        });
+                    });
+                });
             });
         });
 

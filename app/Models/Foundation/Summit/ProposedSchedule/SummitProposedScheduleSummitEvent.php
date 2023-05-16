@@ -60,14 +60,14 @@ class SummitProposedScheduleSummitEvent
     protected $duration;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitEvent", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="SummitEventID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitEvent
      */
     protected $summit_event;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitAbstractLocation", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="models\summit\SummitAbstractLocation", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="LocationID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitAbstractLocation
      */
@@ -88,7 +88,7 @@ class SummitProposedScheduleSummitEvent
     protected $updated_by = null;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitProposedSchedule", fetch="EXTRA_LAZY", inversedBy="scheduled_summit_events")
+     * @ORM\ManyToOne(targetEntity="SummitProposedSchedule", fetch="EXTRA_LAZY", inversedBy="scheduled_summit_events")
      * @ORM\JoinColumn(name="ScheduleID", referencedColumnName="ID")
      * @var SummitProposedSchedule
      */

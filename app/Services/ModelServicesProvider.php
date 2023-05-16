@@ -47,6 +47,7 @@ use App\Services\Model\Imp\SummitMediaUploadTypeService;
 use App\Services\Model\Imp\SummitMetricService;
 use App\Services\Model\Imp\SummitPresentationActionService;
 use App\Services\Model\Imp\SummitPresentationActionTypeService;
+use App\Services\Model\Imp\SummitProposedScheduleAllowedLocationService;
 use App\Services\Model\Imp\SummitRegistrationInvitationService;
 use App\Services\Model\Imp\SummitScheduleSettingsService;
 use App\Services\Model\Imp\SummitSelectedPresentationListService;
@@ -82,6 +83,7 @@ use App\Services\Model\ISummitOrderExtraQuestionTypeService;
 use App\Services\Model\ISummitOrderService;
 use App\Services\Model\ISummitPresentationActionService;
 use App\Services\Model\ISummitPresentationActionTypeService;
+use App\Services\Model\ISummitProposedScheduleAllowedLocationService;
 use App\Services\Model\ISummitPushNotificationService;
 use App\Services\Model\ISummitRefundPolicyTypeService;
 use App\Services\Model\ISummitRegistrationInvitationService;
@@ -463,6 +465,11 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitSignService::class,
             SummitSignService::class,
         );
+
+        App::singleton(
+            ISummitProposedScheduleAllowedLocationService::class,
+            SummitProposedScheduleAllowedLocationService::class
+        );
    }
 
     /**
@@ -529,6 +536,7 @@ final class ModelServicesProvider extends ServiceProvider
             IScheduleService::class,
             ISummitSubmissionInvitationService::class,
             ISummitSignService::class,
+            ISummitProposedScheduleAllowedLocationService::class,
         ];
     }
 }

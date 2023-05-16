@@ -89,6 +89,7 @@ abstract class JsonUtils
      */
     public static function toJsonInt($value)
     {
+        if(is_null($value)) return null;
         if(empty($value)) return 0;
         return intval($value);
     }

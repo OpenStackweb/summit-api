@@ -308,7 +308,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     protected $image;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="EXTRA_LAZY", inversedBy="created_presentations")
      * @ORM\JoinColumn(name="CreatedByID", referencedColumnName="ID", onDelete="SET NULL")
      * @var Member
      */

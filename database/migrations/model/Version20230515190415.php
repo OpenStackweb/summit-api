@@ -29,7 +29,7 @@ final class Version20230515190415 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $builder = new Builder($schema);
-        if (!$schema->hasTable("")) {
+        if (!$schema->hasTable(self::TableName)) {
             $builder->create(self::TableName, function (Table $table) {
                 $table->integer("ID", true,true);
                 $table->primary("ID");
@@ -41,11 +41,11 @@ final class Version20230515190415 extends AbstractMigration
                 // FK
                 $table->integer("PresentationCategoryID", false, false)->setNotnull(false)->setDefault('NULL');
                 $table->index("PresentationCategoryID", "PresentationCategoryID");
-                $table->foreign("PresentationCategory", "PresentationCategoryID", "ID", ["onDelete" => "CASCADE"], "FK_SummitSign_Summit");
+                $table->foreign("PresentationCategory", "PresentationCategoryID", "ID", ["onDelete" => "CASCADE"], "FK_SummitProposedScheduleAllowedLocation_Track");
 
                 $table->integer("LocationID", false, false)->setNotnull(false)->setDefault('NULL');
                 $table->index("LocationID", "LocationID");
-                $table->foreign("SummitAbstractLocation", "LocationID", "ID", ["onDelete" => "CASCADE"], "FK_SummitSign_Location");
+                $table->foreign("SummitAbstractLocation", "LocationID", "ID", ["onDelete" => "CASCADE"], "FK_SummitProposedScheduleAllowedLocation_Location");
 
                 $table->unique(["PresentationCategoryID", "LocationID"], "IDX_UNIQUE_ProposedScheduleAllowedLocation_Track_Location");
             });

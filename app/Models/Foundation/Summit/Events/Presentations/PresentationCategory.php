@@ -126,7 +126,7 @@ class PresentationCategory extends SilverstripeBaseModel
     protected $color;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitProposedScheduleAllowedLocation", mappedBy="track", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation", mappedBy="track", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      */
     protected $proposed_schedule_allowed_locations;
 
@@ -772,10 +772,10 @@ SQL;
 
     /**
      * @param SummitAbstractLocation $location
-     * @return void
+     * @return SummitProposedScheduleAllowedLocation
      * @throws ValidationException
      */
-    public function addProposedScheduleAllowedLocation(SummitAbstractLocation $location):void{
+    public function addProposedScheduleAllowedLocation(SummitAbstractLocation $location):SummitProposedScheduleAllowedLocation{
 
         // check by location if its exists
         $criteria = Criteria::create();
@@ -787,23 +787,28 @@ SQL;
 
         $proposed_location = new SummitProposedScheduleAllowedLocation($this, $location);
         $this->proposed_schedule_allowed_locations->add($proposed_location);
+
+        return $proposed_location;
     }
 
     /**
-     * @param SummitAbstractLocation $location
+     * @param SummitProposedScheduleAllowedLocation $proposed_location
      * @return void
-     * @throws ValidationException
      */
-    public function removeProposedScheduleAllowedLocation(SummitAbstractLocation $location):void{
+    public function removeProposedScheduleAllowedLocation(SummitProposedScheduleAllowedLocation $proposed_location):void{
 
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('location', $location));
-
-        $proposed_location = $this->proposed_schedule_allowed_locations->matching($criteria)->first();
-
-        if(!$proposed_location){
-            throw new ValidationException(sprintf("Location %s does not exists on this category.", $location->getId()));
-        };
+        if(!$this->proposed_schedule_allowed_locations->contains($proposed_location)) return;
         $this->proposed_schedule_allowed_locations->removeElement($proposed_location);
+    }
+
+    /**
+     * @param int $allowed_location_id
+     * @return SummitProposedScheduleAllowedLocation|null
+     */
+    public function getAllowedLocationById(int $allowed_location_id):?SummitProposedScheduleAllowedLocation{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $allowed_location_id));
+        $res =  $this->proposed_schedule_allowed_locations->matching($criteria)->first();
+        return $res === false ? null : $res;
     }
 }

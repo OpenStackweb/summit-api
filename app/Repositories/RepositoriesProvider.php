@@ -34,6 +34,7 @@ use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedDay;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEvent;
 use App\Models\Foundation\Summit\Repositories\IDefaultSummitEventTypeRepository;
@@ -75,6 +76,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitOrderExtraQuestionTypeRepos
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitPresentationCommentRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitPresentationSpeakerAssignmentRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitProposedScheduleAllowedDayRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitProposedScheduleAllowedLocationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRefundPolicyTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
@@ -850,6 +852,13 @@ final class RepositoriesProvider extends ServiceProvider
             ISummitProposedScheduleAllowedLocationRepository::class,
             function(){
                 return EntityManager::getRepository(SummitProposedScheduleAllowedLocation::class);
+            }
+        );
+
+        App::singleton(
+            ISummitProposedScheduleAllowedDayRepository::class,
+            function (){
+                return EntityManager::getRepository(SummitProposedScheduleAllowedDay::class);
             }
         );
     }

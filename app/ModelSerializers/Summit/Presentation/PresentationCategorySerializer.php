@@ -56,6 +56,8 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
         $allowed_tag = [];
         $extra_questions = [];
         $selection_lists = [];
+        $proposed_schedule_allowed_locations = [];
+
         $summit = $category->getSummit();
 
         foreach ($category->getGroups() as $group) {
@@ -78,11 +80,16 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
             $allowed_access_levels[] = intval($access_level->getId());
         }
 
+        foreach ($category->getProposedScheduleAllowedLocations() as $allowed_location) {
+            $proposed_schedule_allowed_locations[] = intval($allowed_location->getId());
+        }
+
         $values['track_groups'] = $groups;
         $values['allowed_tags'] = $allowed_tag;
         $values['extra_questions'] = $extra_questions;
         $values['selection_lists'] = $selection_lists;
         $values['allowed_access_levels'] = $allowed_access_levels;
+        $values['proposed_schedule_allowed_locations'] = $proposed_schedule_allowed_locations;
 
         if (!empty($expand)) {
             $exp_expand = explode(',', $expand);
@@ -137,15 +144,14 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
                             $values['extra_questions'] = $extra_questions;
                         }
                         break;
-
-                    case 'selection_lists':
+                    case 'proposed_schedule_allowed_locations':
                         {
-                            $selection_lists = [];
-                            unset($values['selection_lists']);
-                            foreach ($category->getSelectionLists() as $list) {
-                                $selection_lists[] = SerializerRegistry::getInstance()->getSerializer($list)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
+                            $proposed_schedule_allowed_locations = [];
+                            unset($values['proposed_schedule_allowed_locations']);
+                            foreach ($category->getProposedScheduleAllowedLocations() as $allowed_location) {
+                                $proposed_schedule_allowed_locations[] = SerializerRegistry::getInstance()->getSerializer($allowed_location)->serialize(AbstractSerializer::filterExpandByPrefix($expand, $relation));
                             }
-                            $values['selection_lists'] = $selection_lists;
+                            $values['proposed_schedule_allowed_locations'] = $proposed_schedule_allowed_locations;
                         }
                         break;
                 }

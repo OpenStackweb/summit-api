@@ -118,12 +118,12 @@ class SummitProposedScheduleAllowedLocation extends SilverstripeBaseModel
 
     /**
      * @param \DateTime $day
-     * @param int|null $from
+     * @param int|null $opening_hour
      * @param int|null $to
      * @return SummitProposedScheduleAllowedDay|null
      * @throws ValidationException
      */
-    public function addAllowedTimeFrame(\DateTime $day, ?int $from = null, ?int $to = null):?SummitProposedScheduleAllowedDay{
+    public function addAllowedTimeFrame(\DateTime $day, ?int $opening_hour = null, ?int $closing_hour = null):?SummitProposedScheduleAllowedDay{
         if(!$this->location->getSummit()->dayIsOnSummitPeriod($day))
             throw new ValidationException
             (
@@ -143,7 +143,7 @@ class SummitProposedScheduleAllowedLocation extends SilverstripeBaseModel
             throw new ValidationException(sprintf("Day %s already exists for location %s.", $day->format("Y-m-d"), $this->location->getId()));
         }
 
-        $time_frame = new SummitProposedScheduleAllowedDay($this, $day, $from, $to);
+        $time_frame = new SummitProposedScheduleAllowedDay($this, $day, $opening_hour, $closing_hour);
         $this->allowed_timeframes->add($time_frame);
         return $time_frame;
     }
@@ -167,6 +167,19 @@ class SummitProposedScheduleAllowedLocation extends SilverstripeBaseModel
         $criteria->where(Criteria::expr()->eq('id', $time_frame_id));
         $res =  $this->allowed_timeframes->matching($criteria)->first();
         return $res === false ? null : $res;
+    }
+
+    public function getAllowedTimeFrameForDates(\DateTime $from, \DateTime $to):?SummitProposedScheduleAllowedDay{
+        $criteria = Criteria::create();
+        $day = clone $from;
+        $day = $day->setTime(0,0,0);
+        $criteria->where(Criteria::expr()->eq('day', $day));
+        $res =  $this->allowed_timeframes->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    public function hasTimeFrameRestrictions():bool{
+        return $this->allowed_timeframes->count() > 0;
     }
 
 }

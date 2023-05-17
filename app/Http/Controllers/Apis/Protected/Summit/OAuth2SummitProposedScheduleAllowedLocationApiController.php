@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedDay;
+use App\Models\Foundation\Summit\Repositories\ISummitProposedScheduleAllowedDayRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitProposedScheduleAllowedLocationRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitProposedScheduleAllowedLocationService;
@@ -21,6 +21,7 @@ use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterElement;
+use utils\PagingInfo;
 
 /**
  * Class OAuth2SummitProposedScheduleAllowedLocationApiController
@@ -41,21 +42,34 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
      */
     private $summit_repository;
 
+    /**
+     * @var ISummitProposedScheduleAllowedDayRepository
+     */
+    private $allowed_time_frames_repository;
 
     /**
      * @var ISummitProposedScheduleAllowedLocationService
      */
     private $service;
 
+    /**
+     * @param ISummitRepository $summit_repository
+     * @param ISummitProposedScheduleAllowedDayRepository $allowed_time_frames_repository
+     * @param ISummitProposedScheduleAllowedLocationRepository $repository
+     * @param ISummitProposedScheduleAllowedLocationService $service
+     * @param IResourceServerContext $resource_server_context
+     */
     public function __construct
     (
         ISummitRepository $summit_repository,
+        ISummitProposedScheduleAllowedDayRepository $allowed_time_frames_repository,
         ISummitProposedScheduleAllowedLocationRepository $repository,
         ISummitProposedScheduleAllowedLocationService $service,
         IResourceServerContext $resource_server_context
     )
     {
         parent::__construct($resource_server_context);
+        $this->allowed_time_frames_repository = $allowed_time_frames_repository;
         $this->summit_repository = $summit_repository;
         $this->service = $service;
         $this->repository = $repository;
@@ -199,8 +213,78 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
         });
     }
 
+    /**
+     * @param $summit_id
+     * @param $track_id
+     * @param $location_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
     public function getAllTimeFrameFromAllowedLocation($summit_id, $track_id, $location_id){
 
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
+        if (is_null($summit)) return $this->error404();
+
+        $track = $summit->getPresentationCategory(intval($track_id));
+        if(is_null($track)) return $this->error404();
+
+        $allowed_location = $track->getAllowedLocationById(intval($location_id));
+        if(is_null($allowed_location)) return $this->error404();
+
+        return $this->_getAll(
+            function () {
+                return [
+                    'allowed_location_id' => ['=='],
+                    'track_id' => ['=='],
+                    'location_id' =>  ['=='],
+                    'day' => ['<','>','==','>=','<='],
+                    'opening_hour' => ['<','>','==','>=','<='],
+                    'closing_hour' => ['<','>','==','>=','<='],
+                ];
+            },
+            function () {
+                return [
+                    'allowed_location_id' => 'sometimes|integer',
+                    'track_id' => 'sometimes|integer',
+                    'location_id' =>  'sometimes|integer',
+                    'day' => 'sometimes|integer',
+                    'opening_hour' => 'sometimes|integer',
+                    'closing_hour' => 'sometimes|integer',
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'day',
+                    'opening_hour',
+                    'closing_hour',
+                    'location_id',
+                    'allowed_location_id',
+                    'track_id',
+                ];
+            },
+            function ($filter) use ($allowed_location) {
+                if ($filter instanceof Filter) {
+                    $filter->addFilterCondition
+                    (
+                        FilterElement::makeEqual('allowed_location_id', $allowed_location->getId())
+                    );
+                }
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Public;
+            },
+            null,
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) {
+                return $this->allowed_time_frames_repository->getAllByPage
+                (
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
     }
 
     /**

@@ -773,7 +773,7 @@ final class SummitService
                 $event->clearPublishingDates();
 
             if ($event->isPublished()) {
-                $this->validateBlackOutTimesAndTimes($event);
+                $this->validateBlackOutTimesAndTimes($event, $event->getLocation()->getOpeningHour(), $event->getLocation()->getClosingHour());
                 $event->unPublish();
                 $event->publish();
             }
@@ -967,7 +967,7 @@ final class SummitService
                 }
             }
 
-            $this->validateBlackOutTimesAndTimes($event);
+            $this->validateBlackOutTimesAndTimes($event, $event->getLocation()->getOpeningHour(), $event->getLocation()->getClosingHour());
             $event->unPublish();
             $event->publish();
             $event->setUpdatedBy(ResourceServerContext::getCurrentUser(false));

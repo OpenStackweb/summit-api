@@ -15,7 +15,7 @@ use Doctrine\ORM\Mapping as ORM;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitProposedScheduleAllowedDayRepository")
  * @ORM\Table(name="SummitProposedScheduleAllowedDay")
  * Class SummitProposedScheduleAllowedDay
  * @package App\Models\Foundation\Summit\ProposedSchedule
@@ -40,16 +40,16 @@ class SummitProposedScheduleAllowedDay extends SilverstripeBaseModel
     private $day;
 
     /**
-     * @ORM\Column(name="`From`", type="smallint")
+     * @ORM\Column(name="`OpeningHour`", type="smallint")
      * @var int
      */
-    private $from;
+    private $opening_hour;
 
     /**
-     * @ORM\Column(name="`To`", type="smallint")
+     * @ORM\Column(name="`ClosingHour`", type="smallint")
      * @var int
      */
-    private $to;
+    private $closing_hour;
 
     /**
      * @ORM\ManyToOne(targetEntity="SummitProposedScheduleAllowedLocation",inversedBy="allowed_timeframes")
@@ -61,21 +61,21 @@ class SummitProposedScheduleAllowedDay extends SilverstripeBaseModel
     /**
      * @param SummitProposedScheduleAllowedLocation $allowed_location
      * @param string $day
-     * @param int|null $from
-     * @param int|null $to
+     * @param int|null $opening_hour
+     * @param int|null $closing_hour
      */
     public function __construct(
         SummitProposedScheduleAllowedLocation $allowed_location,
         \DateTime $day,
-        ?int $from=null,
-        ?int $to=null
+        ?int $opening_hour=null,
+        ?int $closing_hour=null
     )
     {
         parent::__construct();
         $this->allowed_location = $allowed_location;
         $this->day = $day;
-        $this->from = $from;
-        $this->to = $to;
+        $this->opening_hour = $opening_hour;
+        $this->closing_hour = $closing_hour;
     }
 
     /**
@@ -89,17 +89,33 @@ class SummitProposedScheduleAllowedDay extends SilverstripeBaseModel
     /**
      * @return int|null
      */
-    public function getFrom(): ?int
+    public function getOpeningHour(): ?int
     {
-        return $this->from;
+        return $this->opening_hour;
+    }
+
+    /**
+     * @param int|null $opening_hour
+     */
+    public function setOpeningHour(?int $opening_hour)
+    {
+        $this->opening_hour = $opening_hour;
     }
 
     /**
      * @return int|null
      */
-    public function getTo(): ?int
+    public function getClosingHour(): ?int
     {
-        return $this->to;
+        return $this->closing_hour;
+    }
+
+    /**
+     * @param int|null $closing_hour
+     */
+    public function setClosingHour(?int $closing_hour)
+    {
+        $this->closing_hour = $closing_hour;
     }
 
     /**
@@ -117,22 +133,5 @@ class SummitProposedScheduleAllowedDay extends SilverstripeBaseModel
     {
         $this->day = $day;
     }
-
-    /**
-     * @param int|null $from
-     */
-    public function setFrom(?int $from): void
-    {
-        $this->from = $from;
-    }
-
-    /**
-     * @param int|null $to
-     */
-    public function setTo(?int $to): void
-    {
-        $this->to = $to;
-    }
-
 
 }

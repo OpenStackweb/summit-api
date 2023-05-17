@@ -232,4 +232,34 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiControllerTest
         $this->assertTrue($time_frame_new->id == $time_frame->id);
     }
 
+    public function testGetAllTimeFramesByAllowedLocation(){
+        $time_frame = $this->testAddTimeFrame();
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_id' => self::$defaultTrack->getId(),
+            'location_id' => $time_frame->allowed_location_id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitProposedScheduleAllowedLocationApiController@getAllTimeFrameFromAllowedLocation",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $page = json_decode($content);
+        $this->assertTrue(!is_null($page));
+        $this->assertTrue($page->total > 1);
+    }
+
 }

@@ -801,6 +801,10 @@ SQL;
         $this->proposed_schedule_allowed_locations->removeElement($proposed_location);
     }
 
+    public function getProposedScheduleAllowedLocations(){
+        return $this->proposed_schedule_allowed_locations;
+    }
+
     /**
      * @param int $allowed_location_id
      * @return SummitProposedScheduleAllowedLocation|null
@@ -808,6 +812,28 @@ SQL;
     public function getAllowedLocationById(int $allowed_location_id):?SummitProposedScheduleAllowedLocation{
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $allowed_location_id));
+        $res =  $this->proposed_schedule_allowed_locations->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    /**
+     * @param SummitAbstractLocation $location
+     * @return bool
+     */
+    public function isProposedScheduleAllowedLocation(SummitAbstractLocation $location):bool{
+        if(!$this->proposed_schedule_allowed_locations->count()) return true;
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('location', $location));
+        return $this->proposed_schedule_allowed_locations->matching($criteria)->count() > 0;
+    }
+
+    /**
+     * @param SummitAbstractLocation $location
+     * @return SummitProposedScheduleAllowedLocation|null
+     */
+    public function getProposedScheduleAllowedLocationByLocation(SummitAbstractLocation $location):?SummitProposedScheduleAllowedLocation{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('location', $location));
         $res =  $this->proposed_schedule_allowed_locations->matching($criteria)->first();
         return $res === false ? null : $res;
     }

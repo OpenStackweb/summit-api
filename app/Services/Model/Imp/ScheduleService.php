@@ -14,7 +14,9 @@
 
 use App\Facades\ResourceServerContext;
 use App\Models\Exceptions\AuthzException;
+use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEvent;
 use App\Models\Foundation\Summit\SelectionPlan;
 use Illuminate\Support\Facades\Log;
@@ -137,6 +139,84 @@ final class ScheduleService
         });
 
         return $this->publishProposedActivity($schedule->getId(), $presentation_id, $payload);
+    }
+
+
+    /**
+     * @param IPublishableEvent $publishable_event
+     * @param int|null $opening_hour
+     * @param int|null $closing_hour
+     * @return void
+     * @throws ValidationException
+     */
+    protected function validateBlackOutTimesAndTimes(IPublishableEvent $publishable_event, ?int $opening_hour = null, ?int $closing_hour= null):void
+    {
+
+        $location = $publishable_event->getLocation();
+        $track = $publishable_event->getCategory();
+
+        Log::debug
+        (
+            sprintf
+            (
+                "ScheduleService::validateBlackOutTimesAndTimes event %s location %s track %s",
+                $publishable_event->getId(),
+                $location->getId(),
+                $track->getId()
+            )
+        );
+
+        if(!$track->isProposedScheduleAllowedLocation($location))
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Location %s is not allowed for track %s on proposed schedule.",
+                    $location->getName(),
+                    $track->getTitle()
+                )
+            );
+
+        $allowed_location = $track->getProposedScheduleAllowedLocationByLocation($location);
+        $opening_hour = $location->getOpeningHour();
+        $closing_hour = $location->getClosingHour();
+
+        Log::debug
+        (
+            sprintf
+            (
+                "ScheduleService::validateBlackOutTimesAndTimes event %s opening_hour %s closing_hour %s",
+                $publishable_event->getId(),
+                $opening_hour,
+                $closing_hour
+            )
+        );
+
+        if($allowed_location instanceof SummitProposedScheduleAllowedLocation && $allowed_location->hasTimeFrameRestrictions()){
+            // check if we have a time frame custom restriction
+            $time_frame = $allowed_location->getAllowedTimeFrameForDates
+            (
+                $publishable_event->getStartDate(),
+                $publishable_event->getEndDate()
+            );
+
+            $opening_hour = $time_frame->getFrom();
+            $closing_hour = $time_frame->getTo();
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "ScheduleService::validateBlackOutTimesAndTimes location %s has custom restriction for date %s opening_hour %s closing_hour %s",
+                    $location->getId(),
+                    $publishable_event->getStartDate()->format("Y-m-d"),
+                    $opening_hour,
+                    $closing_hour
+                )
+            );
+        }
+
+        parent::validateBlackOutTimesAndTimes($publishable_event, $opening_hour, $closing_hour);
     }
 
     /**

@@ -83,7 +83,7 @@ implements ISummitProposedScheduleAllowedLocationService
             $day->setTime(0,0,0);
             $day->setTimezone(new \DateTimeZone('UTC'));
 
-            return $location->addAllowedTimeFrame($day, $payload['from'] ?? null, $payload['to'] ?? null);
+            return $location->addAllowedTimeFrame($day, $payload['opening_hour'] ?? null, $payload['closing_hour'] ?? null);
         });
     }
 
@@ -107,11 +107,11 @@ implements ISummitProposedScheduleAllowedLocationService
             if(is_null($time_frame))
                 throw new EntityNotFoundException(sprintf("Allowed Day %s not found", $allowed_day_id));
 
-            if(isset($payload['from']))
-                $time_frame->setFrom($payload['from']);
+            if(isset($payload['opening_hour']))
+                $time_frame->setOpeningHour($payload['opening_hour']);
 
-            if(isset($payload['to']))
-                $time_frame->setTo($payload['to']);
+            if(isset($payload['closing_hour']))
+                $time_frame->setClosingHour($payload['closing_hour']);
 
             return $time_frame;
         });

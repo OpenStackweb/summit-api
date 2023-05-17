@@ -44,12 +44,12 @@ final class Version20230515191855 extends AbstractMigration
                 // Fields
 
                 $table->dateTime("`Day`")->setNotnull(true);
-                $table->smallInteger("`From`")->setNotnull(false)->setDefault('NULL');
-                $table->smallInteger("`To`")->setNotnull(false)->setDefault('NULL');
+                $table->smallInteger("`OpeningHour`")->setNotnull(false)->setDefault('NULL');
+                $table->smallInteger("`ClosingHour`")->setNotnull(false)->setDefault('NULL');
 
                 // FK
 
-                $table->integer("AllowedLocationID", false, truefalse)->setNotnull(false)->setDefault('NULL');
+                $table->integer("AllowedLocationID", false, true)->setNotnull(false)->setDefault('NULL');
                 $table->index("AllowedLocationID", "AllowedLocationID");
                 $table->foreign("SummitProposedScheduleAllowedLocation", "AllowedLocationID", "ID", ["onDelete" => "CASCADE"], "FK_SummitProposedScheduleAllowedDay_AllowedLocation");
 

@@ -26,8 +26,8 @@ final class SummitProposedScheduleAllowedDayValidationRulesFactory
     {
         return [
             'day' => 'required|date_format:U',
-            'from' => 'sometimes|int|min:0|max:2359',
-            'to' => 'sometimes|int|min:0|max:2359|required_with:from|gt:from',
+            'opening_hour' => 'sometimes|int|min:0|max:2359',
+            'closing_hour' => 'sometimes|int|min:0|max:2359|required_with:from|gt:from',
         ];
     }
 
@@ -35,8 +35,8 @@ final class SummitProposedScheduleAllowedDayValidationRulesFactory
     {
         return [
             'day' => 'sometimes|date_format:U',
-            'from' => 'sometimes|int|min:0|max:2359',
-            'to' => 'sometimes|int|min:0|max:2359|required_with:from|gt:from',
+            'opening_hour' => 'sometimes|int|min:0|max:2359',
+            'closing_hour' => 'sometimes|int|min:0|max:2359|required_with:from|gt:from',
         ];
     }
 }

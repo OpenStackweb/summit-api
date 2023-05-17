@@ -1,4 +1,4 @@
-<?php namespace App\ModelSerializers\Summit\ProposedSchedule;
+<?php namespace App\Models\Foundation\Summit\Repositories;
 /*
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,19 +11,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-use ModelSerializers\SilverStripeSerializer;
-
+use models\utils\IBaseRepository;
 /**
- * Class SummitProposedScheduleAllowedDaySerializer
- * @package App\ModelSerializers\Summit\ProposedSchedule
+ * Interface ISummitProposedScheduleAllowedDayRepository
+ * @package App\Models\Foundation\Summit\Repositories
  */
-final class SummitProposedScheduleAllowedDaySerializer extends SilverStripeSerializer
+interface ISummitProposedScheduleAllowedDayRepository extends IBaseRepository
 {
-    protected static $array_mappings = [
-        'AllowedLocationId' => 'allowed_location_id:json_int',
-        'Day'               => 'day:datetime_epoch',
-        'OpeningHour'       => 'opening_hour:json_int',
-        'ClosingHour'       => 'closing_hour:json_int',
-    ];
+
 }

@@ -66,7 +66,9 @@ trait SummitOwned
     public $former_summit_id = 0;
 
     public function clearSummit():void{
-        $this->former_summit_id = is_null($this->summit) ? $this->summit->getId() : 0;
+        if ($this->former_summit_id == 0) {
+            $this->former_summit_id = is_null($this->summit) ? 0 : $this->summit->getId();
+        }
         $this->summit = null;
     }
 }

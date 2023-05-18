@@ -14,9 +14,13 @@
 use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use models\summit\IOrderConstants;
 use models\summit\PresentationCategory;
 use models\summit\Summit;
+use models\summit\SummitAttendeeTicket;
+use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
+use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
@@ -50,6 +54,17 @@ final class DoctrineSummitTrackRepository
             ),
             'voting_visible' => 't.voting_visible',
             'chair_visible' => 't.chair_visible',
+            'has_proposed_schedule_allowed_locations'=>  new DoctrineSwitchFilterMapping([
+                    'true' => new DoctrineCaseFilterMapping(
+                        'true',
+                     "SIZE(e.proposed_schedule_allowed_locations) > 0",
+                    ),
+                    'false' => new DoctrineCaseFilterMapping(
+                        'false',
+                        "SIZE(e.proposed_schedule_allowed_locations) = 0"
+                    ),
+                ]
+            ),
         ];
     }
 

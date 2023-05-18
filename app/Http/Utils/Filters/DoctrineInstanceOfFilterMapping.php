@@ -47,6 +47,35 @@ final class DoctrineInstanceOfFilterMapping extends FilterMapping implements IQu
         return $value;
     }
 
+    private function buildWhere(QueryBuilder $query, FilterElement $filter):string{
+        $value = $filter->getValue();
+
+        if (is_array($value)) {
+            $where_components = [];
+
+            foreach ($value as $val) {
+
+                $param_count = $query->getParameters()->count() + 1;
+                $where = $this->where;
+                $has_param = false;
+
+                if (strstr($where, ":class_name")) {
+                    $where = str_replace(":class_name", ":class_name_" . $param_count, $where);
+                    $has_param = true;
+                }
+
+                if ($has_param) {
+                    $query = $query->setParameter(":class_name_" . $param_count, $this->translateClassName($val));
+                }
+
+                $where_components[] =  $where;
+            }
+
+            return implode(sprintf(" %s ", $filter->getSameFieldOp()), $where_components);
+        }
+        return str_replace(":class_name", $this->translateClassName($filter->getValue()), $this->where);
+    }
+
     /**
      * @param QueryBuilder $query
      * @param FilterElement $filter
@@ -54,8 +83,7 @@ final class DoctrineInstanceOfFilterMapping extends FilterMapping implements IQu
      */
     public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder
     {
-        $where = str_replace(":class_name", $this->translateClassName($filter->getValue()), $this->where);
-        return $query->andWhere($where);
+        return $query->andWhere($this->buildWhere($query, $filter));
     }
 
     /**
@@ -65,8 +93,7 @@ final class DoctrineInstanceOfFilterMapping extends FilterMapping implements IQu
      */
     public function applyOr(QueryBuilder $query, FilterElement $filter): string
     {
-        $where = str_replace(":class_name", $this->translateClassName($filter->getValue()), $this->where);
-        return $where;
+        return $this->buildWhere($query, $filter);
     }
 
 }

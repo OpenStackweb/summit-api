@@ -14,10 +14,8 @@
 use App\Models\Foundation\Summit\Repositories\ISummitTrackRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Tools\Pagination\Paginator;
-use models\summit\IOrderConstants;
 use models\summit\PresentationCategory;
 use models\summit\Summit;
-use models\summit\SummitAttendeeTicket;
 use utils\DoctrineCaseFilterMapping;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
@@ -57,11 +55,11 @@ final class DoctrineSummitTrackRepository
             'has_proposed_schedule_allowed_locations'=>  new DoctrineSwitchFilterMapping([
                     'true' => new DoctrineCaseFilterMapping(
                         'true',
-                     "SIZE(e.proposed_schedule_allowed_locations) > 0",
+                     "SIZE(t.proposed_schedule_allowed_locations) > 0",
                     ),
                     'false' => new DoctrineCaseFilterMapping(
                         'false',
-                        "SIZE(e.proposed_schedule_allowed_locations) = 0"
+                        "SIZE(t.proposed_schedule_allowed_locations) = 0"
                     ),
                 ]
             ),

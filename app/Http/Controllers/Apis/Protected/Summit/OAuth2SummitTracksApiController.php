@@ -100,7 +100,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                     'group_name' => 'sometimes|string',
                     'voting_visible' => 'sometimes|boolean',
                     'chair_visible' => 'sometimes|boolean',
-                    'has_proposed_schedule_allowed_locations'=> 'sometimes|boolean',
+                    'has_proposed_schedule_allowed_locations'=> 'sometimes|required|string|in:true,false',
                 ];
             },
             function () {

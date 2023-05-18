@@ -47,6 +47,21 @@ final class DoctrineInstanceOfFilterMapping extends FilterMapping implements IQu
         return $value;
     }
 
+    private function buildWhere(QueryBuilder $query, FilterElement $filter):string{
+        $value = $filter->getValue();
+
+        if (is_array($value)) {
+            $where_components = [];
+            // see @https://github.com/doctrine/orm/issues/4462
+            foreach ($value as $val) {
+                $where_components[] =  str_replace(":class_name", $this->translateClassName($val), $this->where);
+            }
+
+            return implode(sprintf(" %s ", $filter->getSameFieldOp()), $where_components);
+        }
+        return str_replace(":class_name", $this->translateClassName($filter->getValue()), $this->where);
+    }
+
     /**
      * @param QueryBuilder $query
      * @param FilterElement $filter
@@ -54,8 +69,7 @@ final class DoctrineInstanceOfFilterMapping extends FilterMapping implements IQu
      */
     public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder
     {
-        $where = str_replace(":class_name", $this->translateClassName($filter->getValue()), $this->where);
-        return $query->andWhere($where);
+        return $query->andWhere($this->buildWhere($query, $filter));
     }
 
     /**
@@ -65,8 +79,7 @@ final class DoctrineInstanceOfFilterMapping extends FilterMapping implements IQu
      */
     public function applyOr(QueryBuilder $query, FilterElement $filter): string
     {
-        $where = str_replace(":class_name", $this->translateClassName($filter->getValue()), $this->where);
-        return $where;
+        return $this->buildWhere($query, $filter);
     }
 
 }

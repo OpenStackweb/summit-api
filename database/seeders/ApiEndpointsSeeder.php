@@ -5216,6 +5216,21 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'remove-all-allowed-location-from-track',
+                'route' => '/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/all',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteTracksData, $current_realm),
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+
+            [
                 'name' => 'remove-allowed-location-from-track',
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}',
                 'http_method' => 'DELETE',
@@ -5264,6 +5279,20 @@ class ApiEndpointsSeeder extends Seeder
                 'scopes' => [
                     sprintf(SummitScopes::ReadSummitData, $current_realm),
                     sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-all--time-frame-from-allowed-location',
+                'route' => '/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames/all',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WriteTracksData, $current_realm),
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,

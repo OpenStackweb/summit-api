@@ -238,7 +238,7 @@ Route::group(array('prefix' => 'summits'), function () {
 
         Route::group(['prefix' => 'signs'], function () {
             Route::get('', 'OAuth2SummitSignApiController@getAllBySummit');
-            Route::post('',  ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSignApiController@add']);
+            Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSignApiController@add']);
             Route::group(['prefix' => '{sign_id}'], function () {
                 Route::get('', 'OAuth2SummitSignApiController@get');
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSignApiController@update']);
@@ -287,7 +287,7 @@ Route::group(array('prefix' => 'summits'), function () {
 
         Route::group(['prefix' => 'selection-plans'], function () {
             Route::get('', ['uses' => 'OAuth2SummitSelectionPlansApiController@getAll']);
-            Route::get('me','OAuth2SummitSelectionPlansApiController@getMySelectionPlans');
+            Route::get('me', 'OAuth2SummitSelectionPlansApiController@getMySelectionPlans');
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSelectionPlansApiController@addSelectionPlan']);
             Route::group(['prefix' => '{selection_plan_id}'], function () {
 
@@ -766,10 +766,10 @@ Route::group(array('prefix' => 'summits'), function () {
                     Route::delete('', ['uses' => 'OAuth2PresentationApiController@unCastAttendeeVote']);
                 });
 
-                Route::group(['prefix' => 'comments'], function(){
+                Route::group(['prefix' => 'comments'], function () {
                     Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@getComments']);
                     Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@addComment']);
-                    Route::group(['prefix' => '{comment_id}'], function(){
+                    Route::group(['prefix' => '{comment_id}'], function () {
                         Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@getComment']);
                         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@deleteComment']);
                         Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@updateComment']);
@@ -778,7 +778,7 @@ Route::group(array('prefix' => 'summits'), function () {
 
                 // speakers
 
-                Route::group(['prefix' => 'speakers'], function(){
+                Route::group(['prefix' => 'speakers'], function () {
                     Route::group(['prefix' => '{speaker_id}'], function () {
                         Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@addSpeaker2Presentation']);
                         Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@updateSpeakerInPresentation']);
@@ -1619,6 +1619,12 @@ Route::group(array('prefix' => 'summits'), function () {
                             'middleware' => 'auth.user',
                             'uses' => 'OAuth2SummitProposedScheduleAllowedLocationApiController@addAllowedLocationToTrack']
                     );
+                    Route::group(['prefix' => 'all'], function () {
+                        Route::delete('', [
+                                'middleware' => 'auth.user',
+                                'uses' => 'OAuth2SummitProposedScheduleAllowedLocationApiController@removeAllAllowedLocationFromTrack']
+                        );
+                    });
                     Route::group(['prefix' => '{location_id}'], function () {
                         Route::get('', [
                                 'middleware' => 'auth.user',
@@ -1628,7 +1634,7 @@ Route::group(array('prefix' => 'summits'), function () {
                                 'middleware' => 'auth.user',
                                 'uses' => 'OAuth2SummitProposedScheduleAllowedLocationApiController@removeAllowedLocationFromTrack']
                         );
-                        Route::group(['prefix'=> 'allowed-time-frames'], function(){
+                        Route::group(['prefix' => 'allowed-time-frames'], function () {
                             Route::get('', [
                                     'middleware' => 'auth.user',
                                     'uses' => 'OAuth2SummitProposedScheduleAllowedLocationApiController@getAllTimeFrameFromAllowedLocation']
@@ -1637,7 +1643,15 @@ Route::group(array('prefix' => 'summits'), function () {
                                     'middleware' => 'auth.user',
                                     'uses' => 'OAuth2SummitProposedScheduleAllowedLocationApiController@addTimeFrame2AllowedLocation']
                             );
-                            Route::group(['prefix'=> '{time_frame_id}'], function(){
+
+                            Route::group(['prefix' => 'all'], function () {
+                                Route::delete('', [
+                                        'middleware' => 'auth.user',
+                                        'uses' => 'OAuth2SummitProposedScheduleAllowedLocationApiController@removeAllTimeFrameFromAllowedLocation']
+                                );
+                            });
+
+                            Route::group(['prefix' => '{time_frame_id}'], function () {
                                 Route::get('', [
                                         'middleware' => 'auth.user',
                                         'uses' => 'OAuth2SummitProposedScheduleAllowedLocationApiController@getTimeFrameFromAllowedLocation']
@@ -1650,7 +1664,7 @@ Route::group(array('prefix' => 'summits'), function () {
 
                                 Route::delete('', [
                                         'middleware' => 'auth.user',
-                                        'uses' => 'OAuth2SummitProposedScheduleAllowedLocationApiController@deleteTimeFrameFromAllowedLocation']
+                                        'uses' => 'OAuth2SummitProposedScheduleAllowedLocationApiController@removeTimeFrameFromAllowedLocation']
                                 );
 
                             });
@@ -1887,7 +1901,7 @@ Route::group(array('prefix' => 'summits'), function () {
                     });
 
                     Route::group(['prefix' => '{presentation_id}'], function () {
-                        Route::group(['prefix'=> 'propose'], function (){
+                        Route::group(['prefix' => 'propose'], function () {
                             Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitProposedScheduleApiController@publish']);
                             Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitProposedScheduleApiController@unpublish']);
                         });

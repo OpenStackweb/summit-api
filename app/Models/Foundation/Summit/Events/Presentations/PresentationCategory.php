@@ -837,4 +837,8 @@ SQL;
         $res =  $this->proposed_schedule_allowed_locations->matching($criteria)->first();
         return $res === false ? null : $res;
     }
+
+    public function clearProposedScheduleAllowedLocations():void{
+        $this->proposed_schedule_allowed_locations->clear();
+    }
 }

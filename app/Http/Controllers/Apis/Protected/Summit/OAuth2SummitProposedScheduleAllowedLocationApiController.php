@@ -190,6 +190,25 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
     /**
      * @param $summit_id
      * @param $track_id
+     * @return mixed
+     */
+    public function removeAllAllowedLocationFromTrack($summit_id, $track_id){
+        return $this->processRequest(function () use ($summit_id, $track_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
+            if (is_null($summit)) return $this->error404();
+
+            $track = $summit->getPresentationCategory(intval($track_id));
+            if(is_null($track)) return $this->error404();
+
+            $this->service->deleteAllProposedLocationFromTrack($track);
+
+            return $this->delete();
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $track_id
      * @param $location_id
      * @return mixed
      */
@@ -326,7 +345,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
      * @param $time_frame_id
      * @return mixed
      */
-    public function deleteTimeFrameFromAllowedLocation($summit_id, $track_id, $location_id, $time_frame_id){
+    public function removeTimeFrameFromAllowedLocation($summit_id, $track_id, $location_id, $time_frame_id){
         return $this->processRequest(function() use($summit_id, $track_id, $location_id, $time_frame_id){
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
             if (is_null($summit)) return $this->error404();
@@ -339,6 +358,27 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
             return $this->deleted();
         });
     }
+
+    /**
+     * @param $summit_id
+     * @param $track_id
+     * @param $location_id
+     * @return mixed
+     */
+    public function removeAllTimeFrameFromAllowedLocation($summit_id, $track_id, $location_id){
+        return $this->processRequest(function() use($summit_id, $track_id, $location_id){
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
+            if (is_null($summit)) return $this->error404();
+
+            $track = $summit->getPresentationCategory(intval($track_id));
+            if (is_null($track)) return $this->error404();
+
+            $this->service->deleteAllAllowedDayToProposedLocation($track, intval($location_id));
+
+            return $this->deleted();
+        });
+    }
+
     /**
      * @param $summit_id
      * @param $track_id

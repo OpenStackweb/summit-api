@@ -133,4 +133,29 @@ implements ISummitProposedScheduleAllowedLocationService
 
         });
     }
+
+    /**
+     * @param PresentationCategory $track
+     * @param int $allowed_location_id
+     * @return void
+     * @throws \Exception
+     */
+    public function deleteAllAllowedDayToProposedLocation(PresentationCategory $track, int $allowed_location_id): void
+    {
+        $this->tx_service->transaction(function() use($track, $allowed_location_id){
+            $location = $track->getAllowedLocationById($allowed_location_id);
+            if(is_null($location))
+                throw new EntityNotFoundException(sprintf("Allowed Location %s not found", $allowed_location_id));
+
+            $location->clearAllowedTimeFrames();
+
+        });
+    }
+
+
+    public function deleteAllProposedLocationFromTrack(PresentationCategory $track):void{
+        $this->tx_service->transaction(function() use($track){
+            $track->clearProposedScheduleAllowedLocations();
+        });
+    }
 }

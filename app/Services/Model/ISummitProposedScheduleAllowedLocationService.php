@@ -44,6 +44,14 @@ interface ISummitProposedScheduleAllowedLocationService
 
     /**
      * @param PresentationCategory $track
+     * @return void
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function deleteAllProposedLocationFromTrack(PresentationCategory $track):void;
+
+    /**
+     * @param PresentationCategory $track
      * @param int $allowed_location_id
      * @param array $payload
      * @return SummitProposedScheduleAllowedDay|null
@@ -72,4 +80,13 @@ interface ISummitProposedScheduleAllowedLocationService
      * @throws ValidationException
      */
     public function deleteAllowedDayToProposedLocation(PresentationCategory $track, int $allowed_location_id, int $allowed_day_id):void;
+
+    /**
+     * @param PresentationCategory $track
+     * @param int $allowed_location_id
+     * @return void
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function deleteAllAllowedDayToProposedLocation(PresentationCategory $track, int $allowed_location_id): void;
 }

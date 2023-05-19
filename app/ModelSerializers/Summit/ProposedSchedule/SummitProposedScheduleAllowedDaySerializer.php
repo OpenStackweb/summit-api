@@ -1,7 +1,5 @@
-<?php namespace models\summit;
-use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
-
-/**
+<?php namespace App\ModelSerializers\Summit\ProposedSchedule;
+/*
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +12,18 @@ use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
  * limitations under the License.
  **/
 
+use ModelSerializers\SilverStripeSerializer;
+
 /**
- * Interface ISummitProposedScheduleRepository
- * @package models\summit
+ * Class SummitProposedScheduleAllowedDaySerializer
+ * @package App\ModelSerializers\Summit\ProposedSchedule
  */
-interface ISummitProposedScheduleRepository extends ISummitEventPublishRepository
+final class SummitProposedScheduleAllowedDaySerializer extends SilverStripeSerializer
 {
-    /**
-     * @param string $source
-     * @param int $summit_id
-     * @return SummitProposedSchedule|null
-     */
-    public function getBySourceAndSummitId(string $source, int $summit_id): ?SummitProposedSchedule;
+    protected static $array_mappings = [
+        'AllowedLocationId' => 'allowed_location_id:json_int',
+        'Day'               => 'day:datetime_epoch',
+        'OpeningHour'       => 'opening_hour:json_int',
+        'ClosingHour'       => 'closing_hour:json_int',
+    ];
 }

@@ -1,4 +1,4 @@
-<?php namespace ModelSerializers;
+<?php namespace App\ModelSerializers\Summit\ProposedSchedule;
 /**
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +14,7 @@
 
 use Libs\ModelSerializers\Many2OneExpandSerializer;
 use Libs\ModelSerializers\One2ManyExpandSerializer;
+use ModelSerializers\SilverStripeSerializer;
 
 /**
  * Class SummitProposedScheduleSerializer

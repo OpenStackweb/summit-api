@@ -33,6 +33,10 @@ use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuesti
 use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedDay;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEvent;
 use App\Models\Foundation\Summit\Repositories\IDefaultSummitEventTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IDefaultTrackTagGroupRepository;
 use App\Models\Foundation\Summit\Repositories\IPaymentGatewayProfileRepository;
@@ -72,6 +76,8 @@ use App\Models\Foundation\Summit\Repositories\ISummitOrderExtraQuestionTypeRepos
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitPresentationCommentRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitPresentationSpeakerAssignmentRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitProposedScheduleAllowedDayRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitProposedScheduleAllowedLocationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRefundPolicyTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
@@ -89,7 +95,6 @@ use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Foundation\Summit\Signs\SummitSign;
 use App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment;
 use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
-use models\summit\SummitSubmissionInvitation;
 use App\Models\Foundation\Summit\TrackTagGroupAllowedTag;
 use App\Models\ResourceServer\IApiRepository;
 use Illuminate\Support\Facades\App;
@@ -146,14 +151,13 @@ use models\summit\SummitMetric;
 use models\summit\SummitOrder;
 use models\summit\SummitOrderExtraQuestionType;
 use models\summit\SummitPresentationComment;
-use models\summit\SummitProposedSchedule;
-use models\summit\SummitProposedScheduleSummitEvent;
 use models\summit\SummitRefundPolicyType;
 use models\summit\SummitRegistrationInvitation;
 use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitRoomReservation;
 use models\summit\SummitScheduleConfig;
 use models\summit\SummitSponsorshipType;
+use models\summit\SummitSubmissionInvitation;
 use models\summit\SummitTaxType;
 use models\summit\SummitTicketType;
 use models\summit\SummitTrackChair;
@@ -841,6 +845,20 @@ final class RepositoriesProvider extends ServiceProvider
             ISummitSignRepository::class,
             function(){
                 return EntityManager::getRepository(SummitSign::class);
+            }
+        );
+
+        App::singleton(
+            ISummitProposedScheduleAllowedLocationRepository::class,
+            function(){
+                return EntityManager::getRepository(SummitProposedScheduleAllowedLocation::class);
+            }
+        );
+
+        App::singleton(
+            ISummitProposedScheduleAllowedDayRepository::class,
+            function (){
+                return EntityManager::getRepository(SummitProposedScheduleAllowedDay::class);
             }
         );
     }

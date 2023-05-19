@@ -1,4 +1,4 @@
-<?php namespace models\summit;
+<?php namespace App\Models\Foundation\Summit\ProposedSchedule;
 /*
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,17 +11,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\Mapping AS ORM;
+
+use App\Models\Foundation\Summit\IPublishableEvent;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\Mapping as ORM;
 use models\exceptions\ValidationException;
 use models\main\Member;
+use models\summit\SummitAbstractLocation;
+use models\summit\SummitEvent;
+use models\summit\SummitOwned;
 use models\utils\SilverstripeBaseModel;
+
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitProposedScheduleRepository")
  * @ORM\Table(name="SummitProposedSchedule")
  * Class SummitProposedSchedule
- * @package models\summit
+ * @package App\Models\Foundation\Summit\ProposedSchedule
  */
 class SummitProposedSchedule extends SilverstripeBaseModel
 {
@@ -192,10 +198,11 @@ class SummitProposedSchedule extends SilverstripeBaseModel
     }
 
     /**
-     * @param SummitProposedScheduleSummitEvent $scheduled_event
+     * @param IPublishableEvent|SummitProposedScheduleSummitEvent $scheduled_event
      * @throws ValidationException
      */
-    public function addScheduledSummitEvent(SummitProposedScheduleSummitEvent $scheduled_event){
+    public function addScheduledSummitEvent(IPublishableEvent $scheduled_event){
+        if(!$scheduled_event instanceof SummitProposedScheduleSummitEvent) return;
         if($this->scheduled_summit_events->contains($scheduled_event)) return;
 
         $criteria = Criteria::create();
@@ -208,9 +215,10 @@ class SummitProposedSchedule extends SilverstripeBaseModel
     }
 
     /**
-     * @param SummitProposedScheduleSummitEvent $scheduled_event
+     * @param IPublishableEvent|SummitProposedScheduleSummitEvent $scheduled_event
      */
-    public function removeScheduledSummitEvent(SummitProposedScheduleSummitEvent $scheduled_event){
+    public function removeScheduledSummitEvent(IPublishableEvent $scheduled_event){
+        if(!$scheduled_event instanceof SummitProposedScheduleSummitEvent) return;
         if(!$this->scheduled_summit_events->contains($scheduled_event)) return;
         $this->scheduled_summit_events->removeElement($scheduled_event);
         $scheduled_event->clearSchedule();

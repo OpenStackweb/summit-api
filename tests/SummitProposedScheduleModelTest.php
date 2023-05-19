@@ -13,10 +13,10 @@
  **/
 
 use App\Models\Foundation\Main\IGroup;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEvent;
 use App\ModelSerializers\SerializerUtils;
 use LaravelDoctrine\ORM\Facades\EntityManager;
-use models\summit\SummitProposedSchedule;
-use models\summit\SummitProposedScheduleSummitEvent;
 use ModelSerializers\SerializerRegistry;
 
 /**

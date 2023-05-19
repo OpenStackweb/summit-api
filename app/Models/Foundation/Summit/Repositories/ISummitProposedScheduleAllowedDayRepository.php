@@ -1,7 +1,5 @@
-<?php namespace models\summit;
-use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
-
-/**
+<?php namespace App\Models\Foundation\Summit\Repositories;
+/*
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +11,12 @@ use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use models\utils\IBaseRepository;
 /**
- * Interface ISummitProposedScheduleRepository
- * @package models\summit
+ * Interface ISummitProposedScheduleAllowedDayRepository
+ * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitProposedScheduleRepository extends ISummitEventPublishRepository
+interface ISummitProposedScheduleAllowedDayRepository extends IBaseRepository
 {
-    /**
-     * @param string $source
-     * @param int $summit_id
-     * @return SummitProposedSchedule|null
-     */
-    public function getBySourceAndSummitId(string $source, int $summit_id): ?SummitProposedSchedule;
+
 }

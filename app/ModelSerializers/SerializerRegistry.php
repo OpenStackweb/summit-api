@@ -72,6 +72,10 @@ use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackLiteralContentQ
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackMultiValueQuestionTemplateSerializer;
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackQuestionValueTemplateSerializer;
 use App\ModelSerializers\Summit\Presentation\TrackQuestions\TrackSingleValueTemplateQuestionSerializer;
+use App\ModelSerializers\Summit\ProposedSchedule\SummitProposedScheduleAllowedDaySerializer;
+use App\ModelSerializers\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocationSerializer;
+use App\ModelSerializers\Summit\ProposedSchedule\SummitProposedScheduleSerializer;
+use App\ModelSerializers\Summit\ProposedSchedule\SummitProposedScheduleSummitEventSerializer;
 use App\ModelSerializers\Summit\Registration\Refunds\SummitAttendeeTicketRefundRequestSerializer;
 use App\ModelSerializers\Summit\Registration\SponsorUserInfoGrantCSVSerializer;
 use App\ModelSerializers\Summit\Registration\SummitAttendeeCSVSerializer;
@@ -96,6 +100,7 @@ use App\ModelSerializers\Summit\SummitEmailEventFlowSerializer;
 use App\ModelSerializers\Summit\SummitLocationBannerSerializer;
 use App\ModelSerializers\Summit\SummitScheduleConfigSerializer;
 use App\ModelSerializers\Summit\SummitSchedulePreFilterElementConfigSerializer;
+use App\ModelSerializers\Summit\SummitSignSerializer;
 use App\ModelSerializers\Summit\SummitSponsorshipTypeSerializer;
 use App\ModelSerializers\Summit\TrackTagGroups\TrackTagGroupAllowedTagSerializer;
 use App\ModelSerializers\Summit\TrackTagGroups\TrackTagGroupSerializer;
@@ -114,7 +119,7 @@ use ModelSerializers\Locations\SummitLocationImageSerializer;
 use ModelSerializers\Locations\SummitVenueFloorSerializer;
 use ModelSerializers\Locations\SummitVenueRoomSerializer;
 use ModelSerializers\Locations\SummitVenueSerializer;
-use App\ModelSerializers\Summit\SummitSignSerializer;
+
 /**
  * Class SerializerRegistry
  * @package ModelSerializers
@@ -537,6 +542,9 @@ final class SerializerRegistry
         // proposed schedule
         $this->registry['SummitProposedSchedule'] = SummitProposedScheduleSerializer::class;
         $this->registry['SummitProposedScheduleSummitEvent'] = SummitProposedScheduleSummitEventSerializer::class;
+        $this->registry['SummitProposedScheduleAllowedLocation'] = SummitProposedScheduleAllowedLocationSerializer::class;
+        $this->registry['SummitProposedScheduleAllowedDay'] = SummitProposedScheduleAllowedDaySerializer::class;
+
     }
 
     /**

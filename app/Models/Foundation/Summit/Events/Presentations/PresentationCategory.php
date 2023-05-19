@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation;
 use App\Models\Foundation\Summit\ScheduleEntity;
 use Doctrine\ORM\Mapping AS ORM;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplate;
@@ -123,6 +124,11 @@ class PresentationCategory extends SilverstripeBaseModel
      * @var string
      */
     protected $color;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation", mappedBy="track", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     */
+    protected $proposed_schedule_allowed_locations;
 
     /**
      * @return string
@@ -292,6 +298,7 @@ class PresentationCategory extends SilverstripeBaseModel
         $this->chair_visible             = false;
         $this->voting_visible            = false;
         $this->order = 0;
+        $this->proposed_schedule_allowed_locations = new ArrayCollection();
     }
 
     /**
@@ -762,4 +769,76 @@ SQL;
     }
 
     use ScheduleEntity;
+
+    /**
+     * @param SummitAbstractLocation $location
+     * @return SummitProposedScheduleAllowedLocation
+     * @throws ValidationException
+     */
+    public function addProposedScheduleAllowedLocation(SummitAbstractLocation $location):SummitProposedScheduleAllowedLocation{
+
+        // check by location if its exists
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('location', $location));
+
+        if($this->proposed_schedule_allowed_locations->matching($criteria)->count() > 0){
+            throw new ValidationException(sprintf("Location %s already exists on this category.", $location->getId()));
+        }
+
+        $proposed_location = new SummitProposedScheduleAllowedLocation($this, $location);
+        $this->proposed_schedule_allowed_locations->add($proposed_location);
+
+        return $proposed_location;
+    }
+
+    /**
+     * @param SummitProposedScheduleAllowedLocation $proposed_location
+     * @return void
+     */
+    public function removeProposedScheduleAllowedLocation(SummitProposedScheduleAllowedLocation $proposed_location):void{
+
+        if(!$this->proposed_schedule_allowed_locations->contains($proposed_location)) return;
+        $this->proposed_schedule_allowed_locations->removeElement($proposed_location);
+    }
+
+    public function getProposedScheduleAllowedLocations(){
+        return $this->proposed_schedule_allowed_locations;
+    }
+
+    /**
+     * @param int $allowed_location_id
+     * @return SummitProposedScheduleAllowedLocation|null
+     */
+    public function getAllowedLocationById(int $allowed_location_id):?SummitProposedScheduleAllowedLocation{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $allowed_location_id));
+        $res =  $this->proposed_schedule_allowed_locations->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    /**
+     * @param SummitAbstractLocation $location
+     * @return bool
+     */
+    public function isProposedScheduleAllowedLocation(SummitAbstractLocation $location):bool{
+        if(!$this->proposed_schedule_allowed_locations->count()) return true;
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('location', $location));
+        return $this->proposed_schedule_allowed_locations->matching($criteria)->count() > 0;
+    }
+
+    /**
+     * @param SummitAbstractLocation $location
+     * @return SummitProposedScheduleAllowedLocation|null
+     */
+    public function getProposedScheduleAllowedLocationByLocation(SummitAbstractLocation $location):?SummitProposedScheduleAllowedLocation{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('location', $location));
+        $res =  $this->proposed_schedule_allowed_locations->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    public function clearProposedScheduleAllowedLocations():void{
+        $this->proposed_schedule_allowed_locations->clear();
+    }
 }

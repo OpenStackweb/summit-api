@@ -1,7 +1,5 @@
-<?php namespace models\summit;
-use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
-
-/**
+<?php namespace App\Http\Controllers;
+/*
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +12,26 @@ use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
  * limitations under the License.
  **/
 
+
+use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
+
 /**
- * Interface ISummitProposedScheduleRepository
- * @package models\summit
+ * Class SummitProposedScheduleAllowedLocationValidationRulesFactory
+ * @package App\Http\Controllers
  */
-interface ISummitProposedScheduleRepository extends ISummitEventPublishRepository
+final class SummitProposedScheduleAllowedLocationValidationRulesFactory
+    extends AbstractValidationRulesFactory
 {
-    /**
-     * @param string $source
-     * @param int $summit_id
-     * @return SummitProposedSchedule|null
-     */
-    public function getBySourceAndSummitId(string $source, int $summit_id): ?SummitProposedSchedule;
+
+    public static function buildForAdd(array $payload = []): array
+    {
+       return [
+           'location_id' => 'required|integer',
+       ];
+    }
+
+    public static function buildForUpdate(array $payload = []): array
+    {
+       return [];
+    }
 }

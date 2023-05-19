@@ -65,7 +65,6 @@ implements IExternalRegistrationFeedResponse
         // map fields
         return [
             'id' => $res[PayloadParamNames::UserId],
-            'created' => (new \DateTime('now', new \DateTimeZone('UTC')))->getTimestamp(),
             'profile' => [
                 'first_name'=> $res[PayloadParamNames::FirstName],
                 'last_name' => $res[PayloadParamNames::LastName],
@@ -77,9 +76,9 @@ implements IExternalRegistrationFeedResponse
                 'id'=> $this->forum,
                 'name'=> $this->forum,
                 'description'=> $this->forum,
-                'quantity_total' => PHP_INT_MAX,
+                'quantity_total' => SummitTicketType::QtyInfinite, // infinite
                 'cost' =>[
-                    'major_value' => 0.0, // free
+                    'major_value' => SummitTicketType::AmountFree, // free
                     'currency' => SummitTicketType::USD_Currency,
                 ]
             ],
@@ -126,6 +125,6 @@ implements IExternalRegistrationFeedResponse
 
     public function pageCount(): int
     {
-        return 1;
+        return count($this->payload);
     }
 }

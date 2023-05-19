@@ -63,11 +63,11 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
                 [
                     'timeout' => 120,
                     'http_errors' => true,
-                    RequestOptions::JSON => (string)new EncryptedPayload($summit->getApiFeedKey(), $request)
+                    RequestOptions::JSON => (new EncryptedPayload($summit->getExternalRegistrationFeedApiKey(), $request))->getPayload()
                 ]
             );
 
-            $response = new DecryptedResponse($summit->getApiFeedKey(), $response->getBody()->getContents());
+            $response = new DecryptedResponse($summit->getExternalRegistrationFeedApiKey(), $response->getBody()->getContents());
 
             Log::debug(sprintf("SamsungRegistrationAPI::checkUser POST %s response %s", $this->endpoint, $response));
 
@@ -106,11 +106,11 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
                 [
                     'timeout' => 120,
                     'http_errors' => true,
-                    RequestOptions::JSON => (string)new EncryptedPayload($summit->getApiFeedKey(), $request)
+                    RequestOptions::JSON => (new EncryptedPayload($summit->getExternalRegistrationFeedApiKey(), $request))->getPayload()
                 ]
             );
 
-            $response = new DecryptedResponse($summit->getApiFeedKey(), $response->getBody()->getContents());
+            $response = new DecryptedResponse($summit->getExternalRegistrationFeedApiKey(), $response->getBody()->getContents());
 
             Log::debug(sprintf("SamsungRegistrationAPI::checkEmail POST %s response %s", $this->endpoint, $response));
 
@@ -142,21 +142,19 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
 
             $client = new Client();
 
+
             // http://docs.guzzlephp.org/en/stable/request-options.html
             $response = $client->request('POST',
                 $this->endpoint,
                 [
                     'timeout' => 120,
                     'http_errors' => true,
-                    RequestOptions::JSON => (string) new EncryptedPayload($summit->getApiFeedKey(), $request)
+                    'headers' => ['Accept' => 'application/json'],
+                    RequestOptions::JSON => (new EncryptedPayload($summit->getExternalRegistrationFeedApiKey(), $request))->getPayload(),
                 ]
             );
 
-            $response = new DecryptedListResponse($summit->getApiFeedKey(), $response->getBody()->getContents(), $summit->getExternalSummitId());
-
-            Log::debug(sprintf("SamsungRegistrationAPI::userList POST %s response %s", $this->endpoint, $response));
-
-            return $response;
+            return new DecryptedListResponse($summit->getExternalRegistrationFeedApiKey(), $response->getBody()->getContents(), $summit->getExternalSummitId());;
         }
         catch (RequestException $ex) {
             Log::warning($ex->getMessage());

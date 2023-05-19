@@ -13,6 +13,7 @@
  **/
 
 use App\Services\Apis\Samsung\CheckUserRequest;
+use App\Services\Apis\Samsung\DecryptedListResponse;
 use App\Services\Apis\Samsung\DecryptedResponse;
 use App\Services\Apis\Samsung\EmptyResponse;
 use App\Services\Apis\Samsung\EncryptedPayload;
@@ -89,5 +90,25 @@ final class SamsungApiTest extends TestCase
         $data = '{"data":"123456789"}';
         $this->expectException(InvalidResponse::class);
         $response = new DecryptedResponse($summit->getApiFeedKey(), $data);
+    }
+
+    public function testList(){
+
+        $summit = new Summit();
+        $summit->setExternalSummitId(ForumTypes::SAFE);
+        $summit->setApiFeedKey("12345601234567890123456789012345");
+
+        $raw_data = <<<JSON
+[{"type":"emailCheck","userId":"0CBl5NpPDg5kcFXzXhHkSx","email":"jpmaxman@samsung.com","forum":"SFF \u0026 SAFE™ Forum","session":"SFF \u0026 SAFE™ 2023,Tech Session I - Advanced Technology and Design Infrastructure","country":"United States","firstName":"JP","lastName":"Maxwell","companyName":"Samsung","companyType":"Samsung","jobFunction":"Architect","jobTitle":"Architect","groupId":"Attendee","additional":"V5riM96EwXCfocPdp3WGeq,ReR7Jyqm5LEWYgWaIpiqiC"},
+{"type":"emailCheck","userId":"0CBl5NpPDg5kcFXzXhHkSx","email":"jpmaxman@samsung.com","forum":"SFF \u0026 SAFE™ Forum","session":"SFF \u0026 SAFE™ 2023,Tech Session I - Advanced Technology and Design Infrastructure","country":"United States","firstName":"JP","lastName":"Maxwell","companyName":"Samsung","companyType":"Samsung","jobFunction":"Architect","jobTitle":"Architect","groupId":"Attendee","additional":"V5riM96EwXCfocPdp3WGeq,ReR7Jyqm5LEWYgWaIpiqiC"}]
+JSON;
+        $enc = AES::encrypt($summit->getApiFeedKey(), $raw_data);
+        $data = ['data' => $enc->getData()];
+
+        $response = new DecryptedListResponse($summit->getApiFeedKey(), json_encode($data), $summit->getExternalSummitId());
+
+        foreach ($response as $index => $external_attendee) {
+            $this->assertTrue(!is_null($external_attendee));
+        }
     }
 }

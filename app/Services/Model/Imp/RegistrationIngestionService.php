@@ -347,7 +347,7 @@ final class RegistrationIngestionService
                                 $ticket = new SummitAttendeeTicket();
                                 $ticket->setExternalAttendeeId($external_attendee['id']);
                                 $ticket->setExternalOrderId($external_order['id']);
-                                $ticket->setBoughtDate(new \DateTime($external_attendee['created'], new \DateTimeZone('UTC')));
+                                $ticket->setBoughtDate(new \DateTime($external_attendee['created'] ?? 'now', new \DateTimeZone('UTC')));
                                 $ticket->setOrder($order);
                                 $ticket->generateNumber();
 
@@ -592,8 +592,8 @@ final class RegistrationIngestionService
                                         $badge_feature_name
                                     )
                                 );
-                                $badge_feature = $summit->getBadgeTypeByName($badge_feature_name);
-                                if(!is_null($badge_feature)){
+                                $badge_feature = $summit->getFeatureTypeByName($badge_feature_name);
+                                if(is_null($badge_feature)){
                                     // create it
                                     Log::debug
                                     (
@@ -610,6 +610,7 @@ final class RegistrationIngestionService
 
                                     $summit->addFeatureType($badge_feature);
                                 }
+
                                 Log::debug
                                 (
                                     sprintf
@@ -620,6 +621,7 @@ final class RegistrationIngestionService
                                         $ticket->getOwnerEmail()
                                     )
                                 );
+
                                 $ticket->getBadge()->addFeature($badge_feature);
                             }
                             Log::debug(sprintf("RegistrationIngestionService::ingestSummit processed attendee %s", $external_attendee['id']));

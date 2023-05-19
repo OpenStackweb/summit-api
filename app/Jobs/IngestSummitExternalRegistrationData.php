@@ -13,6 +13,7 @@
  **/
 use App\Jobs\Emails\Registration\ExternalIngestion\SuccessfulIIngestionEmail;
 use App\Jobs\Emails\Registration\ExternalIngestion\UnsuccessfulIIngestionEmail;
+use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
 use App\Services\Model\IRegistrationIngestionService;
 use App\Services\Model\ISummitOrderExtraQuestionTypeService;
 use App\Services\Model\ISummitTicketTypeService;
@@ -90,10 +91,13 @@ class IngestSummitExternalRegistrationData implements ShouldQueue
                 return;
             }
 
-            // first re seed ticket types
-            $ticketTypeService->seedSummitTicketTypesFromEventBrite($summit);
-            // then re seed extra questions
-            $extraQuestionTypeService->seedSummitOrderExtraQuestionTypesFromEventBrite($summit);
+            if($summit->getExternalRegistrationFeedType() == ISummitExternalRegistrationFeedType::Eventbrite){
+                // first re seed ticket types
+                $ticketTypeService->seedSummitTicketTypesFromEventBrite($summit);
+                // then re seed extra questions
+                $extraQuestionTypeService->seedSummitOrderExtraQuestionTypesFromEventBrite($summit);
+            }
+
             // and finally ingest all data
             $service->ingestSummit($summit);
 

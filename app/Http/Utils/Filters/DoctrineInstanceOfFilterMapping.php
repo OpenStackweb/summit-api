@@ -56,7 +56,6 @@ final class DoctrineInstanceOfFilterMapping extends FilterMapping implements IQu
             foreach ($value as $val) {
                 $where_components[] =  str_replace(":class_name", $this->translateClassName($val), $this->where);
             }
-
             return implode(sprintf(" %s ", $filter->getSameFieldOp()), $where_components);
         }
         return str_replace(":class_name", $this->translateClassName($filter->getValue()), $this->where);
@@ -69,18 +68,7 @@ final class DoctrineInstanceOfFilterMapping extends FilterMapping implements IQu
      */
     public function apply(QueryBuilder $query, FilterElement $filter): QueryBuilder
     {
-
-        $value = $filter->getValue();
-        if (is_array($value)) {
-            $where_components = [];
-            foreach ($value as $value_item) {
-                $where_components[] = str_replace(":class_name", $this->translateClassName($value_item), $this->where);
-            }
-            $where = implode(' OR ', $where_components);
-        } else {
-            $where = str_replace(":class_name", $this->translateClassName($value), $this->where);
-        }
-        return $query->andWhere($where);
+        return $query->andWhere($this->buildWhere($query, $filter));
     }
 
     /**

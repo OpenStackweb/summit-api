@@ -142,7 +142,7 @@ final class BaseServicesProvider extends ServiceProvider
             ISamsungRegistrationAPI::class,
             function(){
                 return new SamsungRegistrationAPI(
-                    Config::get("server.samsung_api_endpoint", null),
+                    Config::get("server.samsung_registration_api_endpoint", null),
                 );
             }
         );

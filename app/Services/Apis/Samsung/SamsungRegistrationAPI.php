@@ -152,11 +152,11 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
                 ]
             );
 
-            $response = new DecryptedResponse($summit->getApiFeedKey(), $response->getBody()->getContents());
+            $response = new DecryptedListResponse($summit->getApiFeedKey(), $response->getBody()->getContents(), $summit->getExternalSummitId());
 
             Log::debug(sprintf("SamsungRegistrationAPI::userList POST %s response %s", $this->endpoint, $response));
 
-            return $response->getPayload();
+            return $response;
         }
         catch (RequestException $ex) {
             Log::warning($ex->getMessage());

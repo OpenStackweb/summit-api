@@ -14,11 +14,11 @@
 
 
 /**
- * Class ForumTypes
+ * Class Groups
  * @package App\Services\Apis\Samsung
  */
-final class ForumTypes
+final class Groups
 {
-    const SFF = 'SFF';
-    const SAFE = 'SAFE™ Forum';
+    const Attendee = 'Attendee';
+    const BoothStaff = 'Booth Staff';
 }

@@ -14,6 +14,7 @@
 
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
+use App\Models\Foundation\Summit\Factories\SummitBadgeFeatureTypeFactory;
 use App\Models\Foundation\Summit\Factories\SummitOrderFactory;
 use App\Models\Foundation\Summit\Factories\SummitPromoCodeFactory;
 use App\Models\Foundation\Summit\Factories\SummitTicketTypeFactory;
@@ -35,6 +36,7 @@ use models\summit\Summit;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use models\summit\SummitAttendeeTicket;
+use models\summit\SummitBadgeFeatureType;
 use models\summit\SummitBadgeType;
 use models\summit\SummitOrderExtraQuestionAnswer;
 use models\summit\SummitRegistrationDiscountCode;
@@ -163,6 +165,7 @@ final class RegistrationIngestionService
 
             if (!$summit->hasDefaultBadgeType())
                 throw new ValidationException(sprintf("summit %s has not default badge type set", $summit_id));
+
             $shouldMarkProcess = false;
             do {
                 Log::debug(sprintf("RegistrationIngestionService::ingestSummit getting external attendees page %s", $page));
@@ -217,25 +220,28 @@ final class RegistrationIngestionService
 
                             $ticket_type = $summit->getTicketTypeByExternalId($ticket_class['id']);
                             if (is_null($ticket_type)) {
-                                // create ticket type if does not exists
+                                // create ticket type if it does not exists
                                 Log::debug(sprintf("RegistrationIngestionService::ingestSummit: ticket class %s does not exists", $ticket_class['id']));
                                 $ticket_type = SummitTicketTypeFactory::build(
                                     $summit, [
                                         'name' => $ticket_class['name'],
                                         'description' => $ticket_class['description'],
                                         'external_id' => $ticket_class['id'],
+                                        'quantity_2_sell' => $ticket_class['quantity_total'],
                                         'cost' => $ticket_class['cost']['major_value'],
                                         'currency' => $ticket_class['cost']['currency'],
-                                        'quantity_2_sell' => $ticket_class['quantity_total'],
                                     ]
                                 );
 
                                 $summit->addTicketType($ticket_type);
                             }
 
+                            // trying to get the order by external id
                             $order = $this->order_repository->getByExternalIdAndSummitLockExclusive($summit, $external_order['id']);
                             if (is_null($order)) {
+                                // create it if it does not exists ...
                                 Log::debug(sprintf("RegistrationIngestionService::ingestSummit: order %s does not exists", $external_order['id']));
+
                                 $owner_order_email = trim($external_order['email']);
                                 $order = SummitOrderFactory::build($summit, [
                                     'external_id' => $external_order['id'],
@@ -318,6 +324,7 @@ final class RegistrationIngestionService
                                 $summit->addOrder($order);
                             }
 
+                            // try to get the existent ticket
                             $ticket = $this->ticket_repository->getBySummitAndExternalOrderIdAndExternalAttendeeIdExclusiveLock
                             (
                                 $summit,
@@ -326,8 +333,17 @@ final class RegistrationIngestionService
                             );
 
                             if (is_null($ticket)) {
+                                // create it if it does not exists ..
+                                Log::debug
+                                (
+                                    sprintf
+                                    (
+                                        "RegistrationIngestionService::ingestSummit ticket %s - %s does not exists",
+                                        $external_order['id'],
+                                        $external_attendee['id']
+                                    )
+                                );
 
-                                Log::debug(sprintf("RegistrationIngestionService::ingestSummit ticket %s - %s does not exists", $external_order['id'], $external_attendee['id']));
                                 $ticket = new SummitAttendeeTicket();
                                 $ticket->setExternalAttendeeId($external_attendee['id']);
                                 $ticket->setExternalOrderId($external_order['id']);
@@ -345,11 +361,12 @@ final class RegistrationIngestionService
                                 $ticket->setTicketType($ticket_type);
                             }
 
-                            // default badge
+                            // default badge, if ticket it does not already has it
                             if (!$ticket->hasBadge()) {
                                 $ticket->setBadge(SummitBadgeType::buildBadgeFromType($default_badge_type));
                             }
 
+                            // check promo code ..,
                             if (!is_null($external_promo_code)) {
 
                                 Log::debug(sprintf("RegistrationIngestionService::ingestSummit processing promo code %s", json_encode($external_promo_code)));
@@ -482,6 +499,7 @@ final class RegistrationIngestionService
                                 ], $attendee_owner);
                                 $summit->addAttendee($attendee);
                             } else {
+                                // update it
                                 SummitAttendeeFactory::populate($summit, $attendee, [
                                     'first_name' => $first_name,
                                     'last_name' => $last_name,
@@ -490,6 +508,7 @@ final class RegistrationIngestionService
                                 ], $attendee_owner);
                             }
 
+                            // extra questions answers ...
                             $attendee->clearExtraQuestionAnswers();
                             $answers = $external_attendee['answers'] ?? [];
 
@@ -526,13 +545,17 @@ final class RegistrationIngestionService
                             }
 
                             $ticket->setOwner($attendee);
+                            // set ticket status
+
                             if (!$cancelled && !$refunded) {
                                 $ticket->setPaid();
                                 $order->setPaidStatus();
                             }
+
                             if ($cancelled) {
                                 $ticket->setCancelled();
                             }
+
                             if ($refunded) {
                                 try {
                                     if ($ticket->canRefund($ticket->getFinalAmount())) {
@@ -549,6 +572,7 @@ final class RegistrationIngestionService
                                     Log::warning($ex);
                                 }
                             }
+
                             // force the disclaimer
                             if ($summit->isRegistrationDisclaimerMandatory() && !$attendee->isDisclaimerAccepted())
                                 $attendee->setDisclaimerAcceptedDate(new \DateTime('now', new \DateTimeZone('UTC')));
@@ -557,7 +581,47 @@ final class RegistrationIngestionService
                             $order->addTicket($ticket);
                             $ticket->generateQRCode();
                             $ticket->generateHash();
+                            // if we have a badge feature to add ....
+                            $badge_feature_name = $external_attendee_profile['badge_feature'] ?? null;
+                            if(!is_null($badge_feature_name)){
+                                Log::debug
+                                (
+                                    sprintf
+                                    (
+                                        "RegistrationIngestionService::ingestSummit processing badge feature %s",
+                                        $badge_feature_name
+                                    )
+                                );
+                                $badge_feature = $summit->getBadgeTypeByName($badge_feature_name);
+                                if(!is_null($badge_feature)){
+                                    // create it
+                                    Log::debug
+                                    (
+                                        sprintf
+                                        (
+                                            "RegistrationIngestionService::ingestSummit badge feature %s does not exists , creating it ...",
+                                            $badge_feature_name
+                                        )
+                                    );
+                                    $badge_feature = SummitBadgeFeatureTypeFactory::build([
+                                        'name' => $badge_feature_name,
+                                        'description' => $badge_feature_name,
+                                    ]);
 
+                                    $summit->addFeatureType($badge_feature);
+                                }
+                                Log::debug
+                                (
+                                    sprintf
+                                    (
+                                        "RegistrationIngestionService::ingestSummit assigning badge feature %s to ticket external id %s owner %s",
+                                        $badge_feature_name,
+                                        $ticket->getExternalAttendeeId(),
+                                        $ticket->getOwnerEmail()
+                                    )
+                                );
+                                $ticket->getBadge()->addFeature($badge_feature);
+                            }
                             Log::debug(sprintf("RegistrationIngestionService::ingestSummit processed attendee %s", $external_attendee['id']));
                         });
                     } catch (Exception $ex) {

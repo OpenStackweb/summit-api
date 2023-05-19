@@ -22,8 +22,11 @@ interface ISummitExternalRegistrationFeedType
     const NoneType   = '';
     const Eventbrite = 'Eventbrite';
 
+    const Samsung = 'SAMSUNG';
+
     const ValidFeedTypes = [
         self::NoneType,
         self::Eventbrite,
+        self::Samsung,
     ];
 }

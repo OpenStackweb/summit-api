@@ -27,4 +27,12 @@ final class PayloadParamNames
     const Region = 'region';
 
     const Data = 'data';
+
+    const FirstName = 'firstName';
+
+    const LastName = 'lastName';
+
+    const CompanyName = 'companyName';
+
+    const Group = 'groupId';
 }

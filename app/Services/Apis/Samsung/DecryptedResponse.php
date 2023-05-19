@@ -40,7 +40,10 @@ final class DecryptedResponse extends AbstractPayload
         if($dec->hasError())
             throw new InvalidResponse($dec->getErrorMessage());
 
-        $this->payload = json_decode($dec->getData(), true);
+        $list = json_decode($dec->getData(), true);
+        if(!is_array($list))
+            throw new InvalidResponse(sprintf("invalid data field on response %s", $content));
+        $this->payload = count($list) == 1 ? $list[0] : $list;
     }
 
 }

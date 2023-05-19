@@ -13,6 +13,8 @@
  **/
 use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
 use App\Services\Apis\ExternalRegistrationFeeds\implementations\EventbriteRegistrationFeed;
+use App\Services\Apis\ExternalRegistrationFeeds\implementations\SamsungRegistrationFeed;
+use App\Services\Apis\Samsung\ISamsungRegistrationAPI;
 use models\summit\Summit;
 use GuzzleHttp\ClientInterface;
 use Illuminate\Support\Facades\App;
@@ -34,6 +36,10 @@ final class ExternalRegistrationFeedFactory implements IExternalRegistrationFeed
             case ISummitExternalRegistrationFeedType::Eventbrite:
                 return new EventbriteRegistrationFeed($summit, $client);
                 break;
+            case ISummitExternalRegistrationFeedType::Samsung:{
+                return new SamsungRegistrationFeed($summit, App::make(ISamsungRegistrationAPI::class), $client);
+            }
+            break;
         }
         return null;
     }

@@ -19,6 +19,7 @@ use App\Services\Apis\Samsung\EncryptedPayload;
 use App\Services\Apis\Samsung\ForumTypes;
 use App\Services\Apis\Samsung\InvalidResponse;
 use App\Services\Apis\Samsung\Regions;
+use App\Utils\AES;
 use models\summit\Summit;
 
 /**
@@ -34,7 +35,7 @@ final class SamsungApiTest extends TestCase
         $userId = '123456789';
         $region = Regions::US;
         $request = new CheckUserRequest($userId, $summit->getExternalSummitId(), $region);
-        $this->assertTrue($request == '{"type":"userCheck","userId":"123456789","forum":"SAFE™","region":"US"}');
+        $this->assertTrue($request == '{"type":"userCheck","userId":"123456789","forum":"SAFE™ Forum","region":"US"}');
     }
 
     public function testUserCheckRequestEnc(){
@@ -46,14 +47,14 @@ final class SamsungApiTest extends TestCase
         $userId = '123456789';
         $region = Regions::US;
         $request = new CheckUserRequest($userId, $summit->getExternalSummitId(), $region);
-        $this->assertTrue($request == '{"type":"userCheck","userId":"123456789","forum":"SAFE™","region":"US"}');
+        $this->assertTrue($request == '{"type":"userCheck","userId":"123456789","forum":"SAFE™ Forum","region":"US"}');
 
         $data = (string)new EncryptedPayload($summit->getApiFeedKey(), $request);
         $this->assertTrue(!empty($data));
 
         $response = new DecryptedResponse($summit->getApiFeedKey(), $data);
 
-        $this->assertTrue($response == '{"type":"userCheck","userId":"123456789","forum":"SAFE™","region":"US"}');
+        $this->assertTrue($response == '{"type":"userCheck","userId":"123456789","forum":"SAFE™ Forum   ","region":"US"}');
 
     }
 
@@ -67,8 +68,21 @@ final class SamsungApiTest extends TestCase
         $response = new DecryptedResponse($summit->getApiFeedKey(), $data);
     }
 
-    public function testInvalidResponse(){
+    public function testNonEmptyResponse(){
 
+        $summit = new Summit();
+        $summit->setExternalSummitId(ForumTypes::SAFE);
+        $summit->setApiFeedKey("12345601234567890123456789012345");
+
+        $raw_data = '[{"type":"emailCheck","userId":"0CBl5NpPDg5kcFXzXhHkSx","email":"jpmaxman@samsung.com","forum":"SFF \u0026 SAFE™ Forum","session":"SFF \u0026 SAFE™ 2023,Tech Session I - Advanced Technology and Design Infrastructure","country":"United States","firstName":"JP","lastName":"Maxwell","companyName":"Samsung","companyType":"Samsung","jobFunction":"Architect","jobTitle":"Architect","groupId":"Attendee","additional":"V5riM96EwXCfocPdp3WGeq,ReR7Jyqm5LEWYgWaIpiqiC"}]';
+        $enc = AES::encrypt($summit->getApiFeedKey(), $raw_data);
+        $data = ['data' => $enc->getData()];
+        $response = new DecryptedResponse($summit->getApiFeedKey(), json_encode($data));
+        $payload = $response->getPayload();
+        $this->assertTrue(!is_null($payload));
+    }
+
+    public function testInvalidResponse(){
         $summit = new Summit();
         $summit->setExternalSummitId(ForumTypes::SAFE);
         $summit->setApiFeedKey("12345601234567890123456789012345");

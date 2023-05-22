@@ -1456,7 +1456,7 @@ Route::group(array('prefix' => 'summits'), function () {
 
                 // allowed extra questions
                 Route::group(array('prefix' => 'allowed-extra-questions'), function () {
-                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getAttendeeExtraQuestions']);
+                    Route::get('', [ 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getAttendeeExtraQuestions']);
                 });
             });
         });

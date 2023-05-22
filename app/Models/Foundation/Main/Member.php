@@ -1715,6 +1715,13 @@ SQL;
         return $this->summit_registration_orders->matching($criteria)->count() > 0;
     }
 
+    public function getPadRegistrationOrdersForSummit(Summit $summit){
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->eq('summit', $summit))
+            ->andWhere(Criteria::expr()->eq('status',IOrderConstants::PaidStatus));
+        return $this->summit_registration_orders->matching($criteria);
+    }
+
     /**
      * @param int $order_id
      * @return SummitOrder|null

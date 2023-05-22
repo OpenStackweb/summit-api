@@ -1132,4 +1132,15 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     {
        return self::convertToCents($this->getRefundedAmount());
     }
+
+    /**
+     * @param SummitAttendee $attendee
+     * @return bool
+     */
+    public function hasTicketOwner(SummitAttendee $attendee):bool{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('owner', $attendee))
+            ->andWhere(Criteria::expr()->eq('status', IOrderConstants::PaidStatus));
+        return $this->tickets->matching($criteria)->count() > 0;
+    }
 }

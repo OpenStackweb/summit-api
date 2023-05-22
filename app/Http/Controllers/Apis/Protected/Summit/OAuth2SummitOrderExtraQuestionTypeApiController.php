@@ -13,26 +13,24 @@
  **/
 
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderExtraQuestionTypeRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitOrderExtraQuestionTypeService;
-use Illuminate\Support\Facades\Log;
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
-use models\summit\SummitAttendee;
+use models\summit\SummitOrder;
 use models\summit\SummitOrderExtraQuestionTypeConstants;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterElement;
-use utils\Order;
 use utils\PagingInfo;
 use utils\PagingResponse;
-use App\Http\Controllers\RequestProcessor;
 
 /**
  * Class OAuth2SummitOrderExtraQuestionTypeApiController
@@ -488,6 +486,32 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
 
         $attendee = $summit->getAttendeeById(intval($attendee_id));
         if (is_null($attendee)) return $this->error404();
+
+        // authz
+        // check that we have a current member ( not service account )
+        $current_member = $this->getResourceServerContext()->getCurrentUser();
+        if(is_null($current_member))
+            return $this->error401();
+        // check is user is admin or its on any pre - authorized group
+        $auth = $current_member->isAdmin() || $summit->isSummitAdmin($current_member) || $current_member->isOnGroup(IGroup::BadgePrinters);
+
+        if(!$auth){
+            // check if current member is the attendee
+            $auth = $attendee->getEmail() == $current_member->getEmail() || $attendee->getMemberId() == $current_member->getId();
+            if(!$auth){
+                // check if the attendee is under some order of the current member
+                foreach($current_member->getPadRegistrationOrdersForSummit($summit) as $order){
+                    if(!$order instanceof SummitOrder) continue;
+                    if($order->hasTicketOwner($attendee)){
+                        $auth = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if(!$auth)
+            return $this->error401();
 
         return $this->_getAll(
             function () {

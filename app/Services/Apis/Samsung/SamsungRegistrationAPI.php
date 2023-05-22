@@ -67,7 +67,12 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
                 ]
             );
 
-            $response = new DecryptedResponse($summit->getExternalRegistrationFeedApiKey(), $response->getBody()->getContents());
+            $response = new DecryptedSingleResponse
+            (
+                $summit->getExternalRegistrationFeedApiKey(),
+                $response->getBody()->getContents(),
+                $summit->getExternalSummitId()
+            );
 
             Log::debug(sprintf("SamsungRegistrationAPI::checkUser POST %s response %s", $this->endpoint, $response));
 
@@ -110,7 +115,12 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
                 ]
             );
 
-            $response = new DecryptedResponse($summit->getExternalRegistrationFeedApiKey(), $response->getBody()->getContents());
+            $response = new DecryptedSingleResponse
+            (
+                $summit->getExternalRegistrationFeedApiKey(),
+                $response->getBody()->getContents(),
+                $summit->getExternalSummitId()
+            );
 
             Log::debug(sprintf("SamsungRegistrationAPI::checkEmail POST %s response %s", $this->endpoint, $response));
 
@@ -154,7 +164,12 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
                 ]
             );
 
-            return new DecryptedListResponse($summit->getExternalRegistrationFeedApiKey(), $response->getBody()->getContents(), $summit->getExternalSummitId());;
+            return new DecryptedListResponse
+            (
+                $summit->getExternalRegistrationFeedApiKey(),
+                $response->getBody()->getContents(),
+                $summit->getExternalSummitId()
+            );
         }
         catch (RequestException $ex) {
             Log::warning($ex->getMessage());

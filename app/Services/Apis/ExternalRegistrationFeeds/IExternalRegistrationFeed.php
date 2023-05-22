@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use DateTime;
+use models\summit\SummitAttendeeTicket;
+
 /**
  * Interface IExternalRegistrationFeed
  * @package App\Services\Apis\ExternalRegistrationFeeds
@@ -24,4 +26,22 @@ interface IExternalRegistrationFeed
      * @return IExternalRegistrationFeedResponse|null
      */
     public function getAttendees(int $page = 1, ?DateTime $changed_since = null):?IExternalRegistrationFeedResponse;
+
+    /**
+     * @param string $qr_code_content
+     * @return bool
+     */
+    public function isValidQRCode(string $qr_code_content):bool;
+
+    /**
+     * @param string $qr_code_content
+     * @return mixed
+     */
+    public function getAttendeeByQRCode(string $qr_code_content);
+
+    /**
+     * @param string $email
+     * @return mixed
+     */
+    public function getAttendeeByEmail(string $email);
 }

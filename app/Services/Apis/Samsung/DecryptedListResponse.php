@@ -14,7 +14,6 @@
 
 use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedResponse;
 use App\Utils\AES;
-use models\summit\SummitTicketType;
 
 /**
  * Class DecryptedListResponse
@@ -27,10 +26,6 @@ implements IExternalRegistrationFeedResponse
     private $position = 0;
 
     /**
-     * @var string
-     */
-    private $forum;
-    /**
      * @param string $key
      * @param string $content
      * @param string $forum
@@ -39,8 +34,10 @@ implements IExternalRegistrationFeedResponse
      */
     public function __construct(string $key, string $content, string $forum){
 
+        parent::__construct($forum);
+
         $this->position  = 0;
-        $this->forum     = $forum;
+
         $response = json_decode($content, true);
         if(is_array($response) && !count($response))
             throw new EmptyResponse("response not found");
@@ -60,37 +57,11 @@ implements IExternalRegistrationFeedResponse
 
     public function current()
     {
-        $res =  $this->payload[$this->position];
-
-        // map fields
-        return [
-            'id' => $res[PayloadParamNames::UserId],
-            'profile' => [
-                'first_name'=> $res[PayloadParamNames::FirstName],
-                'last_name' => $res[PayloadParamNames::LastName],
-                'email' => $res[PayloadParamNames::Email],
-                'company' => $res[PayloadParamNames::CompanyName],
-                'badge_feature' => $res[PayloadParamNames::Group],
-            ],
-            'ticket_class' => [
-                'id'=> $this->forum,
-                'name'=> $this->forum,
-                'description'=> $this->forum,
-                'quantity_total' => SummitTicketType::QtyInfinite, // infinite
-                'cost' =>[
-                    'major_value' => SummitTicketType::AmountFree, // free
-                    'currency' => SummitTicketType::USD_Currency,
-                ]
-            ],
-            'order' => [
-                'id' => $res[PayloadParamNames::UserId],
-                'first_name'=> $res[PayloadParamNames::FirstName],
-                'last_name' => $res[PayloadParamNames::LastName],
-                'email' => $res[PayloadParamNames::Email]
-            ],
-            'refunded' => false,
-            'cancelled' => false,
-        ];
+        return SamsungRecordSerializer::serialize
+        (
+            $this->payload[$this->position],
+            $this->forum
+        );
     }
 
     public function next()

@@ -18,6 +18,7 @@ use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedRespons
 use App\Services\Apis\Samsung\EmptyResponse;
 use App\Services\Apis\Samsung\InvalidResponse;
 use App\Services\Apis\Samsung\ISamsungRegistrationAPI;
+use App\Services\Apis\Samsung\PayloadParamNames;
 use App\Services\Apis\Samsung\Regions;
 use DateTime;
 use GuzzleHttp\ClientInterface;
@@ -80,5 +81,37 @@ final class SamsungRegistrationFeed
             Log::warning($ex->getMessage());
             throw $ex;
         }
+    }
+
+    public function isValidQRCode(string $qr_code_content): bool
+    {
+        $qr_json = json_decode($qr_code_content, true);
+        if(!$qr_json) return false;
+        if(!isset($qr_json[PayloadParamNames::UserId])) return false;
+        return true;
+    }
+
+    /**
+     * @param string $qr_code_content
+     * @return array|mixed
+     */
+    public function getAttendeeByQRCode(string $qr_code_content)
+    {
+        $qr_json = json_decode($qr_code_content, true);
+        if(!$qr_json) return [];
+        if(!isset($qr_json[PayloadParamNames::UserId])) return [];
+
+        return $this->api->checkUser($this->summit, $qr_json[PayloadParamNames::UserId]);
+    }
+
+    /**
+     * @param string $email
+     * @return mixed
+     */
+    public function getAttendeeByEmail(string $email)
+    {
+        $email = trim($email);
+        if(!filter_var($email, FILTER_VALIDATE_EMAIL)) return [];
+        return $this->api->checkEmail($this->summit, $email);
     }
 }

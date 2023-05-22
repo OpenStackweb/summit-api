@@ -14,7 +14,7 @@
 
 use App\Services\Apis\Samsung\CheckUserRequest;
 use App\Services\Apis\Samsung\DecryptedListResponse;
-use App\Services\Apis\Samsung\DecryptedResponse;
+use App\Services\Apis\Samsung\DecryptedSingleResponse;
 use App\Services\Apis\Samsung\EmptyResponse;
 use App\Services\Apis\Samsung\EncryptedPayload;
 use App\Services\Apis\Samsung\ForumTypes;
@@ -53,7 +53,7 @@ final class SamsungApiTest extends TestCase
         $data = (string)new EncryptedPayload($summit->getApiFeedKey(), $request);
         $this->assertTrue(!empty($data));
 
-        $response = new DecryptedResponse($summit->getApiFeedKey(), $data);
+        $response = new DecryptedSingleResponse($summit->getApiFeedKey(), $data);
 
         $this->assertTrue($response == '{"type":"userCheck","userId":"123456789","forum":"SAFE™ Forum   ","region":"US"}');
 
@@ -66,7 +66,7 @@ final class SamsungApiTest extends TestCase
         $summit->setApiFeedKey("12345601234567890123456789012345");
         $data = "[]";
         $this->expectException(EmptyResponse::class);
-        $response = new DecryptedResponse($summit->getApiFeedKey(), $data);
+        $response = new DecryptedSingleResponse($summit->getApiFeedKey(), $data);
     }
 
     public function testNonEmptyResponse(){
@@ -78,7 +78,7 @@ final class SamsungApiTest extends TestCase
         $raw_data = '[{"type":"emailCheck","userId":"0CBl5NpPDg5kcFXzXhHkSx","email":"jpmaxman@samsung.com","forum":"SFF \u0026 SAFE™ Forum","session":"SFF \u0026 SAFE™ 2023,Tech Session I - Advanced Technology and Design Infrastructure","country":"United States","firstName":"JP","lastName":"Maxwell","companyName":"Samsung","companyType":"Samsung","jobFunction":"Architect","jobTitle":"Architect","groupId":"Attendee","additional":"V5riM96EwXCfocPdp3WGeq,ReR7Jyqm5LEWYgWaIpiqiC"}]';
         $enc = AES::encrypt($summit->getApiFeedKey(), $raw_data);
         $data = ['data' => $enc->getData()];
-        $response = new DecryptedResponse($summit->getApiFeedKey(), json_encode($data));
+        $response = new DecryptedSingleResponse($summit->getApiFeedKey(), json_encode($data));
         $payload = $response->getPayload();
         $this->assertTrue(!is_null($payload));
     }
@@ -89,7 +89,7 @@ final class SamsungApiTest extends TestCase
         $summit->setApiFeedKey("12345601234567890123456789012345");
         $data = '{"data":"123456789"}';
         $this->expectException(InvalidResponse::class);
-        $response = new DecryptedResponse($summit->getApiFeedKey(), $data);
+        $response = new DecryptedSingleResponse($summit->getApiFeedKey(), $data);
     }
 
     public function testList(){

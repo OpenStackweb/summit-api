@@ -1,4 +1,4 @@
-<?php namespace App\Services\Apis\Samsung;
+<?php namespace App\Services\Model\Strategies\TicketFinder\Strategies;
 /*
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,35 +12,20 @@
  * limitations under the License.
  **/
 
+use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategy;
+use models\summit\SummitAttendeeTicket;
 
 /**
- * Class AbstractPayloadRequest
- * @package App\Services\Apis\Samsung
+ * Class TicketFinderByNumberStrategy
+ * @package App\Services\Model\Strategies\TicketFinder\Strategies
  */
-abstract class AbstractPayload
+final class TicketFinderByNumberStrategy
+    extends AbstractTicketFinderStrategy
+    implements ITicketFinderStrategy
 {
-    protected $payload = [];
 
-    /**
-     * @var string
-     */
-    protected $forum;
-
-    /**
-     * @param string $forum
-     */
-    function __construct(string $forum)
+    public function find(): ?SummitAttendeeTicket
     {
-        $this->forum = $forum;
-    }
-
-    public function __toString()
-    {
-        return json_encode($this->payload, JSON_UNESCAPED_UNICODE);
-    }
-
-    public function getPayload(): array
-    {
-        return $this->payload;
+        return $this->repository->getByNumber(strval($this->ticket_criteria));
     }
 }

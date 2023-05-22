@@ -12,23 +12,24 @@
  * limitations under the License.
  **/
 
-
 use App\Utils\AES;
 
 /**
  * Class DecryptedResponse
  * @package App\Services\Apis\Samsung
  */
-final class DecryptedResponse extends AbstractPayload
+final class DecryptedSingleResponse extends AbstractPayload
 {
     /**
      * @param string $key
      * @param string $content
+     * @param string $forum
      * @throws EmptyResponse
      * @throws InvalidResponse
      */
-    public function __construct(string $key, string $content){
+    public function __construct(string $key, string $content,  string $forum){
 
+        parent::__construct($forum);
         $response = json_decode($content, true);
         if(is_array($response) && !count($response))
             throw new EmptyResponse("response not found");
@@ -44,6 +45,12 @@ final class DecryptedResponse extends AbstractPayload
         if(!is_array($list))
             throw new InvalidResponse(sprintf("invalid data field on response %s", $content));
         $this->payload = count($list) == 1 ? $list[0] : $list;
+    }
+
+
+    public function getPayload(): array
+    {
+        return SamsungRecordSerializer::serialize($this->payload, $this->forum);
     }
 
 }

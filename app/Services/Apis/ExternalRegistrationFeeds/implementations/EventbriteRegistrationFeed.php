@@ -59,4 +59,20 @@ final class EventbriteRegistrationFeed extends AbstractExternalFeed
             throw $ex;
         }
     }
+
+    public function isValidQRCode(string $qr_code_content): bool
+    {
+        // TODO: Implement isValidQRCode() method.
+        throw new \Exception("Not Implemented");
+    }
+
+    public function getAttendeeByQRCode(string $qr_code_content)
+    {
+        throw new \Exception("Not Implemented");
+    }
+
+    public function getAttendeeByEmail(string $email)
+    {
+        throw new \Exception("Not Implemented");
+    }
 }

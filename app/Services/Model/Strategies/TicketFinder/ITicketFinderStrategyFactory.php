@@ -1,6 +1,6 @@
-<?php namespace App\Services\Model;
-/**
- * Copyright 2019 OpenStack Foundation
+<?php namespace App\Services\Model\Strategies\TicketFinder;
+/*
+ * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,29 +12,21 @@
  * limitations under the License.
  **/
 use models\summit\Summit;
-use models\summit\SummitAttendee;
 
 /**
- * Interface IRegistrationIngestionService
- * @package App\Services\Model
+ * Interface ITicketFinderStrategyFactory
+ * @package App\Services\Model\Strategies\TicketFinder
  */
-interface IRegistrationIngestionService
+interface ITicketFinderStrategyFactory
 {
-
-    public function ingestAllSummits():void;
-
     /**
      * @param Summit $summit
-     * @return array
-     * @throws \Exception
+     * @param $ticket_criteria
+     * @return ITicketFinderStrategy|null
      */
-    public function ingestSummit(Summit $summit):void;
-
-    /**
-     * @param $summit_id
-     * @param $index
-     * @param $external_attendee
-     * @return void
-     */
-    public function ingestExternalAttendee($summit_id, $index, $external_attendee):?SummitAttendee;
+    public function build
+    (
+        Summit $summit,
+        $ticket_criteria
+    ):?ITicketFinderStrategy;
 }

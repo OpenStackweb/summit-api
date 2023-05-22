@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
 use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedFactory;
 use App\Services\Model\IRegistrationIngestionService;
 use App\Services\Model\Strategies\TicketFinder\Strategies\TicketFinderByExternalFeedStrategy;
@@ -19,6 +20,7 @@ use App\Services\Model\Strategies\TicketFinder\Strategies\TicketFinderByIdStrate
 use App\Services\Model\Strategies\TicketFinder\Strategies\TicketFinderByNumberStrategy;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
+use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\Summit;
 use models\summit\SummitAttendeeBadge;
@@ -30,7 +32,7 @@ use Illuminate\Support\Facades\App;
 final class TicketFinderStrategyFactory
     implements ITicketFinderStrategyFactory
 {
-    private $repository;
+    private $ticket_repository;
 
     /**
      * @var IExternalRegistrationFeedFactory
@@ -38,16 +40,24 @@ final class TicketFinderStrategyFactory
     private $external_registration_feed_factory;
 
     /**
+     * @var ISummitAttendeeRepository
+     */
+    private $attendee_repository;
+
+    /**
      * @param IExternalRegistrationFeedFactory $external_registration_feed_factory
+     * @param ISummitAttendeeRepository $attendee_repository
      * @param ISummitAttendeeTicketRepository $repository
      */
     public function __construct
     (
         IExternalRegistrationFeedFactory $external_registration_feed_factory,
-        ISummitAttendeeTicketRepository $repository
+        ISummitAttendeeRepository $attendee_repository,
+        ISummitAttendeeTicketRepository $ticket_repository
     )
     {
-        $this->repository = $repository;
+        $this->ticket_repository = $ticket_repository;
+        $this->attendee_repository = $attendee_repository;
         $this->external_registration_feed_factory = $external_registration_feed_factory;
     }
 
@@ -59,9 +69,22 @@ final class TicketFinderStrategyFactory
      */
     public function build(Summit $summit, $ticket_criteria): ?ITicketFinderStrategy
     {
-        Log::debug(sprintf("TicketFinderStrategyFactory::build summit %s ticket_criteria %s", $summit->getId(), $ticket_criteria));
+        $registrationFeedType = $summit->getExternalRegistrationFeedType();
+        Log::debug
+        (
+            sprintf
+            (
+                "TicketFinderStrategyFactory::build summit %s ticket_criteria %s registrationFeedType %s",
+                $summit->getId(),
+                $ticket_criteria,
+                $registrationFeedType
+            )
+        );
+
         if(is_null($ticket_criteria)) return null;
+
         if(is_numeric($ticket_criteria)) {
+
             Log::debug
             (
                 sprintf
@@ -74,18 +97,31 @@ final class TicketFinderStrategyFactory
 
             return new TicketFinderByIdStrategy
             (
-                $this->repository,
+                $this->ticket_repository,
                 $summit,
                 intval($ticket_criteria)
             );
         }
+
         // check if its base 64 encoded
         if (is_string($ticket_criteria)) {
             if(base64_decode(strval($ticket_criteria), true) !== false){
                 // its a QR code on base 64
                 // get by qr code
                 $qr_code_content = base64_decode(strval($ticket_criteria), true);
+
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "TicketFinderStrategyFactory::build summit %s ticket_criteria %s using TicketFinderByQRCodeStrategy",
+                        $summit->getId(),
+                        $qr_code_content
+                    )
+                );
+
                 try {
+
                     $fields = SummitAttendeeBadge::parseQRCode($qr_code_content);
                     $prefix = $fields['prefix'];
                     if ($summit->getBadgeQRPrefix() != $prefix)
@@ -100,17 +136,37 @@ final class TicketFinderStrategyFactory
                         );
 
                     $ticket_number = $fields['ticket_number'];
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "TicketFinderStrategyFactory::build summit %s ticket_criteria %s using TicketFinderByNumberStrategy",
+                            $summit->getId(),
+                            $ticket_number
+                        )
+                    );
+
                     return new TicketFinderByNumberStrategy
                     (
-                        $this->repository,
+                        $this->ticket_repository,
                         $summit,
                         $ticket_number
                     );
                 }
                 catch(ValidationException $ex){
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "TicketFinderStrategyFactory::build summit %s ticket_criteria %s using TicketFinderByExternalFeedStrategy",
+                            $summit->getId(),
+                            $qr_code_content
+                        )
+                    );
+
                     // is not a valid Native QR code , check if we have set any registration external feed
-                    $external_feed = $summit->getExternalRegistrationFeedType();
-                    if(!empty($external_feed)){
+
+                    if(!empty($registrationFeedType) && $registrationFeedType !== ISummitExternalRegistrationFeedType::NoneType){
                         $feed = $this->external_registration_feed_factory->build($summit);
                         if(is_null($feed)) return null;
 
@@ -121,7 +177,8 @@ final class TicketFinderStrategyFactory
                         (
                             App::make(IRegistrationIngestionService::class),
                             $feed,
-                            $this->repository,
+                            $this->attendee_repository,
+                            $this->ticket_repository,
                             $summit,
                             $qr_code_content
                         );
@@ -129,9 +186,22 @@ final class TicketFinderStrategyFactory
 
                 }
             }
+            else if(filter_var($ticket_criteria, FILTER_VALIDATE_EMAIL) && $registrationFeedType !== ISummitExternalRegistrationFeedType::NoneType){
+                $feed = $this->external_registration_feed_factory->build($summit);
+                if(is_null($feed)) return null;
+                return new TicketFinderByExternalFeedStrategy
+                (
+                    App::make(IRegistrationIngestionService::class),
+                    $feed,
+                    $this->attendee_repository,
+                    $this->ticket_repository,
+                    $summit,
+                    $ticket_criteria
+                );
+            }
             return new TicketFinderByNumberStrategy
             (
-                $this->repository,
+                $this->ticket_repository,
                 $summit,
                 $ticket_criteria
             );

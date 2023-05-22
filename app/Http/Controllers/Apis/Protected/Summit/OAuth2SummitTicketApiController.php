@@ -13,6 +13,7 @@
  **/
 
 use App\Http\Utils\EpochCellFormatter;
+use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitOrderService;
@@ -31,6 +32,7 @@ use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterElement;
+use utils\PagingResponse;
 
 /**
  * Class OAuth2SummitTicketApiController
@@ -78,6 +80,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         $this->service = $service;
     }
 
+    use ParseAndGetFilter;
+
     /**
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
@@ -111,11 +115,11 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'has_badge' => ['=='],
                     'view_type_id' => ['=='],
                     'promo_code_id' => ['=='],
-                    'promo_code' => ['==','@@', '=@'],
+                    'promo_code' => ['==', '@@', '=@'],
                     'promo_code_description' => ['@@', '=@'],
                     'promo_code_tag_id' => ['=='],
-                    'promo_code_tag' => ['==','@@', '=@'],
-                    'final_amount' => ['==', '<>','>=','>'],
+                    'promo_code_tag' => ['==', '@@', '=@'],
+                    'final_amount' => ['==', '<>', '>=', '>'],
                 ];
             },
             function () {
@@ -172,6 +176,51 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
 
     /**
      * @param $summit_id
+     * @return mixed
+     */
+    public function getAllBySummitExternal($summit_id)
+    {
+        return $this->processRequest(function () use ($summit_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit))
+                return $this->error404();
+
+            $external_feed_type = $summit->getExternalRegistrationFeedType();
+            if (is_null($external_feed_type) ||
+            $external_feed_type == ISummitExternalRegistrationFeedType::NoneType)
+                return $this->error404();
+
+            $filter = self::getFilter(
+                [ 'owner_email' => ['==']],
+                ['owner_email' => 'sometimes|string']
+            );
+
+            $filterVal = $filter->getUniqueFilter('owner_email');
+            if(is_null($filterVal)) return $this->error400();
+
+            $ticket = $this->service->getTicket($summit, $filterVal->getRawValue());
+
+            if(is_null($ticket)) return $this->error404();
+
+            $response = new PagingResponse
+            (
+                1,
+                1,
+                1,
+                1,
+                [$ticket]
+            );
+
+            return $this->ok($response->toArray(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
+
+    /**
+     * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     public function getAllBySummitCSV($summit_id)
@@ -203,11 +252,11 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'has_badge' => ['=='],
                     'view_type_id' => ['=='],
                     'promo_code_id' => ['=='],
-                    'promo_code' => ['==','@@', '=@'],
-                    'promo_code_tag' => ['==','@@', '=@'],
+                    'promo_code' => ['==', '@@', '=@'],
+                    'promo_code_tag' => ['==', '@@', '=@'],
                     'promo_code_tag_id' => ['=='],
                     'promo_code_description' => ['@@', '=@'],
-                    'final_amount' => ['==', '<>','>=','>'],
+                    'final_amount' => ['==', '<>', '>=', '>'],
                 ];
             },
             function () {
@@ -458,7 +507,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     'status' => ['==', '<>'],
                     'order_owner_id' => ['==', '<>'],
                     'has_order_owner' => ['=='],
-                    'final_amount' => ['==', '<>','>=','>'],
+                    'final_amount' => ['==', '<>', '>=', '>'],
                 ];
             },
             function () {

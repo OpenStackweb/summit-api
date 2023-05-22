@@ -1355,6 +1355,8 @@ Route::group(array('prefix' => 'summits'), function () {
         // tickets
         Route::group(['prefix' => 'tickets'], function () {
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@getAllBySummit']);
+            Route::get('external', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@getAllBySummitExternal']);
+
             Route::group(['prefix' => 'csv'], function () {
                 Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@getAllBySummitCSV']);
                 Route::get('template', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@getImportTicketDataTemplate']);

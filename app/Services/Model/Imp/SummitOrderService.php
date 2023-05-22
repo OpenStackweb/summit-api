@@ -2461,14 +2461,14 @@ final class SummitOrderService
     /**
      * @param Summit $summit
      * @param $ticket_id
-     * @return SummitAttendeeTicket
+     * @return SummitAttendeeTicket|null
      * @throws \Exception
      */
-    public function getTicket(Summit $summit, $ticket_id): SummitAttendeeTicket
+    public function getTicket(Summit $summit, $ticket_id): ?SummitAttendeeTicket
     {
         return $this->tx_service->transaction(function () use ($summit, $ticket_id) {
 
-            // depending on ticket id format ( string / b64 or numeric we will be using the proper strategy to find it)
+            Log::debug(sprintf("SummitOrderService::getTicket summit %s ticket id %s", $summit->getId(), $ticket_id));
 
             $strategy = $this->ticket_finder_strategy_factory->build($summit, $ticket_id);
             if(is_null($strategy))
@@ -2478,9 +2478,11 @@ final class SummitOrderService
 
             if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
                 throw new EntityNotFoundException("Ticket not found.");
+
             if ($ticket->getOrder()->getSummitId() != $summit->getId()) {
                 throw new ValidationException("Ticket does not belong to summit.");
             }
+
             return $ticket;
         });
     }

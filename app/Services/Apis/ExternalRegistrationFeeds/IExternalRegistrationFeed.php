@@ -35,6 +35,12 @@ interface IExternalRegistrationFeed
 
     /**
      * @param string $qr_code_content
+     * @return string|null
+     */
+    public function getExternalUserIdFromQRCode(string $qr_code_content):?string;
+
+    /**
+     * @param string $qr_code_content
      * @return mixed
      */
     public function getAttendeeByQRCode(string $qr_code_content);

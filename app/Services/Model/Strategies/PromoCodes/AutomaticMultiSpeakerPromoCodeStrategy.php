@@ -83,7 +83,7 @@ final class AutomaticMultiSpeakerPromoCodeStrategy implements IPromoCodeStrategy
         return $this->tx_service->transaction(function () use ($speaker) {
             $code = null;
             do {
-                $code = $this->code_generator->generate($this->summit, 6);
+                $code = $this->code_generator->generate($this->summit);
             } while($this->repository->getByCode($code) != null);
 
             $promo_code_spec = $this->data["promo_code_spec"];

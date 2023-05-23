@@ -22,8 +22,7 @@ interface IPromoCodeGenerator
 {
     /**
      * @param Summit $summit
-     * @param int $length
      * @return string
      */
-    public function generate(Summit $summit, int $length): string;
+    public function generate(Summit $summit): string;
 }

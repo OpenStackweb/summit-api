@@ -119,22 +119,11 @@ class SummitProposedScheduleAllowedLocation extends SilverstripeBaseModel
     /**
      * @param \DateTime $day
      * @param int|null $opening_hour
-     * @param int|null $to
+     * @param int|null $closing_hour
      * @return SummitProposedScheduleAllowedDay|null
      * @throws ValidationException
      */
     public function addAllowedTimeFrame(\DateTime $day, ?int $opening_hour = null, ?int $closing_hour = null):?SummitProposedScheduleAllowedDay{
-        if(!$this->location->getSummit()->dayIsOnSummitPeriod($day))
-            throw new ValidationException
-            (
-                sprintf
-                (
-                    "Day %s is not on summit period( %s - %s).",
-                    $day->format("Y-m-d"),
-                    $this->location->getSummit()->getLocalBeginDate()->format("Y-m-d"),
-                    $this->location->getSummit()->getLocalEndDate()->format("Y-m-d"),
-                )
-            );
 
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('day', $day));

@@ -17,6 +17,7 @@ use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedL
 use App\Services\Model\AbstractService;
 use App\Services\Model\ISummitProposedScheduleAllowedLocationService;
 use models\exceptions\EntityNotFoundException;
+use models\exceptions\ValidationException;
 use models\summit\PresentationCategory;
 
 /**
@@ -78,10 +79,25 @@ implements ISummitProposedScheduleAllowedLocationService
             if(is_null($location))
                 throw new EntityNotFoundException(sprintf("Allowed Location %s not found", $allowed_location_id));
 
+            $summit = $track->getSummit();
             $day = intval($payload['day']);
-            $day = new \DateTime("@$day");
-            $day->setTime(0,0,0);
-            $day->setTimezone(new \DateTimeZone('UTC'));
+            $day = new \DateTime("@$day", new \DateTimeZone("UTC"));
+            $localDay = $summit->convertDateFromUTC2TimeZone($day);
+            // reset time on local day
+            $localDay->setTime(0,0,0);
+            $day = $summit->convertDateFromTimeZone2UTC($localDay);
+
+            if(!$summit->dayIsOnSummitPeriod($day, false))
+                throw new ValidationException
+                (
+                    sprintf
+                    (
+                        "Day %s is not on summit period( %s - %s).",
+                        $day->format("Y-m-d"),
+                        $summit->getLocalBeginDate()->format("Y-m-d"),
+                        $summit->getLocalEndDate()->format("Y-m-d"),
+                    )
+                );
 
             return $location->addAllowedTimeFrame($day, $payload['opening_hour'] ?? null, $payload['closing_hour'] ?? null);
         });

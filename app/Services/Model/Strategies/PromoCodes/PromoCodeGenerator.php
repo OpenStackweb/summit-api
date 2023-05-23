@@ -26,35 +26,44 @@ final class PromoCodeGenerator implements IPromoCodeGenerator
 {
     const VsChar = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+    const Length = 6;
+
     /**
      * @var ICacheService
      */
     private $cache_service;
 
     /**
-     * @param ICacheService $cache_service
+     * @var int
      */
-    public function __construct(ICacheService $cache_service)
+    private $length;
+
+    /**
+     * @param ICacheService $cache_service
+     * @param int $length
+     */
+    public function __construct(ICacheService $cache_service, int $length = self::Length)
     {
         $this->cache_service = $cache_service;
+        $this->length = $length;
     }
 
-    private function generateValue(int $length): string
+    private function generateValue(): string
     {
         // calculate value
         // entropy(SHANNON FANO Approx) len * log(count(VsChar))/log(2) = bits of entropy
-        return Rand::getString($length, self::VsChar);
+        return Rand::getString($this->length, self::VsChar);
     }
 
     /**
      * @inheritDoc
      */
-    public function generate(Summit $summit, int $length): string
+    public function generate(Summit $summit): string
     {
         do {
-            $key = sprintf("%s_%s", $summit->getName(), $this->generateValue($length));
+            $key = strtoupper(sprintf("%s_%s", $summit->getRegistrationSlugPrefix(), $this->generateValue()));
         } while(!$this->cache_service->addSingleValue($key, $key));
 
-        return strtoupper($key);
+        return $key;
     }
 }

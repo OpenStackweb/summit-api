@@ -16,6 +16,8 @@ use App\Services\Model\Strategies\PromoCodes\IPromoCodeGenerator;
 use App\Services\Model\Strategies\PromoCodes\PromoCodeGenerator;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
+use libs\utils\ICacheService;
+
 /**
  * Class UtilsProvider
  * @package App\Services\Utils
@@ -35,6 +37,11 @@ final class UtilsProvider extends ServiceProvider
      */
     public function register()
     {
-        App::singleton(IPromoCodeGenerator::class, PromoCodeGenerator::class);
+        App::singleton(IPromoCodeGenerator::class, function () {
+            return new PromoCodeGenerator(
+                App::make(ICacheService::class),
+                PromoCodeGenerator::Length
+            );
+        });
     }
 }

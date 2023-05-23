@@ -114,4 +114,15 @@ final class SamsungRegistrationFeed
         if(!filter_var($email, FILTER_VALIDATE_EMAIL)) return [];
         return $this->api->checkEmail($this->summit, $email);
     }
+
+    /**
+     * @param string $qr_code_content
+     * @return string|null
+     */
+    public function getExternalUserIdFromQRCode(string $qr_code_content): ?string
+    {
+        $qr_json = json_decode($qr_code_content, true);
+        if(!$qr_json) return null;
+        return $qr_json[PayloadParamNames::UserId] ?? null;
+    }
 }

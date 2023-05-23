@@ -13,6 +13,7 @@
  **/
 use GuzzleHttp\Client;
 use Exception;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
 use Illuminate\Support\Facades\Log;
@@ -32,11 +33,22 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
     private $endpoint;
 
     /**
+     * @var ClientInterface
+     */
+    private $client;
+
+    /**
+     * @param ClientInterface $client
      * @param string $endpoint
      */
-    public function __construct(string $endpoint)
+    public function __construct
+    (
+        ClientInterface $client,
+        string $endpoint
+    )
     {
         $this->endpoint = $endpoint;
+        $this->client = $client;
     }
 
 
@@ -55,10 +67,9 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
 
             Log::debug(sprintf("SamsungRegistrationAPI::checkUser POST %s payload %s", $this->endpoint, $request));
 
-            $client = new Client();
 
             // http://docs.guzzlephp.org/en/stable/request-options.html
-            $response = $client->request('POST',
+            $response = $this->client->request('POST',
                 $this->endpoint,
                 [
                     'timeout' => 120,
@@ -103,10 +114,9 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
 
             Log::debug(sprintf("SamsungRegistrationAPI::checkEmail POST %s payload %s", $this->endpoint, $request));
 
-            $client = new Client();
 
             // http://docs.guzzlephp.org/en/stable/request-options.html
-            $response = $client->request('POST',
+            $response = $this->client->request('POST',
                 $this->endpoint,
                 [
                     'timeout' => 120,
@@ -150,11 +160,8 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
 
             Log::debug(sprintf("SamsungRegistrationAPI::userList POST %s payload %s", $this->endpoint, $request));
 
-            $client = new Client();
-
-
             // http://docs.guzzlephp.org/en/stable/request-options.html
-            $response = $client->request('POST',
+            $response = $this->client->request('POST',
                 $this->endpoint,
                 [
                     'timeout' => 120,

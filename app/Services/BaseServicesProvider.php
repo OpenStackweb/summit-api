@@ -141,8 +141,10 @@ final class BaseServicesProvider extends ServiceProvider
         App::singleton(
             ISamsungRegistrationAPI::class,
             function(){
-                return new SamsungRegistrationAPI(
-                    Config::get("server.samsung_registration_api_endpoint", null),
+                return new SamsungRegistrationAPI
+                (
+                    App::make( ClientInterface::class),
+                    Config::get("server.samsung_registration_api_endpoint", null)
                 );
             }
         );

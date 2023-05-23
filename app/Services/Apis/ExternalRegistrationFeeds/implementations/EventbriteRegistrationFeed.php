@@ -75,4 +75,9 @@ final class EventbriteRegistrationFeed extends AbstractExternalFeed
     {
         throw new \Exception("Not Implemented");
     }
+
+    public function getExternalUserIdFromQRCode(string $qr_code_content): ?string
+    {
+        throw new \Exception("Not Implemented");
+    }
 }

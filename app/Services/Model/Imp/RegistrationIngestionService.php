@@ -156,10 +156,10 @@ final class RegistrationIngestionService
             return $this->tx_service->transaction(function () use ($summit_id, $external_attendee) {
 
                 $summit = $this->summit_repository->getById($summit_id);
-                if (!$summit instanceof Summit) return;
+                if (!$summit instanceof Summit) return null;
                 $default_badge_type = $summit->getDefaultBadgeType();
 
-                if (!$summit instanceof Summit) return;
+                if (!$summit instanceof Summit) return null;
 
                 $external_attendee_profile = $external_attendee['profile'] ?? null;
                 $external_promo_code = $external_attendee['promotional_code'] ?? null;

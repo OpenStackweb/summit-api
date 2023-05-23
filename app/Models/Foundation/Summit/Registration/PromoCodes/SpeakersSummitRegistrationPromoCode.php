@@ -27,7 +27,7 @@ class SpeakersSummitRegistrationPromoCode
 {
     use SpeakersPromoCodeTrait;
 
-    const ClassName = 'SpeakersSummitRegistrationPromoCode';
+    const ClassName = 'SPEAKERS_PROMO_CODE';
 
     public static $metadata = [
         'class_name' => self::ClassName,

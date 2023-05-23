@@ -365,9 +365,14 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
                 $tickets_to_return[$ticket->getTicketTypeId()] = 0;
             $tickets_to_return[$ticket->getTicketTypeId()] += 1;
             if ($ticket->hasPromoCode()) {
-                if (!isset($promo_codes_to_return[$ticket->getPromoCode()->getCode()]))
-                    $promo_codes_to_return[$ticket->getPromoCode()->getCode()] = 0;
-                $promo_codes_to_return[$ticket->getPromoCode()->getCode()] += 1;
+                $code = $ticket->getPromoCode()->getCode();
+                if (!isset($promo_codes_to_return[$code])) {
+                    $promo_codes_to_return[$code] = [
+                        "qty" => 0,
+                        "owner_email" => $ticket->getOrder()->getOwnerEmail()
+                    ];
+                }
+                $promo_codes_to_return[$code]["qty"] += 1;
             }
         }
 

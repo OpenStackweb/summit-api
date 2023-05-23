@@ -637,9 +637,9 @@ final class SummitPromoCodeService
             if (!$speaker instanceof PresentationSpeaker)
                 throw new EntityNotFoundException("speaker not found");
 
-            //can't remove sent associations
+            //can't remove sent or redeemed associations
             $assignment = $promo_code->getSpeakerAssignment($speaker);
-            if (!is_null($assignment) && $assignment->isSent()) return $promo_code;
+            if (!is_null($assignment) && ($assignment->isSent() || $assignment->isRedeemed())) return $promo_code;
 
             $promo_code->unassignSpeaker($speaker);
 

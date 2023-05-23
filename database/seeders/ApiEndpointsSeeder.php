@@ -111,7 +111,7 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
-                'name'        => 'get-all-tickets-by-summit',
+                'name'        => 'get-all-external-tickets-by-summit',
                 'route'       => '/api/v1/summits/{id}/tickets/external',
                 'http_method' => 'GET',
                 'scopes'      => [

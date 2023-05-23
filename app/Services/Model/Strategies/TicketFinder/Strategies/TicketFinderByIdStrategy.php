@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategy;
+use Illuminate\Support\Facades\Log;
 use models\summit\SummitAttendeeTicket;
 /**
  * Class TicketFinderByIdStrategy
@@ -27,6 +28,7 @@ final class TicketFinderByIdStrategy
      */
     public function find(): ?SummitAttendeeTicket
     {
+        Log::debug(sprintf("TicketFinderByIdStrategy::find id %s", $this->ticket_criteria));
         $res = $this->repository->getById(intval($this->ticket_criteria));
         return $res instanceof SummitAttendeeTicket ? $res : null;
     }

@@ -48,5 +48,6 @@ abstract class AbstractTicketFinderStrategy implements ITicketFinderStrategy
     {
         $this->summit = $summit;
         $this->ticket_criteria = $ticket_criteria;
+        $this->repository = $repository;
     }
 }

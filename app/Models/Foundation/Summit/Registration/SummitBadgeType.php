@@ -244,6 +244,14 @@ class SummitBadgeType extends SilverstripeBaseModel
     }
 
     /**
+     * @param string $feature_name
+     * @return bool
+     */
+    public function hasFeatureByName(string $feature_name):bool{
+        return $this->getBadgeFeatureByName($feature_name) !== null;
+    }
+
+    /**
      * @param string $badge_feature_name
      * @return SummitBadgeFeatureType|null
      */

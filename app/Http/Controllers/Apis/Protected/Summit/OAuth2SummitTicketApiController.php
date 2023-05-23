@@ -181,6 +181,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     public function getAllBySummitExternal($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
+
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit))
                 return $this->error404();
@@ -191,8 +192,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                 return $this->error404();
 
             $filter = self::getFilter(
-                [ 'owner_email' => ['==']],
-                ['owner_email' => 'sometimes|string']
+                function(){ return [ 'owner_email' => ['==']];},
+                function(){ return ['owner_email' => 'required|string'];}
             );
 
             $filterVal = $filter->getUniqueFilter('owner_email');

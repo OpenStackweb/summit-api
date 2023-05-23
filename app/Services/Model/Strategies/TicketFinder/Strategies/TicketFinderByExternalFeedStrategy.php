@@ -120,7 +120,7 @@ final class TicketFinderByExternalFeedStrategy
                 );
             }
 
-            return $attendee->getTickets()->first();
+            return $attendee->getFirstTicket();
         }
         if(filter_var($this->ticket_criteria, FILTER_VALIDATE_EMAIL)){
 
@@ -166,7 +166,7 @@ final class TicketFinderByExternalFeedStrategy
                     $res
                 );
             }
-            return $attendee->getTickets()->first();
+            return $attendee->getFirstTicket();
         }
         return null;
     }

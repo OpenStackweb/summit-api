@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use models\exceptions\ValidationException;
@@ -220,6 +222,19 @@ class SummitAttendeeBadge extends SilverstripeBaseModel implements IQREntity
      */
     public function hasFeature(SummitBadgeFeatureType $feature):bool{
         return $this->features->contains($feature);
+    }
+
+    /**
+     * @param string $name
+     * @return bool
+     */
+    public function hasFeatureByName(string $name):bool{
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('name', trim($name)));
+        $res = $this->features->matching($criteria)->count() > 0;
+        if(!$res)
+            $res = $this->type->hasFeatureByName($name);
+        return $res;
     }
 
     /**

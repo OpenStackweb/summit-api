@@ -37,7 +37,6 @@ use Exception;
 use Illuminate\Support\Facades\Log;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
-use models\summit\SummitBadgeFeatureType;
 use models\summit\SummitBadgeType;
 use models\summit\SummitOrderExtraQuestionAnswer;
 use models\summit\SummitRegistrationDiscountCode;
@@ -494,7 +493,7 @@ final class RegistrationIngestionService
                     Log::debug(sprintf("RegistrationIngestionService::ingestSummit added answer %s", $answer));
                 }
 
-                $ticket->setOwner($attendee);
+                $attendee->addTicket($ticket);
                 // set ticket status
 
                 if (!$cancelled && !$refunded) {

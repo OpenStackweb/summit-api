@@ -839,6 +839,11 @@ SQL;
     }
 
     public function clearProposedScheduleAllowedLocations():void{
+        $this->proposed_schedule_allowed_locations->forAll(function($key, $entity){
+            $entity->clearTrack();
+            $entity->clearLocation();
+            return true;
+        });
         $this->proposed_schedule_allowed_locations->clear();
     }
 }

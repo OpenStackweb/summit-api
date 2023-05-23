@@ -96,11 +96,11 @@ class SummitProposedScheduleAllowedLocation extends SilverstripeBaseModel
     private $location;
 
     /**
-     * @ORM\OneToMany(targetEntity="SummitProposedScheduleAllowedDay", mappedBy="allowed_location", cascade={"persist"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @ORM\OneToMany(targetEntity="SummitProposedScheduleAllowedDay", mappedBy="allowed_location", cascade={"persist", "remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
      */
     private $allowed_timeframes;
 
-    /**
+    /*
      * @param PresentationCategory $track
      * @param SummitAbstractLocation $location
      */
@@ -113,7 +113,19 @@ class SummitProposedScheduleAllowedLocation extends SilverstripeBaseModel
     }
 
     public function clearAllowedTimeFrames(){
+        $this->allowed_timeframes->forAll(function($key, $entity){
+            $entity->clearAllowedLocation();
+            return true;
+        });
         $this->allowed_timeframes->clear();
+    }
+
+    public function clearTrack():void{
+        $this->track = null;
+    }
+
+    public function clearLocation():void{
+        $this->location = null;
     }
 
     /**

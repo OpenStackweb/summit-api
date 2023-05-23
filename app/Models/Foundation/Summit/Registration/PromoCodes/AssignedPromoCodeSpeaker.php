@@ -117,11 +117,24 @@ class AssignedPromoCodeSpeaker extends BaseEntity
     }
 
     /**
+     * @return bool
+     */
+    public function isRedeemed(): bool
+    {
+        return $this->getRedeemedAt() != null;
+    }
+
+    /**
      * @param \DateTime $redeemed
      */
     public function setRedeemedAt(\DateTime $redeemed): void
     {
         $this->redeemed = $redeemed;
+    }
+
+    public function clearRedeemedAt(): void
+    {
+        $this->redeemed = null;
     }
 
     /**

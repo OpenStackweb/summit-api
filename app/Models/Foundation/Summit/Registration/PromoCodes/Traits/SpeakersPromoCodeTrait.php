@@ -133,8 +133,35 @@ trait SpeakersPromoCodeTrait
             parent::addUsage($owner_email, $usage);
             $utc_now = new \DateTime('now', new \DateTimeZone('UTC'));
             $existing_owner->setRedeemedAt($utc_now);
+
+        } catch (ValidationException $ex){
+            Log::warning($ex);
         }
-        catch (ValidationException $ex){
+    }
+
+    /**
+     * @param int $to_restore
+     * @param string|null $owner_email
+     * @throws ValidationException
+     */
+    public function removeUsage(int $to_restore, string $owner_email = null)
+    {
+        try {
+            if ($owner_email == null)
+                throw new ValidationException("owner email is mandatory in order to remove usage for promo code {$this->getId()}");
+
+            $existing_owner = $this->owners->filter(function ($e) use($owner_email){
+                return $e->getSpeaker()->getEmail() == $owner_email;
+            })->first();
+
+            if (!$existing_owner instanceof AssignedPromoCodeSpeaker)
+                throw new ValidationException("can't find an owner with the email {$owner_email} for the promo_code");
+
+            $existing_owner->clearRedeemedAt();
+
+            parent::removeUsage($to_restore);
+
+        } catch (ValidationException $ex){
             Log::warning($ex);
         }
     }

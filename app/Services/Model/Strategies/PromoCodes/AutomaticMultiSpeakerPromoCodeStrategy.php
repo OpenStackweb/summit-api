@@ -86,8 +86,8 @@ final class AutomaticMultiSpeakerPromoCodeStrategy implements IPromoCodeStrategy
                 $code = $this->code_generator->generate($this->summit, 6);
             } while($this->repository->getByCode($code) != null);
 
-            $promo_code_spec["code"] = $code;
             $promo_code_spec = $this->data["promo_code_spec"];
+            $promo_code_spec["code"] = $code;
             $promo_code = SummitPromoCodeFactory::build($this->summit, $promo_code_spec);
             if (is_null($promo_code)) {
                 throw new ValidationException('cannot build a valid promo code with the given specification');

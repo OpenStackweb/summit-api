@@ -356,6 +356,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     public function calculateTicketsAndPromoCodesToReturn(): array
     {
 
+        Log::debug(sprintf("SummitOrder::calculateTicketsAndPromoCodesToReturn order %s", $this->id));
         $tickets_to_return = [];
         $promo_codes_to_return = [];
 
@@ -363,9 +364,14 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
 
             if (!isset($tickets_to_return[$ticket->getTicketTypeId()]))
                 $tickets_to_return[$ticket->getTicketTypeId()] = 0;
+
             $tickets_to_return[$ticket->getTicketTypeId()] += 1;
+
+            Log::debug(sprintf("SummitOrder::calculateTicketsAndPromoCodesToReturn order %s ticket %s", $this->id, $ticket->getId()));
+
             if ($ticket->hasPromoCode()) {
                 $code = $ticket->getPromoCode()->getCode();
+                Log::debug(sprintf("SummitOrder::calculateTicketsAndPromoCodesToReturn order %s ticket %s promo code %s", $this->id, $ticket->getId(), $code));
                 if (!isset($promo_codes_to_return[$code])) {
                     $promo_codes_to_return[$code] = [
                         "qty" => 0,

@@ -1844,6 +1844,7 @@ final class SummitOrderService
     {
         return $this->tx_service->transaction(function () use ($summit, $order_hash) {
 
+            Log::debug(sprintf("SummitOrderService::cancel summit %s order %s",$summit->getId(), $order_hash));
             $order = $this->order_repository->getByHashLockExclusive($order_hash);
 
             if (is_null($order) || !$order instanceof SummitOrder || $summit->getId() != $order->getSummitId())
@@ -1958,11 +1959,14 @@ final class SummitOrderService
      */
     public function revokeReservedOrdersOlderThanNMinutes(int $minutes, int $max = 100): void
     {
-        Log::debug(sprintf("revokeReservedOrdersOlderThanNMinutes minutes %s max %s", $minutes, $max));
+        Log::debug(sprintf("SummitOrderService::revokeReservedOrdersOlderThanNMinutes minutes %s max %s", $minutes, $max));
+
         // done in this way to avoid db lock contention
         $orders = $this->tx_service->transaction(function () use ($minutes, $max) {
             return $this->order_repository->getAllReservedOlderThanXMinutes($minutes, $max);
         });
+
+        Log::debug(sprintf("SummitOrderService::revokeReservedOrdersOlderThanNMinutes got %s orders to revoke", count($orders)));
 
         foreach ($orders as $order) {
             $this->tx_service->transaction(function () use ($order) {
@@ -2400,6 +2404,17 @@ final class SummitOrderService
     {
 
         // restore tickets and promo-codes
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitOrderService::restoreTicketsPromoCodes restoring tickets and promo codes for summit %s tickets_to_return %s promo_codes_to_return %s",
+                $summit->getId(),
+                json_encode($tickets_to_return),
+                json_encode($promo_codes_to_return)
+            )
+        );
 
         foreach ($tickets_to_return as $ticket_type_id => $qty) {
             $ticket_type = $this->ticket_type_repository->getByIdExclusiveLock($ticket_type_id);

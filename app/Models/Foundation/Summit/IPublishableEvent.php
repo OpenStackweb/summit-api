@@ -14,6 +14,7 @@
 
 use DateTime;
 use models\exceptions\ValidationException;
+use models\summit\PresentationCategory;
 use models\summit\Summit;
 use models\summit\SummitAbstractLocation;
 use models\summit\SummitEventType;
@@ -91,4 +92,6 @@ interface IPublishableEvent extends IEntity
     public function getTitle(): string;
 
     public function getLocationName(): string;
+
+    public function getCategory():?PresentationCategory;
 }

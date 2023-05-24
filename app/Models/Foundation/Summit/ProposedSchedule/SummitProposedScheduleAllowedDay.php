@@ -126,6 +126,10 @@ class SummitProposedScheduleAllowedDay extends SilverstripeBaseModel
         return $this->allowed_location;
     }
 
+    public function clearAllowedLocation():void{
+        $this->allowed_location = null;
+    }
+
     /**
      * @param \DateTime $day
      */

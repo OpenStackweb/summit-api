@@ -108,6 +108,8 @@ use App\Services\Model\RSVPTemplateService;
 use App\Services\Model\ScheduleIngestionService;
 use App\Services\Model\ScheduleService;
 use App\Services\Model\SponsorshipTypeService;
+use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategyFactory;
+use App\Services\Model\Strategies\TicketFinder\TicketFinderStrategyFactory;
 use App\Services\Model\SummitAccessLevelTypeService;
 use App\Services\Model\SummitBadgeFeatureTypeService;
 use App\Services\Model\SummitBadgeTypeService;
@@ -470,6 +472,11 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitProposedScheduleAllowedLocationService::class,
             SummitProposedScheduleAllowedLocationService::class
         );
+
+        App::singleton(
+            ITicketFinderStrategyFactory::class,
+            TicketFinderStrategyFactory::class
+        );
    }
 
     /**
@@ -537,6 +544,7 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitSubmissionInvitationService::class,
             ISummitSignService::class,
             ISummitProposedScheduleAllowedLocationService::class,
+            ITicketFinderStrategyFactory::class,
         ];
     }
 }

@@ -1,6 +1,6 @@
-<?php namespace App\Models\Foundation\Summit\Registration;
-/**
- * Copyright 2019 OpenStack Foundation
+<?php namespace App\Services\Model\Strategies\TicketFinder;
+/*
+ * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,21 +12,13 @@
  * limitations under the License.
  **/
 
+use models\summit\SummitAttendeeTicket;
 
 /**
- * Interface ISummitExternalRegistrationFeedType
- * @package App\Models\Foundation\Summit\Registration
+ * Interface ITicketFinderStrategy
+ * @package App\Services\Model\Strategies\TicketFinder
  */
-interface ISummitExternalRegistrationFeedType
+interface ITicketFinderStrategy
 {
-    const NoneType   = '';
-    const Eventbrite = 'Eventbrite';
-
-    const Samsung = 'SAMSUNG';
-
-    const ValidFeedTypes = [
-        self::NoneType,
-        self::Eventbrite,
-        self::Samsung,
-    ];
+    public function find():?SummitAttendeeTicket;
 }

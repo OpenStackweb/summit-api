@@ -1,6 +1,6 @@
-<?php namespace App\Models\Foundation\Summit\Registration;
-/**
- * Copyright 2019 OpenStack Foundation
+<?php namespace App\Services\Apis\Samsung;
+/*
+ * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,19 +14,11 @@
 
 
 /**
- * Interface ISummitExternalRegistrationFeedType
- * @package App\Models\Foundation\Summit\Registration
+ * Class Groups
+ * @package App\Services\Apis\Samsung
  */
-interface ISummitExternalRegistrationFeedType
+final class Groups
 {
-    const NoneType   = '';
-    const Eventbrite = 'Eventbrite';
-
-    const Samsung = 'SAMSUNG';
-
-    const ValidFeedTypes = [
-        self::NoneType,
-        self::Eventbrite,
-        self::Samsung,
-    ];
+    const Attendee = 'Attendee';
+    const BoothStaff = 'Booth Staff';
 }

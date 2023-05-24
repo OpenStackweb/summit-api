@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
 use App\Permissions\IPermissionsManager;
 use App\Permissions\PermissionsManager;
 use App\Services\Apis\ExternalUserApi;
@@ -22,6 +21,8 @@ use App\Services\Apis\IMailApi;
 use App\Services\Apis\IPasswordlessAPI;
 use App\Services\Apis\MailApi;
 use App\Services\Apis\PasswordlessAPI;
+use App\Services\Apis\Samsung\ISamsungRegistrationAPI;
+use App\Services\Apis\Samsung\SamsungRegistrationAPI;
 use App\Services\Model\FolderService;
 use App\Services\Model\IFolderService;
 use App\Services\utils\EmailExcerptService;
@@ -136,6 +137,17 @@ final class BaseServicesProvider extends ServiceProvider
             IPasswordlessAPI::class,
             PasswordlessAPI::class
         );
+
+        App::singleton(
+            ISamsungRegistrationAPI::class,
+            function(){
+                return new SamsungRegistrationAPI
+                (
+                    App::make( ClientInterface::class),
+                    Config::get("server.samsung_registration_api_endpoint", null)
+                );
+            }
+        );
     }
 
     /**
@@ -159,6 +171,7 @@ final class BaseServicesProvider extends ServiceProvider
             IFolderService::class,
             ILockManagerService::class,
             IPasswordlessAPI::class,
+            ISamsungRegistrationAPI::class,
         ];
     }
 }

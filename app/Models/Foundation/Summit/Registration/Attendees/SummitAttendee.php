@@ -253,6 +253,11 @@ class SummitAttendee extends SilverstripeBaseModel
         return $this->tickets;
     }
 
+    public function getFirstTicket():?SummitAttendeeTicket{
+        if($this->tickets->count() == 0) return null;
+        return $this->tickets->first();
+    }
+
     /**
      * @param SummitAttendeeTicket $ticket
      */

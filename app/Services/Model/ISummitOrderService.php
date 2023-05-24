@@ -329,10 +329,10 @@ interface ISummitOrderService extends IProcessPaymentService
     /**
      * @param Summit $summit
      * @param $ticket_id
-     * @return SummitAttendeeTicket
+     * @return SummitAttendeeTicket|null
      * @throws \Exception
      */
-    public function getTicket(Summit $summit, $ticket_id):SummitAttendeeTicket;
+    public function getTicket(Summit $summit, $ticket_id):?SummitAttendeeTicket;
 
     public function processAllOrderReminder():void;
 

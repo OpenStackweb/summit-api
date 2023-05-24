@@ -30,6 +30,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\dto\ExternalUserDTO;
+use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategyFactory;
 use App\Services\Utils\CSVReader;
 use App\Services\Utils\ILockManagerService;
 use Illuminate\Http\UploadedFile;
@@ -1026,6 +1027,11 @@ final class SummitOrderService
     private $company_repository;
 
     /**
+     * @var ITicketFinderStrategyFactory
+     */
+    private $ticket_finder_strategy_factory;
+
+    /**
      * @param ISummitTicketTypeRepository $ticket_type_repository
      * @param IMemberRepository $member_repository
      * @param ISummitRegistrationPromoCodeRepository $promo_code_repository
@@ -1041,6 +1047,7 @@ final class SummitOrderService
      * @param IFileDownloadStrategy $download_strategy
      * @param ICompanyRepository $company_repository
      * @param ICompanyService $company_service
+     * @param ITicketFinderStrategyFactory $ticket_finder_strategy_factory
      * @param ITransactionService $tx_service
      * @param ILockManagerService $lock_service
      */
@@ -1061,6 +1068,7 @@ final class SummitOrderService
         IFileDownloadStrategy                      $download_strategy,
         ICompanyRepository                         $company_repository,
         ICompanyService                            $company_service,
+        ITicketFinderStrategyFactory               $ticket_finder_strategy_factory,
         ITransactionService                        $tx_service,
         ILockManagerService                        $lock_service
     )
@@ -1082,6 +1090,7 @@ final class SummitOrderService
         $this->lock_service = $lock_service;
         $this->company_repository = $company_repository;
         $this->company_service = $company_service;
+        $this->ticket_finder_strategy_factory = $ticket_finder_strategy_factory;
     }
 
     /**
@@ -2452,41 +2461,28 @@ final class SummitOrderService
     /**
      * @param Summit $summit
      * @param $ticket_id
-     * @return SummitAttendeeTicket
+     * @return SummitAttendeeTicket|null
      * @throws \Exception
      */
-    public function getTicket(Summit $summit, $ticket_id): SummitAttendeeTicket
+    public function getTicket(Summit $summit, $ticket_id): ?SummitAttendeeTicket
     {
         return $this->tx_service->transaction(function () use ($summit, $ticket_id) {
-            $ticket = $this->ticket_repository->getById(intval($ticket_id));
-            if (is_null($ticket)) {
-                $ticket = $this->ticket_repository->getByNumber(strval($ticket_id));
-            }
-            if (is_null($ticket)) {
-                // get by qr code
-                $qr_code = strval($ticket_id);
-                $fields = SummitAttendeeBadge::parseQRCode($qr_code);
-                $prefix = $fields['prefix'];
-                if ($summit->getBadgeQRPrefix() != $prefix)
-                    throw new ValidationException
-                    (
-                        sprintf
-                        (
-                            "%s qr code is not valid for summit %s.",
-                            $qr_code,
-                            $summit->getId()
-                        )
-                    );
 
-                $ticket_number = $fields['ticket_number'];
-                $ticket = $this->ticket_repository->getByNumber($ticket_number);
-            }
+            Log::debug(sprintf("SummitOrderService::getTicket summit %s ticket id %s", $summit->getId(), $ticket_id));
+
+            $strategy = $this->ticket_finder_strategy_factory->build($summit, $ticket_id);
+            if(is_null($strategy))
+                throw new EntityNotFoundException("Ticket not found.");
+
+            $ticket = $strategy->find();
 
             if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket)
                 throw new EntityNotFoundException("Ticket not found.");
+
             if ($ticket->getOrder()->getSummitId() != $summit->getId()) {
                 throw new ValidationException("Ticket does not belong to summit.");
             }
+
             return $ticket;
         });
     }

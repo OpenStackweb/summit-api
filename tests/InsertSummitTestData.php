@@ -264,13 +264,18 @@ trait InsertSummitTestData
         self::$summit->setRegistrationEndDate((clone $begin_date)->add(new DateInterval("P30D")));
         self::$summit->setName("TEST SUMMIT");
 
-
-
         self::$default_badge_type = new SummitBadgeType();
         self::$default_badge_type->setName("BADGE TYPE1");
         self::$default_badge_type->setIsDefault(true);
         self::$default_badge_type->setDescription("BADGE TYPE1 DESCRIPTION");
         self::$summit->addBadgeType(self::$default_badge_type);
+
+        for($i = 0 ; $i < 5; $i++){
+            $access_level = new SummitAccessLevelType();
+            $access_level->setName(sprintf("Access Level %s", $i));
+            self::$default_badge_type->addAccessLevel($access_level);
+            self::$summit->addBadgeAccessLevelType($access_level);
+        }
 
         self::$em->persist(self::$summit);
         self::$em->flush();
@@ -305,12 +310,16 @@ trait InsertSummitTestData
             $type->setCurrency("USD");
             $type->setQuantity2Sell(100);
             $type->setBadgeType(self::$default_badge_type);
+            $type->setAudience(SummitTicketType::Audience_All);
             self::$ticket_types[] = $type;
         }
 
         foreach(self::$ticket_types as $ticket_type) {
             self::$summit->addTicketType($ticket_type);
         }
+
+        self::$em->persist(self::$summit);
+        self::$em->flush();
 
         self::$defaultPresentationType = new PresentationType();
         self::$defaultPresentationType->setType('TEST PRESENTATION TYPE');
@@ -351,12 +360,7 @@ trait InsertSummitTestData
         
         self::$summit->addEventType(self::$allow2VotePresentationType);
 
-        for($i = 0 ; $i < 5; $i++){
-            $access_level = new SummitAccessLevelType();
-            $access_level->setName(sprintf("Access Level %s", $i));
-            self::$default_badge_type->addAccessLevel($access_level);
-            self::$summit->addBadgeAccessLevelType($access_level);
-        }
+
 
         if (self::$defaultMember != null) {
             $attendee = new SummitAttendee();
@@ -754,5 +758,14 @@ trait InsertSummitTestData
         self::$em->remove(self::$summit2);
         self::$em->remove(self::$summit_permission_group);
         self::$em->flush();
+
+        // reset static vars
+
+        self::$summit = null;
+        self::$default_badge_type = null;
+        self::$summit2 = null;
+        self::$mainVenue = null;
+        self::$defaultTags = [];
+        self::$ticket_types = [];
     }
 }

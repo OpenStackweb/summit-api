@@ -111,6 +111,18 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name'        => 'get-all-external-tickets-by-summit',
+                'route'       => '/api/v1/summits/{id}/tickets/external',
+                'http_method' => 'GET',
+                'scopes'      => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    sprintf(SummitScopes::ReadRegistrationOrders, $current_realm),
+                ],
+                'authz_groups' => [
+                    IGroup::BadgePrinters,
+                ]
+            ],
+            [
                 'name'        => 'get-all-tickets-by-summit-csv',
                 'route'       => '/api/v1/summits/{id}/tickets/csv',
                 'http_method' => 'GET',

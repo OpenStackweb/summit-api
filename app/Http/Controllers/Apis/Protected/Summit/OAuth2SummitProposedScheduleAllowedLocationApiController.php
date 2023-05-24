@@ -183,7 +183,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
 
             $this->service->deleteProposedLocationFromTrack($track, intval($location_id));
 
-            return $this->delete();
+            return $this->deleted();
         });
     }
 
@@ -202,7 +202,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
 
             $this->service->deleteAllProposedLocationFromTrack($track);
 
-            return $this->delete();
+            return $this->deleted();
         });
     }
 

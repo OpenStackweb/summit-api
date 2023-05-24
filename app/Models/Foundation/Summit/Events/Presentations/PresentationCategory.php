@@ -821,6 +821,7 @@ SQL;
      * @return bool
      */
     public function isProposedScheduleAllowedLocation(SummitAbstractLocation $location):bool{
+        // there are not restrictions
         if(!$this->proposed_schedule_allowed_locations->count()) return true;
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('location', $location));

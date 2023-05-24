@@ -407,7 +407,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     /**
      * @return PresentationCategory
      */
-    public function getCategory()
+    public function getCategory():?PresentationCategory
     {
         return $this->category;
     }

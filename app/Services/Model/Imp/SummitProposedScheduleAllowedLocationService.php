@@ -168,7 +168,11 @@ implements ISummitProposedScheduleAllowedLocationService
         });
     }
 
-
+    /**
+     * @param PresentationCategory $track
+     * @return void
+     * @throws \Exception
+     */
     public function deleteAllProposedLocationFromTrack(PresentationCategory $track):void{
         $this->tx_service->transaction(function() use($track){
             $track->clearProposedScheduleAllowedLocations();

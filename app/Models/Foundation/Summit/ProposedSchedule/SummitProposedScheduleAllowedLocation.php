@@ -15,6 +15,7 @@
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\summit\PresentationCategory;
 use models\summit\SummitAbstractLocation;
@@ -170,10 +171,48 @@ class SummitProposedScheduleAllowedLocation extends SilverstripeBaseModel
         return $res === false ? null : $res;
     }
 
+    /**
+     * @param \DateTime $from
+     * @param \DateTime $to
+     * @return SummitProposedScheduleAllowedDay|null
+     */
     public function getAllowedTimeFrameForDates(\DateTime $from, \DateTime $to):?SummitProposedScheduleAllowedDay{
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitProposedScheduleAllowedLocation::getAllowedTimeFrameForDates(%s,%s)",
+                $from->format("Y-m-d H:i:s"),
+                $to->format("Y-m-d H:i:s")
+            )
+        );
+
         $criteria = Criteria::create();
+        $summit = $this->location->getSummit();
         $day = clone $from;
-        $day = $day->setTime(0,0,0);
+        $localDay = $summit->convertDateFromUTC2TimeZone($day);
+        // clear time on local day
+        $localDay = $localDay->setTime(0,0,0);
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitProposedScheduleAllowedLocation::getAllowedTimeFrameForDates localDay %s",
+                $localDay->format("Y-m-d H:i:s")
+            )
+        );
+
+        $day = $summit->convertDateFromTimeZone2UTC($localDay);
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitProposedScheduleAllowedLocation::getAllowedTimeFrameForDates query day %s",
+                $day->format("Y-m-d H:i:s")
+            )
+        );
+
         $criteria->where(Criteria::expr()->eq('day', $day));
         $res =  $this->allowed_timeframes->matching($criteria)->first();
         return $res === false ? null : $res;

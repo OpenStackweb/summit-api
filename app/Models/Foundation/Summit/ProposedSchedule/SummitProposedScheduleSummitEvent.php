@@ -18,6 +18,7 @@ use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use models\exceptions\ValidationException;
 use models\main\Member;
+use models\summit\PresentationCategory;
 use models\summit\Summit;
 use models\summit\SummitAbstractLocation;
 use models\summit\SummitEvent;
@@ -432,5 +433,10 @@ class SummitProposedScheduleSummitEvent
         $start_date = $this->getLocalStartDate();
         if (empty($start_date)) return 'TBD';
         return $start_date->format("Y-m-d H:i:s");
+    }
+
+    public function getCategory(): ?PresentationCategory
+    {
+        return $this->summit_event->getCategory();
     }
 }

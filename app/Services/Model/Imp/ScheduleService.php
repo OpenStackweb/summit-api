@@ -177,7 +177,9 @@ final class ScheduleService
                 )
             );
 
+        // try to get the allowed location
         $allowed_location = $track->getProposedScheduleAllowedLocationByLocation($location);
+        // try to get the opening hour restrictions from main location
         $opening_hour = $location->getOpeningHour();
         $closing_hour = $location->getClosingHour();
 
@@ -200,20 +202,22 @@ final class ScheduleService
                 $publishable_event->getEndDate()
             );
 
-            $opening_hour = $time_frame->getFrom();
-            $closing_hour = $time_frame->getTo();
+            if(!is_null($time_frame)) {
+                $opening_hour = $time_frame->getOpeningHour();
+                $closing_hour = $time_frame->getClosingHour();
 
-            Log::debug
-            (
-                sprintf
+                Log::debug
                 (
-                    "ScheduleService::validateBlackOutTimesAndTimes location %s has custom restriction for date %s opening_hour %s closing_hour %s",
-                    $location->getId(),
-                    $publishable_event->getStartDate()->format("Y-m-d"),
-                    $opening_hour,
-                    $closing_hour
-                )
-            );
+                    sprintf
+                    (
+                        "ScheduleService::validateBlackOutTimesAndTimes location %s has custom restriction for date %s opening_hour %s closing_hour %s",
+                        $location->getId(),
+                        $publishable_event->getStartDate()->format("Y-m-d"),
+                        $opening_hour,
+                        $closing_hour
+                    )
+                );
+            }
         }
 
         parent::validateBlackOutTimesAndTimes($publishable_event, $opening_hour, $closing_hour);

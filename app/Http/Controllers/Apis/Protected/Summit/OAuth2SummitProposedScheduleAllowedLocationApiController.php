@@ -86,7 +86,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
         if (is_null($summit)) return $this->error404();
 
         $track = $summit->getPresentationCategory(intval($track_id));
-        if(is_null($track)) return $this->error404();
+        if(is_null($track) || !$track->isChairVisible()) return $this->error404();
 
         return $this->_getAll(
             function () {
@@ -131,7 +131,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
             if (is_null($summit)) return $this->error404();
 
             $track = $summit->getPresentationCategory(intval($track_id));
-            if(is_null($track)) return $this->error404();
+            if(is_null($track) || !$track->isChairVisible()) return $this->error404();
 
             $payload = $this->getJsonPayload(SummitProposedScheduleAllowedLocationValidationRulesFactory::buildForAdd());
 
@@ -157,7 +157,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
             if (is_null($summit)) return $this->error404();
 
             $track = $summit->getPresentationCategory(intval($track_id));
-            if(is_null($track)) return $this->error404();
+            if(is_null($track) || !$track->isChairVisible()) return $this->error404();
 
             $allowed_location = $track->getAllowedLocationById(intval($location_id));
 
@@ -179,11 +179,11 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
             if (is_null($summit)) return $this->error404();
 
             $track = $summit->getPresentationCategory(intval($track_id));
-            if(is_null($track)) return $this->error404();
+            if(is_null($track) || !$track->isChairVisible()) return $this->error404();
 
             $this->service->deleteProposedLocationFromTrack($track, intval($location_id));
 
-            return $this->delete();
+            return $this->deleted();
         });
     }
 
@@ -198,11 +198,11 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
             if (is_null($summit)) return $this->error404();
 
             $track = $summit->getPresentationCategory(intval($track_id));
-            if(is_null($track)) return $this->error404();
+            if(is_null($track) || !$track->isChairVisible()) return $this->error404();
 
             $this->service->deleteAllProposedLocationFromTrack($track);
 
-            return $this->delete();
+            return $this->deleted();
         });
     }
 
@@ -218,7 +218,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
             if (is_null($summit)) return $this->error404();
 
             $track = $summit->getPresentationCategory(intval($track_id));
-            if (is_null($track)) return $this->error404();
+            if(is_null($track) || !$track->isChairVisible()) return $this->error404();
 
             $payload = $this->getJsonPayload(SummitProposedScheduleAllowedDayValidationRulesFactory::buildForAdd());
 
@@ -244,7 +244,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
         if (is_null($summit)) return $this->error404();
 
         $track = $summit->getPresentationCategory(intval($track_id));
-        if(is_null($track)) return $this->error404();
+        if(is_null($track) || !$track->isChairVisible()) return $this->error404();
 
         $allowed_location = $track->getAllowedLocationById(intval($location_id));
         if(is_null($allowed_location)) return $this->error404();
@@ -319,7 +319,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
             if (is_null($summit)) return $this->error404();
 
             $track = $summit->getPresentationCategory(intval($track_id));
-            if(is_null($track)) return $this->error404();
+            if(is_null($track) || !$track->isChairVisible()) return $this->error404();
 
             $allowed_location = $track->getAllowedLocationById(intval($location_id));
 
@@ -351,7 +351,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
             if (is_null($summit)) return $this->error404();
 
             $track = $summit->getPresentationCategory(intval($track_id));
-            if (is_null($track)) return $this->error404();
+            if(is_null($track) || !$track->isChairVisible()) return $this->error404();
 
             $this->service->deleteAllowedDayToProposedLocation($track, intval($location_id), intval($time_frame_id));
 
@@ -371,7 +371,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
             if (is_null($summit)) return $this->error404();
 
             $track = $summit->getPresentationCategory(intval($track_id));
-            if (is_null($track)) return $this->error404();
+            if(is_null($track) || !$track->isChairVisible()) return $this->error404();
 
             $this->service->deleteAllAllowedDayToProposedLocation($track, intval($location_id));
 
@@ -392,7 +392,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
             if (is_null($summit)) return $this->error404();
 
             $track = $summit->getPresentationCategory(intval($track_id));
-            if (is_null($track)) return $this->error404();
+            if(is_null($track) || !$track->isChairVisible()) return $this->error404();
 
             $payload = $this->getJsonPayload(SummitProposedScheduleAllowedDayValidationRulesFactory::buildForUpdate());
 

@@ -976,7 +976,16 @@ final class SummitService
                 }
             }
 
-            $this->validateBlackOutTimesAndTimes($event, $event->getLocation()->getOpeningHour(), $event->getLocation()->getClosingHour());
+            $location = $event->getLocation();
+            $opening_hour = null;
+            $closing_hour = null;
+
+            if (!is_null($location)){
+                $opening_hour = $location->getOpeningHour();
+                $closing_hour = $location->getClosingHour();
+            }
+
+            $this->validateBlackOutTimesAndTimes($event, $opening_hour, $closing_hour);
             $event->unPublish();
             $event->publish();
             $event->setUpdatedBy(ResourceServerContext::getCurrentUser(false));

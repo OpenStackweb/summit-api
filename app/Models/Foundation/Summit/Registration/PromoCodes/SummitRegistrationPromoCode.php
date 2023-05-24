@@ -361,7 +361,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      * @param string|null $owner_email
      * @throws ValidationException
      */
-    public function removeUsage(int $to_restore, string $owner_email = null)
+    public function removeUsage(int $to_restore, ?string $owner_email = null)
     {
 
         $quantity_used = $this->quantity_used;

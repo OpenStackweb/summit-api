@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\AbstractEmailJob;
+use App\Jobs\Emails\Traits\SummitEmailJob;
 use Illuminate\Support\Facades\Config;
 use models\summit\Presentation;
 use models\summit\PresentationSpeaker;
@@ -21,6 +22,7 @@ use models\summit\PresentationSpeaker;
  */
 class PresentationModeratorNotificationEmail extends AbstractEmailJob
 {
+    use SummitEmailJob;
     protected function getEmailEventSlug(): string
     {
         return self::EVENT_SLUG;
@@ -62,8 +64,8 @@ class PresentationModeratorNotificationEmail extends AbstractEmailJob
             throw new \InvalidArgumentException('cfp.support_email is null.');
 
         $payload = [];
-        $payload['summit_name'] = $summit->getName();
-        $payload['summit_logo'] = $summit->getLogoUrl();
+        $payload = $this->emitSummitTemplateVars($payload, $summit);
+
         $payload['speaker_full_name'] = $moderator->getFullName(" ");
         $payload['speaker_email'] = $moderator->getEmail();
         $payload['creator_full_name'] = $creator->getFullName();
@@ -71,8 +73,6 @@ class PresentationModeratorNotificationEmail extends AbstractEmailJob
         $payload['selection_plan_name'] = $selection_plan->getName();
         $payload['presentation_edit_link'] = $presentation->getEditLink();
 
-        $summitBeginDate = $summit->getLocalBeginDate();
-        $payload['summit_date'] = !is_null($summitBeginDate)? $summitBeginDate->format("F d, Y") : "";
         $submissionEndDateLocal = $selection_plan->getSubmissionEndDateLocal();
         $payload['until_date'] = !is_null($submissionEndDateLocal) ? $submissionEndDateLocal->format('F d, Y') : "";
 

@@ -213,6 +213,15 @@ final class SummitPromoCodeService
 
             $promo_code->setSourceAdmin();
 
+            if (isset($data['speaker_ids']) && ($promo_code->getClassName() == SpeakersSummitRegistrationPromoCode::ClassName ||
+                $promo_code->getClassName() == SpeakersRegistrationDiscountCode::ClassName)) {
+
+                foreach ($data['speaker_ids'] as $speaker_id) {
+                    $speaker = $summit->getSpeaker($speaker_id);
+                    $promo_code->assignSpeaker($speaker);
+                }
+            }
+
             // tags
             if (isset($data['tags'])) {
                 $promo_code->clearTags();

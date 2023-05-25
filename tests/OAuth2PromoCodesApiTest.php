@@ -339,6 +339,96 @@ final class OAuth2PromoCodesApiTest extends ProtectedApiTest
         return $promo_code;
     }
 
+    public function testAddSpeakersRegistrationPromoCode(
+        $summit_id = 3609,
+        $code = "SPSPROMOCODE",
+        $class_name =\models\summit\SpeakersSummitRegistrationPromoCode::ClassName,
+        array $extra_params = []
+    ){
+        $params = [
+            'id' => $summit_id,
+        ];
+
+        $data = [
+            'code'               => $code,
+            'class_name'         => $class_name,
+            'quantity_available' => 100,
+            'speaker_ids'        => [33145],
+            'type'               => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAccepted
+        ];
+
+        $data = array_merge($data, $extra_params);
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitPromoCodesApiController@addPromoCodeBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $promo_code = json_decode($content);
+        $this->assertTrue(!is_null($promo_code));
+        return $promo_code;
+    }
+
+    public function testUpdateSpeakersRegistrationPromoCode(
+        $summit_id = 3609,
+        $code = "SPSPROMOCODE",
+        $class_name =\models\summit\SpeakersSummitRegistrationPromoCode::ClassName,
+        array $extra_params = []
+    ){
+        $code       = str_random(16).'_PROMOCODE_TEST';
+        $promo_code = $this->testAddSpeakersRegistrationPromoCode($summit_id, $code);
+
+        $params = [
+            'id'            => $summit_id,
+            'promo_code_id' => $promo_code->id
+        ];
+
+        $data = [
+            'code'               => $code.'_UPDATE',
+            'class_name'         => $class_name,
+            'quantity_available' => 100,
+            'speaker_ids'        => [33145],
+            'type'               => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAccepted
+        ];
+
+        $data = array_merge($data, $extra_params);
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitPromoCodesApiController@updatePromoCodeBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $promo_code = json_decode($content);
+        $this->assertTrue(!is_null($promo_code));
+        return $promo_code;
+    }
+
     public function testAddDiscountSpeakerCode($summit_id = 27, $code = ""){
         $params = [
             'id' => $summit_id,

@@ -114,7 +114,7 @@ trait SpeakersPromoCodeTrait
         $res = $this->owners->matching($criteria)->first();
         return $res == false ? null : $res;
     }
-
+    
     /**
      * @param string $owner_email
      * @param int $usage

@@ -89,6 +89,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                     'group_name' => ['=@', '==', '@@'],
                     'voting_visible' => ['=='],
                     'chair_visible' => ['=='],
+                    'has_proposed_schedule_allowed_locations' => ['=='],
                 ];
             },
             function () {
@@ -99,6 +100,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                     'group_name' => 'sometimes|string',
                     'voting_visible' => 'sometimes|boolean',
                     'chair_visible' => 'sometimes|boolean',
+                    'has_proposed_schedule_allowed_locations'=> 'sometimes|required|string|in:true,false',
                 ];
             },
             function () {
@@ -169,6 +171,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                     'group_name' => ['=@', '==', '@@'],
                     'voting_visible' => ['=='],
                     'chair_visible' => ['=='],
+                    'has_proposed_schedule_allowed_locations' => ['=='],
                 ]);
             }
 
@@ -181,6 +184,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                 'group_name' => 'sometimes|string',
                 'voting_visible' => 'sometimes|boolean',
                 'chair_visible' => 'sometimes|boolean',
+                'has_proposed_schedule_allowed_locations'=> 'sometimes|boolean',
             ]);
 
             $order = null;

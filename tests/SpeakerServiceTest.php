@@ -146,7 +146,7 @@ final class SpeakerServiceTest extends TestCase
         $this->assertTrue($report[0]['email_type'] == SpeakerAnnouncementSummitEmail::TypeAccepted);
     }
 
-    public function testSendSpeakerEmailsForMultiSpeakersPromoCode($summit_id = 3593) {
+    public function testSendSpeakerEmailsForMultiSpeakersPromoCode($summit_id = 3609) {
 
         $service = App::make(ISpeakerService::class);
 
@@ -198,7 +198,7 @@ final class SpeakerServiceTest extends TestCase
             //"promo_code"              => 'TEST_SSRPC'
         ];
 
-        $service->sendEmails(3607/*$summit->getId()*/, $payload, $filter);
+        $service->sendEmails($summit->getId(), $payload, $filter);
 
         $report = EmailExcerpt::getReport();
 

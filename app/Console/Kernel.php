@@ -83,7 +83,7 @@ class Kernel extends ConsoleKernel
         $schedule->command("summit:feedback-avg-rate-processor")->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
         // registration orders
 
-        $schedule->command('summit:order-reservation-revocation')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
+        $schedule->command('summit:order-reservation-revocation')->everyMinute()->withoutOverlapping()->onOneServer();
 
         // reminder emails
 

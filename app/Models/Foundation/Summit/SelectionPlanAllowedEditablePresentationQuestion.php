@@ -29,7 +29,7 @@ class SelectionPlanAllowedEditablePresentationQuestion extends SilverstripeBaseM
     private $type;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="allowed_presentation_questions", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="App\Models\Foundation\Summit\SelectionPlan", inversedBy="allowed_editable_presentation_questions", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="SelectionPlanID", referencedColumnName="ID")
      * @var SelectionPlan
      */

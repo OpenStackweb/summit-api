@@ -12,10 +12,10 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEvent;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
-use models\summit\SummitProposedSchedule;
-use models\summit\SummitProposedScheduleSummitEvent;
 use utils\Filter;
 
 /**

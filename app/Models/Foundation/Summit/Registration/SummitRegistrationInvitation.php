@@ -198,38 +198,9 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         return $this->accepted_date;
     }
 
-    public function isAccepted(): bool
+    public function setAccepted(bool $accepted)
     {
-
-        $bought_tickets = $this->getBoughtTicketTypesExcerpt();
-
-        Log::debug(sprintf("SummitRegistrationInvitation::isAccepted %s bought_tickets %s", $this->id, json_encode($bought_tickets)));
-        // check if we fullfill the invitation
-
-        $invitation_ticket_types = $this->ticket_types;
-        if($invitation_ticket_types->count() === 0 )
-            $invitation_ticket_types = $this->summit->getTicketTypesByAudience(SummitTicketType::Audience_With_Invitation);
-
-        if($invitation_ticket_types->count() === 0)
-            throw new ValidationException
-            (
-                sprintf
-                (
-                    "There are not Ticket Types with Audience %s for Summit %s.",
-                    SummitTicketType::Audience_With_Invitation,
-                    $this->summit->getId()
-                )
-            );
-
-        foreach ($invitation_ticket_types as $ticket_type){
-            if(!isset($bought_tickets[$ticket_type->getId()])){
-                Log::debug(sprintf("SummitRegistrationInvitation::isAccepted %s ticket type %s is not purchased yet ", $this->id, $ticket_type->getId()));
-                $this->accepted_date = null;
-                return false;
-            }
-        }
-
-        return !is_null($this->accepted_date);
+        $this->accepted_date = $accepted ? new \DateTime('now', new \DateTimeZone('UTC')) : null;
     }
 
     public function isSent(): bool
@@ -402,7 +373,7 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
 
     public function markAsAccepted(): void
     {
-        Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s ", $this->id));
+        Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s orders count %s", $this->id, $this->orders->count()));
         if($this->orders->count() === 0 ) return;
 
         $bought_tickets = $this->getBoughtTicketTypesExcerpt();
@@ -426,13 +397,23 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
             );
 
         foreach ($invitation_ticket_types as $ticket_type){
+            Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s checking if ticket type %s is purchased ... ", $this->id, $ticket_type->getId()));
             if(!isset($bought_tickets[$ticket_type->getId()])){
-                Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s ticket type is not purchased yet ", $this->id, $ticket_type->getId()));
+                Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s ticket type %s is not purchased yet, marking invitation as non accepted ... ", $this->id, $ticket_type->getId()));
+                $this->accepted_date = null;
                 return;
             }
         }
+
         // once i bought all meant ticket types ... the invitation is marked as accepted
         $this->accepted_date = new \DateTime('now', new \DateTimeZone('UTC'));
+
+        Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s marked as accepted", $this->id));
+    }
+
+    public function isAccepted(): bool
+    {
+        return !is_null($this->accepted_date);
     }
 
     public function addOrder(SummitOrder $order){
@@ -449,6 +430,10 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         return $this->orders;
     }
 
+    public function hasTicketType(SummitTicketType $ticketType):bool{
+        return $this->ticket_types->contains($ticketType);
+    }
+
     /**
      * @param SummitTicketType $ticketType
      * @throws ValidationException
@@ -463,16 +448,18 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         }
         if ($this->ticket_types->contains($ticketType)) return;
         $this->ticket_types->add($ticketType);
-        $this->accepted_date = null;
+        $this->markAsAccepted();
     }
 
     /**
      * @param SummitTicketType $ticketType
+     * @throws ValidationException
      */
     public function removeTicketType(SummitTicketType $ticketType)
     {
         if (!$this->ticket_types->contains($ticketType)) return;
         $this->ticket_types->removeElement($ticketType);
+        $this->markAsAccepted();
     }
 
     /**

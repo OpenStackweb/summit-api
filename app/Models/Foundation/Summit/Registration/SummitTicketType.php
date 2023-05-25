@@ -45,6 +45,10 @@ class SummitTicketType extends SilverstripeBaseModel
     const GBP_Currency = 'GBP';
     const CAD_Currency = 'CAD';
 
+    const AmountFree = 0.0;
+
+    const QtyInfinite = 0;
+
     const AllowedCurrencies = [
         self::USD_Currency,
         self::EUR_Currency,

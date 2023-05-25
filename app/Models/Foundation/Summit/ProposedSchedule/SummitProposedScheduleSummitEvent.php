@@ -1,4 +1,4 @@
-<?php namespace models\summit;
+<?php namespace App\Models\Foundation\Summit\ProposedSchedule;
 /*
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,15 +15,21 @@
 use App\Models\Foundation\Summit\IPublishableEventWithSpeakerConstraint;
 use App\Models\Foundation\Summit\TimeDurationRestrictedEvent;
 use DateTime;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use models\exceptions\ValidationException;
 use models\main\Member;
+use models\summit\PresentationCategory;
+use models\summit\Summit;
+use models\summit\SummitAbstractLocation;
+use models\summit\SummitEvent;
+use models\summit\SummitEventType;
 use models\utils\SilverstripeBaseModel;
+
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\Summit\DoctrineSummitProposedScheduleEventRepository")
  * Class SummitProposedScheduleSummitEvent
  * @ORM\Table(name="SummitProposedScheduleSummitEvent")
- * @package models\summit
+ * @package App\Models\Foundation\Summit\ProposedSchedule
  */
 class SummitProposedScheduleSummitEvent
     extends SilverstripeBaseModel
@@ -55,14 +61,14 @@ class SummitProposedScheduleSummitEvent
     protected $duration;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitEvent", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="models\summit\SummitEvent", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="SummitEventID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitEvent
      */
     protected $summit_event;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitAbstractLocation", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="models\summit\SummitAbstractLocation", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="LocationID", referencedColumnName="ID", onDelete="SET NULL")
      * @var SummitAbstractLocation
      */
@@ -83,7 +89,7 @@ class SummitProposedScheduleSummitEvent
     protected $updated_by = null;
 
     /**
-     * @ORM\ManyToOne(targetEntity="models\summit\SummitProposedSchedule", fetch="EXTRA_LAZY", inversedBy="scheduled_summit_events")
+     * @ORM\ManyToOne(targetEntity="SummitProposedSchedule", fetch="EXTRA_LAZY", inversedBy="scheduled_summit_events")
      * @ORM\JoinColumn(name="ScheduleID", referencedColumnName="ID")
      * @var SummitProposedSchedule
      */
@@ -427,5 +433,10 @@ class SummitProposedScheduleSummitEvent
         $start_date = $this->getLocalStartDate();
         if (empty($start_date)) return 'TBD';
         return $start_date->format("Y-m-d H:i:s");
+    }
+
+    public function getCategory(): ?PresentationCategory
+    {
+        return $this->summit_event->getCategory();
     }
 }

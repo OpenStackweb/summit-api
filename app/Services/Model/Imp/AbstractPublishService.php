@@ -12,9 +12,9 @@
  * limitations under the License.
  **/
 
-use App\Facades\ResourceServerContext;
 use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\IPublishableEventWithSpeakerConstraint;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEvent;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -22,7 +22,6 @@ use models\exceptions\ValidationException;
 use models\summit\ISummitEventPublishRepository;
 use models\summit\Summit;
 use models\summit\SummitEvent;
-use models\summit\SummitProposedScheduleSummitEvent;
 
 /**
  * Class AbstractPublishService
@@ -174,29 +173,43 @@ abstract class AbstractPublishService extends AbstractService
      * @param IPublishableEvent $publishable_event
      * @throws ValidationException
      */
-    protected function validateBlackOutTimesAndTimes(IPublishableEvent $publishable_event)
+    protected function validateBlackOutTimesAndTimes(IPublishableEvent $publishable_event, ?int $opening_hour = null, ?int $closing_hour= null):void
     {
         $current_event_location = $publishable_event->getLocation();
         $eventType = $publishable_event->getType();
 
         if (!$eventType->isAllowsPublishingDates()) return;
 
-        // validate current location timeframe restriction
-        $location_opening_hour = $current_event_location->getOpeningHour();
+        // validate current timeframe restriction
 
-        if ($location_opening_hour != null) {
-            $location_closing_hour = $current_event_location->getClosingHour() ?? 2359;
+        if (!is_null($opening_hour)) {
+
+            $closing_hour = $closing_hour ?? 2359;
             $event_opening_hour = intval($publishable_event->getStartDate()->format('Hi'));
             $event_closing_hour = intval($publishable_event->getEndDate()->format('Hi'));
-            if ($event_closing_hour < $location_opening_hour || $event_opening_hour > $location_closing_hour) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "AbstractPublishService::validateBlackOutTimesAndTimes event %s opening_hour %s closing_hour %s event_opening_hour %s event_closing_hour %s",
+                    $publishable_event->getId(),
+                    $opening_hour,
+                    $closing_hour,
+                    $event_opening_hour,
+                    $event_closing_hour
+                )
+            );
+
+            if ($event_closing_hour < $opening_hour || $event_opening_hour > $event_closing_hour) {
                 throw new ValidationException
                 (
                     sprintf
                     (
                         "You can't publish event %s out of this time frame (%s - %s) due to event location time restrictions.",
                         $publishable_event->getId(),
-                        $location_opening_hour,
-                        $location_closing_hour
+                        $opening_hour,
+                        $closing_hour
                     )
                 );
             }
@@ -223,6 +236,7 @@ abstract class AbstractPublishService extends AbstractService
                         )
                     );
                 }
+
                 if (!$eventType->isAllowsLocationTimeframeCollision()) {
                     // if trying to publish an event on a slot occupied by another event
                     // event collision ( same timeframe , same location)

@@ -52,10 +52,9 @@ final class DoctrineInstanceOfFilterMapping extends FilterMapping implements IQu
 
         if (is_array($value)) {
             $where_components = [];
-
             // see @https://github.com/doctrine/orm/issues/4462
             foreach ($value as $val) {
-                $where_components[] = str_replace(":class_name", $this->translateClassName($val), $this->where);
+                $where_components[] =  str_replace(":class_name", $this->translateClassName($val), $this->where);
             }
             return implode(sprintf(" %s ", $filter->getSameFieldOp()), $where_components);
         }

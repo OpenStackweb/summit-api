@@ -37,7 +37,6 @@ class RedisCacheService implements ICacheService
             // try to re init the connection bc background process
             Redis::purge(self::Connection);
             $this->redis = Redis::connection(self::Connection);
-            Log::debug(sprintf("RedisCacheService::__construct connected to redis server."));
         } catch (ConnectionException $ex) {
             $resource = $ex->getConnection()->getResource();
             $metadata = var_export(stream_get_meta_data($resource), true);
@@ -49,7 +48,6 @@ class RedisCacheService implements ICacheService
     {
         try {
             if (!is_null($this->redis)) {
-                Log::debug(sprintf("RedisCacheService::__destruct disconnecting from redis server"));
                 $this->redis->disconnect();
                 Redis::purge(self::Connection);
                 $this->redis = null;

@@ -12,10 +12,10 @@
  * limitations under the License.
  **/
 
-use Doctrine\ORM\QueryBuilder;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEvent;
 use App\Repositories\SilverStripeDoctrineRepository;
+use Doctrine\ORM\QueryBuilder;
 use models\summit\ISummitProposedScheduleEventRepository;
-use models\summit\SummitProposedScheduleSummitEvent;
 use utils\Filter;
 
 /**

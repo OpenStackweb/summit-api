@@ -47,6 +47,7 @@ use App\Services\Model\Imp\SummitMediaUploadTypeService;
 use App\Services\Model\Imp\SummitMetricService;
 use App\Services\Model\Imp\SummitPresentationActionService;
 use App\Services\Model\Imp\SummitPresentationActionTypeService;
+use App\Services\Model\Imp\SummitProposedScheduleAllowedLocationService;
 use App\Services\Model\Imp\SummitRegistrationInvitationService;
 use App\Services\Model\Imp\SummitScheduleSettingsService;
 use App\Services\Model\Imp\SummitSelectedPresentationListService;
@@ -82,6 +83,7 @@ use App\Services\Model\ISummitOrderExtraQuestionTypeService;
 use App\Services\Model\ISummitOrderService;
 use App\Services\Model\ISummitPresentationActionService;
 use App\Services\Model\ISummitPresentationActionTypeService;
+use App\Services\Model\ISummitProposedScheduleAllowedLocationService;
 use App\Services\Model\ISummitPushNotificationService;
 use App\Services\Model\ISummitRefundPolicyTypeService;
 use App\Services\Model\ISummitRegistrationInvitationService;
@@ -108,6 +110,8 @@ use App\Services\Model\ScheduleService;
 use App\Services\Model\SponsorshipTypeService;
 use App\Services\Model\Strategies\PromoCodes\IPromoCodeStrategyFactory;
 use App\Services\Model\Strategies\PromoCodes\PromoCodeStrategyFactory;
+use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategyFactory;
+use App\Services\Model\Strategies\TicketFinder\TicketFinderStrategyFactory;
 use App\Services\Model\SummitAccessLevelTypeService;
 use App\Services\Model\SummitBadgeFeatureTypeService;
 use App\Services\Model\SummitBadgeTypeService;
@@ -455,7 +459,7 @@ final class ModelServicesProvider extends ServiceProvider
             IScheduleService::class,
             ScheduleService::class,
         );
-      
+
         App::singleton(
             ISummitSubmissionInvitationService::class,
             SummitSubmissionInvitationService::class,
@@ -467,10 +471,21 @@ final class ModelServicesProvider extends ServiceProvider
         );
 
         App::singleton(
+
+            ISummitProposedScheduleAllowedLocationService::class,
+            SummitProposedScheduleAllowedLocationService::class
+        );
+
+        App::singleton(
+            ITicketFinderStrategyFactory::class,
+            TicketFinderStrategyFactory::class
+        );
+        App::singleton(
+
             IPromoCodeStrategyFactory::class,
             PromoCodeStrategyFactory::class,
         );
-   }
+    }
 
     /**
      * Get the services provided by the provider.
@@ -536,7 +551,9 @@ final class ModelServicesProvider extends ServiceProvider
             IScheduleService::class,
             ISummitSubmissionInvitationService::class,
             ISummitSignService::class,
-            IPromoCodeStrategyFactory::class
+            ISummitProposedScheduleAllowedLocationService::class,
+            ITicketFinderStrategyFactory::class,
+            IPromoCodeStrategyFactory::class,
         ];
     }
 }

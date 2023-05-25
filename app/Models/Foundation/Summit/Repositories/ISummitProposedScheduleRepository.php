@@ -1,4 +1,6 @@
 <?php namespace models\summit;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
+
 /**
  * Copyright 2023 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");

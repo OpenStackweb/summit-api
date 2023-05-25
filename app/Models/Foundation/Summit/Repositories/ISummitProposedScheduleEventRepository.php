@@ -11,7 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleSummitEvent;
 use models\utils\IBaseRepository;
+
 /**
  * Interface ISummitProposedScheduleEventRepository
  * @package models\summit

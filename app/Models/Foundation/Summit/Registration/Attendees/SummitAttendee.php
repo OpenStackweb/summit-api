@@ -253,6 +253,11 @@ class SummitAttendee extends SilverstripeBaseModel
         return $this->tickets;
     }
 
+    public function getFirstTicket():?SummitAttendeeTicket{
+        if($this->tickets->count() == 0) return null;
+        return $this->tickets->first();
+    }
+
     /**
      * @param SummitAttendeeTicket $ticket
      */
@@ -1177,10 +1182,11 @@ INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.ID = SummitAttendeeBadge_F
 INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
 WHERE SummitAttendeeTicket.OwnerID = :owner_id
 UNION
-SELECT DISTINCT E.* 
+SELECT DISTINCT E.*
 FROM SummitBadgeFeatureType E
-INNER JOIN SummitBadgeType_BadgeFeatures ON SummitBadgeType_BadgeFeatures.SummitBadgeTypeID = E.ID
-INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType_BadgeFeatures.SummitBadgeFeatureTypeID
+INNER JOIN SummitBadgeType_BadgeFeatures ON SummitBadgeType_BadgeFeatures.SummitBadgeFeatureTypeID = E.ID
+INNER JOIN SummitBadgeType ON SummitBadgeType.ID = SummitBadgeType_BadgeFeatures.SummitBadgeTypeID
+INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType.ID
 INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
 WHERE SummitAttendeeTicket.OwnerID = :owner_id
 SQL;

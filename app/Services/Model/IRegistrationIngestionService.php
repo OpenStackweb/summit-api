@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use models\summit\Summit;
+use models\summit\SummitAttendee;
+
 /**
  * Interface IRegistrationIngestionService
  * @package App\Services\Model
@@ -27,4 +29,12 @@ interface IRegistrationIngestionService
      * @throws \Exception
      */
     public function ingestSummit(Summit $summit):void;
+
+    /**
+     * @param $summit_id
+     * @param $index
+     * @param $external_attendee
+     * @return void
+     */
+    public function ingestExternalAttendee($summit_id, $index, $external_attendee):?SummitAttendee;
 }

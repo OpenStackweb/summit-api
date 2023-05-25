@@ -329,6 +329,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             'last_name' => 'sometimes|string|max:255',
             'allowed_ticket_types' => 'sometimes|int_array',
             'tags' => 'sometimes|string_array',
+            'is_accepted' => 'sometimes|boolean',
         ];
     }
 

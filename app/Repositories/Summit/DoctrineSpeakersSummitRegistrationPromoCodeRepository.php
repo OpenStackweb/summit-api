@@ -49,6 +49,20 @@ class DoctrineSpeakersSummitRegistrationPromoCodeRepository
     }
 
     /**
+     * @return array
+     */
+    protected function getOrderMappings()
+    {
+        return [
+            'id'        => 'o.id',
+            'email'     => 'm.email',
+            'full_name' => <<<SQL
+LOWER(CONCAT(m.first_name, ' ', m.last_name))
+SQL
+        ];
+    }
+
+    /**
      * @inheritDoc
      */
     public function getPromoCodeSpeakers(

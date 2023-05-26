@@ -31,7 +31,8 @@ class AssignedPromoCodeSpeakerSerializer extends AbstractSerializer
         'speaker' => [
             'type' => One2ManyExpandSerializer::class,
             'getter' => 'getSpeaker',
-            'has' => 'hasSpeaker'
+            'has' => 'hasSpeaker',
+            'serializer_type' => SerializerRegistry::SerializerType_Private
         ],
     ];
 }

@@ -19,6 +19,7 @@ use App\Services\Model\ISummitProposedScheduleAllowedLocationService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\summit\PresentationCategory;
+use models\summit\SummitVenue;
 
 /**
  * Class SummitProposedScheduleAllowedLocationService
@@ -41,7 +42,11 @@ implements ISummitProposedScheduleAllowedLocationService
             $location_id = intval($payload['location_id']);
             $location = $track->getSummit()->getLocation($location_id);
             if(is_null($location))
-                throw new EntityNotFoundException(sprintf("location %s not found", $location_id));
+                throw new EntityNotFoundException(sprintf("Location %s not found.", $location_id));
+
+            if($location->getClassName() === SummitVenue::ClassName){
+                throw new ValidationException("Location is a Venue, you can not add a venue to a track.");
+            }
 
             return $track->addProposedScheduleAllowedLocation($location);
         });
@@ -75,9 +80,13 @@ implements ISummitProposedScheduleAllowedLocationService
     {
         return $this->tx_service->transaction(function() use($track, $allowed_location_id, $payload){
 
-            $location = $track->getAllowedLocationById($allowed_location_id);
-            if(is_null($location))
-                throw new EntityNotFoundException(sprintf("Allowed Location %s not found", $allowed_location_id));
+            $alloqed_location = $track->getAllowedLocationById($allowed_location_id);
+            if(is_null($alloqed_location))
+                throw new EntityNotFoundException(sprintf("Allowed Location %s not found.", $allowed_location_id));
+
+            if($alloqed_location->getLocation()->getClassName() === SummitVenue::ClassName){
+                throw new ValidationException("Location is a Venue, you can not add a venue to a track.");
+            }
 
             $summit = $track->getSummit();
             $day = intval($payload['day']);
@@ -99,7 +108,7 @@ implements ISummitProposedScheduleAllowedLocationService
                     )
                 );
 
-            return $location->addAllowedTimeFrame($day, $payload['opening_hour'] ?? null, $payload['closing_hour'] ?? null);
+            return $alloqed_location->addAllowedTimeFrame($day, $payload['opening_hour'] ?? null, $payload['closing_hour'] ?? null);
         });
     }
 
@@ -114,11 +123,11 @@ implements ISummitProposedScheduleAllowedLocationService
     public function updateAllowedDayToProposedLocation(PresentationCategory $track, int $allowed_location_id, int $allowed_day_id, array $payload): ?SummitProposedScheduleAllowedDay
     {
         return $this->tx_service->transaction(function() use($track, $allowed_location_id, $allowed_day_id){
-            $location = $track->getAllowedLocationById($allowed_location_id);
-            if(is_null($location))
+            $alloqed_location = $track->getAllowedLocationById($allowed_location_id);
+            if(is_null($alloqed_location))
                 throw new EntityNotFoundException(sprintf("Allowed Location %s not found", $allowed_location_id));
 
-            $time_frame = $location->getAllowedTimeFrameById($allowed_day_id);
+            $time_frame = $alloqed_location->getAllowedTimeFrameById($allowed_day_id);
 
             if(is_null($time_frame))
                 throw new EntityNotFoundException(sprintf("Allowed Day %s not found", $allowed_day_id));
@@ -136,16 +145,16 @@ implements ISummitProposedScheduleAllowedLocationService
     public function deleteAllowedDayToProposedLocation(PresentationCategory $track, int $allowed_location_id, int $allowed_day_id): void
     {
         $this->tx_service->transaction(function() use($track, $allowed_location_id, $allowed_day_id){
-            $location = $track->getAllowedLocationById($allowed_location_id);
-            if(is_null($location))
+            $alloqed_location = $track->getAllowedLocationById($allowed_location_id);
+            if(is_null($alloqed_location))
                 throw new EntityNotFoundException(sprintf("Allowed Location %s not found", $allowed_location_id));
 
-            $time_frame = $location->getAllowedTimeFrameById($allowed_day_id);
+            $time_frame = $alloqed_location->getAllowedTimeFrameById($allowed_day_id);
 
             if(is_null($time_frame))
                 throw new EntityNotFoundException(sprintf("Allowed Day %s not found", $allowed_day_id));
 
-            $location->removeAllowedTimeFrame($time_frame);
+            $alloqed_location->removeAllowedTimeFrame($time_frame);
 
         });
     }
@@ -159,11 +168,11 @@ implements ISummitProposedScheduleAllowedLocationService
     public function deleteAllAllowedDayToProposedLocation(PresentationCategory $track, int $allowed_location_id): void
     {
         $this->tx_service->transaction(function() use($track, $allowed_location_id){
-            $location = $track->getAllowedLocationById($allowed_location_id);
-            if(is_null($location))
+            $alloqed_location = $track->getAllowedLocationById($allowed_location_id);
+            if(is_null($alloqed_location))
                 throw new EntityNotFoundException(sprintf("Allowed Location %s not found", $allowed_location_id));
 
-            $location->clearAllowedTimeFrames();
+            $alloqed_location->clearAllowedTimeFrames();
 
         });
     }

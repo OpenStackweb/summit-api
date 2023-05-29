@@ -24,16 +24,16 @@ use models\exceptions\ValidationException;
 class AssignedPromoCodeSpeaker extends BaseEntity
 {
     /**
-     * @ORM\OneToOne(targetEntity="PresentationSpeaker")
+     * @ORM\ManyToOne(targetEntity="PresentationSpeaker")
      * @ORM\JoinColumn(name="SpeakerID", referencedColumnName="ID")
      * @var PresentationSpeaker
      */
     private $speaker;
 
     /**
-     * @ORM\ManyToOne(targetEntity="SummitRegistrationPromoCode")
+     * @ORM\ManyToOne(targetEntity="SummitRegistrationPromoCode",inversedBy="owners")
      * @ORM\JoinColumn(name="RegistrationPromoCodeID", referencedColumnName="ID")
-     * @var SpeakersSummitRegistrationPromoCode
+     * @var SummitRegistrationPromoCode
      */
     protected $registration_promo_code;
 

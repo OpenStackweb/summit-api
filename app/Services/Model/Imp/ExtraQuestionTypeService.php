@@ -90,16 +90,15 @@ abstract class ExtraQuestionTypeService
                 $name = trim($payload['value']);
                 $former_value = $question->getValueByName($name);
                 if (!is_null($former_value) && $former_value->getId() != $value_id)
-                    throw new ValidationException("value already exists.");
+                    throw new ValidationException("Value already exists.");
             }
 
             if(isset($payload['label'])) {
                 $label = trim($payload['label']);
                 $former_value = $question->getValueByLabel($label);
                 if (!is_null($former_value) && $former_value->getId() != $value_id)
-                    throw new ValidationException("value already exists.");
+                    throw new ValidationException("Label already exists.");
             }
-
 
             if (isset($payload['order']) && intval($payload['order']) != $value->getOrder()) {
                 // request to update order

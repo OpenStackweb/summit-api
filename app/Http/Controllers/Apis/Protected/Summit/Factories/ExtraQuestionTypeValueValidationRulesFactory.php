@@ -1,4 +1,6 @@
 <?php namespace App\Http\Controllers;
+use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
+
 /**
  * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,26 +19,23 @@
  * Class ExtraQuestionTypeValueValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class ExtraQuestionTypeValueValidationRulesFactory
+final class ExtraQuestionTypeValueValidationRulesFactory extends AbstractValidationRulesFactory
 {
-    /**
-     * @param array $data
-     * @param bool $update
-     * @return array
-     */
-    public static function build(array $data, $update = false){
 
-        if($update){
-            return [
-                'label' => 'sometimes|string',
-                'value' => 'sometimes|string|max:255',
-                'order' => 'sometimes|integer|min:1'
-            ];
-        }
-
+    public static function buildForAdd(array $payload = []): array
+    {
         return [
             'label' => 'sometimes|string',
             'value' => 'required|string|max:255',
+        ];
+    }
+
+    public static function buildForUpdate(array $payload = []): array
+    {
+        return [
+            'label' => 'sometimes|string',
+            'value' => 'sometimes|string|max:255',
+            'order' => 'sometimes|integer|min:1'
         ];
     }
 }

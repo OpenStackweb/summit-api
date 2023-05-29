@@ -351,7 +351,10 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
             $dict = json_decode($dict, true);
 
         if(empty($dict)) {
-            foreach ($this->values as $questionValue) {
+            $criteria = Criteria::create();
+            $criteria->orderBy(['order' => 'ASC']);
+
+            foreach ($this->values->matching($criteria) as $questionValue) {
                 $dict[$questionValue->getId()] = $questionValue->getLabel();
             }
            // sore it for 600 secs
@@ -372,7 +375,9 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
      * @return ExtraQuestionTypeValue[]|ArrayCollection
      */
     public function getValues(){
-        return $this->values;
+        $criteria = Criteria::create();
+        $criteria->orderBy(['order' => 'ASC']);
+        return $this->values->matching($criteria);
     }
 
     const QuestionChoicesCharSeparator = ',';

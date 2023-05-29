@@ -1197,7 +1197,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
 
         return $this->_add(
             function ($payload) {
-                return ExtraQuestionTypeValueValidationRulesFactory::build($payload);
+                return ExtraQuestionTypeValueValidationRulesFactory::buildForAdd($payload);
             },
             function ($payload, $summit, $question_id) {
                 return $this->selection_plan_extra_questions_service->addExtraQuestionValue
@@ -1226,7 +1226,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
 
         return $this->_add(
             function ($payload) {
-                return ExtraQuestionTypeValueValidationRulesFactory::build($payload);
+                return ExtraQuestionTypeValueValidationRulesFactory::buildForAdd($payload);
             },
             function ($payload, $summit, $question_id) {
                 return $this->selection_plan_extra_questions_service->addExtraQuestionValue
@@ -1251,7 +1251,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         $args = [$summit, intval($question_id)];
 
         return $this->_update($value_id, function ($payload) {
-            return ExtraQuestionTypeValueValidationRulesFactory::build($payload, false);
+            return ExtraQuestionTypeValueValidationRulesFactory::buildForUpdate($payload);
         },
             function ($value_id, $payload, $summit, $question_id) {
                 return $this->selection_plan_extra_questions_service->updateExtraQuestionValue
@@ -1282,7 +1282,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         $args = [$summit, intval($question_id)];
 
         return $this->_update($value_id, function ($payload) {
-            return ExtraQuestionTypeValueValidationRulesFactory::build($payload, false);
+            return ExtraQuestionTypeValueValidationRulesFactory::buildForUpdate($payload);
         },
             function ($value_id, $payload, $summit, $question_id) {
                 return $this->selection_plan_extra_questions_service->updateExtraQuestionValue

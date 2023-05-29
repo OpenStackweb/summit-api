@@ -56,7 +56,6 @@ final class DoctrineInstanceOfFilterMapping extends FilterMapping implements IQu
             foreach ($value as $val) {
                 $where_components[] =  str_replace(":class_name", $this->translateClassName($val), $this->where);
             }
-
             return implode(sprintf(" %s ", $filter->getSameFieldOp()), $where_components);
         }
         return str_replace(":class_name", $this->translateClassName($filter->getValue()), $this->where);

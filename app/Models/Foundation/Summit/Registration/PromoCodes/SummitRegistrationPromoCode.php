@@ -33,7 +33,9 @@ use Doctrine\ORM\Mapping as ORM;
  *     "SummitRegistrationDiscountCode" = "SummitRegistrationDiscountCode",
  *     "MemberSummitRegistrationDiscountCode" = "MemberSummitRegistrationDiscountCode",
  *     "SpeakerSummitRegistrationDiscountCode" = "SpeakerSummitRegistrationDiscountCode",
- *     "SponsorSummitRegistrationDiscountCode" = "SponsorSummitRegistrationDiscountCode"
+ *     "SponsorSummitRegistrationDiscountCode" = "SponsorSummitRegistrationDiscountCode",
+ *     "SpeakersRegistrationDiscountCode" = "SpeakersRegistrationDiscountCode",
+ *     "SpeakersSummitRegistrationPromoCode" = "SpeakersSummitRegistrationPromoCode"
  * })
  * Class SummitRegistrationPromoCode
  * @package models\summit
@@ -315,10 +317,11 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     }
 
     /**
+     * @param string|null $ownerEmail
      * @param int $usage
      * @throws ValidationException
      */
-    public function addUsage(int $usage)
+    public function addUsage(string $ownerEmail, int $usage = 1)
     {
 
         $quantity_used = $this->quantity_used;
@@ -328,11 +331,12 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         (
             sprintf
             (
-                "SummitRegistrationPromoCode::addUsage code %s usage %s quantity_used %s quantity_available %s.",
+                "SummitRegistrationPromoCode::addUsage code %s usage %s quantity_used %s quantity_available %s ownerEmail %s.",
                 $this->code,
                 $usage,
                 $quantity_used,
-                $quantity_available
+                $quantity_available,
+                $ownerEmail
             )
         );
 
@@ -355,9 +359,10 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
 
     /**
      * @param int $to_restore
+     * @param string|null $owner_email
      * @throws ValidationException
      */
-    public function removeUsage(int $to_restore)
+    public function removeUsage(int $to_restore, ?string $owner_email = null)
     {
 
         $quantity_used = $this->quantity_used;
@@ -367,11 +372,12 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         (
             sprintf
             (
-                "SummitRegistrationPromoCode::removeUsage code %s to_restore %s quantity_used %s quantity_available %s",
+                "SummitRegistrationPromoCode::removeUsage code %s to_restore %s quantity_used %s quantity_available %s owner_email %s",
                 $this->code,
                 $to_restore,
                 $quantity_used,
-                $quantity_available
+                $quantity_available,
+                $owner_email
             )
         );
 

@@ -15,12 +15,16 @@
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
+use App\Models\Foundation\Summit\Repositories\ISpeakersRegistrationDiscountCodeRepository;
+use App\Models\Foundation\Summit\Repositories\ISpeakersSummitRegistrationPromoCodeRepository;
 use App\ModelSerializers\SerializerUtils;
 use Illuminate\Http\Request as LaravelRequest;
 use models\main\IMemberRepository;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitRepository;
+use models\summit\SpeakersRegistrationDiscountCode;
+use models\summit\SpeakersSummitRegistrationPromoCode;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISummitPromoCodeService;
 use utils\Order;
@@ -45,6 +49,16 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
     private $member_repository;
 
     /**
+     * @var ISpeakersSummitRegistrationPromoCodeRepository
+     */
+    private $speakers_promo_code_repository;
+
+    /**
+     * @var ISpeakersRegistrationDiscountCodeRepository
+     */
+    private $speakers_discount_code_repository;
+
+    /**
      * @var ISummitPromoCodeService
      */
     private $promo_code_service;
@@ -59,17 +73,21 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
      * OAuth2SummitPromoCodesApiController constructor.
      * @param ISummitRepository $summit_repository
      * @param ISummitRegistrationPromoCodeRepository $promo_code_repository
+     * @param ISpeakersSummitRegistrationPromoCodeRepository $speakers_promo_code_repository
+     * @param ISpeakersRegistrationDiscountCodeRepository $speakers_discount_code_repository
      * @param IMemberRepository $member_repository
      * @param ISummitPromoCodeService $promo_code_service
      * @param IResourceServerContext $resource_server_context
      */
     public function __construct
     (
-        ISummitRepository                      $summit_repository,
-        ISummitRegistrationPromoCodeRepository $promo_code_repository,
-        IMemberRepository                      $member_repository,
-        ISummitPromoCodeService                $promo_code_service,
-        IResourceServerContext                 $resource_server_context
+        ISummitRepository                               $summit_repository,
+        ISummitRegistrationPromoCodeRepository          $promo_code_repository,
+        ISpeakersSummitRegistrationPromoCodeRepository  $speakers_promo_code_repository,
+        ISpeakersRegistrationDiscountCodeRepository     $speakers_discount_code_repository,
+        IMemberRepository                               $member_repository,
+        ISummitPromoCodeService                         $promo_code_service,
+        IResourceServerContext                          $resource_server_context
     )
     {
         parent::__construct($resource_server_context);
@@ -77,6 +95,8 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         $this->repository = $promo_code_repository;
         $this->summit_repository = $summit_repository;
         $this->member_repository = $member_repository;
+        $this->speakers_promo_code_repository = $speakers_promo_code_repository;
+        $this->speakers_discount_code_repository = $speakers_discount_code_repository;
     }
 
     /**
@@ -265,7 +285,6 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
      */
     public function addPromoCodeBySummit($summit_id)
     {
-
         return $this->processRequest(function () use ($summit_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -483,4 +502,166 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         });
     }
 
+    /**
+     * @param $summit_id
+     * @param $promo_code_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getPromoCodeSpeakers($summit_id, $promo_code_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        $promo_code = $this->repository->getById($promo_code_id);
+
+        if (!$promo_code instanceof SpeakersSummitRegistrationPromoCode ) {
+            return $this->error404();
+        }
+
+        return $this->_getAll(
+            function () {
+                return [
+                    'email' => ['@@', '=@', '=='],
+                    'full_name' => ['@@', '=@', '=='],
+                ];
+            },
+            function () {
+                return [
+                    'email' => 'sometimes|string',
+                    'full_name' => 'sometimes|string',
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'email',
+                    'full_name'
+                ];
+            },
+            function ($filter) {
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Private;
+            },
+            function () {
+                return new Order([
+                    OrderElement::buildAscFor("id"),
+                ]);
+            },
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($promo_code) {
+                return $this->speakers_promo_code_repository->getPromoCodeSpeakers
+                (
+                    $promo_code,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
+    }
+
+    /**
+     * @param $summit_id
+     * @param $discount_code_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getDiscountCodeSpeakers($summit_id, $discount_code_id)
+    {
+        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+        if (is_null($summit)) return $this->error404();
+
+        $discount_code = $this->repository->getById($discount_code_id);
+
+        if (!$discount_code instanceof SpeakersRegistrationDiscountCode) {
+            return $this->error404();
+        }
+
+        return $this->_getAll(
+            function () {
+                return [
+                    'email' => ['@@', '=@', '=='],
+                    'first_name' => ['@@', '=@', '=='],
+                    'last_name' => ['@@', '=@', '=='],
+                ];
+            },
+            function () {
+                return [
+                    'email' => 'sometimes|string',
+                    'first_name' => 'sometimes|string',
+                    'last_name' => 'sometimes|string',
+                ];
+            },
+            function () {
+                return [
+                    'id',
+                    'email',
+                ];
+            },
+            function ($filter) {
+                return $filter;
+            },
+            function () {
+                return SerializerRegistry::SerializerType_Private;
+            },
+            function () {
+                return new Order([
+                    OrderElement::buildAscFor("id"),
+                ]);
+            },
+            null,
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($discount_code) {
+                return $this->speakers_discount_code_repository->getDiscountCodeSpeakers
+                (
+                    $discount_code,
+                    new PagingInfo($page, $per_page),
+                    call_user_func($applyExtraFilters, $filter),
+                    $order
+                );
+            }
+        );
+    }
+
+    /**
+     * @param $summit_id
+     * @param $promo_code_id
+     * @param $speaker_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function addSpeaker($summit_id, $promo_code_id, $speaker_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $promo_code_id, $speaker_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $promo_code = $this->repository->getById($promo_code_id);
+            if (is_null($promo_code)) return $this->error404();
+
+            $this->promo_code_service->addPromoCodeSpeaker($promo_code, $speaker_id);
+
+            return $this->created();
+        });
+    }
+
+    /**
+     * @param $summit_id
+     * @param $promo_code_id
+     * @param $speaker_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function removeSpeaker($summit_id, $promo_code_id, $speaker_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $promo_code_id, $speaker_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $promo_code = $this->repository->getById($promo_code_id);
+            if (is_null($promo_code)) return $this->error404();
+
+            $this->promo_code_service->removePromoCodeSpeaker($promo_code, $speaker_id);
+
+            return $this->deleted();
+        });
+    }
 }

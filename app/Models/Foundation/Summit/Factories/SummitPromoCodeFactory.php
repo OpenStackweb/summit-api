@@ -13,6 +13,8 @@
  **/
 use models\summit\MemberSummitRegistrationDiscountCode;
 use models\summit\MemberSummitRegistrationPromoCode;
+use models\summit\SpeakersRegistrationDiscountCode;
+use models\summit\SpeakersSummitRegistrationPromoCode;
 use models\summit\SpeakerSummitRegistrationDiscountCode;
 use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\SponsorSummitRegistrationDiscountCode;
@@ -58,13 +60,21 @@ final class SummitPromoCodeFactory
             case MemberSummitRegistrationDiscountCode::ClassName:{
                 $promo_code = new MemberSummitRegistrationDiscountCode();
             }
-                break;
+            break;
             case SpeakerSummitRegistrationDiscountCode::ClassName:{
                 $promo_code = new SpeakerSummitRegistrationDiscountCode();
             }
-                break;
+            break;
             case SponsorSummitRegistrationDiscountCode::ClassName:{
                 $promo_code = new SponsorSummitRegistrationDiscountCode();
+            }
+            break;
+            case SpeakersSummitRegistrationPromoCode::ClassName:{
+                $promo_code = new SpeakersSummitRegistrationPromoCode();
+            }
+            break;
+            case SpeakersRegistrationDiscountCode::ClassName:{
+                $promo_code = new SpeakersRegistrationDiscountCode();
             }
             break;
         }
@@ -161,8 +171,12 @@ final class SummitPromoCodeFactory
                     $promo_code->setSpeaker($params['speaker']);
             }
             break;
+            case SpeakersSummitRegistrationPromoCode::ClassName:{
+                if(isset($data['type']))
+                    $promo_code->setType($data['type']);
+            }
+            break;
             case SponsorSummitRegistrationPromoCode::ClassName:{
-
                 if(isset($params['owner']))
                     $promo_code->setOwner($params['owner']);
                 if(isset($data['type']))
@@ -193,7 +207,7 @@ final class SummitPromoCodeFactory
                 if(isset($data['rate']))
                     $promo_code->setRate(floatval($data['rate']));
             }
-                break;
+            break;
             case SpeakerSummitRegistrationDiscountCode::ClassName:{
                 if(isset($data['type']))
                     $promo_code->setType($data['type']);
@@ -204,7 +218,16 @@ final class SummitPromoCodeFactory
                 if(isset($data['rate']))
                     $promo_code->setRate(floatval($data['rate']));
             }
-                break;
+            break;
+            case SpeakersRegistrationDiscountCode::ClassName: {
+                if(isset($data['type']))
+                    $promo_code->setType($data['type']);
+                if(isset($data['amount']))
+                    $promo_code->setAmount(floatval($data['amount']));
+                if(isset($data['rate']))
+                    $promo_code->setRate(floatval($data['rate']));
+            }
+            break;
             case SponsorSummitRegistrationDiscountCode::ClassName:{
                 if(isset($params['owner']))
                     $promo_code->setOwner($params['owner']);

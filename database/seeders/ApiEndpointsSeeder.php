@@ -6540,6 +6540,90 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
+            // speakers promo codes
+            [
+                'name' => 'get-promo-code-speakers',
+                'route' => '/api/v1/summits/{id}/speakers-promo-codes/{promo_code_id}/speakers',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-promo-code-speaker',
+                'route' => '/api/v1/summits/{id}/speakers-promo-codes/{promo_code_id}/speakers/{speaker_id}',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'remove-promo-code-speaker',
+                'route' => '/api/v1/summits/{id}/speakers-promo-codes/{promo_code_id}/speakers/{speaker_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            // speakers discount codes
+            [
+                'name' => 'get-discount-code-speakers',
+                'route' => '/api/v1/summits/{id}/speakers-discount-codes/{discount_code_id}/speakers',
+                'http_method' => 'GET',
+                'scopes' => [
+                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-discount-code-speaker',
+                'route' => '/api/v1/summits/{id}/speakers-discount-codes/{discount_code_id}/speakers/{speaker_id}',
+                'http_method' => 'POST',
+                'scopes' => [
+                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'remove-discount-code-speaker',
+                'route' => '/api/v1/summits/{id}/speakers-discount-codes/{discount_code_id}/speakers/{speaker_id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
+                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             // summit speakers assistances
             [
                 'name' => 'get-speaker-assistances-by-summit',

@@ -12,17 +12,17 @@
  * limitations under the License.
  **/
 
+use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessExcerptEmail;
-use App\Jobs\Emails\ProcessSpeakersEmailRequestJob;
-use App\Jobs\Emails\Registration\PromoCodeEmailFactory;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionApprovedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionRequestedEmail;
+use App\Jobs\Emails\ProcessSpeakersEmailRequestJob;
+use App\Jobs\Emails\Registration\PromoCodeEmailFactory;
 use App\Models\Foundation\Main\CountryCodes;
 use App\Models\Foundation\Main\Repositories\ILanguageRepository;
 use App\Models\Foundation\Summit\Factories\PresentationSpeakerSummitAssistanceConfirmationRequestFactory;
 use App\Models\Foundation\Summit\Factories\SpeakerEditPermissionRequestFactory;
-use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use App\Models\Foundation\Summit\Repositories\IPresentationSpeakerSummitAssistanceConfirmationRequestRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerActiveInvolvementRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakerEditPermissionRequestRepository;
@@ -32,6 +32,8 @@ use App\Services\Model\AbstractService;
 use App\Services\Model\IFolderService;
 use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\Strategies\EmailActions\SpeakerActionsEmailStrategy;
+use App\Services\Model\Strategies\PromoCodes\IPromoCodeStrategyFactory;
+use App\Services\Model\Strategies\PromoCodes\PromoCodeStrategyFactory;
 use App\Services\Utils\Facades\EmailExcerpt;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -54,8 +56,6 @@ use models\summit\SpeakerRegistrationRequest;
 use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\SpeakerTravelPreference;
 use models\summit\Summit;
-use App\Http\Utils\IFileUploader;
-use models\summit\SummitRegistrationPromoCode;
 use utils\Filter;
 
 /**
@@ -129,6 +129,11 @@ final class SpeakerService
     private $summit_repository;
 
     /**
+     * @var IPromoCodeStrategyFactory
+     */
+    protected $promo_code_strategy_factory;
+
+    /**
      * SpeakerService constructor.
      * @param ISpeakerRepository $speaker_repository
      * @param IMemberRepository $member_repository
@@ -142,6 +147,7 @@ final class SpeakerService
      * @param IFileUploader $file_uploader
      * @param ISpeakerEditPermissionRequestRepository $speaker_edit_permisssion_repository
      * @param ISummitRepository $summit_repository
+     * @param IPromoCodeStrategyFactory $promo_code_strategy_factory
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -158,6 +164,7 @@ final class SpeakerService
         IFileUploader                                                     $file_uploader,
         ISpeakerEditPermissionRequestRepository                           $speaker_edit_permisssion_repository,
         ISummitRepository                                                 $summit_repository,
+        IPromoCodeStrategyFactory                                         $promo_code_strategy_factory,
         ITransactionService                                               $tx_service
     )
     {
@@ -173,6 +180,7 @@ final class SpeakerService
         $this->speaker_involvement_repository = $speaker_involvement_repository;
         $this->file_uploader = $file_uploader;
         $this->summit_repository = $summit_repository;
+        $this->promo_code_strategy_factory = $promo_code_strategy_factory;
         $this->speaker_edit_permisssion_repository = $speaker_edit_permisssion_repository;
     }
 
@@ -610,92 +618,6 @@ final class SpeakerService
         }
 
         return $speaker;
-    }
-
-    /**
-     * @param Summit $summit
-     * @param PresentationSpeaker $speaker
-     * @param Filter|null $filter
-     * @return SummitRegistrationPromoCode|null
-     * @throws \Exception
-     */
-    private function getPromoCode(Summit $summit, PresentationSpeaker $speaker, ?Filter $filter = null): ?SummitRegistrationPromoCode
-    {
-        return $this->tx_service->transaction(function() use($speaker, $summit, $filter) {
-
-            $promo_code = $speaker->getPromoCodeFor($summit);
-
-            if (is_null($promo_code)) {
-                $promo_code = $speaker->getDiscountCodeFor($summit);
-            }
-
-            if (is_null($promo_code)) {
-                // try to get a new one
-
-                $has_accepted =
-                    $speaker->hasAcceptedPresentations($summit, PresentationSpeaker::RoleModerator, true, $summit->getExcludedCategoriesForAcceptedPresentations(), $filter) ||
-                    $speaker->hasAcceptedPresentations($summit, PresentationSpeaker::RoleSpeaker, true, $summit->getExcludedCategoriesForAcceptedPresentations(), $filter);
-
-                $has_alternate =
-                    $speaker->hasAlternatePresentations($summit, PresentationSpeaker::RoleModerator, true, $summit->getExcludedCategoriesForAlternatePresentations(), $filter) ||
-                    $speaker->hasAlternatePresentations($summit, PresentationSpeaker::RoleSpeaker, true, $summit->getExcludedCategoriesForAlternatePresentations(), $filter);
-
-                if ($has_accepted) //get approved code
-                {
-                    $promo_code = $this->registration_code_repository->getNextAvailableByType
-                    (
-                        $summit,
-                        PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAccepted
-                    );
-                    /*
-                    if (is_null($promo_code))
-                        throw new ValidationException
-                        (
-                            trans
-                            (
-                                'validation_errors.send_speaker_summit_assistance_announcement_mail_run_out_promo_code',
-                                [
-                                    'summit_id' => $summit->getId(),
-                                    'speaker_id' => $speaker->getId(),
-                                    'speaker_email' => $speaker->getEmail(),
-                                    'type' => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAccepted
-                                ]
-                            )
-                        );
-                    */
-                    if (!is_null($promo_code))
-                        $speaker->addPromoCode($promo_code);
-                } else if ($has_alternate) // get alternate code
-                {
-                    $promo_code = $this->registration_code_repository->getNextAvailableByType
-                    (
-                        $summit,
-                        PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAlternate
-                    );
-                    /*
-                    if (is_null($promo_code))
-                        throw new ValidationException
-                        (
-                            trans
-                            (
-                                'validation_errors.send_speaker_summit_assistance_announcement_mail_run_out_promo_code',
-                                [
-                                    'summit_id' => $summit->getId(),
-                                    'speaker_id' => $speaker->getId(),
-                                    'speaker_email' => $speaker->getEmail(),
-                                    'type' => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAccepted
-                                ]
-                            )
-
-                        );
-                    */
-                    if (!is_null($promo_code))
-                        $speaker->addPromoCode($promo_code);
-                }
-            }
-
-            return $promo_code;
-        });
     }
 
     /**
@@ -1316,7 +1238,7 @@ final class SpeakerService
             function($summit, $paging_info, $filter) {
                 return $this->speaker_repository->getSpeakersIdsBySummit($summit, $paging_info, $filter);
             },
-            function($summit, $flow_event, $speaker_id, $test_email_recipient, $speaker_announcement_email_config, $filter) {
+            function($summit, $flow_event, $speaker_id, $test_email_recipient, $speaker_announcement_email_config, $filter) use ($payload) {
                 try {
                     $this->tx_service->transaction(function () use
                     (
@@ -1325,7 +1247,8 @@ final class SpeakerService
                         $speaker_id,
                         $test_email_recipient,
                         $speaker_announcement_email_config,
-                        $filter
+                        $filter,
+                        $payload
                     ) {
                         $email_strategy = new SpeakerActionsEmailStrategy($summit, $flow_event);
 
@@ -1337,8 +1260,8 @@ final class SpeakerService
                             throw new EntityNotFoundException('speaker not found!');
                         }
 
-                        // try to get a promo code
-                        $promo_code = $this->getPromoCode($summit, $speaker, $filter);
+                        // try to get or auto-build a promo code
+                        $promo_code = $this->promo_code_strategy_factory->createStrategy($summit, $payload)->getPromoCode($speaker);
 
                         // try to get a speaker assistance
                         $assistance = $this->generateSpeakerAssistance($summit, $speaker, $filter);

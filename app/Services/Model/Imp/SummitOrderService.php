@@ -595,8 +595,8 @@ final class ApplyPromoCodeTask extends AbstractTask
 
                 Log::debug(sprintf("adding %s usage to promo code %s", $qty, $promo_code->getId()));
 
-                $this->lock_service->lock('promocode.' . $promo_code->getId() . '.usage.lock', function () use ($promo_code, $qty) {
-                    $promo_code->addUsage($qty);
+                $this->lock_service->lock('promocode.' . $promo_code->getId() . '.usage.lock', function () use ($promo_code, $qty, $owner_email) {
+                    $promo_code->addUsage($owner_email, $qty);
                 });
 
             });
@@ -611,14 +611,15 @@ final class ApplyPromoCodeTask extends AbstractTask
     {
         Log::info("ApplyPromoCodeTask::undo: compensating transaction");
         $promo_codes_usage = $this->formerState['promo_codes_usage'];
+        $owner_email = $this->payload['owner_email'];
         foreach ($promo_codes_usage as $code => $info) {
-            $this->tx_service->transaction(function () use ($code, $info) {
+            $this->tx_service->transaction(function () use ($code, $info, $owner_email) {
                 $promo_code = $this->promo_code_repository->getByValueExclusiveLock($this->summit, $code);
                 if (is_null($promo_code)) return;
                 if (!isset($info['redeem'])) return;
 
-                $this->lock_service->lock('promocode.' . $promo_code->getId() . '.usage.lock', function () use ($promo_code, $info) {
-                    $promo_code->removeUsage(intval($info['qty']));
+                $this->lock_service->lock('promocode.' . $promo_code->getId() . '.usage.lock', function () use ($promo_code, $info, $owner_email) {
+                    $promo_code->removeUsage(intval($info['qty']), $owner_email);
                 });
 
             });
@@ -1843,6 +1844,7 @@ final class SummitOrderService
     {
         return $this->tx_service->transaction(function () use ($summit, $order_hash) {
 
+            Log::debug(sprintf("SummitOrderService::cancel summit %s order %s",$summit->getId(), $order_hash));
             $order = $this->order_repository->getByHashLockExclusive($order_hash);
 
             if (is_null($order) || !$order instanceof SummitOrder || $summit->getId() != $order->getSummitId())
@@ -1957,11 +1959,14 @@ final class SummitOrderService
      */
     public function revokeReservedOrdersOlderThanNMinutes(int $minutes, int $max = 100): void
     {
-        Log::debug(sprintf("revokeReservedOrdersOlderThanNMinutes minutes %s max %s", $minutes, $max));
+        Log::debug(sprintf("SummitOrderService::revokeReservedOrdersOlderThanNMinutes minutes %s max %s", $minutes, $max));
+
         // done in this way to avoid db lock contention
         $orders = $this->tx_service->transaction(function () use ($minutes, $max) {
             return $this->order_repository->getAllReservedOlderThanXMinutes($minutes, $max);
         });
+
+        Log::debug(sprintf("SummitOrderService::revokeReservedOrdersOlderThanNMinutes got %s orders to revoke", count($orders)));
 
         foreach ($orders as $order) {
             $this->tx_service->transaction(function () use ($order) {
@@ -2340,7 +2345,8 @@ final class SummitOrderService
                         throw new EntityNotFoundException(sprintf("Promo code %s not found.", $promo_code));
                     }
                     Log::debug(sprintf("SummitOrderService::createTicketsForOrder applying promo code %s", $pc->getCode()));
-                    $pc->addUsage(1);
+                    $owner_email = !is_null($attendee) ? $attendee->getEmail() : $order->getOwnerEmail();
+                    $pc->addUsage($owner_email);
                     $pc->applyTo($ticket);
                 }
 
@@ -2399,6 +2405,17 @@ final class SummitOrderService
 
         // restore tickets and promo-codes
 
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitOrderService::restoreTicketsPromoCodes restoring tickets and promo codes for summit %s tickets_to_return %s promo_codes_to_return %s",
+                $summit->getId(),
+                json_encode($tickets_to_return),
+                json_encode($promo_codes_to_return)
+            )
+        );
+
         foreach ($tickets_to_return as $ticket_type_id => $qty) {
             $ticket_type = $this->ticket_type_repository->getByIdExclusiveLock($ticket_type_id);
             if (!$ticket_type instanceof SummitTicketType) continue;
@@ -2412,12 +2429,13 @@ final class SummitOrderService
 
         // compensate promo codes usages
 
-        foreach ($promo_codes_to_return as $code => $qty) {
+        foreach ($promo_codes_to_return as $code => $value) {
             $promo_code = $this->promo_code_repository->getByValueExclusiveLock($summit, $code);
             if (!$promo_code instanceof SummitRegistrationPromoCode) continue;
+            $qty = $value["qty"];
             Log::debug(sprintf("SummitOrderService::restoreTicketsPromoCodes compensating promo code %s on %s usages", $code, $qty));
             try {
-                $promo_code->removeUsage($qty);
+                $promo_code->removeUsage($qty, $value["owner_email"]);
             } catch (ValidationException $ex) {
                 Log::warning($ex);
             }

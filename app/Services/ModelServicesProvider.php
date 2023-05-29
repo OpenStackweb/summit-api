@@ -108,6 +108,8 @@ use App\Services\Model\RSVPTemplateService;
 use App\Services\Model\ScheduleIngestionService;
 use App\Services\Model\ScheduleService;
 use App\Services\Model\SponsorshipTypeService;
+use App\Services\Model\Strategies\PromoCodes\IPromoCodeStrategyFactory;
+use App\Services\Model\Strategies\PromoCodes\PromoCodeStrategyFactory;
 use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategyFactory;
 use App\Services\Model\Strategies\TicketFinder\TicketFinderStrategyFactory;
 use App\Services\Model\SummitAccessLevelTypeService;
@@ -457,7 +459,7 @@ final class ModelServicesProvider extends ServiceProvider
             IScheduleService::class,
             ScheduleService::class,
         );
-      
+
         App::singleton(
             ISummitSubmissionInvitationService::class,
             SummitSubmissionInvitationService::class,
@@ -469,6 +471,7 @@ final class ModelServicesProvider extends ServiceProvider
         );
 
         App::singleton(
+
             ISummitProposedScheduleAllowedLocationService::class,
             SummitProposedScheduleAllowedLocationService::class
         );
@@ -477,7 +480,12 @@ final class ModelServicesProvider extends ServiceProvider
             ITicketFinderStrategyFactory::class,
             TicketFinderStrategyFactory::class
         );
-   }
+        App::singleton(
+
+            IPromoCodeStrategyFactory::class,
+            PromoCodeStrategyFactory::class,
+        );
+    }
 
     /**
      * Get the services provided by the provider.
@@ -545,6 +553,7 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitSignService::class,
             ISummitProposedScheduleAllowedLocationService::class,
             ITicketFinderStrategyFactory::class,
+            IPromoCodeStrategyFactory::class,
         ];
     }
 }

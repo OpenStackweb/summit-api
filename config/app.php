@@ -163,6 +163,7 @@ return [
         services\BaseServicesProvider::class,
         services\ModelServicesProvider::class,
         App\Http\Utils\UtilsProvider::class,
+        App\Services\Utils\UtilsProvider::class,
         // Doctrine ORM
         LaravelDoctrine\ORM\DoctrineServiceProvider::class,
         LaravelDoctrine\Extensions\BeberleiExtensionsServiceProvider::class,

@@ -266,7 +266,6 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
     public function generateConfirmationToken(): string
     {
         $generator = new RandomGenerator();
-        $this->accepted_date = null;
         // build seed
         $seed = '';
         if (!is_null($this->first_name))

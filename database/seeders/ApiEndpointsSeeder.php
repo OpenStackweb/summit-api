@@ -5190,6 +5190,8 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
                 ]
             ],
             [
@@ -5204,6 +5206,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::TrackChairsAdmins,
                 ]
             ],
             [
@@ -5218,6 +5221,8 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
                 ]
             ],
             [
@@ -5232,6 +5237,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::TrackChairsAdmins,
                 ]
             ],
 
@@ -5261,6 +5267,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::TrackChairsAdmins,
                 ]
             ],
             [
@@ -5275,6 +5282,8 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
                 ]
             ],
             [
@@ -5289,6 +5298,8 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
                 ]
             ],
             [
@@ -5303,6 +5314,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::TrackChairsAdmins,
                 ]
             ],
             [
@@ -5317,6 +5329,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::TrackChairsAdmins,
                 ]
             ],
             [
@@ -5331,6 +5344,8 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::TrackChairs,
+                    IGroup::TrackChairsAdmins,
                 ]
             ],
             // ticket types

@@ -18,6 +18,8 @@ use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitProposedScheduleAllowedLocationService;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
+use models\summit\PresentationCategory;
+use models\summit\Summit;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
 use utils\FilterElement;
@@ -76,6 +78,20 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
     }
 
     /**
+     * @param Summit $summit
+     * @param PresentationCategory $track
+     * @return bool
+     */
+    private function isCurrentUserAuth(Summit $summit, PresentationCategory $track):bool{
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if(is_null($current_member)) return false;
+        if($current_member->isAdmin()) return true;
+        if($summit->isSummitAdmin($current_member)) return true;
+        if($summit->isTrackChair($current_member, $track)) return true;
+        return false;
+    }
+
+    /**
      * @param $summit_id
      * @param $track_id
      * @return \Illuminate\Http\JsonResponse|mixed
@@ -87,6 +103,9 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
 
         $track = $summit->getPresentationCategory(intval($track_id));
         if(is_null($track) || !$track->isChairVisible()) return $this->error404();
+
+        if(!$this->isCurrentUserAuth($summit, $track))
+            return $this->error403();
 
         return $this->_getAll(
             function () {
@@ -133,6 +152,9 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
             $track = $summit->getPresentationCategory(intval($track_id));
             if(is_null($track) || !$track->isChairVisible()) return $this->error404();
 
+            if(!$this->isCurrentUserAuth($summit, $track))
+                return $this->error403();
+
             $payload = $this->getJsonPayload(SummitProposedScheduleAllowedLocationValidationRulesFactory::buildForAdd());
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($this->service->addProposedLocationToTrack($track, $payload))
@@ -159,6 +181,9 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
             $track = $summit->getPresentationCategory(intval($track_id));
             if(is_null($track) || !$track->isChairVisible()) return $this->error404();
 
+            if(!$this->isCurrentUserAuth($summit, $track))
+                return $this->error403();
+
             $allowed_location = $track->getAllowedLocationById(intval($location_id));
 
             if(is_null($allowed_location)) return $this->error404();
@@ -181,6 +206,9 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
             $track = $summit->getPresentationCategory(intval($track_id));
             if(is_null($track) || !$track->isChairVisible()) return $this->error404();
 
+            if(!$this->isCurrentUserAuth($summit, $track))
+                return $this->error403();
+
             $this->service->deleteProposedLocationFromTrack($track, intval($location_id));
 
             return $this->deleted();
@@ -199,6 +227,9 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
 
             $track = $summit->getPresentationCategory(intval($track_id));
             if(is_null($track) || !$track->isChairVisible()) return $this->error404();
+
+            if(!$this->isCurrentUserAuth($summit, $track))
+                return $this->error403();
 
             $this->service->deleteAllProposedLocationFromTrack($track);
 
@@ -219,6 +250,9 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
 
             $track = $summit->getPresentationCategory(intval($track_id));
             if(is_null($track) || !$track->isChairVisible()) return $this->error404();
+
+            if(!$this->isCurrentUserAuth($summit, $track))
+                return $this->error403();
 
             $payload = $this->getJsonPayload(SummitProposedScheduleAllowedDayValidationRulesFactory::buildForAdd());
 
@@ -245,6 +279,9 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
 
         $track = $summit->getPresentationCategory(intval($track_id));
         if(is_null($track) || !$track->isChairVisible()) return $this->error404();
+
+        if(!$this->isCurrentUserAuth($summit, $track))
+            return $this->error403();
 
         $allowed_location = $track->getAllowedLocationById(intval($location_id));
         if(is_null($allowed_location)) return $this->error404();
@@ -321,6 +358,9 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
             $track = $summit->getPresentationCategory(intval($track_id));
             if(is_null($track) || !$track->isChairVisible()) return $this->error404();
 
+            if(!$this->isCurrentUserAuth($summit, $track))
+                return $this->error403();
+
             $allowed_location = $track->getAllowedLocationById(intval($location_id));
 
             if(is_null($allowed_location)) return $this->error404();
@@ -353,6 +393,9 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
             $track = $summit->getPresentationCategory(intval($track_id));
             if(is_null($track) || !$track->isChairVisible()) return $this->error404();
 
+            if(!$this->isCurrentUserAuth($summit, $track))
+                return $this->error403();
+
             $this->service->deleteAllowedDayToProposedLocation($track, intval($location_id), intval($time_frame_id));
 
             return $this->deleted();
@@ -372,6 +415,9 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
 
             $track = $summit->getPresentationCategory(intval($track_id));
             if(is_null($track) || !$track->isChairVisible()) return $this->error404();
+
+            if(!$this->isCurrentUserAuth($summit, $track))
+                return $this->error403();
 
             $this->service->deleteAllAllowedDayToProposedLocation($track, intval($location_id));
 
@@ -393,6 +439,9 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
 
             $track = $summit->getPresentationCategory(intval($track_id));
             if(is_null($track) || !$track->isChairVisible()) return $this->error404();
+
+            if(!$this->isCurrentUserAuth($summit, $track))
+                return $this->error403();
 
             $payload = $this->getJsonPayload(SummitProposedScheduleAllowedDayValidationRulesFactory::buildForUpdate());
 

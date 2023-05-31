@@ -4358,7 +4358,7 @@ DQL;
         $dt = $dt->setTimezone(new \DateTimeZone('UTC'));
 
         if ($omit_time_check)
-            $dt = $dt->setTime(0, 0, 0);
+            $dt = $dt->setTime(0, 0, 0,0);
 
         $dt = $dt->getTimestamp();
 
@@ -4376,6 +4376,7 @@ DQL;
 
         $ed = $ed->getTimestamp();
 
+        Log::debug(sprintf("Summit::dayIsOnSummitPeriod bd %s ed %s dt %s", $bd, $ed, $dt));
         return $bd <= $dt && $dt <= $ed;
     }
 

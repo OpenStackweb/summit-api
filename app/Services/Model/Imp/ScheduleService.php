@@ -212,7 +212,7 @@ final class ScheduleService
                     (
                         "ScheduleService::validateBlackOutTimesAndTimes location %s has custom restriction for date %s opening_hour %s closing_hour %s",
                         $location->getId(),
-                        $publishable_event->getStartDate()->format("Y-m-d"),
+                        $publishable_event->getStartDate()->format("Y-m-d H:i:s"),
                         $opening_hour,
                         $closing_hour
                     )

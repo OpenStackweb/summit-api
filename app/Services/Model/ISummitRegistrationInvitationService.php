@@ -27,8 +27,10 @@ interface ISummitRegistrationInvitationService
     /**
      * @param Summit $summit
      * @param UploadedFile $csv_file
+     * @param array $payload
+     * @return void
      */
-    public function importInvitationData(Summit $summit, UploadedFile $csv_file):void;
+    public function importInvitationData(Summit $summit, UploadedFile $csv_file, array $payload=[]):void;
 
     /**
      * @param Summit $summit

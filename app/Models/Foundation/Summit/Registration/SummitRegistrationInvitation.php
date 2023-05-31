@@ -69,6 +69,20 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
     private $set_password_link;
 
     /**
+     * @ORM\Column(name="AcceptanceCriteria", type="string")
+     * @var string
+     */
+    private $acceptance_criteria;
+
+    const AcceptanceCriteria_AnyTicketType = 'ANY_TICKET_TYPE';
+    const AcceptanceCriteria_AllTicketTypes = 'ALL_TICKET_TYPES';
+
+    const AllowedAcceptanceCriteria = [
+        self::AcceptanceCriteria_AnyTicketType,
+        self::AcceptanceCriteria_AllTicketTypes
+    ];
+
+    /**
      * @var \DateTime
      * @ORM\Column(name="AcceptedDate", type="datetime")
      */
@@ -124,6 +138,8 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         $this->orders = new ArrayCollection();
         $this->tags = new ArrayCollection();
         $this->member = null;
+        $this->acceptance_criteria = self::AcceptanceCriteria_AllTicketTypes;
+        $this->accepted_date = null;
     }
 
     /**
@@ -333,8 +349,14 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
             )
         );
 
+        if($this->isAccepted() && $this->getAcceptanceCriteria() === self::AcceptanceCriteria_AnyTicketType) {
+            // if we already accepted and acceptance criteria is any ( OR ), then there are now more allowed ticket types
+            Log::debug(sprintf("SummitRegistrationInvitation::getRemainingAllowedTicketTypes id %s is accepted and acceptance criteria is any", $this->id));
+            return [];
+        }
+
         $invitation_ticket_types = $this->ticket_types;
-        if($invitation_ticket_types->count() === 0 )
+        if($invitation_ticket_types->count() === 0 )// we are allowed to purchase any ticket type with invitation
             $invitation_ticket_types = $this->summit->getTicketTypesByAudience(SummitTicketType::Audience_With_Invitation);
 
         foreach ($invitation_ticket_types as $ticket_type){
@@ -375,13 +397,19 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s orders count %s", $this->id, $this->orders->count()));
         if($this->orders->count() === 0 ) return;
 
+        // if its already accepted do nothing
+        if($this->isAccepted()) {
+            Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s already accepted", $this->id));
+            return;
+        }
+
         $bought_tickets = $this->getBoughtTicketTypesExcerpt();
 
         Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s bought_tickets %s", $this->id, json_encode($bought_tickets)));
-        // check if we fullfill the invitation
+        // check if we fulfill the invitation
 
         $invitation_ticket_types = $this->ticket_types;
-        if($invitation_ticket_types->count() === 0 )
+        if($invitation_ticket_types->count() === 0 ) // we are allowed to purchase any ticket type with invitation
             $invitation_ticket_types = $this->summit->getTicketTypesByAudience(SummitTicketType::Audience_With_Invitation);
 
         if($invitation_ticket_types->count() === 0)
@@ -395,19 +423,70 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
                 )
             );
 
+        $acceptance_criteria = $this->acceptance_criteria;
+        // initial value of the flag depends on the current acceptance criteria ...
+        $should_accept = $acceptance_criteria === self::AcceptanceCriteria_AllTicketTypes;
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitRegistrationInvitation::markAsAccepted %s acceptance_criteria %s should_accept %b",
+                $this->id,
+                $acceptance_criteria,
+                $should_accept
+            )
+        );
+
+        // iterate over all invitation ticket types to infer if we should accept or not
         foreach ($invitation_ticket_types as $ticket_type){
-            Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s checking if ticket type %s is purchased ... ", $this->id, $ticket_type->getId()));
-            if(!isset($bought_tickets[$ticket_type->getId()])){
-                Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s ticket type %s is not purchased yet, marking invitation as non accepted ... ", $this->id, $ticket_type->getId()));
-                $this->accepted_date = null;
-                return;
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitRegistrationInvitation::markAsAccepted %s checking if ticket type %s is purchased ... ",
+                    $this->id,
+                    $ticket_type->getId()
+                )
+            );
+
+            if($acceptance_criteria === self::AcceptanceCriteria_AllTicketTypes) {
+                // AND
+                if(!isset($bought_tickets[$ticket_type->getId()])){
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitRegistrationInvitation::markAsAccepted %s ticket type %s is not purchased yet, marking invitation as non accepted (ALL)... ",
+                            $this->id,
+                            $ticket_type->getId()
+                        )
+                    );
+                    $should_accept = false;
+                    break;
+                }
             }
+            else{
+                // OR
+                if(isset($bought_tickets[$ticket_type->getId()])){
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "SummitRegistrationInvitation::markAsAccepted %s ticket type %s is purchased , marking invitation as accepted (ANY) ... ",
+                            $this->id,
+                            $ticket_type->getId()
+                        )
+                    );
+                    $should_accept = true;
+                    break;
+                }
+            }
+
         }
 
-        // once i bought all meant ticket types ... the invitation is marked as accepted
-        $this->accepted_date = new \DateTime('now', new \DateTimeZone('UTC'));
+        $this->accepted_date = $should_accept ? new \DateTime('now', new \DateTimeZone('UTC')) : null;
 
-        Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s marked as accepted", $this->id));
     }
 
     public function isAccepted(): bool
@@ -495,6 +574,8 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
 
         $bought_tickets = $this->getBoughtTicketTypesExcerpt();
 
+        if($this->isAccepted()) return false;
+
         Log::debug
         (
             sprintf
@@ -575,5 +656,20 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
     public function clearTags()
     {
         $this->tags->clear();
+    }
+
+    public function getAcceptanceCriteria():string{
+        return $this->acceptance_criteria;
+    }
+
+    /**
+     * @param string $acceptance_criteria
+     * @return void
+     * @throws ValidationException
+     */
+    public function setAcceptanceCriteria(string $acceptance_criteria):void{
+        if(!in_array($acceptance_criteria,self::AllowedAcceptanceCriteria))
+            throw new ValidationException(sprintf("acceptance_criteria %s is not allowed.", $acceptance_criteria));
+        $this->acceptance_criteria = $acceptance_criteria;
     }
 }

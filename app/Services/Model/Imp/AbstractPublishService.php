@@ -185,8 +185,8 @@ abstract class AbstractPublishService extends AbstractService
         if (!is_null($opening_hour)) {
 
             $closing_hour = $closing_hour ?? 2359;
-            $event_opening_hour = intval($publishable_event->getStartDate()->format('Hi'));
-            $event_closing_hour = intval($publishable_event->getEndDate()->format('Hi'));
+            $event_opening_hour = intval($publishable_event->getLocalStartDate()->format('Hi'));
+            $event_closing_hour = intval($publishable_event->getLocalEndDate()->format('Hi'));
 
             Log::debug
             (
@@ -206,8 +206,10 @@ abstract class AbstractPublishService extends AbstractService
                 (
                     sprintf
                     (
-                        "You can't publish event %s out of this time frame (%s - %s) due to event location time restrictions.",
+                        "You can't publish event %s  (from %s to %s) out of this time frame (from %s to %s) due to event location time restrictions.",
                         $publishable_event->getId(),
+                        $event_opening_hour,
+                        $event_closing_hour,
                         $opening_hour,
                         $closing_hour
                     )

@@ -138,11 +138,31 @@ class SummitProposedScheduleAllowedLocation extends SilverstripeBaseModel
      */
     public function addAllowedTimeFrame(\DateTime $day, ?int $opening_hour = null, ?int $closing_hour = null):?SummitProposedScheduleAllowedDay{
 
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitProposedScheduleAllowedLocation::addAllowedTimeFrame location %s day %s opening_hour %s closing_hour %s",
+                $this->location->getId(),
+                $day->format("Y-m-d H:i:s"),
+                $opening_hour,
+                $closing_hour
+            )
+        );
+
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('day', $day));
 
         if($this->allowed_timeframes->matching($criteria)->count() > 0 ){
-            throw new ValidationException(sprintf("Day %s already exists for location %s.", $day->format("Y-m-d"), $this->location->getId()));
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    "Day %s already exists for location %s.",
+                    $day->format("Y-m-d"),
+                    $this->location->getId()
+                )
+            );
         }
 
         $time_frame = new SummitProposedScheduleAllowedDay($this, $day, $opening_hour, $closing_hour);
@@ -192,7 +212,7 @@ class SummitProposedScheduleAllowedLocation extends SilverstripeBaseModel
         $day = clone $from;
         $localDay = $summit->convertDateFromUTC2TimeZone($day);
         // clear time on local day
-        $localDay = $localDay->setTime(0,0,0);
+        $localDay = $localDay->setTime(0,0,0,0);
 
         Log::debug
         (

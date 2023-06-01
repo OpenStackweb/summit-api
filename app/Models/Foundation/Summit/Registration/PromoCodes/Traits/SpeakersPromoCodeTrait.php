@@ -81,14 +81,17 @@ trait SpeakersPromoCodeTrait
 
     /**
      * @param PresentationSpeaker $speaker
+     * @return $this
+     * @throws ValidationException
      */
     public function assignSpeaker(PresentationSpeaker $speaker)
     {
-        if ($this->isSpeakerAlreadyAssigned($speaker)) return;
+        if ($this->isSpeakerAlreadyAssigned($speaker)) return $this;
         $owner = new AssignedPromoCodeSpeaker();
         $owner->setSpeaker($speaker);
         $owner->setRegistrationPromoCode($this);
         $this->owners->add($owner);
+        return $this;
     }
 
     /**
@@ -160,6 +163,40 @@ trait SpeakersPromoCodeTrait
             $existing_owner->clearRedeemedAt();
 
             parent::removeUsage($to_restore);
+
+        } catch (ValidationException $ex){
+            Log::warning($ex);
+        }
+    }
+
+    /**
+     * @param bool $email_sent
+     * @param string|null $recipient
+     * @return void
+     */
+    public function setEmailSent(bool $email_sent, string $recipient = null)
+    {
+        Log::debug
+        (
+            sprintf
+            (
+                "SpeakersPromoCode::setEmailSent promo_code %s email_sent %b recipient %s",
+                $this->getId(),
+                $email_sent,
+                $recipient
+            )
+        );
+
+        try{
+            $existing_owner = $this->owners->filter(function ($e) use($recipient){
+                return $e->getSpeaker()->getEmail() == $recipient;
+            })->first();     if (!$existing_owner instanceof AssignedPromoCodeSpeaker)
+                throw new ValidationException("can't find an owner with the email {$recipient} for the promo_code");
+
+            parent::setEmailSent($email_sent, $recipient);
+
+            $utc_now = new \DateTime('now', new \DateTimeZone('UTC'));
+            $existing_owner->setSentAt($utc_now);
 
         } catch (ValidationException $ex){
             Log::warning($ex);

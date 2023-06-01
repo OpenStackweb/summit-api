@@ -392,16 +392,16 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         return $res;
     }
 
+    /**
+     * @return void
+     * @throws ValidationException
+     */
     public function markAsAccepted(): void
     {
         Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s orders count %s", $this->id, $this->orders->count()));
         if($this->orders->count() === 0 ) return;
 
-        // if its already accepted do nothing
-        if($this->isAccepted()) {
-            Log::debug(sprintf("SummitRegistrationInvitation::markAsAccepted %s already accepted", $this->id));
-            return;
-        }
+        if($this->isAccepted()) return;
 
         $bought_tickets = $this->getBoughtTicketTypesExcerpt();
 
@@ -569,12 +569,12 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
             )
         );
 
+        if($this->isAccepted()) return false;
+
         $ticket_type = $this->summit->getTicketTypeById($ticket_type_id);
         if(is_null($ticket_type) || $ticket_type->getAudience() !== SummitTicketType::Audience_With_Invitation) return false;
 
         $bought_tickets = $this->getBoughtTicketTypesExcerpt();
-
-        if($this->isAccepted()) return false;
 
         Log::debug
         (
@@ -586,10 +586,10 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
             )
         );
 
-        if (!$this->ticket_types->count()) {
+        if (!$this->ticket_types->count()) { // we can buy all ticket types
 
             if(isset($bought_tickets[$ticket_type_id])){
-                // we already bought some, we can not buy more
+                // we already bought it, we can not buy more
                 Log::debug
                 (
                     sprintf
@@ -604,6 +604,7 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
             return true;
         }
 
+        // else we can only buy the ticket types on the invitation list
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $ticket_type_id));
         $ticket_type = $this->ticket_types->matching($criteria)->first();
@@ -621,7 +622,7 @@ class SummitRegistrationInvitation extends SilverstripeBaseModel
         }
 
         if(isset($bought_tickets[$ticket_type_id])){
-            // we already bought some, we can not buy more
+            // we already bought it, we can not buy more
             Log::debug
             (
                 sprintf

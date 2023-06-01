@@ -322,13 +322,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     function getAddValidationRules(array $payload): array
     {
-        return [
-            'email' => 'required|email|max:255',
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'allowed_ticket_types' => 'sometimes|int_array',
-            'tags' => 'sometimes|string_array',
-        ];
+        return SummitRegistrationInvitationValidationRulesFactory::buildForAdd($payload);
     }
 
     use UpdateSummitChildElement;
@@ -338,14 +332,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     function getUpdateValidationRules(array $payload): array
     {
-        return [
-            'email' => 'sometimes|email|max:255',
-            'first_name' => 'sometimes|string|max:255',
-            'last_name' => 'sometimes|string|max:255',
-            'allowed_ticket_types' => 'sometimes|int_array',
-            'tags' => 'sometimes|string_array',
-            'is_accepted' => 'sometimes|boolean',
-        ];
+        return SummitRegistrationInvitationValidationRulesFactory::buildForUpdate($payload);
     }
 
     /**

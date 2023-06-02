@@ -287,8 +287,8 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
 
     public function hasQuantityAvailable(): bool
     {
-        $quantity_available = $this->quantity_available;
-        $quantity_used = $this->quantity_used;
+        $quantity_available = $this->getQuantityAvailable();
+        $quantity_used = $this->getQuantityUsed();
 
         if ($quantity_available > 0 && $quantity_available <= $quantity_used) return false;
         return true;
@@ -325,9 +325,8 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      */
     public function addUsage(string $ownerEmail, int $usage = 1)
     {
-
-        $quantity_used = $this->quantity_used;
-        $quantity_available = $this->quantity_available;
+        $quantity_available = $this->getQuantityAvailable();
+        $quantity_used = $this->getQuantityUsed();
 
         Log::debug
         (
@@ -366,9 +365,8 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
      */
     public function removeUsage(int $to_restore, ?string $owner_email = null)
     {
-
-        $quantity_used = $this->quantity_used;
-        $quantity_available = $this->quantity_available;
+        $quantity_available = $this->getQuantityAvailable();
+        $quantity_used = $this->getQuantityUsed();
 
         Log::debug
         (
@@ -487,6 +485,9 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
         return $this->allowed_ticket_types;
     }
 
+    /**
+     * @return int
+     */
     public function getQuantityUsed(): int
     {
         return $this->quantity_used;

@@ -42,7 +42,7 @@ final class OAuth2SummitPromoCodesApiTest
     public function testGetAllBySummit()
     {
         $params = [
-            'id' => 3607,
+            'id' => 3611,
             //'filter' => 'owner_email==smarcet+kbxkyjnkyx@gmail.com',
             'expand' => 'owners'
         ];
@@ -68,13 +68,13 @@ final class OAuth2SummitPromoCodesApiTest
     public function testAddPromoCodeBySummit()
     {
         $params = [
-            'id' => 3603,
+            'id' => 3611,
         ];
 
         $data = [
             'type'          => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAlternate,
             'class_name'    => SpeakersSummitRegistrationPromoCode::ClassName,
-            'code'          => 'TEST_PC_4',
+            'code'          => 'TEST_PC_5',
             'description'   => 'TEST PROMO CODE',
             'quantity_available'   => 10,
             'allowed_ticket_types' => [],

@@ -12,13 +12,10 @@
  * limitations under the License.
  **/
 
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedAlternateEmail;
-use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedOnlyEmail;
-use App\Models\Foundation\Main\IGroup;
+use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use App\Services\Utils\Facades\EmailExcerpt;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Date;
-use Illuminate\Support\Facades\Request;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\SpeakerAnnouncementSummitEmail;
 use models\summit\SpeakersSummitRegistrationPromoCode;
@@ -146,12 +143,9 @@ final class SpeakerServiceTest extends TestCase
         $this->assertTrue($report[0]['email_type'] == SpeakerAnnouncementSummitEmail::TypeAccepted);
     }
 
-    public function testSendSpeakerEmailsForMultiSpeakersPromoCode($summit_id = 3609) {
+    public function testSendSpeakerEmailsForMultiSpeakersPromoCode($summit_id = 3611) {
 
         $service = App::make(ISpeakerService::class);
-
-        $summit_repo   =  EntityManager::getRepository(\models\summit\Summit::class);
-        $summit = $summit_repo->getById($summit_id);
 
         $filterParam = [
         ];
@@ -178,13 +172,14 @@ final class SpeakerServiceTest extends TestCase
 
         $promo_code_spec = [
             "class_name"            => SpeakersSummitRegistrationPromoCode::ClassName,
-            "allowed_ticket_types"  => [2446,2447],
+            "type"                  => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypeAccepted,
+            "allowed_ticket_types"  => [2664,2665],
             "badge_features"        => [],
             "description"           => "Test multi speakers promo code",
             "discount_rate"         => 0.0,
             "amount"                => 10.0,
             "quantity_available"    => 10,
-            "tags"                  => [],
+            "tags"                  => ['tag1', 'tag2'],
             "valid_since_date"      => Date::now()->getTimestamp(),
             "valid_until_date"      => Date::now()->addDays(10)->getTimestamp(),
         ];
@@ -198,7 +193,7 @@ final class SpeakerServiceTest extends TestCase
             //"promo_code"              => 'TEST_SSRPC'
         ];
 
-        $service->sendEmails($summit->getId(), $payload, $filter);
+        $service->sendEmails($summit_id, $payload, $filter);
 
         $report = EmailExcerpt::getReport();
 

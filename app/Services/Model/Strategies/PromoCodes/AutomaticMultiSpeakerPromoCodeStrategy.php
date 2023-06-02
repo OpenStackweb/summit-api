@@ -20,17 +20,14 @@ use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use models\summit\SummitRegistrationPromoCode;
+use services\model\ISummitPromoCodeService;
+
 /**
  * Class AutomaticMultiSpeakerPromoCodeStrategy
  * @package App\Services\Model\Strategies\PromoCodes
  */
 final class AutomaticMultiSpeakerPromoCodeStrategy implements IPromoCodeStrategy
 {
-    /**
-     * @var ITransactionService
-     */
-    protected $tx_service;
-
     /**
      * @var IPromoCodeGenerator
      */
@@ -40,6 +37,11 @@ final class AutomaticMultiSpeakerPromoCodeStrategy implements IPromoCodeStrategy
      * @var Summit
      */
     private $summit;
+
+    /**
+     * @var ISummitPromoCodeService
+     */
+    private $service;
 
     /**
      * @var ISummitRegistrationPromoCodeRepository
@@ -54,20 +56,20 @@ final class AutomaticMultiSpeakerPromoCodeStrategy implements IPromoCodeStrategy
     /**
      * PromoCodeStrategy constructor.
      * @param Summit $summit
+     * @param ISummitPromoCodeService $service
      * @param ISummitRegistrationPromoCodeRepository $repository
-     * @param ITransactionService $tx_service
      * @param IPromoCodeGenerator $code_generator
      * @param array $data
      */
     public function __construct(Summit $summit,
+                                ISummitPromoCodeService $service,
                                 ISummitRegistrationPromoCodeRepository $repository,
-                                ITransactionService $tx_service,
                                 IPromoCodeGenerator $code_generator,
                                 array $data)
     {
         $this->summit = $summit;
+        $this->service = $service;
         $this->repository = $repository;
-        $this->tx_service = $tx_service;
         $this->code_generator = $code_generator;
         $this->data = $data;
     }
@@ -79,24 +81,19 @@ final class AutomaticMultiSpeakerPromoCodeStrategy implements IPromoCodeStrategy
      * @throws ValidationException|\Exception
      */
     public function getPromoCode(PresentationSpeaker $speaker): ?SummitRegistrationPromoCode {
+        $code = null;
+        do {
+            $code = $this->code_generator->generate($this->summit);
+        } while($this->repository->getByCode($code) != null);
 
-        return $this->tx_service->transaction(function () use ($speaker) {
-            $code = null;
-            do {
-                $code = $this->code_generator->generate($this->summit);
-            } while($this->repository->getByCode($code) != null);
+        $promo_code_spec = $this->data["promo_code_spec"];
+        $promo_code_spec["code"] = $code;
+        $promo_code_spec["speaker_ids"] = [$speaker->getId()];
+        $promo_code = $this->service->addPromoCode($this->summit, $promo_code_spec);
 
-            $promo_code_spec = $this->data["promo_code_spec"];
-            $promo_code_spec["code"] = $code;
-            $promo_code = SummitPromoCodeFactory::build($this->summit, $promo_code_spec);
-
-            if (is_null($promo_code)) {
-                throw new ValidationException('Cannot build a valid promo code with the given specification.');
-            }
-
-            $promo_code->setSourceAdmin();
-
-            return $promo_code->assignSpeaker($speaker);
-        });
+        if (is_null($promo_code)) {
+            throw new ValidationException('cannot build a valid promo code with the given specification');
+        }
+        return $promo_code;
     }
 }

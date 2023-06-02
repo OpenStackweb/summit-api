@@ -31,7 +31,7 @@ final class OAuth2SummitApiTest extends ProtectedApiTest
 
     public function tearDown():void
     {
-       // self::clearTestData();
+        self::clearSummitTestData();
         \Mockery::close();
     }
 

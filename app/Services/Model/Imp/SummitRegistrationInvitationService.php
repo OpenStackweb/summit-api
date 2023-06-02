@@ -24,6 +24,7 @@ use App\Services\Model\IMemberService;
 use App\Services\Model\ISummitRegistrationInvitationService;
 use App\Services\Model\ITagService;
 use App\Services\Utils\CSVReader;
+use Google\Service\Classroom\Registration;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -119,9 +120,11 @@ final class SummitRegistrationInvitationService
     /**
      * @param Summit $summit
      * @param UploadedFile $csv_file
+     * @param array $payload
+     * @return void
      * @throws ValidationException
      */
-    public function importInvitationData(Summit $summit, UploadedFile $csv_file): void
+    public function importInvitationData(Summit $summit, UploadedFile $csv_file, array $payload=[]): void
     {
         Log::debug(sprintf("SummitRegistrationInvitationService::importInvitationData - summit %s", $summit->getId()));
 
@@ -168,6 +171,7 @@ final class SummitRegistrationInvitationService
 
                 $email = trim($row['email']);
                 $former_invitation = $summit->getSummitRegistrationInvitationByEmail($email);
+                $row['acceptance_criteria'] = $payload['acceptance_criteria'] ?? SummitRegistrationInvitation::AcceptanceCriteria_AllTicketTypes;
                 if (!is_null($former_invitation)) {
                     $this->update($summit, $former_invitation->getId(), $row);
                 } else {

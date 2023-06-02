@@ -16,6 +16,7 @@ use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Jobs\Emails\Registration\Invitations\InviteSummitRegistrationEmail;
 use App\Jobs\Emails\Registration\Invitations\ReInviteSummitRegistrationEmail;
+use App\Models\Foundation\Summit\Factories\SummitRegistrationInvitationFactory;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitRegistrationInvitationService;
@@ -27,6 +28,7 @@ use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
+use models\summit\SummitRegistrationInvitation;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use utils\Filter;
@@ -86,12 +88,25 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
-            $file = $request->file('file');
-            if (is_null($file)) {
-                return $this->error412(array('file param not set!'));
+
+            $payload = $request->all();
+
+            $rules = [
+                'file' => 'required',
+                'acceptance_criteria' => sprintf('sometimes|string|in:%s', implode(',', SummitRegistrationInvitation::AllowedAcceptanceCriteria)),
+            ];
+            // Creates a Validator instance and validates the data.
+            $validation = Validator::make($payload, $rules);
+
+            if ($validation->fails()) {
+                $ex = new ValidationException;
+                $ex->setMessages($validation->messages()->toArray());
+                throw $ex;
             }
 
-            $this->service->importInvitationData($summit, $file);
+            $file = $request->file('file');
+
+            $this->service->importInvitationData($summit, $file, $payload);
             return $this->ok();
         });
     }
@@ -307,13 +322,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     function getAddValidationRules(array $payload): array
     {
-        return [
-            'email' => 'required|email|max:255',
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'allowed_ticket_types' => 'sometimes|int_array',
-            'tags' => 'sometimes|string_array',
-        ];
+        return SummitRegistrationInvitationValidationRulesFactory::buildForAdd($payload);
     }
 
     use UpdateSummitChildElement;
@@ -323,14 +332,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     function getUpdateValidationRules(array $payload): array
     {
-        return [
-            'email' => 'sometimes|email|max:255',
-            'first_name' => 'sometimes|string|max:255',
-            'last_name' => 'sometimes|string|max:255',
-            'allowed_ticket_types' => 'sometimes|int_array',
-            'tags' => 'sometimes|string_array',
-            'is_accepted' => 'sometimes|boolean',
-        ];
+        return SummitRegistrationInvitationValidationRulesFactory::buildForUpdate($payload);
     }
 
     /**

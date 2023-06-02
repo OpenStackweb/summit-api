@@ -552,6 +552,19 @@ final class Filter
         return self::buildField($field, self::Email);
     }
 
+    public static function buildLowerCaseStringField(string $field): string
+    {
+        return sprintf("LOWER(%s)",$field);
+    }
+
+    public static function buildConcatStringFields(array $fields): string
+    {
+        $res = [];
+        foreach ($fields as $field) {
+            $res[] = sprintf("LOWER(%s)", $field);
+        }
+        return sprintf("CONCAT(%s)", implode(",' ',",$res));
+    }
     /**
      * @return mixed|null
      */

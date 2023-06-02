@@ -55,8 +55,9 @@ class DoctrineSummitRegistrationInvitationRepository
     {
         return [
             'email' => 'e.email:json_string',
-            'first_name' => 'e.first_name:json_string',
-            'last_name' => 'e.last_name:json_string',
+            'first_name' => Filter::buildLowerCaseStringField('e.first_name'),
+            'last_name' => Filter::buildLowerCaseStringField('e.last_name'),
+            'full_name' => Filter::buildConcatStringFields(['e.first_name', 'e.last_name']),
             'is_accepted' => new DoctrineSwitchFilterMapping([
                     'true' => new DoctrineCaseFilterMapping(
                         'true',
@@ -94,6 +95,9 @@ class DoctrineSummitRegistrationInvitationRepository
         return [
             'id'   => 'e.id',
             'email' => 'e.email',
+            'first_name' => 'e.first_name',
+            'last_name' => 'e.last_name',
+            'full_name'=> Filter::buildConcatStringFields(['e.first_name', 'e.last_name']),
         ];
     }
 

@@ -89,6 +89,7 @@ final class SummitPromoCodeFactory
      * @param array $data
      * @param array $params
      * @return SummitRegistrationPromoCode
+     * @throws \models\exceptions\ValidationException
      */
     public static function populate(SummitRegistrationPromoCode $promo_code, Summit $summit, array $data, array $params = []){
 
@@ -115,9 +116,6 @@ final class SummitPromoCodeFactory
 
         if(isset($data['description']))
             $promo_code->setDescription(trim($data['description']));
-
-        if(isset($data['quantity_available']))
-            $promo_code->setQuantityAvailable(intval($data['quantity_available']));
 
         if(isset($data['valid_since_date'])) {
             $val = intval($data['valid_since_date']);
@@ -149,6 +147,8 @@ final class SummitPromoCodeFactory
                     $promo_code->setAmount(floatval($data['amount']));
                 if(isset($data['rate']))
                     $promo_code->setRate(floatval($data['rate']));
+                if(isset($data['quantity_available']))
+                    $promo_code->setQuantityAvailable(intval($data['quantity_available']));
             }
             break;
             case MemberSummitRegistrationPromoCode::ClassName:{
@@ -162,6 +162,8 @@ final class SummitPromoCodeFactory
                     $promo_code->setLastName(trim($data['last_name']));
                 if(isset($data['email']))
                     $promo_code->setEmail(trim($data['email']));
+                if(isset($data['quantity_available']))
+                    $promo_code->setQuantityAvailable(intval($data['quantity_available']));
             }
             break;
             case SpeakerSummitRegistrationPromoCode::ClassName:{
@@ -169,6 +171,8 @@ final class SummitPromoCodeFactory
                     $promo_code->setType($data['type']);
                 if(isset($params['speaker']))
                     $promo_code->setSpeaker($params['speaker']);
+                if(isset($data['quantity_available']))
+                    $promo_code->setQuantityAvailable(intval($data['quantity_available']));
             }
             break;
             case SpeakersSummitRegistrationPromoCode::ClassName:{
@@ -187,6 +191,8 @@ final class SummitPromoCodeFactory
                     $promo_code->setLastName(trim($data['last_name']));
                 if(isset($data['email']))
                     $promo_code->setEmail(trim($data['email']));
+                if(isset($data['quantity_available']))
+                    $promo_code->setQuantityAvailable(intval($data['quantity_available']));
 
                 $promo_code->setSponsor($params['sponsor']);
             }
@@ -206,6 +212,8 @@ final class SummitPromoCodeFactory
                     $promo_code->setAmount(floatval($data['amount']));
                 if(isset($data['rate']))
                     $promo_code->setRate(floatval($data['rate']));
+                if(isset($data['quantity_available']))
+                    $promo_code->setQuantityAvailable(intval($data['quantity_available']));
             }
             break;
             case SpeakerSummitRegistrationDiscountCode::ClassName:{
@@ -217,6 +225,8 @@ final class SummitPromoCodeFactory
                     $promo_code->setAmount(floatval($data['amount']));
                 if(isset($data['rate']))
                     $promo_code->setRate(floatval($data['rate']));
+                if(isset($data['quantity_available']))
+                    $promo_code->setQuantityAvailable(intval($data['quantity_available']));
             }
             break;
             case SpeakersRegistrationDiscountCode::ClassName: {
@@ -249,6 +259,8 @@ final class SummitPromoCodeFactory
                     $promo_code->setAmount(floatval($data['amount']));
                 if(isset($data['rate']))
                     $promo_code->setRate(floatval($data['rate']));
+                if(isset($data['quantity_available']))
+                    $promo_code->setQuantityAvailable(intval($data['quantity_available']));
             }
             break;
         }

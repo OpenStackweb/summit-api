@@ -125,21 +125,16 @@ trait SpeakersPromoCodeTrait
      */
     public function addUsage(string $owner_email, int $usage = 1)
     {
-        try {
-            $existing_owner = $this->owners->filter(function ($e) use($owner_email){
-                return $e->getSpeaker()->getEmail() == $owner_email;
-            })->first();
+        $existing_owner = $this->owners->filter(function ($e) use($owner_email){
+            return $e->getSpeaker()->getEmail() == $owner_email;
+        })->first();
 
-            if (!$existing_owner instanceof AssignedPromoCodeSpeaker)
-                throw new ValidationException("can't find an owner with the email {$owner_email} for the promo_code");
+        if (!$existing_owner instanceof AssignedPromoCodeSpeaker)
+            throw new ValidationException("can't find an owner with the email {$owner_email} for the promo_code");
 
-            parent::addUsage($owner_email, $usage);
-            $utc_now = new \DateTime('now', new \DateTimeZone('UTC'));
-            $existing_owner->setRedeemedAt($utc_now);
-
-        } catch (ValidationException $ex){
-            Log::warning($ex);
-        }
+        parent::addUsage($owner_email, $usage);
+        $utc_now = new \DateTime('now', new \DateTimeZone('UTC'));
+        $existing_owner->setRedeemedAt($utc_now);
     }
 
     /**
@@ -149,24 +144,66 @@ trait SpeakersPromoCodeTrait
      */
     public function removeUsage(int $to_restore, string $owner_email = null)
     {
-        try {
-            if ($owner_email == null)
-                throw new ValidationException("owner email is mandatory in order to remove usage for promo code {$this->getId()}");
+        if ($owner_email == null)
+            throw new ValidationException("owner email is mandatory in order to remove usage for promo code {$this->getId()}");
 
-            $existing_owner = $this->owners->filter(function ($e) use($owner_email){
-                return $e->getSpeaker()->getEmail() == $owner_email;
-            })->first();
+        $existing_owner = $this->owners->filter(function ($e) use($owner_email){
+            return $e->getSpeaker()->getEmail() == $owner_email;
+        })->first();
 
-            if (!$existing_owner instanceof AssignedPromoCodeSpeaker)
-                throw new ValidationException("can't find an owner with the email {$owner_email} for the promo_code");
+        if (!$existing_owner instanceof AssignedPromoCodeSpeaker)
+            throw new ValidationException("can't find an owner with the email {$owner_email} for the promo_code");
 
-            $existing_owner->clearRedeemedAt();
+        $existing_owner->clearRedeemedAt();
 
-            parent::removeUsage($to_restore);
+        parent::removeUsage($to_restore);
+    }
 
-        } catch (ValidationException $ex){
-            Log::warning($ex);
-        }
+    /**
+     * @param string $email
+     * @param null|string $company
+     * @return bool
+     * @throws ValidationException
+     */
+    public function checkSubject(string $email, ?string $company):bool{
+        if(!$this->hasOwners())
+            throw new ValidationException(sprintf('The Promo Code “%s” is not valid for the %s. Promo Code restrictions are associated with the purchaser email not the attendee.', $this->getCode(), $email));
+
+        $existing_owner = $this->owners->filter(function ($e) use($email){
+            return $e->getSpeaker()->getEmail() == $email;
+        })->first();
+
+        if (!$existing_owner instanceof AssignedPromoCodeSpeaker)
+            throw new ValidationException(sprintf('The Promo Code “%s” is not valid for the %s. Promo Code restrictions are associated with the purchaser email not the attendee.', $this->getCode(), $email));
+
+        return true;
+    }
+
+    /**
+     * @return int
+     */
+    public function getQuantityUsed(): int
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->neq('redeemed', null));
+        return $this->owners->matching($criteria)->count();
+    }
+
+    /**
+     * @return int
+     */
+    public function getQuantityAvailable(): int
+    {
+        return $this->owners->count();
+    }
+
+    /**
+     * @param int $quantity_available
+     * @throws ValidationException
+     */
+    public function setQuantityAvailable(int $quantity_available): void
+    {
+        throw new ValidationException("Quantity available can't be assigned to this Promo Code.");
     }
 
     /**

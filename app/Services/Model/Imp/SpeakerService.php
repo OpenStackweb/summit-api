@@ -33,7 +33,6 @@ use App\Services\Model\IFolderService;
 use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\Strategies\EmailActions\SpeakerActionsEmailStrategy;
 use App\Services\Model\Strategies\PromoCodes\IPromoCodeStrategyFactory;
-use App\Services\Model\Strategies\PromoCodes\PromoCodeStrategyFactory;
 use App\Services\Utils\Facades\EmailExcerpt;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;

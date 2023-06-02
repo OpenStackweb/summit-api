@@ -16,6 +16,7 @@
 use libs\utils\ITransactionService;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\Summit;
+use services\model\ISummitPromoCodeService;
 
 /**
  * Class PromoCodeStrategyFactory
@@ -34,6 +35,11 @@ final class PromoCodeStrategyFactory implements IPromoCodeStrategyFactory
     protected $tx_service;
 
     /**
+     * @var ISummitPromoCodeService
+     */
+    private $service;
+
+    /**
      * @var IPromoCodeGenerator
      */
     protected $code_generator;
@@ -45,10 +51,12 @@ final class PromoCodeStrategyFactory implements IPromoCodeStrategyFactory
      * @param IPromoCodeGenerator $code_generator
      */
     public function __construct(ISummitRegistrationPromoCodeRepository $repository,
+                                ISummitPromoCodeService $service,
                                 ITransactionService $tx_service,
                                 IPromoCodeGenerator $code_generator)
     {
         $this->repository = $repository;
+        $this->service = $service;
         $this->tx_service = $tx_service;
         $this->code_generator = $code_generator;
     }
@@ -63,6 +71,7 @@ final class PromoCodeStrategyFactory implements IPromoCodeStrategyFactory
         if (isset($payload["promo_code"]))
             return new ExistingMultiSpeakerPromoCodeStrategy($summit, $this->tx_service, $payload);
 
-        return new AutomaticMultiSpeakerPromoCodeStrategy($summit, $this->repository, $this->tx_service, $this->code_generator, $payload);
+        return new AutomaticMultiSpeakerPromoCodeStrategy(
+            $summit, $this->service, $this->repository, $this->code_generator, $payload);
     }
 }

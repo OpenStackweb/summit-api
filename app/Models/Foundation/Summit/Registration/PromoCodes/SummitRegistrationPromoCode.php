@@ -199,15 +199,17 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function isEmailSent()
+    public function isEmailSent():bool
     {
         return $this->email_sent;
     }
 
     /**
      * @param bool $email_sent
+     * @param string|null $recipient
+     * @return void
      */
-    public function setEmailSent($email_sent)
+    public function setEmailSent(bool $email_sent, string $recipient = null)
     {
         $this->email_sent = $email_sent;
     }
@@ -215,7 +217,7 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     /**
      * @return bool
      */
-    public function isRedeemed()
+    public function isRedeemed():bool
     {
         return $this->redeemed;
     }

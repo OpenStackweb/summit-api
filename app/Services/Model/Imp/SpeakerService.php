@@ -1261,6 +1261,7 @@ final class SpeakerService
                         }
 
                         // try to get or auto-build a promo code
+
                         $promo_code = $this->promo_code_strategy_factory->createStrategy($summit, $payload)->getPromoCode($speaker);
 
                         // try to get a speaker assistance

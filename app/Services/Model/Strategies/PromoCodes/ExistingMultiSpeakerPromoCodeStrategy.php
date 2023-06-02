@@ -68,14 +68,16 @@ final class ExistingMultiSpeakerPromoCodeStrategy implements IPromoCodeStrategy
         return $this->tx_service->transaction(function () use ($speaker) {
             $promo_code = $this->summit->getPromoCodeByCode($this->data["promo_code"]);
             if (is_null($promo_code)) {
-                throw new EntityNotFoundException('promo code not found!');
+                throw new EntityNotFoundException('Promo Code not found!.');
             }
             if ($promo_code::ClassName != SpeakersSummitRegistrationPromoCode::ClassName &&
                 $promo_code::ClassName != SpeakersRegistrationDiscountCode::ClassName) {
-                throw new ValidationException('invalid promo code');
+                throw new ValidationException('Invalid Promo Code.');
             }
-            $promo_code->assignSpeaker($speaker);
-            return $promo_code;
+
+            $promo_code->setSourceAdmin();
+
+            return $promo_code->assignSpeaker($speaker);
         });
     }
 }

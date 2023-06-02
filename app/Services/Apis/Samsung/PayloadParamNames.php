@@ -35,4 +35,17 @@ final class PayloadParamNames
     const CompanyName = 'companyName';
 
     const Group = 'groupId';
+
+    const Session = 'session';
+
+    const CompanyType = 'companyType';
+
+    const JobFunction = 'jobFunction';
+
+    const JobTitle = 'jobTitle';
+
+    const Country = 'country';
+
+    const AllowedExtraQuestions = [self::Session, self::CompanyType, self::JobFunction, self::JobTitle, self::Country, self::Forum];
+
 }

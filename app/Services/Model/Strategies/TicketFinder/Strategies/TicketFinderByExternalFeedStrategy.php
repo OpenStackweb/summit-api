@@ -116,7 +116,8 @@ final class TicketFinderByExternalFeedStrategy
 
                     $this->summit->getId(),
                     1,
-                    $res
+                    $res,
+                    $this->feed
                 );
             }
 
@@ -163,7 +164,8 @@ final class TicketFinderByExternalFeedStrategy
 
                     $this->summit->getId(),
                     1,
-                    $res
+                    $res,
+                    $this->feed
                 );
             }
             return $attendee->getFirstTicket();

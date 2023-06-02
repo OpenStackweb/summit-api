@@ -15,10 +15,12 @@
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\Summit\Factories\SummitBadgeFeatureTypeFactory;
+use App\Models\Foundation\Summit\Factories\SummitOrderExtraQuestionTypeFactory;
 use App\Models\Foundation\Summit\Factories\SummitOrderFactory;
 use App\Models\Foundation\Summit\Factories\SummitPromoCodeFactory;
 use App\Models\Foundation\Summit\Factories\SummitTicketTypeFactory;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
+use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeed;
 use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedFactory;
 use App\Services\Model\AbstractService;
 use App\Services\Model\dto\ExternalUserDTO;
@@ -39,6 +41,8 @@ use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitBadgeType;
 use models\summit\SummitOrderExtraQuestionAnswer;
+use models\summit\SummitOrderExtraQuestionType;
+use models\summit\SummitOrderExtraQuestionTypeConstants;
 use models\summit\SummitRegistrationDiscountCode;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\SummitRegistrationPromoCode;
@@ -138,9 +142,10 @@ final class RegistrationIngestionService
      * @param $summit_id
      * @param $index
      * @param $external_attendee
-     * @return void
+     * @param IExternalRegistrationFeed $feed
+     * @return SummitAttendee|null
      */
-    public function ingestExternalAttendee($summit_id, $index, $external_attendee):?SummitAttendee{
+    public function ingestExternalAttendee($summit_id, $index, $external_attendee, IExternalRegistrationFeed $feed):?SummitAttendee{
         Log::debug
         (
             sprintf
@@ -152,13 +157,11 @@ final class RegistrationIngestionService
         );
 
         try {
-            return $this->tx_service->transaction(function () use ($summit_id, $external_attendee) {
+            return $this->tx_service->transaction(function () use ($summit_id, $external_attendee, $feed) {
 
                 $summit = $this->summit_repository->getById($summit_id);
                 if (!$summit instanceof Summit) return null;
                 $default_badge_type = $summit->getDefaultBadgeType();
-
-                if (!$summit instanceof Summit) return null;
 
                 $external_attendee_profile = $external_attendee['profile'] ?? null;
                 $external_promo_code = $external_attendee['promotional_code'] ?? null;
@@ -188,7 +191,7 @@ final class RegistrationIngestionService
                 // trying to get the order by external id
                 $order = $this->order_repository->getByExternalIdAndSummitLockExclusive($summit, $external_order['id']);
                 if (is_null($order)) {
-                    // create it if it does not exists ...
+                    // create it if it does not exist ...
                     Log::debug(sprintf("RegistrationIngestionService::ingestSummit: order %s does not exists", $external_order['id']));
 
                     $owner_order_email = trim($external_order['email']);
@@ -197,6 +200,7 @@ final class RegistrationIngestionService
                         'owner_first_name' => $external_order['first_name'],
                         'owner_last_name' => $external_order['last_name'],
                         'owner_email' => $owner_order_email,
+                        'owner_company' => $external_order['company'] ?? null,
                     ]);
 
                     $order->setSummit($summit);
@@ -220,7 +224,7 @@ final class RegistrationIngestionService
                             $user = $this->member_service->checkExternalUser($owner_order_email);
 
                             if (!is_null($user)) {
-                                // we have an user on idp
+                                // we have a user on idp
                                 $external_id = $user['id'];
                                 Log::debug
                                 (
@@ -383,7 +387,7 @@ final class RegistrationIngestionService
                         $user = $this->member_service->checkExternalUser($attendee_email);
 
                         if (!is_null($user)) {
-                            // we have an user on idp
+                            // we have a user on idp
                             $external_id = $user['id'];
                             Log::debug
                             (
@@ -468,7 +472,24 @@ final class RegistrationIngestionService
                     $question = $summit->getExtraQuestionTypeByExternalId($external_question_id);
                     if (is_null($question)) {
                         Log::debug(sprintf("RegistrationIngestionService::ingestSummit question not found ( external id %s )", $external_question_id));
-                        continue;
+
+                        if(!$feed->shouldCreateExtraQuestions())
+                            continue;
+                        // else we should auto create the question as text
+
+                        Log::debug(sprintf("RegistrationIngestionService::ingestSummit creating question ( external id %s )", $external_question_id));
+
+                        $question = SummitOrderExtraQuestionTypeFactory::build([
+                            'name' => $external_question_id,
+                            'label' => $external_question_id,
+                            'type' => ExtraQuestionTypeConstants::TextQuestionType,
+                            'is_mandatory' => false,
+                            'usage' => SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage,
+                            'printable' => true,
+                            'external_id' => $external_question_id,
+                        ]);
+
+                        $summit->addOrderExtraQuestion($question);
                     }
 
                     if ($question->allowsValues()) {
@@ -639,7 +660,7 @@ final class RegistrationIngestionService
                 Log::debug(sprintf("RegistrationIngestionService::ingestSummit response %s", $response->__toString()));
 
                 foreach ($response as $index => $external_attendee) {
-                    $this->ingestExternalAttendee($summit_id, $index, $external_attendee);
+                    $this->ingestExternalAttendee($summit_id, $index, $external_attendee, $feed);
                 }
 
                 ++$page;

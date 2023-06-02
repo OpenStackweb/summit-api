@@ -33,6 +33,9 @@ final class SummitOrderExtraQuestionTypeFactory extends ExtraQuestionTypeFactory
         if(isset($data['usage']))
             $question->setUsage(trim($data['usage']));
 
+        if(isset($data['external_id']))
+            $question->setExternalId(trim($data['external_id']));
+
         if(isset($data['printable']))
             $question->setPrintable(boolval($data['printable']));
 

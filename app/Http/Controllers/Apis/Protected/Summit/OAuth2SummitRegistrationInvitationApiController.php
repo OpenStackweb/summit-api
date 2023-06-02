@@ -169,6 +169,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'email' => ['@@','=@', '=='],
                     'first_name' => ['@@','=@', '=='],
                     'last_name' => ['@@','=@', '=='],
+                    'full_name' => ['@@','=@', '=='],
                     'is_accepted' => ['=='],
                     'is_sent' => ['=='],
                     'ticket_types_id' => ['=='],
@@ -181,6 +182,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'email' => 'sometimes|required|string',
                     'first_name' => 'sometimes|required|string',
                     'last_name' => 'sometimes|required|string',
+                    'full_name' => 'sometimes|required|string',
                     'is_accepted' => 'sometimes|required|string|in:true,false',
                     'is_sent' => 'sometimes|required|string|in:true,false',
                     'ticket_types_id' => 'sometimes|integer',
@@ -192,6 +194,9 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                 return [
                     'id',
                     'email',
+                    'first_name',
+                    'last_name',
+                    'full_name',
                 ];
             },
             function ($filter) use ($summit) {
@@ -221,6 +226,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                 return [
                     'email' =>  ['@@','=@', '=='],
                     'first_name' =>  ['@@','=@', '=='],
+                    'full_name' => ['@@','=@', '=='],
                     'last_name' => ['@@','=@', '=='],
                     'is_accepted' => ['=='],
                     'is_sent' => ['=='],
@@ -234,6 +240,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     'email' => 'sometimes|required|string',
                     'first_name' => 'sometimes|required|string',
                     'last_name' => 'sometimes|required|string',
+                    'full_name' => 'sometimes|required|string',
                     'is_accepted' => 'sometimes|required|string|in:true,false',
                     'is_sent' => 'sometimes|required|string|in:true,false',
                     'ticket_types_id' => 'sometimes|integer',
@@ -245,6 +252,9 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                 return [
                     'id',
                     'email',
+                    'first_name',
+                    'last_name',
+                    'full_name',
                 ];
             },
             function ($filter) use ($summit) {

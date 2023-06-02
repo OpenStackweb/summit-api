@@ -31,8 +31,11 @@ class RegisteredMemberOrderPaidMail extends AbstractEmailJob
     {
         $payload = [];
         $tickets = [];
+        $payload['owner_first_name'] = $order->getOwnerFirstName();
+        $payload['owner_last_name'] = $order->getOwnerSurname();
         $payload['owner_full_name'] = $order->getOwnerFullName();
         $payload['owner_company'] = $order->getOwnerCompanyName();
+
         $owner_email = $order->getOwnerEmail();
         $payload['owner_email'] = $owner_email;
 

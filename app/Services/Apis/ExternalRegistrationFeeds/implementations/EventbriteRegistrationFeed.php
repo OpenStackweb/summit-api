@@ -80,4 +80,9 @@ final class EventbriteRegistrationFeed extends AbstractExternalFeed
     {
         throw new \Exception("Not Implemented");
     }
+
+    public function shouldCreateExtraQuestions(): bool
+    {
+        return false;
+    }
 }

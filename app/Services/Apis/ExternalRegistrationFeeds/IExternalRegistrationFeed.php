@@ -50,4 +50,6 @@ interface IExternalRegistrationFeed
      * @return mixed
      */
     public function getAttendeeByEmail(string $email);
+
+    public function shouldCreateExtraQuestions():bool;
 }

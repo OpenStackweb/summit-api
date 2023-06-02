@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeed;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 
@@ -25,8 +27,7 @@ interface IRegistrationIngestionService
 
     /**
      * @param Summit $summit
-     * @return array
-     * @throws \Exception
+     * @return void
      */
     public function ingestSummit(Summit $summit):void;
 
@@ -34,7 +35,8 @@ interface IRegistrationIngestionService
      * @param $summit_id
      * @param $index
      * @param $external_attendee
-     * @return void
+     * @param IExternalRegistrationFeed $feed
+     * @return SummitAttendee|null
      */
-    public function ingestExternalAttendee($summit_id, $index, $external_attendee):?SummitAttendee;
+    public function ingestExternalAttendee($summit_id, $index, $external_attendee, IExternalRegistrationFeed $feed):?SummitAttendee;
 }

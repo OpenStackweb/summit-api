@@ -125,4 +125,9 @@ final class SamsungRegistrationFeed
         if(!$qr_json) return null;
         return $qr_json[PayloadParamNames::UserId] ?? null;
     }
+
+    public function shouldCreateExtraQuestions(): bool
+    {
+        return true;
+    }
 }

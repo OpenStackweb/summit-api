@@ -26,6 +26,17 @@ final class SamsungRecordSerializer
      * @return array
      */
     public static function serialize(array $res, string $forum):array{
+
+        $answers = [];
+        // answers mapping
+        foreach (PayloadParamNames::AllowedExtraQuestions as $extraQuestion){
+            if(!isset($res[$extraQuestion])) continue;
+            $answers[] = [
+                'question_id' => $extraQuestion,
+                'answer' => $res[$extraQuestion],
+            ];
+        }
+
         // map fields
         return [
             'id' => $res[PayloadParamNames::UserId],
@@ -50,10 +61,12 @@ final class SamsungRecordSerializer
                 'id' => $res[PayloadParamNames::UserId],
                 'first_name'=> $res[PayloadParamNames::FirstName],
                 'last_name' => $res[PayloadParamNames::LastName],
-                'email' => $res[PayloadParamNames::Email]
+                'email' => $res[PayloadParamNames::Email],
+                'company' => $res[PayloadParamNames::CompanyName],
             ],
             'refunded' => false,
             'cancelled' => false,
+            'answers' => $answers,
         ];
     }
 }

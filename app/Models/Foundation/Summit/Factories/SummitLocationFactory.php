@@ -78,11 +78,11 @@ final class SummitLocationFactory
         if(isset($data['description']))
             $location->setDescription(trim($data['description']));
 
-        if(isset($data['opening_hour']))
-            $location->setOpeningHour(intval($data['opening_hour']));
+        if(array_key_exists('opening_hour', $data))
+            $location->setOpeningHour(is_null($data['opening_hour']) ? null : intval($data['opening_hour']));
 
-        if(isset($data['closing_hour']))
-            $location->setClosingHour(intval($data['closing_hour']));
+        if(array_key_exists('closing_hour', $data))
+            $location->setClosingHour(is_null($data['closing_hour']) ? null : intval($data['closing_hour']));
 
         return $location;
     }

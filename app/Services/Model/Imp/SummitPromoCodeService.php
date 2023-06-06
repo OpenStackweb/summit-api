@@ -190,7 +190,7 @@ final class SummitPromoCodeService
      */
     public function addPromoCode(Summit $summit, array $data, Member $current_user = null)
     {
-        return $this->tx_service->transaction(function () use ($summit, $data, $current_user) {
+        $promo_code =  $this->tx_service->transaction(function () use ($summit, $data, $current_user) {
             Log::debug(sprintf("SummitPromoCodeService::addPromoCode summit %s data %s", $summit->getId(), json_encode($data)));
 
             $code = trim($data['code']);
@@ -238,6 +238,23 @@ final class SummitPromoCodeService
 
             return $promo_code;
         });
+
+        if(isset($data['ticket_types_rules'])){
+            $promo_code = $this->tx_service->transaction(function () use ($summit, $data, $current_user, $promo_code) {
+               foreach ($data['ticket_types_rules'] as $rule){
+                   $promo_code = $this->addPromoCodeTicketTypeRule
+                     (
+                         $summit,
+                         $promo_code->getId(),
+                         intval($rule['ticket_type_id']),
+                         $rule,
+                     );
+               }
+               return $promo_code;
+            });
+        }
+
+        return $promo_code;
     }
 
     /**

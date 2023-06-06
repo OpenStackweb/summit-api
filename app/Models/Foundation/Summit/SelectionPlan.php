@@ -1378,17 +1378,6 @@ class SelectionPlan extends SilverstripeBaseModel
         return $allowed_member;
     }
 
-    /**
-     * @param string $email
-     */
-    public function removeAllowedMemberByEmail(string $email): void
-    {
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('email', trim($email)));
-        $res = $this->allowed_members->matching($criteria)->first();
-        if (!$res) return;
-        $this->allowed_members->removeElement($res);
-    }
 
     /**
      * @param int $id
@@ -1418,9 +1407,7 @@ class SelectionPlan extends SilverstripeBaseModel
     public function isAllowedMember(string $email): bool
     {
         if ($this->getType() === self::PublicType) return true;
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('email', trim($email)));
-        return $this->allowed_members->matching($criteria)->count() > 0;
+        return $this->containsMember($email);
     }
 
     /**
@@ -1429,9 +1416,22 @@ class SelectionPlan extends SilverstripeBaseModel
      */
     public function containsMember(string $email): bool
     {
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('email', trim($email)));
-        return $this->allowed_members->matching($criteria)->count() > 0;
+        return $this->allowed_members->filter(function($element) use($email){
+            return $element->getEmail() === strtolower(trim($email));
+        })->count() > 0;
+    }
+
+    /**
+     * @param string $email
+     */
+    public function removeAllowedMemberByEmail(string $email): void
+    {
+        $res = $this->allowed_members->filter(function($element) use($email){
+            return $element->getEmail() === strtolower(trim($email));
+        })->first();
+
+        if (!$res) return;
+        $this->allowed_members->removeElement($res);
     }
 
     const PublicType = 'Public';

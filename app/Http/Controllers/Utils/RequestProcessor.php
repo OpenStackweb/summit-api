@@ -36,7 +36,7 @@ trait RequestProcessor
         }
         catch (AuthzException $ex){
             Log::warning($ex);
-            return $this->error403();
+            return $this->error403($ex->getMessage());
         }
         catch(\InvalidArgumentException $ex){
             Log::warning($ex);

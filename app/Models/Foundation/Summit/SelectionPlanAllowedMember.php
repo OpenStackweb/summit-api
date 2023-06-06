@@ -63,11 +63,11 @@ class SelectionPlanAllowedMember extends BaseEntity
         if(empty($email) && $this->hasMember()){
             $email = $this->member->getEmail();
         }
-        return $email;
+        return strtolower(trim($email));
     }
 
     public function setEmail(string $email):void{
-        $this->email = $email;
+        $this->email = strtolower(trim($email));
     }
 
     /**
@@ -76,7 +76,7 @@ class SelectionPlanAllowedMember extends BaseEntity
      */
     public function __construct(SelectionPlan $selection_plan, string $email){
         $this->selection_plan = $selection_plan;
-        $this->email = trim($email);
+        $this->email = strtolower(trim($email));
     }
 
     /**

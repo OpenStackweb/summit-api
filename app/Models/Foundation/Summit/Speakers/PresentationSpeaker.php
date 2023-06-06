@@ -1208,7 +1208,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             foreach ($private_track_groups as $private_track_group) {
                 $current_private_tracks = $private_track_group->getCategories();
                 if (count($current_private_tracks) == 0) continue;
-                $private_tracks = array_merge($private_tracks, array_values($current_private_tracks));
+                $private_tracks = array_merge($private_tracks, array_values($current_private_tracks->toArray()));
             }
         }
 

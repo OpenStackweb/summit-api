@@ -250,13 +250,14 @@ abstract class AbstractPublishService extends AbstractService
                         (
                             sprintf
                             (
-                                "You can't publish event %s on this time frame (%s - %s), it conflicts with event %s (%s - %s) [LOCATION TIMEFRAME COLLISION].",
+                                "You can't publish event %s on this time frame (%s - %s), it conflicts with event %s (%s - %s) on location %s [LOCATION TIMEFRAME COLLISION].",
                                 $publishable_event->getId(),
                                 $publishable_event->getStartDateNice(),
                                 $publishable_event->getEndDateNice(),
                                 $c_event->getId(),
                                 $c_event->getStartDateNice(),
-                                $c_event->getEndDateNice()
+                                $c_event->getEndDateNice(),
+                                $c_event->getLocation()->getName()
                             )
                         );
                     }
@@ -274,7 +275,7 @@ abstract class AbstractPublishService extends AbstractService
                                     (
                                         sprintf
                                         (
-                                            "You can't publish event %s (%s - %s) on this timeframe, speaker %s (%s) its present in room %s at this time for event %s (%s - %s).",
+                                            "You can't publish event %s (%s - %s) on this timeframe, speaker %s (%s) its present in room %s at this time for event %s (%s - %s) [SPEAKERS COLLISION].",
                                             $publishable_event->getId(),
                                             $publishable_event->getStartDateNice(),
                                             $publishable_event->getEndDateNice(),

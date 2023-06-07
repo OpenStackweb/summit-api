@@ -218,6 +218,8 @@ final class SummitPromoCodeService
 
                 foreach ($data['speaker_ids'] as $speaker_id) {
                     $speaker = $summit->getSpeaker($speaker_id);
+                    if(is_null($speaker))
+                        throw new EntityNotFoundException(sprintf("speaker %s not found", $speaker_id));
                     $promo_code->assignSpeaker($speaker);
                 }
             }

@@ -149,7 +149,7 @@ final class ScheduleService
      * @return void
      * @throws ValidationException
      */
-    protected function validateBlackOutTimesAndTimes(IPublishableEvent $publishable_event, ?int $opening_hour = null, ?int $closing_hour= null):void
+    protected function validateBlackOutTimesAndTimes(IPublishableEvent $publishable_event, ?int $opening_hour = null, ?int $closing_hour = null): void
     {
 
         $location = $publishable_event->getLocation();
@@ -166,7 +166,7 @@ final class ScheduleService
             )
         );
 
-        if(!$track->isProposedScheduleAllowedLocation($location))
+        if (!$track->isProposedScheduleAllowedLocation($location))
             throw new ValidationException
             (
                 sprintf
@@ -194,7 +194,7 @@ final class ScheduleService
             )
         );
 
-        if($allowed_location instanceof SummitProposedScheduleAllowedLocation && $allowed_location->hasTimeFrameRestrictions()){
+        if ($allowed_location instanceof SummitProposedScheduleAllowedLocation && $allowed_location->hasTimeFrameRestrictions()) {
             // check if we have a time frame custom restriction
             $time_frame = $allowed_location->getAllowedTimeFrameForDates
             (
@@ -202,7 +202,7 @@ final class ScheduleService
                 $publishable_event->getEndDate()
             );
 
-            if(!is_null($time_frame)) {
+            if (!is_null($time_frame)) {
                 $opening_hour = $time_frame->getOpeningHour();
                 $closing_hour = $time_frame->getClosingHour();
 
@@ -310,6 +310,7 @@ final class ScheduleService
      */
     public function publishAll(string $source, int $summit_id, array $payload, ?Filter $filter = null): SummitProposedSchedule
     {
+        Log::debug(sprintf("ScheduleService::publishAll summit id %s filter %s", $summit_id, is_null($filter) ? '' : $filter->__toString()));
         $member = ResourceServerContext::getCurrentUser(false);
 
         $schedule = $this->schedule_repository->getBySourceAndSummitId($source, $summit_id);
@@ -318,13 +319,12 @@ final class ScheduleService
             throw new EntityNotFoundException("schedule with source {$source} does not exists!");
 
         if (!$this->isAuthorizedUser($member, $schedule->getSummit()))
-            throw new AuthzException("User is not authorized to perform this action");
+            throw new AuthzException("User is not authorized to perform this action.");
 
         $done = isset($payload['event_ids']); // we have provided only ids and not a criteria
         $page = 1;
-        $count = 0;
         $maxPageSize = 100;
-        $validation_errors = [];
+        $errors = [];
 
         do {
 
@@ -360,39 +360,32 @@ final class ScheduleService
                 Log::debug(sprintf("ScheduleService::publishAll summit id %s page is empty, ending processing.", $summit_id));
                 break;
             }
-            foreach ($ids as $proposed_id) {
 
-                $res = $this->tx_service->transaction(function () use ($source, $summit_id, $proposed_id, $payload) {
-                    try {
+            foreach ($ids as $proposed_id) {
+                try {
+                    $this->tx_service->transaction(function () use ($source, $summit_id, $proposed_id, $payload) {
+
                         Log::debug(sprintf("ScheduleService::publishAll processing proposed id  %s", $proposed_id));
+
                         $proposed = $this->proposed_events_repository->getById($proposed_id);
                         if (!$proposed instanceof SummitProposedScheduleSummitEvent) {
-                            Log::debug(sprintf("ScheduleService::publishAll skippoing processing of proposed_id %s", $proposed_id));
-                            return null;
+                            Log::debug(sprintf("ScheduleService::publishAll skipping processing of proposed_id %s.", $proposed_id));
+                            return;
                         }
 
                         $event = $proposed->getSummitEvent();
-                        if ($event instanceof SummitEvent)
-                            $this->summit_service->publishEvent($proposed->getSummit(), $event->getId(), [
-                                'location_id' => $proposed->getLocationId(),
-                                'start_date' => $proposed->getLocalStartDate()->getTimestamp(),
-                                'end_date' => $proposed->getLocalEndDate()->getTimestamp(),
-                                'duration' => $proposed->getDuration()
-                            ]);
 
-                        return $event;
-                    } catch (ValidationException $ex) {
-                        Log::warning($ex);
-                        return $ex;
-                    } catch (\Exception $ex) {
-                        Log::error($ex);
-                        return $ex;
-                    }
-                });
-                if ($res instanceof ValidationException) {
-                    $validation_errors[] = $res;
+                        $this->summit_service->publishEvent($proposed->getSummit(), $event->getId(), [
+                            'location_id' => $proposed->getLocationId(),
+                            'start_date' => $proposed->getLocalStartDate()->getTimestamp(),
+                            'end_date' => $proposed->getLocalEndDate()->getTimestamp(),
+                            'duration' => $proposed->getDuration()
+                        ]);
+
+                    });
+                } catch (\Exception $ex) {
+                    $errors[] = $ex;
                 }
-                $count++;
             }
 
             $page++;
@@ -400,13 +393,14 @@ final class ScheduleService
         } while (!$done);
 
         // error consolidation
-        if (count($validation_errors) > 0) {
+        if (count($errors) > 0) {
             $msg = '';
-            foreach ($validation_errors as $error) {
+            foreach ($errors as $error) {
                 $msg .= $error->getMessage() . PHP_EOL;
             }
             throw new ValidationException($msg);
         }
+
         return $schedule;
     }
 }

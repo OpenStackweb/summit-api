@@ -81,29 +81,16 @@ abstract class DoctrineExtraQuestionTypeRepository
      */
     public function getQuestionsMetadata()
     {
-        return [
-            [
-                'type' => 'TextArea',
-            ],
-            [
-                'type' => 'Text',
-            ],
-            [
-                'type' => 'CheckBox',
-            ],
-            [
-                'type'  => 'ComboBox',
+        $metadata = [];
+        foreach (ExtraQuestionTypeConstants::ValidQuestionTypes as $type){
+            $metadata[] = in_array($type, ExtraQuestionTypeConstants::AllowedMultiValueQuestionType)?[
+                'type' => $type,
                 'values' => 'array',
-            ],
-            [
-                'type'  => 'CheckBoxList',
-                'values' => 'array',
-            ],
-            [
-                'type' => 'RadioButtonList',
-                'values'  => 'array',
-            ],
-        ];
+            ]: [
+                'type' => $type,
+            ];
+        }
+        return $metadata;
     }
 
     /**

@@ -24,6 +24,8 @@ interface ExtraQuestionTypeConstants
     const CheckBoxQuestionType        = 'CheckBox';
     const RadioButtonQuestionType     = 'RadioButton';
     const ComboBoxQuestionType        = 'ComboBox';
+
+    const CountryComboBoxQuestionType = 'CountryComboBox';
     const CheckBoxListQuestionType    = 'CheckBoxList';
     const RadioButtonListQuestionType = 'RadioButtonList';
 
@@ -35,12 +37,14 @@ interface ExtraQuestionTypeConstants
         self::ComboBoxQuestionType,
         self::CheckBoxListQuestionType,
         self::RadioButtonListQuestionType,
+        self::CountryComboBoxQuestionType,
     ];
 
     const AllowedMultiValueQuestionType = [
         self::ComboBoxQuestionType,
         self::CheckBoxListQuestionType,
         self::RadioButtonListQuestionType,
+        self::CountryComboBoxQuestionType,
     ];
 
     const AllowedPlaceHolderQuestionType = [

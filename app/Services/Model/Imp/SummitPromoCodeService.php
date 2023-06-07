@@ -547,6 +547,30 @@ final class SummitPromoCodeService
                     $row['allowed_ticket_types'] = explode('|', $row['allowed_ticket_types']);
                 }
 
+                if(isset($row['speaker_ids'])){
+                    $row['speaker_ids'] = explode('|', $row['speaker_ids']);
+                }
+
+                if(isset($row['tags'])){
+                    $row['tags'] = explode('|', $row['tags']);
+                }
+
+                if(isset($row['ticket_types_rules']) && (isset($row['amount']) || isset($row['rate']))){
+
+                    $row['ticket_types_rules'] = explode('|', $row['ticket_types_rules']);
+
+                    $ticket_types_rules = [];
+
+                    foreach ($row['ticket_types_rules'] as $ticket_type_id){
+                        $ticket_types_rules[] = [
+                            'ticket_type_id' => intval($ticket_type_id),
+                            'amount' => $row['amount'] ?? 0.0,
+                            'rate' =>  $row['rate']?? 0.0
+                        ];
+                    }
+                    $row['ticket_types_rules'] = $ticket_types_rules;
+                }
+
                 Log::debug(sprintf("SummitPromoCodeService::importPromoCodes processing row %s", json_encode($row)));
                 $code = trim($row['code']);
                 $promo_code = $summit->getPromoCodeByCode($code);

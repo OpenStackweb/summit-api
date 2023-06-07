@@ -603,19 +603,35 @@ final class ApplyPromoCodeTask extends AbstractTask
             // mark a done
             $promo_codes_usage[$promo_code_value]['redeem'] = true;
         }
+        // update state
+        $this->formerState['promo_codes_usage'] = $promo_codes_usage;
 
         return $this->formerState;
     }
 
     public function undo()
     {
-        Log::info("ApplyPromoCodeTask::undo: compensating transaction");
+        Log::debug
+        (
+            sprintf
+            (
+                "ApplyPromoCodeTask::undo: compensating transaction former state %s payload %s",
+                json_encode($this->formerState),
+                json_encode($this->payload)
+            )
+        );
+
         $promo_codes_usage = $this->formerState['promo_codes_usage'];
         $owner_email = $this->payload['owner_email'];
-        foreach ($promo_codes_usage as $code => $info) {
+
+        foreach ($promo_codes_usage as $code => $info)
+        {
+            Log::debug(sprintf("ApplyPromoCodeTask::undo undoing promo code %s info %s owner_email %s", $code, json_encode($info), $owner_email));
+
             $this->tx_service->transaction(function () use ($code, $info, $owner_email) {
                 $promo_code = $this->promo_code_repository->getByValueExclusiveLock($this->summit, $code);
                 if (is_null($promo_code)) return;
+
                 if (!isset($info['redeem'])) return;
 
                 $this->lock_service->lock('promocode.' . $promo_code->getId() . '.usage.lock', function () use ($promo_code, $info, $owner_email) {

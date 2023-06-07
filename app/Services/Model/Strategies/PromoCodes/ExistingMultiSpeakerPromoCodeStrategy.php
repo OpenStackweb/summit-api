@@ -70,8 +70,8 @@ final class ExistingMultiSpeakerPromoCodeStrategy implements IPromoCodeStrategy
             if (is_null($promo_code)) {
                 throw new EntityNotFoundException('Promo Code not found!.');
             }
-            if ($promo_code::ClassName != SpeakersSummitRegistrationPromoCode::ClassName &&
-                $promo_code::ClassName != SpeakersRegistrationDiscountCode::ClassName) {
+            if (!$promo_code instanceof SpeakersSummitRegistrationPromoCode &&
+                !$promo_code instanceof SpeakersRegistrationDiscountCode) {
                 throw new ValidationException('Invalid Promo Code.');
             }
 

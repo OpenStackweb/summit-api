@@ -13,6 +13,7 @@
  **/
 use App\Models\Utils\BaseEntity;
 use Doctrine\ORM\Mapping AS ORM;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 
 /**
@@ -121,15 +122,25 @@ class AssignedPromoCodeSpeaker extends BaseEntity
      */
     public function isRedeemed(): bool
     {
-        return $this->getRedeemedAt() != null;
+        Log::debug
+        (
+            sprintf
+            (
+                "AssignedPromoCodeSpeaker::isRedeemed %s redeemed %b speaker email %s",
+                $this->getId(),
+                !is_null($this->redeemed),
+                $this->speaker->getEmail()
+            )
+        );
+        return !is_null($this->redeemed);
     }
 
     /**
      * @param \DateTime $redeemed
      */
-    public function setRedeemedAt(\DateTime $redeemed): void
+    public function markRedeemed(): void
     {
-        $this->redeemed = $redeemed;
+        $this->redeemed = new \DateTime('now', new \DateTimeZone('UTC'));
     }
 
     public function clearRedeemedAt(): void
@@ -153,11 +164,9 @@ class AssignedPromoCodeSpeaker extends BaseEntity
         return $this->getSentAt() != null;
     }
 
-    /**
-     * @param \DateTime $sent
-     */
-    public function setSentAt(\DateTime $sent): void
+
+    public function markSent(): void
     {
-        $this->sent = $sent;
+        $this->sent = new \DateTime('now', new \DateTimeZone('UTC'));
     }
 }

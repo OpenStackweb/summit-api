@@ -289,6 +289,16 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
     {
         $quantity_available = $this->getQuantityAvailable();
         $quantity_used = $this->getQuantityUsed();
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitRegistrationPromoCode::hasQuantityAvailable code %s quantity_available %s quantity_used %s",
+                $this->code,
+                $quantity_available,
+                $quantity_used
+            )
+        );
 
         if ($quantity_available > 0 && $quantity_available <= $quantity_used) return false;
         return true;

@@ -75,8 +75,7 @@ trait SpeakersPromoCodeTrait
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('speaker', $speaker));
-        $existing_owner = $this->owners->matching($criteria)->first();
-        return $existing_owner instanceof AssignedPromoCodeSpeaker;
+        return $this->owners->matching($criteria)->count() > 0;
     }
 
     /**
@@ -125,16 +124,17 @@ trait SpeakersPromoCodeTrait
      */
     public function addUsage(string $owner_email, int $usage = 1)
     {
+        Log::debug(sprintf("SpeakersPromoCodeTrait::addUsage promo_code %s owner_email %s usage %s", $this->getId(), $owner_email, $usage));
+
         $existing_owner = $this->owners->filter(function ($e) use($owner_email){
-            return $e->getSpeaker()->getEmail() == $owner_email;
+            return strtolower($e->getSpeaker()->getEmail()) == strtolower(trim($owner_email)) && !$e->isRedeemed();
         })->first();
 
         if (!$existing_owner instanceof AssignedPromoCodeSpeaker)
-            throw new ValidationException("can't find an owner with the email {$owner_email} for the promo_code");
+            throw new ValidationException("Can't find an owner with the email {$owner_email} for the promo_code.");
 
-        parent::addUsage($owner_email, $usage);
-        $utc_now = new \DateTime('now', new \DateTimeZone('UTC'));
-        $existing_owner->setRedeemedAt($utc_now);
+
+        $existing_owner->markRedeemed();
     }
 
     /**
@@ -144,19 +144,19 @@ trait SpeakersPromoCodeTrait
      */
     public function removeUsage(int $to_restore, string $owner_email = null)
     {
+        Log::debug(sprintf("SpeakersPromoCodeTrait::removeUsage promo_code %s owner_email %s to_restore %s", $this->getId(), $owner_email, $to_restore));
         if ($owner_email == null)
-            throw new ValidationException("owner email is mandatory in order to remove usage for promo code {$this->getId()}");
+            throw new ValidationException("Owner email is mandatory in order to remove usage for promo code {$this->getId()}.");
 
         $existing_owner = $this->owners->filter(function ($e) use($owner_email){
-            return $e->getSpeaker()->getEmail() == $owner_email;
+            return strtolower($e->getSpeaker()->getEmail()) == strtolower(trim($owner_email)) && $e->isRedeemed();
         })->first();
 
         if (!$existing_owner instanceof AssignedPromoCodeSpeaker)
-            throw new ValidationException("can't find an owner with the email {$owner_email} for the promo_code");
+            throw new ValidationException("Can't find an owner with the email {$owner_email} for the promo_code.");
 
         $existing_owner->clearRedeemedAt();
 
-        parent::removeUsage($to_restore);
     }
 
     /**
@@ -167,14 +167,23 @@ trait SpeakersPromoCodeTrait
      */
     public function checkSubject(string $email, ?string $company):bool{
         if(!$this->hasOwners())
-            throw new ValidationException(sprintf('The Promo Code “%s” is not valid for the %s. Promo Code restrictions are associated with the purchaser email not the attendee.', $this->getCode(), $email));
+            throw new ValidationException
+            (
+                sprintf
+                (
+                    'The Promo Code “%s” is not valid for the %s. Promo Code restrictions are associated with the purchaser email not the attendee.',
+                    $this->getCode(),
+                    $email
+                )
+            );
 
         $existing_owner = $this->owners->filter(function ($e) use($email){
-            return $e->getSpeaker()->getEmail() == $email;
+            return strtolower($e->getSpeaker()->getEmail()) == strtolower(trim($email)) && !$e->isRedeemed();
         })->first();
 
         if (!$existing_owner instanceof AssignedPromoCodeSpeaker)
             throw new ValidationException(sprintf('The Promo Code “%s” is not valid for the %s. Promo Code restrictions are associated with the purchaser email not the attendee.', $this->getCode(), $email));
+
 
         return true;
     }
@@ -184,9 +193,22 @@ trait SpeakersPromoCodeTrait
      */
     public function getQuantityUsed(): int
     {
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->neq('redeemed', null));
-        return $this->owners->matching($criteria)->count();
+        Log::debug(sprintf("SpeakersPromoCodeTrait::getQuantityUsed promo_code %s", $this->getCode()));
+
+        try {
+            $query = $this->createQuery("SELECT COUNT(e.id) from models\summit\AssignedPromoCodeSpeaker e 
+            JOIN e.registration_promo_code pc 
+            WHERE pc.id = :promo_code_id and e.redeemed is not null");
+
+            $query->setParameter('promo_code_id', $this->getId());
+            $res = $query->getSingleScalarResult();
+            Log::debug(sprintf("SpeakersPromoCodeTrait::getQuantityUsed promo_code %s quantity used %s", $this->getCode(), $res));
+            return $res;
+        }
+        catch (\Exception $ex){
+            Log::warning($ex);
+            return 0;
+        }
     }
 
     /**
@@ -226,17 +248,55 @@ trait SpeakersPromoCodeTrait
 
         try{
             $existing_owner = $this->owners->filter(function ($e) use($recipient){
-                return $e->getSpeaker()->getEmail() == $recipient;
-            })->first();     if (!$existing_owner instanceof AssignedPromoCodeSpeaker)
-                throw new ValidationException("can't find an owner with the email {$recipient} for the promo_code");
+                return strtolower($e->getSpeaker()->getEmail()) == strtolower(trim($recipient)) && !$e->isSent();
+            })->first();
 
-            parent::setEmailSent($email_sent, $recipient);
+            if (!$existing_owner instanceof AssignedPromoCodeSpeaker)
+                throw new ValidationException("Can't find an owner with the email {$recipient} for the promo_code.");
 
-            $utc_now = new \DateTime('now', new \DateTimeZone('UTC'));
-            $existing_owner->setSentAt($utc_now);
+            $existing_owner->markSent();
 
         } catch (ValidationException $ex){
             Log::warning($ex);
+        }
+    }
+
+    public function isEmailSent():bool
+    {
+        try {
+            $query = $this->createQuery("SELECT COUNT(e.id) from models\summit\AssignedPromoCodeSpeaker e 
+            JOIN e.registration_promo_code pc 
+            WHERE pc.id = :promo_code_id and e.sent is null");
+
+            $query->setParameter('promo_code_id', $this->getId());
+            $res = $query->getSingleScalarResult();
+            Log::debug(sprintf("SpeakersPromoCodeTrait::isEmailSent promo_code %s not sent qty %s", $this->getCode(), $res));
+            return $res == 0;
+        }
+        catch (\Exception $ex){
+            Log::warning($ex);
+            return false;
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRedeemed():bool
+    {
+        try {
+            $query = $this->createQuery("SELECT COUNT(e.id) from models\summit\AssignedPromoCodeSpeaker e 
+            JOIN e.registration_promo_code pc 
+            WHERE pc.id = :promo_code_id and e.redeemed is null");
+
+            $query->setParameter('promo_code_id', $this->getId());
+            $res = $query->getSingleScalarResult();
+            Log::debug(sprintf("SpeakersPromoCodeTrait::isRedeemed promo_code %s not redeemed qty %s", $this->getCode(), $res));
+            return $res == 0;
+        }
+        catch (\Exception $ex){
+            Log::warning($ex);
+            return false;
         }
     }
 }

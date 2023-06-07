@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Main\CountryCodes;
 use App\Models\Foundation\Main\ExtraQuestions\ExtraQuestionAnswerSet;
 use App\Models\Foundation\Main\ExtraQuestions\SubQuestionRule;
 use App\Models\Foundation\Main\IOrderable;
@@ -546,5 +548,14 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
     public function recalculateSubQuestionRuleOrder(SubQuestionRule $rule, $new_order)
     {
         self::recalculateOrderForSelectable($this->sub_question_rules, $rule, $new_order);
+    }
+
+    public function seed():void{
+        if($this->getType() === ExtraQuestionTypeConstants::CountryComboBoxQuestionType){
+            foreach (CountryCodes::$iso_3166_countryCodes as $iso => $name){
+                $value = new ExtraQuestionTypeValue($iso, $name);
+                $this->addValue($value);
+            }
+        }
     }
 }

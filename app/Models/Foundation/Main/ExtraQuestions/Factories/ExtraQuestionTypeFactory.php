@@ -25,7 +25,9 @@ abstract class ExtraQuestionTypeFactory
      * @return ExtraQuestionType
      */
     public static function build(array $data):ExtraQuestionType{
-        return static::populate(static::getNewEntity(), $data);
+        $e = static::populate(static::getNewEntity(), $data);
+        $e->seed();
+        return $e;
     }
 
     /**

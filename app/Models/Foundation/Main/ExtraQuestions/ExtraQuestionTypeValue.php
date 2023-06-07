@@ -122,9 +122,15 @@ implements IOrderable
         $this->question = $question;
     }
 
-    public function __construct()
+    /**
+     * @param string $value
+     * @param string $label
+     */
+    public function __construct(string $value = '', string $label = '')
     {
         parent::__construct();
+        $this->value = $value;
+        $this->label = $label;
         $this->order = 1;
     }
 }

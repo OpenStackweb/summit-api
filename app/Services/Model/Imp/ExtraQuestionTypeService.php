@@ -63,6 +63,11 @@ abstract class ExtraQuestionTypeService
 
             $value = ExtraQuestionTypeValueFactory::build($payload);
 
+            if($value->isDefault()){
+                // clear the rest of values
+                $question->resetDefaultValues();
+            }
+
             $question->addValue($value);
 
             return $value;
@@ -103,6 +108,11 @@ abstract class ExtraQuestionTypeService
             if (isset($payload['order']) && intval($payload['order']) != $value->getOrder()) {
                 // request to update order
                 $question->recalculateValueOrder($value,  intval($payload['order']) );
+            }
+
+            if(isset($payload['is_default']) && boolval($payload['is_default'])){
+                // clear the rest of values
+                $question->resetDefaultValues();
             }
 
             return ExtraQuestionTypeValueFactory::populate($value, $payload);

@@ -250,6 +250,23 @@ final class DoctrineSummitEventRepository
             'created' => 'e.created:datetime_epoch',
             'last_edited' => 'e.last_edited:datetime_epoch',
             'tags' => "t.tag",
+            'submission_status' => new DoctrineSwitchFilterMapping
+            (
+                [
+                    'Accepted' => new DoctrineCaseFilterMapping(
+                        'Accepted',
+                        "p.status = 'Received' AND e.published = 1"
+                    ),
+                    'Received' => new DoctrineCaseFilterMapping(
+                        'Received',
+                        "p.status = 'Received' AND e.published = 0"
+                    ),
+                    'NonReceived' => new DoctrineCaseFilterMapping(
+                        'NonReceived',
+                        "p.status is null"
+                    )
+                ]
+            ),
             'summit_id' => new DoctrineJoinFilterMapping
             (
                 'e.summit',

@@ -51,22 +51,26 @@ final class CSVExporter
     public function export(array $items, $field_separator = ",", array $header = [], array $formatters = []):string{
         $output         = '';
         $header         = [];
+        $originalHeader = [];
 
+        // get header ( need to iterate over the entire set bc the rows could have distinct keys and we need all)
         foreach ($items as $row) {
-
             $currentKeys = array_keys($row);
             $tempHeader = $currentKeys;
             array_walk($tempHeader, array($this, 'cleanData'));
             $header = array_unique(array_merge($header, $tempHeader));
+            $originalHeader = array_unique(array_merge($originalHeader, $currentKeys));
+        }
 
+        foreach ($items as $row){
             array_walk($row, array($this, 'cleanData'));
             $values = [];
-            foreach ($currentKeys as $key){
-               $val = $row[$key] ?? '';
-               if(isset($formatters[$key]))
-                   $val = $formatters[$key]->format($val);
-               if(is_array($val)) $val = '';
-               $values[] = $val;
+            foreach ($originalHeader as $key){
+                $val = $row[$key] ?? '';
+                if(isset($formatters[$key]))
+                    $val = $formatters[$key]->format($val);
+                if(is_array($val)) $val = '';
+                $values[] = $val;
             }
             $output .= implode($field_separator, $values) . PHP_EOL;
         }

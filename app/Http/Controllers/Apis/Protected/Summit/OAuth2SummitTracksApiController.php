@@ -520,6 +520,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                 'allowed_tags' => 'sometimes|string_array',
                 'allowed_access_levels' => 'sometimes|int_array',
                 'order' => 'sometimes|integer|min:1',
+                'proposed_schedule_transition_time' => 'sometimes|integer|min:1',
             ];
 
             // Creates a Validator instance and validates the data.

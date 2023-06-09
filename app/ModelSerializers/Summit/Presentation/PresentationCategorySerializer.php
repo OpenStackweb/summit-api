@@ -37,6 +37,7 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
             'Color' => 'color:json_color',
             'IconUrl' => 'icon_url:json_url',
             'Order' => 'order:json_int',
+            'ProposedScheduleTransitionTime' => 'proposed_schedule_transition_time:json_int',
         ];
 
     /**

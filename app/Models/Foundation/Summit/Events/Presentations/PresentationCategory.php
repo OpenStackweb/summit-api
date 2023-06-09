@@ -131,6 +131,12 @@ class PresentationCategory extends SilverstripeBaseModel
     protected $proposed_schedule_allowed_locations;
 
     /**
+     * @ORM\Column(name="ProposedScheduleTransitionTime", type="integer")
+     * @var int|null
+     */
+    protected $proposed_schedule_transition_time;
+
+    /**
      * @return string
      */
     public function getDescription()
@@ -846,5 +852,13 @@ SQL;
             return true;
         });
         $this->proposed_schedule_allowed_locations->clear();
+    }
+
+    public function getProposedScheduleTransitionTime():?int{
+        return $this->proposed_schedule_transition_time;
+    }
+
+    public function setProposedScheduleTransitionTime(?int $proposed_schedule_transition_time) {
+        $this->proposed_schedule_transition_time = $proposed_schedule_transition_time;
     }
 }

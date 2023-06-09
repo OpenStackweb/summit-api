@@ -52,6 +52,12 @@ implements IOrderable
     protected $order;
 
     /**
+     * @ORM\Column(name="IsDefault", type="boolean")
+     * @var boolean
+     */
+    protected $is_default;
+
+    /**
      * @ORM\ManyToOne(targetEntity="ExtraQuestionType", inversedBy="values")
      * @ORM\JoinColumn(name="QuestionID", referencedColumnName="ID")
      * @var ExtraQuestionType
@@ -125,12 +131,35 @@ implements IOrderable
     /**
      * @param string $value
      * @param string $label
+     * @param bool $is_default
      */
-    public function __construct(string $value = '', string $label = '')
+    public function __construct(string $value = '', string $label = '', bool $is_default = false)
     {
         parent::__construct();
         $this->value = $value;
         $this->label = $label;
         $this->order = 1;
+        $this->is_default = $is_default;
     }
+
+    /**
+     * @return bool
+     */
+    public function isDefault(): bool
+    {
+        return $this->is_default;
+    }
+
+    /**
+     * @param bool $is_default
+     */
+    public function setIsDefault(bool $is_default): void
+    {
+        $this->is_default = $is_default;
+    }
+
+    public function resetDefaultValue():void{
+        $this->is_default = false;
+    }
+
 }

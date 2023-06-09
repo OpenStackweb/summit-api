@@ -558,4 +558,10 @@ abstract class ExtraQuestionType extends SilverstripeBaseModel
             }
         }
     }
+
+    public function resetDefaultValues():void{
+        foreach ($this->values as $value){
+            $value->resetDefaultValue();
+        }
+    }
 }

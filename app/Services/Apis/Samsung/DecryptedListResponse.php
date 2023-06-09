@@ -52,6 +52,10 @@ implements IExternalRegistrationFeedResponse
         $list = json_decode($dec->getData(), true);
         if(!is_array($list))
             throw new InvalidResponse(sprintf("invalid data field on response %s", $content));
+
+        if(count($list) == 0)
+            throw new EmptyResponse("response not found");
+
         $this->payload = $list;
     }
 

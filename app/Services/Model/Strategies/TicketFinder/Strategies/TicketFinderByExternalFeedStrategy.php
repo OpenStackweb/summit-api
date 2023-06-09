@@ -76,12 +76,18 @@ final class TicketFinderByExternalFeedStrategy
         Log::debug(sprintf("TicketFinderByExternalFeedStrategy::find ticket_criteria %s", $this->ticket_criteria));
 
         if($this->feed->isValidQRCode($this->ticket_criteria)){
+            Log::debug(sprintf("TicketFinderByExternalFeedStrategy::find ticket_criteria %s is a valid QRCode", $this->ticket_criteria));
             $externalAttendeeId = $this->feed->getExternalUserIdFromQRCode($this->ticket_criteria);
             // check first if we have it locally
             $attendee = $this->attendee_repository->getBySummitAndExternalId
             (
                 $this->summit, $externalAttendeeId
             );
+
+            if(!is_null($attendee) && !$attendee->hasTickets()){
+                Log::debug(sprintf("TicketFinderByExternalFeedStrategy::find attendee %s has no tickets, re fetch it from external feed", $externalAttendeeId));
+                $attendee = null;
+            }
 
             if(is_null($attendee)) {
 
@@ -123,14 +129,21 @@ final class TicketFinderByExternalFeedStrategy
 
             return $attendee->getFirstTicket();
         }
+
         if(filter_var($this->ticket_criteria, FILTER_VALIDATE_EMAIL)){
 
+            Log::debug(sprintf("TicketFinderByExternalFeedStrategy::find ticket_criteria %s is a valid email", $this->ticket_criteria));
             $externalAttendeeEmail = $this->ticket_criteria;
             // check first if we have it locally
             $attendee = $this->attendee_repository->getBySummitAndEmail
             (
                 $this->summit, $externalAttendeeEmail
             );
+
+            if(!is_null($attendee) && !$attendee->hasTickets()){
+                Log::debug(sprintf("TicketFinderByExternalFeedStrategy::find attendee %s has no tickets, re fetch it from external feed", $externalAttendeeEmail));
+                $attendee = null;
+            }
 
             if(is_null($attendee)) {
 
@@ -170,6 +183,7 @@ final class TicketFinderByExternalFeedStrategy
             }
             return $attendee->getFirstTicket();
         }
+        Log::debug(sprintf("TicketFinderByExternalFeedStrategy::find ticket_criteria %s is not a valid QRCode or email", $this->ticket_criteria));
         return null;
     }
 }

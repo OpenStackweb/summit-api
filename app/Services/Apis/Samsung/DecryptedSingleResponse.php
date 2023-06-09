@@ -45,6 +45,9 @@ final class DecryptedSingleResponse extends AbstractPayload
         if(!is_array($list))
             throw new InvalidResponse(sprintf("invalid data field on response %s", $content));
         $this->payload = count($list) == 1 ? $list[0] : $list;
+
+        if(count($this->payload) == 0)
+            throw new EmptyResponse("response not found");
     }
 
 

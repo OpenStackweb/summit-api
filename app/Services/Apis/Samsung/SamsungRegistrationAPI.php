@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use GuzzleHttp\Client;
 use Exception;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
@@ -91,11 +90,19 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
         }
         catch (RequestException $ex) {
             Log::warning($ex->getMessage());
-            return null;
+            return [];
+        }
+        catch(EmptyResponse $ex){
+            Log::warning($ex->getMessage());
+            return [];
+        }
+        catch (InvalidResponse $ex){
+            Log::warning($ex->getMessage());
+            return [];
         }
         catch (Exception $ex) {
             Log::error($ex->getMessage());
-            return null;
+            return [];
         }
     }
 
@@ -113,7 +120,6 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
             $request = new CheckEmailRequest($email, $summit->getExternalSummitId(), $region);
 
             Log::debug(sprintf("SamsungRegistrationAPI::checkEmail POST %s payload %s", $this->endpoint, $request));
-
 
             // http://docs.guzzlephp.org/en/stable/request-options.html
             $response = $this->client->request('POST',
@@ -138,11 +144,19 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
         }
         catch (RequestException $ex) {
             Log::warning($ex->getMessage());
-            return null;
+            return [];
+        }
+        catch(EmptyResponse $ex){
+            Log::warning($ex->getMessage());
+            return [];
+        }
+        catch (InvalidResponse $ex){
+            Log::warning($ex->getMessage());
+            return [];
         }
         catch (Exception $ex) {
             Log::error($ex->getMessage());
-            return null;
+            return [];
         }
     }
 
@@ -179,6 +193,14 @@ final class SamsungRegistrationAPI implements ISamsungRegistrationAPI
             );
         }
         catch (RequestException $ex) {
+            Log::warning($ex->getMessage());
+            return null;
+        }
+        catch(EmptyResponse $ex){
+            Log::warning($ex->getMessage());
+            return null;
+        }
+        catch(InvalidResponse $ex){
             Log::warning($ex->getMessage());
             return null;
         }

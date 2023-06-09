@@ -171,6 +171,7 @@ final class RegistrationIngestionService
                 $cancelled = $external_attendee['cancelled'] ?? false;
 
                 $ticket_type = $summit->getTicketTypeByExternalId($ticket_class['id']);
+
                 if (is_null($ticket_type)) {
                     // create ticket type if it does not exists
                     Log::debug(sprintf("RegistrationIngestionService::ingestSummit: ticket class %s does not exists", $ticket_class['id']));
@@ -639,6 +640,9 @@ final class RegistrationIngestionService
             do {
                 Log::debug(sprintf("RegistrationIngestionService::ingestSummit getting external attendees page %s", $page));
                 $response = $feed->getAttendees($page, $summit->getExternalRegistrationFeedLastIngestDate());
+
+                if(is_null($response))
+                    throw new ValidationException("Response is empty");
 
                 if ($response->hasData()) {
                     $shouldMarkProcess = true;

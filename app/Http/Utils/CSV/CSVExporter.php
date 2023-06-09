@@ -43,37 +43,35 @@ final class CSVExporter
 
     /**
      * @param array $items
-     * @param string $field_separator
+     * @param $field_separator
      * @param array $header
+     * @param array $formatters
      * @return string
      */
-    public function export(array $items, $field_separator = ",", array $header = [], array $formatters){
-        $flag           = false;
+    public function export(array $items, $field_separator = ",", array $header = [], array $formatters = []):string{
         $output         = '';
         $header         = [];
-        $originalHeader = [];
 
         foreach ($items as $row) {
-            if (!$flag) {
-                // display field/column names as first row
-                if(!count($header))
-                    $originalHeader = $header = array_keys($row);
-                array_walk($header, array($this, 'cleanData'));
-                $output .= implode($field_separator, $header) . PHP_EOL;;
-                $flag = true;
-            }
+
+            $currentKeys = array_keys($row);
+            $tempHeader = $currentKeys;
+            array_walk($tempHeader, array($this, 'cleanData'));
+            $header = array_unique(array_merge($header, $tempHeader));
+
             array_walk($row, array($this, 'cleanData'));
             $values = [];
-            foreach ($originalHeader as $key){
+            foreach ($currentKeys as $key){
                $val = $row[$key] ?? '';
                if(isset($formatters[$key]))
                    $val = $formatters[$key]->format($val);
                if(is_array($val)) $val = '';
                $values[] = $val;
             }
-            $output .= implode($field_separator, $values) . PHP_EOL;;
+            $output .= implode($field_separator, $values) . PHP_EOL;
         }
-        return $output;
+
+        return implode($field_separator, $header) . PHP_EOL . $output;
     }
 
     function cleanData(&$str)

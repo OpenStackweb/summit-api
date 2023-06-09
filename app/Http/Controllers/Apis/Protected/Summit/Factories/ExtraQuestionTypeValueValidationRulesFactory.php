@@ -1,6 +1,4 @@
 <?php namespace App\Http\Controllers;
-use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
-
 /**
  * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +11,7 @@ use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-
+use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
 /**
  * Class ExtraQuestionTypeValueValidationRulesFactory
  * @package App\Http\Controllers
@@ -27,6 +24,7 @@ final class ExtraQuestionTypeValueValidationRulesFactory extends AbstractValidat
         return [
             'label' => 'sometimes|string',
             'value' => 'required|string|max:255',
+            'is_default' => 'sometimes|boolean',
         ];
     }
 
@@ -35,7 +33,8 @@ final class ExtraQuestionTypeValueValidationRulesFactory extends AbstractValidat
         return [
             'label' => 'sometimes|string',
             'value' => 'sometimes|string|max:255',
-            'order' => 'sometimes|integer|min:1'
+            'order' => 'sometimes|integer|min:1',
+            'is_default' => 'sometimes|boolean',
         ];
     }
 }

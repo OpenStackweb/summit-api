@@ -25,6 +25,7 @@ class ExtraQuestionTypeValueSerializer extends SilverStripeSerializer
         'Value'      => 'value:json_string',
         'Order'      => 'order:json_int',
         'QuestionId' => 'question_id:json_int',
+        'Default'    => 'is_default:json_boolean',
     ];
 
     protected static $expand_mappings = [

@@ -39,6 +39,9 @@ final class ExtraQuestionTypeValueFactory
         if(isset($data['value']))
             $value->setValue(trim($data['value']));
 
+        if(isset($data['is_default']))
+            $value->setIsDefault(boolval($data['is_default']));
+
         return $value;
     }
 }

@@ -198,6 +198,36 @@ class SummitProposedSchedule extends SilverstripeBaseModel
     }
 
     /**
+     * @param \DateTime $date
+     * @param SummitAbstractLocation|null $location
+     * @return SummitProposedScheduleSummitEvent|null
+     */
+    public function getProposedPublishedEventBeforeThan(\DateTime $date, SummitAbstractLocation $location):?SummitProposedScheduleSummitEvent {
+
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->lt('end_date', $date));
+        $criteria->andWhere(Criteria::expr()->eq('location', $location));
+        $criteria->orderBy(['end_date' => 'DESC']);
+        $res = $this->scheduled_summit_events->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    /**
+     * @param \DateTime $date
+     * @param SummitAbstractLocation|null $location
+     * @return SummitProposedScheduleSummitEvent|null
+     */
+    public function getProposedPublishedEventAfterThan(\DateTime $date, SummitAbstractLocation $location):?SummitProposedScheduleSummitEvent {
+
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->gt('start_date', $date));
+        $criteria->andWhere(Criteria::expr()->eq('location', $location));
+        $criteria->orderBy(['start_date' => 'ASC']);
+        $res = $this->scheduled_summit_events->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    /**
      * @param IPublishableEvent|SummitProposedScheduleSummitEvent $scheduled_event
      * @throws ValidationException
      */

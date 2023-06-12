@@ -120,6 +120,36 @@ final class ScheduleService
 
                 if (!$selection_plan->isAllowProposedSchedules())
                     throw new ValidationException("selection plan id {$selection_plan->getId()} does not allow proposed schedules");
+
+                if (!is_null($schedule)) {
+                    $transition_time = $event->getTrackTransitionTime();
+
+                    if (!is_null($transition_time)) {
+                        $prevProposedScheduledEvent = $schedule->getProposedPublishedEventBeforeThan($event->getStartDate(), $event->getLocation());
+
+                        if (!is_null($prevProposedScheduledEvent) &&
+                            ($event->getStartDate()->getTimestamp() - $prevProposedScheduledEvent->getEndDate()->getTimestamp()) / 60 < $transition_time) {
+                            throw new ValidationException(
+                                "There must be a transition time of at least {$transition_time} " .
+                                "minutes between the end of the previous event ({$prevProposedScheduledEvent->getSummitEventId()}) " .
+                                "and the start of the current one ({$event->getId()})");
+                        }
+                    }
+
+                    $nextProposedScheduledEvent = $schedule->getProposedPublishedEventAfterThan($event->getEndDate(), $event->getLocation());
+
+                    if (!is_null($nextProposedScheduledEvent)) {
+                        $transition_time = $nextProposedScheduledEvent->getSummitEvent()->getTrackTransitionTime();
+
+                        if (!is_null($transition_time) &&
+                            ($nextProposedScheduledEvent->getStartDate()->getTimestamp() - $event->getEndDate()->getTimestamp()) / 60 < $transition_time) {
+                            throw new ValidationException(
+                                "There must be a transition time of at least {$transition_time} " .
+                                "minutes between the end of the current event ({$event->getId()}) and the start of the next " .
+                                "one ({$nextProposedScheduledEvent->getSummitEventId()})");
+                        }
+                    }
+                }
             }
 
             if (is_null($schedule)) {

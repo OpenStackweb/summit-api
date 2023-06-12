@@ -410,24 +410,8 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $rules = [
-                'name' => 'required|string|max:100',
-                'description' => 'required|string|max:1500',
-                'code' => 'sometimes|string|max:5',
-                'color' => 'sometimes|hex_color|max:50',
-                'session_count' => 'sometimes|integer',
-                'alternate_count' => 'sometimes|integer',
-                'lightning_count' => 'sometimes|integer',
-                'lightning_alternate_count' => 'sometimes|integer',
-                'voting_visible' => 'sometimes|boolean',
-                'chair_visible' => 'sometimes|boolean',
-                'allowed_tags' => 'sometimes|string_array',
-                'allowed_access_levels' => 'sometimes|int_array',
-                'order' => 'sometimes|integer|min:1',
-            ];
-
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data->all(), $rules);
+            $validation = Validator::make($data->all(), SummitTrackValidationRulesFactory::buildForAdd());
 
             if ($validation->fails()) {
                 $messages = $validation->messages()->toArray();
@@ -506,25 +490,8 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            $rules = [
-                'name' => 'sometimes|string|max:100',
-                'description' => 'sometimes|string|max:1500',
-                'color' => 'sometimes|hex_color|max:50',
-                'code' => 'sometimes|string|max:5',
-                'session_count' => 'sometimes|integer',
-                'alternate_count' => 'sometimes|integer',
-                'lightning_count' => 'sometimes|integer',
-                'lightning_alternate_count' => 'sometimes|integer',
-                'voting_visible' => 'sometimes|boolean',
-                'chair_visible' => 'sometimes|boolean',
-                'allowed_tags' => 'sometimes|string_array',
-                'allowed_access_levels' => 'sometimes|int_array',
-                'order' => 'sometimes|integer|min:1',
-                'proposed_schedule_transition_time' => 'sometimes|integer|min:1',
-            ];
-
             // Creates a Validator instance and validates the data.
-            $validation = Validator::make($data->all(), $rules);
+            $validation = Validator::make($data->all(), SummitTrackValidationRulesFactory::buildForUpdate());
 
             if ($validation->fails()) {
                 $messages = $validation->messages()->toArray();

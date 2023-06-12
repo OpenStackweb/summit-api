@@ -30,7 +30,7 @@ class Version20230609125211 extends AbstractMigration
         $builder = new Builder($schema);
         if ($schema->hasTable("PresentationCategory")) {
             $builder->table("PresentationCategory", function (Table $table) {
-                $table->integer("ProposedScheduleTransitionTime")->setNotnull(false);
+                $table->integer("ProposedScheduleTransitionTime")->setNotnull(false)->setDefault('NULL');
             });
         }
     }

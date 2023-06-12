@@ -436,7 +436,7 @@ class SummitTicketType extends SilverstripeBaseModel
     {
         $amount = $this->cost;
         foreach ($this->applied_taxes as $tax) {
-            $amount += $tax->getAmount();
+            $amount += $tax->applyTo($this->cost, false);
         }
         return $amount;
     }

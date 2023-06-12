@@ -201,7 +201,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
 
             $ticket = $this->service->getTicket($summit, $filterVal->getRawValue());
 
-            if(is_null($ticket)) return $this->error404();
+            $data = is_null($ticket) ? [] : [$ticket];
 
             $response = new PagingResponse
             (
@@ -209,7 +209,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                 1,
                 1,
                 1,
-                [$ticket]
+                $data
             );
 
             return $this->ok($response->toArray(

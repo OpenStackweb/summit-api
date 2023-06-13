@@ -1102,9 +1102,9 @@ SQL;
     {
         try {
             $sql = <<<SQL
-
-SELECT TicketTypeID As type_id, COUNT(ID) As qty FROM `SummitAttendeeTicket` 
-where OwnerID = :owner_id AND
+SELECT TicketTypeID AS type_id, COUNT(SummitTicketType.ID) AS qty, SummitTicketType.Name AS type_name FROM `SummitAttendeeTicket` 
+INNER JOIN SummitTicketType ON SummitTicketType.ID = SummitAttendeeTicket.TicketTypeID                                                  
+WHERE OwnerID = :owner_id AND
 SummitAttendeeTicket.IsActive = 1 AND
 SummitAttendeeTicket.Status = 'Paid'
 GROUP BY OwnerID, TicketTypeID;
@@ -1117,6 +1117,7 @@ SQL;
                 $res = array_map(function ($e) {
                     $e['type_id'] = intval($e['type_id']);
                     $e['qty'] = intval($e['qty']);
+                    $e['type_name'] = $e['type_name'];
                     return $e;
                 }, $res);
             }

@@ -516,9 +516,16 @@ final class SummitRegistrationInvitationService
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit_id));
                 Log::debug(sprintf("SummitRegistrationInvitationService::send page %s", $page));
                 if($filter->hasFilter("is_sent")){
-                    // we need to reset the page bc the page processing will mark the current page as "sent"
-                    // and adding an offset will move the cursor forward, leaving next round of not send out of the current process
-                    $page = 1;
+                    $isSentFilter = $filter->getUniqueFilter("is_sent");
+                    $filterValue = $isSentFilter->getValue();
+
+                    Log::debug(sprintf("SummitRegistrationInvitationService::send is_sent filter value %s", $filterValue));
+                    if($filterValue == 'false') {
+                        // we need to reset the page bc the page processing will mark the current page as "sent"
+                        // and adding an offset will move the cursor forward, leaving next round of not send out of the current process
+                        Log::debug("SummitRegistrationInvitationService::send resetting page bc is_sent filter is false");
+                        $page = 1;
+                    }
                 }
                 return $this->invitation_repository->getAllIdsByPage(new PagingInfo($page, $maxPageSize), $filter);
             });

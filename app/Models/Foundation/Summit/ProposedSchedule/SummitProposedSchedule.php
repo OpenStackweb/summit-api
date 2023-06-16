@@ -58,10 +58,17 @@ class SummitProposedSchedule extends SilverstripeBaseModel
      */
     private $scheduled_summit_events;
 
+    /**
+     * @ORM\OneToMany(targetEntity="SummitProposedScheduleLock", mappedBy="summit_proposed_schedule", cascade={"persist","remove"}, orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @var SummitProposedScheduleLock[]
+     */
+    private $locks;
+
     public function __construct()
     {
         parent::__construct();
         $this->scheduled_summit_events = new ArrayCollection();
+        $this->locks = new ArrayCollection();
     }
 
     /**
@@ -222,5 +229,52 @@ class SummitProposedSchedule extends SilverstripeBaseModel
         if(!$this->scheduled_summit_events->contains($scheduled_event)) return;
         $this->scheduled_summit_events->removeElement($scheduled_event);
         $scheduled_event->clearSchedule();
+    }
+
+    /**
+     * @return SummitProposedScheduleLock[]
+     */
+    public function getProposedScheduleLocks()
+    {
+        return $this->locks;
+    }
+
+    public function clearProposedScheduleLocks():void
+    {
+        $this->locks->clear();
+    }
+
+    /**
+     * @param int $lock_id
+     * @return SummitProposedScheduleLock|null
+     */
+    public function getProposedScheduleLockById(int $lock_id):?SummitProposedScheduleSummitEvent {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $lock_id));
+        $res = $this->locks->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    /**
+     * @param SummitProposedScheduleLock $lock
+     * @throws ValidationException
+     */
+    public function addProposedScheduleLock(SummitProposedScheduleLock $lock){
+        if($this->locks->contains($lock)) return;
+
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('id', $lock));
+        if($this->locks->matching($criteria)->count() > 0)
+            throw new ValidationException(sprintf("Schedule lock %s already exists", $lock->getId()));
+
+        $this->locks->add($lock);
+    }
+
+    /**
+     * @param SummitProposedScheduleLock $lock
+     */
+    public function removeProposedScheduleLock(SummitProposedScheduleLock $lock){
+        if(!$this->locks->contains($lock)) return;
+        $this->locks->removeElement($lock);
     }
 }

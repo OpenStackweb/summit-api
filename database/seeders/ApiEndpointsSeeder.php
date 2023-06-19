@@ -1387,6 +1387,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1400,6 +1401,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1414,6 +1416,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
 
@@ -1428,6 +1431,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1441,6 +1445,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             // payment gateway profiles
@@ -1456,6 +1461,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1470,6 +1476,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1484,6 +1491,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1498,6 +1506,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1512,6 +1521,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             // tax types
@@ -1535,6 +1545,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1549,6 +1560,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1562,6 +1574,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1575,6 +1588,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1588,6 +1602,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1601,6 +1616,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             // features types
@@ -1616,6 +1632,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1629,6 +1646,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1643,6 +1661,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1656,6 +1675,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1669,6 +1689,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1682,6 +1703,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1695,6 +1717,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             // refund-policies
@@ -1710,6 +1733,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1723,6 +1747,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1737,6 +1762,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1750,6 +1776,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -1763,6 +1790,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             // sponsorship-types
@@ -2382,6 +2410,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2395,6 +2424,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2408,6 +2438,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2430,6 +2461,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2443,6 +2475,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2469,6 +2502,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2482,6 +2516,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             // sub question rules
@@ -2505,6 +2540,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2518,6 +2554,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2531,6 +2568,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2555,6 +2593,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2568,6 +2607,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2582,6 +2622,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2595,6 +2636,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2608,6 +2650,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2621,6 +2664,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2634,6 +2678,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2647,6 +2692,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2660,6 +2706,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2673,6 +2720,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2686,6 +2734,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             // badge view types
@@ -2701,6 +2750,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2714,6 +2764,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2728,6 +2779,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2741,6 +2793,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -2754,6 +2807,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             // attendees
@@ -5379,6 +5433,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -5401,6 +5456,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -5415,6 +5471,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -5429,6 +5486,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -5443,6 +5501,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -6388,6 +6447,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -6401,6 +6461,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -6415,6 +6476,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -6428,6 +6490,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -6442,6 +6505,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -6456,6 +6520,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -6470,6 +6535,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -6484,6 +6550,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -6497,6 +6564,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -6511,6 +6579,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -6525,6 +6594,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -6539,6 +6609,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             [
@@ -6553,6 +6624,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
                 ]
             ],
             // summit speakers assistances

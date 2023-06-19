@@ -38,6 +38,7 @@ class SummitAdministratorPermissionGroup extends SilverstripeBaseModel
         IGroup::TrackChairsAdmins,
         IGroup::TrackChairs,
         IGroup::BadgePrinters,
+        IGroup::SummitRegistrationAdmins
     ];
 
     public function __construct()
@@ -74,7 +75,7 @@ class SummitAdministratorPermissionGroup extends SilverstripeBaseModel
     public function addMember(Member $member)
     {
         if(!$this->canAddMember($member)){
-            throw new ValidationException(sprintf("Member %s should belong to following groups (%s)", $member->getId(),
+            throw new ValidationException(sprintf("Member %s should belong to following groups (%s).", $member->getId(),
             implode(",", self::ValidGroups)));
         }
 

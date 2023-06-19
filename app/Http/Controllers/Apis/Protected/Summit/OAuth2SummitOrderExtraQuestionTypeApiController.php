@@ -493,7 +493,8 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         if(is_null($current_member))
             return $this->error401();
         // check is user is admin or its on any pre - authorized group
-        $auth = $current_member->isAdmin() || $summit->isSummitAdmin($current_member) || $current_member->isOnGroup(IGroup::BadgePrinters);
+        $auth = $current_member->isSummitAllowed($summit) ||
+            $current_member->isOnGroup(IGroup::BadgePrinters);
 
         if(!$auth){
             // check if current member is the attendee

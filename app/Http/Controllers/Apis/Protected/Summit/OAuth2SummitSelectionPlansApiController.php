@@ -18,6 +18,7 @@ use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitCategoryChangeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSelectionPlanExtraQuestionTypeRepository;
 use App\ModelSerializers\SerializerUtils;
+use App\Rules\Boolean;
 use App\Services\Model\ISelectionPlanExtraQuestionTypeService;
 use App\Services\Model\ISummitSelectionPlanService;
 use Illuminate\Http\Request as LaravelRequest;
@@ -380,8 +381,8 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                     'id' => 'sometimes|integer',
                     'selection_plan_id' => 'sometimes|integer',
                     'status' => 'sometimes|string',
-                    'is_chair_visible' => 'sometimes|boolean',
-                    'is_voting_visible' => 'sometimes|boolean',
+                    'is_chair_visible' => ['sometimes', new Boolean],
+                    'is_voting_visible' => ['sometimes', new Boolean],
                     'track_chairs_status' => 'sometimes|string|in:voted,untouched,team_selected,selected,maybe,pass',
                     'viewed_status' => 'sometimes|string|in:seen,unseen,moved',
                     'actions' => 'sometimes|string',
@@ -489,8 +490,8 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                     'id' => 'sometimes|integer',
                     'selection_plan_id' => 'sometimes|integer',
                     'status' => 'sometimes|string',
-                    'is_chair_visible' => 'sometimes|boolean',
-                    'is_voting_visible' => 'sometimes|boolean',
+                    'is_chair_visible' => ['sometimes', new Boolean],
+                    'is_voting_visible' => ['sometimes', new Boolean],
                     'track_chairs_status' => 'sometimes|string|in:voted,untouched,team_selected,selected,maybe,pass',
                     'viewed_status' => 'sometimes|string|in:seen,unseen,moved',
                     'actions' => 'sometimes|string',

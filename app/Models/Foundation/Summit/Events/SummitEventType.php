@@ -106,7 +106,13 @@ class SummitEventType extends SilverstripeBaseModel
      */
     protected $allows_location_timeframe_collision;
 
-  /**
+    /**
+     * @ORM\Column(name="ShowAlwaysOnSchedule", type="boolean")
+     * @var bool
+     */
+    protected $show_always_on_schedule;
+
+    /**
      * @ORM\ManyToMany(targetEntity="SummitDocument", mappedBy="event_types")
      */
     protected $summit_documents;
@@ -263,8 +269,10 @@ class SummitEventType extends SilverstripeBaseModel
         $this->allows_level            = false;
         $this->allows_location         = true;
         $this->allows_publishing_dates = true;
-        $this->summit_documents        = new ArrayCollection();
         $this->allows_location_timeframe_collision = false;
+        $this->show_always_on_schedule = false;
+        $this->summit_documents        = new ArrayCollection();
+
     }
 
     /**
@@ -327,6 +335,10 @@ SQL;
         $res =  $native_query->getResult();
 
         return $res;
+    }
+
+    public function hasSummitDocuments():bool{
+        return $this->summit_documents->count() > 0;
     }
 
     public function getSummitDocuments(){
@@ -409,6 +421,22 @@ SQL;
     public function setAllowsLocationTimeframeCollision(bool $allows_location_timeframe_collision): void
     {
         $this->allows_location_timeframe_collision = $allows_location_timeframe_collision;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isShowAlwaysOnSchedule(): bool
+    {
+        return $this->show_always_on_schedule;
+    }
+
+    /**
+     * @param bool $show_always_on_schedule
+     */
+    public function setShowAlwaysOnSchedule(bool $show_always_on_schedule): void
+    {
+        $this->show_always_on_schedule = $show_always_on_schedule;
     }
 
     use ScheduleEntity;

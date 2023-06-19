@@ -61,6 +61,7 @@ final class EventTypeValidationRulesFactory
             'is_private'              => 'sometimes|boolean',
             'is_default'              => 'sometimes|boolean',
             'allows_location_timeframe_collision' => 'sometimes|boolean',
+            'show_always_on_schedule' => 'sometimes|boolean',
         ];
 
         $specific_rules = [];

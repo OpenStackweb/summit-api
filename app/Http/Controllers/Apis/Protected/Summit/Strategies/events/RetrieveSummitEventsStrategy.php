@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Rules\Boolean;
 use libs\utils\PaginationValidationRules;
 use models\exceptions\ValidationException;
 use models\summit\Presentation;
@@ -202,6 +203,7 @@ abstract class RetrieveSummitEventsStrategy
             'speakers_count' => ['>', '<', '<=', '>=', '=='],
             'streaming_type' => ['=='],
             'submission_status' => ['=='],
+            'type_show_always_on_schedule' => ['=='],
         ];
     }
 
@@ -234,11 +236,11 @@ abstract class RetrieveSummitEventsStrategy
             'created_by_fullname' => 'sometimes|string',
             'created_by_email' => 'sometimes|string',
             'created_by_company' => 'sometimes|string',
-            'type_allows_publishing_dates' => 'sometimes|boolean',
-            'type_allows_location' => 'sometimes|boolean',
-            'type_allows_attendee_vote' => 'sometimes|boolean',
-            'type_allows_custom_ordering' => 'sometimes|boolean',
-            'published' => 'sometimes|boolean',
+            'type_allows_publishing_dates' => ['sometimes', new Boolean],
+            'type_allows_location' => ['sometimes', new Boolean],
+            'type_allows_attendee_vote' => ['sometimes', new Boolean],
+            'type_allows_custom_ordering' => ['sometimes', new Boolean],
+            'published' => ['sometimes', new Boolean],
             'class_name' => 'sometimes|string|in:' . implode(',', [Presentation::ClassName, SummitEvent::ClassName]),
             'presentation_attendee_vote_date' => 'sometimes|date_format:U',
             'votes_count' => 'sometimes|integer',
@@ -250,6 +252,7 @@ abstract class RetrieveSummitEventsStrategy
             'etherpad_link' => 'sometimes|string',
             'streaming_type' => 'sometimes|string|in:VOD,LIVE',
             'submission_status' => 'sometimes|string|in:Accepted,Received,NonReceived',
+            'type_show_always_on_schedule' => ['sometimes', new Boolean],
         ];
     }
 }

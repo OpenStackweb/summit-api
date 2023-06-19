@@ -18,6 +18,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitLocationBannerRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitLocationRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRoomReservationRepository;
 use App\ModelSerializers\SerializerUtils;
+use App\Rules\Boolean;
 use App\Services\Model\ILocationService;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Validator;
@@ -397,7 +398,8 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                     'speaker' => ['=@', '=='],
                     'tags' => ['=@', '=='],
                     'event_type_id' => ['=='],
-                    'track_id' => ['==']
+                    'track_id' => ['=='],
+                    'type_show_always_on_schedule' => ['=='],
                 ];
             },
             function () {
@@ -409,6 +411,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                     'tags' =>'sometimes|string',
                     'event_type_id' =>  'sometimes|integer',
                     'track_id' => 'sometimes|integer',
+                    'type_show_always_on_schedule' => ['sometimes', new Boolean],
                 ];
             },
             function () {
@@ -439,7 +442,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             null,
             function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($location_id) {
 
-                return strtolower($location_id) === "tbd" ?
+                return strtolower($location_id) === "tbd" || intval($location_id) === 0 ?
                     $this->event_repository->getAllByPageLocationTBD
                     (
                         new PagingInfo($page, $per_page), call_user_func($applyExtraFilters, $filter), $order

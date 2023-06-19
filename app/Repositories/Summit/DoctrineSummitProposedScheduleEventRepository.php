@@ -43,6 +43,7 @@ final class DoctrineSummitProposedScheduleEventRepository
     {
         return $query->innerJoin('e.summit_proposed_schedule', 's')
             ->innerJoin('e.summit_event', 'ev')
+            ->innerJoin("ev.type","et")
             ->innerJoin('ev.category', 'cat');
     }
 
@@ -58,6 +59,7 @@ final class DoctrineSummitProposedScheduleEventRepository
             'presentation_id'    => 'ev.id:json_int',
             'presentation_title' => 'ev.title:json_string',
             'track_id'           => 'cat.id:json_int',
+            'type_show_always_on_schedule' => 'et.show_always_on_schedule',
         ];
     }
 

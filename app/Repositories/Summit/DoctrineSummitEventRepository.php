@@ -237,14 +237,15 @@ final class DoctrineSummitEventRepository
             'level' => 'e.level:json_string',
             'status' => 'p.status:json_string',
             'progress' => 'p.progress:json_int',
-            'is_chair_visible' => "c.chair_visible :operator :value",
-            'is_voting_visible' => "c.voting_visible :operator :value",
+            'is_chair_visible' => Filter::buildBooleanField("c.chair_visible"),
+            'is_voting_visible' => Filter::buildBooleanField("c.voting_visible"),
             'social_summary' => 'e.social_summary:json_string',
-            'published' => 'e.published',
-            'type_allows_publishing_dates' => 'et.allows_publishing_dates',
-            'type_allows_location' => 'et.allows_location',
-            'type_allows_attendee_vote' => 'et2.allow_attendee_vote',
-            'type_allows_custom_ordering' => 'et2.allow_custom_ordering',
+            'published' =>  Filter::buildBooleanField('e.published'),
+            'type_allows_publishing_dates' => Filter::buildBooleanField('et.allows_publishing_dates'),
+            'type_allows_location' =>  Filter::buildBooleanField('et.allows_location'),
+            'type_allows_attendee_vote' =>  Filter::buildBooleanField('et2.allow_attendee_vote'),
+            'type_allows_custom_ordering' =>  Filter::buildBooleanField('et2.allow_custom_ordering'),
+            'type_show_always_on_schedule' => Filter::buildBooleanField('et.show_always_on_schedule'),
             'start_date' => 'e.start_date:datetime_epoch',
             'end_date' => 'e.end_date:datetime_epoch',
             'created' => 'e.created:datetime_epoch',
@@ -583,8 +584,11 @@ SQL,*/
         $query = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")
+            ->innerJoin("e.type", "et", Join::ON)
             ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')
+            ->leftJoin(PresentationType::class, 'et2', 'WITH', 'et.id = et2.id')
             ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
+            ->leftJoin("e.category", "c", Join::ON)
             ->leftJoin("p.speakers", "sp_presentation", Join::LEFT_JOIN)
             ->leftJoin("sp_presentation.speaker", "sp", Join::LEFT_JOIN)
             ->leftJoin('p.selection_plan', "selp", Join::LEFT_JOIN)

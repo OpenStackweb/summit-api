@@ -36,6 +36,7 @@ class SummitEventTypeSerializer extends SilverStripeSerializer
         'AllowsLocation'        => 'allows_location:json_boolean',
         'Default'               => 'is_default:json_boolean',
         'SummitId'              => 'summit_id:json_int',
+        'ShowAlwaysOnSchedule'  => 'show_always_on_schedule:json_boolean',
     ];
 
     /**
@@ -52,8 +53,10 @@ class SummitEventTypeSerializer extends SilverStripeSerializer
         $values = parent::serialize($expand, $fields, $relations, $params);
 
         $summit_documents  = [];
-        foreach ($event_type->getSummitDocuments() as $document) {
-            $summit_documents[] = $document->getId();
+        if($event_type->hasSummitDocuments()) {
+            foreach ($event_type->getSummitDocuments() as $document) {
+                $summit_documents[] = $document->getId();
+            }
         }
 
         $values['summit_documents'] = $summit_documents;

@@ -92,6 +92,7 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
                     'presentation_id' => ['=='],
                     'location_id' => ['=='],
                     'track_id' => ['=='],
+                    'type_show_always_on_schedule' => ['=='],
                 ];
             },
             function () {
@@ -103,6 +104,7 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
                     'presentation_id' => 'sometimes|integer',
                     'location_id' => 'sometimes|integer',
                     'track_id' => 'sometimes|integer',
+                    'type_show_always_on_schedule' => 'sometimes|boolean'
                 ];
             },
             function () {

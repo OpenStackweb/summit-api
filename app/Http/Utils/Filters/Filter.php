@@ -34,6 +34,8 @@ final class Filter
     const ValuePlaceholder = ':value';
     const OperatorPlaceholder = ':operator';
 
+    const Boolean = 'json_boolean';
+
     /**
      * @param string $mapping
      * @return string
@@ -422,6 +424,9 @@ final class Filter
                 $strTimeZone = count($original_format_parts) > 1 ? $original_format_parts[1] : null;
                 return self::convertToDateTime($value, $strTimeZone);
                 break;
+            case self::Boolean:
+                return to_boolean($value) ? 1 : 0;
+                break;
             case self::Int:
                 if (is_array($value)) {
                     $res = [];
@@ -531,7 +536,7 @@ final class Filter
      */
     public static function buildBooleanField(string $field): string
     {
-        return self::buildField($field, self::Int);
+        return self::buildField($field, self::Boolean);
     }
 
     /**

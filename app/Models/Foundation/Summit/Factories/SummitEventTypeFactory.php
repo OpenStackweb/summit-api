@@ -146,6 +146,9 @@ final class SummitEventTypeFactory
         if(isset($data['allows_location_timeframe_collision']))
             $event_type->setAllowsLocationTimeframeCollision(boolval($data['allows_location_timeframe_collision']));
 
+        if(isset($data['show_always_on_schedule']))
+            $event_type->setShowAlwaysOnSchedule(boolval($data['show_always_on_schedule']));
+
         $summit->addEventType($event_type);
         return $event_type;
     }

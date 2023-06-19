@@ -46,7 +46,7 @@ use models\summit\SummitSelectedPresentation;
 use models\summit\SummitSelectedPresentationList;
 use models\summit\SummitTrackChair;
 use models\utils\SilverstripeBaseModel;
-use Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
 use utils\Filter;
 
 /**
@@ -414,7 +414,7 @@ class Member extends SilverstripeBaseModel
         $this->summit_permission_groups = new ArrayCollection();
         $this->summit_attendance_metrics = new ArrayCollection();
         $this->legal_agreements = new ArrayCollection();
-        $this->track_chairs =  new ArrayCollection();
+        $this->track_chairs = new ArrayCollection();
         $this->election_applications = new ArrayCollection();
         $this->election_nominations = new ArrayCollection();
         $this->candidate_profiles = new  ArrayCollection();
@@ -434,15 +434,17 @@ class Member extends SilverstripeBaseModel
     /**
      * @return ArrayCollection|LegalAgreement[]
      */
-    public function getLegalAgreements(){
+    public function getLegalAgreements()
+    {
         return $this->legal_agreements;
     }
 
     /**
      * @param LegalAgreement $legalAgreement
      */
-    public function addLegalAgreement(LegalAgreement $legalAgreement){
-        if($this->legal_agreements->contains($legalAgreement)) return;
+    public function addLegalAgreement(LegalAgreement $legalAgreement)
+    {
+        if ($this->legal_agreements->contains($legalAgreement)) return;
         $this->legal_agreements->add($legalAgreement);
         $legalAgreement->setOwner($this);
     }
@@ -731,7 +733,7 @@ class Member extends SilverstripeBaseModel
     /**
      * @return string|null
      */
-    public function getLastName():?string
+    public function getLastName(): ?string
     {
         return $this->last_name;
     }
@@ -739,7 +741,7 @@ class Member extends SilverstripeBaseModel
     /**
      * @return string|null
      */
-    public function getFirstName():?string
+    public function getFirstName(): ?string
     {
         return $this->first_name;
     }
@@ -859,6 +861,17 @@ class Member extends SilverstripeBaseModel
             return true;
         return false;
     }
+
+    public function isRegistrationAdmin(): bool
+    {
+        $summitAdminGroup = $this->getGroupByCode(IGroup::SummitRegistrationAdmins);
+        if (!is_null($summitAdminGroup))
+            return true;
+        if ($this->isOnExternalGroup(IGroup::SummitRegistrationAdmins))
+            return true;
+        return false;
+    }
+
 
     public function isTester(): bool
     {
@@ -1444,7 +1457,7 @@ SQL;
     /**
      * @return string
      */
-    public function getFullName():?string
+    public function getFullName(): ?string
     {
         $fullname = $this->first_name;
         if (!empty($this->last_name)) {
@@ -1485,7 +1498,7 @@ SQL;
 
             $photoUrl = null;
 
-            if(!empty($this->external_pic)){
+            if (!empty($this->external_pic)) {
                 $photoUrl = $this->external_pic;
             }
 
@@ -1493,18 +1506,17 @@ SQL;
                 $photoUrl = $photo->getUrl();
             }
 
-            if(empty($photoUrl) && !empty($default_pic))
+            if (empty($photoUrl) && !empty($default_pic))
                 $photoUrl = $default_pic;
 
-            if(empty($photoUrl))
+            if (empty($photoUrl))
                 $photoUrl = $this->getGravatarUrl();
 
             return $photoUrl;
-        }
-        catch(\Exception $ex){
+        } catch (\Exception $ex) {
             Log::warning($ex);
         }
-        if(!empty($default_pic))
+        if (!empty($default_pic))
             return $default_pic;
         return $this->getGravatarUrl();
     }
@@ -1603,7 +1615,7 @@ SQL;
     {
         Log::debug(sprintf("Member::setFirstName %s (%s)", $first_name, $this->id));
         $resource_server_ctx = App::make(IResourceServerContext::class);
-        if($resource_server_ctx->getCurrentUserEmail() === $this->email){
+        if ($resource_server_ctx->getCurrentUserEmail() === $this->email) {
             // if this member is current user , then update it also on auth context to avoid unwanted overwrites
             $resource_server_ctx->updateAuthContextVar(IResourceServerContext::UserFirstName, $first_name);
         }
@@ -1625,7 +1637,7 @@ SQL;
     {
         Log::debug(sprintf("Member::setLastName %s (%s)", $last_name, $this->id));
         $resource_server_ctx = App::make(IResourceServerContext::class);
-        if($resource_server_ctx->getCurrentUserEmail() === $this->email){
+        if ($resource_server_ctx->getCurrentUserEmail() === $this->email) {
             // if this member is current user , then update it also on auth context to avoid unwanted overwrites
             $resource_server_ctx->updateAuthContextVar(IResourceServerContext::UserLastName, $last_name);
         }
@@ -1707,18 +1719,19 @@ SQL;
      * @param Summit $summit
      * @return bool
      */
-    public function hasPaidRegistrationOrderForSummit(Summit $summit):bool
+    public function hasPaidRegistrationOrderForSummit(Summit $summit): bool
     {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('summit', $summit))
-            ->andWhere(Criteria::expr()->eq('status',IOrderConstants::PaidStatus));
+            ->andWhere(Criteria::expr()->eq('status', IOrderConstants::PaidStatus));
         return $this->summit_registration_orders->matching($criteria)->count() > 0;
     }
 
-    public function getPadRegistrationOrdersForSummit(Summit $summit){
+    public function getPadRegistrationOrdersForSummit(Summit $summit)
+    {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('summit', $summit))
-            ->andWhere(Criteria::expr()->eq('status',IOrderConstants::PaidStatus));
+            ->andWhere(Criteria::expr()->eq('status', IOrderConstants::PaidStatus));
         return $this->summit_registration_orders->matching($criteria);
     }
 
@@ -1881,7 +1894,8 @@ SQL;
     /**
      * @return bool
      */
-    public function hasAllowedSummits():bool{
+    public function hasAllowedSummits(): bool
+    {
         return count($this->getAllAllowedSummitsIds()) > 0;
     }
 
@@ -1901,7 +1915,7 @@ SQL;
      */
     public function hasPermissionForOnGroup(Summit $summit, string $groupSlug): bool
     {
-        if(!SummitAdministratorPermissionGroup::isValidGroup($groupSlug)) return false;
+        if (!SummitAdministratorPermissionGroup::isValidGroup($groupSlug)) return false;
 
         $sql = <<<SQL
 SELECT DISTINCT(SummitAdministratorPermissionGroup_Summits.SummitID) 
@@ -1984,7 +1998,8 @@ SQL;
      * @param Summit $summit
      * @return bool
      */
-    public function hasSummitAccess(Summit $summit):bool{
+    public function hasSummitAccess(Summit $summit): bool
+    {
         return count($this->getPaidSummitTicketsIds($summit)) > 0;
     }
 
@@ -1994,7 +2009,7 @@ SQL;
      */
     public function getPaidSummitTickets(Summit $summit)
     {
-       return $this->getPaidSummitTicketsBySummitId($summit->getId());
+        return $this->getPaidSummitTicketsBySummitId($summit->getId());
     }
 
     /**
@@ -2038,7 +2053,8 @@ SQL;
     }
 
 
-    public function resignFoundationMembership(){
+    public function resignFoundationMembership()
+    {
         // Remove member from Foundation group
         foreach ($this->groups as $g) {
             if ($g->getCode() === IGroup::FoundationMembers) {
@@ -2050,16 +2066,17 @@ SQL;
         // Remove Member's Legal Agreements
         $this->legal_agreements->clear();
         $this->membership_type = self::MembershipTypeCommunity;
-        $this->resign_date     = new \DateTime('now', new \DateTimeZone(self::DefaultTimeZone));
+        $this->resign_date = new \DateTime('now', new \DateTimeZone(self::DefaultTimeZone));
     }
 
-    public function resignMembership(){
+    public function resignMembership()
+    {
         // Remove Member's Legal Agreements
         $this->legal_agreements->clear();
         $this->affiliations->clear();
         $this->groups->clear();
         $this->membership_type = self::MembershipTypeNone;
-        $this->resign_date     = new \DateTime('now', new \DateTimeZone(self::DefaultTimeZone));
+        $this->resign_date = new \DateTime('now', new \DateTimeZone(self::DefaultTimeZone));
     }
 
     public function signFoundationMembership(LegalDocument $document)
@@ -2071,7 +2088,7 @@ SQL;
             $legalAgreement->setDocument($document);
             $this->legal_agreements->add($legalAgreement);
             $this->membership_type = self::MembershipTypeFoundation;
-            $this->resign_date  = null;
+            $this->resign_date = null;
         }
     }
 
@@ -2083,8 +2100,9 @@ SQL;
     /**
      * @param SummitTrackChair $trackChair
      */
-    public function addTrackChair(SummitTrackChair $trackChair){
-        if($this->track_chairs->contains($trackChair)) return;
+    public function addTrackChair(SummitTrackChair $trackChair)
+    {
+        if ($this->track_chairs->contains($trackChair)) return;
         $this->track_chairs->add($trackChair);
         $trackChair->setMember($this);
     }
@@ -2092,8 +2110,9 @@ SQL;
     /**
      * @param SummitTrackChair $trackChair
      */
-    public function removeTrackChair(SummitTrackChair $trackChair){
-        if(!$this->track_chairs->contains($trackChair)) return;
+    public function removeTrackChair(SummitTrackChair $trackChair)
+    {
+        if (!$this->track_chairs->contains($trackChair)) return;
         $this->track_chairs->removeElement($trackChair);
         $trackChair->clearMember();
     }
@@ -2101,32 +2120,36 @@ SQL;
     /**
      * @return ArrayCollection|SummitTrackChair[]
      */
-    public function getTrackChairs(){
+    public function getTrackChairs()
+    {
         return $this->track_chairs;
     }
 
     /**
      * @param Nomination $application
      */
-    public function addElectionApplication(Nomination $application){
-        if($this->election_applications->contains($application)) return;
+    public function addElectionApplication(Nomination $application)
+    {
+        if ($this->election_applications->contains($application)) return;
         $this->election_applications->add($application);
     }
 
     /**
      * @return Candidate[]|ArrayCollection
      */
-    public function getElectionApplications(){
+    public function getElectionApplications()
+    {
         return $this->election_applications;
     }
 
     /**
      * @return array|mixed[]
      */
-    public function getLatestElectionApplications(){
+    public function getLatestElectionApplications()
+    {
         $election_repository = EntityManager::getRepository(Election::class);
         $currentElection = $election_repository->getCurrent();
-        if(is_null($currentElection)) return [];
+        if (is_null($currentElection)) return [];
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq("election", $currentElection));
         return $this->election_applications->matching($criteria)->toArray();
@@ -2135,10 +2158,11 @@ SQL;
     /**
      * @return array|mixed[]
      */
-    public function getLatestElectionNominations(){
+    public function getLatestElectionNominations()
+    {
         $election_repository = EntityManager::getRepository(Election::class);
         $currentElection = $election_repository->getCurrent();
-        if(is_null($currentElection)) return [];
+        if (is_null($currentElection)) return [];
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq("election", $currentElection));
         return $this->election_nominations->matching($criteria)->toArray();
@@ -2150,27 +2174,28 @@ SQL;
      * @return Nomination
      * @throws ValidationException
      */
-    public function nominateCandidate(Member $candidate, Election $election):Nomination{
+    public function nominateCandidate(Member $candidate, Election $election): Nomination
+    {
 
-        if(!$this->isFoundationMember())
+        if (!$this->isFoundationMember())
             throw new ValidationException("You are not a valid Voter.");
 
-        if(!$election->isNominationsOpen())
+        if (!$election->isNominationsOpen())
             throw new ValidationException("Nomination Period is closed for election.");
 
-        if(!$candidate->isFoundationMember())
+        if (!$candidate->isFoundationMember())
             throw new ValidationException("Candidate is not valid.");
 
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq("candidate", $candidate))
             ->andWhere(Criteria::expr()->eq("election", $election));
 
-        if($this->election_nominations->matching($criteria)->count() > 0){
+        if ($this->election_nominations->matching($criteria)->count() > 0) {
             throw new ValidationException(sprintf("You have already nominated %s.", $candidate->getFullName()));
         }
 
         // check max nominations
-        if($election->getNominationCountFor($candidate) >= Election::NominationLimit ){
+        if ($election->getNominationCountFor($candidate) >= Election::NominationLimit) {
             throw new ValidationException(sprintf("That's all the nominations that are required to appear on the election ballot. You may want to nominate someone else who you think would be a good candidate."));
         }
 
@@ -2181,8 +2206,7 @@ SQL;
 
         // check if exist a candidate profile for proposed candidate on current election
 
-        if(!$election->isCandidate($candidate))
-        {
+        if (!$election->isCandidate($candidate)) {
             $election->createCandidancy($candidate);
         }
 
@@ -2193,7 +2217,8 @@ SQL;
      * @param Election $election
      * @return ArrayCollection|\Doctrine\Common\Collections\Collection
      */
-    public function getElectionNominationsFor(Election $election){
+    public function getElectionNominationsFor(Election $election)
+    {
 
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq("election", $election));
@@ -2205,7 +2230,8 @@ SQL;
      * @param Election $election
      * @return int
      */
-    public function getElectionNominationsCountFor(Election $election):int{
+    public function getElectionNominationsCountFor(Election $election): int
+    {
 
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq("election", $election));
@@ -2217,7 +2243,8 @@ SQL;
      * @param Election $election
      * @return int
      */
-    public function getElectionApplicationsCountFor(Election $election):int{
+    public function getElectionApplicationsCountFor(Election $election): int
+    {
         try {
             $sql = <<<SQL
             SELECT COUNT(DISTINCT(C.ID)) AS qty
@@ -2241,8 +2268,9 @@ SQL;
     /**
      * @param Candidate $candidate
      */
-    public function addCandidateProfile(Candidate $candidate):void{
-        if($this->candidate_profiles->contains($candidate)) return;
+    public function addCandidateProfile(Candidate $candidate): void
+    {
+        if ($this->candidate_profiles->contains($candidate)) return;
         $this->candidate_profiles->add($candidate);
         $candidate->setMember($this);
     }
@@ -2250,14 +2278,16 @@ SQL;
     /**
      * @return Candidate[]|ArrayCollection
      */
-    public function getCandidateProfiles(){
+    public function getCandidateProfiles()
+    {
         return $this->candidate_profiles;
     }
 
     /**
      * @return int
      */
-    public function getLatestCandidateProfileId():int{
+    public function getLatestCandidateProfileId(): int
+    {
         $res = $this->getLatestCandidateProfile();
         return $res ? $res->getId() : 0;
     }
@@ -2265,10 +2295,11 @@ SQL;
     /**
      * @return Candidate|null
      */
-    public function getLatestCandidateProfile():?Candidate{
+    public function getLatestCandidateProfile(): ?Candidate
+    {
         $election_repository = EntityManager::getRepository(Election::class);
         $currentElection = $election_repository->getCurrent();
-        if(is_null($currentElection)) return null;
+        if (is_null($currentElection)) return null;
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq("election", $currentElection));
         $res = $this->candidate_profiles->matching($criteria)->first();
@@ -2278,10 +2309,11 @@ SQL;
     /**
      * @return bool
      */
-    public function hasLatestCandidateProfile():bool{
+    public function hasLatestCandidateProfile(): bool
+    {
         $election_repository = EntityManager::getRepository(Election::class);
         $currentElection = $election_repository->getCurrent();
-        if(is_null($currentElection)) return false;
+        if (is_null($currentElection)) return false;
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq("election", $currentElection));
         return $this->candidate_profiles->matching($criteria)->count() > 0;
@@ -2292,7 +2324,7 @@ SQL;
      */
     public function getProjects(): array
     {
-        if(empty($this->projects)) return [];
+        if (empty($this->projects)) return [];
         return explode(',', $this->projects);
     }
 
@@ -2355,7 +2387,7 @@ SQL;
     /**
      * @return string|null
      */
-    public function getShirtSize():?string
+    public function getShirtSize(): ?string
     {
         return $this->shirt_size;
     }
@@ -2366,7 +2398,7 @@ SQL;
      */
     public function setShirtSize(string $shirt_size): void
     {
-        if(!in_array($shirt_size, self::AllowedShirtSizes))
+        if (!in_array($shirt_size, self::AllowedShirtSizes))
             throw new ValidationException(sprintf("shirt_size %s is not valid one.", $shirt_size));
         $this->shirt_size = $shirt_size;
     }
@@ -2374,9 +2406,9 @@ SQL;
     /**
      * @return array|string[]
      */
-    public function getFoodPreference():array
+    public function getFoodPreference(): array
     {
-        if(empty($this->food_preference)) return [];
+        if (empty($this->food_preference)) return [];
         return explode(',', $this->food_preference);
     }
 
@@ -2386,7 +2418,7 @@ SQL;
      */
     public function setFoodPreference(array $food_preference): void
     {
-        foreach($food_preference as $food) {
+        foreach ($food_preference as $food) {
             if (!in_array($food, self::AllowedFoodPreferences))
                 throw new ValidationException(sprintf("food_preference %s is not valid one.", $food));
         }
@@ -2396,7 +2428,7 @@ SQL;
     /**
      * @return string|null
      */
-    public function getOtherFoodPreference():?string
+    public function getOtherFoodPreference(): ?string
     {
         return $this->other_food_preference;
     }
@@ -2653,7 +2685,7 @@ SQL;
      */
     public function getAlternatePresentations
     (
-        Summit $summit,
+        Summit  $summit,
         ?Filter $filter = null
     )
     {
@@ -2775,7 +2807,7 @@ SQL;
      */
     public function getRejectedPresentations
     (
-        Summit $summit,
+        Summit  $summit,
         ?Filter $filter = null
     )
     {
@@ -2875,5 +2907,33 @@ SQL;
             $ids[] = intval($p->getId());
         }
         return $ids;
+    }
+
+    public function isSummitAllowed(Summit $summit): bool
+    {
+        if ($this->isAdmin()) return true;
+
+        try {
+            $sql = <<<SQL
+SELECT COUNT(SummitAdministratorPermissionGroup_Summits.SummitID) 
+FROM SummitAdministratorPermissionGroup_Members 
+INNER JOIN SummitAdministratorPermissionGroup_Summits ON 
+SummitAdministratorPermissionGroup_Summits.SummitAdministratorPermissionGroupID = SummitAdministratorPermissionGroup_Members.SummitAdministratorPermissionGroupID
+WHERE SummitAdministratorPermissionGroup_Members.MemberID = :member_id 
+  AND SummitAdministratorPermissionGroup_Summits.SummitID = :summit_id
+SQL;
+
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(
+                [
+                    'member_id' => $this->getId(),
+                    'summit_id' => $summit->getId(),
+                ]
+            );
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            return intval($res[0]) > 0;
+        } catch (\Exception $ex) {
+            return false;
+        }
     }
 }

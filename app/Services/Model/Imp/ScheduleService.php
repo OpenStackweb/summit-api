@@ -99,11 +99,108 @@ final class ScheduleService
     }
 
     /**
+     * @param IPublishableEvent $event
+     * @param SummitProposedSchedule $schedule
+     * @return void
+     * @throws ValidationException
+     */
+    private function checkTransitionTime(IPublishableEvent $event, SummitProposedSchedule $schedule):void{
+
+        /*
+        *  Room 1: <track 1 activity> <track 2 transition time> <track 2 activity> <track 1 transition time> <track 1 activity>
+        *  Room 2: <track 3 activity> <track 1 transition time> <track 1 activity> <track 4 transition time> <track 4 activity>
+        */
+
+        $transition_time = $event->getTrackTransitionTime();
+
+        if (!is_null($transition_time)) { // check immediate previous one event
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "ScheduleService::checkTransitionTime checking immediate previous event %s transition time %s",
+                    $event->getSummitEventId(),
+                    $transition_time
+                )
+            );
+
+            $prevProposedScheduledEvent = $schedule->getProposedPublishedEventBeforeThan($event);
+
+            if (!is_null($prevProposedScheduledEvent)) {
+
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "ScheduleService::checkTransitionTime prevProposedScheduledEvent %s end date %s start date %s transition time %s",
+                        $prevProposedScheduledEvent->getSummitEventId(),
+                        $prevProposedScheduledEvent->getEndDate()->format("Y-m-d H:i:s"),
+                        $event->getStartDate()->format("Y-m-d H:i:s"),
+                        $transition_time
+                    )
+                );
+
+                if(($event->getStartDate()->getTimestamp() - $prevProposedScheduledEvent->getEndDate()->getTimestamp()) / 60 < $transition_time)
+                    throw new ValidationException(
+                        "There must be a transition time of at least {$transition_time} " .
+                        "minutes between the end of the previous event {$prevProposedScheduledEvent->getSummitEventId()} ( {$prevProposedScheduledEvent->getLocalEndDate()->format("Y-m-d H:i:s")} ) " .
+                        "and the start of the current one {$event->getSummitEventId()} ( {$event->getLocalStartDate()->format("Y-m-d H:i:s")} ).");
+            }
+        }
+
+        // check immediate posterior ...
+
+        $nextProposedScheduledEvent = $schedule->getProposedPublishedEventAfterThan($event);
+
+        if (!is_null($nextProposedScheduledEvent)) {
+
+            Log::debug(sprintf("ScheduleService::checkTransitionTime nextProposedScheduledEvent %s", $nextProposedScheduledEvent->getSummitEventId()));
+
+            $transition_time = $nextProposedScheduledEvent->getSummitEvent()->getTrackTransitionTime();
+
+            if (!is_null($transition_time)) {
+
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "ScheduleService::checkTransitionTime nextProposedScheduledEvent %s start date %s end date %s transition time %s",
+                        $nextProposedScheduledEvent->getSummitEventId(),
+                        $nextProposedScheduledEvent->getStartDate()->format("Y-m-d H:i:s"),
+                        $event->getEndDate()->format("Y-m-d H:i:s"),
+                        $transition_time
+                    )
+                );
+
+                if (($nextProposedScheduledEvent->getStartDate() <= $event->getEndDate()) ||
+                    ($nextProposedScheduledEvent->getStartDate()->getTimestamp() - $event->getEndDate()->getTimestamp()) / 60 < $transition_time) {
+                    throw new ValidationException(
+                        "There must be a transition time of at least {$transition_time} " .
+                        "minutes between the end of the current event {$event->getSummitEventId()} ( {$event->getLocalEndDate()->format("Y-m-d H:i:s")} ) and the start of the next " .
+                        "one {$nextProposedScheduledEvent->getSummitEventId()} ( {$nextProposedScheduledEvent->getLocalStartDate()->format("Y-m-d H:i:s")} ).");
+                }
+            }
+        }
+    }
+
+    /**
      * @inheritDoc
      */
     public function publishProposedActivityToSource(
         string $source, int $presentation_id, array $payload): SummitProposedScheduleSummitEvent
     {
+
+        Log::debug
+        (
+            sprintf
+            (
+                "ScheduleService::publishProposedActivityToSource source %s presentation_id %s payload %s",
+                $source,
+                $presentation_id,
+                json_encode($payload)
+            )
+        );
 
         $schedule = $this->tx_service->transaction(function () use ($source, $presentation_id, $payload) {
 
@@ -114,6 +211,7 @@ final class ScheduleService
             $schedule = $this->schedule_repository->getBySourceAndSummitId($source, $event->getSummitId());
 
             if ($event instanceof Presentation) {
+
                 $selection_plan = $event->getSelectionPlan();
                 if (!$selection_plan instanceof SelectionPlan)
                     throw new EntityNotFoundException("presentation id {$presentation_id} does not have a selection plan");
@@ -160,8 +258,8 @@ final class ScheduleService
             sprintf
             (
                 "ScheduleService::validateBlackOutTimesAndTimes event %s location %s track %s",
-                $publishable_event->getId(),
-                $location->getId(),
+                $publishable_event->getSummitEventId(),
+                is_null($location) ? "TBD" : $location->getId(),
                 $track->getId()
             )
         );
@@ -180,15 +278,15 @@ final class ScheduleService
         // try to get the allowed location
         $allowed_location = $track->getProposedScheduleAllowedLocationByLocation($location);
         // try to get the opening hour restrictions from main location
-        $opening_hour = $location->getOpeningHour();
-        $closing_hour = $location->getClosingHour();
+        $opening_hour = is_null($location) ? null : $location->getOpeningHour();
+        $closing_hour = is_null($location) ? null : $location->getClosingHour();
 
         Log::debug
         (
             sprintf
             (
                 "ScheduleService::validateBlackOutTimesAndTimes event %s opening_hour %s closing_hour %s",
-                $publishable_event->getId(),
+                $publishable_event->getSummitEventId(),
                 $opening_hour,
                 $closing_hour
             )
@@ -256,8 +354,10 @@ final class ScheduleService
                 $schedule_event->setCreatedBy($member);
                 $schedule_event->setSchedule($schedule);
             }
+
             $schedule_event = $this->updateLocation($payload, $summit, $schedule_event);
             $schedule_event = $this->updateEventDates($payload, $summit, $schedule_event);
+            $this->checkTransitionTime($schedule_event, $schedule);
             $this->validateBlackOutTimesAndTimes($schedule_event);
             $schedule->addScheduledSummitEvent($schedule_event);
             $schedule_event->setUpdatedBy($member);

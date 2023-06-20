@@ -94,4 +94,8 @@ interface IPublishableEvent extends IEntity
     public function getLocationName(): string;
 
     public function getCategory():?PresentationCategory;
+
+    public function getTrackTransitionTime():?int;
+
+    public function getSummitEventId():int;
 }

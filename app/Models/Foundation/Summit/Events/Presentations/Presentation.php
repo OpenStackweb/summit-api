@@ -2335,4 +2335,5 @@ SQL;
 
         return array_merge( $snapshot, parent::getSnapshot());
     }
+
 }

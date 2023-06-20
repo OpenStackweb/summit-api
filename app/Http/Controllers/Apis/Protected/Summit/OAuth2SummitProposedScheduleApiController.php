@@ -13,6 +13,7 @@
  **/
 
 use App\ModelSerializers\SerializerUtils;
+use App\Rules\Boolean;
 use App\Services\Model\IScheduleService;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitProposedScheduleEventRepository;
@@ -104,7 +105,7 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
                     'presentation_id' => 'sometimes|integer',
                     'location_id' => 'sometimes|integer',
                     'track_id' => 'sometimes|integer',
-                    'type_show_always_on_schedule' => 'sometimes|boolean'
+                    'type_show_always_on_schedule' => ['sometimes', new Boolean]
                 ];
             },
             function () {

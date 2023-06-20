@@ -175,6 +175,8 @@ abstract class AbstractPublishService extends AbstractService
      */
     protected function validateBlackOutTimesAndTimes(IPublishableEvent $publishable_event, ?int $opening_hour = null, ?int $closing_hour= null):void
     {
+        Log::debug(sprintf("AbstractPublishService::validateBlackOutTimesAndTimes event %s", $publishable_event->getSummitEventId()));
+
         $current_event_location = $publishable_event->getLocation();
         $eventType = $publishable_event->getType();
 
@@ -193,7 +195,7 @@ abstract class AbstractPublishService extends AbstractService
                 sprintf
                 (
                     "AbstractPublishService::validateBlackOutTimesAndTimes event %s opening_hour %s closing_hour %s event_opening_hour %s event_closing_hour %s",
-                    $publishable_event->getId(),
+                    $publishable_event->getSummitEventId(),
                     $opening_hour,
                     $closing_hour,
                     $event_opening_hour,
@@ -207,7 +209,7 @@ abstract class AbstractPublishService extends AbstractService
                     sprintf
                     (
                         "You can't publish event %s  (from %s to %s) out of this time frame (from %s to %s) due to event location time restrictions.",
-                        $publishable_event->getId(),
+                        $publishable_event->getSummitEventId(),
                         $event_opening_hour,
                         $event_closing_hour,
                         $opening_hour,
@@ -223,16 +225,16 @@ abstract class AbstractPublishService extends AbstractService
             foreach ($conflict_events as $c_event) {
                 // if the published event is BlackoutTime or if there is a BlackoutTime event in this timeframe
                 if ((!is_null($current_event_location) && !$current_event_location->isOverrideBlackouts()) &&
-                    ($eventType->isBlackoutTimes() || $c_event->getType()->isBlackoutTimes()) && $publishable_event->getId() != $c_event->getId()) {
+                    ($eventType->isBlackoutTimes() || $c_event->getType()->isBlackoutTimes()) && $publishable_event->getSummitEventId() != $c_event->getSummitEventId()) {
                     throw new ValidationException
                     (
                         sprintf
                         (
                             "You can't publish event %s on this time frame (%s - %s), it conflicts with event %s (%s - %s) [BLACKOUT TIMEFRAME COLLISION].",
-                            $publishable_event->getId(),
+                            $publishable_event->getSummitEventId(),
                             $publishable_event->getStartDateNice(),
                             $publishable_event->getEndDateNice(),
-                            $c_event->getId(),
+                            $c_event->getSummitEventId(),
                             $c_event->getStartDateNice(),
                             $c_event->getEndDateNice()
                         )
@@ -245,16 +247,16 @@ abstract class AbstractPublishService extends AbstractService
 
                     if (!is_null($current_event_location) && !is_null($c_event->getLocation()) &&
                         $current_event_location->getId() == $c_event->getLocation()->getId() &&
-                        $publishable_event->getId() != $c_event->getId()) {
+                        $publishable_event->getSummitEventId() != $c_event->getSummitEventId()) {
                         throw new ValidationException
                         (
                             sprintf
                             (
                                 "You can't publish event %s on this time frame (%s - %s), it conflicts with event %s (%s - %s) on location %s [LOCATION TIMEFRAME COLLISION].",
-                                $publishable_event->getId(),
+                                $publishable_event->getSummitEventId(),
                                 $publishable_event->getStartDateNice(),
                                 $publishable_event->getEndDateNice(),
-                                $c_event->getId(),
+                                $c_event->getSummitEventId(),
                                 $c_event->getStartDateNice(),
                                 $c_event->getEndDateNice(),
                                 $c_event->getLocation()->getName()
@@ -266,7 +268,7 @@ abstract class AbstractPublishService extends AbstractService
                 // check speakers collisions
                 if ($publishable_event instanceof IPublishableEventWithSpeakerConstraint &&
                     $c_event instanceof IPublishableEventWithSpeakerConstraint &&
-                    $publishable_event->getId() != $c_event->getId()) {
+                    $publishable_event->getSummitEventId() != $c_event->getSummitEventId()) {
                     if (!$eventType->isAllowsSpeakerEventCollision()) {
                         foreach ($publishable_event->getSpeakers() as $current_speaker) {
                             foreach ($c_event->getSpeakers() as $c_speaker) {
@@ -276,13 +278,13 @@ abstract class AbstractPublishService extends AbstractService
                                         sprintf
                                         (
                                             "You can't publish event %s (%s - %s) on this timeframe, speaker %s (%s) its present in room %s at this time for event %s (%s - %s) [SPEAKERS COLLISION].",
-                                            $publishable_event->getId(),
+                                            $publishable_event->getSummitEventId(),
                                             $publishable_event->getStartDateNice(),
                                             $publishable_event->getEndDateNice(),
                                             $current_speaker->getFullName(),
                                             $current_speaker->getId(),
                                             $c_event->getLocationName(),
-                                            $c_event->getId(),
+                                            $c_event->getSummitEventId(),
                                             $c_event->getStartDateNice(),
                                             $c_event->getEndDateNice()
                                         )

@@ -16,6 +16,7 @@ use App\Models\Foundation\Summit\IPublishableEvent;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\SummitAbstractLocation;
@@ -195,6 +196,64 @@ class SummitProposedSchedule extends SilverstripeBaseModel
         if ($location != null)
             $criteria->andWhere(Criteria::expr()->eq('location', $location));
         return $this->scheduled_summit_events->matching($criteria)->toArray();
+    }
+
+    /**
+     * @param IPublishableEvent $event
+     * @return SummitProposedScheduleSummitEvent|null
+     */
+    public function getProposedPublishedEventBeforeThan(IPublishableEvent $event):?SummitProposedScheduleSummitEvent {
+
+        $date = $event->getStartDate();
+        $location = $event->getLocation();
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitProposedSchedule::getProposedPublishedEventBeforeThan event %s date %s location %s",
+                $event->getSummitEventId(),
+                $date->format("Y-m-d H:i:s"),
+                is_null($location) ? "TBD" : $location->getId()
+            )
+        );
+
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->lte('end_date', $date));
+        $criteria->andWhere(Criteria::expr()->eq('location', $location));
+        $criteria->andWhere(Criteria::expr()->neq('summit_event', $event->getSummitEvent()));
+        $criteria->orderBy(['end_date' => 'DESC']);
+        $res = $this->scheduled_summit_events->matching($criteria)->first();
+        return $res === false ? null : $res;
+    }
+
+    /**
+     * @param IPublishableEvent $event
+     * @return SummitProposedScheduleSummitEvent|null
+     */
+    public function getProposedPublishedEventAfterThan(IPublishableEvent $event):?SummitProposedScheduleSummitEvent {
+
+        $date = $event->getStartDate();
+        $location = $event->getLocation();
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitProposedSchedule::getProposedPublishedEventAfterThan event %s date %s location %s",
+                $event->getSummitEventId(),
+                $date->format("Y-m-d H:i:s"),
+                is_null($location) ? "TBD" : $location->getId()
+            )
+        );
+
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->gte('start_date', $date));
+        $criteria->andWhere(Criteria::expr()->eq('location', $location));
+        $criteria->andWhere(Criteria::expr()->neq('summit_event', $event->getSummitEvent()));
+        $criteria->orderBy(['start_date' => 'ASC']);
+        $res = $this->scheduled_summit_events->matching($criteria)->first();
+        return $res === false ? null : $res;
     }
 
     /**

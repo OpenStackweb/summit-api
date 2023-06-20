@@ -68,6 +68,9 @@ final class PresentationCategoryFactory
         if(isset($data['chair_visible']))
             $track->setChairVisible(boolval($data['chair_visible']));
 
+        if(isset($data['proposed_schedule_transition_time']))
+            $track->setProposedScheduleTransitionTime(intval($data['proposed_schedule_transition_time']));
+
         return $track;
     }
 

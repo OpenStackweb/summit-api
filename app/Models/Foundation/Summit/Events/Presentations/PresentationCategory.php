@@ -131,6 +131,12 @@ class PresentationCategory extends SilverstripeBaseModel
     protected $proposed_schedule_allowed_locations;
 
     /**
+     * @ORM\Column(name="ProposedScheduleTransitionTime", type="integer")
+     * @var int|null
+     */
+    protected $proposed_schedule_transition_time;
+
+    /**
      * @return string
      */
     public function getDescription()
@@ -820,19 +826,20 @@ SQL;
      * @param SummitAbstractLocation $location
      * @return bool
      */
-    public function isProposedScheduleAllowedLocation(SummitAbstractLocation $location):bool{
+    public function isProposedScheduleAllowedLocation(?SummitAbstractLocation $location):bool{
         // there are not restrictions
         if(!$this->proposed_schedule_allowed_locations->count()) return true;
+        if(is_null($location)) return true;
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('location', $location));
         return $this->proposed_schedule_allowed_locations->matching($criteria)->count() > 0;
     }
 
     /**
-     * @param SummitAbstractLocation $location
+     * @param SummitAbstractLocation|null $location
      * @return SummitProposedScheduleAllowedLocation|null
      */
-    public function getProposedScheduleAllowedLocationByLocation(SummitAbstractLocation $location):?SummitProposedScheduleAllowedLocation{
+    public function getProposedScheduleAllowedLocationByLocation(?SummitAbstractLocation $location):?SummitProposedScheduleAllowedLocation{
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('location', $location));
         $res =  $this->proposed_schedule_allowed_locations->matching($criteria)->first();
@@ -846,5 +853,13 @@ SQL;
             return true;
         });
         $this->proposed_schedule_allowed_locations->clear();
+    }
+
+    public function getProposedScheduleTransitionTime():?int{
+        return $this->proposed_schedule_transition_time;
+    }
+
+    public function setProposedScheduleTransitionTime(?int $proposed_schedule_transition_time) {
+        $this->proposed_schedule_transition_time = $proposed_schedule_transition_time;
     }
 }

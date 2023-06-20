@@ -384,7 +384,8 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         if (is_null($summit))
             if (is_null($summit)) return $this->error404();
 
-        if (strtolower($location_id) !== "tbd") {
+        $location = null;
+        if (strtolower($location_id) !== "tbd" && intval($location_id) !== 0) {
             $location = $summit->getLocation(intval($location_id));
             if (is_null($location)) return $this->error404();
         }
@@ -423,11 +424,11 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                     'created',
                 ];
             },
-            function ($filter) use($summit_id, $location_id, $published){
+            function ($filter) use($summit_id, $location, $published){
                 $filter->addFilterCondition(FilterParser::buildFilter('summit_id', '==', $summit_id));
 
-                if (intval($location_id) > 0)
-                    $filter->addFilterCondition(FilterParser::buildFilter('location_id', '==', $location_id));
+                if (!is_null($location))
+                    $filter->addFilterCondition(FilterParser::buildFilter('location_id', '==', $location->getId()));
 
                 if ($published) {
                     $filter->addFilterCondition(FilterParser::buildFilter('published', '==', 1));
@@ -440,9 +441,9 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             },
             null,
             null,
-            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($location_id) {
+            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($location) {
 
-                return strtolower($location_id) === "tbd" || intval($location_id) === 0 ?
+                return is_null($location) ?
                     $this->event_repository->getAllByPageLocationTBD
                     (
                         new PagingInfo($page, $per_page), call_user_func($applyExtraFilters, $filter), $order

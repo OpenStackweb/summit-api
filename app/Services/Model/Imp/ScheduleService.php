@@ -99,12 +99,12 @@ final class ScheduleService
     }
 
     /**
-     * @param Presentation $event
+     * @param IPublishableEvent $event
      * @param SummitProposedSchedule $schedule
      * @return void
      * @throws ValidationException
      */
-    private function checkTransitionTime(Presentation $event, SummitProposedSchedule $schedule):void{
+    private function checkTransitionTime(IPublishableEvent $event, SummitProposedSchedule $schedule):void{
 
         /*
         *  Room 1: <track 1 activity> <track 2 transition time> <track 2 activity> <track 1 transition time> <track 1 activity>
@@ -120,7 +120,7 @@ final class ScheduleService
                 sprintf
                 (
                     "ScheduleService::checkTransitionTime checking immediate previous event %s transition time %s",
-                    $event->getId(),
+                    $event->getSummitEventId(),
                     $transition_time
                 )
             );
@@ -134,28 +134,28 @@ final class ScheduleService
                     sprintf
                     (
                         "ScheduleService::checkTransitionTime prevProposedScheduledEvent %s end date %s start date %s transition time %s",
-                        $prevProposedScheduledEvent->getId(),
+                        $prevProposedScheduledEvent->getSummitEventId(),
                         $prevProposedScheduledEvent->getEndDate()->format("Y-m-d H:i:s"),
                         $event->getStartDate()->format("Y-m-d H:i:s"),
                         $transition_time
                     )
                 );
 
-                if(($event->getStartDate()->getTimestamp() - $prevProposedScheduledEvent->getEndDate()->getTimestamp()) / 60 <= $transition_time)
+                if(($event->getStartDate()->getTimestamp() - $prevProposedScheduledEvent->getEndDate()->getTimestamp()) / 60 < $transition_time)
                     throw new ValidationException(
                         "There must be a transition time of at least {$transition_time} " .
-                        "minutes between the end of the previous event ({$prevProposedScheduledEvent->getSummitEventId()} - {$prevProposedScheduledEvent->getEndDate()->format("Y-m-d H:i:s")})" .
-                        "and the start of the current one ({$event->getId()} - {$event->getStartDate()->format("Y-m-d H:i:s")}).");
+                        "minutes between the end of the previous event {$prevProposedScheduledEvent->getSummitEventId()} ( {$prevProposedScheduledEvent->getLocalEndDate()->format("Y-m-d H:i:s")} ) " .
+                        "and the start of the current one {$event->getSummitEventId()} ( {$event->getLocalStartDate()->format("Y-m-d H:i:s")} ).");
             }
         }
 
         // check immediate posterior ...
 
-        $nextProposedScheduledEvent = $schedule->getProposedPublishedEventAfterThan($event->getEndDate(), $event->getLocation());
+        $nextProposedScheduledEvent = $schedule->getProposedPublishedEventAfterThan($event->getStartDate(), $event->getLocation());
 
         if (!is_null($nextProposedScheduledEvent)) {
 
-            Log::debug(sprintf("ScheduleService::checkTransitionTime nextProposedScheduledEvent %s", $nextProposedScheduledEvent->getId()));
+            Log::debug(sprintf("ScheduleService::checkTransitionTime nextProposedScheduledEvent %s", $nextProposedScheduledEvent->getSummitEventId()));
 
             $transition_time = $nextProposedScheduledEvent->getSummitEvent()->getTrackTransitionTime();
 
@@ -165,19 +165,20 @@ final class ScheduleService
                 (
                     sprintf
                     (
-                        "ScheduleService::checkTransitionTime nextProposedScheduledEvent %s star date %s end date %s transition time %s",
-                        $nextProposedScheduledEvent->getId(),
+                        "ScheduleService::checkTransitionTime nextProposedScheduledEvent %s start date %s end date %s transition time %s",
+                        $nextProposedScheduledEvent->getSummitEventId(),
                         $nextProposedScheduledEvent->getStartDate()->format("Y-m-d H:i:s"),
                         $event->getEndDate()->format("Y-m-d H:i:s"),
                         $transition_time
                     )
                 );
 
-                if (($nextProposedScheduledEvent->getStartDate()->getTimestamp() - $event->getEndDate()->getTimestamp()) / 60 <= $transition_time) {
+                if (($nextProposedScheduledEvent->getStartDate() <= $event->getEndDate()) ||
+                    ($nextProposedScheduledEvent->getStartDate()->getTimestamp() - $event->getEndDate()->getTimestamp()) / 60 < $transition_time) {
                     throw new ValidationException(
                         "There must be a transition time of at least {$transition_time} " .
-                        "minutes between the end of the current event ({$event->getId()} - {$event->getEndDate()->format("Y-m-d H:i:s")}) and the start of the next " .
-                        "one ({$nextProposedScheduledEvent->getSummitEventId()} - {$nextProposedScheduledEvent->getStartDate()->format("HY-m-d H:i:s")}).");
+                        "minutes between the end of the current event {$event->getSummitEventId()} ( {$event->getLocalEndDate()->format("Y-m-d H:i:s")} ) and the start of the next " .
+                        "one {$nextProposedScheduledEvent->getSummitEventId()} ( {$nextProposedScheduledEvent->getLocalStartDate()->format("Y-m-d H:i:s")} ).");
                 }
             }
         }
@@ -217,11 +218,6 @@ final class ScheduleService
 
                 if (!$selection_plan->isAllowProposedSchedules())
                     throw new ValidationException("selection plan id {$selection_plan->getId()} does not allow proposed schedules");
-
-                if (!is_null($schedule)) {
-                    // ONLY CHECK IF THERE IS ALREADY AN SCHEDULE , BC WE ALREADY HAVE SOME EVENTS PUBLISHED ...
-                    $this->checkTransitionTime($event, $schedule);
-                }
             }
 
             if (is_null($schedule)) {
@@ -262,7 +258,7 @@ final class ScheduleService
             sprintf
             (
                 "ScheduleService::validateBlackOutTimesAndTimes event %s location %s track %s",
-                $publishable_event->getId(),
+                $publishable_event->getSummitEventId(),
                 $location->getId(),
                 $track->getId()
             )
@@ -290,7 +286,7 @@ final class ScheduleService
             sprintf
             (
                 "ScheduleService::validateBlackOutTimesAndTimes event %s opening_hour %s closing_hour %s",
-                $publishable_event->getId(),
+                $publishable_event->getSummitEventId(),
                 $opening_hour,
                 $closing_hour
             )
@@ -358,8 +354,10 @@ final class ScheduleService
                 $schedule_event->setCreatedBy($member);
                 $schedule_event->setSchedule($schedule);
             }
+
             $schedule_event = $this->updateLocation($payload, $summit, $schedule_event);
             $schedule_event = $this->updateEventDates($payload, $summit, $schedule_event);
+            $this->checkTransitionTime($schedule_event, $schedule);
             $this->validateBlackOutTimesAndTimes($schedule_event);
             $schedule->addScheduledSummitEvent($schedule_event);
             $schedule_event->setUpdatedBy($member);

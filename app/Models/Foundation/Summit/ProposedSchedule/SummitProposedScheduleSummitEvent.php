@@ -214,7 +214,7 @@ class SummitProposedScheduleSummitEvent
     /**
      * @return int
      */
-    public function getSummitEventId(){
+    public function getSummitEventId():int{
         try{
             return is_null($this->summit_event) ? 0 : $this->summit_event->getId();
         }
@@ -438,5 +438,10 @@ class SummitProposedScheduleSummitEvent
     public function getCategory(): ?PresentationCategory
     {
         return $this->summit_event->getCategory();
+    }
+
+    public function getTrackTransitionTime(): ?int
+    {
+        return $this->summit_event->getTrackTransitionTime();
     }
 }

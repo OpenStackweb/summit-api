@@ -2336,9 +2336,4 @@ SQL;
         return array_merge( $snapshot, parent::getSnapshot());
     }
 
-    public function getTrackTransitionTime():?int{
-        $track = $this->getCategory();
-        if ($track === null) return null;
-        return $track->getProposedScheduleTransitionTime();
-    }
 }

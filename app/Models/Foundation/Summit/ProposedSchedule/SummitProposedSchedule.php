@@ -216,7 +216,7 @@ class SummitProposedSchedule extends SilverstripeBaseModel
         );
 
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->lt('end_date', $date));
+        $criteria->where(Criteria::expr()->lte('end_date', $date));
         $criteria->andWhere(Criteria::expr()->eq('location', $location));
         $criteria->orderBy(['end_date' => 'DESC']);
         $res = $this->scheduled_summit_events->matching($criteria)->first();
@@ -241,7 +241,7 @@ class SummitProposedSchedule extends SilverstripeBaseModel
         );
 
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->gt('start_date', $date));
+        $criteria->where(Criteria::expr()->gte('start_date', $date));
         $criteria->andWhere(Criteria::expr()->eq('location', $location));
         $criteria->orderBy(['start_date' => 'ASC']);
         $res = $this->scheduled_summit_events->matching($criteria)->first();

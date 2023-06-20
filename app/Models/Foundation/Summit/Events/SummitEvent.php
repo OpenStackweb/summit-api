@@ -1528,5 +1528,16 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         ];
     }
 
+    public function getTrackTransitionTime():?int{
+        $track = $this->getCategory();
+        if ($track === null) return null;
+        return $track->getProposedScheduleTransitionTime();
+    }
+
     use ScheduleEntity;
+
+    public function getSummitEventId(): int
+    {
+        return $this->id;
+    }
 }

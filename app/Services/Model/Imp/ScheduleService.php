@@ -99,11 +99,107 @@ final class ScheduleService
     }
 
     /**
+     * @param Presentation $event
+     * @param SummitProposedSchedule $schedule
+     * @return void
+     * @throws ValidationException
+     */
+    private function checkTransitionTime(Presentation $event, SummitProposedSchedule $schedule):void{
+
+        /*
+        *  Room 1: <track 1 activity> <track 2 transition time> <track 2 activity> <track 1 transition time> <track 1 activity>
+        *  Room 2: <track 3 activity> <track 1 transition time> <track 1 activity> <track 4 transition time> <track 4 activity>
+        */
+
+        $transition_time = $event->getTrackTransitionTime();
+
+        if (!is_null($transition_time)) { // check immediate previous one event
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "ScheduleService::checkTransitionTime checking immediate previous event %s transition time %s",
+                    $event->getId(),
+                    $transition_time
+                )
+            );
+
+            $prevProposedScheduledEvent = $schedule->getProposedPublishedEventBeforeThan($event->getStartDate(), $event->getLocation());
+
+            if (!is_null($prevProposedScheduledEvent)) {
+
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "ScheduleService::checkTransitionTime prevProposedScheduledEvent %s end date %s start date %s transition time %s",
+                        $prevProposedScheduledEvent->getId(),
+                        $prevProposedScheduledEvent->getEndDate()->format("Y-m-d H:i:s"),
+                        $event->getStartDate()->format("Y-m-d H:i:s"),
+                        $transition_time
+                    )
+                );
+
+                if(($event->getStartDate()->getTimestamp() - $prevProposedScheduledEvent->getEndDate()->getTimestamp()) / 60 <= $transition_time)
+                    throw new ValidationException(
+                        "There must be a transition time of at least {$transition_time} " .
+                        "minutes between the end of the previous event ({$prevProposedScheduledEvent->getSummitEventId()} - {$prevProposedScheduledEvent->getEndDate()->format("Y-m-d H:i:s")})" .
+                        "and the start of the current one ({$event->getId()} - {$event->getStartDate()->format("Y-m-d H:i:s")}).");
+            }
+        }
+
+        // check immediate posterior ...
+
+        $nextProposedScheduledEvent = $schedule->getProposedPublishedEventAfterThan($event->getEndDate(), $event->getLocation());
+
+        if (!is_null($nextProposedScheduledEvent)) {
+
+            Log::debug(sprintf("ScheduleService::checkTransitionTime nextProposedScheduledEvent %s", $nextProposedScheduledEvent->getId()));
+
+            $transition_time = $nextProposedScheduledEvent->getSummitEvent()->getTrackTransitionTime();
+
+            if (!is_null($transition_time)) {
+
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "ScheduleService::checkTransitionTime nextProposedScheduledEvent %s star date %s end date %s transition time %s",
+                        $nextProposedScheduledEvent->getId(),
+                        $nextProposedScheduledEvent->getStartDate()->format("Y-m-d H:i:s"),
+                        $event->getEndDate()->format("Y-m-d H:i:s"),
+                        $transition_time
+                    )
+                );
+
+                if (($nextProposedScheduledEvent->getStartDate()->getTimestamp() - $event->getEndDate()->getTimestamp()) / 60 <= $transition_time) {
+                    throw new ValidationException(
+                        "There must be a transition time of at least {$transition_time} " .
+                        "minutes between the end of the current event ({$event->getId()} - {$event->getEndDate()->format("Y-m-d H:i:s")}) and the start of the next " .
+                        "one ({$nextProposedScheduledEvent->getSummitEventId()} - {$nextProposedScheduledEvent->getStartDate()->format("HY-m-d H:i:s")}).");
+                }
+            }
+        }
+    }
+
+    /**
      * @inheritDoc
      */
     public function publishProposedActivityToSource(
         string $source, int $presentation_id, array $payload): SummitProposedScheduleSummitEvent
     {
+
+        Log::debug
+        (
+            sprintf
+            (
+                "ScheduleService::publishProposedActivityToSource source %s presentation_id %s payload %s",
+                $source,
+                $presentation_id,
+                json_encode($payload)
+            )
+        );
 
         $schedule = $this->tx_service->transaction(function () use ($source, $presentation_id, $payload) {
 
@@ -114,6 +210,7 @@ final class ScheduleService
             $schedule = $this->schedule_repository->getBySourceAndSummitId($source, $event->getSummitId());
 
             if ($event instanceof Presentation) {
+
                 $selection_plan = $event->getSelectionPlan();
                 if (!$selection_plan instanceof SelectionPlan)
                     throw new EntityNotFoundException("presentation id {$presentation_id} does not have a selection plan");
@@ -122,33 +219,8 @@ final class ScheduleService
                     throw new ValidationException("selection plan id {$selection_plan->getId()} does not allow proposed schedules");
 
                 if (!is_null($schedule)) {
-                    $transition_time = $event->getTrackTransitionTime();
-
-                    if (!is_null($transition_time)) {
-                        $prevProposedScheduledEvent = $schedule->getProposedPublishedEventBeforeThan($event->getStartDate(), $event->getLocation());
-
-                        if (!is_null($prevProposedScheduledEvent) &&
-                            ($event->getStartDate()->getTimestamp() - $prevProposedScheduledEvent->getEndDate()->getTimestamp()) / 60 < $transition_time) {
-                            throw new ValidationException(
-                                "There must be a transition time of at least {$transition_time} " .
-                                "minutes between the end of the previous event ({$prevProposedScheduledEvent->getSummitEventId()}) " .
-                                "and the start of the current one ({$event->getId()})");
-                        }
-                    }
-
-                    $nextProposedScheduledEvent = $schedule->getProposedPublishedEventAfterThan($event->getEndDate(), $event->getLocation());
-
-                    if (!is_null($nextProposedScheduledEvent)) {
-                        $transition_time = $nextProposedScheduledEvent->getSummitEvent()->getTrackTransitionTime();
-
-                        if (!is_null($transition_time) &&
-                            ($nextProposedScheduledEvent->getStartDate()->getTimestamp() - $event->getEndDate()->getTimestamp()) / 60 < $transition_time) {
-                            throw new ValidationException(
-                                "There must be a transition time of at least {$transition_time} " .
-                                "minutes between the end of the current event ({$event->getId()}) and the start of the next " .
-                                "one ({$nextProposedScheduledEvent->getSummitEventId()})");
-                        }
-                    }
+                    // ONLY CHECK IF THERE IS ALREADY AN SCHEDULE , BC WE ALREADY HAVE SOME EVENTS PUBLISHED ...
+                    $this->checkTransitionTime($event, $schedule);
                 }
             }
 

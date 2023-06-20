@@ -16,6 +16,7 @@ use App\Models\Foundation\Summit\IPublishableEvent;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\SummitAbstractLocation;
@@ -204,6 +205,16 @@ class SummitProposedSchedule extends SilverstripeBaseModel
      */
     public function getProposedPublishedEventBeforeThan(\DateTime $date, SummitAbstractLocation $location):?SummitProposedScheduleSummitEvent {
 
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitProposedSchedule::getProposedPublishedEventBeforeThan date %s location %s",
+                $date->format("Y-m-d H:i:s"),
+                $location->getId()
+            )
+        );
+
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->lt('end_date', $date));
         $criteria->andWhere(Criteria::expr()->eq('location', $location));
@@ -218,6 +229,16 @@ class SummitProposedSchedule extends SilverstripeBaseModel
      * @return SummitProposedScheduleSummitEvent|null
      */
     public function getProposedPublishedEventAfterThan(\DateTime $date, SummitAbstractLocation $location):?SummitProposedScheduleSummitEvent {
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitProposedSchedule::getProposedPublishedEventAfterThan date %s location %s",
+                $date->format("Y-m-d H:i:s"),
+                $location->getId()
+            )
+        );
 
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->gt('start_date', $date));

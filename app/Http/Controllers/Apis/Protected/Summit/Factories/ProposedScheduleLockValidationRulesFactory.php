@@ -26,7 +26,7 @@ final class ProposedScheduleLockValidationRulesFactory extends AbstractValidatio
     public static function buildForAdd(array $payload = []): array
     {
         return [
-            'message' => 'sometimes|string|max:1024',
+            'message'  => 'sometimes|string|max:1024',
         ];
     }
 

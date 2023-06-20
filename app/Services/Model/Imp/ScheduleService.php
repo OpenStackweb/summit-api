@@ -13,6 +13,8 @@
  **/
 
 use App\Facades\ResourceServerContext;
+use App\Jobs\Emails\ProposedSchedule\SubmitForReviewEmail;
+use App\Jobs\Emails\ProposedSchedule\UnsubmitForReviewEmail;
 use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\IPublishableEvent;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
@@ -424,6 +426,7 @@ final class ScheduleService
             $former_lock = $this->schedule_lock_repository->getBySummitAndTrackId($summit->getId(), $track_id);
 
             if (!is_null($former_lock)) {
+                SubmitForReviewEmail::dispatch($former_lock);
                 throw new ValidationException("this track already has a review submission");
             }
 
@@ -470,6 +473,9 @@ final class ScheduleService
             }
             $schedule = $this->schedule_repository->getBySourceAndSummitId($source, $summit->getId());
             $schedule->removeProposedScheduleLock($lock);
+
+            UnsubmitForReviewEmail::dispatch($lock);
+
             return $schedule;
         });
     }

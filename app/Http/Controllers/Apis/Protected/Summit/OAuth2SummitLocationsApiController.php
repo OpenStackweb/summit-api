@@ -385,6 +385,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             if (is_null($summit)) return $this->error404();
 
         $location = null;
+
         if (strtolower($location_id) !== "tbd" && intval($location_id) !== 0) {
             $location = $summit->getLocation(intval($location_id));
             if (is_null($location)) return $this->error404();
